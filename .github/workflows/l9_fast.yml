@@ -9,6 +9,12 @@ jobs:
   fast-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      OPENAI_API_KEY: dummy-for-fast
+      OPENAI_API_BASE: https://api.deepseek.com/v1
+      MODEL_NAME: deepseek-chat
+      ALLOW_REAL_SOURCE_ADAPTERS: "false"
+      MEMORY_MAX_RECORD_COUNT: "500"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
