@@ -257,7 +257,7 @@ Before production handoff:
 
 1. Execute all commands in the [Release Checklist](release_checklist.md).
 2. Verify the stable product baseline is `runs/baselines/l9_9_stable/` and the latest accepted handoff snapshot is `runs/baselines/l10_4_production_handoff/`, or explicitly document newer accepted artifacts.
-3. Confirm Docker smoke validation has been completed in an environment with Docker if deploying a container image.
+3. Confirm Docker smoke validation has been completed in a Docker-enabled environment; the current handoff was validated by the GitHub Actions **L10 Manual Docker Smoke** workflow.
 4. Confirm memory and FAISS storage mounts follow the environment matrix.
 5. Record accepted warnings and all structured-log/request-correlation expectations in the handoff notes.
 
@@ -266,7 +266,7 @@ Before production handoff:
 - [README](../README.md): quick start and endpoint overview.
 - [Deployment Environment Matrix](deployment_environment_matrix.md): environment-specific policy.
 - [Docker Smoke Protocol](docker_smoke_protocol.md): container validation procedure.
-- [Docker Runtime Smoke Pending Record](docker_runtime_smoke_pending.md): current blocked status and commands required on a Docker-enabled environment.
+- [Docker Runtime Smoke Validation Record](docker_runtime_smoke_pending.md): completed CI smoke validation and reusable Docker-enabled execution commands.
 - [Regression Protocol](regression_protocol.md): quality and cost gates.
 - [Release Checklist](release_checklist.md): release sign-off checklist.
 - [Architecture Map](architecture_map.md): module and boundary reference.

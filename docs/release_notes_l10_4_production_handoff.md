@@ -66,9 +66,9 @@ The following delivery boundaries were completed before this baseline was frozen
 
 ## Docker Runtime Smoke Status
 
-Docker runtime smoke testing was not executed on the current machine because the Docker CLI is unavailable.
+Docker runtime smoke validation passed through the GitHub Actions **L10 Manual Docker Smoke** workflow on a Docker-enabled runner.
 
-The required validation procedure exists in [Docker Smoke Protocol](docker_smoke_protocol.md) and must be run on a machine or build environment with Docker before container promotion.
+The current local machine still does not provide a Docker CLI, so validation was executed in CI rather than locally. The validated process is defined in [Docker Smoke Protocol](docker_smoke_protocol.md) and recorded in [Docker Runtime Smoke Validation Record](docker_runtime_smoke_pending.md).
 
 ## Frozen Artifacts
 
@@ -82,4 +82,3 @@ The production handoff baseline includes:
 ## Release Position
 
 `l10_4_production_handoff` is the latest production handoff validation snapshot. `l9_9_stable` remains the current stable product release baseline until a subsequent release decision explicitly promotes a newer stable release.
-
