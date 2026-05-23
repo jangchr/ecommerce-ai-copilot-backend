@@ -1,0 +1,126 @@
+{
+  "product_category": "sports_nutrition",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/protein_powder",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The powder clumped instantly and left a chalky aftertaste no matter how long I shook it.",
+      "The vanilla flavor tasted artificial and made my smoothie smell like chemicals.",
+      "It upset my stomach every time I drank it after a workout.",
+      "The scoop was buried at the bottom and the bag would not reseal properly.",
+      "The label promised smooth mixing, but it left gritty chunks in cold water.",
+      "The tub arrived half open with powder dust all over the shipping box."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.5249999999999999,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 0.921875,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.75,
+    "creative_score": 0.8016145833333335,
+    "grounded_score": 0.5370817708333334,
+    "predicted_ctr": 0.09619375000000001,
+    "grounded_ctr": 0.06444981250000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.35, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 972,
+      "latency_ms": 5607.0802211761475,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step by step.\n\n**Product Classification:**\nThe URL path contains \"protein_powder\" — this is a nutritional supplement, specifically a health/fitness product. It's a consumable good in the sports nutrition category.\n\n**Task Complexity Assessment:**\nI need to determine what real inputs are available. The only input provided is a URL. There are no actual product details, no specific analysis request, no comparison criteria, no target audience, no budget constraints, no tim"
+    },
+    "analysis_audience": {
+      "total_tokens": 1179,
+      "latency_ms": 8367.140769958496,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1115,
+      "latency_ms": 6709.293603897095,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 260,
+      "latency_ms": 2330.6479454040527,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2967,
+      "latency_ms": 12763.518333435059,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Disillusioned Athlete**\n\n**Identity:** A regular fitness enthusiast (gym-goer, runner, or home workout person) who relies on protein powder for post-workout recovery and meal replacement. They value convenience, taste, and digestive comfort.\n\n**Core Frustration:** The product fails on its most basic promises. The primary pain is a **broken trust** between label claims and real-world experience. They are not just disappointed; they feel actively misled.\n\n**Physical Pain Point"
+    },
+    "strategy": {
+      "total_tokens": 2639,
+      "latency_ms": 12386.89374923706,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "1. **Core hook:** \"Chalky clumps\" and \"artificial chemical taste\". These are the highest-certainty painpoints (evidence_quotes direct). All creative must open with tactile/sensory contrast: gritty vs. smooth.\n\n2. **Trust mechanism:** The *first sip experience* is the only moment that can rebuild trust (dopamine_summary: relief_moment). The ad must show a *real-time* shake/pour/taste reaction, not just a testimonial.\n\n3. **Evidence_basis:** Direct quotes from dataset (source_confidence 0.67, revi"
+    },
+    "storyboard": {
+      "total_tokens": 3501,
+      "latency_ms": 15284.930944442749,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING:\nScene 1: Open with frustration. Evidence quote about gritty chunks. Visual: Person shakes bottle vigorously, pours lumpy, gray liquid into glass in slow motion (black and white). Narration ties to grit.\n\nScene 2: Contrast with smooth solution. Evidence quote about powder clumping. Visual: Full color, same person pours silky, creamy shake with no clumps. Narration references no clumps.\n\nScene 3: Address taste. Evidence quote about artificial vanilla and chemical smell. Visual: Close-up "
+    }
+  }
+}

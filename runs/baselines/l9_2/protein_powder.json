@@ -1,0 +1,127 @@
+{
+  "product_category": "Health & Personal Care",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/protein_powder",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The powder clumped instantly and left a chalky aftertaste no matter how long I shook it.",
+      "The vanilla flavor tasted artificial and made my smoothie smell like chemicals.",
+      "It upset my stomach every time I drank it after a workout.",
+      "The scoop was buried at the bottom and the bag would not reseal properly.",
+      "The label promised smooth mixing, but it left gritty chunks in cold water.",
+      "The tub arrived half open with powder dust all over the shipping box."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.39875,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.8125,
+    "creative_score": 0.7276666666666668,
+    "grounded_score": 0.4875366666666668,
+    "predicted_ctr": 0.08732000000000001,
+    "grounded_ctr": 0.05850440000000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.29, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 1066,
+      "latency_ms": 5363.119602203369,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step by step.\n\n**Product Classification:**\nThe URL path contains \"protein_powder\" — this is clearly a health/supplement product, specifically a dietary supplement (protein powder). This falls under the \"Health & Personal Care\" or \"Sports Nutrition\" category.\n\n**Task Complexity Assessment:**\nI need to decide complexity based on *real inputs only*. The only real input I have is the URL. There is no user query, no specific question about the product, no instruction to ana"
+    },
+    "analysis_audience": {
+      "total_tokens": 1014,
+      "latency_ms": 5222.568035125732,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1200,
+      "latency_ms": 6063.810110092163,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 1830,
+      "latency_ms": 13829.181909561157,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 5579,
+      "latency_ms": 13326.565027236938,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "Based on the evidence and analysis, here is the structured buyer profile.\n\n**Name:** The Frustrated Post-Workout Purist\n\n**Demographics & Context (Inferred from Product Use):**\n- **Primary Identity:** Fitness-conscious individual who works out regularly and uses protein powder as a post-exercise recovery tool.\n- **Use Case:** Consumes the product immediately after a workout, typically mixed with cold water or in a smoothie.\n- **Purchase Motivation:** Seeks a convenient, effective, and pleasant-t"
+    },
+    "strategy": {
+      "total_tokens": 17788,
+      "latency_ms": 24695.22976875305,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "Based on your full memory, evidence, and profile, I will analyze your storyboard drafts and provide a growth strategy recommendation. Every conclusion will cite the specific evidence_basis.\n\n### Analysis of Past Attempts\n\n**1. Success: Women's Bras (fingerprint: e97949b2...)**\n*   **What Worked:** The strategy correctly identified a high-specificity pain signature (shoulder digging after 2 hours, band rolling when sitting). The storyboard used **strong evidence_quotes** (confidence 0.75) to grou"
+    },
+    "storyboard": {
+      "total_tokens": 9406,
+      "latency_ms": 41620.34201622009,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING MODE:\n\nI need to analyze the evidence carefully. The evidence_quotes are:\n1. \"The powder clumped instantly and left a chalky aftertaste no matter how long I shook it.\"\n2. \"The vanilla flavor tasted artificial and made my smoothie smell like chemicals.\"\n3. \"It upset my stomach every time I drank it after a workout.\"\n4. \"The scoop was buried at the bottom and the bag would not reseal properly.\"\n5. \"The label promised smooth mixing, but it left gritty chunks in cold water.\"\n6. \"The tub arr"
+    }
+  }
+}

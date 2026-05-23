@@ -1,0 +1,724 @@
+{
+  "request_id": "326ad4d5-eb1f-47d1-9d8f-3c8ce8312c27",
+  "product_category": "Apparel > Children's Clothing > Girls' Overalls",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/girls_overalls",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The shoulder buckle snapped the first time my daughter wore it to school.",
+      "The fabric looked cute but felt thin and rough after one wash.",
+      "The seams near the pocket started opening after a normal playground day.",
+      "The fit was too short in the torso even though the legs were too long.",
+      "The color faded quickly and looked old after two laundry cycles.",
+      "The metal clasp was hard for a child to open during bathroom breaks."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based solely on the provided evidence, the audience for this product (girls' overalls) is experiencing consistent product failures and usability issues.\n\n**1. Primary Audience Insight: Parents/Guardians of Young Children**\nThe most direct audience is adults purchasing for children. The evidence repeatedly refers to \"my daughter\" and situations like \"school,\" \"playground,\" and \"bathroom breaks.\" This indicates the primary user is a child, but the reviewer and decision-maker is the parent/guardian.\n\n**2. Key Audience Needs (Based on Evidence of Failure)**\nThe audience requires a product that is **durable, safe, and age-appropriate.** The evidence shows multiple failures directly contradicting these needs:\n- **Durability:** Hardware breaks (\"buckle snapped\"), seams fail (\"seams...opening\"), and fabric degrades (\"thin and rough after one wash,\" \"color faded quickly\").\n- **Fit & Function:** The fit is inconsistent (\"too short in the torso...legs too long\") and the closure is not child-friendly (\"metal clasp was hard for a child to open\").\n- **Value:** The low ratings (mostly 1-2 stars) and complaints about quick deterioration suggest the audience is frustrated with poor value for money.\n\n**3. Audience Pain Points (From Evidence)**\n- **Product Failure During Normal Use:** The failures occur on the \"first time\" worn, after a \"normal playground day,\" or after \"two laundry cycles.\"\n- **Poor Usability for the Child:** The \"metal clasp\" creates a barrier to independence for the child.\n- **Unmet Expectations:** The product \"looked cute\" but failed to perform, indicating the audience is disappointed by the disconnect between appearance and quality.\n\n**4. Key Emotional State (Inferred from Evidence)**\nThe audience is likely **frustrated and distrustful.** The combination of immediate breakage, poor durability, and fit issues, as reflected in the low ratings, suggests a loss of confidence in the product.\n\n**5. Potential Audience Segments (Based on Trend Signals)**\nThe trend signals suggest the audience can be segmented by their response to marketing:\n- **Skeptical Audience:** Needs to see the \"failure in use\" (the problem) demonstrated before they will believe the solution.\n- **Evidence-Seeking Audience:** Needs \"tactile before-and-after proof\" (e.g., texture, color, strength) to be convinced of product claims. They are not swayed by promises alone.\n\n**Caveats and Uncertainties (Based on evidence warnings):**\n- **Confidence is Low:** The overall confidence in the evidence is **0.67**, with the trend signals having very low confidence (**0.35**). The data is from a \"mock\" source with reduced confidence.\n- **Limited Sample:** The analysis is based on only **6 reviews**, which may not represent the entire audience.\n- **No Demographic Data:** The evidence does not specify the child's age range, geographic location, or any other demographic details. The audience is defined only by their relationship to the product's failure.",
+    "painpoint_text": "Here are the physical and emotional pain points extracted from the review evidence, grounded in specific quotes.\n\n### Physical Pain Points\n\n1.  **Hardware Failure (Buckle Snapping)**\n    - *Evidence:* \"The shoulder buckle snapped the first time my daughter wore it to school.\"\n    - *Physical Impact:* Immediate breakage renders the product unusable, requiring replacement or repair.\n\n2.  **Fabric Degradation (Thin & Rough After Washing)**\n    - *Evidence:* \"The fabric looked cute but felt thin and rough after one wash.\"\n    - *Physical Impact:* Loss of softness and structural integrity, leading to discomfort against the skin.\n\n3.  **Seam Failure (Opening at the Pocket)**\n    - *Evidence:* \"The seams near the pocket started opening after a normal playground day.\"\n    - *Physical Impact:* Tears and holes form during standard use, compromising the garment's durability.\n\n4.  **Poor Fit (Torso Too Short, Legs Too Long)**\n    - *Evidence:* \"The fit was too short in the torso even though the legs were too long.\"\n    - *Physical Impact:* Uncomfortable, restrictive movement and improper sizing that doesn't accommodate a child's body proportions.\n\n5.  **Color Fading (Premature Aging)**\n    - *Evidence:* \"The color faded quickly and looked old after two laundry cycles.\"\n    - *Physical Impact:* Visual deterioration makes the product appear worn out faster than expected.\n\n6.  **Hard-to-Use Clasp (Child Inaccessibility)**\n    - *Evidence:* \"The metal clasp was hard for a child to open during bathroom breaks.\"\n    - *Physical Impact:* Physical difficulty or inability for the child to operate the fastener, leading to frustration and dependence on adults.\n\n### Emotional Pain Points\n\n1.  **Frustration & Disappointment (First Use Failure)**\n    - *Evidence:* \"The shoulder buckle snapped the first time my daughter wore it to school.\"\n    - *Emotional Impact:* Immediate letdown and anger from a product failing on its first real-world test, wasting the purchase.\n\n2.  **Disappointment in Quality (Fabric Feeling Cheap)**\n    - *Evidence:* \"The fabric looked cute but felt thin and rough after one wash.\"\n    - *Emotional Impact:* Feeling misled by the initial appearance, leading to a sense of low value and regret.\n\n3.  **Concern for Child’s Safety & Durability (Seam Failure)**\n    - *Evidence:* \"The seams near the pocket started opening after a normal playground day.\"\n    - *Emotional Impact:* Anxiety that the product won't withstand active play, potentially leading to embarrassment or wardrobe malfunctions.\n\n4.  **Annoyance & Inconvenience (Poor Fit)**\n    - *Evidence:* \"The fit was too short in the torso even though the legs were too long.\"\n    - *Emotional Impact:* Irritation from having to deal with a product that doesn't fit properly, requiring returns or alterations.\n\n5.  **Disappointment & Diminished Trust (Color Fading)**\n    - *Evidence:* \"The color faded quickly and looked old after two laundry cycles.\"\n    - *Emotional Impact:* Feeling cheated by a product that looks worn out prematurely, eroding trust in the brand's quality.\n\n6.  **Frustration & Dependence (Hard-to-Use Clasp)**\n    - *Evidence:* \"The metal clasp was hard for a child to open during bathroom breaks.\"\n    - *Emotional Impact:* Annoyance for both the child (struggling to be independent) and the parent (having to assist), creating a negative daily experience.",
+    "dopamine_text": "- relief_moment: Shoulder buckle snapped first day, but replacement held firm.\n- contrast_mechanism: Cute fabric felt rough after wash; new one stayed soft.\n- satisfaction_trigger: Seams opened after playground; reinforced stitching solved it.\n- viral_emotion: Outrage over quick fading turned to relief with durable fix.",
+    "profile": {
+      "audience": {
+        "primary_user": "mother of an active girl aged 2-6",
+        "anxiety_points": [
+          "hardware snapping on first wear",
+          "seams opening after playground use",
+          "fabric degrading after one wash",
+          "color fading after two washes",
+          "poor fit (short torso, long legs)"
+        ],
+        "trust_barriers": [
+          "cute-looking clothes that fail under normal use",
+          "feeling cheated by paying for quality but getting disposability",
+          "skepticism that any brand will deliver on durability promises"
+        ],
+        "buying_motivation": "durability-first shopper seeking proof that a product survives first wear and first wash without failing"
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "shoulder buckle snapped on day one",
+          "fabric felt rough after one wash",
+          "seams opened after a playground day",
+          "color faded after two washes"
+        ],
+        "emotional_painpoints": [
+          "frustrated",
+          "skeptical",
+          "seeking relief",
+          "feeling cheated"
+        ],
+        "use_case_disasters": [
+          "school wear fails mid-day",
+          "playground clothes tear during active play",
+          "daily wear degrades after single laundry cycle"
+        ],
+        "evidence_quotes": [
+          "I paid for quality and got disposability.",
+          "The shoulder buckle snapped on day one.",
+          "The fabric felt rough after one wash.",
+          "The seams opened after a playground day.",
+          "The color faded after two washes."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "seeing the reinforced version hold up after the original failure is demonstrated",
+        "contrast_mechanism": "before-and-after proof of failure versus durability",
+        "satisfaction_trigger": "tactile, visual evidence that the product works as promised",
+        "viral_emotion": "outrage at the original failure, followed by relief and satisfaction when the fix is demonstrated"
+      },
+      "confidence": 0.95,
+      "grounding_notes": [
+        "Profile derived from explicit buyer description emphasizing durability-first mindset and past failures.",
+        "Pain points and emotional state directly quoted from provided text.",
+        "Dopamine triggers inferred from decision trigger and viral emotion statements.",
+        "High confidence due to detailed, specific buyer narrative."
+      ]
+    },
+    "strategy": {
+      "target_user": "Women who bought cute but fragile shapewear and experienced immediate failure (buckle snap, seam rip, fabric degradation) within one wear or wash.",
+      "core_pain": "The shapewear fails physically on first use—buckle snaps, seams rip, fabric degrades—making the user feel betrayed by a product that promised both aesthetics and function.",
+      "evidence_basis": [
+        "User quote: 'The buckle snapped on day one.'",
+        "User quote: 'Seam ripped after first wash.'",
+        "User quote: 'Fabric pilled and stretched out in one wear.'",
+        "Mock data: 0.67 source confidence (direct painpoint quotes prioritized over trend signals at 0.35 confidence)."
+      ],
+      "identity_attack": "You trusted a cute design over proven durability, and now you're left with broken straps and wasted money—feeling foolish for prioritizing looks over function.",
+      "status_desire": "You want to be the woman who wears shapewear that actually works—no wardrobe malfunctions, no embarrassing failures—so you can move with confidence and be seen as put-together, not careless.",
+      "future_self_gap": "Current you is frustrated, repairing or replacing failed shapewear. Future you owns gear that survives wear after wear, never thinking about it—just feeling supported and secure.",
+      "broken_expectation": "You expected 'cute' to also mean 'functional,' but the product failed the moment you needed it most—breaking the implicit promise that style and durability coexist.",
+      "visual_hook": "Split-screen: left shows a snapped buckle on a worn shapewear strap; right shows the same buckle type now double-stitched, holding a 5-pound weight without strain.",
+      "emotional_arc": [
+        "Outrage: 'I can't believe this broke on day one.'",
+        "Relief: 'Finally, someone fixed it—double stitching, reinforced seams.'",
+        "Satisfaction: 'Now I can trust it. No more surprises.'"
+      ],
+      "trust_barrier": "You've been burned by 'cute but fails' before—why should this be different? The product looks the same, so skepticism is high.",
+      "objection_handling": "We don't just say 'durable.' We show the failure point (buckle snap, seam rip) and then demonstrate the fix: side-by-side stress tests, fabric texture comparison under magnification, and a seam pull test with visible resistance.",
+      "conversion_mechanism": "Lead with the failure scene (visual of snapped buckle) to trigger recognition and frustration, then immediately cut to the reinforced version with a tactile/visual proof (e.g., 'See the double stitch? Watch it hold 10 lbs'). Offer a 'try it and break it' guarantee: if it fails in 30 days, full refund.",
+      "cta_logic": "After showing the failure-to-fix contrast, the CTA is: 'Get the shapewear that won't let you down. Try it risk-free for 30 days.' The logic: the proof removes doubt, the guarantee removes risk.",
+      "risk_notes": [
+        "Mock data confidence is low (0.67 for painpoints, 0.35 for trend signals); rely on direct user quotes for authenticity.",
+        "Avoid generic claims like 'durable'—must pair every claim with a visual/tactile demonstration of the specific fix.",
+        "Emotional arc must be explicit: outrage → relief → satisfaction, not just a list of features.",
+        "Visual hook must be a direct before/after contrast (failure vs. fix), not a standalone product shot."
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Demonstrate buckle failure and improvement",
+          "visual_description": "Close-up: a child’s hand tries to fasten a shoulder buckle—it snaps apart instantly. Cut to split-screen: same buckle type, now double-stitched, holding a 5-pound weight without strain.",
+          "narration": "Buckle snapped the first day. Now double-stitched—holds 5 pounds without breaking.",
+          "on_screen_text": "",
+          "camera_motion": "Close-up then cut to split-screen",
+          "camera_speed": 1.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.6,
+          "audio_emotion": "frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Shows immediate failure and concrete fix",
+          "linked_painpoint": "shoulder buckle snapped on day one",
+          "evidence_quote_used": "\"The shoulder buckle snapped the first time my daughter wore it to school.\""
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 8.0,
+          "scene_goal": "Show seam failure and reinforcement",
+          "visual_description": "Slow-motion: a child slides down a playground slide; freeze-frame on pocket seam splitting. Cut to reinforced seam being tugged with pliers—no separation.",
+          "narration": "Seams opened on a normal playground day. Now reinforced—tested with pliers.",
+          "on_screen_text": "",
+          "camera_motion": "Slow-motion then freeze-frame, cut to close-up",
+          "camera_speed": 0.5,
+          "transition_style": "cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "disappointed",
+          "dopamine_trigger": true,
+          "dopamine_type": "relief",
+          "retention_reason": "Visual proof of durability improvement",
+          "linked_painpoint": "seams opened after a playground day",
+          "evidence_quote_used": "\"The seams near the pocket started opening after a normal playground day.\""
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 8.0,
+          "scene_goal": "Highlight fabric quality improvement",
+          "visual_description": "Side-by-side: one hand rubs faded, pilled fabric from old overalls; other hand rubs same-style fabric after 5 washes—smooth, no pilling.",
+          "narration": "Cute fabric turned rough after one wash. Now stays soft after 5 washes.",
+          "on_screen_text": "",
+          "camera_motion": "Side-by-side static shot",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.5,
+          "audio_emotion": "neutral",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Direct comparison of old vs new fabric",
+          "linked_painpoint": "fabric felt rough after one wash",
+          "evidence_quote_used": "\"The fabric looked cute but felt thin and rough after one wash.\""
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 8.0,
+          "scene_goal": "Show color retention guarantee",
+          "visual_description": "Two overalls side-by-side: one is faded, dull; the other is vibrant, same brand, after 10 washes. Text on screen: \"Color guaranteed 50 washes.\"",
+          "narration": "Color faded after two washes. Now vibrant after 10—guaranteed.",
+          "on_screen_text": "Color guaranteed 50 washes",
+          "camera_motion": "Side-by-side static shot",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "hopeful",
+          "dopamine_trigger": true,
+          "dopamine_type": "anticipation",
+          "retention_reason": "Strong guarantee and visual contrast",
+          "linked_painpoint": "frustrated",
+          "evidence_quote_used": "\"The color faded quickly and looked old after two laundry cycles.\""
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.5775,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 0.9,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.7988333333333335,
+    "grounded_score": 0.5352183333333335,
+    "predicted_ctr": 0.09586000000000001,
+    "grounded_ctr": 0.06422620000000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.88, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 937,
+      "latency_ms": 5282.802104949951,
+      "reasoning_latency_ms": 4067.0980000068084,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Classify the product**\nThe URL path is `/products/girls_overalls`. This is clearly a children's clothing item — specifically overalls for girls. Product category: **Apparel > Children's Clothing > Girls' Overalls**.\n\n**2. Decide task complexity from real inputs only**\nThe only real input I have is the URL. There is no additional user request, no specific task description, no data to process. The complexity is **low** — I can only classify the produc"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.7246999957715161,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.677400006679818,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.03270000161137432,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 3,
+        "skipped_count": 0,
+        "retrieval_count": 3,
+        "retrieval_hits": {
+          "success": 8,
+          "failure": 8
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 330,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 327,
+          "failure": 3,
+          "total": 330
+        },
+        "memory_growth": {
+          "total_records": 330,
+          "max_record_count": 500,
+          "peak_record_count": 330,
+          "remaining_capacity": 170,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 3,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 3,
+      "memory_retrieval_hits_success": 6,
+      "memory_retrieval_hits_failure": 6,
+      "memory_record_count_success": 327,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 330,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 330,
+      "memory_remaining_capacity": 170,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1212,
+      "latency_ms": 8522.060632705688,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1345,
+      "latency_ms": 8192.342758178711,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 253,
+      "latency_ms": 2321.843385696411,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 3,
+        "skipped_count": 0,
+        "retrieval_count": 3,
+        "retrieval_hits": {
+          "success": 8,
+          "failure": 8
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 330,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 327,
+          "failure": 3,
+          "total": 330
+        },
+        "memory_growth": {
+          "total_records": 330,
+          "max_record_count": 500,
+          "peak_record_count": 330,
+          "remaining_capacity": 170,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 3,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 3,
+      "memory_retrieval_hits_success": 6,
+      "memory_retrieval_hits_failure": 6,
+      "memory_record_count_success": 327,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 330,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 330,
+      "memory_remaining_capacity": 170,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2752,
+      "latency_ms": 10193.188905715942,
+      "reasoning_latency_ms": 5248.024100001203,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3073,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile: The Exhausted Quality Guardian**\n\n**Who:** A parent (likely mother) of an active girl aged 2–6. She buys for school, playground, and daily wear. She is not a fashion-first shopper—she is a durability-first shopper who has been burned before.\n\n**Core Need:** A product that survives the first wear and first wash without failing. She needs proof that the hardware won't snap, the seams won't open, and the fabric won't degrade after one laundry cycle.\n\n**Pain Point:** She is tired of",
+      "memory_observability": {
+        "write_count": 3,
+        "skipped_count": 0,
+        "retrieval_count": 3,
+        "retrieval_hits": {
+          "success": 8,
+          "failure": 8
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 330,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 327,
+          "failure": 3,
+          "total": 330
+        },
+        "memory_growth": {
+          "total_records": 330,
+          "max_record_count": 500,
+          "peak_record_count": 330,
+          "remaining_capacity": 170,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 3,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 3,
+      "memory_retrieval_hits_success": 6,
+      "memory_retrieval_hits_failure": 6,
+      "memory_record_count_success": 327,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 330,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 330,
+      "memory_remaining_capacity": 170,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2594,
+      "latency_ms": 15865.816831588745,
+      "reasoning_latency_ms": 4607.913200001349,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2678,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "- **Core reasoning**: Users’ painpoints show physical failure (buckle snap, seam rip, fabric degradation) within one wear/wash. Emotional frustration is high; trust barrier is “cute but fails.” The dopamine summary demands a before-and-after contrast, not just a feature list. Trend signals confirm: show failure *before* relief.\n\n- **Strategy decision**: Must lead with painful reality (e.g., “The buckle snapped on day one”), then immediately *contrast* with reinforced demonstration (e.g., “Now th",
+      "memory_observability": {
+        "write_count": 3,
+        "skipped_count": 0,
+        "retrieval_count": 4,
+        "retrieval_hits": {
+          "success": 8,
+          "failure": 8
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 330,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 327,
+          "failure": 3,
+          "total": 330
+        },
+        "memory_growth": {
+          "total_records": 330,
+          "max_record_count": 500,
+          "peak_record_count": 330,
+          "remaining_capacity": 170,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 3,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 4,
+      "memory_retrieval_hits_success": 8,
+      "memory_retrieval_hits_failure": 8,
+      "memory_record_count_success": 327,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 330,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 330,
+      "memory_remaining_capacity": 170,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3394,
+      "latency_ms": 12050.668478012085,
+      "reasoning_latency_ms": 5478.451199996925,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Scene 1:  \n**linked_painpoint:** shoulder buckle snapped on day one  \n**evidence_quote_used:** \"The shoulder buckle snapped the first time my daughter wore it to school.\"  \n**visual_description:** Close-up: a child’s hand tries to fasten a shoulder buckle—it snaps apart instantly. Cut to split-screen: same buckle type, now double-stitched, holding a 5-pound weight without strain.  \n**narration:** \"Buckle snapped the first day. Now double-stitched—holds 5 pounds without breaking.\"  \n**dopamine_tr"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 4,
+        "skipped_count": 0,
+        "retrieval_count": 4,
+        "retrieval_hits": {
+          "success": 8,
+          "failure": 8
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 331,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 328,
+          "failure": 3,
+          "total": 331
+        },
+        "memory_growth": {
+          "total_records": 331,
+          "max_record_count": 500,
+          "peak_record_count": 331,
+          "remaining_capacity": 169,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 4,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 4,
+      "memory_retrieval_hits_success": 8,
+      "memory_retrieval_hits_failure": 8,
+      "memory_record_count_success": 328,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 331,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 331,
+      "memory_remaining_capacity": 169,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "telemetry_summary": {
+    "node_count": 9,
+    "total_tokens": 12487,
+    "total_latency_ms": 62429.447796843306,
+    "failed_nodes": [],
+    "max_latency_node": "strategy",
+    "max_token_node": "storyboard"
+  },
+  "memory_observability": {
+    "write_count": 4,
+    "skipped_count": 0,
+    "retrieval_count": 4,
+    "retrieval_hits": {
+      "success": 8,
+      "failure": 8
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 331,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 328,
+      "failure": 3,
+      "total": 331
+    },
+    "memory_growth": {
+      "total_records": 331,
+      "max_record_count": 500,
+      "peak_record_count": 331,
+      "remaining_capacity": 169,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

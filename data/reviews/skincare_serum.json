@@ -1,0 +1,35 @@
+{
+  "product_category": "skincare_serum",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "The serum made my skin sting within minutes and left red patches overnight.",
+      "date": "2025-11-15"
+    },
+    {
+      "rating": 2,
+      "text": "The dropper barely picked up product, so I had to shake the bottle every time.",
+      "date": "2025-10-29"
+    },
+    {
+      "rating": 2,
+      "text": "It felt sticky under moisturizer and pilled when I applied sunscreen.",
+      "date": "2025-10-03"
+    },
+    {
+      "rating": 1,
+      "text": "The bottle arrived leaking and the label was already peeling off.",
+      "date": "2025-09-14"
+    },
+    {
+      "rating": 3,
+      "text": "I used it for a month and saw no visible change in texture or dark spots.",
+      "date": "2025-08-21"
+    },
+    {
+      "rating": 2,
+      "text": "The fragrance was strong enough to irritate my eyes.",
+      "date": "2025-07-18"
+    }
+  ]
+}

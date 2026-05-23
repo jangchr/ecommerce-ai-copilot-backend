@@ -1,0 +1,127 @@
+{
+  "product_category": "women_bras",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/women_bras",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The straps dug into my shoulders after two hours and left red marks.",
+      "The underwire poked through the fabric after the second wash.",
+      "The cup shape looked smooth in photos but created a visible ridge under shirts.",
+      "Support was fine at first, but the band stretched out within a few weeks.",
+      "The size chart was misleading, and returning it was more work than buying it.",
+      "It rolled up under the bust whenever I sat down."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.55,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.74,
+    "creative_score": 0.8173333333333334,
+    "grounded_score": 0.5476133333333334,
+    "predicted_ctr": 0.09808,
+    "grounded_ctr": 0.06571360000000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.60, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 909,
+      "latency_ms": 4504.7876834869385,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me work through this step by step.\n\n**1. Product Classification**\n- URL path: `/products/women_bras`\n- Product category: Women's intimate apparel, specifically bras\n- This is a fashion/underwear product with specific fit and sizing considerations\n\n**2. Task Complexity Assessment**\n- Real inputs: Only a URL is provided\n- No specific task or query is given beyond the URL\n- The URL alone doesn't tell me what the user wants to do (analyze reviews? check trends? compare products?)\n- Without a cle"
+    },
+    "analysis_audience": {
+      "total_tokens": 874,
+      "latency_ms": 3949.021816253662,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 873,
+      "latency_ms": 3086.818218231201,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 2134,
+      "latency_ms": 17539.507150650024,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 5547,
+      "latency_ms": 13703.300952911377,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "Based on the evidence, here is the structured buyer profile.\n\n**Buyer Persona: The Frustrated Comfort Seeker**\n\n**Demographics & Context:**\n- **Gender:** Female (based on product category: women's bras)\n- **Life Stage:** Likely active, working, or commuting (reviews mention \"after two hours,\" \"whenever I sat down,\" \"under shirts\")\n- **Purchase Motivation:** Seeking reliable, all-day comfort and a smooth, invisible look under clothing. She is not a bargain hunter; she is a solution seeker.\n\n**Cor"
+    },
+    "strategy": {
+      "total_tokens": 18016,
+      "latency_ms": 26027.584552764893,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "Based on the provided memory, evidence, and profile, I will generate a growth strategy for a women's bra product. I will reason from evidence and flag any weak areas.\n\n**1. Core Pain and Target User Analysis (Evidence-Basis)**\n\n*   **Target User:** \"Frustrated Comfort Seeker\" (female, active/working/commuting) — directly from profile.\n*   **Primary Physical Pain:** \"The straps dug into my shoulders after two hours and left red marks.\" (quote 1, evidence_quotes, confidence 0.75). This is the most"
+    },
+    "storyboard": {
+      "total_tokens": 12772,
+      "latency_ms": 60902.38976478577,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING:\n\nI need to analyze this brief carefully. The user wants me to produce 4-5 executable short-video scenes. Each scene must copy one exact evidence quote from evidence.evidence_quotes into evidence_quote_used. I cannot paraphrase the quote. Each scene must connect linked_painpoint to that quote. Every visual_description must be at least 100 English words. Every narration must be concrete and directly tied to the evidence quote. I cannot reuse the same quote for all scenes - at least 4 sce"
+    }
+  }
+}

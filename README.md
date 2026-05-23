@@ -1,0 +1,250 @@
+# Grounded Ecommerce Creative Agent Backend
+
+This backend is an evidence-driven ecommerce creative agent runtime. It turns grounded product-review evidence and trend context into structured strategy, executable short-video scene graphs, reward evaluation, reflection routing and bounded memory. Local curated review datasets remain the stable regression anchor while external source adapters stay feature-flagged and safely degradable.
+
+## Documentation Map
+
+- [Architecture Map](docs/architecture_map.md): backend modules, workflow data flow and safety boundaries.
+- [Regression Protocol](docs/regression_protocol.md): quality thresholds, reports, memory health and cost gates.
+- [API Examples](docs/api_examples.md): request examples and product/debug response boundaries.
+- [Frontend Smoke Protocol](docs/frontend_smoke_protocol.md): manual Debug Mode and UI/API boundary checks.
+- [Release Checklist](docs/release_checklist.md): required preflight commands and release blockers.
+- [Deployment Environment Matrix](docs/deployment_environment_matrix.md): per-environment secrets, storage, cache, probe and artifact policies.
+- [Production Handoff Runbook](docs/production_handoff_runbook.md): operational startup, validation, persistence and troubleshooting guidance.
+- [Release Artifact Manifest](docs/release_artifact_manifest.md): required package contents, exclusions and runtime persistence boundaries.
+
+## Runtime
+
+- Verified local development environment: **Python 3.12**.
+- For production migration, select and pin one supported Python line, preferably **3.11 or 3.12**, across development, CI and deployment.
+
+## Setup On Windows
+
+From the `backend` directory:
+
+```powershell
+py -3.12 -m venv l8
+.\l8\Scripts\Activate.ps1
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Edit `.env` locally and set `OPENAI_API_KEY`. Do not commit real secrets.
+
+The safe default source configuration uses the local grounded review dataset and mock trend adapter:
+
+```dotenv
+ALLOW_REAL_SOURCE_ADAPTERS=false
+```
+
+## Start The API
+
+```powershell
+.\l8\Scripts\python.exe main.py
+```
+
+The development API listens on `http://127.0.0.1:8001`. Interactive FastAPI documentation is available at `/docs`.
+
+Verify the lightweight deployment health probe after startup:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8001/healthz" -Method GET
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "service": "grounded-ecommerce-creative-agent",
+  "stable_baseline": "l9_9_stable"
+}
+```
+
+## Docker Packaging
+
+Build the backend image from this directory:
+
+```powershell
+docker build -t grounded-agent-backend .
+```
+
+Run the container with local environment variables injected at runtime:
+
+```powershell
+docker run --rm -p 8001:8001 --env-file .env grounded-agent-backend
+```
+
+The image does not copy `.env`; live workflow requests still require `OPENAI_API_KEY` to be supplied through `--env-file` or your deployment secret manager. The safe default remains `ALLOW_REAL_SOURCE_ADAPTERS=false`.
+
+Verify container readiness through the lightweight health endpoint:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8001/healthz" -Method GET
+```
+
+The container includes `data/reviews/` and frozen `runs/baselines/` assets so local grounded anchors and release comparison artifacts remain available. It excludes mutable latest/history run output and runtime FAISS indexes from the build context.
+
+For image-content checks, optional in-container fast regression and health verification steps, follow the [Docker Smoke Protocol](docs/docker_smoke_protocol.md).
+
+## Environment Diagnostics
+
+Run the lightweight startup preflight before starting a packaged or containerized service:
+
+```powershell
+.\l8\Scripts\python.exe scripts\startup_preflight.py
+```
+
+Inside the Docker image, use:
+
+```powershell
+python scripts/startup_preflight.py
+```
+
+This check validates packaged data, the stable baseline and bounded-memory configuration without running the workflow, calling an LLM or requiring `OPENAI_API_KEY`.
+
+Run the required environment preflight:
+
+```powershell
+.\l8\Scripts\python.exe scripts\check_env.py
+```
+
+Run the manual FAISS backend diagnostic when dependencies, embedding caches or execution permissions change:
+
+```powershell
+.\l8\Scripts\python.exe scripts\check_faiss_backend.py
+```
+
+When FAISS is available, the expected diagnostic state is `backend=faiss` and `fallback_count=0`. A visible `json_fallback` with `faiss_error` is an observable degradation path for constrained environments.
+
+## Regression Gates
+
+Use the fast gate during ordinary development. It runs compilation, unit checks, API smoke checks, failure checks and routing checks without live LLM regression calls:
+
+```powershell
+.\l8\Scripts\python.exe scripts\run_all_tests.py --fast
+```
+
+Run the full grounded regression after core workflow, prompt, reward, memory or source-runtime changes. It requires configured LLM credentials and executes the ten-category grounded suite:
+
+```powershell
+.\l8\Scripts\python.exe scripts\run_all_tests.py
+```
+
+Freeze an accepted full-run baseline without overwriting an existing milestone:
+
+```powershell
+.\l8\Scripts\python.exe scripts\freeze_baseline.py --name <name>
+```
+
+The current stable release baseline is:
+
+```text
+runs/baselines/l9_9_stable/
+```
+
+The latest accepted production handoff baseline is:
+
+```text
+runs/baselines/l10_4_production_handoff/
+```
+
+Historical stable milestone:
+
+```text
+runs/baselines/l9_6_f_faiss_recovery/
+```
+
+Release candidate predecessor:
+
+```text
+runs/baselines/l9_9_rc1/
+```
+
+For quality thresholds, cost gates, memory health fields and baseline handling, see the [Regression Protocol](docs/regression_protocol.md).
+
+## API Endpoints
+
+### Health Check
+
+```text
+GET /healthz
+```
+
+Returns lightweight deployment readiness metadata. It does not run the workflow, call an LLM or invoke source adapters.
+
+### Product API
+
+```text
+POST /api/v1/generate-copilot
+```
+
+Returns the product-facing creative result: insights, audience, strategy, assets, evaluation and feedback. It does not expose internal debug state.
+
+### Debug API
+
+```text
+POST /api/v1/debug-copilot
+```
+
+Returns regression and observability fields, including evidence, cognitive/execution state, world metrics, telemetry, memory observability, regeneration state and revision count.
+
+### Debug-Only Source Probe API
+
+```text
+POST /api/v1/debug-source-probe
+```
+
+Inspects the disabled real-source adapter shells without entering the product workflow or writing memory. It never executes the local/mock regression anchors through the probe surface.
+
+Request and response surfaces are validated by Pydantic models in `schemas/api_contract.py` and `schemas/source_probe_contract.py`. See [API Examples](docs/api_examples.md) for request recipes and the [Frontend Smoke Protocol](docs/frontend_smoke_protocol.md) for debugger behavior.
+
+## Regression Reports
+
+Full regression output follows this retention convention:
+
+| Directory | Contents |
+| --- | --- |
+| `runs/latest/` | Latest full regression reports and per-category results |
+| `runs/history/<timestamp>/` | Archived full-run outputs |
+| `runs/baselines/` | Manually frozen accepted baselines |
+
+Typical generated reports include:
+
+- `regression_summary.csv`
+- `telemetry_summary.csv`
+- `telemetry_node_aggregate.csv`
+- `cost_gate_summary.csv`
+- `regression_report.md`
+
+## Stable Baseline Status
+
+Current stable release:
+
+```text
+L9.9-Stable final release baseline
+runs/baselines/l9_9_stable/
+```
+
+Latest production handoff validation baseline:
+
+```text
+L10.4 production handoff baseline
+runs/baselines/l10_4_production_handoff/
+```
+
+Historical milestones:
+
+```text
+L9.6 FAISS recovery + stochastic diff gate baseline
+runs/baselines/l9_6_f_faiss_recovery/
+
+L9.9-RC1 release candidate baseline
+runs/baselines/l9_9_rc1/
+```
+
+Stable release details are recorded in [docs/release_notes_l9_9_stable.md](docs/release_notes_l9_9_stable.md). The preceding candidate remains documented in [docs/release_notes_l9_9_rc1.md](docs/release_notes_l9_9_rc1.md).
+Production handoff validation details are recorded in [docs/release_notes_l10_4_production_handoff.md](docs/release_notes_l10_4_production_handoff.md).
+
+The runtime is currently packaged around grounded local datasets, observable memory/FAISS behavior, protected product/debug API boundaries and fast/full regression gates.

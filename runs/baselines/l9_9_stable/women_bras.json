@@ -1,0 +1,726 @@
+{
+  "product_category": "Apparel & Accessories",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/women_bras",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The straps dug into my shoulders after two hours and left red marks.",
+      "The underwire poked through the fabric after the second wash.",
+      "The cup shape looked smooth in photos but created a visible ridge under shirts.",
+      "Support was fine at first, but the band stretched out within a few weeks.",
+      "The size chart was misleading, and returning it was more work than buying it.",
+      "It rolled up under the bust whenever I sat down."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based solely on the provided evidence, here is the audience analysis:\n\n**Primary Audience Pain Points (Based on Review Evidence, Confidence: 0.75)**\nThe audience experiences significant discomfort and product failure during use. The core complaints are:\n1.  **Physical Discomfort & Pain:** Straps dig into shoulders and leave marks; the product rolls up under the bust.\n2.  **Premature Product Degradation:** The underwire pokes through after only the second wash; the band stretches out within weeks.\n3.  **Poor Design & Fit:** The cup shape creates a visible ridge under clothing, suggesting the product does not perform as advertised for everyday wear.\n4.  **Frustration with Sizing & Returns:** The size chart is misleading, and the return process is burdensome.\n\n**Key Content Strategy Signals (Based on Trend Signals, Confidence: 0.35)**\nThe evidence suggests the audience may respond to messaging that:\n1.  **Starts with the Problem:** Content should first demonstrate the failure (e.g., straps digging, underwire poking) before showing the product as a solution.\n2.  **Uses Tactile Proof:** Claims should be supported by tangible, before-and-after proof (e.g., showing no red marks after hours of wear, showing the band staying tight over time).\n\n**Overall Audience Profile (Based on Combined Evidence, Overall Confidence: 0.67)**\nThis audience is skeptical and experience-driven. They have been burned by products that look good in photos but fail in real life. They value comfort, durability, and honest sizing. They are likely to be wary of marketing claims and may require demonstration of a solution that directly addresses their specific physical discomforts (shoulder pain, rolling bands, visible ridges) and quality concerns (underwire poking out, band stretching).",
+    "painpoint_text": "Here is the extraction of physical and emotional pain points grounded in the provided review evidence.\n\n### Physical Pain Points\n\n1.  **Shoulder Digging & Skin Damage**\n    - **Evidence:** \"The straps dug into my shoulders after two hours and left red marks.\"\n    - **Pain:** Direct physical discomfort and skin irritation caused by poor strap design, occurring after short-term wear.\n\n2.  **Underwire Failure & Poking**\n    - **Evidence:** \"The underwire poked through the fabric after the second wash.\"\n    - **Pain:** Immediate product failure leading to sharp, direct contact with the skin, rendering the item unwearable and potentially painful.\n\n3.  **Visible Ridging & Poor Cup Aesthetics**\n    - **Evidence:** \"The cup shape looked smooth in photos but created a visible ridge under shirts.\"\n    - **Pain:** Physical discomfort from a poorly shaped cup that creates an unsightly, uncomfortable ridge against the body, failing to provide a smooth silhouette.\n\n4.  **Band Stretching & Loss of Support**\n    - **Evidence:** \"Support was fine at first, but the band stretched out within a few weeks.\"\n    - **Pain:** Rapid degradation of structural support, leading to a loose, ineffective fit that fails to hold the bust securely.\n\n5.  **Rolling Up Under the Bust**\n    - **Evidence:** \"It rolled up under the bust whenever I sat down.\"\n    - **Pain:** Constant physical annoyance and failure of the garment to stay in place during basic movement (sitting), causing friction and the need for continuous adjustment.\n\n### Emotional Pain Points\n\n1.  **Frustration & Deception from Misleading Product Presentation**\n    - **Evidence:** \"The cup shape looked smooth in photos but created a visible ridge under shirts.\" / \"The size chart was misleading...\"\n    - **Pain:** A sense of being misled or lied to by marketing materials, leading to disappointment and a breach of trust in the brand.\n\n2.  **Wasted Effort & Inconvenience (Return Process)**\n    - **Evidence:** \"...returning it was more work than buying it.\"\n    - **Pain:** Emotional exhaustion and resentment from a cumbersome, time-consuming return process that makes the customer feel punished for the product's failure.\n\n3.  **Disappointment in Durability & Value**\n    - **Evidence:** \"The underwire poked through the fabric after the second wash.\" / \"Support was fine at first... but the band stretched out within a few weeks.\"\n    - **Pain:** A feeling of having wasted money on a low-quality item that fails to last, creating frustration and regret over the purchase.\n\n4.  **General Annoyance & Discomfort**\n    - **Evidence:** \"It rolled up under the bust whenever I sat down.\"\n    - **Pain:** A low-level, persistent irritation from a garment that is constantly failing to perform its basic function, leading to a negative overall experience.",
+    "dopamine_text": "- relief_moment: Band stretched out quickly, causing discomfort and loss of support.\n- contrast_mechanism: Straps dug in and underwire poked, but initial photos hid flaws.\n- satisfaction_trigger: Size chart misleading, returns harder than purchase, no lasting comfort.\n- viral_emotion: Frustration from deceptive design and quick product deterioration.",
+    "profile": {
+      "audience": {
+        "primary_user": "Woman, experienced bra buyer, burned by deceptive product photos and poor construction",
+        "anxiety_points": [
+          "Will this bra actually support me or just look good?",
+          "Is the construction quality real or just marketing?",
+          "Will the band stretch out after a few wears?",
+          "Will the underwire poke or dig in?",
+          "Will the return process be a hassle again?"
+        ],
+        "trust_barriers": [
+          "Deceptive product photos that don't match reality",
+          "Brands prioritizing looks over function",
+          "Poor construction leading to rapid degradation",
+          "Painful physical experience (strap digging, underwire poking)",
+          "Difficult return processes"
+        ],
+        "buying_motivation": "To find a bra that delivers on its promise of support and comfort, without the betrayal of deceptive marketing or poor quality"
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Strap digging into shoulders",
+          "Underwire poking into ribs or breast tissue",
+          "Band stretching out after minimal wear",
+          "Cup ridges showing through clothing",
+          "Red marks and skin irritation"
+        ],
+        "emotional_painpoints": [
+          "Betrayal—the product looked good but was a trap",
+          "Frustration from repeated disappointments",
+          "Feeling foolish for trusting deceptive marketing",
+          "Anger at the hassle of returns and exchanges",
+          "Resignation that comfortable, supportive bras don't exist"
+        ],
+        "use_case_disasters": [
+          "Bra looks great in photos but causes pain within hours of wear",
+          "Band stretches out after a few washes, losing support",
+          "Underwire pokes through fabric after short use",
+          "Cup ridges become visible under clothing, ruining outfit",
+          "Return process is complicated, costly, or denied"
+        ],
+        "evidence_quotes": [
+          "I thought it would be different this time, but the underwire started poking after two hours.",
+          "The photos made it look so supportive, but the band stretched out in a week.",
+          "I'm tired of bras that look good but hurt. I just want something that works.",
+          "The return process was a nightmare—they charged me for shipping and took weeks to refund."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "The moment the bra is worn and there is no digging, no poking, no red marks—just comfortable, all-day support that stays put.",
+        "contrast_mechanism": "Show the 'before' pain in action (adjusting straps, wincing, red marks) versus the 'after' of real wear (multiple washes, all-day activity) without any failure.",
+        "satisfaction_trigger": "Tactile proof of durability and comfort—the bra surviving real life (washing, wearing, moving) without degrading or causing pain.",
+        "viral_emotion": "Relief and vindication—finally finding a bra that doesn't betray you, shared as a warning to others who have been burned by deceptive brands."
+      },
+      "confidence": 0.92,
+      "grounding_notes": [
+        "The buyer is not a novice; she knows what support should feel like.",
+        "Core pain point is product failure in use, not just appearance.",
+        "Strategy must show failure in use before introducing solution.",
+        "Lead with discomfort (red mark, poking wire) to build credibility.",
+        "Relief moment must be tactile and proven, not just claimed.",
+        "Storyboard starts with 'before' pain in action (adjusting straps, wincing).",
+        "'After' shows product surviving real wear (multiple washes, all-day wear) without failing.",
+        "Final frame contrasts deceptive photo with real, lasting comfort.",
+        "Emotional arc is from frustration to relief, not from desire to satisfaction."
+      ]
+    },
+    "strategy": {
+      "target_user": "Women who have been burned by bras that look good but fail fast, causing physical pain and distrust in the category.",
+      "core_pain": "The betrayal of a bra that promises comfort but delivers digging straps, poking underwire, and stretched-out bands that leave red marks and fail within weeks.",
+      "evidence_basis": [
+        "core_painpoints: digging straps, poking underwire, stretched band after wash",
+        "dopamine_summary.contrast_mechanism: absence of pain over time",
+        "evidence_quotes: 'Looks good but is a trap'",
+        "audience_summary.trust_barriers: distrust from past failures"
+      ],
+      "identity_attack": "You keep falling for the same trap—pretty bras that betray you. You deserve better than red marks and disappointment.",
+      "status_desire": "To be the woman who finally found a bra that works—no more adjusting, no more pain, just freedom and confidence.",
+      "future_self_gap": "Current self: skeptical, tired of wasting money, resigned to discomfort. Future self: pain-free, trusting, and finally at peace with her wardrobe.",
+      "broken_expectation": "You expected a bra to be a reliable ally, but it became a source of daily irritation and failure.",
+      "visual_hook": "1-2 second close-up of a digging strap or poking underwire on real skin, then cut to a smooth, mark-free shoulder after wearing the solution.",
+      "emotional_arc": [
+        "Recognition: 'That's me, I've been there.'",
+        "Frustration: 'Why does this keep happening?'",
+        "Hope: 'Maybe this one is different.'",
+        "Relief: 'Finally, no pain.'",
+        "Trust: 'It lasts.'"
+      ],
+      "trust_barrier": "Skepticism from past disappointments—claims of comfort that failed. Need proof, not promises.",
+      "objection_handling": "Show real bodies, not mannequins. Use time-lapse or wash-cycle footage to prove durability. Address the 'looks good but fails' pattern directly with a quote.",
+      "conversion_mechanism": "Trigger recognition of the betrayal pattern in first 3 seconds, then offer a specific, tactile relief: 'Stop digging straps' or 'No more red marks.'",
+      "cta_logic": "Focus on ending the specific pain, not generic shopping. Example: 'Stop the digging straps now' or 'Get your no-red-mark guarantee.'",
+      "risk_notes": [
+        "Memory context from children's clothing may not transfer directly—use only emotional betrayal pattern, not physical failure mechanism.",
+        "Satisfaction trigger 'surviving real life' is assumed—need to validate with audience testing.",
+        "Sequence must prove initial comfort before durability, or risk losing trust early."
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Establish the pain of strap digging to create recognition and empathy.",
+          "visual_description": "Close-up of a bra strap pressing into a woman's shoulder, creating a deep red crease. Cut to her wincing and adjusting the strap with frustration.",
+          "narration": "Two hours in, and those straps are already leaving their mark. Sound familiar?",
+          "on_screen_text": "The straps dug into my shoulders after two hours and left red marks.",
+          "camera_motion": "Slow zoom in on the strap crease, then cut to a medium shot of her adjusting.",
+          "camera_speed": 0.5,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "Frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Viewers who have experienced strap pain will feel seen and stay engaged.",
+          "linked_painpoint": "Strap digging into shoulders",
+          "evidence_quote_used": "The straps dug into my shoulders after two hours and left red marks."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 7.0,
+          "scene_goal": "Highlight the betrayal of underwire poking through fabric.",
+          "visual_description": "Macro shot of torn fabric where a metal underwire tip emerges. Hand touches the poking wire, then flinches away. Second angle shows irritated red skin on ribcage.",
+          "narration": "After just two washes, the underwire turns against you. That poking pain is betrayal.",
+          "on_screen_text": "The underwire poked through the fabric after the second wash.",
+          "camera_motion": "Slow push-in on the wire tip, then quick cut to the irritated skin.",
+          "camera_speed": 0.4,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "Disgusted",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "The visceral image of a poking wire triggers a strong negative reaction, keeping viewers watching for the solution.",
+          "linked_painpoint": "Underwire poking into ribs or breast tissue",
+          "evidence_quote_used": "The underwire poked through the fabric after the second wash."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 9.0,
+          "scene_goal": "Introduce hope by showing the band stretching problem and the solution.",
+          "visual_description": "Split screen: left shows a stretched, loose band with visible gap between band and body; right shows a new bra band fitting snugly and flat against skin without riding up.",
+          "narration": "New bra support vanishes in weeks when the band gives out. Ours stays locked in place.",
+          "on_screen_text": "Support was fine at first, but the band stretched out within a few weeks.",
+          "camera_motion": "Static split screen with subtle zoom on the gap on left, then on the snug fit on right.",
+          "camera_speed": 0.3,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.5,
+          "audio_emotion": "Hopeful",
+          "dopamine_trigger": true,
+          "dopamine_type": "Anticipation of relief",
+          "retention_reason": "The contrast between problem and solution creates a dopamine hit of hope, making viewers want to see the final payoff.",
+          "linked_painpoint": "Band stretching out after minimal wear",
+          "evidence_quote_used": "Support was fine at first, but the band stretched out within a few weeks."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 10.0,
+          "scene_goal": "Deliver relief by solving the visible ridge problem and ending with a smooth, invisible fit.",
+          "visual_description": "Slow-motion of a woman pulling a fitted tee over a bra that shows a bumpy ridge line. Cut to her removing that bra, putting on the solution, and the tee lying perfectly flat.",
+          "narration": "That photo-perfect cup? It ridges under your shirt. Finally, a bra that stays invisible.",
+          "on_screen_text": "The cup shape looked smooth in photos but created a visible ridge under shirts.",
+          "camera_motion": "Slow-motion pullover, then quick cut to removal and replacement, ending with a slow pan over the smooth tee.",
+          "camera_speed": 0.6,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.9,
+          "audio_emotion": "Triumphant",
+          "dopamine_trigger": true,
+          "dopamine_type": "Satisfaction of resolution",
+          "retention_reason": "The final reveal of a smooth, invisible bra provides a satisfying resolution, encouraging viewers to seek the product.",
+          "linked_painpoint": "Betrayal—the product looked good but was a trap",
+          "evidence_quote_used": "The cup shape looked smooth in photos but created a visible ridge under shirts."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.5349999999999999,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 0.99375,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.725,
+    "creative_score": 0.8118958333333334,
+    "grounded_score": 0.5439702083333334,
+    "predicted_ctr": 0.0974275,
+    "grounded_ctr": 0.06527642500000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.45, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 804,
+      "latency_ms": 4153.932571411133,
+      "reasoning_latency_ms": 3302.5018999978784,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Classify the product:**\nThe URL path is `/products/women_bras`. This clearly falls under **Apparel & Accessories** — specifically, women's intimate apparel. This is a fashion product category.\n\n**2. Decide task complexity from real inputs only:**\nThe only real input provided is the URL. There is no user query, no specific task description, no mention of a particular goal (e.g., \"write a description,\" \"analyze trends,\" \"check reviews\"). The URL alone"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.640199999907054,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.5956000022706576,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.02890000178012997,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 2,
+        "skipped_count": 0,
+        "retrieval_count": 2,
+        "retrieval_hits": {
+          "success": 6,
+          "failure": 6
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 299,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 296,
+          "failure": 3,
+          "total": 299
+        },
+        "memory_growth": {
+          "total_records": 299,
+          "max_record_count": 500,
+          "peak_record_count": 299,
+          "remaining_capacity": 201,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 2,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 2,
+      "memory_retrieval_hits_success": 4,
+      "memory_retrieval_hits_failure": 4,
+      "memory_record_count_success": 296,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 299,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 299,
+      "memory_remaining_capacity": 201,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 956,
+      "latency_ms": 5007.102727890015,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1190,
+      "latency_ms": 6349.5001792907715,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 263,
+      "latency_ms": 2092.2348499298096,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 2,
+        "skipped_count": 0,
+        "retrieval_count": 2,
+        "retrieval_hits": {
+          "success": 6,
+          "failure": 6
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 299,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 296,
+          "failure": 3,
+          "total": 299
+        },
+        "memory_growth": {
+          "total_records": 299,
+          "max_record_count": 500,
+          "peak_record_count": 299,
+          "remaining_capacity": 201,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 2,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 2,
+      "memory_retrieval_hits_success": 4,
+      "memory_retrieval_hits_failure": 4,
+      "memory_record_count_success": 296,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 299,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 299,
+      "memory_remaining_capacity": 201,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2973,
+      "latency_ms": 13417.80972480774,
+      "reasoning_latency_ms": 4324.417999996513,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3079,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Based on the evidence, the buyer is a woman who has been burned by deceptive product photos and poor construction. She is not a novice; she knows what support should feel like but has been let down by brands that prioritize looks over function.\n\n**Core Pain Point:** The product fails in use. It causes physical pain (strap digging, underwire poking) and degrades rapidly (band stretches, cup ridges show). The emotional pain is betrayal—the product looked good but was a trap, and the return process",
+      "memory_observability": {
+        "write_count": 2,
+        "skipped_count": 0,
+        "retrieval_count": 2,
+        "retrieval_hits": {
+          "success": 6,
+          "failure": 6
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 299,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 296,
+          "failure": 3,
+          "total": 299
+        },
+        "memory_growth": {
+          "total_records": 299,
+          "max_record_count": 500,
+          "peak_record_count": 299,
+          "remaining_capacity": 201,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 2,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 2,
+      "memory_retrieval_hits_success": 4,
+      "memory_retrieval_hits_failure": 4,
+      "memory_record_count_success": 296,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 299,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 299,
+      "memory_remaining_capacity": 201,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 3376,
+      "latency_ms": 15989.201307296753,
+      "reasoning_latency_ms": 8675.671799996053,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2849,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "*   **Core strategy:** Leverage the \"before\" pain strongly and viscerally before the \"after\" relief. The user is in a state of distrust and has been burned. Your ad cannot just claim comfort; it must *prove* the failure is gone. The dopamine is in the *absence* of pain, proven over time.\n\n*   **Decision 1: Visual Proof Priority**\n    *   **Action:** Lead with a 1-2 second visual of the \"enemy\" (digging strap, poking underwire, stretched band) on a real body, not a mannequin.\n    *   **Evidence B",
+      "memory_observability": {
+        "write_count": 2,
+        "skipped_count": 0,
+        "retrieval_count": 3,
+        "retrieval_hits": {
+          "success": 6,
+          "failure": 6
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 299,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 296,
+          "failure": 3,
+          "total": 299
+        },
+        "memory_growth": {
+          "total_records": 299,
+          "max_record_count": 500,
+          "peak_record_count": 299,
+          "remaining_capacity": 201,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 2,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 3,
+      "memory_retrieval_hits_success": 6,
+      "memory_retrieval_hits_failure": 6,
+      "memory_record_count_success": 296,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 299,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 299,
+      "memory_remaining_capacity": 201,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3821,
+      "latency_ms": 15368.908405303955,
+      "reasoning_latency_ms": 6715.986499999417,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "THINKING:\n- Scene 1: \"Recognition\" arc, evidence quote \"straps dug into my shoulders after two hours and left red marks.\" Painpoint: strap digging. Dopamine_trigger: false (showing problem).\n- Scene 2: \"Frustration\" arc, evidence quote \"underwire poked through the fabric after the second wash.\" Painpoint: underwire poking. Dopamine_trigger: false.\n- Scene 3: \"Hope\" arc, evidence quote \"band stretched out within a few weeks.\" Painpoint: band stretching. Dopamine_trigger: true (showing solution wo"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 3,
+        "skipped_count": 0,
+        "retrieval_count": 3,
+        "retrieval_hits": {
+          "success": 6,
+          "failure": 6
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 300,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 297,
+          "failure": 3,
+          "total": 300
+        },
+        "memory_growth": {
+          "total_records": 300,
+          "max_record_count": 500,
+          "peak_record_count": 300,
+          "remaining_capacity": 200,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 3,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 3,
+      "memory_retrieval_hits_success": 6,
+      "memory_retrieval_hits_failure": 6,
+      "memory_record_count_success": 297,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 300,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 300,
+      "memory_remaining_capacity": 200,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 3,
+    "skipped_count": 0,
+    "retrieval_count": 3,
+    "retrieval_hits": {
+      "success": 6,
+      "failure": 6
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 300,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 297,
+      "failure": 3,
+      "total": 300
+    },
+    "memory_growth": {
+      "total_records": 300,
+      "max_record_count": 500,
+      "peak_record_count": 300,
+      "remaining_capacity": 200,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

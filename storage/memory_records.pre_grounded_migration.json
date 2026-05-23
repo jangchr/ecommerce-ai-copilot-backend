@@ -1,0 +1,188 @@
+{
+  "success": [
+    {
+      "product_type": "Balsamic Vinegar",
+      "pain_signature": {
+        "physical_painpoints": [
+          "Product breaks or malfunctions during routine use",
+          "Material quality is inferior to what was advertised",
+          "Key features stop working at critical moments"
+        ],
+        "emotional_painpoints": [
+          "Feeling betrayed and foolish after purchase",
+          "Anger and helplessness when a main feature fails",
+          "Frustration from wasted time and money",
+          "Sense of being exploited when high price meets low trust"
+        ],
+        "use_case_disasters": [
+          "A daily carry item snaps under normal load",
+          "A kitchen gadget stops working after a few uses",
+          "A tool fails during a simple, routine task"
+        ],
+        "evidence_quotes": [
+          "I thought it looked good online, but it fell apart in a week.",
+          "They show it in perfect settings, but it can't handle real life.",
+          "I just want something that works without me having to worry."
+        ]
+      },
+      "strategy": {
+        "target_user": "The Cautious Daily Driver",
+        "core_pain": "Feels deceived by polished marketing that promises aspirational quality but delivers flimsy, unreliable products that fail in real-world use.",
+        "evidence_basis": [
+          "Profile trust_barriers: Skepticism of marketing claims, need for proof of durability beyond lifestyle photos, requirement for transparent manufacturing and accountability.",
+          "Profile anxiety_points: Marketing images do not match real-world performance.",
+          "Profile painpoint quotes: 'They show it in perfect settings, but it can't handle real life.'",
+          "Profile painpoint.use_case_disasters: specific failure scenarios like daily carry load, kitchen gadget after 100 uses, tool during routine task.",
+          "Profile dopamine.relief_moment: 'When the product survives a real-world stress test...'",
+          "Profile dopamine.viral_emotion: 'Relief and vindication—sharing the story of a product that exceeded expectations and restored trust.'",
+          "Profile dopamine.contrast_mechanism: contrast between polished presentation and actual performance."
+        ],
+        "identity_attack": "You are not a lifestyle influencer. You are someone who needs tools that work when life gets messy. Stop buying products that are built for photoshoots instead of your actual Tuesday.",
+        "status_desire": "To be seen as a practical, no-nonsense person who makes smart, durable choices—not someone fooled by flashy ads.",
+        "future_self_gap": "Current self: frustrated, skeptical, burned by past purchases. Future self: vindicated, confident, a savvy owner of gear that delivers on its promises.",
+        "broken_expectation": "The product's marketing promised aspirational quality and lifestyle perfection, but the actual experience was flimsy and unreliable, creating a negative contrast with reality.",
+        "visual_hook": "Raw, single-camera stress test video: a product undergoing repetitive real-world abuse (e.g., 100 uses, a drop, a spill) with a timer and no music—showing either survival or failure.",
+        "emotional_arc": [
+          "Frustration: 'I've been burned by marketing before.'",
+          "Skepticism: 'This looks too good to be true.'",
+          "Relief: 'Finally, a product that survives my actual life.'",
+          "Vindication: 'I made the right choice—and I want to tell others.'"
+        ],
+        "trust_barrier": "Skepticism of marketing claims and need for proof of durability beyond lifestyle photos, requiring transparent manufacturing and accountability.",
+        "objection_handling": "Address the 'flimsy after a week' fear head-on with transparent materials & warranty section: 'This hinge is rated for 10,000 cycles. Here is the test report. If it fails in the first year, we replace it, no questions asked.'",
+        "conversion_mechanism": "Replace aspirational hero image with side-by-side 'What you see in ads vs. What you get in your hands' comparison, plus transparent materials & warranty section that directly addresses anxiety points.",
+        "cta_logic": "Click to see the stress test video or view the materials report—not to 'buy now.' Conversion happens after trust is proven through raw evidence.",
+        "risk_notes": [
+          "Product evidence confidence is 0.45—the product's actual durability is unproven; strategy relies on engineering data that may not exist.",
+          "Stress test videos may backfire if the product fails in tests; must be based on real failure rates.",
+          "Vindication Loop requires a high-tolerance warranty policy that is a cost center; needs financial modeling to ensure lifetime value exceeds replacement costs.",
+          "Review data is mock (data_warnings), so specific failure modes are illustrative, not proven; strategy must be validated with real customer feedback.",
+          "If stress test videos have low engagement after 30 days, pivot to 'transparent honesty' strategy acknowledging first-version flaws."
+        ]
+      },
+      "storyboard_pattern": {
+        "scenes": [
+          {
+            "scene_id": 1,
+            "duration_sec": 3.0,
+            "scene_goal": "Hook attention with visceral failure trigger",
+            "visual_description": "Single camera, handheld. A kitchen counter. A cheap-looking kitchen gadget (e.g., a garlic press or vegetable chopper) sits next to a timer. The timer reads 'USE #47.' The gadget is visibly bent, plastic deformed.",
+            "narration": "Day 47 with the 'premium' gadget they showed in the ad.",
+            "on_screen_text": "",
+            "camera_motion": "handheld",
+            "camera_speed": 1.0,
+            "transition_style": "cut",
+            "emotional_intensity": 0.8,
+            "audio_emotion": "tension",
+            "dopamine_trigger": true,
+            "dopamine_type": "contrast",
+            "retention_reason": "The crack sound and timer trigger flimsy anxiety",
+            "linked_painpoint": "product durability disappointment"
+          },
+          {
+            "scene_id": 2,
+            "duration_sec": 5.0,
+            "scene_goal": "Establish core contrast thesis",
+            "visual_description": "Split screen. Left side: The same broken gadget, now in a trash can. Right side: A slow, steady shot of a heavy-duty metal tool (e.g., a ratcheting wrench or a cast-iron skillet) being used to crush a walnut. No music. Just the sound of the crack.",
+            "narration": "They sold you a photoshoot. You needed a Tuesday.",
+            "on_screen_text": "MARKETING vs. REALITY",
+            "camera_motion": "static",
+            "camera_speed": 0.5,
+            "transition_style": "split_screen",
+            "emotional_intensity": 0.7,
+            "audio_emotion": "determination",
+            "dopamine_trigger": true,
+            "dopamine_type": "contrast",
+            "retention_reason": "Split screen visually reinforces marketing vs reality",
+            "linked_painpoint": "deceptive advertising"
+          },
+          {
+            "scene_id": 3,
+            "duration_sec": 7.0,
+            "scene_goal": "Provide evidence to overcome trust barrier",
+            "visual_description": "Close-up of the metal tool's hinge. A timestamp appears: 'TEST: 10,000 CYCLES.' The tool is opened and closed rapidly, 10 times in 2 seconds. Then a cut to a PDF document on a phone screen: 'MATERIALS REPORT: 6061 Aluminum. Heat-treated. Tensile strength: 310 MPa.'",
+            "narration": "This hinge? Rated for ten thousand cycles. Here's the test report. If it fails in the first year, we replace it. No questions.",
+            "on_screen_text": "TRANSPARENT WARRANTY: 1 YEAR, NO QUESTIONS",
+            "camera_motion": "close_up",
+            "camera_speed": 0.3,
+            "transition_style": "cut",
+            "emotional_intensity": 0.6,
+            "audio_emotion": "confidence",
+            "dopamine_trigger": false,
+            "dopamine_type": "",
+            "retention_reason": "Test report and warranty directly address trust barrier",
+            "linked_painpoint": "product reliability skepticism"
+          },
+          {
+            "scene_id": 4,
+            "duration_sec": 5.0,
+            "scene_goal": "Deliver relief through real-world usage",
+            "visual_description": "A person's hand, dirty, using the same metal tool to tighten a bolt on a bicycle. The tool doesn't slip. The person exhales, a small, satisfied sound.",
+            "narration": "It doesn't need to look good in a magazine. It just needs to work when you need it.",
+            "on_screen_text": "",
+            "camera_motion": "static",
+            "camera_speed": 0.5,
+            "transition_style": "cut",
+            "emotional_intensity": 0.5,
+            "audio_emotion": "satisfaction",
+            "dopamine_trigger": true,
+            "dopamine_type": "relief",
+            "retention_reason": "Real context usage provides emotional relief",
+            "linked_painpoint": "product performance anxiety"
+          },
+          {
+            "scene_id": 5,
+            "duration_sec": 5.0,
+            "scene_goal": "Reinforce identity and status desire",
+            "visual_description": "The same hand, now holding the tool, points the camera at a small, worn-out sticker on the tool's handle: 'MADE IN USA' or 'LIFETIME WARRANTY.' The camera pulls back to show the person's face—a normal person, not a model—smiling slightly, nodding.",
+            "narration": "I stopped buying gear for influencers. I bought gear for me.",
+            "on_screen_text": "CLICK FOR STRESS TEST VIDEO",
+            "camera_motion": "pull_back",
+            "camera_speed": 0.4,
+            "transition_style": "cut",
+            "emotional_intensity": 0.6,
+            "audio_emotion": "pride",
+            "dopamine_trigger": true,
+            "dopamine_type": "status",
+            "retention_reason": "Identity attack against influencer culture",
+            "linked_painpoint": "buyer's remorse from influencer marketing"
+          },
+          {
+            "scene_id": 6,
+            "duration_sec": 3.0,
+            "scene_goal": "Drive low-barrier CTA with trust-first logic",
+            "visual_description": "A simple, static screen. No music. Two buttons: LEFT BUTTON: 'WATCH THE STRESS TEST (RAW, NO MUSIC)' RIGHT BUTTON: 'VIEW MATERIALS REPORT & WARRANTY'",
+            "narration": "Don't buy it yet. Watch it break first. Then decide.",
+            "on_screen_text": "",
+            "camera_motion": "static",
+            "camera_speed": 0.0,
+            "transition_style": "cut",
+            "emotional_intensity": 0.4,
+            "audio_emotion": "neutral",
+            "dopamine_trigger": false,
+            "dopamine_type": "",
+            "retention_reason": "CTA lowers barrier by delaying purchase until trust proven",
+            "linked_painpoint": "purchase hesitation from lack of evidence"
+          }
+        ]
+      },
+      "predicted_ctr": 0.10341999999999998,
+      "retention_3s": 0.6716666666666666,
+      "failure_reason": "motion=0.62, dopamine=4, fatigue_penalty=0.00",
+      "failed_layer": "",
+      "reward_metrics": {
+        "retention_3s": 0.6716666666666666,
+        "dopamine_score": 1.0,
+        "visual_quality": 1.0,
+        "narration_quality": 0.7833333333333333,
+        "evidence_alignment": 1.0,
+        "emotion_score": 0.6,
+        "predicted_ctr": 0.10341999999999998,
+        "is_approved": true,
+        "reason": "motion=0.62, dopamine=4, fatigue_penalty=0.00",
+        "reward_hacking_penalty": 0.0
+      }
+    }
+  ],
+  "failure": []
+}

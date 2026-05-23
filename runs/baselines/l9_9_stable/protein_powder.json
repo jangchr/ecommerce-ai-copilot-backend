@@ -1,0 +1,706 @@
+{
+  "product_category": "Health & Fitness / Sports Nutrition",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/protein_powder",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The powder clumped instantly and left a chalky aftertaste no matter how long I shook it.",
+      "The vanilla flavor tasted artificial and made my smoothie smell like chemicals.",
+      "It upset my stomach every time I drank it after a workout.",
+      "The scoop was buried at the bottom and the bag would not reseal properly.",
+      "The label promised smooth mixing, but it left gritty chunks in cold water.",
+      "The tub arrived half open with powder dust all over the shipping box."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based on the provided evidence, here is the audience analysis:\n\n**Primary Pain Points (High Confidence)**\nThe audience experiences significant frustration with the product's physical mixing and texture. Evidence shows the powder \"clumped instantly,\" left a \"chalky aftertaste,\" and formed \"gritty chunks\" despite the label promising smooth mixing. This indicates a core audience need for a product that dissolves easily and has a palatable texture.\n\n**Secondary Pain Points (Moderate Confidence)**\nThe audience is also disappointed by poor flavor quality and negative physical reactions. One review notes an \"artificial\" vanilla flavor that made a smoothie \"smell like chemicals,\" while another reports the product \"upset my stomach.\" This suggests the audience values natural taste and digestive comfort.\n\n**Packaging & Usability Issues (Moderate Confidence)**\nThe audience is affected by poor packaging design. Evidence includes a bag that \"would not reseal properly,\" a scoop \"buried at the bottom,\" and a tub that \"arrived half open\" causing a mess. This points to a need for secure, user-friendly packaging.\n\n**Trend-Based Insight (Low Confidence - due to mock source)**\nThe trend signals suggest the audience may respond well to content that first shows the failure (e.g., clumping, gritty texture) before demonstrating the solution, and uses tactile before-and-after proof to make claims credible. This is marked with low confidence as the source is noted as \"mock.\"\n\n**Summary of Audience Needs (Based on Evidence)**\nThe audience appears to be health-conscious consumers (e.g., using the product post-workout or in smoothies) who have been let down by this specific protein powder. Their core unmet needs are:\n1.  **Reliable Mixing:** A powder that dissolves smoothly without clumps or grit.\n2.  **Pleasant Taste & Aftertaste:** A natural flavor profile without chemical smells or chalky residue.\n3.  **Digestive Comfort:** A product that does not cause stomach upset.\n4.  **Functional Packaging:** A bag or tub that is easy to open, reseal, and access the scoop.",
+    "painpoint_text": "Based on the provided review evidence, here are the extracted physical and emotional painpoints:\n\n### Physical Painpoints\n\n1.  **Clumping and Chalky Texture:** The powder clumps instantly and leaves a chalky aftertaste, even after vigorous shaking.\n    - *Evidence:* *\"The powder clumped instantly and left a chalky aftertaste no matter how long I shook it.\"*\n2.  **Gritty Chunks:** The product fails to mix smoothly, leaving gritty chunks when mixed with cold water.\n    - *Evidence:* *\"The label promised smooth mixing, but it left gritty chunks in cold water.\"*\n3.  **Digestive Distress:** Consumption leads to stomach upset, specifically after workouts.\n    - *Evidence:* *\"It upset my stomach every time I drank it after a workout.\"*\n4.  **Artificial Chemical Odor:** The vanilla flavor tastes artificial and produces a chemical-like smell in the smoothie.\n    - *Evidence:* *\"The vanilla flavor tasted artificial and made my smoothie smell like chemicals.\"*\n5.  **Packaging Failure:** The packaging arrives damaged (tub half open) or is non-functional (bag does not reseal), leading to mess and product waste.\n    - *Evidence:* *\"The tub arrived half open with powder dust all over the shipping box.\"* & *\"The bag would not reseal properly.\"*\n\n### Emotional Painpoints\n\n1.  **Frustration and Disappointment:** The product fails to deliver on its core promise of smooth mixing, causing frustration during preparation.\n    - *Evidence:* *\"The label promised smooth mixing, but it left gritty chunks...\"* (Implies a breach of trust and failed expectations).\n2.  **Disgust and Repulsion:** The artificial flavor and chemical smell create a negative sensory experience that is repulsive.\n    - *Evidence:* *\"The vanilla flavor tasted artificial and made my smoothie smell like chemicals.\"*\n3.  **Physical Discomfort & Distress:** The stomach upset causes physical pain and discomfort, linking the product to a negative bodily experience.\n    - *Evidence:* *\"It upset my stomach every time I drank it...\"*\n4.  **Annoyance & Inconvenience:** The poor packaging (buried scoop, non-resealable bag, damaged tub) adds unnecessary hassle and mess to the user's routine.\n    - *Evidence:* *\"The scoop was buried at the bottom...\"* & *\"...powder dust all over the shipping box.\"*",
+    "dopamine_text": "- relief_moment: Smooth mixing finally achieved after switching to a different brand.\n- contrast_mechanism: Chalky clumps and gritty chunks replaced by instant, silky texture.\n- satisfaction_trigger: No more stomach upset or chemical smell after workout drinks.\n- viral_emotion: Frustration turns to relief when a product finally works as promised.",
+    "profile": {
+      "audience": {
+        "primary_user": "Regular gym-goer or fitness enthusiast who relies on post-workout shakes for recovery and convenience",
+        "anxiety_points": [
+          "Product fails at basic promise of mixing",
+          "Chalky clumps and gritty chunks in cold water",
+          "Chemical aftertaste ruins the drink",
+          "Stomach upset from the product"
+        ],
+        "trust_barriers": [
+          "Label promises smooth mixing but reality is gritty",
+          "Need tactile proof (before-and-after demonstration) to believe claims"
+        ],
+        "buying_motivation": "Relief from physical disgust and digestive distress; achieving a silky-smooth mix without clumps, stomach upset, or chemical smell"
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Chalky clumps",
+          "Gritty chunks in cold water",
+          "Chemical aftertaste",
+          "Stomach upset"
+        ],
+        "emotional_painpoints": [
+          "Frustration",
+          "Betrayal",
+          "Feeling let down"
+        ],
+        "use_case_disasters": [
+          "Recovery ritual turns into a chore",
+          "Drink is ruined by unpleasant texture and taste"
+        ],
+        "evidence_quotes": [
+          "The label promised smooth mixing, but the reality is a gritty, stomach-upsetting mess.",
+          "They need tactile proof—a before-and-after demonstration of smooth mixing—to believe a brand’s claims."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "When the powder finally mixes silky-smooth without clumps",
+        "contrast_mechanism": "Before-and-after demonstration of smooth mixing versus gritty failure",
+        "satisfaction_trigger": "The drink doesn't cause stomach upset or a chemical smell",
+        "viral_emotion": "Relief from physical disgust and digestive distress"
+      },
+      "confidence": 0.95,
+      "grounding_notes": [
+        "Profile derived from explicit buyer frustrations with protein powder mixing and digestive issues.",
+        "Emotional state and unmet needs are directly stated in the input.",
+        "Decision driver and relief moment are clearly articulated as the moment of smooth mixing and absence of side effects."
+      ]
+    },
+    "strategy": {
+      "target_user": "Regular gym-goer / fitness enthusiast, post-workout shake user, sensitive to texture/smell/digestion",
+      "core_pain": "Chalky clumps, gritty texture, chemical aftertaste, and digestive upset that turn a post-workout ritual into a frustrating, disgusting experience",
+      "evidence_basis": [
+        "User quotes in evidence_quotes describing texture and aftertaste complaints",
+        "Audience summary buying motivation: relief from disgust",
+        "Dopamine summary contrast mechanism: failure vs. relief"
+      ],
+      "identity_attack": "You're not a casual sipper—you're a dedicated athlete who deserves a shake that doesn't punish you for your discipline. Yet you're choking down gritty sludge like it's a punishment.",
+      "status_desire": "To be the kind of person who has a flawless, effortless recovery routine—no grimacing, no stomach cramps, just pure performance fuel.",
+      "future_self_gap": "Current you: dreading the shake, holding your nose, bloated. Future you: looking forward to a silky-smooth, clean-tasting recovery that feels like a reward.",
+      "broken_expectation": "You expected a premium protein powder to mix cleanly and taste neutral—instead you got clumps, grit, and a chemical burn that betrayed your trust.",
+      "visual_hook": "Side-by-side slow-motion: one glass shows clumps sinking and a gritty residue; the other shows a silky, uniform vortex dissolving instantly into a smooth, opaque liquid.",
+      "emotional_arc": [
+        "Frustration: 'Why does every powder do this?'",
+        "Disgust: 'That smell and texture make me gag.'",
+        "Relief: 'Finally, a shake that feels as good as it fuels.'",
+        "Satisfaction: 'This is what recovery should taste like.'"
+      ],
+      "trust_barrier": "Skepticism that any powder can actually deliver on smoothness and digestibility—too many brands have lied before.",
+      "objection_handling": "Show the unboxing and mixing process live, unedited. Address the 'chalky' myth head-on: 'We use micro-filtration, not cheap fillers. That's why it dissolves instantly.'",
+      "conversion_mechanism": "Offer a 'Smoothness Guarantee' sampler pack—try one serving risk-free, and if it clumps, get a full refund plus a free shaker bottle.",
+      "cta_logic": "Low-friction trial removes the financial risk and lets the tactile proof do the selling. The free shaker bottle adds perceived value and reinforces the 'smooth mix' identity.",
+      "risk_notes": [
+        "Dataset warning: confidence 0.67 on pain signature and target user—may need validation with real user interviews.",
+        "Trend confidence 0.35 (mock source) weakens the 'show failure before relief' strategy—consider A/B testing alternative hooks.",
+        "Review confidence 0.75 on emotional hook is stronger, but digestive upset claims could trigger medical liability if overstated."
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Establish the painpoint of chalky clumps and aftertaste to create dissatisfaction with current products.",
+          "visual_description": "Hand vigorously shaking a protein shaker, then pouring the contents into a glass; visible wet clumps splatting into the glass.",
+          "narration": "Shake forever, still clumps and chalk. Why settle for gritty?",
+          "on_screen_text": "Chalky clumps?",
+          "camera_motion": "Handheld, shaky, close-up on shaker and pour",
+          "camera_speed": 1.0,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.6,
+          "audio_emotion": "frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Relatable painpoint hooks viewers who have experienced the same issue.",
+          "linked_painpoint": "Chalky clumps and aftertaste",
+          "evidence_quote_used": "The powder clumped instantly and left a chalky aftertaste no matter how long I shook it."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 7.0,
+          "scene_goal": "Highlight the painpoint of artificial chemical aftertaste to deepen dissatisfaction.",
+          "visual_description": "Close-up of someone grimacing after taking a sip, then putting down a glass with a half-finished shake.",
+          "narration": "That fake vanilla smell and chemical burn - your nose knows.",
+          "on_screen_text": "Chemical aftertaste?",
+          "camera_motion": "Slow zoom in on face, then pan down to glass",
+          "camera_speed": 0.5,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "disgusted",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Sensory detail (smell/taste) creates vivid memory and emotional response.",
+          "linked_painpoint": "Chemical aftertaste",
+          "evidence_quote_used": "The vanilla flavor tasted artificial and made my smoothie smell like chemicals."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 7.0,
+          "scene_goal": "Introduce the painpoint of digestive upset to build urgency for a solution.",
+          "visual_description": "Person clutching their stomach, wincing in discomfort, looking at a shake bottle with disappointment.",
+          "narration": "Post-workout fuel shouldn't punish your gut. Every time.",
+          "on_screen_text": "Digestive upset?",
+          "camera_motion": "Static, medium shot, focus on facial expression and body language",
+          "camera_speed": 0.0,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "painful",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Physical pain point creates empathy and desire for relief.",
+          "linked_painpoint": "Digestive upset",
+          "evidence_quote_used": "It upset my stomach every time I drank it after a workout."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 10.0,
+          "scene_goal": "Present the solution: smooth mixing without grit, providing relief and a dopamine hit of satisfaction.",
+          "visual_description": "Split screen: left side shows gritty residue on a glass, right side shows a silky vortex dissolving instantly in a clear glass.",
+          "narration": "No more gritty chunks. This dissolves silky smooth in cold water. Guaranteed.",
+          "on_screen_text": "Smooth mixing. Guaranteed.",
+          "camera_motion": "Static split screen, slow motion on right side vortex",
+          "camera_speed": 0.3,
+          "transition_style": "Wipe (left to right)",
+          "emotional_intensity": 0.9,
+          "audio_emotion": "triumphant",
+          "dopamine_trigger": true,
+          "dopamine_type": "relief",
+          "retention_reason": "Visual contrast and guarantee provide satisfying resolution and hope.",
+          "linked_painpoint": "Chalky clumps and aftertaste",
+          "evidence_quote_used": "The label promised smooth mixing, but it left gritty chunks in cold water."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.44,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 0.925,
+    "narration_quality": 0.79375,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.75,
+    "creative_score": 0.6837291666666667,
+    "grounded_score": 0.45809854166666675,
+    "predicted_ctr": 0.08204750000000001,
+    "grounded_ctr": 0.05497182500000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.70, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 868,
+      "latency_ms": 4236.307144165039,
+      "reasoning_latency_ms": 3266.4750999974785,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step-by-step.\n\n**1. Classify the product:**\nThe URL path is `/products/protein_powder`. This is clearly a health/fitness supplement — specifically a protein powder product. Category: **Health & Fitness / Sports Nutrition**.\n\n**2. Decide task complexity from real inputs only:**\nThe only real input provided is the URL. There is no user query, no specific task description, no request for research, comparison, or analysis. The input is minimal — just a product URL. Therefo"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.49729999591363594,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.45840000530006364,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.026599998818710446,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 4,
+        "skipped_count": 0,
+        "retrieval_count": 4,
+        "retrieval_hits": {
+          "success": 10,
+          "failure": 10
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 301,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 298,
+          "failure": 3,
+          "total": 301
+        },
+        "memory_growth": {
+          "total_records": 301,
+          "max_record_count": 500,
+          "peak_record_count": 301,
+          "remaining_capacity": 199,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 4,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 4,
+      "memory_retrieval_hits_success": 8,
+      "memory_retrieval_hits_failure": 8,
+      "memory_record_count_success": 298,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 301,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 301,
+      "memory_remaining_capacity": 199,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1036,
+      "latency_ms": 5332.470417022705,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1121,
+      "latency_ms": 5243.611812591553,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 268,
+      "latency_ms": 2037.9631519317627,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 4,
+        "skipped_count": 0,
+        "retrieval_count": 4,
+        "retrieval_hits": {
+          "success": 10,
+          "failure": 10
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 301,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 298,
+          "failure": 3,
+          "total": 301
+        },
+        "memory_growth": {
+          "total_records": 301,
+          "max_record_count": 500,
+          "peak_record_count": 301,
+          "remaining_capacity": 199,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 4,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 4,
+      "memory_retrieval_hits_success": 8,
+      "memory_retrieval_hits_failure": 8,
+      "memory_record_count_success": 298,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 301,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 301,
+      "memory_remaining_capacity": 199,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2566,
+      "latency_ms": 7924.61633682251,
+      "reasoning_latency_ms": 3857.4662000028184,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3112,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile: The Disillusioned Athlete**\n\n**Identity:** A regular gym-goer or fitness enthusiast who relies on post-workout shakes for recovery and convenience.\n\n**Core Frustration:** The product fails at its most basic promise—mixing. The experience is physically unpleasant: chalky clumps, gritty chunks in cold water, and a chemical aftertaste that ruins the drink. This turns a recovery ritual into a chore.\n\n**Emotional State:** Frustrated and betrayed. The label promised smooth mixing, but",
+      "memory_observability": {
+        "write_count": 4,
+        "skipped_count": 0,
+        "retrieval_count": 4,
+        "retrieval_hits": {
+          "success": 10,
+          "failure": 10
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 301,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 298,
+          "failure": 3,
+          "total": 301
+        },
+        "memory_growth": {
+          "total_records": 301,
+          "max_record_count": 500,
+          "peak_record_count": 301,
+          "remaining_capacity": 199,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 4,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 4,
+      "memory_retrieval_hits_success": 8,
+      "memory_retrieval_hits_failure": 8,
+      "memory_record_count_success": 298,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 301,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 301,
+      "memory_remaining_capacity": 199,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2405,
+      "latency_ms": 12034.322261810303,
+      "reasoning_latency_ms": 3237.1563999986392,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2637,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "- **Product category:** Health & Fitness / Sports Nutrition\n- **Pain signature:** Physical (chalky clumps, gritty texture, chemical aftertaste, digestive upset) and emotional (frustration, disgust, relief-seeking). Evidence: user quotes in evidence_quotes. Confidence: 0.67 (dataset warning).\n- **Target user:** Regular gym-goer / fitness enthusiast, post-workout shake user, sensitive to texture/smell/digestion. Evidence: audience_summary. Confidence: 0.67.\n- **Core strategy:** Use tactile before-",
+      "memory_observability": {
+        "write_count": 4,
+        "skipped_count": 0,
+        "retrieval_count": 5,
+        "retrieval_hits": {
+          "success": 10,
+          "failure": 10
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 301,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 298,
+          "failure": 3,
+          "total": 301
+        },
+        "memory_growth": {
+          "total_records": 301,
+          "max_record_count": 500,
+          "peak_record_count": 301,
+          "remaining_capacity": 199,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 4,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 5,
+      "memory_retrieval_hits_success": 10,
+      "memory_retrieval_hits_failure": 10,
+      "memory_record_count_success": 298,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 301,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 301,
+      "memory_remaining_capacity": 199,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3068,
+      "latency_ms": 11390.974283218384,
+      "reasoning_latency_ms": 3911.664400002337,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "THINKING:\n\nScene 1: Painpoint - chalky clumps. Quote: \"The powder clumped instantly and left a chalky aftertaste no matter how long I shook it.\" Dopamine trigger false. Visual: Hand vigorously shaking shaker, then pouring - visible wet clumps splatting into glass. Narration: \"Shake forever, still clumps and chalk. Why settle for gritty?\"\n\nScene 2: Painpoint - chemical aftertaste. Quote: \"The vanilla flavor tasted artificial and made my smoothie smell like chemicals.\" Dopamine trigger false. Visu"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 5,
+        "skipped_count": 0,
+        "retrieval_count": 5,
+        "retrieval_hits": {
+          "success": 10,
+          "failure": 10
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 302,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 299,
+          "failure": 3,
+          "total": 302
+        },
+        "memory_growth": {
+          "total_records": 302,
+          "max_record_count": 500,
+          "peak_record_count": 302,
+          "remaining_capacity": 198,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 5,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 5,
+      "memory_retrieval_hits_success": 10,
+      "memory_retrieval_hits_failure": 10,
+      "memory_record_count_success": 299,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 302,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 302,
+      "memory_remaining_capacity": 198,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 5,
+    "skipped_count": 0,
+    "retrieval_count": 5,
+    "retrieval_hits": {
+      "success": 10,
+      "failure": 10
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 302,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 299,
+      "failure": 3,
+      "total": 302
+    },
+    "memory_growth": {
+      "total_records": 302,
+      "max_record_count": 500,
+      "peak_record_count": 302,
+      "remaining_capacity": 198,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

@@ -1,0 +1,126 @@
+{
+  "product_category": "skincare_serum",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/skincare_serum",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The serum made my skin sting within minutes and left red patches overnight.",
+      "The dropper barely picked up product, so I had to shake the bottle every time.",
+      "It felt sticky under moisturizer and pilled when I applied sunscreen.",
+      "The bottle arrived leaking and the label was already peeling off.",
+      "I used it for a month and saw no visible change in texture or dark spots.",
+      "The fragrance was strong enough to irritate my eyes."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.3375,
+    "dopamine_score": 0.0,
+    "visual_quality": 1.0,
+    "narration_quality": 0.965625,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.6273437500000001,
+    "grounded_score": 0.42032031250000007,
+    "predicted_ctr": 0.07528125000000001,
+    "grounded_ctr": 0.05043843750000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.88, dopamine=0, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 879,
+      "latency_ms": 4192.607879638672,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "I'll analyze this step by step.\n\n**Product Classification:**\n- URL path: `/products/skincare_serum`\n- This is clearly a skincare product, specifically a serum\n- Category: Beauty/Skincare\n\n**Task Complexity Assessment:**\n- The URL is from `test.local` - this is a test/development environment\n- No real user input has been provided yet (no specific product name, no specific analysis request)\n- The available tools are all mock tools: `amazon_review_mock`, `tiktok_trend_mock`, `local_review_dataset`\n"
+    },
+    "analysis_audience": {
+      "total_tokens": 1298,
+      "latency_ms": 7935.311079025269,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1325,
+      "latency_ms": 7567.294359207153,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 249,
+      "latency_ms": 2250.81205368042,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2745,
+      "latency_ms": 10127.127170562744,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Frustrated Efficacy Seeker**\n\n**Identity:** A diligent skincare user who follows routines (moisturizer, sunscreen) and expects visible, tactile results. They are not a novice; they layer products and look for texture improvement and dark spot reduction.\n\n**Core Pain Point:** **Broken Trust in Product Performance.** The product fails on every sensory and functional level. It causes physical harm (stinging, red patches, eye irritation), has a poor cosmetic feel (sticky, pillin"
+    },
+    "strategy": {
+      "total_tokens": 3460,
+      "latency_ms": 18796.990871429443,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "*   **Pivot-Angle:** The core emotional battle isn't \"product efficacy.\" It is **\"Restoring Trust Through Immediate Sensory Certainty.\"** The audience is pre-traumatized. They expect pain, stickiness, and broken promises. The serum must prove its safety (no sting) and value (tactile glide) before it can sell efficacy (glow).\n    *   *Evidence Basis:* `trust_barriers` (Broken promises, lack of sensory proof) + `core_painpoints` (stinging, irritation) + `dopamine_summary` relief_moment (first smoo"
+    },
+    "storyboard": {
+      "total_tokens": 3324,
+      "latency_ms": 12185.033082962036,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "**Scene 1**\n- linked_painpoint: Stinging sensation on application\n- evidence_quote_used: \"The serum made my skin sting within minutes and left red patches overnight.\"\n- visual_description: Shot of a woman's hand hesitating over a serum bottle. Cut to her wincing as she applies a thick white cream to her cheek, which immediately turns red and blotchy.\n- narration: \"Every serum promised brightening. Instead, it stung within minutes and left red patches overnight.\"\n- dopamine_trigger: false\n\n**Scen"
+    }
+  }
+}

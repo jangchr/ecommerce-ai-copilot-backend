@@ -1,0 +1,35 @@
+{
+  "product_category": "pet_hair_vacuum",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "It pushed pet hair around the rug instead of lifting it into the canister.",
+      "date": "2025-11-07"
+    },
+    {
+      "rating": 2,
+      "text": "The brush roll tangled with long dog hair after one room.",
+      "date": "2025-10-19"
+    },
+    {
+      "rating": 1,
+      "text": "The suction dropped as soon as the filter had a thin layer of dust.",
+      "date": "2025-09-26"
+    },
+    {
+      "rating": 2,
+      "text": "Emptying the bin released a cloud of hair and dust back into the air.",
+      "date": "2025-09-06"
+    },
+    {
+      "rating": 2,
+      "text": "The hose attachment was too weak to clean hair from the couch seams.",
+      "date": "2025-08-20"
+    },
+    {
+      "rating": 3,
+      "text": "It worked on hard floors but failed on the thick rug where my cat sleeps.",
+      "date": "2025-07-27"
+    }
+  ]
+}

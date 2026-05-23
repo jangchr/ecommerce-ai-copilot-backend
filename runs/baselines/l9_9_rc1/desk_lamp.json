@@ -1,0 +1,713 @@
+{
+  "product_category": "home_lighting",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/desk_lamp",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The lamp flickered after ten minutes and gave me a headache while working.",
+      "The touch control was so sensitive that it changed brightness whenever I moved my notebook.",
+      "The neck would not stay in place and slowly drooped toward the desk.",
+      "The charging port became loose after a week of normal use.",
+      "The light was bright but created harsh glare on my monitor.",
+      "The base was too light, so the lamp tipped over when fully extended."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based on the provided evidence, here is the audience analysis.\n\n**Audience Problem Summary**\n\nThe audience is experiencing a desk lamp that is failing in multiple ways during normal use, causing frustration and physical discomfort. The core audience need is for a **reliable, stable, and comfortable lighting solution** that does not interfere with their work.\n\n**Detailed Audience Pain Points (with Evidence)**\n\n1.  **Product Unreliability & Physical Discomfort:** The lamp causes physical strain and fails quickly.\n    *   *Evidence:* \"The lamp flickered after ten minutes and gave me a headache while working.\" (Rating: 1)\n    *   *Evidence:* \"The charging port became loose after a week of normal use.\" (Rating: 1)\n\n2.  **Poor Usability & Lack of Control:** The controls are overly sensitive and unintentional, disrupting workflow.\n    *   *Evidence:* \"The touch control was so sensitive that it changed brightness whenever I moved my notebook.\" (Rating: 2)\n\n3.  **Structural Instability & Poor Build Quality:** The lamp cannot maintain its position or stay upright, making it unreliable for focused tasks.\n    *   *Evidence:* \"The neck would not stay in place and slowly drooped toward the desk.\" (Rating: 2)\n    *   *Evidence:* \"The base was too light, so the lamp tipped over when fully extended.\" (Rating: 2)\n\n4.  **Visual Discomfort from Glare:** The light quality is poor, creating glare that hinders work rather than helping it.\n    *   *Evidence:* \"The light was bright but created harsh glare on my monitor.\" (Rating: 3)\n\n**Audience Profile (Inferred from Pain Points)**\n\n*   **User Type:** Desk workers who use a computer monitor for extended periods (e.g., office workers, students, remote employees).\n*   **Core Need:** A dependable, stable task light that provides comfortable, flicker-free illumination without causing glare or requiring constant readjustment.\n*   **Frustration Level:** High. The reviews are consistently negative (ratings 1-3), indicating a product that fails to meet basic expectations for its category.\n\n**Strategic Recommendations (Based on Trend Signals)**\n\n*   **Narrative Structure:** When communicating a solution, the evidence strongly supports the trend: **\"Show the failure in use before introducing the relief moment.\"** The audience is intimately familiar with flickering, drooping, tipping, and accidental control changes. A marketing message should first acknowledge these specific failures to build empathy and credibility before presenting a solution.\n*   **Proof of Concept:** The evidence supports the use of **\"tactile before-and-after proof to make product claims credible.\"** The audience has directly experienced physical failures (loose ports, drooping necks, tipping bases). A solution must demonstrate tangible, physical improvements—for example, a weighted base that doesn't tip, a rigid neck that stays put, or a tactile switch instead of an overly sensitive touch sensor.\n\n**Data Confidence & Limitations**\n\n*   **Review Confidence:** Moderate (0.75). The dataset is small (6 reviews) but provides consistent, specific, and actionable feedback.\n*   **Trend Signal Confidence:** Low (0.35). The trend signals are derived from a \"mock\" source with reduced confidence. The recommendations based on them are plausible given the evidence but should be considered hypotheses rather than confirmed strategies.\n*   **Data Warning:** The dataset is a local curated review set, which may not represent the entire customer base.",
+    "painpoint_text": "Based on the provided review evidence, here are the extracted physical and emotional painpoints:\n\n**Physical Painpoints:**\n\n1.  **Flickering Light:** The lamp flickers after a short period of use.\n    - *Evidence:* \"The lamp flickered after ten minutes...\"\n2.  **Headaches:** The flickering directly causes physical discomfort.\n    - *Evidence:* \"...gave me a headache while working.\"\n3.  **Unstable Neck:** The lamp’s neck fails to hold its position, drooping down over time.\n    - *Evidence:* \"The neck would not stay in place and slowly drooped toward the desk.\"\n4.  **Harsh Glare:** The light creates a harsh reflection on the computer monitor, causing visual strain.\n    - *Evidence:* \"The light was bright but created harsh glare on my monitor.\"\n5.  **Unstable Base:** The lamp is top-heavy and tips over easily when extended, posing a physical disruption.\n    - *Evidence:* \"The base was too light, so the lamp tipped over when fully extended.\"\n6.  **Hardware Failure:** The charging port becomes loose and unreliable after short-term use.\n    - *Evidence:* \"The charging port became loose after a week of normal use.\"\n7.  **Oversensitive Controls:** The touch control is too sensitive, causing unintended changes to brightness.\n    - *Evidence:* \"The touch control was so sensitive that it changed brightness whenever I moved my notebook.\"\n\n**Emotional Painpoints:**\n\n1.  **Frustration & Annoyance:** Users are frustrated by the lamp’s inability to perform basic functions reliably (flickering, drooping, tipping over).\n    - *Evidence:* The consistent low ratings (1-2 stars) and the tone of complaints (e.g., \"would not stay in place,\" \"tipped over\") indicate significant annoyance.\n2.  **Discomfort & Distress:** The physical pains (headaches, glare) translate directly into emotional distress and a negative work experience.\n    - *Evidence:* \"...gave me a headache while working.\" (Headaches cause distress).\n3.  **Distrust & Disappointment:** The product fails shortly after purchase (e.g., charging port loose after a week), leading to a feeling of being cheated or disappointed in the product's quality.\n    - *Evidence:* \"The charging port became loose after a week of normal use.\"\n4.  **Inconvenience & Helplessness:** The overly sensitive touch control forces the user to constantly adjust the lamp, disrupting their workflow and making them feel like they can't control the product.\n    - *Evidence:* \"...changed brightness whenever I moved my notebook.\"",
+    "dopamine_text": "- relief_moment: Lamp flickers and causes headache; user finally turns it off.\n- contrast_mechanism: Touch control too sensitive; neck droops; charging port loose.\n- satisfaction_trigger: Bright light creates harsh glare on monitor, not helpful.\n- viral_emotion: Frustration from multiple failures makes product feel unreliable.",
+    "profile": {
+      "audience": {
+        "primary_user": "Remote worker or student spending long hours at a desk",
+        "anxiety_points": [
+          "Lamp flickering causing headaches",
+          "Harsh glare on monitor causing eye strain",
+          "Drooping neck requiring constant readjustment",
+          "Overly sensitive touch controls causing accidental changes",
+          "Charging port failing within a week",
+          "Lamp tipping over easily"
+        ],
+        "trust_barriers": [
+          "Past experience with unreliable desk lamps",
+          "Skepticism about feature-heavy products that fail in basic use",
+          "Fear of wasting money on another poorly built tool"
+        ],
+        "buying_motivation": "Need for a reliable, stable, and comfortable task light that works without demanding attention"
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Headaches from flickering light",
+          "Eye strain from harsh glare on monitor",
+          "Neck drooping requiring constant readjustment",
+          "Lamp tipping over easily"
+        ],
+        "emotional_painpoints": [
+          "Deep frustration from product failing in multiple ways during normal use",
+          "Feeling that time and money were wasted",
+          "Lamp becomes a source of disruption, not a tool"
+        ],
+        "use_case_disasters": [
+          "Touch controls trigger accidental changes during focused work",
+          "Charging port fails within a week",
+          "Lamp is physically unstable and tips over"
+        ],
+        "evidence_quotes": [
+          "I just want a lamp that works without me having to think about it.",
+          "The flickering gives me a headache after an hour.",
+          "I'm tired of adjusting the neck every five minutes."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "When the user realizes the lamp holds its position, provides steady light, and doesn't flicker or glare",
+        "contrast_mechanism": "Before-and-after visual: old lamp neck drooping and light flickering vs. new lamp neck firm and light steady",
+        "satisfaction_trigger": "The quiet satisfaction of the lamp becoming invisible—allowing the user to focus on work without disruption",
+        "viral_emotion": "Relief and gratitude for a product that simply works as expected"
+      },
+      "confidence": 0.95,
+      "grounding_notes": [
+        "Profile derived from explicit buyer description: remote worker/student, long desk hours, task lighting focus.",
+        "Pain points directly listed: flickering, glare, drooping neck, sensitive controls, failing port, instability.",
+        "Core need for reliability and comfort explicitly stated.",
+        "Narrative hook and proof mechanism provided in decision section.",
+        "Emotional target is quiet satisfaction, not joy, as per description."
+      ]
+    },
+    "strategy": {
+      "target_user": "Remote workers and students who have bought multiple desk lamps that flicker, droop, or break within months, leaving them frustrated and skeptical of feature-heavy promises.",
+      "core_pain": "Frustration fatigue from lamps that fail—flickering causing headaches, necks drooping mid-use, and broken charging ports—making users distrustful of any new lamp claiming to be better.",
+      "evidence_basis": [
+        "Review quotes: 'touch control too sensitive' and 'charging port loose' indicate specific failure points.",
+        "Painpoint data: 'headaches from flickering' and 'neck drooping requiring readjustment' are common complaints.",
+        "Dopamine summary: relief moment defined as 'holds position, steady light'—the smallest proof of reliability.",
+        "Satisfaction trigger: 'lamp becomes invisible' when it just works without attention."
+      ],
+      "identity_attack": "You're the person who keeps buying 'smart' lamps that break your trust—you're not stupid, you're just tired of being sold features that fail.",
+      "status_desire": "To be the person who finally owns a lamp that doesn't demand attention—a tool that fades into the background so you can focus on real work.",
+      "future_self_gap": "Current self: constantly adjusting, squinting at flicker, annoyed by a broken promise. Future self: forgets the lamp exists, works uninterrupted, trusts the tool.",
+      "broken_expectation": "Every lamp before this one promised durability and performance but delivered flicker, droop, and loose ports—this lamp breaks that cycle by doing the opposite.",
+      "visual_hook": "A side-by-side slow-motion comparison: left lamp flickers and neck droops over 4 hours; right lamp holds steady, light constant, no adjustment needed.",
+      "emotional_arc": [
+        "Frustration: 'You know that moment when the flicker starts and the headache builds?'",
+        "Relief: 'Then you see the neck hold position, the light stay steady for 8 hours.'",
+        "Satisfaction: 'You forget the lamp exists. Work happens.'"
+      ],
+      "trust_barrier": "Skepticism about feature-heavy products that fail—users have been burned by touch controls, RGB, and app connectivity that break.",
+      "objection_handling": "We don't mention touch controls, RGB, or apps. Instead, we show physical proof: a time-lapse of the neck position over 4 hours and a slow-mo flicker comparison. No features, just evidence.",
+      "conversion_mechanism": "The before-and-after visual proof (flicker/droop vs. steady/holds) triggers a dopamine relief moment—users see the smallest proof of reliability and feel safe to buy.",
+      "cta_logic": "After showing the side-by-side proof, the CTA is: 'Stop fixing your lamp. Get the one that works.' No feature list, just a promise kept.",
+      "risk_notes": [
+        "Trend confidence is low (0.35)—the before-and-after tactic may feel cliché; mitigate with specific, physical proof like time-lapse or slow-mo.",
+        "Avoid any feature mentions (touch, RGB, app) to prevent triggering skepticism.",
+        "Evidence quotes are concrete but limited—ensure the visual proof is undeniable to overcome low trend confidence."
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Establish the pain of flicker-induced headache, creating immediate frustration.",
+          "visual_description": "Slow-motion close-up of a desk lamp's LED panel flickering rapidly. User rubs temples, squinting at monitor. Time stamp shows 10 minutes elapsed.",
+          "narration": "Ten minutes in, the flicker starts. The headache follows. Every time.",
+          "on_screen_text": "",
+          "camera_motion": "Slow push-in on flickering LED panel, then rack focus to user's face",
+          "camera_speed": 0.3,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "Irritation",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Viewer recognizes the specific, relatable pain of flicker headache",
+          "linked_painpoint": "Headaches from flickering light",
+          "evidence_quote_used": "The lamp flickered after ten minutes and gave me a headache while working."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 8.0,
+          "scene_goal": "Deepen frustration with the neck droop problem, showing constant readjustment.",
+          "visual_description": "Time-lapse over 2 hours: lamp neck gradually droops lower, light beam shifting from desk to empty floor. User reaches up, pushes it back, it droops again.",
+          "narration": "The neck won't stay. You push it up. It droops again. All day long.",
+          "on_screen_text": "",
+          "camera_motion": "Static wide shot, time-lapse with subtle zoom out as light shifts away",
+          "camera_speed": 0.1,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "Frustration",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Visual of constant readjustment mirrors viewer's own experience",
+          "linked_painpoint": "Neck drooping requiring constant readjustment",
+          "evidence_quote_used": "The neck would not stay in place and slowly drooped toward the desk."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 10.0,
+          "scene_goal": "Introduce relief by contrasting harsh glare with a better solution.",
+          "visual_description": "Side-by-side: left lamp casts harsh glare onto monitor screen, creating bright reflection spots. Right lamp has diffused, steady light across the same monitor.",
+          "narration": "Harsh glare on your screen. Until you see the one that doesn't blind you.",
+          "on_screen_text": "",
+          "camera_motion": "Slow pan from left to right, emphasizing the contrast",
+          "camera_speed": 0.4,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.5,
+          "audio_emotion": "Relief",
+          "dopamine_trigger": true,
+          "dopamine_type": "Contrast relief",
+          "retention_reason": "Visual side-by-side makes the improvement obvious and satisfying",
+          "linked_painpoint": "Eye strain from harsh glare on monitor",
+          "evidence_quote_used": "The light was bright but created harsh glare on my monitor."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 10.0,
+          "scene_goal": "Deliver satisfaction by showing a durable port that works reliably.",
+          "visual_description": "Close-up of charging port on old lamp—wiggling visibly, loose. Cut to new lamp's port, cable inserted firmly, no movement. User plugs in phone, works.",
+          "narration": "Ports that break in a week. Until this one. Plug it in. Forget it.",
+          "on_screen_text": "",
+          "camera_motion": "Close-up macro shot, then cut to stable medium shot of user working",
+          "camera_speed": 0.5,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.3,
+          "audio_emotion": "Satisfaction",
+          "dopamine_trigger": true,
+          "dopamine_type": "Resolution satisfaction",
+          "retention_reason": "Final scene shows product working as expected, fulfilling the promise",
+          "linked_painpoint": "Deep frustration from product failing in multiple ways during normal use",
+          "evidence_quote_used": "The charging port became loose after a week of normal use."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.5225,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 0.859375,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.575,
+    "creative_score": 0.7742395833333333,
+    "grounded_score": 0.5187405208333333,
+    "predicted_ctr": 0.09290875,
+    "grounded_ctr": 0.062248862499999995,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.33, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 810,
+      "latency_ms": 4593.76335144043,
+      "reasoning_latency_ms": 3893.511000002036,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step-by-step.\n\n**Product Classification:**\nThe URL path is `/products/desk_lamp`. This is clearly a physical consumer product — a desk lamp. It falls under home/office lighting, a subcategory of home goods.\n\n**Task Complexity from Real Inputs:**\nI only have the URL. There is no additional input like a product description, target audience, or specific goal. The complexity is low — I can only infer the product type from the URL path. I cannot determine specific features,"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.8087999958661385,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.7740000000922009,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.022600004740525037,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 6,
+        "skipped_count": 0,
+        "retrieval_count": 6,
+        "retrieval_hits": {
+          "success": 14,
+          "failure": 14
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 293,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 290,
+          "failure": 3,
+          "total": 293
+        },
+        "memory_growth": {
+          "total_records": 293,
+          "max_record_count": 500,
+          "peak_record_count": 293,
+          "remaining_capacity": 207,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 6,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 6,
+      "memory_retrieval_hits_success": 12,
+      "memory_retrieval_hits_failure": 12,
+      "memory_record_count_success": 290,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 293,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 293,
+      "memory_remaining_capacity": 207,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1308,
+      "latency_ms": 8254.69970703125,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1136,
+      "latency_ms": 5826.217174530029,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 255,
+      "latency_ms": 1841.3786888122559,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 6,
+        "skipped_count": 0,
+        "retrieval_count": 6,
+        "retrieval_hits": {
+          "success": 14,
+          "failure": 14
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 293,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 290,
+          "failure": 3,
+          "total": 293
+        },
+        "memory_growth": {
+          "total_records": 293,
+          "max_record_count": 500,
+          "peak_record_count": 293,
+          "remaining_capacity": 207,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 6,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 6,
+      "memory_retrieval_hits_success": 12,
+      "memory_retrieval_hits_failure": 12,
+      "memory_record_count_success": 290,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 293,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 293,
+      "memory_remaining_capacity": 207,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 3014,
+      "latency_ms": 11562.601089477539,
+      "reasoning_latency_ms": 6156.448499998078,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3049,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile**\n\n**Core Identity:** A remote worker or student who spends long hours at a desk, relying on task lighting for focused work. They are technically aware enough to buy a lamp with features like touch controls and adjustable necks, but their primary need is for a tool that works reliably without demanding attention.\n\n**Primary Pain (The \"Before\" State):**\n- **Physical:** Suffers from headaches caused by flickering light. Experiences eye strain from harsh glare on the monitor. The la",
+      "memory_observability": {
+        "write_count": 6,
+        "skipped_count": 0,
+        "retrieval_count": 6,
+        "retrieval_hits": {
+          "success": 14,
+          "failure": 14
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 293,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 290,
+          "failure": 3,
+          "total": 293
+        },
+        "memory_growth": {
+          "total_records": 293,
+          "max_record_count": 500,
+          "peak_record_count": 293,
+          "remaining_capacity": 207,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 6,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 6,
+      "memory_retrieval_hits_success": 12,
+      "memory_retrieval_hits_failure": 12,
+      "memory_record_count_success": 290,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 293,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 293,
+      "memory_remaining_capacity": 207,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2888,
+      "latency_ms": 14834.336996078491,
+      "reasoning_latency_ms": 6482.963700000255,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2834,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "- **Target is frustration fatigue**: Users have failed lamps. Trust is wounded. They don't need *another* feature; they need a **promise kept**. Evidence: trust_barriers list \"skepticism about feature-heavy products that fail.\" **Strength: medium-high (review-backed).**\n\n- **Smallest proof = highest credibility**: Show the drooping neck + flicker (trend: \"show failure before relief\"). Then show the neck holds + light is steady for 8 hours. **That's the entire sell.** Evidence: trend_signals, dop",
+      "memory_observability": {
+        "write_count": 6,
+        "skipped_count": 0,
+        "retrieval_count": 7,
+        "retrieval_hits": {
+          "success": 14,
+          "failure": 14
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 293,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 290,
+          "failure": 3,
+          "total": 293
+        },
+        "memory_growth": {
+          "total_records": 293,
+          "max_record_count": 500,
+          "peak_record_count": 293,
+          "remaining_capacity": 207,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 6,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 7,
+      "memory_retrieval_hits_success": 14,
+      "memory_retrieval_hits_failure": 14,
+      "memory_record_count_success": 290,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 293,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 293,
+      "memory_remaining_capacity": 207,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3737,
+      "latency_ms": 14426.865577697754,
+      "reasoning_latency_ms": 6882.526000001235,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "THINKING:\n- Core pain: flicker headache, neck droop, loose port, harsh glare, sensitive touch. Evidence quotes cover each.\n- Emotional arc: frustration → relief → satisfaction. Scene 1: frustration (flicker/headache). Scene 2: frustration (neck droop). Scene 3: relief (steady neck, no flicker). Scene 4: satisfaction (forget lamp exists, work happens). \n- Use 4 distinct quotes: quotes 0, 2, 3, 4. Quote 1 (touch control) is less central to core pain—skip to stay on target.\n- Dopamine triggers: sce"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 7,
+        "skipped_count": 0,
+        "retrieval_count": 7,
+        "retrieval_hits": {
+          "success": 14,
+          "failure": 14
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 294,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 291,
+          "failure": 3,
+          "total": 294
+        },
+        "memory_growth": {
+          "total_records": 294,
+          "max_record_count": 500,
+          "peak_record_count": 294,
+          "remaining_capacity": 206,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 7,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 7,
+      "memory_retrieval_hits_success": 14,
+      "memory_retrieval_hits_failure": 14,
+      "memory_record_count_success": 291,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 294,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 294,
+      "memory_remaining_capacity": 206,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 7,
+    "skipped_count": 0,
+    "retrieval_count": 7,
+    "retrieval_hits": {
+      "success": 14,
+      "failure": 14
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 294,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 291,
+      "failure": 3,
+      "total": 294
+    },
+    "memory_growth": {
+      "total_records": 294,
+      "max_record_count": 500,
+      "peak_record_count": 294,
+      "remaining_capacity": 206,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

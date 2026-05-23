@@ -1,0 +1,127 @@
+{
+  "product_category": "food",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/balsamic_vinegar",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The cap cracked during shipping and leaked all over the box.",
+      "The glaze was too watery and ran off the salad instead of sticking.",
+      "It tasted more like sweet syrup than aged balsamic vinegar.",
+      "The bottle arrived sticky, and the seal looked like it had already been opened.",
+      "The flavor was okay, but it was too thin to use as a finishing drizzle.",
+      "I expected a rich, tangy reduction, but this tasted flat and watery."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.5725,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.8128333333333333,
+    "grounded_score": 0.5445983333333333,
+    "predicted_ctr": 0.09753999999999999,
+    "grounded_ctr": 0.06535179999999999,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.82, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 930,
+      "latency_ms": 5053.682327270508,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\nThe URL path contains \"balsamic_vinegar\" - this is a food product, specifically a condiment/cooking ingredient. Balsamic vinegar is a specialty food item.\n\n**Task Complexity Assessment:**\n- This is a single product URL\n- No specific task is stated beyond the URL being provided\n- The product is a common grocery item but with specialty/artisanal variations possible\n- Without additional context about what workflow is needed, I'll assume"
+    },
+    "analysis_audience": {
+      "total_tokens": 892,
+      "latency_ms": 4733.104228973389,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1097,
+      "latency_ms": 5143.4314250946045,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 246,
+      "latency_ms": 2085.7739448547363,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2685,
+      "latency_ms": 8918.384075164795,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Discerning Finishing Cook**\n\n**Identity:** A home cook or food enthusiast who values premium, artisan ingredients for final presentation. They buy balsamic glaze specifically for its thick, syrupy texture and complex tangy-sweet flavor to use as a finishing drizzle on salads, roasted vegetables, or cheese plates.\n\n**Core Frustration:** The product fails at its fundamental purpose. The physical experience is ruined by watery consistency that slides off food instead of clingin"
+    },
+    "strategy": {
+      "total_tokens": 2682,
+      "latency_ms": 11895.97773551941,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "*   **Strategy:** **Bottle-Designed-for-Reseal vs. Leaking-Disaster**.\n    *   *Evidence_basis:* evidence_quotes: “leaked all over the box”, “arrived sticky”, “seal looked like it had already been opened”. trust_barriers: “Product fails at its fundamental purpose”. This directly addresses a *physical* failure (leak) before taste/glaze.\n    *   *Weak evidence:* No direct quote about a *successful* seal design. Assumption from pain. Flag: 0.67 source confidence.\n\n*   **Core Message:** **“The Bottl"
+    },
+    "storyboard": {
+      "total_tokens": 3440,
+      "latency_ms": 14443.05419921875,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "**Scene 1**\n- **evidence_quote_used:** \"The bottle arrived sticky, and the seal looked like it had already been opened.\"\n- **linked_painpoint:** Sticky, leaking bottle; Broken seal\n- **visual_description:** Split-screen: Left – sticky brown bottle with smudged label and leak stains on cardboard. Right – pristine bottle, then close-up of thumb pressing sealed cap until crisp 'pop' sound.\n- **narration:** \"Sticky bottle with a broken seal? That's not premium. Hear the pop of a seal that's actually"
+    }
+  }
+}

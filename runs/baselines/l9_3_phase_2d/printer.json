@@ -1,0 +1,126 @@
+{
+  "product_category": "printer",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/printer",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The printer disconnected from Wi-Fi every time I needed to print a shipping label.",
+      "Setup took almost an hour because the app kept failing to find the printer.",
+      "It said the ink was empty even though I had just installed a new cartridge.",
+      "The paper jammed twice during a ten-page document.",
+      "Print quality was acceptable, but the software popups made it frustrating to use.",
+      "Customer support told me to reinstall everything instead of fixing the connection issue."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.4375,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 0.99375,
+    "narration_quality": 0.8218749999999999,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.6,
+    "creative_score": 0.6861979166666667,
+    "grounded_score": 0.45975260416666675,
+    "predicted_ctr": 0.08234375000000001,
+    "grounded_ctr": 0.055170312500000006,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.68, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 824,
+      "latency_ms": 4445.646286010742,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\nThe URL path `/products/printer` clearly indicates this is a **printer** — a consumer electronics / office equipment product.\n\n**Task Complexity from Real Inputs:**\n- The input is just a URL. No user query, no specific analysis request, no timeframe, no target audience.\n- This is a **low complexity** input — it provides only the product identity, nothing more.\n\n**Available Tools:**\n1. `amazon_review_mock` — could fetch mock Amazon re"
+    },
+    "analysis_audience": {
+      "total_tokens": 1000,
+      "latency_ms": 5761.111736297607,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1179,
+      "latency_ms": 6303.529977798462,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 251,
+      "latency_ms": 2157.3002338409424,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2479,
+      "latency_ms": 7450.354814529419,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Reluctant Operator**\n\n**Identity:** Small business owner or home-office operator (e.g., e-commerce seller). Needs a printer as a utility tool, not a hobby. Primary task: printing shipping labels reliably.\n\n**Core Pain:** Unreliable execution of simple, time-sensitive tasks. The printer fails at the worst moment (Wi-Fi drops during label printing), wastes time (hour-long setup), and lies (false ink alerts). This creates a deep frustration with technology that should be invisi"
+    },
+    "strategy": {
+      "total_tokens": 2706,
+      "latency_ms": 11727.370023727417,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "- **Core decision:** Frame printer as **\"Relief from chaos\"** (pain relief) not feature list (weak).\n    - *Evidence_basis:* Painpoints & dopamine_summary: Wi-Fi drops, 1hr setup, false alerts → relief = sigh. Contrast: 2min vs 1hr.\n    - *Flag weak evidence:* Trend_signals confidence = 0.35. Short before/after contrast is untested for printer. Hold but verify.\n- **Guiding contrast:** \"Setup in 2 minutes vs. 1 hour\" + \"No false ink alerts\" + \"No Wi-Fi drops\".\n    - *Evidence_basis:* Core painpoi"
+    },
+    "storyboard": {
+      "total_tokens": 3343,
+      "latency_ms": 12610.99910736084,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING:\nScene 1: Physical pain (Wi-Fi drops) + Frustration. Quote 0. dopamine_trigger=false.\nScene 2: Setup pain (hour-long) + Resigned frustration. Quote 1. dopamine_trigger=false.\nScene 3: False alerts (ink) + Worn down. Quote 2. dopamine_trigger=false.\nScene 4: Final relief (tactile proof: plug-and-print, no popups). Quote 4 (software popups). dopamine_trigger=true.\n\n4 scenes, 1 trigger.\n\n---\n\n**Scene 1**  \n- evidence_quote_used: \"The printer disconnected from Wi-Fi every time I needed to p"
+    }
+  }
+}

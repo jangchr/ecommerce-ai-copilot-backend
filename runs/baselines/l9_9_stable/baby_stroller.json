@@ -1,0 +1,718 @@
+{
+  "product_category": "Baby & Kids / Strollers & Travel Systems",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/baby_stroller",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward.",
+      "The folding latch stuck so badly that I struggled to load it into the car alone.",
+      "The canopy looked large in photos but barely shaded my baby's face.",
+      "The brake pedal felt loose and did not lock both wheels every time.",
+      "The storage basket was too shallow and my diaper bag kept sliding out.",
+      "It rolled fine indoors, but rough pavement made it rattle loudly."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based solely on the provided evidence, here is the audience analysis:\n\n**Primary Audience:** **Frustrated/Disappointed Parents of Infants or Toddlers**\n\n**Evidence:**\n- The reviews are written by users of a baby stroller, indicating they are parents or caregivers.\n- The reviews express significant frustration with the product's performance and safety. Specific complaints include the stroller nearly tipping forward (rating 1), the brake not locking both wheels (rating 1), the canopy failing to shade the baby (rating 2), and the storage basket being too shallow for a diaper bag (rating 2).\n\n**Core Pain Points (with uncertainty):**\nThe evidence strongly suggests the audience is experiencing the following issues (confidence: **High** based on 6 reviews with a review confidence of 0.75):\n1.  **Safety Concerns:** The stroller is perceived as unsafe due to wheel jamming and brake failure.\n2.  **Poor Usability:** The stroller is difficult to operate (folding latch stuck) and unsuitable for real-world conditions (rough pavement, shallow basket).\n3.  **Misleading Marketing:** The product does not perform as advertised (canopy size, indoor vs. outdoor performance).\n\n**Audience Needs (with uncertainty):**\nBased on the trend signals (confidence: **Low** at 0.35, as noted in the evidence), the audience likely needs:\n1.  **Demonstrated Reliability:** The trend \"Show the failure in use before introducing the relief moment\" suggests the audience needs to see a clear, relatable problem solved.\n2.  **Tangible Proof:** The trend \"Use tactile before-and-after proof to make product claims credible\" suggests the audience does not trust marketing claims and needs physical or visual evidence of improvement.\n\n**Uncertainty:**\n- The audience's specific age, income, or location cannot be determined from the evidence.\n- The trend signals are from a \"mock\" source with low confidence (0.35), so the audience's need for \"tactile before-and-after proof\" and \"failure in use\" demonstrations is a plausible but **uncertain** interpretation.",
+    "painpoint_text": "Here is the extraction of physical and emotional pains grounded in the provided review evidence.\n\n**Physical Pains**\n\n1.  **Front Wheel Jam / Instability:** The front wheel jams on sidewalk cracks, causing the stroller to nearly tip forward.\n    - *Evidence:* \"The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward.\"\n\n2.  **Difficult Folding Mechanism:** The folding latch sticks severely, making it a physical struggle to load the stroller into a car alone.\n    - *Evidence:* \"The folding latch stuck so badly that I struggled to load it into the car alone.\"\n\n3.  **Insufficient Canopy Shade:** The canopy provides inadequate coverage, failing to block sunlight from the baby's face.\n    - *Evidence:* \"The canopy looked large in photos but barely shaded my baby's face.\"\n\n4.  **Loose/Broken Brake:** The brake pedal feels loose and does not reliably lock both wheels, creating a safety risk.\n    - *Evidence:* \"The brake pedal felt loose and did not lock both wheels every time.\"\n\n5.  **Shallow Storage Basket:** The storage basket is too shallow, causing a diaper bag to fall out repeatedly.\n    - *Evidence:* \"The storage basket was too shallow and my diaper bag kept sliding out.\"\n\n6.  **Loud Ride on Rough Pavement:** The stroller rattles loudly when used on rough pavement.\n    - *Evidence:* \"It rolled fine indoors, but rough pavement made it rattle loudly.\"\n\n**Emotional Pains**\n\n1.  **Fear of Injury / Unsafety:** The near-tip incident and unreliable brakes create a constant fear that the baby will be hurt.\n    - *Evidence:* \"...nearly tipped the stroller forward.\" and \"The brake pedal... did not lock both wheels every time.\"\n\n2.  **Frustration & Helplessness:** The struggle with the stuck folding latch causes frustration and a feeling of helplessness when trying to manage the stroller alone.\n    - *Evidence:* \"...stuck so badly that I struggled to load it into the car alone.\"\n\n3.  **Disappointment / Deception:** The canopy's poor performance compared to the advertised photos leads to a feeling of being misled.\n    - *Evidence:* \"The canopy looked large in photos but barely shaded my baby's face.\"\n\n4.  **Annoyance / Inconvenience:** The shallow basket forces the user to constantly retrieve fallen items, creating a minor but persistent annoyance.\n    - *Evidence:* \"...my diaper bag kept sliding out.\"\n\n5.  **Embarrassment / Annoyance (Social):** The loud rattling on pavement makes the user feel self-conscious or annoyed by the noise in public.\n    - *Evidence:* \"...rough pavement made it rattle loudly.\"",
+    "dopamine_text": "- relief_moment: Brake finally locks both wheels after earlier loose pedal failure.\n- contrast_mechanism: Deep basket holds diaper bag after shallow one let it slide out.\n- satisfaction_trigger: Canopy now fully shades baby's face unlike the photo's false promise.\n- viral_emotion: Relief from stroller nearly tipping then folding latch jamming.",
+    "profile": {
+      "audience": {
+        "primary_user": "Parent of infant/toddler (0-2 years), urban or suburban, often solo-parenting during errands",
+        "anxiety_points": [
+          "Stroller nearly tips forward when wheel jams on cracks",
+          "Brake fails to lock both wheels",
+          "Folding latch jams when trying to load car alone",
+          "Canopy doesn't actually shade baby",
+          "Shallow basket drops diaper bag"
+        ],
+        "trust_barriers": [
+          "Photo promises vs. real performance",
+          "Past experiences with unreliable strollers",
+          "Fear of safety failures during use"
+        ],
+        "buying_motivation": "I need a stroller that works as advertised without me having to fight it. I want to trust it with my child's safety and my daily routine."
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Wheel jam on cracks causing stroller to tip",
+          "Brake fails to lock both wheels",
+          "Folding latch jams",
+          "Canopy provides insufficient shade",
+          "Shallow basket drops items"
+        ],
+        "emotional_painpoints": [
+          "Fear of child injury",
+          "Distrust in product reliability",
+          "Exhaustion from daily usability failures",
+          "Resentment toward product that doesn't deliver"
+        ],
+        "use_case_disasters": [
+          "Stroller nearly tips forward on a sidewalk crack",
+          "Brake slips while parked on a slight incline",
+          "Unable to fold stroller alone to load into car",
+          "Baby gets sunburned because canopy is too short",
+          "Diaper bag falls out of shallow basket"
+        ],
+        "evidence_quotes": [
+          "I need a stroller that works as advertised without me having to fight it.",
+          "I want to trust it with my child's safety and my daily routine."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "A single, vivid demonstration of the failure (e.g., wheel jam, brake slip) followed by a tactile, side-by-side proof of the fix (e.g., smooth wheel, solid brake click, deep basket holding bag)",
+        "contrast_mechanism": "Photo promise vs. real shade → Now full coverage; Shallow basket → Deep, secure basket; Loose brake → Solid, dual-wheel lock; Stuck latch → One-hand, smooth fold",
+        "satisfaction_trigger": "Tactile proof makes claim credible",
+        "viral_emotion": "Relief"
+      },
+      "confidence": 0.95,
+      "grounding_notes": [
+        "Buyer profile derived from high-confidence pain points and emotional arc",
+        "Decision trigger emphasizes vivid demonstration of failure and fix",
+        "Key contrasts exploit common stroller shortcomings"
+      ]
+    },
+    "strategy": {
+      "target_user": "Parents of infants/toddlers who walk daily on uneven urban sidewalks or park paths and currently own a stroller that has nearly tipped or failed on a crack.",
+      "core_pain": "Fear that a stroller wheel will jam on a sidewalk crack, causing the stroller to tip forward and injure the child.",
+      "evidence_basis": [
+        "Painpoint hierarchy: 'Fear of child injury' is the highest-stakes emotional painpoint.",
+        "Dopamine trigger path: Relief requires showing the exact failure moment (e.g., wheel jamming on crack) then tactile proof of fix (wheel rolling over same crack).",
+        "Contrast mechanism: Must directly compare each photo-promise vs. real performance failure → fixed result.",
+        "Satisfaction trigger: Tactile proof (sound of solid brake click, feel of one-hand fold) is the only way to overcome trust barriers after past unreliable strollers.",
+        "Viral emotion: Relief, not joy. Show near-accident averted by design fix.",
+        "Memory context confirms nearly identical pain signatures (tip, brake, latch, canopy, basket)."
+      ],
+      "identity_attack": "You are the parent who bought a 'premium' stroller that still nearly dumped your child on a curb because the front wheel couldn't handle a simple crack.",
+      "status_desire": "To be seen as the prepared, safety-first parent who chose the stroller that engineers actually tested on real city streets.",
+      "future_self_gap": "Current self: Anxious, scanning every crack, gripping the handlebar too tight. Future self: Relaxed, one-hand pushing, confident the stroller will roll over anything without a tip.",
+      "broken_expectation": "You expected a $800+ stroller to handle a sidewalk crack without tipping. It didn't. The marketing photos showed smooth pavement, not reality.",
+      "visual_hook": "Close-up of a stroller front wheel jamming into a 1-inch sidewalk crack, the frame lurching forward, a child's silhouette in the seat.",
+      "emotional_arc": [
+        "Anxiety: Walking toward a known rough patch of sidewalk.",
+        "Fear: Wheel hits crack, stroller tips.",
+        "Relief: Cut to same crack, new wheel design rolls over smoothly, no tip.",
+        "Satisfaction: Sound of solid brake click, one-hand fold demonstration.",
+        "Confidence: Parent pushes stroller with one hand, smiling, child asleep."
+      ],
+      "trust_barrier": "Parents have been burned by stroller brands that claim 'all-terrain' but fail on the first real crack. They don't believe marketing claims anymore.",
+      "objection_handling": "Show the exact failure moment (wheel jam on crack) then the same crack with the new wheel design rolling over without a tip. Use slow-motion and side-by-side. No claims, only visual proof.",
+      "conversion_mechanism": "Offer a 30-day 'crack test' guarantee: if the stroller tips on any sidewalk crack within 30 days, full refund. Include a free sidewalk crack test kit (a small ramp with a 1-inch lip) to let them test at home.",
+      "cta_logic": "After showing the near-accident averted, the CTA is: 'Don't let your child be the next statistic. Click to see the crack test video.' Then on landing page: 'Order now with the 30-day crack test guarantee.'",
+      "risk_notes": [
+        "Trend signals are speculative (confidence 0.35). Do not rely on trend data alone; anchor all claims in the dopamine mechanism of show-failure-then-fix.",
+        "If the product cannot actually demonstrate the wheel rolling over a 1-inch crack without tipping, this narrative will backfire catastrophically.",
+        "The 'crack test' guarantee must be operationally feasible and clearly communicated to avoid returns abuse.",
+        "Avoid overpromising: do not claim 'never tips' – only claim 'tested on real cracks, see the video.'"
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Establish painpoint: wheel jam on crack causing near tip-over.",
+          "visual_description": "CLOSE-UP: Stroller front wheel hits 1-inch sidewalk crack, wheel jams, frame lurches forward, baby seat tilts dangerously, parent's hand grips handlebar in panic.",
+          "narration": "Your stroller wheel hits a crack. The frame lurches. Your child tips forward.",
+          "on_screen_text": "Wheel jam on crack",
+          "camera_motion": "Handheld, sudden jolt",
+          "camera_speed": 0.8,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.9,
+          "audio_emotion": "alarm",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Creates visceral fear of child tipping",
+          "linked_painpoint": "wheel jam on crack",
+          "evidence_quote_used": "The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 7.0,
+          "scene_goal": "Show brake failure: loose pedal, doesn't lock both wheels.",
+          "visual_description": "WIDE: Parent presses brake pedal. Pedal wiggles loose. Only one rear wheel locks. Stroller rolls slightly on a slight slope. Baby inside.",
+          "narration": "Brake pedal feels loose. One wheel locks. The other? Rolling free.",
+          "on_screen_text": "Brake fails on slope",
+          "camera_motion": "Steady, slow pan",
+          "camera_speed": 0.3,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "unease",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Highlights safety risk of rolling away",
+          "linked_painpoint": "brake failure",
+          "evidence_quote_used": "The brake pedal felt loose and did not lock both wheels every time."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 7.0,
+          "scene_goal": "Show folding latch jam causing frustration alone.",
+          "visual_description": "MEDIUM: Parent alone at car trunk, repeatedly pushing folding latch, stroller half-folded, latch stuck, frustrated grunt, trunk door open.",
+          "narration": "Folding latch jams. You're alone. The car door is open. The stroller won't fold.",
+          "on_screen_text": "Latch jammed",
+          "camera_motion": "Handheld, shaky",
+          "camera_speed": 0.6,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "frustration",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Relatable solo struggle with folding",
+          "linked_painpoint": "folding latch jam",
+          "evidence_quote_used": "The folding latch stuck so badly that I struggled to load it into the car alone."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 8.0,
+          "scene_goal": "Show relief: new wheel design rolls over same crack smoothly.",
+          "visual_description": "REPEAT same crack but now stroller with new wheel design. Wheel rolls over crack smoothly, suspension absorbs impact, frame stays level, baby content.",
+          "narration": "New wheel design rolls over that same crack. Smooth. No tip. No fear.",
+          "on_screen_text": "Smooth ride over crack",
+          "camera_motion": "Smooth dolly, steady",
+          "camera_speed": 0.4,
+          "transition_style": "Dissolve",
+          "emotional_intensity": 0.3,
+          "audio_emotion": "calm",
+          "dopamine_trigger": true,
+          "dopamine_type": "relief",
+          "retention_reason": "Contrast with scene 1, satisfying resolution",
+          "linked_painpoint": "wheel jam on crack",
+          "evidence_quote_used": "The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.4225,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 1.0,
+    "narration_quality": 0.9125,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.675,
+    "creative_score": 0.7055416666666667,
+    "grounded_score": 0.47271291666666676,
+    "predicted_ctr": 0.084665,
+    "grounded_ctr": 0.056725550000000007,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.53, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 844,
+      "latency_ms": 4706.707954406738,
+      "reasoning_latency_ms": 3747.537999995984,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step-by-step.\n\n**1. Product Classification**\nThe URL path contains \"baby_stroller\" — this is clearly a baby product, specifically a stroller. Category: Baby & Kids / Strollers & Travel Systems.\n\n**2. Task Complexity from Real Inputs**\nThe only real input is a URL. There is no user query, no specific task description, no request for analysis, comparison, or content generation. The input is minimal — just a product page URL. This means the complexity is low. I cannot ass"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.4413999995449558,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.40409999928670004,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.02559999848017469,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 7,
+        "skipped_count": 0,
+        "retrieval_count": 7,
+        "retrieval_hits": {
+          "success": 16,
+          "failure": 16
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 304,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 301,
+          "failure": 3,
+          "total": 304
+        },
+        "memory_growth": {
+          "total_records": 304,
+          "max_record_count": 500,
+          "peak_record_count": 304,
+          "remaining_capacity": 196,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 7,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 7,
+      "memory_retrieval_hits_success": 14,
+      "memory_retrieval_hits_failure": 14,
+      "memory_record_count_success": 301,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 304,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 304,
+      "memory_remaining_capacity": 196,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1029,
+      "latency_ms": 5133.309841156006,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1174,
+      "latency_ms": 5383.569955825806,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 265,
+      "latency_ms": 2228.181838989258,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 7,
+        "skipped_count": 0,
+        "retrieval_count": 7,
+        "retrieval_hits": {
+          "success": 16,
+          "failure": 16
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 304,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 301,
+          "failure": 3,
+          "total": 304
+        },
+        "memory_growth": {
+          "total_records": 304,
+          "max_record_count": 500,
+          "peak_record_count": 304,
+          "remaining_capacity": 196,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 7,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 7,
+      "memory_retrieval_hits_success": 14,
+      "memory_retrieval_hits_failure": 14,
+      "memory_record_count_success": 301,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 304,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 304,
+      "memory_remaining_capacity": 196,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2926,
+      "latency_ms": 9965.200185775757,
+      "reasoning_latency_ms": 5091.965599996911,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3099,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile: The Safety-First, Frustrated Parent**\n\n**Identity:** Parent of infant/toddler (0-2 years), urban or suburban, often solo-parenting during errands. Values reliability over aesthetics.\n\n**Core Pain Points (High Confidence):**\n- **Safety Anxiety:** Stroller nearly tips forward (wheel jam on cracks); brake fails to lock both wheels. *Emotional state: Fear, distrust.*\n- **Daily Usability Failures:** Folding latch jams (can't load car alone); canopy doesn't actually shade baby; shallo",
+      "memory_observability": {
+        "write_count": 7,
+        "skipped_count": 0,
+        "retrieval_count": 7,
+        "retrieval_hits": {
+          "success": 16,
+          "failure": 16
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 304,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 301,
+          "failure": 3,
+          "total": 304
+        },
+        "memory_growth": {
+          "total_records": 304,
+          "max_record_count": 500,
+          "peak_record_count": 304,
+          "remaining_capacity": 196,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 7,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 7,
+      "memory_retrieval_hits_success": 14,
+      "memory_retrieval_hits_failure": 14,
+      "memory_record_count_success": 301,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 304,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 304,
+      "memory_remaining_capacity": 196,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2850,
+      "latency_ms": 15194.028854370117,
+      "reasoning_latency_ms": 4791.394899999432,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2811,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Evidence & Reasoning:\n\n- **Painpoint hierarchy:** “Fear of child injury” is the highest-stakes emotional painpoint. **Evidence_basis:** audience trust_barriers and core_painpoints list safety first. Flag: weak evidence for ranking, but logical priority.\n- **Dopamine trigger path:** Relief requires showing the *exact failure moment* (e.g., wheel jamming on crack) then tactile proof of fix (wheel rolling over same crack). **Evidence_basis:** dopamine_summary + evidence_quotes (first quote about ti",
+      "memory_observability": {
+        "write_count": 7,
+        "skipped_count": 0,
+        "retrieval_count": 8,
+        "retrieval_hits": {
+          "success": 16,
+          "failure": 16
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 304,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 301,
+          "failure": 3,
+          "total": 304
+        },
+        "memory_growth": {
+          "total_records": 304,
+          "max_record_count": 500,
+          "peak_record_count": 304,
+          "remaining_capacity": 196,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 7,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 8,
+      "memory_retrieval_hits_success": 16,
+      "memory_retrieval_hits_failure": 16,
+      "memory_record_count_success": 301,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 304,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 304,
+      "memory_remaining_capacity": 196,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3400,
+      "latency_ms": 12204.498291015625,
+      "reasoning_latency_ms": 5411.888499998895,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "THINKING:\nScene 1: Show painpoint - wheel jam on crack, near tip. Use quote 1.\nScene 2: Show brake failure - loose pedal, doesn't lock. Use quote 4.\nScene 3: Show folding latch jam - struggle alone. Use quote 2.\nScene 4: Show relief - new wheel design rolls over same crack smoothly. Use quote 1 again (same crack, different outcome). Max 3 dopamine triggers: scene 4 is the only relief scene.\n\nScene 1:\nevidence_quote_used: \"The front wheel jammed on a sidewalk crack and nearly tipped the stroller "
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 8,
+        "skipped_count": 0,
+        "retrieval_count": 8,
+        "retrieval_hits": {
+          "success": 16,
+          "failure": 16
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 305,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 302,
+          "failure": 3,
+          "total": 305
+        },
+        "memory_growth": {
+          "total_records": 305,
+          "max_record_count": 500,
+          "peak_record_count": 305,
+          "remaining_capacity": 195,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 8,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 8,
+      "memory_retrieval_hits_success": 16,
+      "memory_retrieval_hits_failure": 16,
+      "memory_record_count_success": 302,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 305,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 305,
+      "memory_remaining_capacity": 195,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 8,
+    "skipped_count": 0,
+    "retrieval_count": 8,
+    "retrieval_hits": {
+      "success": 16,
+      "failure": 16
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 305,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 302,
+      "failure": 3,
+      "total": 305
+    },
+    "memory_growth": {
+      "total_records": 305,
+      "max_record_count": 500,
+      "peak_record_count": 305,
+      "remaining_capacity": 195,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

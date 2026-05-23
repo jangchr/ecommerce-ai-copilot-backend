@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual env
+l8/
+.venv/
+venv/
+
+# Env / secrets
+.env
+.env.local
+
+# Runtime logs / server markers
+.server.pid
+.server.job
+server.err.log
+server.out.log
+server.job.log
+
+# Runtime storage
+storage/faiss_memory/
+faiss_index/
+
+# Regression outputs
+runs/latest/
+runs/history/
+runs/*.json
+
+# Keep frozen baselines
+!runs/baselines/
+!runs/baselines/**
+
+# OS
+.DS_Store
+Thumbs.db

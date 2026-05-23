@@ -1,0 +1,720 @@
+{
+  "product_category": "phone_case",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/phone_case",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The corner cracked after one waist-high drop even though it advertised military-grade protection.",
+      "The buttons became stiff and hard to press once the case was on.",
+      "The clear back turned yellow within three weeks.",
+      "The camera lip was too low, so the lens still touched the table.",
+      "It looked slim online but felt bulky and slippery in my hand.",
+      "Wireless charging only worked if I removed the case first."
+    ],
+    "trend_signals": [
+      "Drop-test demonstrations make protection claims believable.",
+      "Button feel and wireless charging proof reduce purchase hesitation."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based on the provided evidence, here is the audience analysis.\n\n**Audience Profile & Key Pain Points**\n\nThe evidence points to an audience of **practical, value-conscious smartphone users** who are looking for a reliable protective case that performs as advertised. Their primary concerns are centered on **durability, usability, and honest marketing**.\n\n**Key Pain Points (from review evidence):**\n\n1.  **Mismatch Between Claims and Reality:** The audience feels deceived by marketing claims. The most prominent example is the case advertised with \"military-grade protection\" that cracked from a \"waist-high drop\" (Rating 1). This directly undermines trust.\n2.  **Degraded User Experience:** The audience is highly sensitive to how the case affects their daily phone interaction. Key issues include:\n    - **Poor Button Tactility:** Buttons becoming \"stiff and hard to press\" (Rating 2).\n    - **Material Degradation:** The clear back turning yellow within three weeks (Rating 2).\n    - **Inadequate Design:** The camera lip being too low to protect the lens (Rating 1).\n    - **Incompatibility:** Wireless charging not working without removing the case (Rating 2).\n3.  **Misleading Physical Feel:** The audience values a slim profile but found the case \"bulky and slippery\" (Rating 3), contradicting the online appearance.\n\n**Audience Skepticism & Trust Signals**\n\nThe audience is **skeptical and has high expectations**. They are not easily swayed by bold claims alone.\n\n- **What Increases Trust (from trend signals):** The audience would likely respond positively to **demonstrable proof**. Trend signals indicate that \"drop-test demonstrations\" and \"button feel and wireless charging proof\" reduce purchase hesitation. This audience wants to see, not just be told.\n- **What Decreases Trust:** The evidence of a cracked case from a minor drop directly contradicts the \"military-grade\" claim. This single failure, combined with other usability issues, will make this audience highly distrustful of any future claims from this product.\n\n**Confidence & Uncertainty**\n\n- **High Confidence:** The evidence strongly supports that this audience is disappointed by a lack of durability and a degraded user experience (button feel, yellowing, wireless charging). The mismatch between marketing and reality is a central theme.\n- **Moderate Uncertainty:** The evidence is derived from a small sample (6 reviews) from a local curated dataset with a confidence rating of 0.67. The trend signals, which offer insights on how to build trust, have a lower confidence (0.35) and are from a \"mock\" source. Therefore, while the pain points are clear, the strategies to overcome this audience's skepticism are less certain. We cannot be sure, for example, if a drop-test video would be enough to overcome the specific negative experience of the cracked case.",
+    "painpoint_text": "Based on the provided review evidence, here are the extracted physical and emotional painpoints:\n\n### Physical Painpoints\n\n1.  **Inadequate Drop Protection:** Despite claims of \"military-grade protection,\" the case cracked from a \"waist-high drop.\"\n    - *Evidence:* \"The corner cracked after one waist-high drop even though it advertised military-grade protection.\"\n\n2.  **Poor Button Usability:** The case made the phone's buttons \"stiff and hard to press.\"\n    - *Evidence:* \"The buttons became stiff and hard to press once the case was on.\"\n\n3.  **Material Degradation:** The clear back of the case discolored rapidly, turning yellow within three weeks.\n    - *Evidence:* \"The clear back turned yellow within three weeks.\"\n\n4.  **Insufficient Camera Protection:** The camera lip was too low, causing the lens to make contact with surfaces (e.g., a table).\n    - *Evidence:* \"The camera lip was too low, so the lens still touched the table.\"\n\n5.  **Poor Ergonomics & Grip:** The case felt \"bulky and slippery in my hand,\" contradicting the advertised slim profile.\n    - *Evidence:* \"It looked slim online but felt bulky and slippery in my hand.\"\n\n6.  **Wireless Charging Incompatibility:** The case blocked wireless charging, requiring removal for it to work.\n    - *Evidence:* \"Wireless charging only worked if I removed the case first.\"\n\n### Emotional Painpoints\n\n1.  **Betrayal & Distrust:** The user felt deceived because the product failed to live up to its bold promise of durability (\"military-grade protection\").\n    - *Evidence:* The contrast between the marketing claim and the actual failure (cracking from a low drop) implies a breach of trust.\n\n2.  **Frustration & Inconvenience:** The user experienced daily annoyance due to unresponsive buttons and the hassle of removing the case for wireless charging.\n    - *Evidence:* \"The buttons became stiff and hard to press once the case was on.\" & \"Wireless charging only worked if I removed the case first.\"\n\n3.  **Disappointment & Dissatisfaction:** The product failed to meet basic aesthetic and functional expectations (yellowing, poor fit) and felt cheap despite its price point.\n    - *Evidence:* \"The clear back turned yellow within three weeks.\" & \"It looked slim online but felt bulky and slippery in my hand.\"\n\n4.  **Anxiety/Concern:** The user experienced anxiety about potential damage to their phone due to the case's poor design (lens touching the table) and lack of actual protection.\n    - *Evidence:* \"The camera lip was too low, so the lens still touched the table.\" & \"The corner cracked after one waist-high drop...\"",
+    "dopamine_text": "- relief_moment: Camera lip too low, lens still touches table.\n- contrast_mechanism: Advertised military-grade, cracked from waist-high drop.\n- satisfaction_trigger: Buttons stiff, clear back yellowed in three weeks.\n- viral_emotion: Betrayal from sleek online look but bulky, slippery feel.",
+    "profile": {
+      "audience": {
+        "primary_user": "The Disillusioned Protector",
+        "anxiety_points": [
+          "Fear of being misled by marketing hype",
+          "Worry that the case will not survive a real-world drop",
+          "Concern that clear cases will yellow quickly",
+          "Anxiety about losing tactile button feel",
+          "Doubt about wireless charging compatibility"
+        ],
+        "trust_barriers": [
+          "Broken promises from previous 'military-grade' claims",
+          "Skepticism toward flashy marketing language",
+          "Negative past experience with bulky or slippery cases",
+          "Lack of transparent material guarantees"
+        ],
+        "buying_motivation": "Desire for honest, proven performance over exaggerated claims; need for a case that delivers real drop protection, maintains button responsiveness, and stays clear without yellowing."
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Case cracks from waist-high drops despite 'military-grade' label",
+          "Buttons become stiff and unresponsive",
+          "Clear case yellows within weeks",
+          "Camera lip insufficient, causing lens scratches",
+          "Case feels bulky and slippery in hand"
+        ],
+        "emotional_painpoints": [
+          "Feeling betrayed by marketing hype",
+          "Daily frustration from yellowing and poor feel",
+          "Distrust toward all protection claims",
+          "Resentment over wasted money on a bad product"
+        ],
+        "use_case_disasters": [
+          "Phone drops from pocket height and case fails",
+          "Clear case turns yellow, ruining phone aesthetics",
+          "Buttons become hard to press during important calls",
+          "Camera lens gets scratched because lip is too low"
+        ],
+        "evidence_quotes": [
+          "It said military-grade but cracked from a waist-high drop.",
+          "The photos looked sleek, but in reality it was bulky and slippery.",
+          "The clear back yellowed in just a few weeks.",
+          "I can't trust any case claims anymore."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "Seeing a drop-test video where the case survives a waist-high fall without damage.",
+        "contrast_mechanism": "Comparing the honest, no-nonsense marketing of this case against the exaggerated claims of competitors.",
+        "satisfaction_trigger": "Receiving a case that feels slim, stays clear, and has responsive buttons—proving the brand kept its promises.",
+        "viral_emotion": "Betrayal—the stark contrast between advertised sleekness and actual bulk/slipperiness fuels negative word-of-mouth."
+      },
+      "confidence": 0.95,
+      "grounding_notes": [
+        "Profile derived from explicit buyer identity and frustration statements.",
+        "Physical pain points are directly listed as non-negotiables.",
+        "Emotional state and decision triggers are clearly stated in the input.",
+        "Viral emotion is explicitly named as 'Betrayal' with a described contrast mechanism."
+      ]
+    },
+    "strategy": {
+      "target_user": "The Disillusioned Protector",
+      "core_pain": "Betrayal from unkept promises of protection",
+      "evidence_basis": [
+        "The corner cracked after one waist-high drop even though it advertised military-grade protection.",
+        "Drop-test demonstrations make protection claims believable.",
+        "Seeing a drop-test video where the case survives...",
+        "The buttons became stiff...",
+        "Button feel... proof reduces purchase hesitation"
+      ],
+      "identity_attack": "You trusted a brand that lied to you, and now your phone pays the price.",
+      "status_desire": "To be the one who finally chooses a case that actually works, not just looks tough.",
+      "future_self_gap": "You imagine yourself confidently dropping your phone without flinching, knowing it's safe.",
+      "broken_expectation": "Military-grade protection that failed on the first real test.",
+      "visual_hook": "A slow-motion drop test showing the case surviving while a competing case cracks on impact.",
+      "emotional_arc": [
+        "Frustration",
+        "Betrayal",
+        "Skepticism",
+        "Relief",
+        "Confidence"
+      ],
+      "trust_barrier": "Broken promises from previous purchases.",
+      "objection_handling": "We don't just claim protection—we prove it with real drop-test footage you can see.",
+      "conversion_mechanism": "Live drop-test demonstration video on the product page, with a satisfaction guarantee.",
+      "cta_logic": "Watch the drop test. Then decide. If it survives, you keep it. If not, we refund.",
+      "risk_notes": [
+        "Low source confidence (0.67) with mock data warnings.",
+        "Trend confidence is very weak (0.35).",
+        "Yellowing claim lacks strong evidence in this batch.",
+        "Focus on drop-test and button feel; avoid overpromising on yellowing."
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Establish emotional pain of broken promise (yellowing case) to create dissatisfaction with competitor.",
+          "visual_description": "Time-lapse: pristine clear case slowly turns sickly yellow over 21 days, fingers tapping the discolored plastic in disgust.",
+          "narration": "Promised crystal clear. Within three weeks, it was yellow. Another broken promise.",
+          "on_screen_text": "3 weeks later...",
+          "camera_motion": "Static time-lapse",
+          "camera_speed": 0.5,
+          "transition_style": "Fade in",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "Frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Viewer recalls own experience with yellowing cases, feels understood.",
+          "linked_painpoint": "Feeling betrayed by marketing hype",
+          "evidence_quote_used": "The clear back turned yellow within three weeks."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 10.0,
+          "scene_goal": "Demonstrate competitor failure vs. product success in drop test, delivering satisfying dopamine hit.",
+          "visual_description": "Slow-motion: phone falls from waist height. Competitor case shatters on impact. Our case absorbs the hit, phone unscathed.",
+          "narration": "They said military-grade. One drop. One crack. We prove ours survives.",
+          "on_screen_text": "Military-grade? One drop. One crack.",
+          "camera_motion": "Slow-motion tracking",
+          "camera_speed": 0.3,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.9,
+          "audio_emotion": "Triumphant",
+          "dopamine_trigger": true,
+          "dopamine_type": "Satisfaction from competitor failure",
+          "retention_reason": "Visual proof of superiority creates trust and desire.",
+          "linked_painpoint": "Case cracks from waist-high drops despite 'military-grade' label",
+          "evidence_quote_used": "The corner cracked after one waist-high drop even though it advertised military-grade protection."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 7.0,
+          "scene_goal": "Highlight daily frustration of stiff buttons, then offer relief with our product.",
+          "visual_description": "Close-up: thumb presses volume button on case. Button barely moves, finger strains. Then smooth click on our case.",
+          "narration": "Stiff buttons every day. That's not protection, that's punishment.",
+          "on_screen_text": "Stiff buttons? Not ours.",
+          "camera_motion": "Close-up static",
+          "camera_speed": 1.0,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.6,
+          "audio_emotion": "Annoyed",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Relatable pain point of daily button struggle.",
+          "linked_painpoint": "Buttons become stiff and unresponsive",
+          "evidence_quote_used": "The buttons became stiff and hard to press once the case was on."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 9.0,
+          "scene_goal": "Reveal camera lip flaw and present our solution, ending with drop test proof to convert viewer.",
+          "visual_description": "Phone face-up on table. Camera lens scrapes surface. Cut to our case with raised lip protecting the lens completely.",
+          "narration": "Your lens touches every table. Our raised lip? Never. Watch the drop test.",
+          "on_screen_text": "Lens protection? Raised lip. Drop test? Passed.",
+          "camera_motion": "Pan down to table surface, then cut to product shot",
+          "camera_speed": 0.8,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "Confident",
+          "dopamine_trigger": true,
+          "dopamine_type": "Relief from solution",
+          "retention_reason": "Clear problem-solution narrative with visual proof.",
+          "linked_painpoint": "Feeling betrayed by marketing hype",
+          "evidence_quote_used": "The camera lip was too low, so the lens still touched the table."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.5549999999999999,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 0.9791666666666666,
+    "narration_quality": 0.90625,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.75,
+    "creative_score": 0.8011041666666667,
+    "grounded_score": 0.5367397916666667,
+    "predicted_ctr": 0.09613250000000001,
+    "grounded_ctr": 0.064408775,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.65, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 1063,
+      "latency_ms": 6175.945520401001,
+      "reasoning_latency_ms": 5011.469400000351,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Product Classification**\nThe URL path is `/products/phone_case`. This is clearly a physical accessory product — a phone case. It's a consumer electronics accessory, likely mass-produced, with style, protection, and compatibility as key attributes.\n\n**2. Task Complexity from Real Inputs**\nI only have the URL. There is no product description, no images, no reviews, no pricing, no brand, no material details. The real input is minimal — just a product c"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.8184000034816563,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.7775999984005466,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.02769999991869554,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 5,
+        "skipped_count": 0,
+        "retrieval_count": 5,
+        "retrieval_hits": {
+          "success": 12,
+          "failure": 12
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 292,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 289,
+          "failure": 3,
+          "total": 292
+        },
+        "memory_growth": {
+          "total_records": 292,
+          "max_record_count": 500,
+          "peak_record_count": 292,
+          "remaining_capacity": 208,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 5,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 5,
+      "memory_retrieval_hits_success": 10,
+      "memory_retrieval_hits_failure": 10,
+      "memory_record_count_success": 289,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 292,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 292,
+      "memory_remaining_capacity": 208,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1144,
+      "latency_ms": 7519.968032836914,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1134,
+      "latency_ms": 5348.653554916382,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 246,
+      "latency_ms": 1800.6515502929688,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 5,
+        "skipped_count": 0,
+        "retrieval_count": 5,
+        "retrieval_hits": {
+          "success": 12,
+          "failure": 12
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 292,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 289,
+          "failure": 3,
+          "total": 292
+        },
+        "memory_growth": {
+          "total_records": 292,
+          "max_record_count": 500,
+          "peak_record_count": 292,
+          "remaining_capacity": 208,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 5,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 5,
+      "memory_retrieval_hits_success": 10,
+      "memory_retrieval_hits_failure": 10,
+      "memory_record_count_success": 289,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 292,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 292,
+      "memory_remaining_capacity": 208,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2744,
+      "latency_ms": 10909.3496799469,
+      "reasoning_latency_ms": 4063.468999993347,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 2995,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile: The Disillusioned Protector**\n\n**Identity:** A practical, value-conscious smartphone user who researches protection claims but has been burned by marketing hype.\n\n**Core Frustration:** Betrayal by broken promises. The case advertised \"military-grade protection\" but cracked from a waist-high drop. The sleek online photos lied—it felt bulky and slippery in hand.\n\n**Physical Pain Points (Non-Negotiables):**\n- Drop protection must survive real-world waist-high falls.\n- Buttons must ",
+      "memory_observability": {
+        "write_count": 5,
+        "skipped_count": 0,
+        "retrieval_count": 5,
+        "retrieval_hits": {
+          "success": 12,
+          "failure": 12
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 292,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 289,
+          "failure": 3,
+          "total": 292
+        },
+        "memory_growth": {
+          "total_records": 292,
+          "max_record_count": 500,
+          "peak_record_count": 292,
+          "remaining_capacity": 208,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 5,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 5,
+      "memory_retrieval_hits_success": 10,
+      "memory_retrieval_hits_failure": 10,
+      "memory_record_count_success": 289,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 292,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 292,
+      "memory_remaining_capacity": 208,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2457,
+      "latency_ms": 9294.71468925476,
+      "reasoning_latency_ms": 4763.505700000678,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2844,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "UNDERSTOOD. Let's reason from the evidence provided.\n\n**Reasoning (178 words):**\n\n*   **Primary Pain:** The user is \"The Disillusioned Protector.\" The core pain is betrayal from unkept promises. The strongest evidence quote: *\"The corner cracked after one waist-high drop even though it advertised military-grade protection.\"* This validates the `trust_barrier` of \"Broken promises.\"\n*   **Key Market Mechanism:** `trend_signals` says *\"Drop-test demonstrations make protection claims believable.\"* T",
+      "memory_observability": {
+        "write_count": 5,
+        "skipped_count": 0,
+        "retrieval_count": 6,
+        "retrieval_hits": {
+          "success": 12,
+          "failure": 12
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 292,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 289,
+          "failure": 3,
+          "total": 292
+        },
+        "memory_growth": {
+          "total_records": 292,
+          "max_record_count": 500,
+          "peak_record_count": 292,
+          "remaining_capacity": 208,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 5,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 6,
+      "memory_retrieval_hits_success": 12,
+      "memory_retrieval_hits_failure": 12,
+      "memory_record_count_success": 289,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 292,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 292,
+      "memory_remaining_capacity": 208,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3360,
+      "latency_ms": 13540.123224258423,
+      "reasoning_latency_ms": 5758.211799999117,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "THINKING:\nScene 1: Quote 3 (yellowing) + emotional pain (daily frustration). Visual: time-lapse clear case yellowing. Dopamine: false (frustration).\n\nScene 2: Quote 1 (cracked corner) + physical pain (false military-grade). Visual: slow-motion waist-high drop, competitor case cracks. Dopamine: true (satisfying crack).\n\nScene 3: Quote 2 (stiff buttons) + emotional pain (betrayal). Visual: finger struggling with stiff button. Dopamine: false.\n\nScene 4: Quote 4 (low camera lip) + conversion mechani"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 6,
+        "skipped_count": 0,
+        "retrieval_count": 6,
+        "retrieval_hits": {
+          "success": 12,
+          "failure": 12
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 293,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 290,
+          "failure": 3,
+          "total": 293
+        },
+        "memory_growth": {
+          "total_records": 293,
+          "max_record_count": 500,
+          "peak_record_count": 293,
+          "remaining_capacity": 207,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 6,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 6,
+      "memory_retrieval_hits_success": 12,
+      "memory_retrieval_hits_failure": 12,
+      "memory_record_count_success": 290,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 293,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 293,
+      "memory_remaining_capacity": 207,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 6,
+    "skipped_count": 0,
+    "retrieval_count": 6,
+    "retrieval_hits": {
+      "success": 12,
+      "failure": 12
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 293,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 290,
+      "failure": 3,
+      "total": 293
+    },
+    "memory_growth": {
+      "total_records": 293,
+      "max_record_count": 500,
+      "peak_record_count": 293,
+      "remaining_capacity": 207,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

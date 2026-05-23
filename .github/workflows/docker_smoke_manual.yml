@@ -1,0 +1,56 @@
+name: L10 Manual Docker Smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t grounded-agent-backend .
+
+      - name: Start smoke container
+        run: |
+          docker run -d --name grounded-agent-smoke -p 8001:8001 \
+            -e OPENAI_API_KEY=dummy-for-smoke \
+            -e ALLOW_REAL_SOURCE_ADAPTERS=false \
+            grounded-agent-backend
+
+      - name: Wait for health endpoint
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8001/healthz; then
+              exit 0
+            fi
+            echo "Waiting for /healthz (${attempt}/30)..."
+            sleep 2
+          done
+          docker logs grounded-agent-smoke
+          exit 1
+
+      - name: Verify health endpoint
+        run: curl --fail --silent --show-error http://127.0.0.1:8001/healthz
+
+      - name: Run startup preflight in container
+        run: docker exec grounded-agent-smoke python scripts/startup_preflight.py
+
+      - name: Run fast gate in container
+        run: docker exec grounded-agent-smoke python scripts/run_all_tests.py --fast
+
+      - name: Verify required assets are packaged
+        run: |
+          docker exec grounded-agent-smoke python -c "from pathlib import Path; assert Path('/app/data/reviews').is_dir(); assert Path('/app/runs/baselines/l9_9_stable').is_dir(); assert Path('/app/runs/baselines/l10_4_production_handoff').is_dir(); print('required assets present')"
+
+      - name: Verify excluded assets are absent
+        run: |
+          docker exec grounded-agent-smoke python -c "from pathlib import Path; assert not Path('/app/.env').exists(); assert not Path('/app/runs/latest').exists(); assert not Path('/app/runs/history').exists(); assert not Path('/app/storage/faiss_memory').exists(); print('excluded assets absent')"
+
+      - name: Stop and remove smoke container
+        if: always()
+        run: docker rm -f grounded-agent-smoke || true
+

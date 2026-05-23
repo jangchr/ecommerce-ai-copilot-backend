@@ -1,0 +1,127 @@
+{
+  "product_category": "desk_lamp",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/desk_lamp",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The lamp flickered after ten minutes and gave me a headache while working.",
+      "The touch control was so sensitive that it changed brightness whenever I moved my notebook.",
+      "The neck would not stay in place and slowly drooped toward the desk.",
+      "The charging port became loose after a week of normal use.",
+      "The light was bright but created harsh glare on my monitor.",
+      "The base was too light, so the lamp tipped over when fully extended."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.53,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.8043333333333333,
+    "grounded_score": 0.5389033333333334,
+    "predicted_ctr": 0.09652,
+    "grounded_ctr": 0.0646684,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.40, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 978,
+      "latency_ms": 5972.905158996582,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Product Classification**\nThe URL contains \"desk_lamp\" — this is a physical consumer product in the home/office lighting category. Desk lamps are relatively simple, low-complexity products.\n\n**2. Task Complexity from Real Inputs**\n- The input is just a URL. No additional context like \"this is a complex product with many variants\" or \"this is a high-stakes purchase.\"\n- Desk lamps are not technically complex (no software, no assembly required for most,"
+    },
+    "analysis_audience": {
+      "total_tokens": 1084,
+      "latency_ms": 8222.959280014038,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 957,
+      "latency_ms": 4498.400926589966,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 243,
+      "latency_ms": 2247.3044395446777,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2957,
+      "latency_ms": 11977.46467590332,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile (Desk Lamp)**\n\n**Who They Are:** A remote worker or student who uses a desk lamp daily for focused, screen-based tasks. They bought this lamp expecting reliable, comfortable task lighting.\n\n**Core Need:** A stable, flicker-free light that reduces eye strain and doesn’t interfere with their workflow.\n\n**Primary Pain Points (Physical & Emotional):**\n- **Health & Comfort:** Flickering causes headaches within minutes. Harsh glare on the monitor creates visual discomfort.\n- **Unreliab"
+    },
+    "strategy": {
+      "total_tokens": 2433,
+      "latency_ms": 10080.026388168335,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "Evidence-based growth strategy for desk lamp:\n\n- **Core CTA**: \"Stop the Flicker\" (direct painpoint match)  \n  - evidence_basis: quotes 1,2,3,4 + relief_moment\n  - flag: low trend_confidence (0.35)\n\n- **Visual hook**: Side-by-side video: stable lamp neck vs. competitor drooping (tactile proof)  \n  - evidence_basis: trend_signals (contrast/tactile proof outperform)\n  - flag: mock source, confidence 0.67\n\n- **Headline**: \"Stable light, stable focus — no headache, no glare\"  \n  - evidence_basis: pa"
+    },
+    "storyboard": {
+      "total_tokens": 3215,
+      "latency_ms": 12586.145162582397,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "Scene 1 (dopamine_trigger=false):\n- evidence_quote_used: \"The lamp flickered after ten minutes and gave me a headache while working.\"\n- linked_painpoint: Flickering causes headaches within minutes\n- visual_description: Close-up of lamp surface flickering unevenly on a desk, with a person rubbing their temples. Timer shows 10 minutes elapsed. Overlay text: \"10 min in.\"\n- narration: \"Ten minutes of flickering light. Now the headache starts. This is not how a lamp should work.\"\n\nScene 2 (dopamine_t"
+    }
+  }
+}

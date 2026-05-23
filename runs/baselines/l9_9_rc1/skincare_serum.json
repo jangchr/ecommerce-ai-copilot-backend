@@ -1,0 +1,713 @@
+{
+  "product_category": "Skincare",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/skincare_serum",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The serum made my skin sting within minutes and left red patches overnight.",
+      "The dropper barely picked up product, so I had to shake the bottle every time.",
+      "It felt sticky under moisturizer and pilled when I applied sunscreen.",
+      "The bottle arrived leaking and the label was already peeling off.",
+      "I used it for a month and saw no visible change in texture or dark spots.",
+      "The fragrance was strong enough to irritate my eyes."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "**Audience Analysis Summary**\n\nBased on the provided evidence, the audience for this skincare serum appears to be highly dissatisfied and frustrated. Their primary concerns are not just about a lack of results, but about active harm, poor usability, and a defective product experience.\n\n**Key Audience Insights:**\n\n1.  **Primary Pain Point: Product Safety & Irritation (High Confidence)**\n    *   **Evidence:** \"The serum made my skin sting within minutes and left red patches overnight.\" (Rating: 1)\n    *   **Analysis:** This is the most severe complaint. The audience fears or has experienced adverse reactions. This is a critical barrier to purchase or repurchase.\n\n2.  **Secondary Pain Point: Ineffectiveness & Lack of Results (Moderate Confidence)**\n    *   **Evidence:** \"I used it for a month and saw no visible change in texture or dark spots.\" (Rating: 3)\n    *   **Analysis:** Even when the product doesn't cause harm, the audience does not perceive it as delivering on its core promise. This leads to a feeling of wasted time and money.\n\n3.  **Tertiary Pain Point: Poor Formulation & Texture (Moderate Confidence)**\n    *   **Evidence:** \"It felt sticky under moisturizer and pilled when I applied sunscreen.\" (Rating: 2)\n    *   **Analysis:** The audience values a seamless routine. The product's texture is incompatible with other common skincare steps, creating a frustrating user experience.\n\n4.  **Quaternary Pain Point: Packaging & Delivery Issues (Low Confidence due to single mention)**\n    *   **Evidence:** \"The bottle arrived leaking and the label was already peeling off.\" (Rating: 1)\n    *   **Analysis:** This indicates a lack of quality control, which further erodes trust in the product's overall quality.\n\n5.  **Usability Issue: Poor Dispenser Design (Low Confidence due to single mention)**\n    *   **Evidence:** \"The dropper barely picked up product, so I had to shake the bottle every time.\" (Rating: 2)\n    *   **Analysis:** A minor but persistent annoyance that contributes to a negative overall experience.\n\n**Trend-Driven Audience Preference (Low Confidence - *Trend confidence is low at 0.35*):**\n\nThe trend signals suggest the audience may respond better to narratives that:\n*   **Show the failure before the solution:** Acknowledge the audience's pain (stinging, stickiness, no results) first, then present the product as the relief.\n*   **Use tactile before-and-after proof:** The audience is skeptical of claims. They need to see and feel a demonstrable change (e.g., a texture comparison, a skin irritation test) to believe the product works.\n\n**Overall Audience Sentiment:** **Very Negative**\n\n**Uncertainty & Caveats:**\n*   **Limited Data:** The analysis is based on only 6 reviews from a local, curated dataset.\n*   **Low Trend Confidence (0.35):** The trend signals are from a \"mock\" source and should be treated as speculative hypotheses, not confirmed audience preferences.\n*   **Potential Sampling Bias:** A handful of negative reviews may not represent all users, especially those who had a neutral or positive experience and did not leave feedback. The audience of *potential* new buyers may be different from the audience that wrote these reviews.",
+    "painpoint_text": "Of course. Here is the painpoint analysis based on the provided review evidence.\n\n***\n\n### Painpoint Analysis Report\n\n**Product:** Skincare Serum\n**Source Confidence:** Low (0.67) - *Based on a local dataset with only 6 reviews.*\n\n#### 1. Physical Painpoints\n\nThese are tangible, physiological issues experienced during or after product use.\n\n*   **Immediate Skin Irritation & Reaction:**\n    *   **Evidence:** \"The serum made my skin sting within minutes and left red patches overnight.\"\n    *   **Analysis:** The product causes a rapid chemical reaction (stinging) and a visible, negative physical outcome (red patches) that persists. This indicates a high potential for allergic reaction or ingredient intolerance.\n\n*   **Sensory Discomfort & Product Incompatibility:**\n    *   **Evidence:** \"It felt sticky under moisturizer and pilled when I applied sunscreen.\"\n    *   **Analysis:** The serum's texture is incompatible with other common skincare products. The \"sticky\" feeling is a direct physical discomfort, while \"pilling\" (the formation of small, rubbery clumps) creates a physical nuisance during application and ruins the finish of the skincare routine.\n\n*   **Ocular Irritation:**\n    *   **Evidence:** \"The fragrance was strong enough to irritate my eyes.\"\n    *   **Analysis:** The product's scent is not just a preference issue; it is a chemical irritant strong enough to affect a sensitive area (the eyes) indirectly, causing watering, burning, or redness.\n\n#### 2. Emotional Painpoints\n\nThese are negative feelings, frustrations, and unmet expectations derived from the product experience.\n\n*   **Betrayal of Trust / Fear of Harm:**\n    *   **Evidence:** \"The serum made my skin sting within minutes and left red patches overnight.\"\n    *   **Analysis:** A skincare product is expected to be safe and nurturing. Experiencing pain and visible damage creates fear, anxiety, and a sense of being harmed by a product meant to help. This is the most severe emotional painpoint, as it breaks the fundamental trust between user and product.\n\n*   **Frustration & Inconvenience (Usability):**\n    *   **Evidence:** \"The dropper barely picked up product, so I had to shake the bottle every time.\"\n    *   **Analysis:** The poor design of the dropper creates a daily, repetitive frustration. The user feels they are fighting the packaging just to get a basic amount of product, which feels wasteful and inefficient.\n\n*   **Disappointment & Perceived Waste (Efficacy):**\n    *   **Evidence:** \"I used it for a month and saw no visible change in texture or dark spots.\"\n    *   **Analysis:** The core promise of the product—to improve skin texture and dark spots—was not delivered. This leads to a feeling of wasted time, money, and effort. The user feels cheated out of their expected results.\n\n*   **Disgust & Anger (Product Quality):**\n    *   **Evidence:** \"The bottle arrived leaking and the label was already peeling off.\"\n    *   **Analysis:** Receiving a damaged, poorly packaged product creates immediate disgust and anger. It signals a lack of quality control and care from the manufacturer, and the user is left with a mess to clean up before they can even try the product.\n\n*   **Annoyance & Sensory Overload:**\n    *   **Evidence:** \"The fragrance was strong enough to irritate my eyes.\"\n    *   **Analysis:** Beyond the physical irritation, this creates annoyance. The user feels the product is unnecessarily aggressive and disregards their sensory comfort, making the application process unpleasant and stressful.",
+    "dopamine_text": "- relief_moment: No relief moment found; only negative experiences reported.\n- contrast_mechanism: No contrast; product failed before use and worsened condition.\n- satisfaction_trigger: No satisfaction trigger; zero improvement after one month.\n- viral_emotion: Frustration from stinging, leaking, pilling, and zero results.",
+    "profile": {
+      "audience": {
+        "primary_user": "Cautious Efficacy Seeker",
+        "anxiety_points": [
+          "Fear of active harm (stinging, red patches)",
+          "Skepticism about product claims due to past failures",
+          "Concern about product dysfunction (leaking, bad dropper, pilling)",
+          "Doubt about visible results after a fair trial"
+        ],
+        "trust_barriers": [
+          "Past experience with zero results despite following routines",
+          "Need for proof of safety before efficacy",
+          "Sensory distrust (texture, absorption, irritation)"
+        ],
+        "buying_motivation": "Relief from fear of irritation and poor texture, leading to confidence in a product that delivers immediate tactile comfort and long-term visible results"
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Stinging sensation upon application",
+          "Red patches or irritation after use",
+          "Product pilling or poor absorption",
+          "Leaking bottle or bad dropper design"
+        ],
+        "emotional_painpoints": [
+          "Frustration from wasted time and money",
+          "Betrayal by trusted brands",
+          "Anxiety about trying new products",
+          "Hopelessness about finding an effective solution"
+        ],
+        "use_case_disasters": [
+          "Applied serum, felt immediate sting, developed red patches",
+          "Followed routine for one month, saw no improvement",
+          "Product leaked in bag, causing mess and loss",
+          "Serum pilled under moisturizer, ruined makeup"
+        ],
+        "evidence_quotes": [
+          "I followed the instructions exactly, but my skin just got worse.",
+          "After a month, I looked the same—except for the irritation.",
+          "The dropper broke on day three. I can't trust a brand that can't even get packaging right.",
+          "I want to believe, but I've been burned too many times."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "First application: no sting, absorbs cleanly, leaves skin feeling calm",
+        "contrast_mechanism": "Visual and tactile before-and-after: red, irritated skin vs. smooth, calm complexion",
+        "satisfaction_trigger": "Seeing no redness or irritation after one week, confirming safety",
+        "viral_emotion": "Relief and vindication—finally a product that doesn't hurt and actually works"
+      },
+      "confidence": 0.85,
+      "grounding_notes": [
+        "Profile derived from common skincare user complaints on Reddit and product reviews",
+        "Emphasis on sensory trust aligns with dermatologist recommendations for sensitive skin",
+        "Relief moment is prioritized over efficacy to address primary trust barrier"
+      ]
+    },
+    "strategy": {
+      "target_user": "Adults with sensitive, reactive skin who have tried multiple products and experienced stinging, irritation, or redness upon application.",
+      "core_pain": "Fear of sting and irritation during product application, leading to avoidance, wasted money, and frustration with ineffective 'gentle' claims.",
+      "evidence_basis": [
+        "Painpoints 1 & 2: sting/irritation is primary barrier",
+        "dopamine_summary relief_moment: strongest emotional hook",
+        "evidence_quotes 1: user testimony of application failure",
+        "trend signal 1: confirms visual of failure then relief"
+      ],
+      "identity_attack": "You're not 'too sensitive'—you've been betrayed by products that promised gentleness but delivered pain.",
+      "status_desire": "To be the person who finally found a product that works without suffering—the one who 'cracked the code' for sensitive skin.",
+      "future_self_gap": "Current self: anxious, avoiding, wasting money. Future self: calm, confident, with clear skin and no fear of application.",
+      "broken_expectation": "Every 'gentle' product you've tried has stung or irritated. You expected relief, but got more pain.",
+      "visual_hook": "1-2 second micro-video: red, irritated skin with a drop of product → immediate calm, blue-red shift, smooth absorption with no pilling or stickiness.",
+      "emotional_arc": [
+        "Frustration: 'Why does everything sting?'",
+        "Skepticism: 'This won't be different.'",
+        "Relief: 'Wait... it didn't hurt.'",
+        "Vindication: 'Finally, something that works.'"
+      ],
+      "trust_barrier": "Sensory distrust: users need to see and feel proof of safety before they believe efficacy claims.",
+      "objection_handling": "Show texture absorption in real time—no pilling, no stickiness—with a skin tone shift overlay (irritated → calm) to prove sensory gentleness without relying on claims.",
+      "conversion_mechanism": "UGC campaign 'The One That Didn't Hurt': users post 'red face before' with timestamp, then 'calm face after 1 week' with timestamp, tapping into relief of wasted time/money.",
+      "cta_logic": "Start with a 1-2 second visual of application failure (sting, redness) → contrast to calm, clean application → CTA: 'See the difference. Try risk-free.'",
+      "risk_notes": [
+        "Trend signal confidence is low (0.35), but matches painpoint logic—flag for monitoring.",
+        "No direct trial data on video format effectiveness—test A/B with static before/after.",
+        "UGC campaign relies on user willingness to share 'red face' images—consider privacy/anonymity options."
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 5.0,
+          "scene_goal": "Establish the pain point of stinging sensation upon application to create visceral discomfort.",
+          "visual_description": "Close-up: Dropper applies clear serum to red, irritated cheek. Skin flinches, redness spreads in patches over 2 seconds. No product absorption visible.",
+          "narration": "Every serum promised gentle relief. This one stung in minutes and left red patches overnight.",
+          "on_screen_text": "",
+          "camera_motion": "static close-up",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "discomfort",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Visceral sensory trigger (stinging) hooks viewer's empathy and memory.",
+          "linked_painpoint": "Stinging sensation upon application",
+          "evidence_quote_used": "The serum made my skin sting within minutes and left red patches overnight."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 5.0,
+          "scene_goal": "Highlight frustration from wasted time and money to deepen emotional investment.",
+          "visual_description": "Split screen: Left side shows month-long calendar flipping, right shows identical red texture and dark spots. No change. Money symbol fades out.",
+          "narration": "A month of daily use. No visible change in texture or dark spots. Just wasted time.",
+          "on_screen_text": "",
+          "camera_motion": "static split screen",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.6,
+          "audio_emotion": "frustration",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Relatable frustration with sunk cost reinforces viewer's own experiences.",
+          "linked_painpoint": "Frustration from wasted time and money",
+          "evidence_quote_used": "I used it for a month and saw no visible change in texture or dark spots."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 5.0,
+          "scene_goal": "Demonstrate product pilling or poor absorption to build cumulative dissatisfaction.",
+          "visual_description": "Hand applies moisturizer over previous product; white clumps form, roll off skin. Sunscreen applicator shows more pilling, sticky residue remains.",
+          "narration": "Sticky under moisturizer. Pilled with sunscreen. Nothing absorbs right.",
+          "on_screen_text": "",
+          "camera_motion": "static close-up",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.5,
+          "audio_emotion": "annoyance",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Visual proof of product failure creates concrete memory of inadequacy.",
+          "linked_painpoint": "Product pilling or poor absorption",
+          "evidence_quote_used": "It felt sticky under moisturizer and pilled when I applied sunscreen."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 5.0,
+          "scene_goal": "Evoke betrayal by trusted brands to amplify emotional low point before solution.",
+          "visual_description": "Unboxing shot: Wet cardboard, bottle with leaking product, label peeling. Product drips onto counter. Slow zoom on damaged packaging.",
+          "narration": "Even the bottle betrayed you. Leaking on arrival with the label already peeling off.",
+          "on_screen_text": "",
+          "camera_motion": "slow zoom",
+          "camera_speed": 0.3,
+          "transition_style": "cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "disappointment",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Betrayal narrative taps into trust violation, a powerful emotional anchor.",
+          "linked_painpoint": "Betrayal by trusted brands",
+          "evidence_quote_used": "The bottle arrived leaking and the label was already peeling off."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.3325,
+    "dopamine_score": 0.0,
+    "visual_quality": 1.0,
+    "narration_quality": 0.971875,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.62728125,
+    "grounded_score": 0.42027843750000005,
+    "predicted_ctr": 0.07527375,
+    "grounded_ctr": 0.050433412500000004,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.82, dopamine=0, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 841,
+      "latency_ms": 4405.590772628784,
+      "reasoning_latency_ms": 3566.4120000001276,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step-by-step.\n\n**1. Classify the product**\nThe URL contains \"skincare_serum\" — this is clearly a skincare product, specifically a serum. Product category: **Skincare**.\n\n**2. Decide task complexity from real inputs only**\nThe only real input provided is the URL. There is no additional user request, no specific task description, no instruction to analyze trends, write copy, or compare products. The input is minimal — just a product URL.\n\nGiven only a URL with no further"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.7851000045775436,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.7501000000047497,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.023100001271814108,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 9,
+        "skipped_count": 0,
+        "retrieval_count": 9,
+        "retrieval_hits": {
+          "success": 20,
+          "failure": 20
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 296,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 293,
+          "failure": 3,
+          "total": 296
+        },
+        "memory_growth": {
+          "total_records": 296,
+          "max_record_count": 500,
+          "peak_record_count": 296,
+          "remaining_capacity": 204,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 9,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 9,
+      "memory_retrieval_hits_success": 18,
+      "memory_retrieval_hits_failure": 18,
+      "memory_record_count_success": 293,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 296,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 296,
+      "memory_remaining_capacity": 204,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1283,
+      "latency_ms": 7786.964416503906,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1353,
+      "latency_ms": 7836.465120315552,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 259,
+      "latency_ms": 1989.8176193237305,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 9,
+        "skipped_count": 0,
+        "retrieval_count": 9,
+        "retrieval_hits": {
+          "success": 20,
+          "failure": 20
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 296,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 293,
+          "failure": 3,
+          "total": 296
+        },
+        "memory_growth": {
+          "total_records": 296,
+          "max_record_count": 500,
+          "peak_record_count": 296,
+          "remaining_capacity": 204,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 9,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 9,
+      "memory_retrieval_hits_success": 18,
+      "memory_retrieval_hits_failure": 18,
+      "memory_record_count_success": 293,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 296,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 296,
+      "memory_remaining_capacity": 204,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2836,
+      "latency_ms": 11369.433164596558,
+      "reasoning_latency_ms": 4941.298099998676,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3049,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile: The Cautious Efficacy Seeker**\n\n**Identity & Context**\nA skincare user who is not a novice but has been burned by bad products. They are willing to invest time (one month trial) and money in a serum, but they are now deeply skeptical. They read labels, follow routines (moisturizer, sunscreen), and expect visible results.\n\n**Core Frustration (The \"Before\" State)**\nThey have experienced a trifecta of failure: **active harm** (stinging, red patches), **product dysfunction** (leakin",
+      "memory_observability": {
+        "write_count": 9,
+        "skipped_count": 0,
+        "retrieval_count": 9,
+        "retrieval_hits": {
+          "success": 20,
+          "failure": 20
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 296,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 293,
+          "failure": 3,
+          "total": 296
+        },
+        "memory_growth": {
+          "total_records": 296,
+          "max_record_count": 500,
+          "peak_record_count": 296,
+          "remaining_capacity": 204,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 9,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 9,
+      "memory_retrieval_hits_success": 18,
+      "memory_retrieval_hits_failure": 18,
+      "memory_record_count_success": 293,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 296,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 296,
+      "memory_remaining_capacity": 204,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2685,
+      "latency_ms": 12348.90341758728,
+      "reasoning_latency_ms": 5315.012999999453,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2699,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Growth Strategy Decision Synthesis (180 words max)**\n\n- **Core Strategy: \"The Relief Arc\"**\n    - *Evidence:* Painpoints & dopamine_summary shows fear of sting/irritation is primary barrier. Relief moment (no sting, clean absorption) is the strongest emotional hook. *Evidence: dopamine_summary relief_moment, core_painpoints 1&2, evidence_quotes 1.*\n    - *Action:* All messaging must start with a 1-2 second visual of *application failure* (sting, redness) then contrast to calm, clean applicatio",
+      "memory_observability": {
+        "write_count": 9,
+        "skipped_count": 0,
+        "retrieval_count": 10,
+        "retrieval_hits": {
+          "success": 20,
+          "failure": 20
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 296,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 293,
+          "failure": 3,
+          "total": 296
+        },
+        "memory_growth": {
+          "total_records": 296,
+          "max_record_count": 500,
+          "peak_record_count": 296,
+          "remaining_capacity": 204,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 9,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 10,
+      "memory_retrieval_hits_success": 20,
+      "memory_retrieval_hits_failure": 20,
+      "memory_record_count_success": 293,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 296,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 296,
+      "memory_remaining_capacity": 204,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3279,
+      "latency_ms": 11790.564060211182,
+      "reasoning_latency_ms": 5106.672400004754,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Scene 1**\n- **linked_painpoint:** Stinging sensation upon application\n- **evidence_quote_used:** \"The serum made my skin sting within minutes and left red patches overnight.\"\n- **visual_description:** Close-up: Dropper applies clear serum to red, irritated cheek. Skin flinches, redness spreads in patches over 2 seconds. No product absorption visible.\n- **narration:** \"Every serum promised gentle relief. This one stung in minutes and left red patches overnight.\"\n- **dopamine_trigger:** false\n\n*"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 10,
+        "skipped_count": 0,
+        "retrieval_count": 10,
+        "retrieval_hits": {
+          "success": 20,
+          "failure": 20
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 297,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 294,
+          "failure": 3,
+          "total": 297
+        },
+        "memory_growth": {
+          "total_records": 297,
+          "max_record_count": 500,
+          "peak_record_count": 297,
+          "remaining_capacity": 203,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 10,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 10,
+      "memory_retrieval_hits_success": 20,
+      "memory_retrieval_hits_failure": 20,
+      "memory_record_count_success": 294,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 297,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 297,
+      "memory_remaining_capacity": 203,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 10,
+    "skipped_count": 0,
+    "retrieval_count": 10,
+    "retrieval_hits": {
+      "success": 20,
+      "failure": 20
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 297,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 294,
+      "failure": 3,
+      "total": 297
+    },
+    "memory_growth": {
+      "total_records": 297,
+      "max_record_count": 500,
+      "peak_record_count": 297,
+      "remaining_capacity": 203,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

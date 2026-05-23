@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrossGrowth AI - Agent Debugger</title>
+    <style>
+        :root {
+            --nav-bg: rgba(255, 255, 255, 0.92);
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --bg-base: #f5f5f7;
+            --bg-surface: #ffffff;
+            --border-light: rgba(0, 0, 0, 0.08);
+            --accent-blue: #007aff;
+            --accent-green: #1f9d55;
+            --accent-purple: #8e44ad;
+            --accent-red: #d92d20;
+            --accent-amber: #b76e00;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+        }
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 54px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .nav-content {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .hero { padding: 92px 24px 30px; text-align: center; }
+        .hero h1 { font-size: 30px; font-weight: 700; margin-bottom: 10px; }
+        .hero h2 { font-size: 15px; color: var(--text-secondary); margin-bottom: 28px; font-weight: 500; }
+        .control-panel {
+            max-width: 680px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            border: 1px solid var(--border-light);
+        }
+        .control-panel input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 14px 16px;
+            font-size: 14px;
+            background: transparent;
+            min-width: 0;
+        }
+        .btn-primary {
+            background: var(--text-primary);
+            color: #fff;
+            padding: 0 22px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            min-width: 148px;
+        }
+        .btn-primary:disabled { opacity: 0.65; cursor: progress; }
+        .btn-secondary {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            font-size: 13px;
+            font-weight: 650;
+            cursor: pointer;
+        }
+        .btn-secondary:disabled { opacity: 0.55; cursor: progress; }
+        .run-options {
+            max-width: 680px;
+            margin: 12px auto 0;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .toggle-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .toggle-option input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-blue);
+        }
+        .agent-track { display: flex; justify-content: center; gap: 10px; padding: 24px; flex-wrap: wrap; }
+        .agent-badge {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 650;
+            color: var(--text-secondary);
+            transition: all 0.25s;
+        }
+        .agent-badge.active {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: var(--accent-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,122,255,0.25);
+        }
+        .dashboard-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+        .card {
+            background: var(--bg-surface);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .card.wide { grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .card h3 {
+            font-size: 13px;
+            font-weight: 750;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .json-key {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 750;
+            margin: 12px 0 5px;
+            text-transform: uppercase;
+        }
+        .json-val {
+            font-size: 13px;
+            line-height: 1.45;
+            font-weight: 500;
+            background: var(--bg-base);
+            padding: 10px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+        .eval-box { padding: 14px; border-radius: 8px; border: 1px solid var(--accent-green); background: rgba(31, 157, 85, 0.06); }
+        .eval-box.risk-medium { border-color: var(--accent-amber); background: rgba(183, 110, 0, 0.06); }
+        .eval-box.risk-high { border-color: var(--accent-red); background: rgba(217, 45, 32, 0.06); }
+        .score-bar { height: 6px; background: var(--border-light); border-radius: 3px; margin: 8px 0; overflow: hidden; }
+        .score-fill { height: 100%; background: var(--accent-green); }
+        .feedback-box {
+            background: rgba(0, 122, 255, 0.05);
+            border: 1px dashed var(--accent-blue);
+            padding: 14px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+        pre.debug {
+            max-height: 360px;
+            overflow: auto;
+            background: #111827;
+            color: #e5e7eb;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .probe-tools {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
+        }
+        .probe-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .probe-header h4 {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 750;
+            text-transform: uppercase;
+        }
+        .probe-result {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+        }
+        .probe-provider {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .probe-status {
+            color: var(--accent-amber);
+            text-transform: uppercase;
+        }
+        .probe-status.success { color: var(--accent-green); }
+        .probe-status.error { color: var(--accent-red); }
+        .probe-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .probe-grid .json-key { margin-top: 8px; }
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .card.wide { grid-column: span 1; grid-template-columns: 1fr; }
+            .control-panel { flex-direction: column; border-radius: 8px; }
+            .btn-primary { min-height: 42px; }
+            .probe-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <span>CrossGrowth AI OS</span>
+            <span style="color:var(--accent-green);">Evidence Driven Agent</span>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1>Agent 可视化调试台</h1>
+            <h2>真实证据边界、结构认知、策略决策、Scene Graph、Reward 与 Reflection Trace</h2>
+            <div class="control-panel">
+                <input type="text" id="urlInput" placeholder="输入 ASIN 或商品 URL" value="https://amazon.com/dp/B08XXXXXX">
+                <button class="btn-primary" id="startBtn" onclick="startSystem()">运行 Workflow</button>
+            </div>
+            <div class="run-options">
+                <label class="toggle-option" for="debugMode">
+                    <input type="checkbox" id="debugMode" checked onchange="syncDebugMode()">
+                    <span>Debug Mode</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="agent-track" id="agentTrack">
+            <div class="agent-badge" id="n-planner">Planner</div>
+            <div class="agent-badge" id="n-retrieval">Retrieval</div>
+            <div class="agent-badge" id="n-evidence_builder">Evidence Builder</div>
+            <div class="agent-badge" id="n-parallel_analysis">Parallel Analysis</div>
+            <div class="agent-badge" id="n-cognitive_synthesis">Cognitive Synthesis</div>
+            <div class="agent-badge" id="n-strategy">Strategy</div>
+            <div class="agent-badge" id="n-storyboard">Storyboard</div>
+            <div class="agent-badge" id="n-governance">Governance</div>
+            <div class="agent-badge" id="n-reflection">Reflection</div>
+            <div class="agent-badge" id="n-analytics">Analytics</div>
+        </section>
+
+        <section class="dashboard-grid">
+            <div class="card">
+                <h3 style="color:var(--accent-blue);">1. Evidence</h3>
+                <div id="res-insights" style="opacity: 0.5;">等待执行...</div>
+            </div>
+            <div class="card">
+                <h3 style="color:var(--accent-purple);">2. Strategy</h3>
+                <div id="res-strategy" style="opacity: 0.5;">等待执行...</div>
+            </div>
+            <div class="card">
+                <h3>3. Scene Graph</h3>
+                <div id="res-assets" style="opacity: 0.5;">等待执行...</div>
+            </div>
+
+            <div class="card wide">
+                <div>
+                    <h3 style="color:var(--accent-green);">4. Reward</h3>
+                    <div id="res-evaluation" style="opacity: 0.5;">等待评估...</div>
+                </div>
+                <div>
+                    <h3 style="color:var(--accent-amber);">5. Debug Trace</h3>
+                    <div id="res-analytics" style="opacity: 0.5;">等待完整状态...</div>
+                    <div class="probe-tools" id="sourceProbeTools">
+                        <div class="probe-header">
+                            <h4>Source Probe</h4>
+                            <button class="btn-secondary" id="sourceProbeBtn" onclick="runSourceProbe()">Run Source Probe</button>
+                        </div>
+                        <div id="res-source-probe" style="opacity: 0.65;">No probe run.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function escapeHTML(str) {
+            return String(str ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function block(label, value) {
+            return `
+                <div class="json-key">${escapeHTML(label)}</div>
+                <div class="json-val">${escapeHTML(value)}</div>
+            `;
+        }
+
+        let latestDebugCategory = '';
+
+        function syncDebugMode() {
+            const enabled = document.getElementById('debugMode').checked;
+            document.getElementById('sourceProbeTools').hidden = !enabled;
+            if (!enabled) {
+                const probeTarget = document.getElementById('res-source-probe');
+                probeTarget.innerHTML = '';
+                probeTarget.style.opacity = '0.65';
+                latestDebugCategory = '';
+            }
+        }
+
+        function probeCategoryFromInput() {
+            const url = document.getElementById('urlInput').value || '';
+            const match = url.match(/\/products\/([^/?#]+)/i);
+            return latestDebugCategory || (match ? decodeURIComponent(match[1]) : 'unknown_product');
+        }
+
+        async function postCopilot(endpoint, payload) {
+            const response = await fetch(`http://127.0.0.1:8001/api/v1/${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                throw new Error(`${endpoint} request failed: ${response.status}`);
+            }
+            return response.json();
+        }
+
+        async function runSourceProbe() {
+            if (!document.getElementById('debugMode').checked) return;
+
+            const btn = document.getElementById('sourceProbeBtn');
+            const target = document.getElementById('res-source-probe');
+            btn.disabled = true;
+            target.style.opacity = '1';
+            target.innerHTML = block('Probe Status', 'Running');
+
+            try {
+                const probe = await postCopilot('debug-source-probe', {
+                    product_category: probeCategoryFromInput(),
+                    url: document.getElementById('urlInput').value,
+                    providers: [],
+                    debug_only: true
+                });
+                renderSourceProbe(probe);
+            } catch (error) {
+                target.innerHTML =
+                    block('Probe Status', 'Unavailable') +
+                    block('Error', error.message || 'Probe request failed.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function renderSourceProbe(probe) {
+            const target = document.getElementById('res-source-probe');
+            const telemetry = probe.telemetry || {};
+            const results = (probe.results || []).map((result) => `
+                <div class="probe-result">
+                    <div class="probe-provider">
+                        <span>${escapeHTML(result.provider || '')}</span>
+                        <span class="probe-status ${escapeHTML(result.status || '')}">${escapeHTML(result.status || '')}</span>
+                    </div>
+                    <div class="probe-grid">
+                        ${block('Source Confidence', result.source_confidence ?? 0)}
+                        ${block('Latency Ms', Number(result.latency_ms || 0).toFixed(2))}
+                    </div>
+                    ${block('Error', result.error || '')}
+                    ${block('Evidence Preview', (result.evidence_preview || []).join('\n'))}
+                </div>
+            `).join('');
+
+            target.style.opacity = '1';
+            target.innerHTML =
+                block('Provider Count', telemetry.provider_count ?? 0) +
+                block('Success Count', telemetry.success_count ?? 0) +
+                block('Disabled Count', telemetry.disabled_count ?? 0) +
+                block('Unavailable Count', telemetry.unavailable_count ?? 0) +
+                block('Error Count', telemetry.error_count ?? 0) +
+                block('Total Latency Ms', Number(telemetry.total_latency_ms || 0).toFixed(2)) +
+                block('Fallback Required', telemetry.fallback_required ? 'true' : 'false') +
+                results;
+        }
+
+        async function startSystem() {
+            const btn = document.getElementById('startBtn');
+            const url = document.getElementById('urlInput').value;
+            const debugMode = document.getElementById('debugMode').checked;
+            const payload = { url, goal: 'tiktok_ctr' };
+
+            btn.disabled = true;
+            btn.innerText = "运行中...";
+            document.querySelectorAll('.agent-badge').forEach(b => b.classList.remove('active'));
+
+            const nodes = [
+                'planner',
+                'retrieval',
+                'evidence_builder',
+                'parallel_analysis',
+                'cognitive_synthesis',
+                'strategy',
+                'storyboard',
+                'governance',
+                'reflection',
+                'analytics'
+            ];
+            nodes.forEach((n, i) => setTimeout(() => {
+                document.querySelectorAll('.agent-badge').forEach(b => b.classList.remove('active'));
+                const node = document.getElementById(`n-${n}`);
+                if (node) node.classList.add('active');
+            }, i * 450));
+
+            try {
+                const response = await postCopilot('generate-copilot', payload);
+                renderProductDashboard(response.data);
+
+                if (debugMode) {
+                    try {
+                        const debugData = await postCopilot('debug-copilot', payload);
+                        renderDebugPanel(response.data.feedback, debugData, 'On');
+                    } catch (debugError) {
+                        renderDebugPanel(response.data.feedback, null, 'Unavailable');
+                    }
+                } else {
+                    renderDebugPanel(response.data.feedback, null, 'Off');
+                }
+            } catch(e) {
+                alert("后端未启动或请求失败");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "运行 Workflow";
+            }
+        }
+
+        function renderProductDashboard(data) {
+            const evidence = data.insights.evidence || {};
+            document.getElementById('res-insights').style.opacity = '1';
+            document.getElementById('res-insights').innerHTML =
+                block('Source Type', evidence.source_type || 'unknown') +
+                block('Confidence', evidence.confidence ?? 0) +
+                block('Review Confidence', evidence.review_confidence ?? 0) +
+                block('Trend Confidence', evidence.trend_confidence ?? 0) +
+                block('Evidence Quotes', (evidence.evidence_quotes || []).join('\n')) +
+                block('Trend Signals', (evidence.trend_signals || []).join('\n')) +
+                block('Pain Points', (data.insights.pain_points || []).join('\n')) +
+                block('Audience', data.audience.primary || '');
+
+            document.getElementById('res-strategy').style.opacity = '1';
+            document.getElementById('res-strategy').innerHTML =
+                block('Core Hook Strategy', data.strategy.core_hook_strategy || '') +
+                block('Emotional Trigger', data.strategy.emotional_trigger || '');
+
+            const script = data.assets.tiktok_script || {};
+            document.getElementById('res-assets').style.opacity = '1';
+            document.getElementById('res-assets').innerHTML =
+                block('Hook Scene', script.hook || '') +
+                block('CTA Scene', script.cta || '');
+
+            const evalData = data.evaluation || {};
+            const score = Math.max(0, Math.min(100, Number((evalData.confidence_score * 100).toFixed(0)) || 0));
+            const riskCls = evalData.risk_level === 'high' ? 'risk-high' : (evalData.risk_level === 'medium' ? 'risk-medium' : '');
+            document.getElementById('res-evaluation').style.opacity = '1';
+            document.getElementById('res-evaluation').innerHTML = `
+                <div class="eval-box ${escapeHTML(riskCls)}">
+                    <div style="display:flex; justify-content:space-between; font-weight:700;">
+                        <span>Retention Confidence</span>
+                        <span style="color:var(--accent-green);">${score}%</span>
+                    </div>
+                    <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
+                    ${block('Risk Level', evalData.risk_level || 'low')}
+                    ${block('Reward Reasoning', evalData.reasoning || '')}
+                    ${block('Approved', evalData.is_approved ? 'true' : 'false')}
+                    ${block('Grounded', evalData.is_grounded ? 'true' : 'false')}
+                </div>
+            `;
+        }
+
+        function renderDebugPanel(feedback, debugData, modeStatus) {
+            document.getElementById('res-analytics').style.opacity = '1';
+            if (!debugData) {
+                document.getElementById('res-analytics').innerHTML = `
+                    <div class="feedback-box">${escapeHTML(feedback || '')}</div>
+                    ${block('Debug Mode', modeStatus)}
+                `;
+                return;
+            }
+
+            latestDebugCategory = debugData.product_category || latestDebugCategory;
+            const metrics = debugData.world_metrics || {};
+            const trace = {
+                product_category: debugData.product_category,
+                evidence: debugData.evidence,
+                cognitive_state: debugData.cognitive_state,
+                execution_state: debugData.execution_state,
+                world_metrics: metrics,
+                telemetry: debugData.telemetry,
+                regenerate_node: debugData.regenerate_node,
+                revision_count: debugData.revision_count,
+                memory_observability: debugData.memory_observability
+            };
+            document.getElementById('res-analytics').innerHTML = `
+                <div class="feedback-box">${escapeHTML(feedback || '')}</div>
+                ${block('Debug Mode', modeStatus)}
+                ${block('Product Category', debugData.product_category || '')}
+                ${block('Grounded CTR', metrics.grounded_ctr ?? 0)}
+                ${block('Revision Count', debugData.revision_count ?? 0)}
+                ${block('Regenerate Node', debugData.regenerate_node || '')}
+                <div class="json-key">Raw Debug State</div>
+                <pre class="debug">${escapeHTML(JSON.stringify(trace, null, 2))}</pre>
+            `;
+        }
+        syncDebugMode();
+    </script>
+</body>
+</html>

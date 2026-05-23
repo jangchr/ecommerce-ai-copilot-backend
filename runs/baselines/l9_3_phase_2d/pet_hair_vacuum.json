@@ -1,0 +1,126 @@
+{
+  "product_category": "pet_hair_vacuum",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/pet_hair_vacuum",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "It pushed pet hair around the rug instead of lifting it into the canister.",
+      "The brush roll tangled with long dog hair after one room.",
+      "The suction dropped as soon as the filter had a thin layer of dust.",
+      "Emptying the bin released a cloud of hair and dust back into the air.",
+      "The hose attachment was too weak to clean hair from the couch seams.",
+      "It worked on hard floors but failed on the thick rug where my cat sleeps."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.41000000000000003,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 1.0,
+    "narration_quality": 0.884375,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.6963229166666667,
+    "grounded_score": 0.4665363541666667,
+    "predicted_ctr": 0.08355875,
+    "grounded_ctr": 0.0559843625,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.40, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 938,
+      "latency_ms": 4998.174428939819,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Classify the product**\nThe URL path contains \"pet_hair_vacuum\". This is clearly a home appliance / cleaning tool designed for pet owners. It's a niche product within the vacuum category.\n\n**2. Decide task complexity from real inputs only**\nThe only real input provided is the URL. There is no user query, no specific analysis request, no comparison criteria, no target audience details. The input is minimal — just a product URL. Therefore, the task com"
+    },
+    "analysis_audience": {
+      "total_tokens": 1163,
+      "latency_ms": 7127.767562866211,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1084,
+      "latency_ms": 5415.083646774292,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 246,
+      "latency_ms": 2079.059839248657,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2808,
+      "latency_ms": 10891.554117202759,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Frustrated Pet Owner**\n\n**Who They Are:** A dog or cat owner (especially with long-haired breeds) who vacuums daily or every other day. They are not price-sensitive—they are solution-sensitive. They have already tried budget vacuums and are now looking for a \"final solution.\"\n\n**Core Frustration (The Loop):** They feel trapped in a cycle of cleaning that never ends. They vacuum the rug, but hair is just pushed around. They clean the brush roll, but it tangles again after one"
+    },
+    "strategy": {
+      "total_tokens": 2353,
+      "latency_ms": 11266.640901565552,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "- **Core pain gaps**: evidence_basis shows \"hair pushed round rug\" + \"brush roll tangling\" + \"dust cloud from bin\". **Weak evidence**: \"exhausted\" is inferred emotion, not from review quotes.\n- **Key contrast mechanism**: \"Relief moment = emptying bin without dust cloud\" (dopamine_summary) directly contradicts the pain point \"dust cloud from bin emptying\". This is the strongest differentiation lever.\n- **Trust barrier**: \"Deep distrust\" is flagged by audience_summary. Evidence_basis shows concre"
+    },
+    "storyboard": {
+      "total_tokens": 3589,
+      "latency_ms": 13976.89437866211,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING:\n- Scene 1: Quote 1 - hair pushed around rug. Pain: physical + exhausted. Visual: split rug, left side push, right side clean. Narration: direct frustration.\n- Scene 2: Quote 2 - brush roll tangling. Pain: defeated. Visual: close-up tangled brush, then smooth. Narration: expectation broken.\n- Scene 3: Quote 4 - dust cloud from bin. Pain: disgust. Visual: bin emptying, cloud vs no cloud. Narration: relief.\n- Scene 4: Quote 5 - hose too weak. Pain: exhausted. Visual: couch seam, weak vs s"
+    }
+  }
+}

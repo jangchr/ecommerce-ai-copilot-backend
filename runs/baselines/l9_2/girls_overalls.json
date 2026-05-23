@@ -1,0 +1,126 @@
+{
+  "product_category": "Apparel / Children's Clothing",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/girls_overalls",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The shoulder buckle snapped the first time my daughter wore it to school.",
+      "The fabric looked cute but felt thin and rough after one wash.",
+      "The seams near the pocket started opening after a normal playground day.",
+      "The fit was too short in the torso even though the legs were too long.",
+      "The color faded quickly and looked old after two laundry cycles.",
+      "The metal clasp was hard for a child to open during bathroom breaks."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.546,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 0.8,
+    "emotion_score": 0.7,
+    "creative_score": 0.7825333333333333,
+    "grounded_score": 0.5242973333333334,
+    "predicted_ctr": 0.09390399999999999,
+    "grounded_ctr": 0.06291568,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.56, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 777,
+      "latency_ms": 3402.7180671691895,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step-by-step.\n\n**1. Classify the product**\nThe URL path is `/products/girls_overalls`. This is clearly a children's clothing item — specifically overalls for girls. Product category: **Apparel / Children's Clothing**.\n\n**2. Decide task complexity from real inputs only**\nThe only real input provided is the URL. There is no user query, no specific task description (like \"find trends\" or \"analyze reviews\"). Without a real user instruction, I cannot assume a complex multi-"
+    },
+    "analysis_audience": {
+      "total_tokens": 837,
+      "latency_ms": 3328.8698196411133,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1391,
+      "latency_ms": 8079.940319061279,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 1886,
+      "latency_ms": 14859.987735748291,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 6215,
+      "latency_ms": 16093.286275863647,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "Based on the evidence and analysis, here is the structured buyer profile.\n\n**Name:** The Exhausted Quality Scout\n\n**Demographic Snapshot:**\n- **Who:** A parent (likely a mother, based on the \"girls overalls\" context) of an active, school-aged child (approximately 3-8 years old).\n- **Behavior:** A pragmatic, value-conscious shopper. They are not looking for the cheapest option, but for a reliable investment that can withstand daily wear, tear, and laundry cycles. They are influenced by visual app"
+    },
+    "strategy": {
+      "total_tokens": 21030,
+      "latency_ms": 37323.4543800354,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "I’ve analyzed the memory — your success rate is strong (2 approved ads), with two failures (one from low source confidence, one from no scenes). The evidence set for *girls_overalls* is moderate (confidence 0.67, review_confidence 0.75, 6 quotes). The profile is well-defined. Here’s my strategy with evidence basis and flagged weak spots.\n\n---\n\n## Core Strategy\n\n### Target User\n**The Skeptical Parent** (likely mother of child aged 3-8) who has been burned by “cute” overalls that failed structural"
+    },
+    "storyboard": {
+      "total_tokens": 6837,
+      "latency_ms": 30870.40877342224,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "We’re zeroing in on a brutally specific failure. The user said *“The shoulder buckle snapped the first time my daughter wore it to school.”* That’s not a minor annoyance—that’s a moment of public parenting failure. The child is left with a broken overall on her first day, the mother feels exposed and betrayed, and the product’s promise of “cute” is instantly unmasked as hollow. For scene one, we need to live inside that morning—the rush, the anticipation, the split-second failure. Visuals must d"
+    }
+  }
+}

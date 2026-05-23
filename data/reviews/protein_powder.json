@@ -1,0 +1,35 @@
+{
+  "product_category": "protein_powder",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "The powder clumped instantly and left a chalky aftertaste no matter how long I shook it.",
+      "date": "2025-10-12"
+    },
+    {
+      "rating": 2,
+      "text": "The vanilla flavor tasted artificial and made my smoothie smell like chemicals.",
+      "date": "2025-09-28"
+    },
+    {
+      "rating": 1,
+      "text": "It upset my stomach every time I drank it after a workout.",
+      "date": "2025-09-03"
+    },
+    {
+      "rating": 2,
+      "text": "The scoop was buried at the bottom and the bag would not reseal properly.",
+      "date": "2025-08-17"
+    },
+    {
+      "rating": 2,
+      "text": "The label promised smooth mixing, but it left gritty chunks in cold water.",
+      "date": "2025-07-22"
+    },
+    {
+      "rating": 1,
+      "text": "The tub arrived half open with powder dust all over the shipping box.",
+      "date": "2025-07-05"
+    }
+  ]
+}

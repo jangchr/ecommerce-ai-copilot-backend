@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+langchain
+langchain-core
+langchain-community
+langchain-huggingface
+langchain-openai
+langgraph
+aiolimiter
+faiss-cpu
+jsonpatch
+json-repair
+requests
+sentence-transformers
+tenacity

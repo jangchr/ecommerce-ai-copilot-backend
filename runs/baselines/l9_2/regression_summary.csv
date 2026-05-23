@@ -1,0 +1,11 @@
+category,product_category,source_type,review_confidence,trend_confidence,review_count,evidence_alignment,grounded_ctr,is_grounded,failure_type,regenerate_node,revision_count,result
+baby_stroller,Baby & Kids / Nursery & Gear,local_dataset+mock,0.75,0.35,6,1.0,0.05880992,True,,,0,PASS
+balsamic_vinegar,food_condiment,local_dataset+mock,0.75,0.35,6,0.8,0.06352672000000001,True,,,0,PASS
+desk_lamp,desk_lamp,local_dataset+mock,0.75,0.35,6,0.8,0.0636232,True,,,0,PASS
+girls_overalls,Apparel / Children's Clothing,local_dataset+mock,0.75,0.35,6,0.8,0.06291568,True,,,0,PASS
+pet_hair_vacuum,pet hair vacuum,local_dataset+mock,0.75,0.35,6,1.0,0.06355888000000001,True,,,0,PASS
+phone_case,phone_case,local_dataset+mock,0.75,0.35,6,1.0,0.07158816000000001,True,,,0,PASS
+printer,printer,local_dataset+mock,0.75,0.35,6,1.0,0.06487744,True,,,0,PASS
+protein_powder,Health & Personal Care,local_dataset+mock,0.75,0.35,6,1.0,0.05850440000000001,True,,,0,PASS
+skincare_serum,Beauty & Personal Care,local_dataset+mock,0.75,0.35,6,0.8,0.06137401000000001,True,,,0,PASS
+women_bras,women_bras,local_dataset+mock,0.75,0.35,6,1.0,0.06571360000000001,True,,,0,PASS

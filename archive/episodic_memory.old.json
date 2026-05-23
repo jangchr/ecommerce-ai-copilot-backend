@@ -1,0 +1,126 @@
+[
+  {
+    "product_type": "食品与饮料",
+    "platform": "tiktok",
+    "ctr": 0.042,
+    "hook": "3秒就能放松的秘密，99%的人不知道！",
+    "success_score": 0.95
+  },
+  {
+    "product_type": "食品与饮料",
+    "platform": "tiktok",
+    "ctr": 0.042,
+    "hook": "3秒放松法，打工人都在偷偷用！",
+    "success_score": 0.95
+  },
+  {
+    "product_type": "general",
+    "predicted_ctr": 0.042,
+    "hook": "爆款钩子"
+  },
+  {
+    "product_type": "general_ecommerce",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.38,
+    "successful_attention_curve": [
+      "强"
+    ]
+  },
+  {
+    "product_type": "general_ecommerce",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.38,
+    "successful_attention_curve": [
+      "强"
+    ]
+  },
+  {
+    "product_type": "general_ecommerce",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.38,
+    "successful_attention_curve": [
+      "强"
+    ]
+  },
+  {
+    "product_type": "general_ecommerce",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.38,
+    "successful_attention_curve": [
+      "强"
+    ]
+  },
+  {
+    "product_type": "general_ecommerce",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.38,
+    "successful_attention_curve": [
+      "强"
+    ]
+  },
+  {
+    "product_type": "general_ecommerce",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.38,
+    "successful_attention_curve": [
+      "强"
+    ]
+  },
+  {
+    "product_type": "general_ecommerce",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.38,
+    "successful_attention_curve": [
+      "强"
+    ]
+  },
+  {
+    "product_type": "Women's Bras",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.42,
+    "successful_attention_curve": [
+      "冲击测试GIF（0-3秒，高冲击）",
+      "红色警示线标注（3-6秒，聚焦）",
+      "慢镜头倾倒质地（6-10秒，沉浸）",
+      "透明视窗特写（10-13秒，验证）",
+      "爆炸图结构拆解（13-18秒，理性确认）"
+    ]
+  },
+  {
+    "product_type": "Women's Bras",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.42,
+    "successful_attention_curve": [
+      "冲击测试GIF（0-3秒，高冲击）",
+      "红色警示线标注（3-6秒，聚焦）",
+      "慢镜头倾倒质地（6-10秒，沉浸）",
+      "透明视窗特写（10-13秒，验证）",
+      "爆炸图结构拆解（13-18秒，理性确认）"
+    ]
+  },
+  {
+    "product_type": "Girls' Clothing",
+    "predicted_ctr": 0.045,
+    "retention_3s": 0.42,
+    "successful_attention_curve": [
+      "峰值1：断裂慢动作+儿童绊倒（0-3秒）",
+      "维持：尺寸对比夸张画面（3-6秒）",
+      "峰值2：洗涤褪色分屏对比（6-9秒）",
+      "下降：微距工艺缺陷特写（9-12秒）",
+      "收尾：红色警示文字叠加（12-15秒）"
+    ]
+  },
+  {
+    "product_type": "Girls' Overalls",
+    "predicted_ctr": 0.085,
+    "retention_3s": 0.42,
+    "successful_attention_curve": [
+      "0-1秒：完美画面吸引眼球",
+      "1-2秒：断裂瞬间打破预期，注意力峰值",
+      "2-4秒：慢镜头展示细节，注意力维持",
+      "4-6秒：对比画面（好vs坏），注意力转移",
+      "6-8秒：解决方案出现，注意力聚焦",
+      "8-10秒：行动号召，注意力收网"
+    ]
+  }
+]

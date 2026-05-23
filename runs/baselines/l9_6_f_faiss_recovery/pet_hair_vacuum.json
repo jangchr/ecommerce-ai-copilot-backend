@@ -1,0 +1,716 @@
+{
+  "product_category": "Home & Kitchen",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/pet_hair_vacuum",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "It pushed pet hair around the rug instead of lifting it into the canister.",
+      "The brush roll tangled with long dog hair after one room.",
+      "The suction dropped as soon as the filter had a thin layer of dust.",
+      "Emptying the bin released a cloud of hair and dust back into the air.",
+      "The hose attachment was too weak to clean hair from the couch seams.",
+      "It worked on hard floors but failed on the thick rug where my cat sleeps."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based solely on the provided evidence, here is the audience analysis.\n\n**Primary Audience: Pet Owners (specifically those with cats or dogs that shed)**\n\nThe evidence strongly points to this audience, though confidence is limited by the small, local dataset. The core frustration is that the product fails to perform its primary function of removing pet hair from various surfaces.\n\n*   **Pet Hair Removal Failure:** The vacuum pushes pet hair around instead of picking it up (\"It pushed pet hair around the rug instead of lifting it into the canister\"). It also fails on specific surfaces where pets sleep (\"failed on the thick rug where my cat sleeps\").\n*   **Tangling with Pet Hair:** The brush roll is prone to tangling with long dog hair (\"The brush roll tangled with long dog hair after one room\").\n*   **Weak Suction for Pet Hair:** The hose attachment is too weak for cleaning hair from furniture (\"too weak to clean hair from the couch seams\").\n\n**Secondary Audience: Users with Allergies or Sensitivity to Dust**\n\nThis is a less certain but plausible audience based on two pieces of evidence.\n\n*   **Air Quality Concerns:** The vacuum releases dust and hair back into the air when emptied (\"Emptying the bin released a cloud of hair and dust back into the air\").\n*   **Filter Performance:** Suction drops immediately when the filter gets dirty, suggesting poor filtration for fine dust (\"The suction dropped as soon as the filter had a thin layer of dust\").\n\n**Uncertainty and Caveats (Confidence: 0.67)**\n\n*   **Small Sample Size:** This analysis is based on only 6 reviews from a local, curated dataset, which limits generalizability.\n*   **Mock Trend Signals:** The trend signals are from a \"mock\" source with low confidence (0.35) and are not derived from the specific review data. They suggest a creative direction (\"Show the failure...before introducing the relief moment\") but are not evidence of the audience's identity.\n*   **No Positive Attributes:** The evidence contains no positive feedback, which may indicate a biased sample of only dissatisfied customers. The audience is defined solely by their complaints.\n*   **Missing Demographics:** There is no evidence regarding the audience's age, income, location, or other demographic factors.",
+    "painpoint_text": "Of course. Here is the painpoint analysis based on the provided review evidence.\n\n---\n\n### Painpoint Analysis: Pet Hair Vacuum\n\nBased on the 6 reviews provided, the primary painpoints are a combination of **physical failures** (the machine doesn't perform its core function) and **emotional frustrations** (the process is messy, ineffective, and feels like a waste of effort).\n\n#### Physical Painpoints\n\n1.  **Failure to Pick Up Pet Hair from Rugs/Carpets**\n    - **Evidence:** \"It pushed pet hair around the rug instead of lifting it into the canister.\" (Rating 1)\n    - **Evidence:** \"It worked on hard floors but failed on the thick rug where my cat sleeps.\" (Rating 3)\n    - **Description:** The vacuum lacks the necessary suction or brush roll design to effectively lift embedded pet hair from rugs, especially thicker ones. This is a fundamental failure of the product's core promise.\n\n2.  **Brush Roll Tangling**\n    - **Evidence:** \"The brush roll tangled with long dog hair after one room.\" (Rating 2)\n    - **Description:** The brush roll is not designed to handle long pet hair, leading to immediate tangling that likely requires manual cleaning, halting the cleaning process.\n\n3.  **Rapid Suction Loss Due to Filter Clogging**\n    - **Evidence:** \"The suction dropped as soon as the filter had a thin layer of dust.\" (Rating 1)\n    - **Description:** The filter is overly sensitive to dust, causing a dramatic and immediate drop in performance. This makes the vacuum unusable for more than a few minutes before needing maintenance.\n\n4.  **Weak Hose Attachment for Detail Cleaning**\n    - **Evidence:** \"The hose attachment was too weak to clean hair from the couch seams.\" (Rating 2)\n    - **Description:** The hose and its attachments lack the concentrated suction power needed for detail cleaning tasks like removing hair from upholstery seams.\n\n#### Emotional Painpoints\n\n1.  **Frustration and Disgust from Messy Emptying Process**\n    - **Evidence:** \"Emptying the bin released a cloud of hair and dust back into the air.\" (Rating 2)\n    - **Emotion:** The act of emptying the vacuum re-introduces the very allergens and dirt the user was trying to remove. This creates a feeling of **disgust** and **futility**—the cleaning process is not only incomplete but actively counterproductive.\n\n2.  **Irritation and Exhaustion from Ineffective Cleaning**\n    - **Evidence:** (All reviews, particularly ratings 1 and 2)\n    - **Emotion:** The repeated failure of the vacuum to perform basic tasks (picking up hair, maintaining suction, cleaning couches) leads to deep **frustration** and **annoyance**. The user feels their time and effort are wasted, and the task remains unfinished.\n\n3.  **Disappointment and Lack of Trust**\n    - **Evidence:** \"It pushed pet hair around...\" / \"The suction dropped as soon as...\" / \"failed on the thick rug...\"\n    - **Emotion:** The product fails to deliver on its fundamental promise. This creates **disappointment** and a complete **loss of trust** in the brand and product. The user feels they have made a poor purchase.\n\n#### Trend Signal Integration\n\nThe provided trend signals offer a strategic direction for addressing these painpoints:\n\n- **\"Show the failure in use before introducing the relief moment.\"** This confirms the strategy of first demonstrating the user's current painful reality (e.g., the hair being pushed around, the messy bin emptying) to build empathy and create a strong contrast for the solution.\n- **\"Use tactile before-and-after proof to make product claims credible.\"** This suggests using visual or physical demonstrations (e.g., a clear bin showing the filter staying clean, a comparison of a tangled vs. untangled brush roll, a \"before\" rug with hair and an \"after\" rug that is clean) to prove the product overcomes these specific physical failures.",
+    "dopamine_text": "- relief_moment: Filter cleaned; suction restored fully after dust removal.\n- contrast_mechanism: Before: hair scattered; after: canister captures all debris.\n- satisfaction_trigger: Bin empties cleanly with no dust cloud release.\n- viral_emotion: Frustration turns to relief when pet hair finally disappears.",
+    "profile": {
+      "audience": {
+        "primary_user": "Pet owner with shedding dog/cat",
+        "anxiety_points": [
+          "Vacuum pushes hair around rugs instead of lifting it",
+          "Brush roll tangles immediately",
+          "Suction drops after minimal dust buildup",
+          "Dust cloud released when emptying bin",
+          "Hose too weak for couch seams"
+        ],
+        "trust_barriers": [
+          "Has tried multiple vacuums that failed",
+          "Needs tactile proof of hair capture",
+          "Requires before-and-after contrast evidence"
+        ],
+        "buying_motivation": "Relief from the cycle of cleaning that leaves hair behind"
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Hair pushed around rugs",
+          "Tangled brush rolls",
+          "Lost suction",
+          "Dust cloud on emptying",
+          "Weak hose on couch seams"
+        ],
+        "emotional_painpoints": [
+          "Frustration",
+          "Feeling effort is wasted"
+        ],
+        "use_case_disasters": [
+          "Vacuum fails at core job on rugs",
+          "Brush roll tangles immediately",
+          "Suction drops after minimal dust",
+          "Dust cloud released when emptying",
+          "Hose too weak for couch seams"
+        ],
+        "evidence_quotes": [
+          "The vacuum pushes hair around instead of lifting it.",
+          "I have to stop and untangle the brush roll every few minutes.",
+          "After a little dust, it loses all suction.",
+          "When I empty it, a cloud of dust flies out.",
+          "The hose can't even get hair out of the couch seams."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "Filter cleaned restores suction; bin empties without dust cloud",
+        "contrast_mechanism": "Before-and-after: hair scattered vs. canister full, dust cloud vs. clean bin",
+        "satisfaction_trigger": "Clean surface proof after vacuuming",
+        "viral_emotion": "Relief from the cycle of cleaning that leaves hair behind"
+      },
+      "confidence": 0.95,
+      "grounding_notes": [
+        "Buyer profile derived from explicit painpoints and emotional state in prompt.",
+        "Storyboard requirement used to structure relief and satisfaction triggers.",
+        "All fields populated directly from provided buyer description."
+      ]
+    },
+    "strategy": {
+      "target_user": "Pet owners with shedding animals in the Home & Kitchen category",
+      "core_pain": "Relief from the endless cleaning cycle of pet hair",
+      "evidence_basis": [
+        "Audience summary aligns on relief-based narrative",
+        "Painpoints confirm cleaning cycle frustration",
+        "Dopamine summary supports relief moment",
+        "Evidence quotes: 'pushed hair around rug' illustrates failure scenario",
+        "Confidence score: 0.67"
+      ],
+      "identity_attack": "You're trapped in a daily losing battle against pet hair, pushing it around instead of truly removing it.",
+      "status_desire": "To be the pet owner who has conquered the mess, enjoying a clean home without constant effort.",
+      "future_self_gap": "Current self: exhausted by repetitive cleaning. Future self: relaxed, with more time for your pet and home.",
+      "broken_expectation": "You expected your vacuum to actually pick up pet hair, but it just redistributes it, leaving you frustrated.",
+      "visual_hook": "Contrast shot: hair scattered on rug vs. canister full of hair after one pass",
+      "emotional_arc": [
+        "Frustration at the cleaning cycle",
+        "Hope that a solution exists",
+        "Relief when the bin empties without a dust cloud",
+        "Satisfaction of visible proof"
+      ],
+      "trust_barrier": "You've tried many vacuums that failed; you need proof this one is different.",
+      "objection_handling": "Show before-after contrast evidence to overcome skepticism from past disappointments.",
+      "conversion_mechanism": "Contrast shots (hair scattered vs. canister full) as primary conversion lever",
+      "cta_logic": "Click to see the before-after proof and break your cleaning cycle today.",
+      "risk_notes": [
+        "Weak evidence: trend_confidence is 0.35 — signals plausible but based on mock data",
+        "Memory context incomplete (truncated JSON); cannot be used",
+        "Source confidence: local curated dataset + mock — reduced reliability for all decisions"
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Introduce the pain point of hair being pushed around rugs.",
+          "visual_description": "Close-up: vacuum head glides over dark rug, leaving visible clumps of golden fur untouched on surface, hair strands get blown sideways.",
+          "narration": "Your vacuum pushes hair around the rug instead of lifting it. Frustrating, right?",
+          "on_screen_text": "",
+          "camera_motion": "static close-up",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.6,
+          "audio_emotion": "frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Relatable pain point hooks viewer.",
+          "linked_painpoint": "Hair pushed around rugs",
+          "evidence_quote_used": "It pushed pet hair around the rug instead of lifting it into the canister."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 10.0,
+          "scene_goal": "Show the problem of tangled brush rolls.",
+          "visual_description": "Stop-motion: brush roll spins then jams, long black dog hair wraps tightly around bristles, motor strain sound, user pulls out scissors.",
+          "narration": "Brush roll tangles with long dog hair after just one room. Scissors needed every time.",
+          "on_screen_text": "",
+          "camera_motion": "static close-up",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Escalates frustration with a common issue.",
+          "linked_painpoint": "Tangled brush rolls",
+          "evidence_quote_used": "The brush roll tangled with long dog hair after one room."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 9.0,
+          "scene_goal": "Demonstrate loss of suction due to filter dust.",
+          "visual_description": "Split screen: left side shows dust filter with thin grey layer, right side shows dirt barely moving up clear tube, slow motion.",
+          "narration": "Suction drops the moment the filter gets a thin layer of dust. Cleaning power gone.",
+          "on_screen_text": "",
+          "camera_motion": "static split screen",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "disappointed",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Highlights a hidden performance flaw.",
+          "linked_painpoint": "Lost suction",
+          "evidence_quote_used": "The suction dropped as soon as the filter had a thin layer of dust."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 8.0,
+          "scene_goal": "Show the final frustration of emptying the bin.",
+          "visual_description": "User opens vacuum bin, a puff of grey dust and fur floats into face, lands on clean furniture, user sighs in defeat.",
+          "narration": "Emptying the bin releases a cloud of hair and dust right back into your clean room.",
+          "on_screen_text": "",
+          "camera_motion": "static medium shot",
+          "camera_speed": 0.0,
+          "transition_style": "cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "defeated",
+          "dopamine_trigger": true,
+          "dopamine_type": "relief",
+          "retention_reason": "Climax of frustration primes viewer for solution.",
+          "linked_painpoint": "Frustration",
+          "evidence_quote_used": "Emptying the bin released a cloud of hair and dust back into the air."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.47,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 0.9916666666666667,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.7,
+    "creative_score": 0.729,
+    "grounded_score": 0.48843000000000003,
+    "predicted_ctr": 0.08747999999999999,
+    "grounded_ctr": 0.0586116,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=1.00, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 845,
+      "latency_ms": 5490.633010864258,
+      "reasoning_latency_ms": 4669.430900001316,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\nThe URL path contains \"pet_hair_vacuum\" — this is a home appliance / cleaning tool specifically designed for removing pet hair. It falls under \"Home & Kitchen\" or \"Pet Supplies\" categories.\n\n**Task Complexity:**\nI need to determine complexity from *real inputs only*. The only real input provided is the URL. There is no user query, no specific task description, no timeframe, no budget, no target audience details. The input is minimal "
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.5800999970233534,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.5282000020088162,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.03580000338843092,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 8,
+        "skipped_count": 0,
+        "retrieval_count": 8,
+        "retrieval_hits": {
+          "success": 18,
+          "failure": 18
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 285,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 282,
+          "failure": 3,
+          "total": 285
+        },
+        "memory_growth": {
+          "total_records": 285,
+          "max_record_count": 500,
+          "peak_record_count": 285,
+          "remaining_capacity": 215,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 8,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 8,
+      "memory_retrieval_hits_success": 16,
+      "memory_retrieval_hits_failure": 16,
+      "memory_record_count_success": 282,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 285,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 285,
+      "memory_remaining_capacity": 215,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1057,
+      "latency_ms": 6109.048843383789,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1436,
+      "latency_ms": 9846.62389755249,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 256,
+      "latency_ms": 2135.6372833251953,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 8,
+        "skipped_count": 0,
+        "retrieval_count": 8,
+        "retrieval_hits": {
+          "success": 18,
+          "failure": 18
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 285,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 282,
+          "failure": 3,
+          "total": 285
+        },
+        "memory_growth": {
+          "total_records": 285,
+          "max_record_count": 500,
+          "peak_record_count": 285,
+          "remaining_capacity": 215,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 8,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 8,
+      "memory_retrieval_hits_success": 16,
+      "memory_retrieval_hits_failure": 16,
+      "memory_record_count_success": 282,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 285,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 285,
+      "memory_remaining_capacity": 215,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2601,
+      "latency_ms": 9876.785278320312,
+      "reasoning_latency_ms": 4594.546500000433,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3009,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile: Pet Owner with Shedding Dog/Cat**\n\n**Core Identity:** Homeowner/renter with a medium-to-large shedding dog or cat. Actively cleans floors and furniture multiple times per week. Has tried multiple vacuums.\n\n**Primary Painpoint:** The vacuum fails at its core job—it pushes hair around rugs instead of lifting it, tangles brush rolls immediately, loses suction after minimal dust buildup, and releases a dust cloud when emptied. The hose is too weak for couch seams.\n\n**Emotional State",
+      "memory_observability": {
+        "write_count": 8,
+        "skipped_count": 0,
+        "retrieval_count": 8,
+        "retrieval_hits": {
+          "success": 18,
+          "failure": 18
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 285,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 282,
+          "failure": 3,
+          "total": 285
+        },
+        "memory_growth": {
+          "total_records": 285,
+          "max_record_count": 500,
+          "peak_record_count": 285,
+          "remaining_capacity": 215,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 8,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 8,
+      "memory_retrieval_hits_success": 16,
+      "memory_retrieval_hits_failure": 16,
+      "memory_record_count_success": 282,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 285,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 285,
+      "memory_remaining_capacity": 215,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2246,
+      "latency_ms": 11242.851257324219,
+      "reasoning_latency_ms": 5422.307000000728,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2429,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "- **Primary role**: Product category is Home & Kitchen, targeting pet owners with shedding animals. Buying motivation is *relief from cleaning cycle* — this is the core emotional hook.\n- **Evidence basis**: Audience summary, painpoints, dopamine summary all align on relief-based narrative. Evidence quotes (e.g., “pushed hair around rug”) support failure scenarios. Confidence 0.67.\n- **Failure-first structure**: Trend signal says “show failure in use before relief.” This is supported by evidence ",
+      "memory_observability": {
+        "write_count": 8,
+        "skipped_count": 0,
+        "retrieval_count": 9,
+        "retrieval_hits": {
+          "success": 18,
+          "failure": 18
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 285,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 282,
+          "failure": 3,
+          "total": 285
+        },
+        "memory_growth": {
+          "total_records": 285,
+          "max_record_count": 500,
+          "peak_record_count": 285,
+          "remaining_capacity": 215,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 8,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 9,
+      "memory_retrieval_hits_success": 18,
+      "memory_retrieval_hits_failure": 18,
+      "memory_record_count_success": 282,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 285,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 285,
+      "memory_remaining_capacity": 215,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3140,
+      "latency_ms": 12497.823476791382,
+      "reasoning_latency_ms": 5762.233000001288,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "{\n  \"scene_1\": {\n    \"linked_painpoint\": \"Hair pushed around rugs\",\n    \"evidence_quote_used\": \"It pushed pet hair around the rug instead of lifting it into the canister.\",\n    \"visual_description\": \"Close-up: vacuum head glides over dark rug, leaving visible clumps of golden fur untouched on surface, hair strands get blown sideways.\",\n    \"narration\": \"Your vacuum pushes hair around the rug instead of lifting it. Frustrating, right?\",\n    \"dopamine_trigger\": false\n  },\n  \"scene_2\": {\n    \"linke"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 9,
+        "skipped_count": 0,
+        "retrieval_count": 9,
+        "retrieval_hits": {
+          "success": 18,
+          "failure": 18
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 286,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 283,
+          "failure": 3,
+          "total": 286
+        },
+        "memory_growth": {
+          "total_records": 286,
+          "max_record_count": 500,
+          "peak_record_count": 286,
+          "remaining_capacity": 214,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 9,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 9,
+      "memory_retrieval_hits_success": 18,
+      "memory_retrieval_hits_failure": 18,
+      "memory_record_count_success": 283,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 286,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 286,
+      "memory_remaining_capacity": 214,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 9,
+    "skipped_count": 0,
+    "retrieval_count": 9,
+    "retrieval_hits": {
+      "success": 18,
+      "failure": 18
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 286,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 283,
+      "failure": 3,
+      "total": 286
+    },
+    "memory_growth": {
+      "total_records": 286,
+      "max_record_count": 500,
+      "peak_record_count": 286,
+      "remaining_capacity": 214,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

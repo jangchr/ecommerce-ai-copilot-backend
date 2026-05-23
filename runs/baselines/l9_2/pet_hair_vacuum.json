@@ -1,0 +1,126 @@
+{
+  "product_category": "pet hair vacuum",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/pet_hair_vacuum",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "It pushed pet hair around the rug instead of lifting it into the canister.",
+      "The brush roll tangled with long dog hair after one room.",
+      "The suction dropped as soon as the filter had a thin layer of dust.",
+      "Emptying the bin released a cloud of hair and dust back into the air.",
+      "The hose attachment was too weak to clean hair from the couch seams.",
+      "It worked on hard floors but failed on the thick rug where my cat sleeps."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.536,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.5,
+    "creative_score": 0.7905333333333334,
+    "grounded_score": 0.5296573333333334,
+    "predicted_ctr": 0.094864,
+    "grounded_ctr": 0.06355888000000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.46, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 770,
+      "latency_ms": 3760.366201400757,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step-by-step.\n\n**1. Classify the product**\nFrom the URL path `/products/pet_hair_vacuum`, the product is a **pet hair vacuum** — a home appliance designed for cleaning pet hair from floors, furniture, etc.\n\n**2. Decide task complexity from real inputs only**\nThe only real input provided is the URL. There is no user query, no specific task description, no mention of what analysis is needed (e.g., \"find top complaints,\" \"compare with competitors,\" \"check trends\"). Withou"
+    },
+    "analysis_audience": {
+      "total_tokens": 943,
+      "latency_ms": 4376.844644546509,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1242,
+      "latency_ms": 6595.540523529053,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 2076,
+      "latency_ms": 16022.359132766724,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 6093,
+      "latency_ms": 12073.567390441895,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "Based on the evidence, here is the structured buyer profile:\n\n**Name:** The Frustrated Pet Parent\n\n**Demographics:**\n- Owns at least one long-haired dog or cat\n- Lives in a home with a mix of hard floors and thick rugs or carpets\n- Has upholstered furniture (couches) where pets sleep\n\n**Primary Goal:**\nTo remove embedded pet hair from rugs, carpets, and upholstery in one efficient pass, without creating additional mess or maintenance work.\n\n**Core Pain Points (Physical & Emotional):**\n1. **The \""
+    },
+    "strategy": {
+      "total_tokens": 15014,
+      "latency_ms": 15944.169521331787,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "I'll analyze these components and generate a new strategy for a pet hair vacuum product.\n\n**Evidence-Basis Analysis:**\n\n- Review confidence: 0.75 (6 direct quotes)\n- Trend confidence: 0.35 (mock source - weak)\n- Profile confidence: 0.95 (detailed persona analysis)\n- Weighted average: ~0.67\n\n**Key Pain Pattern from Evidence:**\n\nThe most salient failure is **aggregate incompetence** - the vacuum fails at multiple basic tasks (pushing hair, tangling brush, losing suction, dust-cloud emptying, weak "
+    },
+    "storyboard": {
+      "total_tokens": 8686,
+      "latency_ms": 37716.02964401245,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "SCENE 1\n\nevidence_quote_used: \"It pushed pet hair around the rug instead of lifting it into the canister.\"\n\nlinked_painpoint: The vacuum pushes hair around on rugs instead of lifting it\n\ndopamine_trigger: false\n\nvisual_description: The camera holds a tight, low-angle shot on a dense wool rug in a warm, naturally lit living room. Golden afternoon sunlight streams in from a nearby window, illuminating thousands of fine white and ginger cat hairs embedded deep in the fibers. A robotic vacuum cleane"
+    }
+  }
+}

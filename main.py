@@ -1,0 +1,340 @@
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+import time
+import uvicorn
+from uuid import uuid4
+
+from core.logging_utils import emit_event
+from core.telemetry_utils import summarize_telemetry
+from core.workflow import copilot_engine, memory_engine
+from schemas.api_contract import DebugCopilotResponse, GenerateCopilotResponse, GrowthRequest
+from schemas.source_probe_contract import (
+    SourceProbeRequest,
+    SourceProbeResponse,
+    SourceProbeResult,
+    SourceProbeTelemetry,
+)
+from source_adapters import SourceAdapterRegistry
+
+app = FastAPI()
+source_probe_registry = SourceAdapterRegistry()
+SOURCE_PROBE_PROVIDERS = {
+    "amazon_review_api",
+    "tiktok_trend_api",
+    "reddit_review_api",
+}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid4())
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
+@app.get("/healthz")
+async def healthz(request: Request):
+    started = time.perf_counter()
+    emit_event(
+        "healthz_request",
+        request.state.request_id,
+        endpoint="/healthz",
+        status="ok",
+        latency_ms=(time.perf_counter() - started) * 1000,
+    )
+    return {
+        "status": "ok",
+        "service": "grounded-ecommerce-creative-agent",
+        "stable_baseline": "l9_9_stable",
+    }
+
+
+@app.post("/api/v1/generate-copilot", response_model=GenerateCopilotResponse)
+async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
+    started = time.perf_counter()
+    request_id = http_request.state.request_id
+    emit_event(
+        "generate_copilot_start",
+        request_id,
+        endpoint="/api/v1/generate-copilot",
+        status="started",
+        goal=request.goal,
+    )
+
+    initial_state = {
+        "env_state": {"asin_url": request.url, "business_goal": request.goal},
+        "cognitive_state": {},
+        "execution_state": {},
+        "telemetry_state": {},
+        "world_metrics": {},
+        "revision_count": 0,
+        "next_nodes": [],
+    }
+
+    final_state = await copilot_engine.ainvoke(initial_state)
+
+    env_state = final_state.get("env_state", {})
+    cog_state = final_state.get("cognitive_state", {})
+    exec_state = final_state.get("execution_state", {})
+    world_metrics = final_state.get("world_metrics", {})
+    strategy_data = cog_state.get("strategy", {})
+    profile = cog_state.get("profile", {})
+    painpoint = profile.get("painpoint", {})
+    audience = profile.get("audience", {})
+    dopamine = profile.get("dopamine", {})
+    storyboard_data = exec_state.get("storyboard", {})
+    scenes = storyboard_data.get("scenes", [])
+
+    ui_strategy = {
+        "core_hook_strategy": (
+            f"Identity attack:\n{strategy_data.get('identity_attack', '')}\n\n"
+            f"Status desire:\n{strategy_data.get('status_desire', '')}\n\n"
+            f"Evidence:\n" + "\n".join(strategy_data.get("evidence_basis", []))
+        ),
+        "emotional_trigger": (
+            f"Future-self gap:\n{strategy_data.get('future_self_gap', '')}\n\n"
+            f"Conversion mechanism:\n{strategy_data.get('conversion_mechanism', '')}\n\n"
+            f"CTA logic:\n{strategy_data.get('cta_logic', '')}"
+        ),
+    }
+
+    hook_text = "Scene graph was not generated."
+    cta_text = "Conversion scene was not generated."
+    if scenes and isinstance(scenes, list):
+        first_scene = scenes[0]
+        last_scene = scenes[-1]
+        hook_text = (
+            f"0-{first_scene.get('duration_sec', 0)}s | {first_scene.get('scene_goal', '')}\n"
+            f"Visual: {first_scene.get('visual_description', '')}\n"
+            f"Narration: {first_scene.get('narration', '')}\n"
+            f"Text: {first_scene.get('on_screen_text', '')}\n"
+            f"Retention: {first_scene.get('retention_reason', '')}"
+        )
+        cta_text = (
+            f"Final scene | {last_scene.get('scene_goal', '')}\n"
+            f"Visual: {last_scene.get('visual_description', '')}\n"
+            f"Narration: {last_scene.get('narration', '')}\n"
+            f"Painpoint: {last_scene.get('linked_painpoint', '')}"
+        )
+
+    retention_score = world_metrics.get("retention_3s", 0.0)
+    if retention_score < 0.50:
+        risk_level = "high"
+    elif retention_score < 0.70:
+        risk_level = "medium"
+    else:
+        risk_level = "low"
+
+    response = {
+        "status": "success",
+        "data": {
+            "insights": {
+                "pain_points": painpoint.get("physical_painpoints", []) + painpoint.get("emotional_painpoints", []),
+                "user_complaint_cluster": painpoint.get("use_case_disasters", []),
+                "evidence": env_state.get("evidence", {}),
+            },
+            "audience": {
+                "primary": audience.get("primary_user", ""),
+                "sensitivity": dopamine.get("viral_emotion", ""),
+                "trust_barriers": audience.get("trust_barriers", []),
+            },
+            "strategy": ui_strategy,
+            "assets": {"tiktok_script": {"hook": hook_text, "cta": cta_text}, "storyboard": storyboard_data},
+            "evaluation": {
+                "confidence_score": retention_score,
+                "risk_level": risk_level,
+                "reasoning": (
+                    f"{world_metrics.get('reason', '')}\n"
+                    f"Dopamine score: {world_metrics.get('dopamine_score', 0):.2f}\n"
+                    f"Evidence alignment: {world_metrics.get('evidence_alignment', 0):.2f}\n"
+                    f"Creative CTR: {world_metrics.get('predicted_ctr', 0) * 100:.1f}%\n"
+                    f"Grounded CTR: {world_metrics.get('grounded_ctr', 0) * 100:.1f}%\n"
+                    f"Source confidence: {world_metrics.get('source_confidence', 0):.2f}\n"
+                    f"Failure type: {world_metrics.get('failure_type', '')}"
+                ),
+                "is_approved": world_metrics.get("is_approved", False),
+                "is_grounded": world_metrics.get("is_grounded", False),
+                "creative_approved": world_metrics.get("creative_approved", False),
+                "grounded_approved": world_metrics.get("grounded_approved", False),
+            },
+            "feedback": exec_state.get("reflection", {}).get("root_cause", "Memory writer recorded the final outcome."),
+        },
+    }
+    emit_event(
+        "generate_copilot_complete",
+        request_id,
+        endpoint="/api/v1/generate-copilot",
+        status="success",
+        latency_ms=(time.perf_counter() - started) * 1000,
+        product_category=env_state.get("product_category"),
+        goal=request.goal,
+    )
+    return response
+
+
+@app.post("/api/v1/debug-copilot", response_model=DebugCopilotResponse)
+async def debug_copilot_flow(request: GrowthRequest, http_request: Request):
+    started = time.perf_counter()
+    request_id = http_request.state.request_id
+    emit_event(
+        "debug_copilot_start",
+        request_id,
+        endpoint="/api/v1/debug-copilot",
+        status="started",
+        goal=request.goal,
+    )
+    initial_state = {
+        "env_state": {"asin_url": request.url, "business_goal": request.goal},
+        "cognitive_state": {},
+        "execution_state": {},
+        "telemetry_state": {},
+        "world_metrics": {},
+        "revision_count": 0,
+        "next_nodes": ["planner"],
+    }
+
+    final_state = await copilot_engine.ainvoke(initial_state)
+    env_state = final_state.get("env_state", {})
+    exec_state = final_state.get("execution_state", {})
+    telemetry_state = final_state.get("telemetry_state", {})
+
+    response = {
+        "request_id": request_id,
+        "product_category": env_state.get("product_category"),
+        "evidence": env_state.get("evidence"),
+        "cognitive_state": final_state.get("cognitive_state", {}),
+        "execution_state": exec_state,
+        "world_metrics": final_state.get("world_metrics", {}),
+        "regenerate_node": exec_state.get("regenerate_node"),
+        "revision_count": final_state.get("revision_count", 0),
+        "telemetry": telemetry_state,
+        "telemetry_summary": summarize_telemetry(telemetry_state),
+        "memory_observability": memory_engine.observability_snapshot(),
+    }
+    emit_event(
+        "debug_copilot_complete",
+        request_id,
+        endpoint="/api/v1/debug-copilot",
+        status="success",
+        latency_ms=(time.perf_counter() - started) * 1000,
+        product_category=env_state.get("product_category"),
+        goal=request.goal,
+    )
+    return response
+
+
+@app.post("/api/v1/debug-source-probe", response_model=SourceProbeResponse)
+async def debug_source_probe(request: SourceProbeRequest, http_request: Request):
+    started = time.perf_counter()
+    request_id = http_request.state.request_id
+    emit_event(
+        "debug_source_probe_start",
+        request_id,
+        endpoint="/api/v1/debug-source-probe",
+        status="started",
+        product_category=request.product_category,
+    )
+    providers = request.providers or sorted(SOURCE_PROBE_PROVIDERS)
+    results = []
+
+    for provider in providers:
+        if provider not in SOURCE_PROBE_PROVIDERS:
+            results.append(
+                SourceProbeResult(
+                    provider=provider,
+                    status="disabled",
+                    error="Provider is not available in debug-only real-source probe.",
+                    metadata={"allowed": False},
+                )
+            )
+            continue
+
+        started = time.perf_counter()
+        try:
+            evidence = source_probe_registry.fetch(
+                provider,
+                request.url or "",
+                request.product_category,
+            )
+            warnings = list(evidence.data_warnings)
+            disabled = any(
+                warning.endswith("_disabled") or warning.endswith("_not_enabled")
+                for warning in warnings
+            )
+            if disabled:
+                status = "disabled"
+            elif evidence.source_type == "unavailable":
+                status = "unavailable"
+            else:
+                status = "success"
+            results.append(
+                SourceProbeResult(
+                    provider=provider,
+                    status=status,
+                    source_confidence=evidence.confidence,
+                    latency_ms=(time.perf_counter() - started) * 1000,
+                    evidence_preview=evidence.evidence_quotes[:3],
+                    metadata={
+                        **evidence.metadata,
+                        "source_type": evidence.source_type,
+                        "data_warnings": warnings,
+                    },
+                )
+            )
+        except Exception as exc:
+            results.append(
+                SourceProbeResult(
+                    provider=provider,
+                    status="error",
+                    latency_ms=(time.perf_counter() - started) * 1000,
+                    error=str(exc),
+                )
+            )
+
+    fallback_required = not any(
+        result.status == "success" and result.source_confidence >= 0.70
+        for result in results
+    )
+    telemetry = SourceProbeTelemetry(
+        total_latency_ms=sum(result.latency_ms for result in results),
+        provider_count=len(results),
+        success_count=sum(result.status == "success" for result in results),
+        disabled_count=sum(result.status == "disabled" for result in results),
+        unavailable_count=sum(result.status == "unavailable" for result in results),
+        error_count=sum(result.status == "error" for result in results),
+        fallback_required=fallback_required,
+    )
+    response = SourceProbeResponse(
+        request_id=request_id,
+        debug_only=True,
+        product_category=request.product_category,
+        results=results,
+        fallback_required=fallback_required,
+        telemetry=telemetry,
+        memory_write_allowed=False,
+    )
+    emit_event(
+        "debug_source_probe_complete",
+        request_id,
+        endpoint="/api/v1/debug-source-probe",
+        status="success",
+        latency_ms=(time.perf_counter() - started) * 1000,
+        product_category=request.product_category,
+        provider_count=len(results),
+        fallback_required=fallback_required,
+    )
+    return response
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

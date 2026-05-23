@@ -1,0 +1,126 @@
+{
+  "product_category": "women's bras",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/women_bras",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The straps dug into my shoulders after two hours and left red marks.",
+      "The underwire poked through the fabric after the second wash.",
+      "The cup shape looked smooth in photos but created a visible ridge under shirts.",
+      "Support was fine at first, but the band stretched out within a few weeks.",
+      "The size chart was misleading, and returning it was more work than buying it.",
+      "It rolled up under the bust whenever I sat down."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.59,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 0.990625,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.55,
+    "creative_score": 0.8049270833333334,
+    "grounded_score": 0.5393011458333334,
+    "predicted_ctr": 0.09659125,
+    "grounded_ctr": 0.0647161375,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=1.00, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 815,
+      "latency_ms": 4370.481967926025,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step-by-step.\n\n**1. Classify the product:**\nThe URL path is `/products/women_bras`. This is clearly an apparel product — specifically women's intimate apparel. The product category is \"women's bras.\"\n\n**2. Decide task complexity from real inputs only:**\nThe only real input provided is the URL. There is no user query, no specific task description, no mention of a particular analysis goal (e.g., \"find top complaints\" or \"compare trends\"). Without a real task instruction,"
+    },
+    "analysis_audience": {
+      "total_tokens": 895,
+      "latency_ms": 4407.122850418091,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1031,
+      "latency_ms": 4986.008405685425,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 247,
+      "latency_ms": 1857.2182655334473,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2762,
+      "latency_ms": 10485.574960708618,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Disillusioned Comfort Seeker**\n\n**Identity:** A woman who prioritizes all-day comfort and a smooth, invisible look under clothing. She is not a lingerie enthusiast but a practical buyer who expects a bra to be a reliable, low-maintenance tool.\n\n**Core Pain (Physical & Emotional):** She experiences a cascade of physical failures that erode trust. The straps dig in, the underwire pokes through, and the band stretches out within weeks. This creates a constant state of minor phy"
+    },
+    "strategy": {
+      "total_tokens": 2599,
+      "latency_ms": 11478.679895401001,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "- **Pain signature**: Physical (straps digging, under wire poking, band stretching) + emotional (frustration from constant irritation, feeling deceived by marketing). Evidence: all 5 pain points from core_painpoints, confirmed by evidence_quotes (e.g. “straps dug… left red marks,” “underwire poked through after second wash,” “band stretched out within weeks”). Evidence strength: High (review_confidence 0.75).\n- **Target audience**: Practical buyer, not lingerie enthusiast; seeks a reliable, invi"
+    },
+    "storyboard": {
+      "total_tokens": 3169,
+      "latency_ms": 12718.5697555542,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "SCENE 1\n- evidence_quote_used: \"The straps dug into my shoulders after two hours and left red marks.\"\n- linked_painpoint: Straps digging into shoulders\n- visual_description: Close-up of a woman's shoulder with deep red grooves and angry strap marks. Cut to demo: a single strap supporting a heavy weight, staying put without digging.\n- narration: \"Two hours and your shoulders look like this. No bra should punish you for wearing it.\"\n- dopamine_trigger: false\n\nSCENE 2\n- evidence_quote_used: \"The un"
+    }
+  }
+}

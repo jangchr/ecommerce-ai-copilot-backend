@@ -1,0 +1,35 @@
+{
+  "product_category": "baby_stroller",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward.",
+      "date": "2025-11-11"
+    },
+    {
+      "rating": 2,
+      "text": "The folding latch stuck so badly that I struggled to load it into the car alone.",
+      "date": "2025-10-25"
+    },
+    {
+      "rating": 2,
+      "text": "The canopy looked large in photos but barely shaded my baby's face.",
+      "date": "2025-09-30"
+    },
+    {
+      "rating": 1,
+      "text": "The brake pedal felt loose and did not lock both wheels every time.",
+      "date": "2025-09-02"
+    },
+    {
+      "rating": 2,
+      "text": "The storage basket was too shallow and my diaper bag kept sliding out.",
+      "date": "2025-08-13"
+    },
+    {
+      "rating": 3,
+      "text": "It rolled fine indoors, but rough pavement made it rattle loudly.",
+      "date": "2025-07-24"
+    }
+  ]
+}

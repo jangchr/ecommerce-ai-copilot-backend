@@ -1,0 +1,35 @@
+{
+  "product_category": "printer",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "The printer disconnected from Wi-Fi every time I needed to print a shipping label.",
+      "date": "2025-12-01"
+    },
+    {
+      "rating": 2,
+      "text": "Setup took almost an hour because the app kept failing to find the printer.",
+      "date": "2025-11-09"
+    },
+    {
+      "rating": 1,
+      "text": "It said the ink was empty even though I had just installed a new cartridge.",
+      "date": "2025-10-13"
+    },
+    {
+      "rating": 2,
+      "text": "The paper jammed twice during a ten-page document.",
+      "date": "2025-09-20"
+    },
+    {
+      "rating": 3,
+      "text": "Print quality was acceptable, but the software popups made it frustrating to use.",
+      "date": "2025-08-17"
+    },
+    {
+      "rating": 1,
+      "text": "Customer support told me to reinstall everything instead of fixing the connection issue.",
+      "date": "2025-07-29"
+    }
+  ]
+}

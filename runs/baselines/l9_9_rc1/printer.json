@@ -1,0 +1,707 @@
+{
+  "product_category": "printer",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/printer",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The printer disconnected from Wi-Fi every time I needed to print a shipping label.",
+      "Setup took almost an hour because the app kept failing to find the printer.",
+      "It said the ink was empty even though I had just installed a new cartridge.",
+      "The paper jammed twice during a ten-page document.",
+      "Print quality was acceptable, but the software popups made it frustrating to use.",
+      "Customer support told me to reinstall everything instead of fixing the connection issue."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based solely on the provided evidence, here is the audience analysis:\n\n**Primary Audience Profile: Small Business Owner / Home Office User (Operational Reliability Focus)**\n\n- **Pain Point:** The audience is likely a small business owner or someone who relies on the printer for essential, time-sensitive tasks such as printing shipping labels. They are experiencing **critical reliability failures** that directly disrupt their workflow and business operations.\n    - *Evidence:* \"The printer disconnected from Wi-Fi every time I needed to print a shipping label.\" (Rating 1, Dec 2025).\n    - *Evidence:* \"The paper jammed twice during a ten-page document.\" (Rating 2, Sep 2025).\n\n- **Frustration with Onboarding:** The audience has a low tolerance for complex or broken setup processes. They expect a \"plug and play\" experience and become highly frustrated when the setup app fails.\n    - *Evidence:* \"Setup took almost an hour because the app kept failing to find the printer.\" (Rating 2, Nov 2025).\n\n- **Skepticism of Product Claims (Smart Features):** The audience is disillusioned with \"smart\" features that don't work as advertised, specifically regarding ink level detection. They need proof that the technology is accurate.\n    - *Evidence:* \"It said the ink was empty even though I had just installed a new cartridge.\" (Rating 1, Oct 2025).\n\n- **Value Pragmatism over Frills:** While print quality is acceptable, the audience is annoyed by unnecessary software popups. They value a clean, efficient user experience over feature bloat.\n    - *Evidence:* \"Print quality was acceptable, but the software popups made it frustrating to use.\" (Rating 3, Aug 2025).\n\n- **High Need for Effective Support:** The audience is not satisfied with generic troubleshooting (e.g., \"reinstall everything\"). They require quick, effective solutions for hardware/connection issues.\n    - *Evidence:* \"Customer support told me to reinstall everything instead of fixing the connection issue.\" (Rating 1, Jul 2025).\n\n**Audience Needs (derived from data):**\n1.  **Unquestionable Reliability:** The device must work consistently for critical, repetitive tasks (label printing, multi-page documents).\n2.  **Frictionless Setup:** The initial experience must be fast and app-based without failures.\n3.  **Accurate Feedback:** The device must provide truthful status updates (e.g., ink levels).\n4.  **Minimal Intrusion:** The software should not interrupt the user with popups.\n5.  **Competent Support:** Customer support must offer targeted, effective fixes rather than generic resets.\n\n**Uncertainty:**\n- **Confidence Level:** The overall confidence is **moderate (0.67)** due to the small dataset (6 reviews) and the use of a mock source with reduced confidence (0.35).\n- **Audience Size:** It is unclear if this represents a large market segment or a small group of vocal users.\n- **Demographics:** The evidence does not specify the audience's exact industry, technical skill level, budget, or age.\n- **Trend Impact:** The trend signals (\"Show the failure in use...\", \"Use tactile before-and-after proof...\") are of **low confidence (0.35)** and come from a mock source. While they align with the audience's need for proof of reliability, their validity is uncertain.",
+    "painpoint_text": "Based on the provided review evidence, here are the extracted physical and emotional painpoints:\n\n### Physical Painpoints\n\n- **Wi-Fi Connectivity Failure:** The printer disconnects from Wi-Fi, preventing the user from printing critical items like shipping labels. (Evidence: *\"The printer disconnected from Wi-Fi every time I needed to print a shipping label.\"*)\n- **Setup Failure & Time Waste:** The setup process is excessively long (nearly an hour) due to the app failing to detect the printer. (Evidence: *\"Setup took almost an hour because the app kept failing to find the printer.\"*)\n- **False Ink Level Reporting:** The printer incorrectly reports an empty ink cartridge immediately after a new one is installed, halting work. (Evidence: *\"It said the ink was empty even though I had just installed a new cartridge.\"*)\n- **Paper Jams:** The printer jams frequently (twice in a short document), causing physical interruption and waste. (Evidence: *\"The paper jammed twice during a ten-page document.\"*)\n- **Intrusive Software Popups:** The software generates persistent popups that interfere with the user's workflow. (Evidence: *\"Print quality was acceptable, but the software popups made it frustrating to use.\"*)\n\n### Emotional Painpoints\n\n- **Frustration & Anger:** Users experience high levels of frustration due to the printer failing at critical moments and the software being intrusive. (Evidence: *\"...the software popups made it **frustrating** to use.\"*)\n- **Helplessness & Dismissal:** Users feel dismissed and unsupported when customer support provides generic, unhelpful solutions (reinstalling) rather than fixing the root connection issue. (Evidence: *\"Customer support told me to reinstall everything instead of fixing the connection issue.\"*)\n- **Anxiety & Unreliability:** The printer's repeated failures (Wi-Fi dropping, false ink alerts, jams) create a sense of unreliability, causing anxiety about whether the device will work when needed. (Evidence: *\"The printer disconnected from Wi-Fi **every time** I needed to print a shipping label.\"*)",
+    "dopamine_text": "- relief_moment: Printer finally prints without Wi-Fi disconnecting mid-label.\n- contrast_mechanism: Hour-long setup vs instant connection after fixing app errors.\n- satisfaction_trigger: No false ink warnings or paper jams during full document.\n- viral_emotion: Relief from constant software popups and hardware failures.",
+    "profile": {
+      "audience": {
+        "primary_user": "Small business owner / home office operator",
+        "anxiety_points": [
+          "Printer fails at worst possible moment (Wi-Fi drops mid-label print, paper jams on short document, false ink warnings halt work)",
+          "Setup is a nightmare (1-hour, app-failing ordeal shatters plug-and-play expectation)",
+          "Product actively works against them, threatening business workflow and deadlines"
+        ],
+        "trust_barriers": [
+          "Initial betrayal during onboarding sets tone of distrust",
+          "Skepticism toward feature lists after repeated failures",
+          "Need for tactile proof over verbal claims"
+        ],
+        "buying_motivation": "Desperate hope for a device that just works without drama—relief from operational failures"
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Wi-Fi drops mid-label print",
+          "Paper jams on short documents",
+          "False ink warnings halt work"
+        ],
+        "emotional_painpoints": [
+          "Frustration",
+          "Betrayal",
+          "Time-starved desperation"
+        ],
+        "use_case_disasters": [
+          "Shipping label fails to print during peak order fulfillment",
+          "Client document jams minutes before deadline",
+          "Setup takes over an hour with app failures"
+        ],
+        "evidence_quotes": [
+          "I just need it to print the label without drama.",
+          "Why does it always fail when I'm in a rush?",
+          "I spent an hour setting it up and it still doesn't work."
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "The label prints cleanly, the document finishes without a jam, the ink warning stays off—absence of failure",
+        "contrast_mechanism": "Before: jammed paper tray, error messages, wasted time. After: smooth stack of printed pages, no alerts, workflow uninterrupted",
+        "satisfaction_trigger": "Tactile before-and-after proof (e.g., jammed tray vs. smooth stack) that the device just works",
+        "viral_emotion": "Relief—the desperate hope fulfilled, shared as 'finally a printer that doesn't ruin my day'"
+      },
+      "confidence": 0.92,
+      "grounding_notes": [
+        "Profile derived from explicit buyer identity and pain points provided",
+        "Emotional state and decision driver directly inform dopamine profile",
+        "Trust barriers and evidence quotes based on stated onboarding friction and failure scenarios"
+      ]
+    },
+    "strategy": {
+      "target_user": "Small business owner or home-office operator managing a high-volume label or document workflow, frustrated by recurring printer failures that disrupt operations.",
+      "core_pain": "Relentless operational failure: Wi-Fi drops mid-label, false ink warnings halt work, recurring jams. The emotional core is relief from the absence of failure, not joy.",
+      "evidence_basis": [
+        "User quote: 'Wi-Fi drops mid-label, false ink warnings halt work, recurring jams.'",
+        "Trend signals: show failure before relief; use before/after visuals (jammed tray → smooth stack).",
+        "Past success: similar pain signatures (Wi-Fi drops, false ink warnings, jams) targeted small business owners; strategy mapped emotional pain to 'desperate for silent reliability.'"
+      ],
+      "identity_attack": "You are not a careless operator—you are a professional whose tools betray you. The printer is the weak link in your otherwise reliable workflow.",
+      "status_desire": "To be seen as the person who runs a smooth, interruption-free operation—the one who never has to apologize for a delayed shipment or a misprinted label.",
+      "future_self_gap": "Current self: constantly fighting the printer, losing time and patience. Desired future self: calm, efficient, focused on growth, not on hardware failures.",
+      "broken_expectation": "You expected a 'professional-grade' printer to just work, but it delivers constant alerts, jams, and connectivity drops—breaking your trust in the category.",
+      "visual_hook": "Side-by-side: left side shows a jammed tray with error messages on screen; right side shows a smooth stack of labels with no alerts, clean and quiet.",
+      "emotional_arc": [
+        "Frustration: 'Why does this always happen mid-job?'",
+        "Desperation: 'I can't afford another delay.'",
+        "Relief: 'Finally, a printer that just works.'",
+        "Confidence: 'I can trust my equipment again.'"
+      ],
+      "trust_barrier": "Audience is skeptical of feature lists. They need tactile proof over verbal claims. Show failure before relief—use before/after visuals as credibility anchor.",
+      "objection_handling": "Address 'But all printers have issues' by showing the specific failure points (Wi-Fi drops, false ink warnings, jams) and demonstrating how this product eliminates them, not just reduces them.",
+      "conversion_mechanism": "Dopamine contrast: trigger relief by showing the absence of failure. The trigger is tactile proof of uninterrupted workflow. Viral emotion is relief, shared as 'finally a printer that just works.'",
+      "cta_logic": "Offer a risk-free trial or a side-by-side comparison video. The CTA should promise the end of operational failure: 'Stop fighting your printer. Start working.'",
+      "risk_notes": [
+        "Trend confidence = 0.35 (mock source, low). Data warnings: local + mock dataset. Source confidence 0.67. Growth strategy should treat trend signals as directional, not validated.",
+        "Compensate by over-indexing on cited user quotes (evidence_quotes) which have higher review confidence (0.75).",
+        "Avoid new emotional categories; reuse proven pain signature: 'desperate for silent reliability.'"
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 8.0,
+          "scene_goal": "Establish the pain of Wi-Fi disconnecting during critical print jobs, using a direct user quote to build empathy.",
+          "visual_description": "Close-up of a printer screen showing 'Wi-Fi disconnected' error. Frustrated small business owner sighs, holding a half-printed shipping label. Small stack of unprinted labels beside the printer.",
+          "narration": "Wi-Fi drops mid-label? That’s not professional. That’s sabotage.",
+          "on_screen_text": "\"The printer disconnected from Wi-Fi every time I needed to print a shipping label.\"",
+          "camera_motion": "Slow zoom in on the error screen, then pan to the user's face.",
+          "camera_speed": 0.5,
+          "transition_style": "fade_in",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Relatable pain point for small business owners who rely on reliable printing.",
+          "linked_painpoint": "Wi-Fi drops mid-label print",
+          "evidence_quote_used": "The printer disconnected from Wi-Fi every time I needed to print a shipping label."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 7.0,
+          "scene_goal": "Highlight the wasted time and frustration of a lengthy, failed setup process.",
+          "visual_description": "Split screen: left shows a smartphone app stuck on 'Searching for printer...' with a spinning wheel. Right shows a frustrated user checking the clock, 45 minutes elapsed. No printer visible.",
+          "narration": "An hour to set up? You bought a printer, not a puzzle.",
+          "on_screen_text": "\"Setup took almost an hour because the app kept failing to find the printer.\"",
+          "camera_motion": "Static split screen, slight zoom on the spinning wheel and clock.",
+          "camera_speed": 0.3,
+          "transition_style": "cut",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "annoyed",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Highlights a common but deeply irritating experience that wastes time.",
+          "linked_painpoint": "Frustration",
+          "evidence_quote_used": "Setup took almost an hour because the app kept failing to find the printer."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 7.0,
+          "scene_goal": "Show the absurdity of false ink warnings that halt productivity despite a new cartridge.",
+          "visual_description": "Close-up of a new ink cartridge being inserted. Printer screen immediately shows 'Ink empty - replace cartridge.' User's hand freezes mid-air, expression of disbelief. Desk cluttered with shipping supplies.",
+          "narration": "New ink, false warning. Your workflow just stopped for nothing.",
+          "on_screen_text": "\"It said the ink was empty even though I had just installed a new cartridge.\"",
+          "camera_motion": "Follow the cartridge insertion, then zoom to the error message, then cut to user's face.",
+          "camera_speed": 0.6,
+          "transition_style": "cut",
+          "emotional_intensity": 0.6,
+          "audio_emotion": "bewildered",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Demonstrates a nonsensical error that directly interrupts work, creating a desire for a solution.",
+          "linked_painpoint": "False ink warnings halt work",
+          "evidence_quote_used": "It said the ink was empty even though I had just installed a new cartridge."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 8.0,
+          "scene_goal": "Contrast the pain of paper jams with the relief of a flawless print run, providing a dopamine hit of resolution.",
+          "visual_description": "Side-by-side: left shows a jammed printer tray with crumpled paper and error message. Right shows same printer model smoothly ejecting a clean stack of 10 labels, no alerts, silent operation.",
+          "narration": "Two jams in ten pages? Now imagine zero. Relief.",
+          "on_screen_text": "\"The paper jammed twice during a ten-page document.\"",
+          "camera_motion": "Slow pan from the chaotic jammed side to the smooth, quiet side, then hold on the clean output.",
+          "camera_speed": 0.4,
+          "transition_style": "crossfade",
+          "emotional_intensity": 0.9,
+          "audio_emotion": "triumphant",
+          "dopamine_trigger": true,
+          "dopamine_type": "relief",
+          "retention_reason": "Provides a satisfying contrast and a vision of a better experience, leaving the viewer with hope.",
+          "linked_painpoint": "Paper jams on short documents",
+          "evidence_quote_used": "The paper jammed twice during a ten-page document."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.415,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 1.0,
+    "narration_quality": 0.715625,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.75,
+    "creative_score": 0.6820104166666667,
+    "grounded_score": 0.4569469791666667,
+    "predicted_ctr": 0.08184125,
+    "grounded_ctr": 0.054833637500000004,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.45, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 789,
+      "latency_ms": 4786.975145339966,
+      "reasoning_latency_ms": 3868.005500000436,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Product Classification**\nThe URL path contains \"products/printer\". This is clearly a physical hardware product — a printer. Printers are consumer electronics/office equipment.\n\n**2. Task Complexity Assessment**\nI need to decide complexity from *real inputs only*. The only real input I have is the URL itself. There is no additional user request, no specific task description, no business context. With just a URL and no stated goal, the complexity is m"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.7324999969569035,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.6859000059193932,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.026699999580159783,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 1,
+        "skipped_count": 0,
+        "retrieval_count": 1,
+        "retrieval_hits": {
+          "success": 4,
+          "failure": 4
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 288,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 285,
+          "failure": 3,
+          "total": 288
+        },
+        "memory_growth": {
+          "total_records": 288,
+          "max_record_count": 500,
+          "peak_record_count": 288,
+          "remaining_capacity": 212,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 1,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 1,
+      "memory_retrieval_hits_success": 2,
+      "memory_retrieval_hits_failure": 2,
+      "memory_record_count_success": 285,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 288,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 288,
+      "memory_remaining_capacity": 212,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1297,
+      "latency_ms": 8937.36219406128,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1039,
+      "latency_ms": 5612.299203872681,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 255,
+      "latency_ms": 2085.3493213653564,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 1,
+        "skipped_count": 0,
+        "retrieval_count": 1,
+        "retrieval_hits": {
+          "success": 4,
+          "failure": 4
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 288,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 285,
+          "failure": 3,
+          "total": 288
+        },
+        "memory_growth": {
+          "total_records": 288,
+          "max_record_count": 500,
+          "peak_record_count": 288,
+          "remaining_capacity": 212,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 1,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 1,
+      "memory_retrieval_hits_success": 2,
+      "memory_retrieval_hits_failure": 2,
+      "memory_record_count_success": 285,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 288,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 288,
+      "memory_remaining_capacity": 212,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2754,
+      "latency_ms": 12000.463485717773,
+      "reasoning_latency_ms": 5743.048500000441,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 3038,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile: Small Business Owner / Home Office Operator**\n\n**Core Identity:** A time-pressed professional who relies on the printer for essential, revenue-critical tasks (e.g., shipping labels, client documents). They are not tech enthusiasts; they expect the printer to be a silent, reliable utility.\n\n**Primary Pain Point (Operational Reliability):** The printer fails at the worst possible moment. Wi-Fi drops mid-label print. Paper jams on a short document. False ink warnings halt work. The",
+      "memory_observability": {
+        "write_count": 1,
+        "skipped_count": 0,
+        "retrieval_count": 1,
+        "retrieval_hits": {
+          "success": 4,
+          "failure": 4
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 288,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 285,
+          "failure": 3,
+          "total": 288
+        },
+        "memory_growth": {
+          "total_records": 288,
+          "max_record_count": 500,
+          "peak_record_count": 288,
+          "remaining_capacity": 212,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 1,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 1,
+      "memory_retrieval_hits_success": 2,
+      "memory_retrieval_hits_failure": 2,
+      "memory_record_count_success": 285,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 288,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 288,
+      "memory_remaining_capacity": 212,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2716,
+      "latency_ms": 14369.72451210022,
+      "reasoning_latency_ms": 5788.966799998889,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2728,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Thinking:**\n\n*   **Core Pain Rewiring:** Evidence shows Wi-Fi drops mid-label, false ink warnings halt work, recurring jams. The emotional core is *relief from operational failure*, not joy. Strategy must frame *absence of failure* as the product's primary benefit.\n*   **Trust Barrier:** Audience is skeptical of feature lists. Evidence says they need \"tactile proof over verbal claims.\" Trend signals confirm: show failure *before* relief. Use before/after visuals (jammed tray → smooth stack).\n*",
+      "memory_observability": {
+        "write_count": 1,
+        "skipped_count": 0,
+        "retrieval_count": 2,
+        "retrieval_hits": {
+          "success": 4,
+          "failure": 4
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 288,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 285,
+          "failure": 3,
+          "total": 288
+        },
+        "memory_growth": {
+          "total_records": 288,
+          "max_record_count": 500,
+          "peak_record_count": 288,
+          "remaining_capacity": 212,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 1,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 2,
+      "memory_retrieval_hits_success": 4,
+      "memory_retrieval_hits_failure": 4,
+      "memory_record_count_success": 285,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 288,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 288,
+      "memory_remaining_capacity": 212,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3834,
+      "latency_ms": 16650.118589401245,
+      "reasoning_latency_ms": 7388.4379000010085,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "THINKING:\n- 4 scenes, each with exact evidence quote, linked to painpoint\n- Scene 1: Wi-Fi drops (quote 1) + physical painpoint Wi-Fi drops. dopamine_trigger=false (showing failure)\n- Scene 2: Setup app failure (quote 2) + emotional betrayal/frustration. dopamine_trigger=false\n- Scene 3: False ink warning (quote 3) + physical painpoint false ink warnings. dopamine_trigger=false\n- Scene 4: Paper jams (quote 4) + physical painpoint paper jams. dopamine_trigger=true (relief moment)\n- Only 1 dopamin"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 2,
+        "skipped_count": 0,
+        "retrieval_count": 2,
+        "retrieval_hits": {
+          "success": 4,
+          "failure": 4
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 289,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 286,
+          "failure": 3,
+          "total": 289
+        },
+        "memory_growth": {
+          "total_records": 289,
+          "max_record_count": 500,
+          "peak_record_count": 289,
+          "remaining_capacity": 211,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 2,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 2,
+      "memory_retrieval_hits_success": 4,
+      "memory_retrieval_hits_failure": 4,
+      "memory_record_count_success": 286,
+      "memory_record_count_failure": 3,
+      "memory_record_count_total": 289,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 289,
+      "memory_remaining_capacity": 211,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "memory_observability": {
+    "write_count": 2,
+    "skipped_count": 0,
+    "retrieval_count": 2,
+    "retrieval_hits": {
+      "success": 4,
+      "failure": 4
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 289,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 286,
+      "failure": 3,
+      "total": 289
+    },
+    "memory_growth": {
+      "total_records": 289,
+      "max_record_count": 500,
+      "peak_record_count": 289,
+      "remaining_capacity": 211,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "regenerate_node": null,
+  "revision_count": 0
+}

@@ -1,0 +1,35 @@
+{
+  "product_category": "desk_lamp",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "The lamp flickered after ten minutes and gave me a headache while working.",
+      "date": "2025-10-30"
+    },
+    {
+      "rating": 2,
+      "text": "The touch control was so sensitive that it changed brightness whenever I moved my notebook.",
+      "date": "2025-10-04"
+    },
+    {
+      "rating": 2,
+      "text": "The neck would not stay in place and slowly drooped toward the desk.",
+      "date": "2025-09-16"
+    },
+    {
+      "rating": 1,
+      "text": "The charging port became loose after a week of normal use.",
+      "date": "2025-08-29"
+    },
+    {
+      "rating": 3,
+      "text": "The light was bright but created harsh glare on my monitor.",
+      "date": "2025-08-08"
+    },
+    {
+      "rating": 2,
+      "text": "The base was too light, so the lamp tipped over when fully extended.",
+      "date": "2025-07-19"
+    }
+  ]
+}

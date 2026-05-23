@@ -1,0 +1,8 @@
+metric,actual,warning_limit,limit,status
+total_tokens,123517,,135000,PASS
+total_latency_ms,542513.4978550705,650000,700000,PASS
+storyboard_tokens,34368,,45000,PASS
+strategy_tokens,27527,,35000,PASS
+cognitive_synthesis_tokens,28178,,35000,PASS
+analysis_dopamine_tokens,2583,,5000,PASS
+failed_nodes,None,,None,PASS

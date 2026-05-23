@@ -1,0 +1,28 @@
+name: L9 Fast Regression
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  fast-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+
+      - name: Run fast regression gate
+        run: python scripts/run_all_tests.py --fast

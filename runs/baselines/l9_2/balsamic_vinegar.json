@@ -1,0 +1,127 @@
+{
+  "product_category": "food_condiment",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/balsamic_vinegar",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The cap cracked during shipping and leaked all over the box.",
+      "The glaze was too watery and ran off the salad instead of sticking.",
+      "It tasted more like sweet syrup than aged balsamic vinegar.",
+      "The bottle arrived sticky, and the seal looked like it had already been opened.",
+      "The flavor was okay, but it was too thin to use as a finishing drizzle.",
+      "I expected a rich, tangy reduction, but this tasted flat and watery."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.524,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 0.8,
+    "emotion_score": 0.82,
+    "creative_score": 0.7901333333333334,
+    "grounded_score": 0.5293893333333334,
+    "predicted_ctr": 0.094816,
+    "grounded_ctr": 0.06352672000000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.34, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 939,
+      "latency_ms": 4496.340990066528,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\nThe URL contains \"balsamic_vinegar\" - this is a food/grocery product, specifically a condiment or cooking ingredient. Balsamic vinegar is a shelf-stable food product.\n\n**Task Complexity from Real Inputs:**\n- The URL is a test URL (test.local), so there's no actual product page to scrape or analyze\n- The product name is clear: balsamic vinegar\n- This is a simple, single-ingredient food product with straightforward use cases\n\n**Tool Se"
+    },
+    "analysis_audience": {
+      "total_tokens": 948,
+      "latency_ms": 4202.494859695435,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1002,
+      "latency_ms": 4937.75486946106,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 1773,
+      "latency_ms": 14767.997980117798,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 4842,
+      "latency_ms": 9197.964668273926,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "Based on the evidence, here is the structured buyer profile:\n\n**Name:** The Discerning Home Gourmet\n\n**Demographic Snapshot:** An adult home cook or food enthusiast who values premium ingredients for finishing dishes—salads, roasted vegetables, or desserts. They are willing to pay for quality and seek authentic, artisanal products.\n\n**Core Need:** A thick, complex, aged balsamic vinegar or glaze that delivers a rich, tangy flavor and a syrupy consistency suitable for drizzling and finishing.\n\n**"
+    },
+    "strategy": {
+      "total_tokens": 17528,
+      "latency_ms": 27324.374437332153,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "Based on the memory of failures and the evidence provided, I will generate a growth strategy for this Balsamic Vinegar product. Every decision will cite its evidence basis and flag weak evidence.\n\n**Thinking Mode: Reason from Evidence**\n\nThe memory shows a pattern: failures were due to weak source confidence (0.43 for the food product) and a lack of visual or tactile proof (the \"food\" storyboard failed `grounded_score` at 0.28 because the evidence was weak and the \"tactile proof\" trend was only "
+    },
+    "storyboard": {
+      "total_tokens": 8489,
+      "latency_ms": 37110.044956207275,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "We need to build a short video that grabs \"The Discerning Home Gourmet\" right in the gut. The core message: you buy what you think is premium balsamic, but it’s watery and the bottle arrives broken—this is not your fault, but you don’t have to settle anymore. We'll open with a moment of pure \"gourmet fantasy\" shattered by reality, then walk through the specific, painful evidence, and finish with the relief of the perfect drizzle and a tamper-evident seal. The emotional arc is: Frustration → Disg"
+    }
+  }
+}

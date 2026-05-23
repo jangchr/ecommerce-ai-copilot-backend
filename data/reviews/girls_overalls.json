@@ -1,0 +1,35 @@
+{
+  "product_category": "girls_overalls",
+  "reviews": [
+    {
+      "rating": 2,
+      "text": "The shoulder buckle snapped the first time my daughter wore it to school.",
+      "date": "2025-11-25"
+    },
+    {
+      "rating": 2,
+      "text": "The fabric looked cute but felt thin and rough after one wash.",
+      "date": "2025-10-16"
+    },
+    {
+      "rating": 1,
+      "text": "The seams near the pocket started opening after a normal playground day.",
+      "date": "2025-09-11"
+    },
+    {
+      "rating": 3,
+      "text": "The fit was too short in the torso even though the legs were too long.",
+      "date": "2025-08-28"
+    },
+    {
+      "rating": 2,
+      "text": "The color faded quickly and looked old after two laundry cycles.",
+      "date": "2025-08-03"
+    },
+    {
+      "rating": 1,
+      "text": "The metal clasp was hard for a child to open during bathroom breaks.",
+      "date": "2025-07-14"
+    }
+  ]
+}

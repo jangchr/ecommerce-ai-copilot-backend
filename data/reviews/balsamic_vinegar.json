@@ -1,0 +1,35 @@
+{
+  "product_category": "balsamic_vinegar",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "The cap cracked during shipping and leaked all over the box.",
+      "date": "2025-11-08"
+    },
+    {
+      "rating": 2,
+      "text": "The glaze was too watery and ran off the salad instead of sticking.",
+      "date": "2025-10-21"
+    },
+    {
+      "rating": 2,
+      "text": "It tasted more like sweet syrup than aged balsamic vinegar.",
+      "date": "2025-09-14"
+    },
+    {
+      "rating": 1,
+      "text": "The bottle arrived sticky, and the seal looked like it had already been opened.",
+      "date": "2025-08-30"
+    },
+    {
+      "rating": 3,
+      "text": "The flavor was okay, but it was too thin to use as a finishing drizzle.",
+      "date": "2025-08-12"
+    },
+    {
+      "rating": 2,
+      "text": "I expected a rich, tangy reduction, but this tasted flat and watery.",
+      "date": "2025-07-19"
+    }
+  ]
+}

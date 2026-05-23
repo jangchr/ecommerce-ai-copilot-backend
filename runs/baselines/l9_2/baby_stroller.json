@@ -1,0 +1,127 @@
+{
+  "product_category": "Baby & Kids / Nursery & Gear",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/baby_stroller",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward.",
+      "The folding latch stuck so badly that I struggled to load it into the car alone.",
+      "The canopy looked large in photos but barely shaded my baby's face.",
+      "The brake pedal felt loose and did not lock both wheels every time.",
+      "The storage basket was too shallow and my diaper bag kept sliding out.",
+      "It rolled fine indoors, but rough pavement made it rattle loudly."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.434,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.78,
+    "creative_score": 0.7314666666666667,
+    "grounded_score": 0.4900826666666667,
+    "predicted_ctr": 0.087776,
+    "grounded_ctr": 0.05880992,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.64, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 909,
+      "latency_ms": 4493.647813796997,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\n- URL path: `/products/baby_stroller`\n- Product type: Baby stroller (a physical, durable baby product)\n- Category: Baby & Kids / Nursery & Gear\n\n**Task Complexity Assessment:**\n- Baby strollers are high-consideration purchases with safety, durability, and usability concerns\n- Real inputs would include: safety certifications, weight limits, foldability, wheel type, canopy features, storage capacity, compatibility with car seats\n- This"
+    },
+    "analysis_audience": {
+      "total_tokens": 1136,
+      "latency_ms": 7060.699462890625,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 953,
+      "latency_ms": 4726.6669273376465,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 2213,
+      "latency_ms": 19334.906578063965,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 6141,
+      "latency_ms": 13483.365058898926,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "Based on the evidence and analysis, here is the structured buyer profile.\n\n---\n\n**Buyer Persona: The Real-World Safety Parent**\n\n**Demographics & Context:**\n- **Primary:** Practical, safety-conscious parents (likely new or with a toddler) who use the stroller as their primary mode of transport for daily errands, walks, and car loading.\n- **Secondary:** Value-conscious shoppers who rely heavily on product imagery and specifications to make purchase decisions.\n\n**Core Pain Points (The \"Before\" Sta"
+    },
+    "strategy": {
+      "total_tokens": 21042,
+      "latency_ms": 40266.53528213501,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "First, I'll analyze the evidence and past patterns. The two most successful campaigns (phone_case and desk_lamp) share a proven structure: **start with visceral failure, then demonstrate the fix with visible proof**. Both scored grounded_ctr > 0.06. The food campaign failed because evidence was weak (0.43 confidence) and couldn't support the claims.\n\nFrom the new evidence, I have 6 review quotes with 0.75 confidence. Key physical pain points: **stroller tipping** (jammed wheel on cracks), **unre"
+    },
+    "storyboard": {
+      "total_tokens": 9461,
+      "latency_ms": 36282.25111961365,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "Alright, let me walk through the evidence and plan the scenes.\n\nI am looking at the profile: safety-conscious parents. The core pain is clear: a stroller that fails on safety and usability. The evidence provides six concrete quotes. My job is to build 4 to 5 scenes that each use *one exact quote* for the `evidence_quote_used` field, connecting it to the linked painpoint.\n\nThe evidence quotes are distinct and powerful:\n1.  \"The front wheel jammed on a sidewalk crack and nearly tipped the stroller"
+    }
+  }
+}

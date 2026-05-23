@@ -1,0 +1,126 @@
+{
+  "product_category": "Apparel / Kids Fashion",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/girls_overalls",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The shoulder buckle snapped the first time my daughter wore it to school.",
+      "The fabric looked cute but felt thin and rough after one wash.",
+      "The seams near the pocket started opening after a normal playground day.",
+      "The fit was too short in the torso even though the legs were too long.",
+      "The color faded quickly and looked old after two laundry cycles.",
+      "The metal clasp was hard for a child to open during bathroom breaks."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.5349999999999999,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 0.9916666666666667,
+    "narration_quality": 0.83125,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.7783541666666667,
+    "grounded_score": 0.5214972916666667,
+    "predicted_ctr": 0.0934025,
+    "grounded_ctr": 0.062579675,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.45, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 994,
+      "latency_ms": 6328.879594802856,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\n- URL path: `/products/girls_overalls`\n- Product type: Children's clothing (girls' overalls)\n- Category: Apparel / Kids Fashion\n\n**Task Complexity Assessment:**\n- This is a children's clothing item, which typically has specific considerations: sizing accuracy, durability, comfort, and style preferences\n- The URL suggests a single product page, not a category or search results\n- Real inputs: I only have the URL. No specific task instr"
+    },
+    "analysis_audience": {
+      "total_tokens": 837,
+      "latency_ms": 4824.934244155884,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 945,
+      "latency_ms": 4802.180528640747,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 241,
+      "latency_ms": 2238.0621433258057,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 3037,
+      "latency_ms": 13339.555740356445,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Exhausted Quality Scout**\n\n**Who:** A parent (likely mother) of a young girl (ages 3-7). She is a pragmatic, value-conscious shopper who buys clothes for active, school-going kids. She is not a fashionista; she is a problem-solver seeking reliability.\n\n**Core Need:** To find durable, well-fitting, and low-maintenance clothing that survives a child's day without failing. She wants to buy once and not worry.\n\n**Primary Pain Points (Physical & Emotional):**\n- **Structural Failu"
+    },
+    "strategy": {
+      "total_tokens": 2688,
+      "latency_ms": 12319.900751113892,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "*   **Analysis of Inputs:**\n    *   **Strong Evidence:** Painpoints (buckles snapping, seams opening), evidence quotes (direct parental frustration), and user profile (pragmatic, value-conscious) point to a core need for **durability and reliability**, not fashion.\n    *   **Weak Evidence:** Trend signals (confidence 0.35) and memory context (printer strategy) have low relevance for kids’ apparel. The dopamine trigger \"relief\" aligns with the printer strategy but is too generic for this category"
+    },
+    "storyboard": {
+      "total_tokens": 3527,
+      "latency_ms": 14496.95110321045,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING:\n- Use 4 distinct quotes: #1, #2, #3, #5. Skip #4 (fit issue, less visceral).\n- Scene 1: Quote #1 (buckle snaps). Emotional arc: trust → anger. Visual: split-screen snap vs intact. Dopamine trigger: yes (tactical proof).\n- Scene 2: Quote #2 (fabric thin/rough). Emotional: disappointment. Visual: close-up fabric comparison. No dopamine trigger.\n- Scene 3: Quote #3 (seams open). Emotional: anger/betrayal. Visual: playground day → seam failure. Dopamine trigger: yes (vindication).\n- Scene "
+    }
+  }
+}

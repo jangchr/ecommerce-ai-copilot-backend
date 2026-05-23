@@ -1,0 +1,126 @@
+{
+  "product_category": "phone_case",
+  "selected_tools": [
+    "local_review_dataset",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/phone_case",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The corner cracked after one waist-high drop even though it advertised military-grade protection.",
+      "The buttons became stiff and hard to press once the case was on.",
+      "The clear back turned yellow within three weeks.",
+      "The camera lip was too low, so the lens still touched the table.",
+      "It looked slim online but felt bulky and slippery in my hand.",
+      "Wireless charging only worked if I removed the case first."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.652,
+    "dopamine_score": 1.0,
+    "visual_quality": 1.0,
+    "narration_quality": 1.0,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.6,
+    "creative_score": 0.8904000000000001,
+    "grounded_score": 0.5965680000000001,
+    "predicted_ctr": 0.10684800000000001,
+    "grounded_ctr": 0.07158816000000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.42, dopamine=3, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 857,
+      "latency_ms": 4364.742994308472,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Product Classification:**\nThe URL path is `/products/phone_case`. This is clearly a phone case — a physical accessory product in the mobile accessories category.\n\n**2. Task Complexity from Real Inputs:**\nI only have a URL. There is no user query, no specific instruction about what to do with this product. The task complexity is minimal — I cannot determine a specific workflow because the user hasn't asked me to do anything with this product yet. I n"
+    },
+    "analysis_audience": {
+      "total_tokens": 1009,
+      "latency_ms": 5842.680931091309,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1102,
+      "latency_ms": 5368.370532989502,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 1891,
+      "latency_ms": 15101.4404296875,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 6119,
+      "latency_ms": 17775.66957473755,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "Based on the evidence, here is the structured buyer profile.\n\n**Buyer Persona: The Betrayed Protector**\n\n**Core Identity:** A pragmatic, value-conscious phone owner who prioritizes device safety and longevity. They are not early adopters of flashy tech; they buy a case to protect a significant investment. They research products, read descriptions carefully, and trust marketing claims like \"military-grade protection\" as a signal of quality.\n\n**Primary Pain Point (The Wound):** **Broken Trust.** T"
+    },
+    "strategy": {
+      "total_tokens": 21256,
+      "latency_ms": 44767.462968826294,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "I will analyze the provided memory, evidence, and profile to synthesize a growth strategy for a phone case product, citing all sources and flagging weak evidence.\n\n## Summary of Current State\n\nFrom memory, you have two successful strategies and two failures. The successes are in Apparel and Health & Personal Care. The failures are a \"food\" product with weak evidence (confidence=0.43) and a \"general\" product with no scenes.\n\n**Evidence for this analysis:**\n- Evidence quotes: 6 specific pain point"
+    },
+    "storyboard": {
+      "total_tokens": 10386,
+      "latency_ms": 43495.48077583313,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING MODE:\n\nLet me analyze the strategy and evidence carefully.\n\nThe target is \"The Betrayed Protector\" - someone who bought a case that failed on multiple promises. The core pain is broken trust: military-grade protection that cracked, yellowing, stiff buttons, low camera lip, bulky/slippery feel, and wireless charging requiring removal.\n\nThe evidence has 6 concrete quotes. I need to select 4-5 distinct quotes for the scenes. Let me plan:\n\nScene 1: The cracked corner after waist-high drop ("
+    }
+  }
+}

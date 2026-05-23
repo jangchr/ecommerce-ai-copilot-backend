@@ -1,0 +1,35 @@
+{
+  "product_category": "phone_case",
+  "reviews": [
+    {
+      "rating": 1,
+      "text": "The corner cracked after one waist-high drop even though it advertised military-grade protection.",
+      "date": "2025-11-02"
+    },
+    {
+      "rating": 2,
+      "text": "The buttons became stiff and hard to press once the case was on.",
+      "date": "2025-10-18"
+    },
+    {
+      "rating": 2,
+      "text": "The clear back turned yellow within three weeks.",
+      "date": "2025-09-27"
+    },
+    {
+      "rating": 1,
+      "text": "The camera lip was too low, so the lens still touched the table.",
+      "date": "2025-09-09"
+    },
+    {
+      "rating": 3,
+      "text": "It looked slim online but felt bulky and slippery in my hand.",
+      "date": "2025-08-14"
+    },
+    {
+      "rating": 2,
+      "text": "Wireless charging only worked if I removed the case first.",
+      "date": "2025-07-30"
+    }
+  ]
+}

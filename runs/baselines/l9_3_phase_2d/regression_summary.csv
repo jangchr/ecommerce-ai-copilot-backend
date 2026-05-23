@@ -1,0 +1,11 @@
+category,product_category,source_type,review_confidence,trend_confidence,review_count,evidence_alignment,grounded_ctr,is_grounded,failure_type,regenerate_node,revision_count,baseline_grounded_ctr,delta_grounded_ctr,baseline_evidence_alignment,delta_evidence_alignment,baseline_revision_count,delta_revision_count,diff_status,diff_warning,result
+balsamic_vinegar,food,local_dataset+mock,0.75,0.35,6,1.0,0.06535179999999999,True,,,0,0.06352672000000001,0.001825079999999979,0.8,0.19999999999999996,0,0,OK,,PASS
+printer,printer,local_dataset+mock,0.75,0.35,6,1.0,0.055170312500000006,True,,,0,0.06487744,-0.009707127499999989,1.0,0.0,0,0,OK,,PASS
+women_bras,women's bras,local_dataset+mock,0.75,0.35,6,1.0,0.0647161375,True,,,0,0.06571360000000001,-0.0009974625000000042,1.0,0.0,0,0,OK,,PASS
+girls_overalls,Apparel / Kids Fashion,local_dataset+mock,0.75,0.35,6,1.0,0.062579675,True,,,0,0.06291568,-0.00033600500000000033,0.8,0.19999999999999996,0,0,OK,,PASS
+protein_powder,sports_nutrition,local_dataset+mock,0.75,0.35,6,1.0,0.06444981250000001,True,,,0,0.05850440000000001,0.005945412499999997,1.0,0.0,0,0,OK,,PASS
+phone_case,phone_case,local_dataset+mock,0.75,0.35,6,1.0,0.0701967375,True,,,0,0.07158816000000001,-0.0013914225000000169,1.0,0.0,0,0,OK,,PASS
+desk_lamp,desk_lamp,local_dataset+mock,0.75,0.35,6,1.0,0.0646684,True,,,0,0.0636232,0.0010451999999999961,0.8,0.19999999999999996,0,0,OK,,PASS
+baby_stroller,baby_stroller,local_dataset+mock,0.75,0.35,6,1.0,0.05680846250000001,True,,,0,0.05880992,-0.002001457499999991,1.0,0.0,0,0,OK,,PASS
+pet_hair_vacuum,pet_hair_vacuum,local_dataset+mock,0.75,0.35,6,1.0,0.0559843625,True,,,0,0.06355888000000001,-0.0075745175000000095,1.0,0.0,0,0,OK,,PASS
+skincare_serum,skincare_serum,local_dataset+mock,0.75,0.35,6,1.0,0.05043843750000001,True,,,0,0.06137401000000001,-0.010935572499999997,0.8,0.19999999999999996,0,0,WARN,grounded_ctr dropped by 0.0109 (0.0614 -> 0.0504),PASS

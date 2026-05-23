@@ -1,0 +1,127 @@
+{
+  "product_category": "baby_stroller",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/baby_stroller",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward.",
+      "The folding latch stuck so badly that I struggled to load it into the car alone.",
+      "The canopy looked large in photos but barely shaded my baby's face.",
+      "The brake pedal felt loose and did not lock both wheels every time.",
+      "The storage basket was too shallow and my diaper bag kept sliding out.",
+      "It rolled fine indoors, but rough pavement made it rattle loudly."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.43,
+    "dopamine_score": 0.3333333333333333,
+    "visual_quality": 1.0,
+    "narration_quality": 0.859375,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.75,
+    "creative_score": 0.7065729166666668,
+    "grounded_score": 0.47340385416666675,
+    "predicted_ctr": 0.08478875000000001,
+    "grounded_ctr": 0.05680846250000001,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.60, dopamine=1, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 1027,
+      "latency_ms": 6177.273750305176,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\nThe URL path contains \"baby_stroller\" — this is a baby product, specifically a stroller/pram. This is a physical consumer good in the baby/kids category.\n\n**Task Complexity from Real Inputs:**\n- The input is just a URL. There is no specific task instruction beyond the URL itself.\n- However, the context of \"workflow planner\" and the available tools suggest the user likely wants to research this product.\n- A baby stroller is a high-con"
+    },
+    "analysis_audience": {
+      "total_tokens": 1201,
+      "latency_ms": 8344.055652618408,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 911,
+      "latency_ms": 5344.624757766724,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 249,
+      "latency_ms": 2496.6578483581543,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2860,
+      "latency_ms": 13869.730949401855,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Safety-First Parent**\n\n**Identity:** A practical, safety-conscious parent (likely a new mom or dad) who needs a stroller to function dependably in real-world, everyday situations. They are not looking for luxury features; they need a tool that protects their child and simplifies their life.\n\n**Core Pain Points (Physical & Emotional):**\n- **Safety Hazards:** The stroller nearly tips on a sidewalk crack, and the brakes fail to lock consistently. This creates a constant, low-gr"
+    },
+    "strategy": {
+      "total_tokens": 2962,
+      "latency_ms": 15413.482904434204,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "*   **Core Strategy:** Build \"Relief Ladder\" narrative: start with anxiety (tipping, bad brakes, stuck latch), then deliver tactile proof of each resolved pain, then expand to convenience canopy/fold/basket. This directly addresses trust barriers (past failures) and the primary motivation (relief).\n*   **Evidence Basis:**\n    *   *painpoints/evidence_quotes:* Directly source the specific failures (tipping, brake, latch, canopy) to build credibility.\n    *   *audience_summary/trust_barriers:* \"Ma"
+    },
+    "storyboard": {
+      "total_tokens": 3371,
+      "latency_ms": 11750.42176246643,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "1.  **Scene 1**\n    *   **linked_painpoint:** Stroller tipping hazard on uneven surfaces\n    *   **evidence_quote_used:** \"The front wheel jammed on a sidewalk crack and nearly tipped the stroller forward.\"\n    *   **visual_description:** Close-up: stroller front wheel hits a sidewalk crack, jams, and the chassis lurches forward violently, a baby doll head snaps forward.\n    *   **narration:** \"This wheel jams on a crack. Your baby nearly tips forward. Every time.\"\n    *   **dopamine_trigger:** "
+    }
+  }
+}

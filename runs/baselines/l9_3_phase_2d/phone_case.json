@@ -1,0 +1,127 @@
+{
+  "product_category": "phone_case",
+  "selected_tools": [
+    "local_review_dataset",
+    "amazon_review_mock",
+    "tiktok_trend_mock"
+  ],
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/phone_case",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The corner cracked after one waist-high drop even though it advertised military-grade protection.",
+      "The buttons became stiff and hard to press once the case was on.",
+      "The clear back turned yellow within three weeks.",
+      "The camera lip was too low, so the lens still touched the table.",
+      "It looked slim online but felt bulky and slippery in my hand.",
+      "Wireless charging only worked if I removed the case first."
+    ],
+    "trend_signals": [
+      "Short before/after contrast and tactile proof perform better for this category."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "world_metrics": {
+    "retention_3s": 0.6725,
+    "dopamine_score": 1.0,
+    "visual_quality": 1.0,
+    "narration_quality": 0.890625,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.55,
+    "creative_score": 0.87309375,
+    "grounded_score": 0.5849728125,
+    "predicted_ctr": 0.10477125,
+    "grounded_ctr": 0.0701967375,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.62, dopamine=3, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "regenerate_node": null,
+  "reflection": null,
+  "revision_count": 0,
+  "telemetry": {
+    "planner": {
+      "total_tokens": 1035,
+      "latency_ms": 5953.991174697876,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "reasoning_preview": "Let me reason through this step by step.\n\n**1. Product Classification:**\nThe URL path is `/products/phone_case`. This is clearly a phone case — a consumer electronics accessory. It's a physical product, not digital or service-based.\n\n**2. Task Complexity from Real Inputs:**\nThe only real input provided is the URL. There is no additional context like a specific question, a target market, or a comparison request. The task appears to be: given this product URL, what can we learn or analyze about it"
+    },
+    "analysis_audience": {
+      "total_tokens": 884,
+      "latency_ms": 5281.554937362671,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1108,
+      "latency_ms": 6165.323257446289,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 247,
+      "latency_ms": 2229.7656536102295,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "reasoning_preview": ""
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2683,
+      "latency_ms": 10957.339525222778,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "reasoning_preview": "**Buyer Profile: The Disillusioned Pragmatist**\n\n**Identity:** A practical, value-conscious phone owner who researches before buying. They trusted the product's \"military-grade\" marketing promise and wanted reliable, everyday protection.\n\n**Core Need:** A phone case that delivers on its core functional promises without compromise. They need drop protection that works, buttons that remain tactile, and materials that don't degrade.\n\n**Primary Pain Point (Broken Trust):** The product's marketing cl"
+    },
+    "strategy": {
+      "total_tokens": 2594,
+      "latency_ms": 12321.13003730774,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "reasoning_preview": "Evidence:\n- User is \"Disillusioned Pragmatist\" – seeks tactile proof, hates exaggeration. Evidence: trust barriers [\"Exaggerated marketing promises\", \"No visual evidence\"] and dopamine triggers [\"tactile proof\", \"before/after contrasts\"].\n- Painpoints: waist-high drop cracks, camera lip fails, buttons stiff, yellowing. Evidence: quotes [\"corner cracked after one waist-high drop\", \"clear back turned yellow within three weeks\", \"buttons became stiff\"].\n- Trend: short before/after contrast and tact"
+    },
+    "storyboard": {
+      "total_tokens": 3544,
+      "latency_ms": 14628.236770629883,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "reasoning_preview": "THINKING:\nScene 1: Painpoint visual hook. Show week 0 vs week 3 yellowing. Quote about yellowing. Narration ties frustration.\nScene 2: Drop test failure. Quote about corner cracking. Narration on broken promise.\nScene 3: Camera lip fail. Quote about lens touching table. Narration on false protection.\nScene 4: Button stiffness. Quote about stiff buttons. Narration on poor feel. Use audio click-test.\n\n4 quotes used, 3 dopamine triggers (scenes 2,3,4). Keep tight.\n\nOUTPUT:\n```json\n[\n  {\n    \"scene_"
+    }
+  }
+}
