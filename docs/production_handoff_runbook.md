@@ -76,6 +76,8 @@ Render-specific setup is documented in [Render Deployment Setup](render_deployme
 
 The first public Render deployment smoke passed for `https://ecommerce-ai-copilot-backend.onrender.com` and is recorded in [Render First Deployment Smoke 2026-05-24](render_first_deployment_smoke_20260524.md).
 
+The public Product Mode handoff audit is recorded in [Public Product Mode Handoff Audit](public_product_mode_handoff_audit.md).
+
 ## Startup Sequence
 
 Perform startup in this order:
@@ -334,4 +336,5 @@ Before production handoff:
 - [L11.0 Product Mode MVP Release Notes](release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
 - [Deployment Provider Decision](deployment_provider_decision.md): Render/Railway/Fly.io/DigitalOcean/AWS Lightsail comparison and recommended MVP deployment path.
 - [Render Deployment Setup](render_deployment_setup.md): Render Docker Web Service configuration and post-deploy Product Mode smoke checklist.
+- [Public Product Mode Handoff Audit](public_product_mode_handoff_audit.md): public Render handoff artifact, boundary and live-recheck notes.
 - [Render First Deployment Smoke 2026-05-24](render_first_deployment_smoke_20260524.md): public Render health, static frontend and Product Mode generation smoke results.
