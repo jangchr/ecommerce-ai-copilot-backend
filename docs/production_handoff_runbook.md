@@ -27,6 +27,20 @@ runs/baselines/l10_4_production_handoff/
 | Correlation and logs | Every response returns `X-Request-ID`; structured logs use the request ID and safe summary fields only. |
 | Memory | Only grounded, approved outcomes qualify for success memory; memory capacity remains bounded. |
 
+## Amazon Shadow Source Status
+
+Amazon real-source work is currently debug-only and shadow-only:
+
+- `amazon_review_api` can be evaluated through `/api/v1/debug-source-probe`.
+- `/api/v1/debug-copilot` can return `shadow_sources` only when `real_source_mode=amazon_shadow`.
+- `/api/v1/generate-copilot` does not call Amazon and does not return `shadow_sources`.
+- Shadow evidence is not used for generation.
+- Shadow evidence does not write memory.
+- `memory_write_allowed=false` and `used_for_generation=false` are hard observability invariants.
+- `amazon_primary` remains unimplemented and must not be enabled without a separate promotion review.
+
+The current status is documented in [L10.10 Amazon Shadow Observability Release Notes](release_notes_l10_10_amazon_shadow_observability.md).
+
 ## Startup Sequence
 
 Perform startup in this order:
@@ -273,3 +287,4 @@ Before production handoff:
 - [API Examples](api_examples.md): endpoint requests and response surfaces.
 - [Release Artifact Manifest](release_artifact_manifest.md): package contents, exclusions and durable-runtime state policy.
 - [L10.4 Production Handoff Release Notes](release_notes_l10_4_production_handoff.md): latest validated handoff baseline, costs, memory status and Docker smoke boundary.
+- [L10.10 Amazon Shadow Observability Release Notes](release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
