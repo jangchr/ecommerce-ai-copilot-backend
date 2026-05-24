@@ -162,6 +162,10 @@ runs/amazon_shadow_eval/<timestamp>/
   amazon_shadow_eval_report.md
 ```
 
+## Review History
+
+- [2026-05-24 Amazon Shadow Evaluation Review](amazon_shadow_eval_20260524_review.md)
+
 ## Promotion Review
 
 Amazon shadow evidence can be considered for a future design review only after:
