@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 from source_adapters.amazon_review_adapter import AmazonReviewAdapter
 
@@ -15,7 +16,7 @@ AMAZON_HTML = """
     <span id="acrCustomerReviewText">1,234 ratings</span>
     <span class="a-price a-offscreen">$14.99</span>
     <div id="wayfinding-breadcrumbs_feature_div">
-      Grocery & Gourmet Food › Vinegars
+      Grocery & Gourmet Food > Vinegars
     </div>
     <div id="feature-bullets">
       <ul>
@@ -38,7 +39,7 @@ class AmazonProbeAdapterTest(unittest.TestCase):
     def test_parse_html_extracts_product_and_review_evidence(self):
         evidence = AmazonReviewAdapter().parse_html(
             AMAZON_HTML,
-            "https://www.amazon.com/dp/B000TEST",
+            "https://www.amazon.com/dp/B000TEST00",
             "balsamic_vinegar",
         )
 
@@ -60,7 +61,7 @@ class AmazonProbeAdapterTest(unittest.TestCase):
     def test_fetch_uses_mocked_network_response(self):
         adapter = AmazonReviewAdapter()
         with patch.object(adapter, "_fetch_html", return_value=AMAZON_HTML):
-            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST", "balsamic_vinegar")
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "balsamic_vinegar")
 
         self.assertEqual(evidence.source_type, "amazon_review_api")
         self.assertGreaterEqual(evidence.confidence, 0.70)
@@ -68,10 +69,12 @@ class AmazonProbeAdapterTest(unittest.TestCase):
     def test_fetch_failure_returns_unavailable_with_error(self):
         adapter = AmazonReviewAdapter()
         with patch.object(adapter, "_fetch_html", side_effect=TimeoutError("timeout")):
-            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST", "balsamic_vinegar")
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "balsamic_vinegar")
 
         self.assertEqual(evidence.source_type, "unavailable")
-        self.assertIn("amazon_fetch_failed", evidence.data_warnings)
+        self.assertIn("timeout", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "timeout")
+        self.assertEqual(evidence.metadata["retry_count"], 1)
         self.assertIn("timeout", evidence.metadata["error"])
 
     def test_non_amazon_url_returns_unavailable_without_network(self):
@@ -81,6 +84,81 @@ class AmazonProbeAdapterTest(unittest.TestCase):
 
         self.assertEqual(evidence.source_type, "unavailable")
         self.assertIn("non_amazon_url", evidence.data_warnings)
+        self.assertIn("invalid_or_redirected_url", evidence.data_warnings)
+
+    def test_amazon_non_detail_url_returns_invalid_without_network(self):
+        adapter = AmazonReviewAdapter()
+        with patch.object(adapter, "_fetch_html", side_effect=AssertionError("must not fetch")):
+            evidence = adapter.fetch("https://www.amazon.com/s?k=printer", "printer")
+
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("invalid_or_redirected_url", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "invalid_or_redirected_url")
+
+    def test_404_does_not_retry_and_is_classified_as_not_found(self):
+        adapter = AmazonReviewAdapter()
+        error = HTTPError(
+            "https://www.amazon.com/dp/B000MISSNG",
+            404,
+            "Not Found",
+            hdrs=None,
+            fp=None,
+        )
+        with patch.object(adapter, "_fetch_html", side_effect=error) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000MISSNG", "skincare_serum")
+
+        self.assertEqual(fetch_html.call_count, 1)
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("not_found", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "not_found")
+        self.assertEqual(evidence.metadata["retry_count"], 0)
+
+    def test_connection_reset_retries_once_and_can_succeed(self):
+        adapter = AmazonReviewAdapter()
+        with patch.object(
+            adapter,
+            "_fetch_html",
+            side_effect=[ConnectionResetError("WinError 10054"), AMAZON_HTML],
+        ) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "balsamic_vinegar")
+
+        self.assertEqual(fetch_html.call_count, 2)
+        self.assertEqual(evidence.source_type, "amazon_review_api")
+        self.assertEqual(evidence.metadata["retry_count"], 1)
+
+    def test_connection_reset_after_retry_is_classified(self):
+        adapter = AmazonReviewAdapter()
+        with patch.object(
+            adapter,
+            "_fetch_html",
+            side_effect=ConnectionResetError("WinError 10054 connection reset"),
+        ) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "balsamic_vinegar")
+
+        self.assertEqual(fetch_html.call_count, 2)
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("transient_connection_reset", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "transient_connection_reset")
+        self.assertEqual(evidence.metadata["retry_count"], 1)
+
+    def test_blocked_html_is_classified_as_blocked(self):
+        adapter = AmazonReviewAdapter()
+        blocked_html = "<html><body>Robot Check CAPTCHA enter the characters you see below</body></html>"
+        with patch.object(adapter, "_fetch_html", return_value=blocked_html):
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "printer")
+
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("blocked", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "blocked")
+
+    def test_parse_empty_is_classified(self):
+        adapter = AmazonReviewAdapter()
+        with patch.object(adapter, "_fetch_html", return_value="<html><body>No usable fields</body></html>"):
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "printer")
+
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("parse_empty", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "parse_empty")
 
 
 if __name__ == "__main__":

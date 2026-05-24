@@ -1,11 +1,17 @@
 import html
 import re
+import socket
 import urllib.request
 from html.parser import HTMLParser
 from typing import Optional
+from urllib.error import HTTPError, URLError
 
 from schemas.source_contract import SourceEvidence
 from source_adapters.base import BaseSourceAdapter
+
+
+class InvalidAmazonDetailURL(ValueError):
+    pass
 
 
 class _AmazonHTMLTextParser(HTMLParser):
@@ -91,6 +97,7 @@ class _AmazonHTMLTextParser(HTMLParser):
 
 class AmazonReviewAdapter(BaseSourceAdapter):
     source_type = "amazon_review_api"
+    max_retries = 1
 
     def fetch(self, url: str, product_category: str) -> SourceEvidence:
         if not url:
@@ -98,23 +105,45 @@ class AmazonReviewAdapter(BaseSourceAdapter):
                 url,
                 product_category,
                 "missing_amazon_url",
+                error_type="missing_url",
             )
         if "amazon." not in url.lower():
             return self._unavailable(
                 url,
                 product_category,
                 "non_amazon_url",
+                error_type="invalid_or_redirected_url",
             )
-
-        try:
-            html_text = self._fetch_html(url)
-            evidence = self.parse_html(html_text, url, product_category)
-        except Exception as exc:
+        if not self._is_amazon_detail_url(url):
             return self._unavailable(
                 url,
                 product_category,
-                "amazon_fetch_failed",
+                "invalid_amazon_detail_url",
+                error_type="invalid_or_redirected_url",
+            )
+
+        try:
+            html_text, retry_count = self._fetch_html_with_retry(url)
+            if self._is_blocked_html(html_text):
+                return self._unavailable(
+                    url,
+                    product_category,
+                    "blocked",
+                    error="Amazon returned a blocked, robot check or captcha page.",
+                    error_type="blocked",
+                    retry_count=retry_count,
+                )
+            evidence = self.parse_html(html_text, url, product_category)
+            evidence.metadata["retry_count"] = retry_count
+        except Exception as exc:
+            error_type = self._classify_error(exc)
+            return self._unavailable(
+                url,
+                product_category,
+                error_type,
                 error=str(exc),
+                error_type=error_type,
+                retry_count=getattr(exc, "retry_count", 0),
             )
 
         if evidence.evidence_quotes or evidence.metadata.get("product_title"):
@@ -122,8 +151,22 @@ class AmazonReviewAdapter(BaseSourceAdapter):
         return self._unavailable(
             url,
             product_category,
-            "amazon_parse_empty",
+            "parse_empty",
+            error_type="parse_empty",
+            retry_count=evidence.metadata.get("retry_count", 0),
         )
+
+    def _fetch_html_with_retry(self, url: str) -> tuple[str, int]:
+        retry_count = 0
+        while True:
+            try:
+                return self._fetch_html(url), retry_count
+            except Exception as exc:
+                if retry_count < self.max_retries and self._is_transient_error(exc):
+                    retry_count += 1
+                    continue
+                setattr(exc, "retry_count", retry_count)
+                raise
 
     def _fetch_html(self, url: str) -> str:
         request = urllib.request.Request(
@@ -138,8 +181,56 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             },
         )
         with urllib.request.urlopen(request, timeout=8) as response:
+            final_url = response.geturl()
+            if final_url and not self._is_amazon_detail_url(final_url):
+                raise InvalidAmazonDetailURL(f"Invalid or redirected Amazon URL: {final_url}")
             content_type = response.headers.get_content_charset() or "utf-8"
             return response.read().decode(content_type, errors="replace")
+
+    def _is_amazon_detail_url(self, url: str) -> bool:
+        lowered = (url or "").lower()
+        return bool(re.search(r"/(?:dp|gp/product)/[a-z0-9]{10}", lowered))
+
+    def _is_transient_error(self, exc: Exception) -> bool:
+        error_type = self._classify_error(exc)
+        return error_type in {"transient_connection_reset", "timeout"}
+
+    def _classify_error(self, exc: Exception) -> str:
+        if isinstance(exc, HTTPError):
+            if exc.code == 404:
+                return "not_found"
+            return "unknown_error"
+        if isinstance(exc, InvalidAmazonDetailURL):
+            return "invalid_or_redirected_url"
+        if isinstance(exc, (TimeoutError, socket.timeout)):
+            return "timeout"
+        if isinstance(exc, ConnectionResetError):
+            return "transient_connection_reset"
+        if isinstance(exc, URLError):
+            reason = getattr(exc, "reason", "")
+            reason_text = str(reason).lower()
+            if isinstance(reason, (TimeoutError, socket.timeout)) or "timed out" in reason_text or "timeout" in reason_text:
+                return "timeout"
+            if "10054" in reason_text or "connection reset" in reason_text or "connection closed" in reason_text:
+                return "transient_connection_reset"
+            return "unknown_error"
+        text = str(exc).lower()
+        if "10054" in text or "connection reset" in text or "connection closed" in text:
+            return "transient_connection_reset"
+        if "timed out" in text or "timeout" in text:
+            return "timeout"
+        return "unknown_error"
+
+    def _is_blocked_html(self, html_text: str) -> bool:
+        lowered = (html_text or "").lower()
+        blocked_markers = [
+            "captcha",
+            "robot check",
+            "enter the characters you see below",
+            "sorry, we just need to make sure you're not a robot",
+            "automated access",
+        ]
+        return any(marker in lowered for marker in blocked_markers)
 
     def parse_html(self, html_text: str, url: str, product_category: str) -> SourceEvidence:
         parser = _AmazonHTMLTextParser()
@@ -190,6 +281,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
                 "price": price,
                 "category_hint": category_hint,
                 "bullet_points": bullets,
+                "retry_count": 0,
             },
         )
 
@@ -219,10 +311,19 @@ class AmazonReviewAdapter(BaseSourceAdapter):
         product_category: str,
         warning: str,
         error: str = "",
+        error_type: str = "",
+        retry_count: int = 0,
     ) -> SourceEvidence:
-        metadata = {"adapter": self.__class__.__name__}
+        metadata = {
+            "adapter": self.__class__.__name__,
+            "error_type": error_type or warning,
+            "retry_count": retry_count,
+        }
         if error:
             metadata["error"] = error
+        warnings = [warning]
+        if metadata["error_type"] not in warnings:
+            warnings.append(metadata["error_type"])
         return SourceEvidence(
             source_type="unavailable",
             source_url=url,
@@ -231,7 +332,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             review_confidence=0.0,
             review_count=0,
             evidence_quotes=[],
-            data_warnings=[warning],
+            data_warnings=warnings,
             metadata=metadata,
         )
 

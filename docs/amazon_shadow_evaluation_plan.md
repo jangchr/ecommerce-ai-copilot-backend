@@ -121,6 +121,22 @@ These are hard requirements:
 - Amazon shadow evidence must not enter success memory.
 - Amazon shadow evaluation must not change the local 10-category regression baseline.
 
+## Error Classification And Retry
+
+The Amazon adapter uses a bounded retry policy. It retries at most once, and only for transient network failures. It does not retry deterministic page-level failures such as HTTP 404.
+
+| Condition | error_type | Retry? |
+| --- | --- | --- |
+| HTTP 404 | `not_found` | No |
+| `ConnectionResetError` or WinError 10054 | `transient_connection_reset` | Yes, once |
+| timeout or urllib timeout | `timeout` | Yes, once |
+| captcha, robot check or blocked page | `blocked` | No |
+| redirect or non-Amazon detail page | `invalid_or_redirected_url` | No |
+| parsed page has no core fields | `parse_empty` | No |
+| other exception | `unknown_error` | No |
+
+Unavailable `SourceEvidence` should include the `error_type` in both `data_warnings` and `metadata.error_type`, preserve the raw error summary in `metadata.error` when available, and report `metadata.retry_count`.
+
 ## Execution Policy
 
 - This evaluation does not enter fast gate.
