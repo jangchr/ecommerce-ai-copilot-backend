@@ -196,33 +196,66 @@ class AmazonReviewAdapter(BaseSourceAdapter):
         return error_type in {"connection_refused", "transient_connection_reset", "timeout"}
 
     def _classify_error(self, exc: Exception) -> str:
+        text_parts = [
+            str(exc),
+            repr(exc),
+            type(exc).__name__,
+        ]
+
+        reason = getattr(exc, "reason", None)
+        if reason is not None:
+            text_parts.extend([
+                str(reason),
+                repr(reason),
+                type(reason).__name__,
+            ])
+
+            for attr in ("errno", "winerror", "strerror"):
+                value = getattr(reason, attr, None)
+                if value is not None:
+                    text_parts.append(str(value))
+
+        for attr in ("errno", "winerror", "strerror"):
+            value = getattr(exc, attr, None)
+            if value is not None:
+                text_parts.append(str(value))
+
+        text = " | ".join(text_parts).lower()
+
         if isinstance(exc, HTTPError):
             if exc.code == 404:
                 return "not_found"
-            return "unknown_error"
+            if exc.code in {403, 429, 503}:
+                return "blocked"
+            return "http_error"
         if isinstance(exc, InvalidAmazonDetailURL):
             return "invalid_or_redirected_url"
-        if isinstance(exc, (TimeoutError, socket.timeout)):
-            return "timeout"
-        if isinstance(exc, ConnectionResetError):
-            return "transient_connection_reset"
-        if isinstance(exc, URLError):
-            reason = getattr(exc, "reason", "")
-            reason_text = str(reason).lower()
-            if "10061" in reason_text or "connection refused" in reason_text or "actively refused" in reason_text:
-                return "connection_refused"
-            if isinstance(reason, (TimeoutError, socket.timeout)) or "timed out" in reason_text or "timeout" in reason_text:
-                return "timeout"
-            if "10054" in reason_text or "connection reset" in reason_text or "connection closed" in reason_text:
-                return "transient_connection_reset"
-            return "url_error"
-        text = str(exc).lower()
-        if "10061" in text or "connection refused" in text or "actively refused" in text:
+
+        if (
+            "winerror 10061" in text
+            or "10061" in text
+            or "connection refused" in text
+            or "actively refused" in text
+            or "actively rejected" in text
+        ):
             return "connection_refused"
-        if "10054" in text or "connection reset" in text or "connection closed" in text:
+
+        if (
+            "winerror 10054" in text
+            or "10054" in text
+            or "connection reset" in text
+            or "connectionreseterror" in text
+            or "connection closed" in text
+            or "forcibly closed" in text
+        ):
             return "transient_connection_reset"
+
         if "timed out" in text or "timeout" in text:
             return "timeout"
+
+        if isinstance(exc, URLError):
+            return "url_error"
+
         return "unknown_error"
 
     def _is_blocked_html(self, html_text: str) -> bool:

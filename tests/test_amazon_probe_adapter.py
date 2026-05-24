@@ -156,6 +156,19 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         self.assertEqual(evidence.metadata["error_type"], "connection_refused")
         self.assertEqual(evidence.metadata["retry_count"], 1)
 
+    def test_urllib_error_text_with_winerror_10061_classifies_connection_refused(self):
+        adapter = AmazonReviewAdapter()
+        error = URLError("[WinError 10061] connection refused")
+
+        with patch.object(adapter, "_fetch_html", side_effect=error) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "balsamic_vinegar")
+
+        self.assertEqual(fetch_html.call_count, 2)
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertEqual(evidence.metadata["error_type"], "connection_refused")
+        self.assertEqual(evidence.metadata["retry_count"], 1)
+        self.assertIn("connection_refused", evidence.data_warnings)
+
     def test_url_error_winerror_10054_is_connection_reset(self):
         adapter = AmazonReviewAdapter()
         reset = URLError("[WinError 10054] An existing connection was forcibly closed by the remote host")
