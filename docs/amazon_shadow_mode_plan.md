@@ -12,6 +12,8 @@ local grounded reviews + mock trend + LLM creative workflow
 
 Amazon real-source probing already exists as a debug-only capability through `/api/v1/debug-source-probe`. The next step is to define how Amazon evidence could be compared beside the local evidence without changing product output or memory.
 
+The shadow evaluation set and pass criteria are defined in [Amazon Shadow Evaluation Plan](amazon_shadow_evaluation_plan.md).
+
 ## Protected Boundaries
 
 - `/api/v1/generate-copilot` remains unchanged.
