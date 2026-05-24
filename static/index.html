@@ -272,6 +272,10 @@
                     <input type="checkbox" id="debugMode" checked onchange="syncDebugMode()">
                     <span>Debug Mode</span>
                 </label>
+                <label class="toggle-option" for="amazonShadowMode" id="amazonShadowOption">
+                    <input type="checkbox" id="amazonShadowMode">
+                    <span>Amazon Shadow</span>
+                </label>
             </div>
         </section>
 
@@ -344,11 +348,13 @@
         function syncDebugMode() {
             const enabled = document.getElementById('debugMode').checked;
             document.getElementById('sourceProbeTools').hidden = !enabled;
+            document.getElementById('amazonShadowOption').hidden = !enabled;
             if (!enabled) {
                 const probeTarget = document.getElementById('res-source-probe');
                 probeTarget.innerHTML = '';
                 probeTarget.style.opacity = '0.65';
                 latestDebugCategory = '';
+                document.getElementById('amazonShadowMode').checked = false;
             }
         }
 
@@ -479,7 +485,11 @@
 
                 if (debugMode) {
                     try {
-                        const debugData = await postCopilot('debug-copilot', payload);
+                        const debugPayload = { ...payload };
+                        if (document.getElementById('amazonShadowMode').checked) {
+                            debugPayload.real_source_mode = 'amazon_shadow';
+                        }
+                        const debugData = await postCopilot('debug-copilot', debugPayload);
                         renderDebugPanel(response.data.feedback, debugData, 'On');
                     } catch (debugError) {
                         renderDebugPanel(response.data.feedback, null, 'Unavailable');
@@ -538,6 +548,40 @@
             `;
         }
 
+        function renderAmazonShadowSummary(shadowSources) {
+            const shadow = shadowSources || {};
+            if (!shadow.amazon_review_api) return '';
+
+            const amazon = shadow.amazon_review_api || {};
+            const metadata = amazon.metadata || {};
+            const evidencePreview = amazon.evidence_preview || [];
+            const bulletPoints = metadata.bullet_points || [];
+            const warnings = metadata.data_warnings || [];
+            const errorType = metadata.error_type || '';
+
+            return `
+                <div class="json-key">Amazon Shadow Summary</div>
+                <div class="probe-grid">
+                    ${block('Shadow Provider Status', amazon.status || '')}
+                    ${block('Shadow Source Confidence', amazon.source_confidence ?? 0)}
+                    ${block('Shadow Product Title', metadata.product_title || '')}
+                    ${block('Shadow Rating', metadata.rating || '')}
+                    ${block('Shadow Review Count', metadata.review_count || '')}
+                    ${block('Shadow Evidence Preview Count', evidencePreview.length)}
+                    ${block('Shadow Bullet Points Count', bulletPoints.length)}
+                    ${block('Shadow Category Hint', metadata.category_hint || metadata.product_category_hint || '')}
+                    ${block('Shadow Latency Ms', Number(amazon.latency_ms || 0).toFixed(2))}
+                    ${block('Shadow Error Type', errorType)}
+                    ${block('Shadow Retry Count', metadata.retry_count ?? 0)}
+                    ${block('Shadow Memory Write Allowed', shadow.memory_write_allowed ? 'true' : 'false')}
+                    ${block('Shadow Used For Generation', shadow.used_for_generation ? 'true' : 'false')}
+                </div>
+                ${block('Shadow Evidence Preview', evidencePreview.join('\n'))}
+                ${block('Shadow Data Warnings', warnings.join('\n'))}
+                ${block('Shadow Error', amazon.error || metadata.error || '')}
+            `;
+        }
+
         function renderDebugPanel(feedback, debugData, modeStatus) {
             document.getElementById('res-analytics').style.opacity = '1';
             if (!debugData) {
@@ -559,7 +603,8 @@
                 telemetry: debugData.telemetry,
                 regenerate_node: debugData.regenerate_node,
                 revision_count: debugData.revision_count,
-                memory_observability: debugData.memory_observability
+                memory_observability: debugData.memory_observability,
+                shadow_sources: debugData.shadow_sources
             };
             document.getElementById('res-analytics').innerHTML = `
                 <div class="feedback-box">${escapeHTML(feedback || '')}</div>
@@ -568,6 +613,7 @@
                 ${block('Grounded CTR', metrics.grounded_ctr ?? 0)}
                 ${block('Revision Count', debugData.revision_count ?? 0)}
                 ${block('Regenerate Node', debugData.regenerate_node || '')}
+                ${renderAmazonShadowSummary(debugData.shadow_sources)}
                 <div class="json-key">Raw Debug State</div>
                 <pre class="debug">${escapeHTML(JSON.stringify(trace, null, 2))}</pre>
             `;

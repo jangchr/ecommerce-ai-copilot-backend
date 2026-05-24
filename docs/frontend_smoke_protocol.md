@@ -63,6 +63,38 @@ Expected results:
   - `revision_count`
   - `regenerate_node`
 
+## Smoke Test: Amazon Shadow Observability
+
+1. Turn **Debug Mode** on.
+2. Turn **Amazon Shadow** on.
+3. Enter an Amazon product URL, for example `https://www.amazon.com/dp/B00QIIMCCW`.
+4. Run the workflow.
+5. Inspect the Debug Trace panel.
+
+Expected results:
+
+- The product request still calls only `POST /api/v1/generate-copilot` and does not receive `shadow_sources` in the product response body.
+- The debug request calls `POST /api/v1/debug-copilot` with `real_source_mode=amazon_shadow`.
+- The Debug Trace panel displays an `Amazon Shadow Summary` with:
+  - `Shadow Provider Status`
+  - `Shadow Source Confidence`
+  - `Shadow Product Title`
+  - `Shadow Rating`
+  - `Shadow Review Count`
+  - `Shadow Evidence Preview Count`
+  - `Shadow Bullet Points Count`
+  - `Shadow Category Hint`
+  - `Shadow Latency Ms`
+  - `Shadow Error Type`
+  - `Shadow Retry Count`
+  - `Shadow Memory Write Allowed`
+  - `Shadow Used For Generation`
+- If `error_type` exists, the panel displays `Shadow Error Type` explicitly instead of relying only on raw error text.
+- `Shadow Memory Write Allowed` remains `false`.
+- `Shadow Used For Generation` remains `false`.
+- Existing product output remains unchanged if Amazon shadow probing fails.
+- Turning **Debug Mode** off hides and disables Amazon Shadow; it must not trigger shadow source calls.
+
 ## Smoke Test: Source Probe In Debug Mode
 
 1. Turn **Debug Mode** on.

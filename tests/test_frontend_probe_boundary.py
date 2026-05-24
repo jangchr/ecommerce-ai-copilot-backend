@@ -18,6 +18,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("async function runSourceProbe()", self.source)
         self.assertIn("if (!document.getElementById('debugMode').checked) return;", self.source)
         self.assertIn("document.getElementById('sourceProbeTools').hidden = !enabled;", self.source)
+        self.assertIn("document.getElementById('amazonShadowOption').hidden = !enabled;", self.source)
+        self.assertIn("document.getElementById('amazonShadowMode').checked = false;", self.source)
 
     def test_amazon_probe_metadata_fields_are_rendered(self):
         self.assertIn("function renderAmazonProbeMetadata(result)", self.source)
@@ -30,6 +32,23 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Amazon Bullet Points", self.source)
         self.assertIn("Amazon Data Warnings", self.source)
         self.assertIn("Amazon Adapter Error", self.source)
+
+    def test_amazon_shadow_summary_fields_are_rendered(self):
+        self.assertIn("function renderAmazonShadowSummary(shadowSources)", self.source)
+        self.assertIn("real_source_mode = 'amazon_shadow'", self.source)
+        self.assertIn("Shadow Provider Status", self.source)
+        self.assertIn("Shadow Source Confidence", self.source)
+        self.assertIn("Shadow Product Title", self.source)
+        self.assertIn("Shadow Rating", self.source)
+        self.assertIn("Shadow Review Count", self.source)
+        self.assertIn("Shadow Evidence Preview Count", self.source)
+        self.assertIn("Shadow Bullet Points Count", self.source)
+        self.assertIn("Shadow Category Hint", self.source)
+        self.assertIn("Shadow Latency Ms", self.source)
+        self.assertIn("Shadow Error Type", self.source)
+        self.assertIn("Shadow Retry Count", self.source)
+        self.assertIn("Shadow Memory Write Allowed", self.source)
+        self.assertIn("Shadow Used For Generation", self.source)
 
 
 if __name__ == "__main__":
