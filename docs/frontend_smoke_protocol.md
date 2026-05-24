@@ -8,6 +8,8 @@ This protocol validates the frontend/API boundary of the Agent Debugger without 
 
 The page under test is `static/index.html`.
 
+For a product-demo-oriented walkthrough, use the [Product Mode Demo Protocol](product_mode_demo_protocol.md).
+
 The API surfaces have distinct responsibilities:
 
 | Endpoint | Purpose | Frontend Use |
