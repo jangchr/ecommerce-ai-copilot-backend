@@ -51,6 +51,7 @@ class ApiContractTest(unittest.TestCase):
             "telemetry",
             "telemetry_summary",
             "memory_observability",
+            "shadow_sources",
             "revision_count",
             "regenerate_node",
         ]:
@@ -59,6 +60,7 @@ class ApiContractTest(unittest.TestCase):
 
     def test_growth_request_defaults_to_tiktok_ctr(self):
         self.assertEqual(GrowthRequest(url="x").goal, "tiktok_ctr")
+        self.assertEqual(GrowthRequest(url="x").real_source_mode, "local")
 
     def test_source_probe_contract_exposes_debug_and_memory_guard_fields(self):
         request_properties = SourceProbeRequest.model_json_schema()["properties"]

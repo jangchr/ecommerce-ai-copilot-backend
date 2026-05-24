@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class GrowthRequest(BaseModel):
     url: str
     goal: str = "tiktok_ctr"
+    real_source_mode: Literal["local", "amazon_shadow"] = "local"
 
 
 class EvidencePayload(BaseModel):
@@ -81,5 +82,6 @@ class DebugCopilotResponse(BaseModel):
     telemetry: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     telemetry_summary: Dict[str, Any] = Field(default_factory=dict)
     memory_observability: Dict[str, Any] = Field(default_factory=dict)
+    shadow_sources: Dict[str, Any] = Field(default_factory=dict)
     regenerate_node: Optional[str] = None
     revision_count: int = 0

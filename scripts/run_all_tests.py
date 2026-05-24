@@ -21,6 +21,7 @@ FAST_COMMANDS = [
         "tests.test_cognitive_synthesis",
         "tests.test_regression_diff_gate",
         "tests.test_api_contract",
+        "tests.test_shadow_mode_contract",
         "tests.test_api_live_smoke",
         "tests.test_source_probe_contract",
         "tests.test_source_probe_endpoint",

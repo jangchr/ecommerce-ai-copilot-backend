@@ -19,11 +19,13 @@ The product and workflow-debug endpoints accept this request contract:
 ```json
 {
   "url": "https://test.local/products/balsamic_vinegar",
-  "goal": "tiktok_ctr"
+  "goal": "tiktok_ctr",
+  "real_source_mode": "local"
 }
 ```
 
 `goal` is optional and defaults to `tiktok_ctr`.
+`real_source_mode` is optional and defaults to `local`. The only accepted values are `local` and `amazon_shadow`; `amazon_primary` is intentionally unavailable.
 
 ## Product Creative Response
 
@@ -40,9 +42,12 @@ Use this endpoint for product-facing UI output. It returns generated creative pr
 ```json
 {
   "url": "https://test.local/products/balsamic_vinegar",
-  "goal": "tiktok_ctr"
+  "goal": "tiktok_ctr",
+  "real_source_mode": "local"
 }
 ```
+
+Product calls should keep `real_source_mode="local"` or omit the field. The product endpoint does not return `shadow_sources`.
 
 ### curl
 
@@ -58,6 +63,7 @@ curl -X POST "http://127.0.0.1:8001/api/v1/generate-copilot" \
 $body = @{
     url = "https://test.local/products/balsamic_vinegar"
     goal = "tiktok_ctr"
+    real_source_mode = "local"
 } | ConvertTo-Json
 
 Invoke-RestMethod `
@@ -137,9 +143,12 @@ The debug response body mirrors the response header correlation ID as `request_i
 ```json
 {
   "url": "https://test.local/products/balsamic_vinegar",
-  "goal": "tiktok_ctr"
+  "goal": "tiktok_ctr",
+  "real_source_mode": "amazon_shadow"
 }
 ```
+
+`amazon_shadow` is a debug-only contract mode. It is reserved for future side-channel Amazon observability and must not replace local dataset evidence, enter success memory or change product regression results.
 
 ### curl
 
@@ -177,6 +186,7 @@ Invoke-RestMethod `
 | `telemetry` | Node-level timing, token and observability data. |
 | `telemetry_summary` | Safe per-request aggregate: node count, total tokens/latency, failed nodes and token/latency hotspot nodes. |
 | `memory_observability` | Memory backend, capacity and FAISS/fallback health information. |
+| `shadow_sources` | Debug-only side-channel source comparison payload. Empty by default; not exposed by the product endpoint. |
 | `revision_count` | Number of self-repair revisions performed. |
 | `regenerate_node` | Routed regeneration target, when a further repair is required. |
 

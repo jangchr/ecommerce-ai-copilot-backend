@@ -137,6 +137,7 @@ class ApiLiveSmokeTest(unittest.TestCase):
             "telemetry",
             "telemetry_summary",
             "memory_observability",
+            "shadow_sources",
             "revision_count",
             "regenerate_node",
         ]:
