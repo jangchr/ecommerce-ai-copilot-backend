@@ -107,7 +107,62 @@ class AmazonShadowEvalRunnerTest(unittest.TestCase):
             self.assertIn("Total URLs: 1", report)
             self.assertIn("Unavailable count: 1", report)
             self.assertIn("Product API called: false", report)
-            self.assertIn("never `/api/v1/generate-copilot`", report)
+            self.assertIn("Debug Copilot called: true", report)
+            self.assertIn("The runner never calls `/api/v1/generate-copilot`", report)
+
+    def test_probe_only_uses_debug_source_probe_and_skips_debug_copilot(self):
+        items = [{"category": "phone_case", "url": "https://www.amazon.com/dp/B0D6X6GZ8Y"}]
+        payload = {
+            "fallback_required": False,
+            "memory_write_allowed": False,
+            "results": [
+                {
+                    "provider": "amazon_review_api",
+                    "status": "success",
+                    "source_confidence": 0.88,
+                    "latency_ms": 42.0,
+                    "evidence_preview": ["The case yellowed after a month."],
+                    "metadata": {
+                        "product_title": "Phone Case",
+                        "rating": "4.3",
+                        "review_count": "991",
+                        "category_hint": "Cell Phones",
+                        "bullet_points": ["Clear case"],
+                    },
+                    "error": "",
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir, patch.object(
+            runner,
+            "post_debug_source_probe",
+            return_value=payload,
+        ) as probe, patch.object(
+            runner,
+            "post_debug_copilot",
+            side_effect=AssertionError("probe-only must not call debug-copilot"),
+        ):
+            output_dir = runner.run_evaluation(
+                items=items,
+                base_url="http://127.0.0.1:8001",
+                output_root=Path(tmpdir),
+                probe_only=True,
+            )
+
+            probe.assert_called_once()
+            csv_path = output_dir / "amazon_shadow_eval_summary.csv"
+            report_path = output_dir / "amazon_shadow_eval_report.md"
+            with csv_path.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            self.assertEqual(rows[0]["provider_status"], "success")
+            self.assertEqual(rows[0]["memory_write_allowed"], "False")
+            self.assertEqual(rows[0]["used_for_generation"], "False")
+
+            report = report_path.read_text(encoding="utf-8")
+            self.assertIn("Product API called: false", report)
+            self.assertIn("Debug Copilot called: false", report)
+            self.assertIn("Probe-only mode: true", report)
 
 
 if __name__ == "__main__":

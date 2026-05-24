@@ -136,7 +136,38 @@ Run the manual evaluator only when the backend is already running locally:
 .\l8\Scripts\python.exe scripts\run_amazon_shadow_eval.py
 ```
 
-The runner calls:
+For source quality evaluation, prefer probe-only mode:
+
+```powershell
+.\l8\Scripts\python.exe scripts\run_amazon_shadow_eval.py --probe-only
+```
+
+`--probe-only` calls:
+
+```text
+POST http://127.0.0.1:8001/api/v1/debug-source-probe
+```
+
+with:
+
+```json
+{
+  "product_category": "<category>",
+  "url": "<amazon_url>",
+  "providers": ["amazon_review_api"],
+  "debug_only": true
+}
+```
+
+It does not call `/api/v1/debug-copilot`, does not run the full workflow, does not call `/api/v1/generate-copilot`, and does not write memory.
+
+Use the full debug-copilot mode only for end-to-end shadow checks:
+
+```powershell
+.\l8\Scripts\python.exe scripts\run_amazon_shadow_eval.py
+```
+
+That mode calls:
 
 ```text
 POST http://127.0.0.1:8001/api/v1/debug-copilot
