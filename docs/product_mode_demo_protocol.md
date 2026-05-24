@@ -15,7 +15,13 @@ From the `backend` directory:
 Open the local UI:
 
 ```text
-http://127.0.0.1:8001
+http://127.0.0.1:8001/
+```
+
+FastAPI documentation remains available for API debugging:
+
+```text
+http://127.0.0.1:8001/docs
 ```
 
 ## Product Mode Inputs

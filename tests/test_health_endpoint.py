@@ -32,6 +32,21 @@ class HealthEndpointTest(unittest.TestCase):
         workflow.assert_not_awaited()
         source_fetch.assert_not_called()
 
+    def test_root_serves_static_index(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/html", response.headers.get("content-type", ""))
+        self.assertIn("Product Mode is stable", response.text)
+        self.assertIn("Copy Hook", response.text)
+
+    def test_static_index_path_is_available(self):
+        response = self.client.get("/static/index.html")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/html", response.headers.get("content-type", ""))
+        self.assertIn("Product Mode is stable", response.text)
+
 
 if __name__ == "__main__":
     unittest.main()

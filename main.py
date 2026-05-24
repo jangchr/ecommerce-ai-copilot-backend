@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import time
 import uvicorn
 from uuid import uuid4
@@ -18,6 +22,9 @@ from source_adapters import SourceAdapterRegistry
 
 app = FastAPI()
 source_probe_registry = SourceAdapterRegistry()
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+INDEX_HTML = STATIC_DIR / "index.html"
 SOURCE_PROBE_PROVIDERS = {
     "amazon_review_api",
     "tiktok_trend_api",
@@ -32,6 +39,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 
 @app.middleware("http")
 async def request_id_middleware(request: Request, call_next):
@@ -40,6 +49,11 @@ async def request_id_middleware(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
+
+
+@app.get("/")
+async def index():
+    return FileResponse(INDEX_HTML)
 
 
 def _probe_status_from_evidence(evidence) -> str:

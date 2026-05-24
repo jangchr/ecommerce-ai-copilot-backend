@@ -29,6 +29,7 @@ Result:
 - `/static/index.html` also returned `404 Not Found`.
 - Because this task explicitly forbids modifying `main.py`, no route or static-file serving behavior was changed.
 - Static frontend source was inspected directly from `static/index.html` for Product Mode controls and guard logic.
+- This 404 was accepted as the follow-up target for L11.0-D static frontend serving fix.
 
 ## Product Mode Test
 
