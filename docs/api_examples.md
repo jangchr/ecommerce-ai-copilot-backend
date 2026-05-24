@@ -67,6 +67,44 @@ Invoke-RestMethod `
     -Body $body
 ```
 
+### Amazon Debug-Only Probe Example
+
+This example probes a real Amazon product page through the debug-only surface. It is best-effort and must not be used as a product runtime dependency.
+
+```json
+{
+  "product_category": "balsamic_vinegar",
+  "url": "https://www.amazon.com/dp/B00QIIMCCW",
+  "providers": [
+    "amazon_review_api"
+  ],
+  "debug_only": true
+}
+```
+
+```bash
+curl -X POST "http://127.0.0.1:8001/api/v1/debug-source-probe" \
+  -H "Content-Type: application/json" \
+  -d '{"product_category":"balsamic_vinegar","url":"https://www.amazon.com/dp/B00QIIMCCW","providers":["amazon_review_api"],"debug_only":true}'
+```
+
+```powershell
+$body = @{
+    product_category = "balsamic_vinegar"
+    url = "https://www.amazon.com/dp/B00QIIMCCW"
+    providers = @("amazon_review_api")
+    debug_only = $true
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri "http://127.0.0.1:8001/api/v1/debug-source-probe" `
+    -Method POST `
+    -ContentType "application/json" `
+    -Body $body
+```
+
+Successful Amazon probe results may include `metadata.product_title`, `metadata.rating`, `metadata.review_count`, `metadata.price`, `metadata.category_hint`, `metadata.bullet_points` and short `evidence_preview` snippets. Amazon may still return `unavailable` or `error` due to blocking, redirects, localization or DOM changes.
+
 ### Response Fields
 
 | Field | Meaning |
@@ -233,4 +271,4 @@ Invoke-RestMethod `
 | `telemetry` | Probe-batch totals: summed provider latency, provider count, status counts and the mirrored fallback decision. |
 | `memory_write_allowed` | Always `false`; probe results must not pollute memory. |
 
-The current real adapters are disabled shells and make no external requests; results are expected to be `disabled` or `unavailable` until an explicitly reviewed future implementation is enabled.
+Only `amazon_review_api` currently has a debug-only best-effort live probe implementation. Other real providers may still return `disabled` or `unavailable`. None of these probes enter the product workflow, write memory or replace the local grounded regression datasets.

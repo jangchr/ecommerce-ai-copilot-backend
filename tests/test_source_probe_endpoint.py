@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from main import app
+from schemas.source_contract import SourceEvidence
 
 
 class SourceProbeEndpointTest(unittest.TestCase):
@@ -72,6 +73,49 @@ class SourceProbeEndpointTest(unittest.TestCase):
         self.assertTrue(all(item["source_confidence"] == 0.0 for item in payload["results"]))
         self.assertEqual(payload["telemetry"]["provider_count"], 2)
         self.assertEqual(payload["telemetry"]["disabled_count"], 2)
+
+    def test_amazon_probe_success_can_return_success_without_workflow(self):
+        evidence = SourceEvidence(
+            source_type="amazon_review_api",
+            source_url="https://www.amazon.com/dp/B000TEST",
+            product_category="balsamic_vinegar",
+            confidence=0.75,
+            review_confidence=0.75,
+            review_count=1234,
+            evidence_quotes=["The cap cracked during shipping and leaked all over the box."],
+            metadata={
+                "product_title": "Premium Balsamic Glaze",
+                "rating": "4.4",
+                "review_count": "1,234",
+                "price": "$14.99",
+                "category_hint": "Grocery",
+                "bullet_points": ["Thick glaze for salads."],
+            },
+        )
+        with patch(
+            "main.copilot_engine.ainvoke",
+            new=AsyncMock(side_effect=AssertionError("Probe endpoint must not run workflow.")),
+        ), patch("main.source_probe_registry.fetch", return_value=evidence):
+            response = self.client.post(
+                "/api/v1/debug-source-probe",
+                json={
+                    "product_category": "balsamic_vinegar",
+                    "url": "https://www.amazon.com/dp/B000TEST",
+                    "providers": ["amazon_review_api"],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertFalse(payload["memory_write_allowed"])
+        self.assertFalse(payload["fallback_required"])
+        self.assertEqual(payload["telemetry"]["success_count"], 1)
+        result = payload["results"][0]
+        self.assertEqual(result["provider"], "amazon_review_api")
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["source_confidence"], 0.75)
+        self.assertIn("cap cracked", result["evidence_preview"][0])
+        self.assertEqual(result["metadata"]["product_title"], "Premium Balsamic Glaze")
 
 
 if __name__ == "__main__":

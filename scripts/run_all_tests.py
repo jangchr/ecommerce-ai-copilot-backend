@@ -14,6 +14,7 @@ FAST_COMMANDS = [
         "tests.test_reward_engine",
         "tests.test_memory_bucket",
         "tests.test_source_adapters",
+        "tests.test_amazon_probe_adapter",
         "tests.test_source_registry",
         "tests.test_runtime_config",
         "tests.test_strategy_node",
