@@ -14,6 +14,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [Production Handoff Runbook](docs/production_handoff_runbook.md): operational startup, validation, persistence and troubleshooting guidance.
 - [Release Artifact Manifest](docs/release_artifact_manifest.md): required package contents, exclusions and runtime persistence boundaries.
 - [L10.10 Amazon Shadow Observability Release Notes](docs/release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
+- [L11.0 Product Mode MVP Release Notes](docs/release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
 
 ## Runtime
 
@@ -152,6 +153,12 @@ The latest accepted production handoff baseline is:
 runs/baselines/l10_4_production_handoff/
 ```
 
+The current Product Mode MVP baseline is:
+
+```text
+runs/baselines/l11_0_product_mode_mvp/
+```
+
 Historical stable milestone:
 
 ```text
@@ -236,6 +243,13 @@ L10.4 production handoff baseline
 runs/baselines/l10_4_production_handoff/
 ```
 
+Product Mode MVP baseline:
+
+```text
+L11.0 Product Mode MVP baseline
+runs/baselines/l11_0_product_mode_mvp/
+```
+
 Historical milestones:
 
 ```text
@@ -249,5 +263,6 @@ runs/baselines/l9_9_rc1/
 Stable release details are recorded in [docs/release_notes_l9_9_stable.md](docs/release_notes_l9_9_stable.md). The preceding candidate remains documented in [docs/release_notes_l9_9_rc1.md](docs/release_notes_l9_9_rc1.md).
 Production handoff validation details are recorded in [docs/release_notes_l10_4_production_handoff.md](docs/release_notes_l10_4_production_handoff.md).
 Amazon shadow-source observability details are recorded in [docs/release_notes_l10_10_amazon_shadow_observability.md](docs/release_notes_l10_10_amazon_shadow_observability.md).
+Product Mode MVP details are recorded in [docs/release_notes_l11_0_product_mode_mvp.md](docs/release_notes_l11_0_product_mode_mvp.md).
 
 The runtime is currently packaged around grounded local datasets, observable memory/FAISS behavior, protected product/debug API boundaries and fast/full regression gates.

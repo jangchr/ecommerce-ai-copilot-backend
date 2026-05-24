@@ -1,0 +1,716 @@
+{
+  "request_id": "8cd61787-0194-46bf-9ee9-d007ba5a88d5",
+  "product_category": "food",
+  "evidence": {
+    "source_type": "local_dataset+mock",
+    "source_url": "https://test.local/products/balsamic_vinegar",
+    "confidence": 0.67,
+    "review_confidence": 0.75,
+    "trend_confidence": 0.35,
+    "review_count": 6,
+    "evidence_quotes": [
+      "The cap cracked during shipping and leaked all over the box.",
+      "The glaze was too watery and ran off the salad instead of sticking.",
+      "It tasted more like sweet syrup than aged balsamic vinegar.",
+      "The bottle arrived sticky, and the seal looked like it had already been opened.",
+      "The flavor was okay, but it was too thin to use as a finishing drizzle.",
+      "I expected a rich, tangy reduction, but this tasted flat and watery."
+    ],
+    "trend_signals": [
+      "Show the failure in use before introducing the relief moment.",
+      "Use tactile before-and-after proof to make product claims credible."
+    ],
+    "data_warnings": [
+      "Local curated review dataset used.",
+      "mock source used; confidence reduced."
+    ]
+  },
+  "cognitive_state": {
+    "audience_text": "Based on the provided evidence, here is the audience analysis:\n\n**Key Pain Points & Audience Sentiment**\n\nThe audience is highly dissatisfied, with 5 out of 6 reviews being negative (ratings of 1 or 2) and one being neutral (rating of 3). The core issues are:\n\n*   **Packaging & Shipping Failures:** The product arrives damaged. Evidence shows \"The cap cracked during shipping and leaked all over the box\" and \"The bottle arrived sticky, and the seal looked like it had already been opened.\"\n*   **Incorrect Texture/Consistency:** The product is perceived as too thin or watery. Evidence includes complaints that it \"was too watery and ran off the salad,\" \"was too thin to use as a finishing drizzle,\" and \"tasted flat and watery.\"\n*   **Incorrect Flavor Profile:** The taste does not match expectations for a quality balsamic vinegar. Evidence states it \"tasted more like sweet syrup than aged balsamic vinegar\" and lacks the expected \"rich, tangy\" reduction.\n\n**Audience Expectations (Based on Negative Feedback)**\n\nThe audience expects a product that is:\n*   **Thick and rich** in consistency, suitable for drizzling.\n*   **Tangy and aged** in flavor, not sweet syrup.\n*   **Securely packaged** and delivered without damage or leakage.\n\n**Strategic Communication Guidance (Based on Trend Signals)**\n\n*   **Highlight the Problem First:** Before presenting the product as a solution, explicitly show the \"failure in use\" (e.g., a watery glaze running off a salad). This validates the audience's current frustration.\n*   **Use Tactile, Before-and-After Proof:** To counter the lack of trust implied by the low ratings and damaged packaging, use concrete, sensory evidence. Show a side-by-side comparison of the \"watery\" failure versus the \"thick, rich drizzle\" of the correct product to make any claims about improved texture or packaging credible.\n\n**Limitations & Uncertainty**\n\n*   **Low Confidence:** The analysis is based on a curated local dataset and a mock source, resulting in a low overall confidence score of 0.67. The trend signals have particularly low confidence (0.35).\n*   **Small Sample Size:** Only 6 reviews are available, which may not represent the full range of customer experience.\n*   **Uncertainty on Product Identity:** It is unclear if the negative reviews refer to a single, flawed batch of the product or if these are core, systemic flaws. The evidence does not clarify if a \"fixed\" version of this product exists.",
+    "painpoint_text": "Based on the provided review evidence, here are the extracted physical and emotional painpoints:\n\n### Physical Painpoints\n\n1.  **Packaging Failure Leading to Mess:**\n    *   *Evidence:* \"The cap cracked during shipping and leaked all over the box.\" (Rating: 1)\n    *   *Evidence:* \"The bottle arrived sticky, and the seal looked like it had already been opened.\" (Rating: 1)\n    *   *Impact:* The product leaks during transit, creating a sticky mess and causing product loss.\n\n2.  **Incorrect Product Consistency (Too Thin/Watery):**\n    *   *Evidence:* \"The glaze was too watery and ran off the salad instead of sticking.\" (Rating: 2)\n    *   *Evidence:* \"...it was too thin to use as a finishing drizzle.\" (Rating: 3)\n    *   *Evidence:* \"...this tasted flat and watery.\" (Rating: 2)\n    *   *Impact:* The product fails to perform its intended function (coating/drizzling), rendering it unusable for its primary purpose.\n\n### Emotional Painpoints\n\n1.  **Disgust / Disappointment from Tampering Concerns:**\n    *   *Evidence:* \"The bottle arrived sticky, and the seal looked like it had already been opened.\" (Rating: 1)\n    *   *Impact:* The customer feels violated and disgusted, suspecting the product was tampered with or used prior to purchase, creating a sense of unsafety.\n\n2.  **Frustration from Deceived Expectations (Authenticity & Quality):**\n    *   *Evidence:* \"It tasted more like sweet syrup than aged balsamic vinegar.\" (Rating: 2)\n    *   *Evidence:* \"I expected a rich, tangy reduction, but this tasted flat and watery.\" (Rating: 2)\n    *   *Impact:* The customer feels misled by the product's labeling or marketing. They experience a deep sense of disappointment and frustration because the core flavor promise (aged, rich, tangy) was not delivered.\n\n3.  **General Dissatisfaction / Waste of Money:**\n    *   *Evidence:* Combined with the low ratings (1-2) across all negative reviews, the physical failures and taste discrepancies lead to a feeling of having wasted money on a defective or inferior product.",
+    "dopamine_text": "- relief_moment: Bottle seal intact and cap secure upon arrival.\n- contrast_mechanism: Thick glaze sticks to salad, unlike watery leaked bottle.\n- satisfaction_trigger: Aged balsamic flavor coats food without sticky mess.\n- viral_emotion: Disgust at leaky cap turns to relief with secure packaging.",
+    "profile": {
+      "audience": {
+        "primary_user": "Home cook who values quality finishing ingredients—balsamic glaze, aged vinegar—for salads and drizzling. Seeks restaurant-level results at home.",
+        "anxiety_points": [
+          "Product arrives damaged (leaky cap, broken seal)",
+          "Product fails functionally (too watery to coat, runs off food)",
+          "Feels cheated—paid for premium but got a sticky, unusable mess"
+        ],
+        "trust_barriers": [
+          "Leaky bottle signals carelessness",
+          "Thin glaze signals cheapness"
+        ],
+        "buying_motivation": "Tactile proof of quality—see the glaze coat and stick, not run. Secure packaging that arrives clean. Flavor that tastes aged, not syrupy."
+      },
+      "painpoint": {
+        "physical_painpoints": [
+          "Leaky cap",
+          "Broken seal",
+          "Watery consistency that runs off food"
+        ],
+        "emotional_painpoints": [
+          "Disgusted",
+          "Distrustful",
+          "Feels cheated"
+        ],
+        "use_case_disasters": [
+          "Glaze fails to coat salad",
+          "Glaze runs off food instead of clinging",
+          "Messy, sticky bottle ruins the experience"
+        ],
+        "evidence_quotes": [
+          "Paid for premium but got a sticky, unusable mess",
+          "Leaky bottle signals carelessness",
+          "Thin glaze signals cheapness"
+        ]
+      },
+      "dopamine": {
+        "relief_moment": "Intact seal, thick drizzle that clings to salad",
+        "contrast_mechanism": "Open with the failure (leaky, watery mess) to create disgust. Then show the relief: intact seal, thick drizzle that clings to salad. End with satisfied, clean use.",
+        "satisfaction_trigger": "Tactile proof of quality—see the glaze coat and stick, not run",
+        "viral_emotion": "Relief and satisfaction from a clean, premium experience"
+      },
+      "confidence": 0.95,
+      "grounding_notes": [
+        "Buyer profile explicitly states identity, frustration, emotional state, decision trigger, and storyboard need.",
+        "All required fields are populated with direct quotes and inferred details from the provided text.",
+        "Confidence is high because the input is detailed and unambiguous."
+      ]
+    },
+    "strategy": {
+      "target_user": "Home bakers frustrated by runny, leaky glazes that ruin cake presentation",
+      "core_pain": "Leaky piping bags and watery glazes create messy, unprofessional results and emotional disappointment",
+      "evidence_basis": [
+        "leaky cap, watery run-off, broken seal (evidence_quotes)",
+        "show failure before relief (trend_signals)",
+        "disgust (failure) vs relief (intact seal, thick drizzle) (dopamine_summary)"
+      ],
+      "identity_attack": "You're not a careless baker—you've been betrayed by cheap tools that make you look sloppy",
+      "status_desire": "You want to be the baker whose cakes look flawless, with glazes that cling perfectly",
+      "future_self_gap": "Current self: frustrated by leaks and thin glazes. Desired self: confident baker with professional, thick, clinging finishes",
+      "broken_expectation": "You expected a simple piping bag to deliver clean results, but instead got watery mess and broken seals",
+      "visual_hook": "Split-screen: leaky, watery glaze dripping messily vs thick, glossy drizzle clinging to cake",
+      "emotional_arc": [
+        "disgust at leaky mess",
+        "disappointment from watery run-off",
+        "relief when thick glaze clings",
+        "satisfaction from tactile proof of quality"
+      ],
+      "trust_barrier": "Skepticism that any glaze can deliver thick, non-runny results without special equipment",
+      "objection_handling": "Show the 2-second quality test: tilt the bag—if it drips thin, it's cheap; if it clings thick, it's premium",
+      "conversion_mechanism": "Offer a side-by-side comparison video and a money-back guarantee on the glaze",
+      "cta_logic": "Click to see the 2-second test and get the glaze that ends leaky disasters",
+      "risk_notes": [
+        "trend_signals confidence is low (0.35); consider real trend audit",
+        "emotional terms are inferred from summary, not directly quoted in evidence",
+        "ensure tactile proof is demonstrated clearly in visual assets"
+      ]
+    }
+  },
+  "execution_state": {
+    "analysis_attempts": 1,
+    "storyboard": {
+      "scenes": [
+        {
+          "scene_id": 1,
+          "duration_sec": 5.0,
+          "scene_goal": "Establish the pain point of a broken seal and compromised product.",
+          "visual_description": "Close-up of a home baker's hands unboxing a sticky bottle; seal is visibly broken, glaze oozing onto cardboard. Split-screen shows clean, intact competitor seal.",
+          "narration": "Arriving sticky with a broken seal—your glaze is compromised before you even start.",
+          "on_screen_text": "Broken seal? Not with us.",
+          "camera_motion": "Static close-up, then slow zoom on broken seal.",
+          "camera_speed": 0.5,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.6,
+          "audio_emotion": "frustrated",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Visual contrast highlights the problem and solution.",
+          "linked_painpoint": "Broken seal",
+          "evidence_quote_used": "The bottle arrived sticky, and the seal looked like it had already been opened."
+        },
+        {
+          "scene_id": 2,
+          "duration_sec": 6.0,
+          "scene_goal": "Demonstrate the superiority of thick glaze over watery consistency.",
+          "visual_description": "Pouring watery glaze onto a cake slice; it immediately runs off the edge in a thin stream, pooling on the plate. Cut to thick glaze clinging and coating evenly.",
+          "narration": "Watery glaze runs right off your cake. Thick glaze clings, coating every bite.",
+          "on_screen_text": "Thick glaze = perfect coverage.",
+          "camera_motion": "Pan down following the pour, then cut to stable shot of thick glaze.",
+          "camera_speed": 0.7,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.7,
+          "audio_emotion": "satisfied",
+          "dopamine_trigger": true,
+          "dopamine_type": "sensory pleasure",
+          "retention_reason": "Direct before/after comparison creates aha moment.",
+          "linked_painpoint": "Watery consistency that runs off food",
+          "evidence_quote_used": "The glaze was too watery and ran off the salad instead of sticking."
+        },
+        {
+          "scene_id": 3,
+          "duration_sec": 5.0,
+          "scene_goal": "Highlight the leaky cap problem and present a secure solution.",
+          "visual_description": "Hand squeezing a cracked cap glaze bottle; liquid spurts from the side crack, making a mess on the counter. Then a secure, leak-proof cap with no drips.",
+          "narration": "A cracked cap leaks everywhere. Our secure cap ends the mess before it starts.",
+          "on_screen_text": "Leak-proof cap. Zero mess.",
+          "camera_motion": "Close-up on cap, then tilt up to show mess, then cut to clean cap.",
+          "camera_speed": 0.6,
+          "transition_style": "Cut",
+          "emotional_intensity": 0.5,
+          "audio_emotion": "relieved",
+          "dopamine_trigger": false,
+          "dopamine_type": "",
+          "retention_reason": "Visual of mess vs. cleanliness is memorable.",
+          "linked_painpoint": "Leaky cap",
+          "evidence_quote_used": "The cap cracked during shipping and leaked all over the box."
+        },
+        {
+          "scene_id": 4,
+          "duration_sec": 6.0,
+          "scene_goal": "Show the emotional payoff of a thick, professional-looking glaze.",
+          "visual_description": "Baker frowns as thin drizzle disappears into frosting, leaving no visible finish. Then a thick, glossy drizzle sits perfectly on top, creating an elegant, professional look.",
+          "narration": "Thin drizzle vanishes. Thick glaze creates the perfect finishing touch you deserve.",
+          "on_screen_text": "Finish with confidence.",
+          "camera_motion": "Slow zoom on baker's face, then cut to macro shot of drizzle.",
+          "camera_speed": 0.4,
+          "transition_style": "Fade",
+          "emotional_intensity": 0.8,
+          "audio_emotion": "proud",
+          "dopamine_trigger": true,
+          "dopamine_type": "accomplishment",
+          "retention_reason": "Emotional shift from disappointment to pride is compelling.",
+          "linked_painpoint": "Disgusted",
+          "evidence_quote_used": "The flavor was okay, but it was too thin to use as a finishing drizzle."
+        }
+      ]
+    }
+  },
+  "world_metrics": {
+    "retention_3s": 0.5449999999999999,
+    "dopamine_score": 0.6666666666666666,
+    "visual_quality": 1.0,
+    "narration_quality": 0.9875,
+    "evidence_alignment": 1.0,
+    "emotion_score": 0.65,
+    "creative_score": 0.8054583333333334,
+    "grounded_score": 0.5396570833333334,
+    "predicted_ctr": 0.096655,
+    "grounded_ctr": 0.06475885,
+    "creative_approved": true,
+    "grounded_approved": true,
+    "is_approved": true,
+    "is_grounded": true,
+    "failure_type": "",
+    "reason": "motion=0.55, dopamine=2, fatigue_penalty=0.00",
+    "reward_hacking_penalty": 0.0,
+    "source_confidence": 0.67,
+    "confidence_penalty": 0.0
+  },
+  "telemetry": {
+    "planner": {
+      "total_tokens": 826,
+      "latency_ms": 4547.374486923218,
+      "reasoning_latency_ms": 3527.455599996756,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "planner",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "Let me analyze this step by step.\n\n**Product Classification:**\nThe URL contains \"balsamic_vinegar\" — this is a food product, specifically a condiment/gourmet food item. Balsamic vinegar is a specialty vinegar often used in cooking and dressings.\n\n**Task Complexity Assessment:**\nFrom the available inputs, I only have a URL. There are no real user inputs yet (no specific questions, no data to process, no complex requirements). The task complexity is currently **low** — I need to wait for actual us"
+    },
+    "retrieval_sources": {
+      "total_tokens": 0,
+      "latency_ms": 0.6916999991517514,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "tool_runtime",
+      "role_key": "retrieval_sources",
+      "source_traces": [
+        {
+          "source_name": "local_review_dataset",
+          "adapter_name": "LocalReviewAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.6452000015997328,
+          "source_type": "local_dataset",
+          "confidence": 0.75,
+          "source_role": "review"
+        },
+        {
+          "source_name": "tiktok_trend_mock",
+          "adapter_name": "MockTrendAdapter",
+          "enabled": true,
+          "fallback": false,
+          "fallback_reason": "",
+          "fetch_latency_ms": 0.028300000849412754,
+          "source_type": "mock",
+          "confidence": 0.35,
+          "source_role": "trend"
+        }
+      ],
+      "memory_observability": {
+        "write_count": 0,
+        "skipped_count": 0,
+        "retrieval_count": 0,
+        "retrieval_hits": {
+          "success": 2,
+          "failure": 2
+        },
+        "backend": "json_fallback",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 375,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 351,
+          "failure": 24,
+          "total": 375
+        },
+        "memory_growth": {
+          "total_records": 375,
+          "max_record_count": 500,
+          "peak_record_count": 375,
+          "remaining_capacity": 125,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "json_fallback",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 0,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 0,
+      "memory_retrieval_hits_success": 0,
+      "memory_retrieval_hits_failure": 0,
+      "memory_record_count_success": 351,
+      "memory_record_count_failure": 24,
+      "memory_record_count_total": 375,
+      "memory_backend": "json_fallback",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 375,
+      "memory_remaining_capacity": 125,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "analysis_audience": {
+      "total_tokens": 1125,
+      "latency_ms": 5727.001428604126,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "audience",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_painpoint": {
+      "total_tokens": 1077,
+      "latency_ms": 5131.610155105591,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "painpoint",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": ""
+    },
+    "analysis_dopamine": {
+      "total_tokens": 255,
+      "latency_ms": 2178.306818008423,
+      "reasoning_latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "dopamine",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "",
+      "memory_observability": {
+        "write_count": 0,
+        "skipped_count": 0,
+        "retrieval_count": 0,
+        "retrieval_hits": {
+          "success": 2,
+          "failure": 2
+        },
+        "backend": "json_fallback",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 375,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 351,
+          "failure": 24,
+          "total": 375
+        },
+        "memory_growth": {
+          "total_records": 375,
+          "max_record_count": 500,
+          "peak_record_count": 375,
+          "remaining_capacity": 125,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "json_fallback",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 0,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 0,
+      "memory_retrieval_hits_success": 0,
+      "memory_retrieval_hits_failure": 0,
+      "memory_record_count_success": 351,
+      "memory_record_count_failure": 24,
+      "memory_record_count_total": 375,
+      "memory_backend": "json_fallback",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 375,
+      "memory_remaining_capacity": 125,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "cognitive_synthesis": {
+      "total_tokens": 2616,
+      "latency_ms": 7750.040054321289,
+      "reasoning_latency_ms": 3882.3709999996936,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "synthesis",
+      "node_name": "cognitive_synthesis",
+      "input_size_char": 2998,
+      "memory_context_used": false,
+      "evidence_count": 5,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "**Buyer Profile**\n\n**Identity:** Home cook who values quality finishing ingredients—balsamic glaze, aged vinegar—for salads and drizzling. Seeks restaurant-level results at home.\n\n**Core Frustration:** Product arrives damaged (leaky cap, broken seal) or fails functionally (too watery to coat, runs off food). Feels cheated—paid for premium but got a sticky, unusable mess.\n\n**Emotional State:** Disgusted and distrustful. The leaky bottle signals carelessness; the thin glaze signals cheapness. Want",
+      "memory_observability": {
+        "write_count": 0,
+        "skipped_count": 0,
+        "retrieval_count": 0,
+        "retrieval_hits": {
+          "success": 2,
+          "failure": 2
+        },
+        "backend": "json_fallback",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 375,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 351,
+          "failure": 24,
+          "total": 375
+        },
+        "memory_growth": {
+          "total_records": 375,
+          "max_record_count": 500,
+          "peak_record_count": 375,
+          "remaining_capacity": 125,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "json_fallback",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 0,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 0,
+      "memory_retrieval_hits_success": 0,
+      "memory_retrieval_hits_failure": 0,
+      "memory_record_count_success": 351,
+      "memory_record_count_failure": 24,
+      "memory_record_count_total": 375,
+      "memory_backend": "json_fallback",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 375,
+      "memory_remaining_capacity": 125,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "strategy": {
+      "total_tokens": 2520,
+      "latency_ms": 10332.863807678223,
+      "reasoning_latency_ms": 5129.254399998899,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "strategy",
+      "node_name": "strategy",
+      "input_size_char": 2636,
+      "memory_context_used": true,
+      "evidence_count": 4,
+      "trend_signal_count": 2,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "*   **Pain-Before-Relief Structure:** Validate. Evidence_quotes show leaky cap, watery run-off, broken seal. Trend_signals explicitly say \"show failure before relief.\" Dopamine_summary contrasts disgust (failure) with relief (intact seal, thick drizzle). *Evidence: strong agreement across cues.*\n*   **Physical-Emotional Pain Link:** Leaky cap (physical) -> disgust (emotional). Watery run-off (physical) -> disappointment/cheated (emotional). Audience_summary trust barriers: leaky=carelessness, th",
+      "memory_observability": {
+        "write_count": 0,
+        "skipped_count": 0,
+        "retrieval_count": 1,
+        "retrieval_hits": {
+          "success": 2,
+          "failure": 2
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 375,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 351,
+          "failure": 24,
+          "total": 375
+        },
+        "memory_growth": {
+          "total_records": 375,
+          "max_record_count": 500,
+          "peak_record_count": 375,
+          "remaining_capacity": 125,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 0,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 1,
+      "memory_retrieval_hits_success": 2,
+      "memory_retrieval_hits_failure": 2,
+      "memory_record_count_success": 351,
+      "memory_record_count_failure": 24,
+      "memory_record_count_total": 375,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 375,
+      "memory_remaining_capacity": 125,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    },
+    "storyboard": {
+      "total_tokens": 3337,
+      "latency_ms": 12805.026531219482,
+      "reasoning_latency_ms": 5543.033600002673,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "deepseek-chat",
+      "role_key": "storyboard",
+      "node_name": "",
+      "input_size_char": 0,
+      "memory_context_used": false,
+      "evidence_count": 0,
+      "trend_signal_count": 0,
+      "fallback": false,
+      "fallback_indicators": [],
+      "reasoning_preview": "{ \"scenes\": [\n  {\n    \"scene_id\": 1,\n    \"linked_painpoint\": \"Broken seal\",\n    \"evidence_quote_used\": \"The bottle arrived sticky, and the seal looked like it had already been opened.\",\n    \"visual_description\": \"Close-up of a home baker's hands unboxing a sticky bottle; seal is visibly broken, glaze oozing onto cardboard. Split-screen shows clean, intact competitor seal.\",\n    \"narration\": \"Arriving sticky with a broken seal—your glaze is compromised before you even start.\",\n    \"dopamine_trigg"
+    },
+    "analytics_memory": {
+      "total_tokens": 0,
+      "latency_ms": 0.0,
+      "retries": 0,
+      "status": "success",
+      "error": null,
+      "model": "memory_engine",
+      "role_key": "analytics_memory",
+      "node_name": "analytics_memory",
+      "memory_observability": {
+        "write_count": 1,
+        "skipped_count": 0,
+        "retrieval_count": 1,
+        "retrieval_hits": {
+          "success": 2,
+          "failure": 2
+        },
+        "backend": "faiss",
+        "faiss_error": "",
+        "faiss_fallback_count": 0,
+        "faiss_recovery_count": 0,
+        "faiss_fallback_trace": [],
+        "max_record_count": 500,
+        "peak_record_count": 376,
+        "limit_reached_count": 0,
+        "pruned_count": 0,
+        "memory_record_count": {
+          "success": 352,
+          "failure": 24,
+          "total": 376
+        },
+        "memory_growth": {
+          "total_records": 376,
+          "max_record_count": 500,
+          "peak_record_count": 376,
+          "remaining_capacity": 124,
+          "limit_reached": false,
+          "limit_reached_count": 0,
+          "pruned_count": 0
+        },
+        "faiss_observability": {
+          "backend": "faiss",
+          "fallback_count": 0,
+          "recovery_count": 0,
+          "fallback_trace": []
+        }
+      },
+      "memory_write_count": 1,
+      "memory_skipped_count": 0,
+      "memory_retrieval_count": 1,
+      "memory_retrieval_hits_success": 2,
+      "memory_retrieval_hits_failure": 2,
+      "memory_record_count_success": 352,
+      "memory_record_count_failure": 24,
+      "memory_record_count_total": 376,
+      "memory_backend": "faiss",
+      "memory_faiss_error": "",
+      "memory_max_record_count": 500,
+      "memory_peak_record_count": 376,
+      "memory_remaining_capacity": 124,
+      "memory_limit_reached": false,
+      "memory_limit_reached_count": 0,
+      "memory_pruned_count": 0,
+      "faiss_fallback_count": 0,
+      "faiss_recovery_count": 0,
+      "faiss_fallback_trace": []
+    }
+  },
+  "telemetry_summary": {
+    "node_count": 9,
+    "total_tokens": 11756,
+    "total_latency_ms": 48472.9149818595,
+    "failed_nodes": [],
+    "max_latency_node": "storyboard",
+    "max_token_node": "storyboard"
+  },
+  "memory_observability": {
+    "write_count": 1,
+    "skipped_count": 0,
+    "retrieval_count": 1,
+    "retrieval_hits": {
+      "success": 2,
+      "failure": 2
+    },
+    "backend": "faiss",
+    "faiss_error": "",
+    "faiss_fallback_count": 0,
+    "faiss_recovery_count": 0,
+    "faiss_fallback_trace": [],
+    "max_record_count": 500,
+    "peak_record_count": 376,
+    "limit_reached_count": 0,
+    "pruned_count": 0,
+    "memory_record_count": {
+      "success": 352,
+      "failure": 24,
+      "total": 376
+    },
+    "memory_growth": {
+      "total_records": 376,
+      "max_record_count": 500,
+      "peak_record_count": 376,
+      "remaining_capacity": 124,
+      "limit_reached": false,
+      "limit_reached_count": 0,
+      "pruned_count": 0
+    },
+    "faiss_observability": {
+      "backend": "faiss",
+      "fallback_count": 0,
+      "recovery_count": 0,
+      "fallback_trace": []
+    }
+  },
+  "shadow_sources": {},
+  "regenerate_node": null,
+  "revision_count": 0
+}
