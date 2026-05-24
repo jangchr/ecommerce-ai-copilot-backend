@@ -27,6 +27,24 @@ The API surfaces have distinct responsibilities:
 2. Open `static/index.html` in the frontend preview used for local development.
 3. Open the browser Network panel and clear existing requests before each check.
 
+## Smoke Test: Product Mode Slug UX
+
+1. Turn **Debug Mode** off.
+2. Confirm the input helper says Product Mode is stable for the 10 local grounded slugs.
+3. Enter one stable slug, for example `balsamic_vinegar`.
+4. Run the workflow.
+
+Expected results:
+
+- The page explains that Amazon URLs are for Debug Mode / Amazon Shadow only.
+- The visible slug list includes `balsamic_vinegar`, `printer`, `women_bras`, `girls_overalls`, `protein_powder`, `phone_case`, `desk_lamp`, `baby_stroller`, `pet_hair_vacuum` and `skincare_serum`.
+- Product sections focus on product response fields: `insights`, `audience`, `strategy`, `assets`, `evaluation` and `feedback`.
+- Product Mode does not display telemetry, `shadow_sources` or memory observability.
+- Copy controls are visible:
+  - `Copy Hook`
+  - `Copy Storyboard`
+  - `Copy Full Markdown`
+
 ## Smoke Test: Debug Mode Off
 
 1. Turn **Debug Mode** off.
@@ -39,6 +57,7 @@ Expected results:
 - Exactly the product request is issued by this run: `POST /api/v1/generate-copilot`.
 - No `POST /api/v1/debug-copilot` request is issued.
 - No `POST /api/v1/debug-source-probe` request is issued.
+- Amazon Shadow is hidden/disabled and no `real_source_mode=amazon_shadow` request is issued.
 - Evidence, Strategy, Scene Graph and Reward sections render from the product response.
 - The Debug Trace section indicates that debug mode is off and does not show internal graph state.
 - The **Run Source Probe** control is hidden and cannot be triggered.

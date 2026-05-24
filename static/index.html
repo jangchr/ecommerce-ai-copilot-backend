@@ -95,6 +95,7 @@
             margin: 12px auto 0;
             display: flex;
             justify-content: flex-end;
+            gap: 16px;
         }
         .toggle-option {
             display: inline-flex;
@@ -242,6 +243,41 @@
             gap: 8px;
         }
         .probe-grid .json-key { margin-top: 8px; }
+        .input-guide {
+            max-width: 920px;
+            margin: 14px auto 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .slug-list {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .slug-pill {
+            border: 1px solid var(--border-light);
+            background: var(--bg-surface);
+            border-radius: 999px;
+            padding: 4px 8px;
+            color: var(--text-primary);
+            font-weight: 650;
+        }
+        .copy-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .copy-status {
+            color: var(--accent-green);
+            font-size: 12px;
+            font-weight: 650;
+            min-height: 16px;
+            margin-bottom: 6px;
+        }
         @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr; }
             .card.wide { grid-column: span 1; grid-template-columns: 1fr; }
@@ -264,8 +300,23 @@
             <h1>Agent 可视化调试台</h1>
             <h2>真实证据边界、结构认知、策略决策、Scene Graph、Reward 与 Reflection Trace</h2>
             <div class="control-panel">
-                <input type="text" id="urlInput" placeholder="输入 ASIN 或商品 URL" value="https://amazon.com/dp/B08XXXXXX">
+                <input type="text" id="urlInput" placeholder="Enter a local grounded slug, e.g. balsamic_vinegar" value="balsamic_vinegar">
                 <button class="btn-primary" id="startBtn" onclick="startSystem()">运行 Workflow</button>
+            </div>
+            <div class="input-guide">
+                Product Mode is stable for these local grounded slugs. Amazon URLs are for Debug Mode / Amazon Shadow only.
+                <div class="slug-list">
+                    <span class="slug-pill">balsamic_vinegar</span>
+                    <span class="slug-pill">printer</span>
+                    <span class="slug-pill">women_bras</span>
+                    <span class="slug-pill">girls_overalls</span>
+                    <span class="slug-pill">protein_powder</span>
+                    <span class="slug-pill">phone_case</span>
+                    <span class="slug-pill">desk_lamp</span>
+                    <span class="slug-pill">baby_stroller</span>
+                    <span class="slug-pill">pet_hair_vacuum</span>
+                    <span class="slug-pill">skincare_serum</span>
+                </div>
             </div>
             <div class="run-options">
                 <label class="toggle-option" for="debugMode">
@@ -303,6 +354,12 @@
             </div>
             <div class="card">
                 <h3>3. Scene Graph</h3>
+                <div class="copy-toolbar">
+                    <button class="btn-secondary" id="copyHookBtn" onclick="copyHook()" disabled>Copy Hook</button>
+                    <button class="btn-secondary" id="copyStoryboardBtn" onclick="copyStoryboard()" disabled>Copy Storyboard</button>
+                    <button class="btn-secondary" id="copyMarkdownBtn" onclick="copyFullMarkdown()" disabled>Copy Full Markdown</button>
+                </div>
+                <div class="copy-status" id="copyStatus"></div>
                 <div id="res-assets" style="opacity: 0.5;">等待执行...</div>
             </div>
 
@@ -344,6 +401,102 @@
         }
 
         let latestDebugCategory = '';
+        let latestProductData = null;
+
+        function storyboardText(storyboard) {
+            const scenes = storyboard?.scenes || [];
+            if (!scenes.length) {
+                return JSON.stringify(storyboard || {}, null, 2);
+            }
+            return scenes.map((scene, index) => {
+                const visual = scene.visual_description || scene.visual || '';
+                const narration = scene.narration || '';
+                const quote = scene.evidence_quote_used || '';
+                return [
+                    `Scene ${index + 1}`,
+                    visual ? `Visual: ${visual}` : '',
+                    narration ? `Narration: ${narration}` : '',
+                    quote ? `Evidence: ${quote}` : ''
+                ].filter(Boolean).join('\n');
+            }).join('\n\n');
+        }
+
+        async function copyText(label, text) {
+            const target = document.getElementById('copyStatus');
+            if (!text) {
+                target.textContent = `${label} is empty.`;
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(text);
+                target.textContent = `${label} copied.`;
+            } catch (error) {
+                target.textContent = `${label} copy unavailable. Select and copy manually.`;
+            }
+        }
+
+        function setCopyButtonsEnabled(enabled) {
+            ['copyHookBtn', 'copyStoryboardBtn', 'copyMarkdownBtn'].forEach((id) => {
+                document.getElementById(id).disabled = !enabled;
+            });
+        }
+
+        function copyHook() {
+            const hook = latestProductData?.assets?.tiktok_script?.hook || '';
+            copyText('Hook', hook);
+        }
+
+        function copyStoryboard() {
+            const storyboard = latestProductData?.assets?.storyboard || {};
+            copyText('Storyboard', storyboardText(storyboard));
+        }
+
+        function productMarkdown(data) {
+            if (!data) return '';
+            const evidence = data.insights?.evidence || {};
+            const script = data.assets?.tiktok_script || {};
+            const evaluation = data.evaluation || {};
+            return [
+                '# Grounded Creative Output',
+                '',
+                '## Insights',
+                `Source Type: ${evidence.source_type || ''}`,
+                `Review Confidence: ${evidence.review_confidence ?? 0}`,
+                `Trend Confidence: ${evidence.trend_confidence ?? 0}`,
+                '',
+                '### Evidence Quotes',
+                ...(evidence.evidence_quotes || []).map((quote) => `- ${quote}`),
+                '',
+                '### Pain Points',
+                ...(data.insights?.pain_points || []).map((pain) => `- ${pain}`),
+                '',
+                '## Audience',
+                data.audience?.primary || '',
+                '',
+                '## Strategy',
+                data.strategy?.core_hook_strategy || '',
+                '',
+                '## Hook',
+                script.hook || '',
+                '',
+                '## Storyboard',
+                storyboardText(data.assets?.storyboard || {}),
+                '',
+                '## CTA',
+                script.cta || '',
+                '',
+                '## Evaluation',
+                `Approved: ${evaluation.is_approved ? 'true' : 'false'}`,
+                `Grounded: ${evaluation.is_grounded ? 'true' : 'false'}`,
+                '',
+                '## Feedback',
+                data.feedback || ''
+            ].join('\n');
+        }
+
+        function copyFullMarkdown() {
+            copyText('Full Markdown', productMarkdown(latestProductData));
+        }
 
         function syncDebugMode() {
             const enabled = document.getElementById('debugMode').checked;
@@ -459,6 +612,9 @@
 
             btn.disabled = true;
             btn.innerText = "运行中...";
+            latestProductData = null;
+            setCopyButtonsEnabled(false);
+            document.getElementById('copyStatus').textContent = '';
             document.querySelectorAll('.agent-badge').forEach(b => b.classList.remove('active'));
 
             const nodes = [
@@ -506,6 +662,10 @@
         }
 
         function renderProductDashboard(data) {
+            latestProductData = data;
+            setCopyButtonsEnabled(true);
+            document.getElementById('copyStatus').textContent = '';
+
             const evidence = data.insights.evidence || {};
             document.getElementById('res-insights').style.opacity = '1';
             document.getElementById('res-insights').innerHTML =
@@ -524,9 +684,11 @@
                 block('Emotional Trigger', data.strategy.emotional_trigger || '');
 
             const script = data.assets.tiktok_script || {};
+            const storyboard = data.assets.storyboard || {};
             document.getElementById('res-assets').style.opacity = '1';
             document.getElementById('res-assets').innerHTML =
                 block('Hook Scene', script.hook || '') +
+                block('Storyboard', storyboardText(storyboard)) +
                 block('CTA Scene', script.cta || '');
 
             const evalData = data.evaluation || {};

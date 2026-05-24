@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import unittest
 
 
@@ -12,6 +13,40 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
     def test_product_frontend_does_not_read_embedded_debug_state(self):
         self.assertNotIn("data.debug", self.source)
+
+    def test_product_mode_guidance_and_copy_controls_are_present(self):
+        for slug in [
+            "balsamic_vinegar",
+            "printer",
+            "women_bras",
+            "girls_overalls",
+            "protein_powder",
+            "phone_case",
+            "desk_lamp",
+            "baby_stroller",
+            "pet_hair_vacuum",
+            "skincare_serum",
+        ]:
+            self.assertIn(slug, self.source)
+        self.assertIn("Amazon URLs are for Debug Mode / Amazon Shadow only", self.source)
+        self.assertIn("Copy Hook", self.source)
+        self.assertIn("Copy Storyboard", self.source)
+        self.assertIn("Copy Full Markdown", self.source)
+        self.assertIn("function copyHook()", self.source)
+        self.assertIn("function copyStoryboard()", self.source)
+        self.assertIn("function copyFullMarkdown()", self.source)
+
+    def test_product_renderer_does_not_display_observability_fields(self):
+        match = re.search(
+            r"function renderProductDashboard\(data\) \{(?P<body>.*?)function renderAmazonShadowSummary",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("telemetry", body)
+        self.assertNotIn("memory_observability", body)
 
     def test_source_probe_is_guarded_by_debug_mode(self):
         self.assertIn("postCopilot('debug-source-probe'", self.source)
