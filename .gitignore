@@ -28,6 +28,7 @@ faiss_index/
 # Regression outputs
 runs/latest/
 runs/history/
+runs/amazon_shadow_eval/
 runs/*.json
 
 # Keep frozen baselines

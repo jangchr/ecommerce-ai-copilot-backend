@@ -128,10 +128,38 @@ These are hard requirements:
 - Live Amazon probes are best-effort and may fail due to blocking, localization, redirects or DOM changes.
 - Any automated script for this plan must write outputs to a separate shadow report directory, not `runs/latest` product regression artifacts.
 
-Suggested output location:
+## Manual Runner
+
+Run the manual evaluator only when the backend is already running locally:
+
+```powershell
+.\l8\Scripts\python.exe scripts\run_amazon_shadow_eval.py
+```
+
+The runner calls:
 
 ```text
-runs/shadow/amazon/<timestamp>/
+POST http://127.0.0.1:8001/api/v1/debug-copilot
+```
+
+with:
+
+```json
+{
+  "url": "<amazon_url>",
+  "goal": "tiktok_ctr",
+  "real_source_mode": "amazon_shadow"
+}
+```
+
+It does not call `/api/v1/generate-copilot`, does not write memory and does not enter fast/full regression gates. Its outputs are runtime artifacts and should not be committed.
+
+Output location:
+
+```text
+runs/amazon_shadow_eval/<timestamp>/
+  amazon_shadow_eval_summary.csv
+  amazon_shadow_eval_report.md
 ```
 
 ## Promotion Review

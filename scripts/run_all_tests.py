@@ -15,6 +15,7 @@ FAST_COMMANDS = [
         "tests.test_memory_bucket",
         "tests.test_source_adapters",
         "tests.test_amazon_probe_adapter",
+        "tests.test_amazon_shadow_eval_runner",
         "tests.test_source_registry",
         "tests.test_runtime_config",
         "tests.test_strategy_node",
