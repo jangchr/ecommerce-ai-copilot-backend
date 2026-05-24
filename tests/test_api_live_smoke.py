@@ -169,7 +169,10 @@ class ApiLiveSmokeTest(unittest.TestCase):
         ), patch(
             "main.memory_engine.observability_snapshot",
             return_value=self.final_state["memory_observability"],
-        ), patch("main.source_probe_registry.fetch", return_value=evidence) as fetch:
+        ), patch("main.memory_engine.save_memory") as save_memory, patch(
+            "main.source_probe_registry.fetch",
+            return_value=evidence,
+        ) as fetch:
             response = self.client.post(
                 "/api/v1/debug-copilot",
                 json={
@@ -184,6 +187,10 @@ class ApiLiveSmokeTest(unittest.TestCase):
             "https://www.amazon.com/dp/B00QIIMCCW",
             "balsamic_vinegar",
         )
+        save_memory.assert_not_called()
+        payload = response.json()
+        self.assertEqual(payload["evidence"]["source_type"], "local_dataset+mock")
+        self.assertEqual(payload["evidence"]["review_confidence"], 0.75)
         shadow = response.json()["shadow_sources"]
         self.assertEqual(shadow["mode"], "amazon_shadow")
         self.assertFalse(shadow["memory_write_allowed"])
