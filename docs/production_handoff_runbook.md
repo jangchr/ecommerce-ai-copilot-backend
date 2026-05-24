@@ -72,6 +72,8 @@ The current Product Mode MVP status is documented in [L11.0 Product Mode MVP Rel
 
 The recommended first external deployment target is documented in [Deployment Provider Decision](deployment_provider_decision.md). Current recommendation: Render first, Railway as the closest alternate, with `ALLOW_REAL_SOURCE_ADAPTERS=false` preserved for the Product Mode MVP.
 
+Render-specific setup is documented in [Render Deployment Setup](render_deployment_setup.md), including Docker settings, required environment variables, `/healthz`, Product Mode frontend smoke, and the first-deployment persistent-storage decision.
+
 ## Startup Sequence
 
 Perform startup in this order:
@@ -329,3 +331,4 @@ Before production handoff:
 - [L10.10 Amazon Shadow Observability Release Notes](release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
 - [L11.0 Product Mode MVP Release Notes](release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
 - [Deployment Provider Decision](deployment_provider_decision.md): Render/Railway/Fly.io/DigitalOcean/AWS Lightsail comparison and recommended MVP deployment path.
+- [Render Deployment Setup](render_deployment_setup.md): Render Docker Web Service configuration and post-deploy Product Mode smoke checklist.
