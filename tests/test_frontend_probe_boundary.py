@@ -52,9 +52,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("postCopilot('debug-source-probe'", self.source)
         self.assertIn("async function runSourceProbe()", self.source)
         self.assertIn("if (!document.getElementById('debugMode').checked) return;", self.source)
+        self.assertIn("document.getElementById('debugTraceSection').hidden = !enabled;", self.source)
         self.assertIn("document.getElementById('sourceProbeTools').hidden = !enabled;", self.source)
         self.assertIn("document.getElementById('amazonShadowOption').hidden = !enabled;", self.source)
         self.assertIn("document.getElementById('amazonShadowMode').checked = false;", self.source)
+
+    def test_debug_trace_is_hidden_when_debug_mode_is_off(self):
+        self.assertIn('id="debugTraceSection" hidden', self.source)
+        self.assertIn("function clearDebugPanel()", self.source)
+        self.assertIn("clearDebugPanel();", self.source)
+        self.assertNotIn("renderDebugPanel(response.data.feedback, null, 'Off')", self.source)
 
     def test_amazon_probe_metadata_fields_are_rendered(self):
         self.assertIn("function renderAmazonProbeMetadata(result)", self.source)

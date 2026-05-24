@@ -42,6 +42,7 @@ Expected results:
 - The visible slug list includes `balsamic_vinegar`, `printer`, `women_bras`, `girls_overalls`, `protein_powder`, `phone_case`, `desk_lamp`, `baby_stroller`, `pet_hair_vacuum` and `skincare_serum`.
 - Product sections focus on product response fields: `insights`, `audience`, `strategy`, `assets`, `evaluation` and `feedback`.
 - Product Mode does not display telemetry, `shadow_sources` or memory observability.
+- Product Mode does not display a `DEBUG TRACE` / Debug Trace panel while Debug Mode is off.
 - Copy controls are visible:
   - `Copy Hook`
   - `Copy Storyboard`
@@ -61,7 +62,7 @@ Expected results:
 - No `POST /api/v1/debug-source-probe` request is issued.
 - Amazon Shadow is hidden/disabled and no `real_source_mode=amazon_shadow` request is issued.
 - Evidence, Strategy, Scene Graph and Reward sections render from the product response.
-- The Debug Trace section indicates that debug mode is off and does not show internal graph state.
+- The Debug Trace section is hidden and does not show debug-only trace text or internal graph state.
 - The **Run Source Probe** control is hidden and cannot be triggered.
 
 ## Smoke Test: Debug Mode On

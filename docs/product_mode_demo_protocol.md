@@ -63,6 +63,7 @@ Expected results:
 - No `POST /api/v1/debug-source-probe` request is issued.
 - Amazon Shadow is hidden and cannot be triggered.
 - The page does not display debug telemetry, memory observability or `shadow_sources`.
+- The page does not display `DEBUG TRACE` or the Debug Trace panel.
 
 Expected Product output sections:
 
@@ -105,4 +106,5 @@ The local demo passes when:
 - Debug Mode Off does not issue debug or source-probe requests.
 - Amazon URLs are clearly marked as Debug Mode / Amazon Shadow only.
 - Product Mode does not show telemetry, `shadow_sources` or memory observability.
+- Product Mode does not show `DEBUG TRACE`.
 - Copy controls are visible and do not affect workflow execution.

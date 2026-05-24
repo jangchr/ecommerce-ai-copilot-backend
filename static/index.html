@@ -364,7 +364,7 @@
             </div>
 
             <div class="card wide">
-                <div>
+                <div id="debugTraceSection" hidden>
                     <h3 style="color:var(--accent-green);">4. Reward</h3>
                     <div id="res-evaluation" style="opacity: 0.5;">等待评估...</div>
                 </div>
@@ -500,6 +500,7 @@
 
         function syncDebugMode() {
             const enabled = document.getElementById('debugMode').checked;
+            document.getElementById('debugTraceSection').hidden = !enabled;
             document.getElementById('sourceProbeTools').hidden = !enabled;
             document.getElementById('amazonShadowOption').hidden = !enabled;
             if (!enabled) {
@@ -508,7 +509,14 @@
                 probeTarget.style.opacity = '0.65';
                 latestDebugCategory = '';
                 document.getElementById('amazonShadowMode').checked = false;
+                clearDebugPanel();
             }
+        }
+
+        function clearDebugPanel() {
+            const analytics = document.getElementById('res-analytics');
+            analytics.style.opacity = '0.5';
+            analytics.innerHTML = '';
         }
 
         function probeCategoryFromInput() {
@@ -651,7 +659,7 @@
                         renderDebugPanel(response.data.feedback, null, 'Unavailable');
                     }
                 } else {
-                    renderDebugPanel(response.data.feedback, null, 'Off');
+                    clearDebugPanel();
                 }
             } catch(e) {
                 alert("后端未启动或请求失败");
@@ -745,6 +753,7 @@
         }
 
         function renderDebugPanel(feedback, debugData, modeStatus) {
+            document.getElementById('debugTraceSection').hidden = false;
             document.getElementById('res-analytics').style.opacity = '1';
             if (!debugData) {
                 document.getElementById('res-analytics').innerHTML = `
