@@ -196,6 +196,7 @@ runs/amazon_shadow_eval/<timestamp>/
 ## Review History
 
 - [2026-05-24 Amazon Shadow Evaluation Review](amazon_shadow_eval_20260524_review.md)
+- [2026-05-24 Amazon Shadow Probe-Only Evaluation Review](amazon_shadow_eval_probe_only_20260524_review.md)
 
 ## Promotion Review
 
