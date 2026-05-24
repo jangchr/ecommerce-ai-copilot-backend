@@ -24,6 +24,24 @@ FastAPI documentation remains available for API debugging:
 http://127.0.0.1:8001/docs
 ```
 
+## Docker / Container Demo URL
+
+When the backend runs inside the Docker image, the container should expose the same Product Mode URL on the mapped host port:
+
+```powershell
+docker run --rm --name grounded-agent-smoke -p 8001:8001 --env-file .env grounded-agent-backend
+```
+
+```text
+http://127.0.0.1:8001/
+```
+
+Container smoke should also verify:
+
+- `/` returns Product Mode HTML containing `Product Mode is stable` or `balsamic_vinegar`.
+- `/static/index.html` returns HTML containing `Copy Hook`.
+- These checks validate static serving only and do not run the workflow.
+
 ## Product Mode Inputs
 
 The default Product Mode input is:

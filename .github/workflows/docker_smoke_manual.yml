@@ -36,6 +36,14 @@ jobs:
       - name: Verify health endpoint
         run: curl --fail --silent --show-error http://127.0.0.1:8001/healthz
 
+      - name: Verify Product Mode frontend
+        run: |
+          curl --fail --silent --show-error http://127.0.0.1:8001/ -o /tmp/product_mode_index.html
+          curl --fail --silent --show-error http://127.0.0.1:8001/static/index.html -o /tmp/product_mode_static.html
+          grep -q "Product Mode is stable" /tmp/product_mode_index.html
+          grep -q "balsamic_vinegar" /tmp/product_mode_index.html
+          grep -q "Copy Hook" /tmp/product_mode_static.html
+
       - name: Run startup preflight in container
         run: docker exec grounded-agent-smoke python scripts/startup_preflight.py
 
@@ -53,4 +61,3 @@ jobs:
       - name: Stop and remove smoke container
         if: always()
         run: docker rm -f grounded-agent-smoke || true
-

@@ -8,6 +8,7 @@ The protocol checks:
 
 - The service image builds and starts with runtime-injected environment variables.
 - `GET /healthz` responds without invoking the workflow.
+- Product Mode frontend routes respond from the container.
 - Grounded review anchors and frozen baseline assets are present.
 - Secrets, mutable run output and runtime vector indexes are not packaged into the image.
 
@@ -68,7 +69,32 @@ Expected response:
 
 `/healthz` is intentionally independent of workflow execution, LLM availability and source adapter availability.
 
-## 4. Optional Container Startup Preflight
+## 4. Verify Product Mode Frontend
+
+With the container running, verify the static frontend routes:
+
+```powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:8001/" -UseBasicParsing
+Invoke-WebRequest -Uri "http://127.0.0.1:8001/static/index.html" -UseBasicParsing
+```
+
+Expected:
+
+- `/` returns HTML containing `Product Mode is stable` or `balsamic_vinegar`.
+- `/static/index.html` returns HTML containing `Copy Hook`.
+- This check only validates static serving and does not run the workflow.
+
+Equivalent shell checks used by CI:
+
+```bash
+curl --fail --silent --show-error http://127.0.0.1:8001/ -o /tmp/product_mode_index.html
+curl --fail --silent --show-error http://127.0.0.1:8001/static/index.html -o /tmp/product_mode_static.html
+grep -q "Product Mode is stable" /tmp/product_mode_index.html
+grep -q "balsamic_vinegar" /tmp/product_mode_index.html
+grep -q "Copy Hook" /tmp/product_mode_static.html
+```
+
+## 5. Optional Container Startup Preflight
 
 Run the lightweight packaged-service preflight inside the named running container:
 
@@ -83,7 +109,7 @@ Expected:
 - A missing `OPENAI_API_KEY` is reported but is not a startup-preflight hard failure.
 - The script does not run workflow or LLM calls and does not reach external source APIs.
 
-## 5. Verify Packaged And Excluded Assets
+## 6. Verify Packaged And Excluded Assets
 
 Run these inspections against the named running container:
 
@@ -106,7 +132,7 @@ Must not be copied into the image:
 
 The image may create mutable runtime state only after it starts; persistent production memory must be mounted on managed durable storage rather than baked into an image.
 
-## 6. Optional Container Fast Gate
+## 7. Optional Container Fast Gate
 
 Because `tests/` and `scripts/` are packaged, the fast boundary suite can be executed inside the image:
 
@@ -119,7 +145,7 @@ Expected:
 - Compilation, unit, API smoke, failure and routing checks pass.
 - The fast gate does not require a live LLM key and does not make real source-provider calls.
 
-## 7. Shutdown
+## 8. Shutdown
 
 If the container was started in the foreground, stop it with `Ctrl+C`. If started detached or from another shell:
 
@@ -140,6 +166,7 @@ Trigger the **L10 Manual Docker Smoke** workflow manually with `workflow_dispatc
 - `docker build -t grounded-agent-backend .`
 - Container startup using `OPENAI_API_KEY=dummy-for-smoke` and `ALLOW_REAL_SOURCE_ADAPTERS=false`.
 - Retry-based `GET /healthz` validation.
+- Product Mode frontend checks for `/` and `/static/index.html`.
 - Container `python scripts/startup_preflight.py`.
 - Container `python scripts/run_all_tests.py --fast`.
 - Required asset checks for `data/reviews/`, `runs/baselines/l9_9_stable/` and `runs/baselines/l10_4_production_handoff/`.
@@ -155,6 +182,7 @@ A Docker smoke run passes when:
 - `docker build` succeeds.
 - The container starts on port `8001`.
 - `/healthz` returns the expected service and baseline identity.
+- `/` returns Product Mode HTML and `/static/index.html` contains copy controls.
 - Required dataset and baseline assets are available inside the image.
 - `.env`, latest/history run artifacts and prebuilt runtime FAISS indexes are absent.
 - Optional in-container fast gate passes when executed.
