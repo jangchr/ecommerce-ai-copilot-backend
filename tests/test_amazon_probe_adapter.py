@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 from source_adapters.amazon_review_adapter import AmazonReviewAdapter
 
@@ -140,6 +140,55 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         self.assertIn("transient_connection_reset", evidence.data_warnings)
         self.assertEqual(evidence.metadata["error_type"], "transient_connection_reset")
         self.assertEqual(evidence.metadata["retry_count"], 1)
+
+    def test_url_error_connection_refused_retries_once_and_is_classified(self):
+        adapter = AmazonReviewAdapter()
+        refused = ConnectionRefusedError(
+            10061,
+            "No connection could be made because the target machine actively refused it",
+        )
+        with patch.object(adapter, "_fetch_html", side_effect=URLError(refused)) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "printer")
+
+        self.assertEqual(fetch_html.call_count, 2)
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("connection_refused", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "connection_refused")
+        self.assertEqual(evidence.metadata["retry_count"], 1)
+
+    def test_url_error_winerror_10054_is_connection_reset(self):
+        adapter = AmazonReviewAdapter()
+        reset = URLError("[WinError 10054] An existing connection was forcibly closed by the remote host")
+        with patch.object(adapter, "_fetch_html", side_effect=reset) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "printer")
+
+        self.assertEqual(fetch_html.call_count, 2)
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("transient_connection_reset", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "transient_connection_reset")
+        self.assertEqual(evidence.metadata["retry_count"], 1)
+
+    def test_url_error_timeout_is_timeout(self):
+        adapter = AmazonReviewAdapter()
+        with patch.object(adapter, "_fetch_html", side_effect=URLError(TimeoutError("timed out"))) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "printer")
+
+        self.assertEqual(fetch_html.call_count, 2)
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("timeout", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "timeout")
+        self.assertEqual(evidence.metadata["retry_count"], 1)
+
+    def test_other_url_error_is_classified_without_retry(self):
+        adapter = AmazonReviewAdapter()
+        with patch.object(adapter, "_fetch_html", side_effect=URLError("unknown url failure")) as fetch_html:
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "printer")
+
+        self.assertEqual(fetch_html.call_count, 1)
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("url_error", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "url_error")
+        self.assertEqual(evidence.metadata["retry_count"], 0)
 
     def test_blocked_html_is_classified_as_blocked(self):
         adapter = AmazonReviewAdapter()

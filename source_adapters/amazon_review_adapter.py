@@ -193,7 +193,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
 
     def _is_transient_error(self, exc: Exception) -> bool:
         error_type = self._classify_error(exc)
-        return error_type in {"transient_connection_reset", "timeout"}
+        return error_type in {"connection_refused", "transient_connection_reset", "timeout"}
 
     def _classify_error(self, exc: Exception) -> str:
         if isinstance(exc, HTTPError):
@@ -209,12 +209,16 @@ class AmazonReviewAdapter(BaseSourceAdapter):
         if isinstance(exc, URLError):
             reason = getattr(exc, "reason", "")
             reason_text = str(reason).lower()
+            if "10061" in reason_text or "connection refused" in reason_text or "actively refused" in reason_text:
+                return "connection_refused"
             if isinstance(reason, (TimeoutError, socket.timeout)) or "timed out" in reason_text or "timeout" in reason_text:
                 return "timeout"
             if "10054" in reason_text or "connection reset" in reason_text or "connection closed" in reason_text:
                 return "transient_connection_reset"
-            return "unknown_error"
+            return "url_error"
         text = str(exc).lower()
+        if "10061" in text or "connection refused" in text or "actively refused" in text:
+            return "connection_refused"
         if "10054" in text or "connection reset" in text or "connection closed" in text:
             return "transient_connection_reset"
         if "timed out" in text or "timeout" in text:

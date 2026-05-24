@@ -128,12 +128,16 @@ The Amazon adapter uses a bounded retry policy. It retries at most once, and onl
 | Condition | error_type | Retry? |
 | --- | --- | --- |
 | HTTP 404 | `not_found` | No |
+| WinError 10061 or connection refused | `connection_refused` | Yes, once |
 | `ConnectionResetError` or WinError 10054 | `transient_connection_reset` | Yes, once |
 | timeout or urllib timeout | `timeout` | Yes, once |
 | captcha, robot check or blocked page | `blocked` | No |
 | redirect or non-Amazon detail page | `invalid_or_redirected_url` | No |
 | parsed page has no core fields | `parse_empty` | No |
+| other `URLError` | `url_error` | No |
 | other exception | `unknown_error` | No |
+
+WinError 10061 is treated as a connection-refused transient network error. The adapter may retry it once, but if the retry still fails the final `error_type` must remain `connection_refused`.
 
 Unavailable `SourceEvidence` should include the `error_type` in both `data_warnings` and `metadata.error_type`, preserve the raw error summary in `metadata.error` when available, and report `metadata.retry_count`.
 
