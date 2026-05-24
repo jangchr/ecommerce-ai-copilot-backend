@@ -74,6 +74,8 @@ The recommended first external deployment target is documented in [Deployment Pr
 
 Render-specific setup is documented in [Render Deployment Setup](render_deployment_setup.md), including Docker settings, required environment variables, `/healthz`, Product Mode frontend smoke, and the first-deployment persistent-storage decision.
 
+The first public Render deployment smoke passed for `https://ecommerce-ai-copilot-backend.onrender.com` and is recorded in [Render First Deployment Smoke 2026-05-24](render_first_deployment_smoke_20260524.md).
+
 ## Startup Sequence
 
 Perform startup in this order:
@@ -332,3 +334,4 @@ Before production handoff:
 - [L11.0 Product Mode MVP Release Notes](release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
 - [Deployment Provider Decision](deployment_provider_decision.md): Render/Railway/Fly.io/DigitalOcean/AWS Lightsail comparison and recommended MVP deployment path.
 - [Render Deployment Setup](render_deployment_setup.md): Render Docker Web Service configuration and post-deploy Product Mode smoke checklist.
+- [Render First Deployment Smoke 2026-05-24](render_first_deployment_smoke_20260524.md): public Render health, static frontend and Product Mode generation smoke results.

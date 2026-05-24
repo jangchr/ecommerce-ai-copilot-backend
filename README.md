@@ -14,6 +14,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [Production Handoff Runbook](docs/production_handoff_runbook.md): operational startup, validation, persistence and troubleshooting guidance.
 - [Release Artifact Manifest](docs/release_artifact_manifest.md): required package contents, exclusions and runtime persistence boundaries.
 - [Render Deployment Setup](docs/render_deployment_setup.md): Render Docker Web Service configuration, secrets, health checks and Product Mode smoke checklist.
+- [Render First Deployment Smoke](docs/render_first_deployment_smoke_20260524.md): public Render health, static frontend and Product Mode generation smoke results.
 - [L10.10 Amazon Shadow Observability Release Notes](docs/release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
 - [L11.0 Product Mode MVP Release Notes](docs/release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
 

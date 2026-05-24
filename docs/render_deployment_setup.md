@@ -6,6 +6,8 @@ Scope: L11.2-B Product Mode MVP Render setup guide.
 
 This guide documents how to deploy the current Product Mode MVP backend to Render without changing runtime behavior.
 
+First public Render smoke results are recorded in [Render First Deployment Smoke 2026-05-24](render_first_deployment_smoke_20260524.md).
+
 ## Service Overview
 
 | Setting | Value |
