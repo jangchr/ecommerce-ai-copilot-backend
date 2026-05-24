@@ -1,6 +1,6 @@
 # Amazon Real-Source Shadow Mode Plan
 
-This document defines the design boundary for a future Amazon real-source shadow mode. It is intentionally a plan only: product runtime, workflow retrieval, Agent prompts, reward logic, routing, grounded gates, cost gates, and regression thresholds remain unchanged.
+This document defines the design boundary for Amazon real-source shadow mode. Product runtime, workflow retrieval, Agent prompts, reward logic, routing, grounded gates, cost gates, and regression thresholds remain unchanged.
 
 ## Purpose
 
@@ -27,10 +27,10 @@ Amazon real-source probing already exists as a debug-only capability through `/a
 | Mode | Status | Behavior |
 | --- | --- | --- |
 | `local` | Default | Product runtime uses local review datasets and mock trend signals. Full regression and release gates use this mode. |
-| `amazon_shadow` | Design-only next step | Amazon evidence is fetched as a side-channel for debug observability only. It is compared against local evidence but does not affect product evidence, strategy, reward, memory, or regression gates. |
+| `amazon_shadow` | Contract and debug execution ready | Amazon evidence is fetched as a side-channel for debug observability only. It is compared against local evidence but does not affect product evidence, strategy, reward, memory, or regression gates. |
 | `amazon_primary` | Not implemented | Would allow Amazon evidence to influence product runtime only after a separate promotion review. This mode is explicitly out of scope for L10.8. |
 
-`amazon_shadow` must require an explicit debug/admin activation path. It must not be enabled merely because `ALLOW_REAL_SOURCE_ADAPTERS=true`.
+`amazon_shadow` requires explicit request activation through `real_source_mode="amazon_shadow"` on the Debug API. It must not be enabled merely because `ALLOW_REAL_SOURCE_ADAPTERS=true`.
 
 ## Amazon Shadow Data Flow
 
@@ -114,8 +114,15 @@ Before any implementation beyond shadow mode:
 - Run full local regression and confirm 10/10 categories still pass.
 - Document accepted risks, failure modes, and rollback behavior.
 
-## L10.8-A Exit Criteria
+## L10.8 Status
+
+- L10.8-A design document ready.
+- L10.8-B request/response contract ready.
+- L10.8-C Debug API shadow execution path ready.
+
+## Exit Criteria
 
 - This design document exists and is linked or discoverable from project docs.
-- No runtime behavior changes are made.
-- Fast regression passes after adding the document.
+- Product runtime behavior remains unchanged.
+- Amazon shadow evidence is visible only through `DebugCopilotResponse.shadow_sources`.
+- Fast regression passes.

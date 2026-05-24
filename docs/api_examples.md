@@ -149,6 +149,7 @@ The debug response body mirrors the response header correlation ID as `request_i
 ```
 
 `amazon_shadow` is a debug-only contract mode. It is reserved for future side-channel Amazon observability and must not replace local dataset evidence, enter success memory or change product regression results.
+When `real_source_mode` is `amazon_shadow`, `/api/v1/debug-copilot` may include `shadow_sources.amazon_review_api` with best-effort Amazon probe status, confidence, latency, short evidence preview and metadata. The main debug workflow result still comes from the local grounded path.
 
 ### curl
 

@@ -42,6 +42,60 @@ async def request_id_middleware(request: Request, call_next):
     return response
 
 
+def _probe_status_from_evidence(evidence) -> str:
+    warnings = list(getattr(evidence, "data_warnings", []) or [])
+    if any(
+        warning.endswith("_disabled") or warning.endswith("_not_enabled")
+        for warning in warnings
+    ):
+        return "disabled"
+    if getattr(evidence, "source_type", "") == "unavailable":
+        return "unavailable"
+    return "success"
+
+
+def _amazon_shadow_sources(url: str, product_category: str) -> dict:
+    started = time.perf_counter()
+    try:
+        evidence = source_probe_registry.fetch(
+            "amazon_review_api",
+            url or "",
+            product_category or "",
+        )
+        metadata = dict(evidence.metadata or {})
+        return {
+            "mode": "amazon_shadow",
+            "amazon_review_api": {
+                "status": _probe_status_from_evidence(evidence),
+                "source_confidence": evidence.confidence,
+                "latency_ms": (time.perf_counter() - started) * 1000,
+                "evidence_preview": evidence.evidence_quotes[:3],
+                "metadata": {
+                    **metadata,
+                    "source_type": evidence.source_type,
+                    "data_warnings": list(evidence.data_warnings),
+                },
+                "error": metadata.get("error", ""),
+            },
+            "memory_write_allowed": False,
+            "used_for_generation": False,
+        }
+    except Exception as exc:
+        return {
+            "mode": "amazon_shadow",
+            "amazon_review_api": {
+                "status": "error",
+                "source_confidence": 0.0,
+                "latency_ms": (time.perf_counter() - started) * 1000,
+                "evidence_preview": [],
+                "metadata": {},
+                "error": str(exc),
+            },
+            "memory_write_allowed": False,
+            "used_for_generation": False,
+        }
+
+
 @app.get("/healthz")
 async def healthz(request: Request):
     started = time.perf_counter()
@@ -220,6 +274,11 @@ async def debug_copilot_flow(request: GrowthRequest, http_request: Request):
         "telemetry": telemetry_state,
         "telemetry_summary": summarize_telemetry(telemetry_state),
         "memory_observability": memory_engine.observability_snapshot(),
+        "shadow_sources": (
+            _amazon_shadow_sources(request.url, env_state.get("product_category", ""))
+            if request.real_source_mode == "amazon_shadow"
+            else {}
+        ),
     }
     emit_event(
         "debug_copilot_complete",
