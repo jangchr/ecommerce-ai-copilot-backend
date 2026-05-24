@@ -10,6 +10,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [Frontend Smoke Protocol](docs/frontend_smoke_protocol.md): manual Debug Mode and UI/API boundary checks.
 - [Product Mode Demo Protocol](docs/product_mode_demo_protocol.md): local demo flow for stable grounded slugs and copy controls.
 - [Public Demo Quickstart](docs/public_demo_quickstart.md): public Product Mode demo URL, stable inputs and troubleshooting.
+- [Public Demo Smoke Checklist](docs/public_demo_smoke_checklist.md): pre-demo public uptime, cold-start and warmup checks.
 - [Release Checklist](docs/release_checklist.md): required preflight commands and release blockers.
 - [Deployment Environment Matrix](docs/deployment_environment_matrix.md): per-environment secrets, storage, cache, probe and artifact policies.
 - [Production Handoff Runbook](docs/production_handoff_runbook.md): operational startup, validation, persistence and troubleshooting guidance.
