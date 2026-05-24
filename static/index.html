@@ -411,6 +411,7 @@
                     </div>
                     ${block('Error', result.error || '')}
                     ${block('Evidence Preview', (result.evidence_preview || []).join('\n'))}
+                    ${renderAmazonProbeMetadata(result)}
                 </div>
             `).join('');
 
@@ -424,6 +425,24 @@
                 block('Total Latency Ms', Number(telemetry.total_latency_ms || 0).toFixed(2)) +
                 block('Fallback Required', telemetry.fallback_required ? 'true' : 'false') +
                 results;
+        }
+
+        function renderAmazonProbeMetadata(result) {
+            if ((result.provider || '') !== 'amazon_review_api') return '';
+            const metadata = result.metadata || {};
+            const warnings = metadata.data_warnings || [];
+            return `
+                ${block('Amazon Product Title', metadata.product_title || '')}
+                <div class="probe-grid">
+                    ${block('Amazon Rating', metadata.rating || '')}
+                    ${block('Amazon Review Count', metadata.review_count || '')}
+                    ${block('Amazon Price', metadata.price || '')}
+                    ${block('Amazon Category Hint', metadata.category_hint || metadata.product_category_hint || '')}
+                </div>
+                ${block('Amazon Bullet Points', (metadata.bullet_points || []).join('\n'))}
+                ${block('Amazon Data Warnings', warnings.join('\n'))}
+                ${block('Amazon Adapter Error', metadata.error || result.error || '')}
+            `;
         }
 
         async function startSystem() {

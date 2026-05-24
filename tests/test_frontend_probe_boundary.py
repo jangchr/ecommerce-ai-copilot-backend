@@ -19,6 +19,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("if (!document.getElementById('debugMode').checked) return;", self.source)
         self.assertIn("document.getElementById('sourceProbeTools').hidden = !enabled;", self.source)
 
+    def test_amazon_probe_metadata_fields_are_rendered(self):
+        self.assertIn("function renderAmazonProbeMetadata(result)", self.source)
+        self.assertIn("amazon_review_api", self.source)
+        self.assertIn("Amazon Product Title", self.source)
+        self.assertIn("Amazon Rating", self.source)
+        self.assertIn("Amazon Review Count", self.source)
+        self.assertIn("Amazon Price", self.source)
+        self.assertIn("Amazon Category Hint", self.source)
+        self.assertIn("Amazon Bullet Points", self.source)
+        self.assertIn("Amazon Data Warnings", self.source)
+        self.assertIn("Amazon Adapter Error", self.source)
+
 
 if __name__ == "__main__":
     unittest.main()

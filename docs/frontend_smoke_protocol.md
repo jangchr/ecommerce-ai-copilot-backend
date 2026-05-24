@@ -78,6 +78,33 @@ Expected results:
 - Telemetry displays `provider_count`, `success_count`, `disabled_count`, `unavailable_count`, `error_count`, `total_latency_ms` and `fallback_required`.
 - The probe does not execute `local_review_dataset` or `tiktok_trend_mock`, does not write memory, and disabled shells make no external API call.
 
+## Smoke Test: Amazon Probe Display
+
+1. Turn **Debug Mode** on.
+2. Enter an Amazon balsamic vinegar URL, for example `https://www.amazon.com/dp/B00QIIMCCW`.
+3. Click **Run Source Probe**.
+4. Inspect the `amazon_review_api` provider row.
+
+Expected results when the Amazon probe succeeds:
+
+- `evidence_preview` displays short visible review snippets.
+- Amazon metadata fields are visible:
+  - `Amazon Product Title`
+  - `Amazon Rating`
+  - `Amazon Review Count`
+  - `Amazon Price`
+  - `Amazon Category Hint`
+  - `Amazon Bullet Points`
+- `fallback_required` is `false` when `source_confidence >= 0.70`.
+- `memory_write_allowed` remains `false` in the debug-source-probe response.
+
+Expected results when Amazon blocks, redirects or parsing fails:
+
+- The provider row displays `status` as `unavailable` or `error`.
+- `Amazon Data Warnings` or `Amazon Adapter Error` explains the failure.
+- Existing product output remains unchanged.
+- No product rerun is triggered by the probe result.
+
 ## Debug Failure Isolation Check
 
 Use a local test condition in which the product request can complete but the debug request returns an error or cannot be reached.
