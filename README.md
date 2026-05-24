@@ -9,6 +9,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [API Examples](docs/api_examples.md): request examples and product/debug response boundaries.
 - [Frontend Smoke Protocol](docs/frontend_smoke_protocol.md): manual Debug Mode and UI/API boundary checks.
 - [Product Mode Demo Protocol](docs/product_mode_demo_protocol.md): local demo flow for stable grounded slugs and copy controls.
+- [Public Demo Quickstart](docs/public_demo_quickstart.md): public Product Mode demo URL, stable inputs and troubleshooting.
 - [Release Checklist](docs/release_checklist.md): required preflight commands and release blockers.
 - [Deployment Environment Matrix](docs/deployment_environment_matrix.md): per-environment secrets, storage, cache, probe and artifact policies.
 - [Production Handoff Runbook](docs/production_handoff_runbook.md): operational startup, validation, persistence and troubleshooting guidance.
@@ -50,6 +51,12 @@ ALLOW_REAL_SOURCE_ADAPTERS=false
 ```
 
 The development API listens on `http://127.0.0.1:8001`. Interactive FastAPI documentation is available at `/docs`.
+
+Public Product Mode demo:
+
+```text
+https://ecommerce-ai-copilot-backend.onrender.com/
+```
 
 For the local Product Mode MVP demo, start the backend and open the served frontend:
 

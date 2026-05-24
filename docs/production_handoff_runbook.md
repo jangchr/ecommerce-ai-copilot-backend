@@ -78,6 +78,8 @@ The first public Render deployment smoke passed for `https://ecommerce-ai-copilo
 
 The public Product Mode handoff audit is recorded in [Public Product Mode Handoff Audit](public_product_mode_handoff_audit.md).
 
+External demo users should start with [Public Demo Quickstart](public_demo_quickstart.md).
+
 ## Startup Sequence
 
 Perform startup in this order:
@@ -330,6 +332,7 @@ Before production handoff:
 - [Release Checklist](release_checklist.md): release sign-off checklist.
 - [Architecture Map](architecture_map.md): module and boundary reference.
 - [API Examples](api_examples.md): endpoint requests and response surfaces.
+- [Public Demo Quickstart](public_demo_quickstart.md): public Product Mode demo URL, stable inputs and troubleshooting.
 - [Release Artifact Manifest](release_artifact_manifest.md): package contents, exclusions and durable-runtime state policy.
 - [L10.4 Production Handoff Release Notes](release_notes_l10_4_production_handoff.md): latest validated handoff baseline, costs, memory status and Docker smoke boundary.
 - [L10.10 Amazon Shadow Observability Release Notes](release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
