@@ -49,6 +49,18 @@ ALLOW_REAL_SOURCE_ADAPTERS=false
 
 The development API listens on `http://127.0.0.1:8001`. Interactive FastAPI documentation is available at `/docs`.
 
+For the local Product Mode MVP demo, start the backend and open the served frontend:
+
+```powershell
+.\l8\Scripts\python.exe main.py
+```
+
+```text
+http://127.0.0.1:8001/
+```
+
+Use the 10 stable local grounded slugs, starting with `balsamic_vinegar`. Amazon URLs remain Debug Mode / Amazon Shadow inputs, not the stable Product Mode path.
+
 Verify the lightweight deployment health probe after startup:
 
 ```powershell

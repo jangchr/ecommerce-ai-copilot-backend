@@ -16,6 +16,12 @@ Latest accepted production handoff baseline:
 runs/baselines/l10_4_production_handoff/
 ```
 
+Current Product Mode MVP baseline:
+
+```text
+runs/baselines/l11_0_product_mode_mvp/
+```
+
 ## Safety Posture
 
 | Boundary | Operating Rule |
@@ -40,6 +46,29 @@ Amazon real-source work is currently debug-only and shadow-only:
 - `amazon_primary` remains unimplemented and must not be enabled without a separate promotion review.
 
 The current status is documented in [L10.10 Amazon Shadow Observability Release Notes](release_notes_l10_10_amazon_shadow_observability.md).
+
+## Product Mode MVP Status
+
+L11.0 Product Mode is the current local demo surface:
+
+- `GET /` serves the static frontend.
+- The default Product Mode input is `balsamic_vinegar`.
+- Product Mode should use the 10 stable local grounded slugs:
+  - `balsamic_vinegar`
+  - `printer`
+  - `women_bras`
+  - `girls_overalls`
+  - `protein_powder`
+  - `phone_case`
+  - `desk_lamp`
+  - `baby_stroller`
+  - `pet_hair_vacuum`
+  - `skincare_serum`
+- Amazon URLs remain Debug Mode / Amazon Shadow inputs and are not stable Product Mode inputs.
+- Debug Mode Off hides Debug Trace, Source Probe, Amazon Shadow and debug-only observability.
+- Copy controls are available for Product Mode output: `Copy Hook`, `Copy Storyboard` and `Copy Full Markdown`.
+
+The current Product Mode MVP status is documented in [L11.0 Product Mode MVP Release Notes](release_notes_l11_0_product_mode_mvp.md).
 
 ## Startup Sequence
 
@@ -101,6 +130,14 @@ Expected body:
 ```
 
 The response must also contain an `X-Request-ID` header.
+
+Open the local Product Mode MVP frontend:
+
+```text
+http://127.0.0.1:8001/
+```
+
+For a stable demo, enter `balsamic_vinegar` or another local grounded slug. Do not use Amazon URLs in Product Mode; use Debug Mode / Amazon Shadow for Amazon source observation.
 
 ## Docker Operation
 
@@ -288,3 +325,4 @@ Before production handoff:
 - [Release Artifact Manifest](release_artifact_manifest.md): package contents, exclusions and durable-runtime state policy.
 - [L10.4 Production Handoff Release Notes](release_notes_l10_4_production_handoff.md): latest validated handoff baseline, costs, memory status and Docker smoke boundary.
 - [L10.10 Amazon Shadow Observability Release Notes](release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
+- [L11.0 Product Mode MVP Release Notes](release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
