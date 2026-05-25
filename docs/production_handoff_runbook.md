@@ -89,6 +89,18 @@ L11.4 improves the public demo presentation layer while preserving Product Mode 
 Current status is documented in [L11.4 Public Demo Polish Release Notes](release_notes_l11_4_public_demo_polish.md).
 Final L11.4 public demo status is documented in [L11.4 Public Demo Final Release Notes](release_notes_l11_4_public_demo_final.md) and [Public Demo Polish Final Audit](public_demo_polish_final_audit.md).
 
+## L12.0 Commercial MVP Planning Status
+
+L12.0 moves the project from technical public demo completion toward commercial MVP definition:
+
+- Target users are mapped across sellers, marketers, creators, brand owners and agencies.
+- The recommended beachhead is the small ecommerce brand owner, with TikTok ad creative freelancers / small agencies as a strong secondary segment.
+- The current value proposition is: generate grounded TikTok ad hooks and storyboards from ecommerce review pain points, with one-click Chinese translation.
+- The next MVP remains scoped around Product Mode polish, copy controls, translation and stable Render deployment.
+- The next MVP explicitly excludes login, payment, database history, Amazon URL as default Product input, team collaboration and `amazon_primary`.
+
+Commercial planning is documented in [Commercial MVP Scope](commercial_mvp_scope.md).
+
 The recommended first external deployment target is documented in [Deployment Provider Decision](deployment_provider_decision.md). Current recommendation: Render first, Railway as the closest alternate, with `ALLOW_REAL_SOURCE_ADAPTERS=false` preserved for the Product Mode MVP.
 
 Render-specific setup is documented in [Render Deployment Setup](render_deployment_setup.md), including Docker settings, required environment variables, `/healthz`, Product Mode frontend smoke, and the first-deployment persistent-storage decision.
@@ -362,6 +374,7 @@ Before production handoff:
 - [L11.4 Public Demo Polish Release Notes](release_notes_l11_4_public_demo_polish.md): public landing copy, result readability and translation button status.
 - [L11.4 Public Demo Final Release Notes](release_notes_l11_4_public_demo_final.md): final public demo polish, Render hardening and translation smoke status.
 - [Public Demo Polish Final Audit](public_demo_polish_final_audit.md): final audit for public Product Mode, translation and Product/Debug boundary status.
+- [Commercial MVP Scope](commercial_mvp_scope.md): target users, beachhead segment, pricing hypotheses and commercial roadmap.
 - [Deployment Provider Decision](deployment_provider_decision.md): Render/Railway/Fly.io/DigitalOcean/AWS Lightsail comparison and recommended MVP deployment path.
 - [Render Deployment Setup](render_deployment_setup.md): Render Docker Web Service configuration and post-deploy Product Mode smoke checklist.
 - [Public Product Mode Handoff Audit](public_product_mode_handoff_audit.md): public Render handoff artifact, boundary and live-recheck notes.

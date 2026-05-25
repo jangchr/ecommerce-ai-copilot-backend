@@ -23,6 +23,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [L11.4 Public Demo Final Release Notes](docs/release_notes_l11_4_public_demo_final.md): final public demo polish, Render hardening and translation smoke status.
 - [Public Demo Polish Final Audit](docs/public_demo_polish_final_audit.md): final audit for public Product Mode, translation and Product/Debug boundary status.
 - [Public Demo v1 Archive](docs/public_demo_v1_archive.md): archived public demo v1 snapshot at commit `81aeffa`.
+- [Commercial MVP Scope](docs/commercial_mvp_scope.md): target users, beachhead segment, pricing hypotheses and commercial roadmap.
 
 ## Runtime
 
