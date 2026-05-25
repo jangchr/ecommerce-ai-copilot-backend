@@ -1101,3 +1101,25 @@ Document: docs/product_description_frontend_ux_design.md
 - ?????
 - ?????
 
+## L13.1-F Product Description Mode Smoke
+
+Status: ready.
+
+Document: docs/product_description_mode_smoke.md
+
+???
+
+- Product Description Mode ?????
+- /api/v1/generate-from-description ??
+- source=user_provided_description
+- Copy / Download / Translation / Recent Generations ????
+- Product / Debug ????
+
+???
+
+- ??? Amazon
+- ??? Source Probe
+- ??? Amazon Shadow
+- ??? data.debug
+- ??? telemetry_summary / shadow_sources / memory_observability
+

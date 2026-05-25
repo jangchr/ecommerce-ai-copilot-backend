@@ -334,3 +334,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Product Description Input Design](docs/product_description_input_design.md) ? L13.1-A ?????????
 - [Product Description API Contract Design](docs/product_description_api_contract_design.md) ? L13.1-B ?????? API contract ???
 - [Product Description Frontend UX Design](docs/product_description_frontend_ux_design.md) ? L13.1-C ???????? UX ???
+- [Product Description Mode Smoke](docs/product_description_mode_smoke.md) ? L13.1-F ???????? smoke ???
