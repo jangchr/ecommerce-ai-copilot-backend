@@ -78,10 +78,16 @@ L11.4 improves the public demo presentation layer while preserving Product Mode 
 - The 10 stable local grounded slugs are visible as quick-pick inputs.
 - Product results are organized as a user-facing TikTok creative brief.
 - Product Mode includes `Translate to Chinese` and `Copy Chinese Translation`.
+- Product Mode includes section-level `Translate this section` and `Copy section translation` controls for visible Product output.
 - Translation uses `/api/v1/translate-output`, does not run workflow, does not write memory and does not expose debug observability.
+- The frontend uses relative API paths for public deployment.
+- Render port binding reads the injected `PORT` value and falls back to `8001` locally.
+- Render public demo uses `ENABLE_HF_RUNTIME_MODELS=false` to avoid request-time Hugging Face embedding model loading.
+- Public `generate-copilot` recovered from prior `502` / abrupt-close behavior and returned `200 OK` for `balsamic_vinegar`.
 - Amazon URLs remain Debug Mode / Amazon Shadow inputs only.
 
 Current status is documented in [L11.4 Public Demo Polish Release Notes](release_notes_l11_4_public_demo_polish.md).
+Final L11.4 public demo status is documented in [L11.4 Public Demo Final Release Notes](release_notes_l11_4_public_demo_final.md) and [Public Demo Polish Final Audit](public_demo_polish_final_audit.md).
 
 The recommended first external deployment target is documented in [Deployment Provider Decision](deployment_provider_decision.md). Current recommendation: Render first, Railway as the closest alternate, with `ALLOW_REAL_SOURCE_ADAPTERS=false` preserved for the Product Mode MVP.
 
@@ -354,6 +360,8 @@ Before production handoff:
 - [L10.10 Amazon Shadow Observability Release Notes](release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
 - [L11.0 Product Mode MVP Release Notes](release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
 - [L11.4 Public Demo Polish Release Notes](release_notes_l11_4_public_demo_polish.md): public landing copy, result readability and translation button status.
+- [L11.4 Public Demo Final Release Notes](release_notes_l11_4_public_demo_final.md): final public demo polish, Render hardening and translation smoke status.
+- [Public Demo Polish Final Audit](public_demo_polish_final_audit.md): final audit for public Product Mode, translation and Product/Debug boundary status.
 - [Deployment Provider Decision](deployment_provider_decision.md): Render/Railway/Fly.io/DigitalOcean/AWS Lightsail comparison and recommended MVP deployment path.
 - [Render Deployment Setup](render_deployment_setup.md): Render Docker Web Service configuration and post-deploy Product Mode smoke checklist.
 - [Public Product Mode Handoff Audit](public_product_mode_handoff_audit.md): public Render handoff artifact, boundary and live-recheck notes.

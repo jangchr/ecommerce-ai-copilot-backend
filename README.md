@@ -20,6 +20,8 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [L10.10 Amazon Shadow Observability Release Notes](docs/release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
 - [L11.0 Product Mode MVP Release Notes](docs/release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
 - [L11.4 Public Demo Polish Release Notes](docs/release_notes_l11_4_public_demo_polish.md): public landing copy, result readability and translation button status.
+- [L11.4 Public Demo Final Release Notes](docs/release_notes_l11_4_public_demo_final.md): final public demo polish, Render hardening and translation smoke status.
+- [Public Demo Polish Final Audit](docs/public_demo_polish_final_audit.md): final audit for public Product Mode, translation and Product/Debug boundary status.
 
 ## Runtime
 
@@ -288,5 +290,6 @@ Production handoff validation details are recorded in [docs/release_notes_l10_4_
 Amazon shadow-source observability details are recorded in [docs/release_notes_l10_10_amazon_shadow_observability.md](docs/release_notes_l10_10_amazon_shadow_observability.md).
 Product Mode MVP details are recorded in [docs/release_notes_l11_0_product_mode_mvp.md](docs/release_notes_l11_0_product_mode_mvp.md).
 Public demo polish details are recorded in [docs/release_notes_l11_4_public_demo_polish.md](docs/release_notes_l11_4_public_demo_polish.md).
+Final public demo polish release details are recorded in [docs/release_notes_l11_4_public_demo_final.md](docs/release_notes_l11_4_public_demo_final.md), with audit results in [docs/public_demo_polish_final_audit.md](docs/public_demo_polish_final_audit.md).
 
 The runtime is currently packaged around grounded local datasets, observable memory/FAISS behavior, protected product/debug API boundaries and fast/full regression gates.
