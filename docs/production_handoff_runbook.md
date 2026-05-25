@@ -2110,3 +2110,27 @@ Documents:
 - 不新增登录
 - 不新增支付
 
+## L14.6-C / L14.6-D / L14.6-E / L14.6-F / L14.6-G Pasted Reviews Input Guide Batch
+
+Status: ready.
+
+Commit:
+
+8219445
+
+Documents:
+
+- docs/pasted_reviews_input_guide_public_refresh.md
+- docs/pasted_reviews_input_guide_final_audit.md
+- docs/release_notes_l14_6_pasted_reviews_input_guide.md
+- docs/pasted_reviews_input_guide_v1_archive.md
+- docs/pasted_reviews_next_polish_decision.md
+
+结论：
+
+- Pasted Reviews input guide 已上线
+- 中文 guide copy override 已修复
+- Public demo refresh 通过
+- Pasted Reviews Input Guide v1 可以归档
+- 下一步建议进入 Sample Review Library polish
+
