@@ -817,3 +817,23 @@ Document: docs/release_notes_l12_commercial_demo.md
 - Product Mode ???? 10 ? stable local grounded slug
 - Amazon URL ????? Debug Mode / Amazon Shadow
 
+## L12.5-B Commercial Demo Final Audit
+
+Status: ready.
+
+Document: docs/commercial_demo_final_audit.md
+
+???
+
+- Commercial Demo v1 ready
+- Public Demo ????
+- Product Mode ???
+- Copy / Download / Translation / Recent Generations / Feedback / Example Gallery ??
+- Product / Debug ????
+- Amazon URL ????? Debug Mode / Amazon Shadow
+- Amazon Beta ?????????
+
+????
+
+L12.5-C Tag commercial-demo-v1
+
