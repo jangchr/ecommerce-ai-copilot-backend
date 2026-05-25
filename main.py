@@ -231,6 +231,37 @@ def _json_from_translation(raw: str) -> dict:
     return parsed
 
 
+def _contains_cjk(text: str) -> bool:
+    return any("\u4e00" <= char <= "\u9fff" for char in text)
+
+
+def _looks_like_utf8_mojibake(text: str) -> bool:
+    markers = ("æ", "ä¸", "å®", "ï¼", "ç")
+    return any(marker in text for marker in markers)
+
+
+def _repair_mojibake_text(text: str) -> str:
+    if not text or not _looks_like_utf8_mojibake(text):
+        return text
+    try:
+        repaired = text.encode("latin1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return text
+    if _contains_cjk(repaired):
+        return repaired
+    return text
+
+
+def _repair_mojibake_payload(value):
+    if isinstance(value, str):
+        return _repair_mojibake_text(value)
+    if isinstance(value, list):
+        return [_repair_mojibake_payload(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _repair_mojibake_payload(item) for key, item in value.items()}
+    return value
+
+
 def _preserve_product_identifiers(translated: dict, original: dict) -> dict:
     if not isinstance(translated, dict) or not isinstance(original, dict):
         return translated
@@ -272,6 +303,7 @@ async def translate_product_visible_data(data: dict, target_language: str) -> di
         target_language,
     )
     translated = _json_from_translation(raw)
+    translated = _repair_mojibake_payload(translated)
     return _preserve_product_identifiers(translated, data)
 
 

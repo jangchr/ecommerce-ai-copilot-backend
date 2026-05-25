@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest.mock import AsyncMock, patch
 
@@ -178,6 +179,99 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertEqual(payload["output_language"], "zh-CN")
         self.assertIn("\u4e2d\u6587", payload["data"]["assets"]["tiktok_script"]["hook"])
         self.assertEqual(payload["data"]["insights"]["evidence"]["source_type"], "user_pasted_reviews")
+        self.assertNotIn("telemetry_summary", payload)
+        self.assertNotIn("shadow_sources", payload)
+        self.assertNotIn("memory_observability", payload)
+
+    def test_chinese_language_repairs_utf8_mojibake_from_translation_provider(self):
+        def mojibake(text):
+            return text.encode("utf-8").decode("latin1")
+
+        provider_payload = {
+            "insights": {
+                "pain_points": [mojibake("用户痛点来自评论")],
+                "user_complaint_cluster": [mojibake("评论说清洗很麻烦")],
+                "evidence": {
+                    "source_type": "user_pasted_reviews",
+                    "source_url": "",
+                    "confidence": 0.64,
+                    "review_confidence": 0.64,
+                    "trend_confidence": 0.0,
+                    "review_count": 3,
+                    "evidence_quotes": [mojibake("用户评论说清洗很麻烦")],
+                    "trend_signals": [],
+                    "data_warnings": [
+                        "user_pasted_reviews_unverified",
+                        "user_pasted_reviews_no_external_fetch",
+                    ],
+                },
+            },
+            "audience": {
+                "primary": mojibake("忙碌用户"),
+                "sensitivity": mojibake("怕麻烦"),
+                "trust_barriers": [mojibake("担心清洗")],
+            },
+            "strategy": {
+                "core_hook_strategy": mojibake("用评论痛点做开场"),
+                "emotional_trigger": mojibake("从麻烦到轻松"),
+            },
+            "assets": {
+                "tiktok_script": {
+                    "hook": mojibake("开场直接抓住用户痛点"),
+                    "cta": mojibake("试试更轻松的果昔方式"),
+                },
+                "storyboard": {
+                    "source": "user_pasted_reviews",
+                    "scenes": [
+                        {
+                            "scene_id": 1,
+                            "visual_description": mojibake("分镜展示清洗麻烦"),
+                            "narration": mojibake("用户评论变成开场冲突"),
+                            "evidence_quote_used": mojibake("用户评论说清洗很麻烦"),
+                        }
+                    ],
+                },
+            },
+            "evaluation": {
+                "confidence_score": 0.66,
+                "risk_level": "medium",
+                "reasoning": mojibake("基于粘贴评论生成"),
+                "is_approved": True,
+                "is_grounded": True,
+                "creative_approved": True,
+                "grounded_approved": True,
+            },
+            "feedback": mojibake("请核实评论真实性"),
+        }
+
+        with patch(
+            "main.generate_pasted_reviews_brief",
+            new=AsyncMock(return_value=GENERATED_REVIEWS_BRIEF),
+        ), patch(
+            "main.translate_visible_output",
+            new=AsyncMock(return_value=json.dumps(provider_payload, ensure_ascii=False)),
+        ):
+            response = self.client.post(
+                "/api/v1/generate-from-reviews",
+                json={**VALID_REVIEWS_REQUEST, "output_language": "zh-CN"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["output_language"], "zh-CN")
+        self.assertEqual(payload["data"]["insights"]["evidence"]["source_type"], "user_pasted_reviews")
+        self.assertEqual(payload["data"]["insights"]["evidence"]["source_url"], "")
+
+        response_text = json.dumps(payload, ensure_ascii=False)
+        self.assertTrue(any("\u4e00" <= char <= "\u9fff" for char in response_text))
+        self.assertTrue(
+            any(keyword in response_text for keyword in ["痛点", "评论", "用户", "分镜", "开场"])
+        )
+        for marker in ["æ", "ä¸", "å®", "ï¼", "ç"]:
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, response_text)
+
         self.assertNotIn("telemetry_summary", payload)
         self.assertNotIn("shadow_sources", payload)
         self.assertNotIn("memory_observability", payload)
