@@ -359,3 +359,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Product Description Polish v1 Archive](docs/product_description_polish_v1_archive.md) ? product-description-polish-v1 ?????
 - [Language Mode Design](docs/language_mode_design.md) ? L13.6-A ?? / English ?????????
 - [Language Mode API Contract](docs/language_mode_api_contract.md) ? L13.6-B Language Mode API contract ???
+- [Language Mode Frontend Copy Map](docs/language_mode_frontend_copy_map.md) ? L13.6-C Language Mode ??????????
