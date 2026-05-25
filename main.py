@@ -83,6 +83,7 @@ DESCRIPTION_SYSTEM_PROMPT = (
 
 DESCRIPTION_MIN_CHARS = 12
 DESCRIPTION_MAX_CHARS = 6000
+SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -184,6 +185,85 @@ async def translate_visible_output(text: str, target_language: str = "zh-CN") ->
         ]
     )
     return str(message.content or "").strip()
+
+
+def _normalize_output_language(value: str | None) -> str:
+    normalized = (value or "en").strip()
+    return normalized or "en"
+
+
+def _output_language_error(request_id: str):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "status": "error",
+            "error": "Unsupported output_language. Use en or zh-CN.",
+            "error_type": "unsupported_output_language",
+            "request_id": request_id,
+        },
+    )
+
+
+def _validate_output_language(value: str | None, request_id: str):
+    output_language = _normalize_output_language(value)
+    if output_language not in SUPPORTED_OUTPUT_LANGUAGES:
+        return None, _output_language_error(request_id)
+    return output_language, None
+
+
+def _json_from_translation(raw: str) -> dict:
+    cleaned = (raw or "").strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        cleaned = cleaned.replace("json\n", "", 1).replace("JSON\n", "", 1).strip()
+    parsed = json.loads(cleaned)
+    if not isinstance(parsed, dict):
+        raise ValueError("Translated product payload must be a JSON object.")
+    return parsed
+
+
+def _preserve_product_identifiers(translated: dict, original: dict) -> dict:
+    if not isinstance(translated, dict) or not isinstance(original, dict):
+        return translated
+
+    for key, value in original.items():
+        if key in {
+            "source",
+            "source_type",
+            "source_url",
+            "data_warnings",
+            "product_name",
+            "product_category",
+            "risk_level",
+        }:
+            translated[key] = value
+        elif isinstance(value, dict) and isinstance(translated.get(key), dict):
+            translated[key] = _preserve_product_identifiers(translated[key], value)
+        elif isinstance(value, list) and isinstance(translated.get(key), list):
+            translated[key] = [
+                _preserve_product_identifiers(item, value[index])
+                if index < len(value) and isinstance(item, dict) and isinstance(value[index], dict)
+                else item
+                for index, item in enumerate(translated[key])
+            ]
+    return translated
+
+
+async def translate_product_visible_data(data: dict, target_language: str) -> dict:
+    if target_language != "zh-CN":
+        return data
+
+    raw = await translate_visible_output(
+        (
+            "Translate only user-visible natural-language string values in this JSON object. "
+            "Return valid JSON only. Preserve all object keys exactly. Do not translate source identifiers, "
+            "enum-like values, booleans, numbers, request IDs, or URLs.\n\n"
+            f"{json.dumps(data, ensure_ascii=False)}"
+        ),
+        target_language,
+    )
+    translated = _json_from_translation(raw)
+    return _preserve_product_identifiers(translated, data)
 
 
 def _clean_description_text(value: str) -> str:
@@ -392,6 +472,13 @@ async def healthz(request: Request):
 async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
     started = time.perf_counter()
     request_id = http_request.state.request_id
+    output_language, language_error = _validate_output_language(
+        request.output_language,
+        request_id,
+    )
+    if language_error:
+        return language_error
+
     product_category_hint = _safe_product_category_hint(request.url)
     emit_event(
         "generate_copilot_start",
@@ -400,6 +487,7 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         status="started",
         product_category=product_category_hint,
         goal=request.goal,
+        output_language=output_language,
     )
     emit_event(
         "generate_copilot_after_request_parse",
@@ -409,6 +497,7 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         latency_ms=(time.perf_counter() - started) * 1000,
         product_category=product_category_hint,
         goal=request.goal,
+        output_language=output_language,
     )
 
     initial_state = {
@@ -429,6 +518,7 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         latency_ms=(time.perf_counter() - started) * 1000,
         product_category=product_category_hint,
         goal=request.goal,
+        output_language=output_language,
     )
     try:
         final_state = await copilot_engine.ainvoke(initial_state)
@@ -443,10 +533,12 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
             product_category=product_category_hint,
             goal=request.goal,
             error_type=error_type,
+            output_language=output_language,
         )
         return JSONResponse(
             status_code=503,
             content={
+                "status": "error",
                 "error": "generate-copilot workflow failed safely. Please retry after the service is warm.",
                 "error_type": error_type,
                 "request_id": request_id,
@@ -462,6 +554,7 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         latency_ms=(time.perf_counter() - started) * 1000,
         product_category=env_state.get("product_category") or product_category_hint,
         goal=request.goal,
+        output_language=output_language,
     )
     cog_state = final_state.get("cognitive_state", {})
     exec_state = final_state.get("execution_state", {})
@@ -548,7 +641,36 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
             },
             "feedback": exec_state.get("reflection", {}).get("root_cause", "Memory writer recorded the final outcome."),
         },
+        "output_language": output_language,
     }
+    try:
+        response["data"] = await translate_product_visible_data(
+            response["data"],
+            output_language,
+        )
+    except Exception as exc:
+        error_type = _error_type(exc)
+        emit_event(
+            "generate_copilot_error",
+            request_id,
+            endpoint="/api/v1/generate-copilot",
+            status="error",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=env_state.get("product_category"),
+            goal=request.goal,
+            error_type=error_type,
+            output_language=output_language,
+        )
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "error": "generate-copilot language rendering failed safely. Please retry.",
+                "error_type": "generation_failed",
+                "request_id": request_id,
+            },
+        )
+
     emit_event(
         "generate_copilot_complete",
         request_id,
@@ -557,6 +679,7 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         latency_ms=(time.perf_counter() - started) * 1000,
         product_category=env_state.get("product_category"),
         goal=request.goal,
+        output_language=output_language,
     )
     return response
 
@@ -565,6 +688,13 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
 async def generate_from_description(request: ProductDescriptionRequest, http_request: Request):
     started = time.perf_counter()
     request_id = http_request.state.request_id
+    output_language, language_error = _validate_output_language(
+        request.output_language,
+        request_id,
+    )
+    if language_error:
+        return language_error
+
     product_name = _clean_description_text(request.product_name)
     emit_event(
         "generate_from_description_start",
@@ -573,6 +703,7 @@ async def generate_from_description(request: ProductDescriptionRequest, http_req
         status="started",
         product_category=request.product_category or "user_provided_product",
         goal=request.goal,
+        output_language=output_language,
     )
 
     validation_error = _validate_description_request(request, request_id)
@@ -585,15 +716,19 @@ async def generate_from_description(request: ProductDescriptionRequest, http_req
             latency_ms=(time.perf_counter() - started) * 1000,
             product_category=request.product_category or "user_provided_product",
             goal=request.goal,
+            output_language=output_language,
         )
         return validation_error
 
     try:
         generated = await generate_description_brief(request)
+        data = _description_response_data(request, generated)
+        data = await translate_product_visible_data(data, output_language)
         response = {
             "status": "success",
-            "data": _description_response_data(request, generated),
+            "data": data,
             "request_id": request_id,
+            "output_language": output_language,
         }
         emit_event(
             "generate_from_description_complete",
@@ -603,6 +738,7 @@ async def generate_from_description(request: ProductDescriptionRequest, http_req
             latency_ms=(time.perf_counter() - started) * 1000,
             product_category=request.product_category or product_name,
             goal=request.goal,
+            output_language=output_language,
         )
         return response
     except Exception:
@@ -615,6 +751,7 @@ async def generate_from_description(request: ProductDescriptionRequest, http_req
             product_category=request.product_category or product_name,
             goal=request.goal,
             error_type="generation_failed",
+            output_language=output_language,
         )
         return _description_error(
             "Product Description Mode generation failed safely. Please retry with a shorter description.",

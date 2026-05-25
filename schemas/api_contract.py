@@ -7,6 +7,7 @@ class GrowthRequest(BaseModel):
     url: str
     goal: str = "tiktok_ctr"
     real_source_mode: Literal["local", "amazon_shadow"] = "local"
+    output_language: str = "en"
 
 
 class EvidencePayload(BaseModel):
@@ -70,6 +71,7 @@ class GenerateCopilotData(BaseModel):
 class GenerateCopilotResponse(BaseModel):
     status: str
     data: GenerateCopilotData
+    output_language: str = "en"
 
 
 class TranslationRequest(BaseModel):
@@ -90,12 +92,14 @@ class ProductDescriptionRequest(BaseModel):
     customer_pain_points: str
     target_platform: str = "TikTok"
     goal: str = "tiktok_ctr"
+    output_language: str = "en"
 
 
 class ProductDescriptionResponse(BaseModel):
     status: str
     data: GenerateCopilotData
     request_id: Optional[str] = None
+    output_language: str = "en"
 
 
 class DebugCopilotResponse(BaseModel):

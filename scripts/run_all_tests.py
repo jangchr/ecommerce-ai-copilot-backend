@@ -25,6 +25,7 @@ FAST_COMMANDS = [
         "tests.test_shadow_mode_contract",
         "tests.test_api_live_smoke",
         "tests.test_product_description_endpoint",
+        "tests.test_language_mode_backend",
         "tests.test_translation_endpoint",
         "tests.test_source_probe_contract",
         "tests.test_source_probe_endpoint",

@@ -1,5 +1,7 @@
 import unittest
 
+from fastapi.testclient import TestClient
+
 from main import app
 from schemas.api_contract import (
     DebugCopilotResponse,
@@ -77,6 +79,7 @@ class ApiContractTest(unittest.TestCase):
     def test_growth_request_defaults_to_tiktok_ctr(self):
         self.assertEqual(GrowthRequest(url="x").goal, "tiktok_ctr")
         self.assertEqual(GrowthRequest(url="x").real_source_mode, "local")
+        self.assertEqual(GrowthRequest(url="x").output_language, "en")
 
     def test_source_probe_contract_exposes_debug_and_memory_guard_fields(self):
         request_properties = SourceProbeRequest.model_json_schema()["properties"]
@@ -115,9 +118,37 @@ class ApiContractTest(unittest.TestCase):
         self.assertIn("customer_pain_points", request_properties)
         self.assertIn("target_platform", request_properties)
         self.assertIn("goal", request_properties)
+        self.assertIn("output_language", request_properties)
         self.assertIn("status", response_properties)
         self.assertIn("data", response_properties)
         self.assertIn("request_id", response_properties)
+        self.assertIn("output_language", response_properties)
+        self.assertEqual(request.output_language, "en")
+
+    def test_generate_contract_exposes_output_language_without_debug_fields(self):
+        request_properties = GrowthRequest.model_json_schema()["properties"]
+        response_properties = GenerateCopilotResponse.model_json_schema()["properties"]
+
+        self.assertIn("output_language", request_properties)
+        self.assertIn("output_language", response_properties)
+        self.assertNotIn("telemetry_summary", response_properties)
+        self.assertNotIn("shadow_sources", response_properties)
+        self.assertNotIn("memory_observability", response_properties)
+
+    def test_invalid_output_language_returns_safe_error(self):
+        client = TestClient(app)
+
+        response = client.post(
+            "/api/v1/generate-copilot",
+            json={"url": "balsamic_vinegar", "output_language": "fr"},
+            headers={"X-Request-ID": "invalid-language-contract"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["error_type"], "unsupported_output_language")
+        self.assertEqual(payload["request_id"], "invalid-language-contract")
 
     def test_generate_contract_is_unchanged_by_translation_endpoint(self):
         response_properties = GenerateCopilotResponse.model_json_schema()["properties"]
