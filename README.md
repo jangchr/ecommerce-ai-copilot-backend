@@ -22,6 +22,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [L11.4 Public Demo Polish Release Notes](docs/release_notes_l11_4_public_demo_polish.md): public landing copy, result readability and translation button status.
 - [L11.4 Public Demo Final Release Notes](docs/release_notes_l11_4_public_demo_final.md): final public demo polish, Render hardening and translation smoke status.
 - [Public Demo Polish Final Audit](docs/public_demo_polish_final_audit.md): final audit for public Product Mode, translation and Product/Debug boundary status.
+- [Public Demo v1 Archive](docs/public_demo_v1_archive.md): archived public demo v1 snapshot at commit `81aeffa`.
 
 ## Runtime
 
@@ -291,5 +292,6 @@ Amazon shadow-source observability details are recorded in [docs/release_notes_l
 Product Mode MVP details are recorded in [docs/release_notes_l11_0_product_mode_mvp.md](docs/release_notes_l11_0_product_mode_mvp.md).
 Public demo polish details are recorded in [docs/release_notes_l11_4_public_demo_polish.md](docs/release_notes_l11_4_public_demo_polish.md).
 Final public demo polish release details are recorded in [docs/release_notes_l11_4_public_demo_final.md](docs/release_notes_l11_4_public_demo_final.md), with audit results in [docs/public_demo_polish_final_audit.md](docs/public_demo_polish_final_audit.md).
+Public Demo v1 is archived at commit `81aeffa` and documented in [docs/public_demo_v1_archive.md](docs/public_demo_v1_archive.md).
 
 The runtime is currently packaged around grounded local datasets, observable memory/FAISS behavior, protected product/debug API boundaries and fast/full regression gates.
