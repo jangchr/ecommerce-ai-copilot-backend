@@ -368,3 +368,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Language Mode v1 Archive](docs/language_mode_v1_archive.md) ? language-mode-v1 ?????
 - [Language Mode Trial Launch Checklist](docs/language_mode_trial_launch_checklist.md) ? L13.8-A Language Mode ???????????
 - [Language Mode Trial Outreach Tracker](docs/language_mode_trial_outreach_tracker.md) ? L13.8-B Language Mode ????????????
+- [Language Mode Trial Smoke Record](docs/language_mode_trial_smoke_record.md) ? L13.8-C Language Mode ??? smoke ???
