@@ -353,3 +353,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Product Description Sample Input Design](docs/product_description_sample_input_design.md) ? L13.4-C ???????????
 - [Product Description Polish Smoke Record](docs/product_description_polish_smoke_record.md) ? L13.4-E ???????? smoke ???
 - [L13.4 Product Description Polish Release Notes](docs/release_notes_l13_4_product_description_polish.md) ? Product Description Mode ?????? release notes?
+- [Product Description Polish Final Audit](docs/product_description_polish_final_audit.md) ? L13.4-G Product Description Mode ?????????

@@ -1511,3 +1511,22 @@ Document: docs/release_notes_l13_4_product_description_polish.md
 
 L13.4-G Product Description polish final audit
 
+## L13.4-G Product Description Polish Final Audit
+
+Status: ready.
+
+Document: docs/product_description_polish_final_audit.md
+
+???
+
+- Product Description Mode ???????????
+- helper text / Good inputs include / Use sample product ???
+- Use sample product ???????????? API
+- Frontend boundary test PASS
+- Fast gate PASS?123 tests
+- Product / Debug ????
+
+????
+
+L13.5 Public demo refresh for product-description-demo-v1
+
