@@ -826,7 +826,8 @@
                     <div class="description-field wide">
                         <label for="reviewsPastedReviews" data-i18n="pastedReviews">Pasted reviews</label>
                         <div class="field-helper" data-i18n="pastedReviewsHelper">Paste customer reviews, complaints, objections, or buyer feedback.</div>
-                        <textarea id="reviewsPastedReviews" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment."></textarea>
+                        <textarea id="reviewsPastedReviews" oninput="updateReviewCountPreview()" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment."></textarea>
+                        <div id="reviewCountPreview" class="field-helper" data-i18n="reviewCountEmpty">Review count: 0. Paste at least 3 specific review snippets for stronger output.</div>
                         <div id="reviewPasteGuide" style="margin-top:10px; padding:12px; border:1px solid #dbe4f0; border-radius:10px; background:#f8fafc;">
                             <strong data-i18n="reviewGuideTitle">What to paste</strong>
                             <p style="margin:6px 0 10px 0;" data-i18n="reviewGuideBody">Paste real customer language: complaints, objections, review snippets, or things buyers wish were easier.</p>
@@ -1219,6 +1220,7 @@
                 reviewsGenerated: 'Pasted Reviews Mode result generated.',
                 reviewsFailed: 'Pasted Reviews Mode failed. Please try again.',
                 missingReviews: 'Please paste customer reviews or buyer feedback.',
+                reviewCountEmpty: 'Review count: 0. Paste at least 3 specific review snippets for stronger output.',
                 reviewGuideTitle: 'What to paste',
                 reviewGuideBody: 'Paste real customer language: complaints, objections, review snippets, or things buyers wish were easier.',
                 goodReviewExampleTitle: 'Good example',
@@ -1324,6 +1326,7 @@
                 reviewsGenerated: '粘贴评论模式结果已生成。',
                 reviewsFailed: '粘贴评论模式生成失败，请重试。',
                 missingReviews: '请粘贴用户评论或买家反馈。',
+                reviewCountEmpty: '评论条数：0。建议至少粘贴 3 条具体评论，生成效果会更好。',
                 reviewGuideTitle: '应该粘贴什么',
                 reviewGuideBody: '粘贴真实用户原话：抱怨、购买顾虑、评论片段，或者买家希望哪里更方便。',
                 goodReviewExampleTitle: '好例子',
@@ -1462,6 +1465,40 @@
             if (state) target.classList.add(state);
         }
 
+        function reviewLineCount(value) {
+            return (value || '')
+                .split('\n')
+                .map(line => line.replace(/^[-*•\d.\s]+/, '').trim())
+                .filter(line => line.length >= 8)
+                .length;
+        }
+
+        function updateReviewCountPreview() {
+            const target = document.getElementById('reviewCountPreview');
+            if (!target) return;
+
+            const count = reviewLineCount(document.getElementById('reviewsPastedReviews')?.value || '');
+            target.classList.remove('error', 'success');
+
+            if (!count) {
+                target.textContent = t('reviewCountEmpty');
+                return;
+            }
+
+            if (count < 3) {
+                target.classList.add('error');
+                target.textContent = currentOutputLanguage() === 'zh-CN'
+                    ? `检测到 ${count} 条评论。建议至少粘贴 3 条具体评论。`
+                    : `Detected ${count} review snippet${count === 1 ? '' : 's'}. Add at least 3 specific snippets for stronger output.`;
+                return;
+            }
+
+            target.classList.add('success');
+            target.textContent = currentOutputLanguage() === 'zh-CN'
+                ? `检测到 ${count} 条评论。输入足够，可以生成。`
+                : `Detected ${count} review snippets. This is enough to generate.`;
+        }
+
         function fillSampleProductDescription() {
             document.getElementById('descriptionProductName').value = 'Portable mini blender';
             document.getElementById('descriptionProductCategory').value = 'Kitchen appliance';
@@ -1486,6 +1523,7 @@
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';
             document.getElementById('reviewsGoal').value = 'tiktok_ctr';
             setReviewsStatus(t('reviewsSampleFilled'));
+            updateReviewCountPreview();
         }
 
         function fillSamplePetHairReviews() {
@@ -1502,6 +1540,7 @@
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';
             document.getElementById('reviewsGoal').value = 'tiktok_ctr';
             setReviewsStatus(t('petHairSampleFilled'));
+            updateReviewCountPreview();
         }
 
         function fillSampleDeskLampReviews() {
@@ -1518,6 +1557,7 @@
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';
             document.getElementById('reviewsGoal').value = 'tiktok_ctr';
             setReviewsStatus(t('deskLampSampleFilled'));
+            updateReviewCountPreview();
         }
 
         function storyboardText(storyboard) {
@@ -2224,6 +2264,7 @@
             const productCategory = reviewsInputValue('reviewsProductCategory');
             const productDescription = reviewsInputValue('reviewsProductDescription');
             const pastedReviews = reviewsInputValue('reviewsPastedReviews');
+            updateReviewCountPreview();
             const targetPlatform = reviewsInputValue('reviewsTargetPlatform') || 'TikTok';
             const goal = reviewsInputValue('reviewsGoal') || 'tiktok_ctr';
 

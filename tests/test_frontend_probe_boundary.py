@@ -71,6 +71,11 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("使用示例评论", self.source)
         self.assertIn("使用宠物毛发示例", self.source)
         self.assertIn("使用台灯示例", self.source)
+        self.assertIn("reviewCountPreview", self.source)
+        self.assertIn("Review count: 0", self.source)
+        self.assertIn("评论条数：0", self.source)
+        self.assertIn("function reviewLineCount(value)", self.source)
+        self.assertIn("function updateReviewCountPreview()", self.source)
         self.assertIn("What to paste", self.source)
         self.assertIn("Good example", self.source)
         self.assertIn("Weak example", self.source)
@@ -295,6 +300,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("What to paste", section_body)
         self.assertIn("Good example", section_body)
         self.assertIn("Weak example", section_body)
+        self.assertIn("reviewCountPreview", section_body)
+        self.assertIn("oninput=\"updateReviewCountPreview()\"", section_body)
 
         function_match = re.search(
             r"async function generateFromReviews\(\) \{(?P<body>.*?)\n        function renderProductDashboard",
@@ -400,6 +407,37 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("telemetry_summary", body)
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("memory_observability", body)
+
+    def test_pasted_reviews_review_count_preview_is_frontend_only(self):
+        self.assertIn("function reviewLineCount(value)", self.source)
+        self.assertIn("function updateReviewCountPreview()", self.source)
+        self.assertIn("reviewCountEmpty", self.source)
+
+        match = re.search(
+            r"function updateReviewCountPreview\(\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("reviewLineCount", body)
+        self.assertIn("reviewCountPreview", body)
+        self.assertIn("currentOutputLanguage()", body)
+
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("generate-from-reviews", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
 
     def test_language_mode_passes_output_language_without_debug_leakage(self):
         self.assertIn("const payload = { url, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)
