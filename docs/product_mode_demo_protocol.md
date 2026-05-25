@@ -92,6 +92,24 @@ Expected:
 - The gallery does not save anything to Recent Generations.
 - The gallery does not display or read Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
 
+## Product Description Mode Check
+
+1. Leave **Debug Mode** off.
+2. Fill **Product name**, **Product description** and **Customer pain points**.
+3. Optionally fill Product category, Target platform and Goal.
+4. Click **Generate from description**.
+
+Expected:
+
+- The page calls `/api/v1/generate-from-description`.
+- The stable slug `/api/v1/generate-copilot` path is not called.
+- The result renders in the Product Result area.
+- Evidence source displays `user_provided_description`.
+- Copy Hook, Copy Storyboard, Copy Full Markdown, Download Markdown, Download JSON, Translate to Chinese and section translation remain usable.
+- The result is saved to Recent Generations.
+- Debug Mode, Source Probe and Amazon Shadow are not triggered.
+- The UI does not expose Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
+
 ## Product Mode: Debug Mode Off
 
 1. Turn **Debug Mode** off.

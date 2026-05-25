@@ -47,6 +47,12 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Product Result", self.source)
         self.assertIn("Copy / Download / Translation Actions", self.source)
         self.assertIn("Feedback", self.source)
+        self.assertIn("Product Description Mode", self.source)
+        self.assertIn("Product name", self.source)
+        self.assertIn("Product description", self.source)
+        self.assertIn("Customer pain points", self.source)
+        self.assertIn("Generate from description", self.source)
+        self.assertIn("function generateFromDescription()", self.source)
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
@@ -128,6 +134,46 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("data.debug", body)
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("memory_observability", body)
+
+    def test_product_description_mode_calls_only_description_endpoint(self):
+        self.assertIn("postProductDescription", self.source)
+        self.assertIn("/api/v1/generate-from-description", self.source)
+        self.assertIn("Please enter a product name.", self.source)
+        self.assertIn("Please enter a product description.", self.source)
+        self.assertIn("Please add customer pain points or review snippets.", self.source)
+        self.assertIn("Source: user_provided_description", self.source)
+
+        section_match = re.search(
+            r"<section class=\"description-mode\"(?P<body>.*?)<section class=\"example-gallery\"",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(section_match)
+        section_body = section_match.group("body")
+
+        function_match = re.search(
+            r"async function generateFromDescription\(\) \{(?P<body>.*?)\n        function renderProductDashboard",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(function_match)
+        function_body = function_match.group("body")
+
+        self.assertIn("postProductDescription({", function_body)
+        self.assertIn("renderProductDashboard(response.data", function_body)
+        self.assertIn("saveCurrentGenerationToRecent();", function_body)
+
+        for body in [section_body, function_body]:
+            with self.subTest(description_boundary=body[:40]):
+                self.assertNotIn("generate-copilot", body)
+                self.assertNotIn("debug-source-probe", body)
+                self.assertNotIn("debug-copilot", body)
+                self.assertNotIn("runSourceProbe", body)
+                self.assertNotIn("renderDebugPanel", body)
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("memory_observability", body)
 
     def test_product_renderer_does_not_display_observability_fields(self):

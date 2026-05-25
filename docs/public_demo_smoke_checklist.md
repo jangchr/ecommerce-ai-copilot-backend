@@ -42,6 +42,9 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - **Example Gallery** is visible.
    - Example Gallery cards exist for `balsamic_vinegar`, `pet_hair_vacuum` and `desk_lamp`.
    - **Try This Product** fills the input only and does not run the workflow or enable Debug Mode.
+   - **Product Description Mode** is visible below stable slug quick-picks and above Example Gallery.
+   - Product Description Mode required fields are visible: Product name, Product description and Customer pain points.
+   - **Generate from description** is visible.
 
 4. Run Product Mode:
 
@@ -81,6 +84,14 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - **Copy section translation** works after a section translation succeeds.
    - Section translation affects only the clicked section and leaves the original English output visible.
    - At minimum, translate Evidence Snapshot and Storyboard before a live demo.
+
+8. Optional Product Description Mode check:
+
+   - Fill Product name, Product description and Customer pain points.
+   - Click **Generate from description**.
+   - Confirm the result source is `user_provided_description`.
+   - Confirm stable slug Product Mode, Debug Mode, Source Probe and Amazon Shadow are not triggered.
+   - Confirm Copy / Download / Translation and Recent Generations work after success.
 
 ## Render Cold Start Expectations
 

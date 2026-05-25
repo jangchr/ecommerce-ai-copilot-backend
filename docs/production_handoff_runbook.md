@@ -157,6 +157,21 @@ Status: draft implementation.
 
 Contract details are documented in [Product Description API Contract Design](product_description_api_contract_design.md).
 
+## L13.1-E Product Description Frontend Implementation
+
+Status: draft implementation.
+
+The public demo page now includes **Product Description Mode** between stable slug quick-picks and Example Gallery:
+
+- Required fields: Product name, Product description and Customer pain points.
+- Optional fields: Product category, Target platform and Goal.
+- **Generate from description** calls `/api/v1/generate-from-description`.
+- Successful results reuse the Product Result renderer and enable Copy, Download, Translation and Recent Generations.
+- The result source is `user_provided_description`.
+- This mode does not call stable slug `/api/v1/generate-copilot`, Debug Copilot, Source Probe, Amazon Shadow or Amazon adapters.
+- It does not display or save Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
+- No backend endpoint beyond L13.1-D, database, login or payment was added.
+
 The recommended first external deployment target is documented in [Deployment Provider Decision](deployment_provider_decision.md). Current recommendation: Render first, Railway as the closest alternate, with `ALLOW_REAL_SOURCE_ADAPTERS=false` preserved for the Product Mode MVP.
 
 Render-specific setup is documented in [Render Deployment Setup](render_deployment_setup.md), including Docker settings, required environment variables, `/healthz`, Product Mode frontend smoke, and the first-deployment persistent-storage decision.

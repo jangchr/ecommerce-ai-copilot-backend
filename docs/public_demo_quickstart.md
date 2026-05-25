@@ -57,6 +57,26 @@ The public landing page includes a static Example Gallery for:
 
 Each card shows a pain point summary, hook summary and storyboard summary. **Try This Product** only fills the Product Mode input with that slug. It does not call `/api/v1/generate-copilot`, does not enable Debug Mode, does not run Source Probe, does not run Amazon Shadow and does not save anything to Recent Generations.
 
+## Product Description Mode
+
+Product Description Mode lets you generate a Product-like brief from your own product copy.
+
+Required fields:
+
+- Product name
+- Product description
+- Customer pain points
+
+Optional fields:
+
+- Product category
+- Target platform, default `TikTok`
+- Goal, default `tiktok_ctr`
+
+Click **Generate from description** to call `/api/v1/generate-from-description`. Successful results render in the same Product Result area and enable Copy, Download, Translation and Recent Generations actions.
+
+Product Description Mode uses source `user_provided_description`. It does not call stable slug `/api/v1/generate-copilot`, Source Probe, Amazon Shadow or Amazon adapters, and it does not expose Debug Trace, telemetry, `shadow_sources` or `memory_observability`.
+
 After the workflow finishes, review:
 
 - Evidence Snapshot: source badge, confidence indicators and short review-backed quotes.

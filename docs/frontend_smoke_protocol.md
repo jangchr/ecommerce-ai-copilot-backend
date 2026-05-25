@@ -75,6 +75,22 @@ Expected results:
 - Recent Generations is unchanged by gallery clicks.
 - The gallery does not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
 
+## Smoke Test: Product Description Mode
+
+1. Keep **Debug Mode** off.
+2. Fill Product name, Product description and Customer pain points.
+3. Click **Generate from description**.
+
+Expected results:
+
+- The frontend calls `/api/v1/generate-from-description`.
+- It does not call `/api/v1/generate-copilot`.
+- It does not call `/api/v1/debug-copilot` or `/api/v1/debug-source-probe`.
+- Source displays as `user_provided_description`.
+- The result renders in the Product Result area and enables Copy / Download / Translation actions.
+- Recent Generations receives the Product-visible result only.
+- Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` and `memory_observability` remain hidden.
+
 ## Smoke Test: Product Downloads
 
 1. Turn **Debug Mode** off.

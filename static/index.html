@@ -362,6 +362,82 @@
             font-weight: 650;
             line-height: 1.45;
         }
+        .description-mode {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 18px;
+        }
+        .description-shell {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+        }
+        .description-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        .description-header h3 {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .description-header p {
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .description-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .description-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .description-field.wide { grid-column: span 2; }
+        .description-field label {
+            font-size: 12px;
+            font-weight: 750;
+            color: var(--text-secondary);
+        }
+        .description-field input,
+        .description-field textarea {
+            width: 100%;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--bg-base);
+            color: var(--text-primary);
+        }
+        .description-field textarea {
+            min-height: 86px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+        .description-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .description-status {
+            font-size: 13px;
+            font-weight: 650;
+            color: var(--text-secondary);
+        }
+        .description-status.error { color: var(--accent-red); }
+        .description-status.success { color: var(--accent-green); }
         .example-gallery {
             max-width: 1400px;
             margin: 0 auto;
@@ -564,6 +640,9 @@
             .control-panel { flex-direction: column; border-radius: 8px; }
             .btn-primary { min-height: 42px; }
             .probe-grid { grid-template-columns: 1fr; }
+            .description-grid { grid-template-columns: 1fr; }
+            .description-field.wide { grid-column: span 1; }
+            .description-header { flex-direction: column; }
             .example-grid { grid-template-columns: 1fr; }
             .example-header { flex-direction: column; }
             .recent-item { grid-template-columns: 1fr; }
@@ -614,6 +693,48 @@
                     <input type="checkbox" id="amazonShadowMode">
                     <span>Amazon Shadow</span>
                 </label>
+            </div>
+        </section>
+
+        <section class="description-mode" id="productDescriptionMode">
+            <div class="description-shell">
+                <div class="description-header">
+                    <div>
+                        <h3>Product Description Mode</h3>
+                        <p>Use your own product copy and customer pain points to generate a Product-like creative brief. This mode uses `user_provided_description` as the source and does not call Amazon, Source Probe or Debug Mode.</p>
+                    </div>
+                    <span class="source-badge">Source: user_provided_description</span>
+                </div>
+                <div class="description-grid">
+                    <div class="description-field">
+                        <label for="descriptionProductName">Product name</label>
+                        <input id="descriptionProductName" type="text" placeholder="SoftGlow Desk Lamp">
+                    </div>
+                    <div class="description-field">
+                        <label for="descriptionProductCategory">Product category</label>
+                        <input id="descriptionProductCategory" type="text" placeholder="desk_lamp">
+                    </div>
+                    <div class="description-field wide">
+                        <label for="descriptionProductDescription">Product description</label>
+                        <textarea id="descriptionProductDescription" placeholder="Describe the product, its main features, and the situation it is used in."></textarea>
+                    </div>
+                    <div class="description-field wide">
+                        <label for="descriptionPainPoints">Customer pain points</label>
+                        <textarea id="descriptionPainPoints" placeholder="Add customer pain points, objections, review snippets, or complaints you want the brief to address."></textarea>
+                    </div>
+                    <div class="description-field">
+                        <label for="descriptionTargetPlatform">Target platform</label>
+                        <input id="descriptionTargetPlatform" type="text" value="TikTok">
+                    </div>
+                    <div class="description-field">
+                        <label for="descriptionGoal">Goal</label>
+                        <input id="descriptionGoal" type="text" value="tiktok_ctr">
+                    </div>
+                </div>
+                <div class="description-actions">
+                    <button class="btn-primary" id="descriptionGenerateBtn" type="button" onclick="generateFromDescription()">Generate from description</button>
+                    <span class="description-status" id="descriptionStatus"></span>
+                </div>
             </div>
         </section>
 
@@ -926,6 +1047,17 @@
 
         function setExampleSlug(slug) {
             setDemoSlug(slug);
+        }
+
+        function descriptionInputValue(id) {
+            return (document.getElementById(id)?.value || '').trim();
+        }
+
+        function setDescriptionStatus(message, state = '') {
+            const target = document.getElementById('descriptionStatus');
+            target.textContent = message || '';
+            target.classList.remove('error', 'success');
+            if (state) target.classList.add(state);
         }
 
         function storyboardText(storyboard) {
@@ -1385,6 +1517,19 @@
             return response.json();
         }
 
+        async function postProductDescription(payload) {
+            const response = await fetch('/api/v1/generate-from-description', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || 'Product Description Mode request failed.');
+            }
+            return body;
+        }
+
         async function runSourceProbe() {
             if (!document.getElementById('debugMode').checked) return;
 
@@ -1523,6 +1668,68 @@
             } finally {
                 btn.disabled = false;
                 btn.innerText = "运行 Workflow";
+            }
+        }
+
+        async function generateFromDescription() {
+            const btn = document.getElementById('descriptionGenerateBtn');
+            const productName = descriptionInputValue('descriptionProductName');
+            const productCategory = descriptionInputValue('descriptionProductCategory');
+            const productDescription = descriptionInputValue('descriptionProductDescription');
+            const customerPainPoints = descriptionInputValue('descriptionPainPoints');
+            const targetPlatform = descriptionInputValue('descriptionTargetPlatform') || 'TikTok';
+            const goal = descriptionInputValue('descriptionGoal') || 'tiktok_ctr';
+
+            if (!productName) {
+                setDescriptionStatus('Please enter a product name.', 'error');
+                return;
+            }
+            if (!productDescription) {
+                setDescriptionStatus('Please enter a product description.', 'error');
+                return;
+            }
+            if (!customerPainPoints) {
+                setDescriptionStatus('Please add customer pain points or review snippets.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            setDescriptionStatus('Generating from your product description...');
+            latestProductData = null;
+            latestChineseTranslation = '';
+            latestInputSlug = productName;
+            latestGeneratedAt = '';
+            latestRecentId = '';
+            latestDebugCategory = '';
+            resetSectionTranslations();
+            setCopyButtonsEnabled(false);
+            document.getElementById('copyStatus').textContent = '';
+            const translationTarget = document.getElementById('res-translation');
+            translationTarget.style.opacity = '0.5';
+            translationTarget.innerHTML = '';
+            document.getElementById('debugMode').checked = false;
+            document.getElementById('amazonShadowMode').checked = false;
+            syncDebugMode();
+
+            try {
+                const response = await postProductDescription({
+                    product_name: productName,
+                    product_category: productCategory,
+                    product_description: productDescription,
+                    customer_pain_points: customerPainPoints,
+                    target_platform: targetPlatform,
+                    goal
+                });
+                renderProductDashboard(response.data, {
+                    inputSlug: productName,
+                    generatedAt: new Date().toISOString()
+                });
+                saveCurrentGenerationToRecent();
+                setDescriptionStatus('Product Description Mode result generated.', 'success');
+            } catch (error) {
+                setDescriptionStatus(error.message || 'Product Description Mode failed. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
             }
         }
 
