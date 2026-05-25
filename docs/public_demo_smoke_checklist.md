@@ -153,3 +153,9 @@ skincare_serum
 ```
 
 Do not use Amazon URLs in Product Mode. Amazon URLs are Debug Mode / Amazon Shadow inputs only.
+
+## Feedback Link Check
+
+?? Public Demo ?????????
+
+https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog

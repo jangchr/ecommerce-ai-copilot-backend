@@ -143,3 +143,9 @@ Wait briefly and retry. If it continues, check the Render service logs.
 Amazon URLs are not stable Product Mode inputs. Use Debug Mode / Amazon Shadow only when specifically testing real-source shadow behavior.
 
 For a stable product demo, use `balsamic_vinegar` or another local grounded slug.
+
+## Feedback
+
+??????????
+
+https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog

@@ -305,3 +305,5 @@ Final public demo polish release details are recorded in [docs/release_notes_l11
 Public Demo v1 is archived at commit `81aeffa` and documented in [docs/public_demo_v1_archive.md](docs/public_demo_v1_archive.md).
 
 The runtime is currently packaged around grounded local datasets, observable memory/FAISS behavior, protected product/debug API boundaries and fast/full regression gates.
+
+- Feedback form: https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog
