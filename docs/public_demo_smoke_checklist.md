@@ -88,6 +88,7 @@ Recommended response:
 - Refresh the page.
 - Retry `balsamic_vinegar`.
 - If failures continue, check Render service logs.
+- If a new deploy shows `Port scan timeout reached, no open ports detected`, verify the service binds to the Render-provided `PORT` environment variable and falls back to `8001` only for local runs.
 
 ## Five-Minute Pre-Demo Warmup
 

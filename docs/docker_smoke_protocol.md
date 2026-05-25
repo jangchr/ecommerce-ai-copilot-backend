@@ -39,7 +39,9 @@ docker run --rm -p 8001:8001 --env-file .env grounded-agent-backend
 
 Expected:
 
-- The container starts `uvicorn main:app --host 0.0.0.0 --port 8001`.
+- The container starts `uvicorn main:app --host 0.0.0.0 --port ${PORT:-8001}`.
+- Local Docker smoke uses the default fallback port `8001`.
+- Render and other platforms can inject `PORT`; the container command and healthcheck read that value.
 - `OPENAI_API_KEY` and model settings enter the process only through runtime environment injection or a deployment secret manager.
 - The default runtime safety posture remains `ALLOW_REAL_SOURCE_ADAPTERS=false`.
 
@@ -180,7 +182,7 @@ This workflow does not make real source-provider calls and does not constitute a
 A Docker smoke run passes when:
 
 - `docker build` succeeds.
-- The container starts on port `8001`.
+- The container starts on the expected bind port: `PORT` when provided, otherwise `8001`.
 - `/healthz` returns the expected service and baseline identity.
 - `/` returns Product Mode HTML and `/static/index.html` contains copy controls.
 - Required dataset and baseline assets are available inside the image.

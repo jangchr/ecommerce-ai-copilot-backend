@@ -33,6 +33,10 @@ app = FastAPI()
 source_probe_registry = SourceAdapterRegistry()
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+
+
+def get_server_port() -> int:
+    return int(os.getenv("PORT", "8001"))
 INDEX_HTML = STATIC_DIR / "index.html"
 SOURCE_PROBE_PROVIDERS = {
     "amazon_review_api",
@@ -481,4 +485,4 @@ async def debug_source_probe(request: SourceProbeRequest, http_request: Request)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=get_server_port(), reload=True)

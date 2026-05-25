@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
-from main import app
+from main import app, get_server_port
 
 
 class HealthEndpointTest(unittest.TestCase):
@@ -46,6 +46,13 @@ class HealthEndpointTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("text/html", response.headers.get("content-type", ""))
         self.assertIn("Product Mode is stable", response.text)
+
+    def test_server_port_uses_render_port_with_local_fallback(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_server_port(), 8001)
+
+        with patch.dict("os.environ", {"PORT": "10000"}):
+            self.assertEqual(get_server_port(), 10000)
 
 
 if __name__ == "__main__":

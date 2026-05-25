@@ -16,7 +16,7 @@ First public Render smoke results are recorded in [Render First Deployment Smoke
 | Service type | Web Service |
 | Runtime | Docker |
 | Repository | `jangchr/ecommerce-ai-copilot-backend` |
-| Port | `8001` |
+| Port binding | Render injects `PORT`; the service reads `PORT` and falls back to `8001` locally |
 | Health check path | `/healthz` |
 | Stable Product Mode baseline | `runs/baselines/l11_0_product_mode_mvp/` |
 
@@ -71,6 +71,19 @@ Notes:
 - `OPENAI_API_KEY` must be injected by Render as a secret/environment variable.
 - `ALLOW_REAL_SOURCE_ADAPTERS=false` is required for the Product Mode MVP.
 - `MEMORY_MAX_RECORD_COUNT=500` preserves the bounded-memory policy.
+- Render injects `PORT` for Web Services. The application and Docker command read `PORT` at startup, with a local fallback of `8001`.
+- Do not rely on a hard-coded `8001` binding in Render. If `PORT` is manually set, it must match the port Render expects to scan.
+
+## Port Binding
+
+Render detects readiness by scanning the port assigned through the `PORT` environment variable. The backend is hardened for this behavior:
+
+```text
+host = 0.0.0.0
+port = int(os.getenv("PORT", "8001"))
+```
+
+Local development and Docker smoke can continue to use `8001`. Render deployments should allow the platform-injected `PORT` to drive the container bind port.
 
 ## Secret Strategy
 
