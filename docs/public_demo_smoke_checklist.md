@@ -60,6 +60,13 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - **Copy Storyboard** works.
    - **Copy Full Markdown** works.
 
+7. Confirm translation controls:
+
+   - **Translate to Chinese** is visible.
+   - Clicking it shows a loading state and then a Chinese Translation block.
+   - **Copy Chinese Translation** works after translation succeeds.
+   - Translation failure does not clear the original English result.
+
 ## Render Cold Start Expectations
 
 Render may cold start the service.
@@ -105,6 +112,7 @@ Run this 5 minutes before a live demo:
    - `grounded=true`.
    - `approved=true`.
    - Copy buttons are usable.
+   - Translation controls are usable or any translation failure is isolated from the product result.
 
 5. Leave the browser tab open for the demo.
 

@@ -19,6 +19,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [Render First Deployment Smoke](docs/render_first_deployment_smoke_20260524.md): public Render health, static frontend and Product Mode generation smoke results.
 - [L10.10 Amazon Shadow Observability Release Notes](docs/release_notes_l10_10_amazon_shadow_observability.md): debug-only Amazon probe, shadow evaluation and observability status.
 - [L11.0 Product Mode MVP Release Notes](docs/release_notes_l11_0_product_mode_mvp.md): static frontend serving, Product Mode UX cleanup and browser demo validation.
+- [L11.4 Public Demo Polish Release Notes](docs/release_notes_l11_4_public_demo_polish.md): public landing copy, result readability and translation button status.
 
 ## Runtime
 
@@ -286,5 +287,6 @@ Stable release details are recorded in [docs/release_notes_l9_9_stable.md](docs/
 Production handoff validation details are recorded in [docs/release_notes_l10_4_production_handoff.md](docs/release_notes_l10_4_production_handoff.md).
 Amazon shadow-source observability details are recorded in [docs/release_notes_l10_10_amazon_shadow_observability.md](docs/release_notes_l10_10_amazon_shadow_observability.md).
 Product Mode MVP details are recorded in [docs/release_notes_l11_0_product_mode_mvp.md](docs/release_notes_l11_0_product_mode_mvp.md).
+Public demo polish details are recorded in [docs/release_notes_l11_4_public_demo_polish.md](docs/release_notes_l11_4_public_demo_polish.md).
 
 The runtime is currently packaged around grounded local datasets, observable memory/FAISS behavior, protected product/debug API boundaries and fast/full regression gates.
