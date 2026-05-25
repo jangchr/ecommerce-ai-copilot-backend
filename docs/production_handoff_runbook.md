@@ -1683,3 +1683,24 @@ Document: docs/language_mode_smoke_record.md
 - ??? Source Probe / Amazon Shadow
 - ??? Amazon URL Product Mode
 
+## L13.6-G Language Mode Final Audit
+
+Status: ready.
+
+Document: docs/language_mode_final_audit.md
+
+???
+
+- Language Mode v1 ???
+- ???? output_language=en / zh-CN
+- ???? English / ?? selector
+- generate-copilot / generate-from-description ??? output_language
+- ????? UI ?????????
+- Frontend boundary test PASS
+- Fast gate PASS?133 tests
+- Product / Debug ????
+
+????
+
+L13.7 Public demo refresh for Language Mode
+
