@@ -404,3 +404,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L14.7 Pasted Reviews Sample Library Release Notes](docs/release_notes_l14_7_pasted_reviews_sample_library.md) — L14.7 示例评论库 release notes。
 - [Pasted Reviews Sample Library v1 Archive](docs/pasted_reviews_sample_library_v1_archive.md) — pasted-reviews-sample-library-v1 归档记录。
 - [Pasted Reviews After Sample Library Decision](docs/pasted_reviews_after_sample_library_decision.md) — L14.7-G 示例评论库后续 polish 决策。
+- [Pasted Reviews Review Count Public Refresh](docs/pasted_reviews_review_count_public_refresh.md) ? L14.8-C ?????????????
+- [Pasted Reviews Review Count Final Audit](docs/pasted_reviews_review_count_final_audit.md) ? L14.8-D ???????????
+- [L14.8 Pasted Reviews Review Count Release Notes](docs/release_notes_l14_8_pasted_reviews_review_count.md) ? L14.8 ?????? release notes?
+- [Pasted Reviews Review Count v1 Archive](docs/pasted_reviews_review_count_v1_archive.md) ? pasted-reviews-review-count-v1 ?????
+- [Pasted Reviews After Review Count Decision](docs/pasted_reviews_after_review_count_decision.md) ? L14.8-G ???????? polish ???

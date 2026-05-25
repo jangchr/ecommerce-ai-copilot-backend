@@ -2158,3 +2158,27 @@ Documents:
 - Pasted Reviews Sample Library v1 可以归档
 - 下一步建议进入 Review Count Preview polish
 
+## L14.8-C / L14.8-D / L14.8-E / L14.8-F / L14.8-G Pasted Reviews Review Count Batch
+
+Status: ready.
+
+Commit:
+
+6ec6241
+
+Documents:
+
+- docs/pasted_reviews_review_count_public_refresh.md
+- docs/pasted_reviews_review_count_final_audit.md
+- docs/release_notes_l14_8_pasted_reviews_review_count.md
+- docs/pasted_reviews_review_count_v1_archive.md
+- docs/pasted_reviews_after_review_count_decision.md
+
+???
+
+- Review Count Preview ???
+- English / ?? review count copy ???
+- Public demo refresh ??
+- Pasted Reviews Review Count Preview v1 ????
+- ??????? Detected Pain Point Preview polish
+
