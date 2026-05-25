@@ -83,6 +83,21 @@ class TranslationResponse(BaseModel):
     request_id: Optional[str] = None
 
 
+class ProductDescriptionRequest(BaseModel):
+    product_name: str
+    product_category: Optional[str] = None
+    product_description: str
+    customer_pain_points: str
+    target_platform: str = "TikTok"
+    goal: str = "tiktok_ctr"
+
+
+class ProductDescriptionResponse(BaseModel):
+    status: str
+    data: GenerateCopilotData
+    request_id: Optional[str] = None
+
+
 class DebugCopilotResponse(BaseModel):
     request_id: Optional[str] = None
     product_category: Optional[str] = None

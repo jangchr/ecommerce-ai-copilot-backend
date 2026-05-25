@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -18,6 +19,8 @@ from schemas.api_contract import (
     DebugCopilotResponse,
     GenerateCopilotResponse,
     GrowthRequest,
+    ProductDescriptionRequest,
+    ProductDescriptionResponse,
     TranslationRequest,
     TranslationResponse,
 )
@@ -71,6 +74,15 @@ TRANSLATION_SYSTEM_PROMPT = (
     "and necessary technical field names. Do not add facts. Do not change strategy meaning. "
     "Do not translate JSON/code keys inside code blocks unless the value is natural language."
 )
+
+DESCRIPTION_SYSTEM_PROMPT = (
+    "You create concise ecommerce TikTok creative briefs from user-provided product descriptions. "
+    "Use only the supplied product description and customer pain points. Do not invent review evidence, "
+    "do not claim Amazon or local dataset sources, and return compact JSON only."
+)
+
+DESCRIPTION_MIN_CHARS = 12
+DESCRIPTION_MAX_CHARS = 6000
 
 app.add_middleware(
     CORSMiddleware,
@@ -172,6 +184,191 @@ async def translate_visible_output(text: str, target_language: str = "zh-CN") ->
         ]
     )
     return str(message.content or "").strip()
+
+
+def _clean_description_text(value: str) -> str:
+    return (value or "").strip()
+
+
+def _description_error(error: str, error_type: str, request_id: str, status_code: int = 400):
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "error",
+            "error": error,
+            "error_type": error_type,
+            "request_id": request_id,
+        },
+    )
+
+
+def _validate_description_request(request: ProductDescriptionRequest, request_id: str):
+    product_name = _clean_description_text(request.product_name)
+    product_description = _clean_description_text(request.product_description)
+    customer_pain_points = _clean_description_text(request.customer_pain_points)
+    combined_size = len(product_name) + len(product_description) + len(customer_pain_points)
+
+    if not product_name:
+        return _description_error("product_name is required.", "missing_product_name", request_id)
+    if not product_description:
+        return _description_error(
+            "product_description is required.",
+            "missing_product_description",
+            request_id,
+        )
+    if not customer_pain_points:
+        return _description_error(
+            "customer_pain_points is required.",
+            "missing_customer_pain_points",
+            request_id,
+        )
+    if len(product_name) < 2 or len(product_description) < DESCRIPTION_MIN_CHARS or len(customer_pain_points) < DESCRIPTION_MIN_CHARS:
+        return _description_error(
+            "Product description mode needs a product name plus a short product description and customer pain point summary.",
+            "input_too_short",
+            request_id,
+        )
+    if combined_size > DESCRIPTION_MAX_CHARS:
+        return _description_error(
+            "Input is too long for Product Description Mode. Please shorten the description and pain points.",
+            "input_too_long",
+            request_id,
+        )
+    return None
+
+
+def _safe_evidence_quote(text: str, limit: int = 220) -> str:
+    cleaned = " ".join(_clean_description_text(text).split())
+    return cleaned[:limit]
+
+
+async def generate_description_brief(request: ProductDescriptionRequest) -> dict:
+    llm = ChatOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_API_BASE", "https://api.deepseek.com/v1"),
+        model=os.getenv("MODEL_NAME", "deepseek-chat"),
+        temperature=0.4,
+        max_retries=0,
+    )
+    content = (
+        "Return JSON with keys: target_audience, core_hook_strategy, emotional_trigger, hook, "
+        "cta, storyboard_scenes, evaluation_reasoning, feedback. "
+        "storyboard_scenes must be a list of exactly 4 objects with visual_description, narration, evidence_quote_used.\n\n"
+        f"Product name: {request.product_name}\n"
+        f"Product category: {request.product_category or 'unspecified'}\n"
+        f"Target platform: {request.target_platform or 'TikTok'}\n"
+        f"Goal: {request.goal or 'tiktok_ctr'}\n"
+        f"Product description: {request.product_description}\n"
+        f"Customer pain points: {request.customer_pain_points}\n"
+    )
+    message = await llm.ainvoke(
+        [
+            SystemMessage(content=DESCRIPTION_SYSTEM_PROMPT),
+            HumanMessage(content=content),
+        ]
+    )
+    raw = str(message.content or "").strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        raw = raw.replace("json\n", "", 1).replace("JSON\n", "", 1).strip()
+    parsed = json.loads(raw)
+    if not isinstance(parsed, dict):
+        raise ValueError("Description generation returned non-object JSON.")
+    return parsed
+
+
+def _description_response_data(request: ProductDescriptionRequest, generated: dict) -> dict:
+    product_name = _clean_description_text(request.product_name)
+    category = _clean_description_text(request.product_category or "user_provided_product")
+    description_quote = _safe_evidence_quote(request.product_description)
+    pain_quote = _safe_evidence_quote(request.customer_pain_points)
+    scenes = generated.get("storyboard_scenes") or []
+    if not isinstance(scenes, list):
+        scenes = []
+    normalized_scenes = []
+    for index, scene in enumerate(scenes[:4]):
+        if not isinstance(scene, dict):
+            continue
+        quote = scene.get("evidence_quote_used") or pain_quote or description_quote
+        normalized_scenes.append(
+            {
+                "scene_id": index + 1,
+                "scene_goal": scene.get("scene_goal", f"Show {product_name} benefit"),
+                "visual_description": scene.get("visual_description", ""),
+                "narration": scene.get("narration", ""),
+                "evidence_quote_used": quote,
+                "linked_painpoint": pain_quote,
+            }
+        )
+    while len(normalized_scenes) < 4:
+        index = len(normalized_scenes) + 1
+        normalized_scenes.append(
+            {
+                "scene_id": index,
+                "scene_goal": f"Make {product_name} feel useful",
+                "visual_description": f"Show {product_name} solving the stated customer frustration in a simple {request.target_platform or 'TikTok'} scene.",
+                "narration": f"{product_name} is positioned around the pain point: {pain_quote}",
+                "evidence_quote_used": pain_quote or description_quote,
+                "linked_painpoint": pain_quote,
+            }
+        )
+
+    hook = generated.get("hook") or f"Stop ignoring this product pain point: {pain_quote}"
+    cta = generated.get("cta") or f"Try {product_name} if this pain point sounds familiar."
+    return {
+        "insights": {
+            "pain_points": [pain_quote],
+            "user_complaint_cluster": [pain_quote],
+            "evidence": {
+                "source_type": "user_provided_description",
+                "source_url": "",
+                "confidence": 0.55,
+                "review_confidence": 0.0,
+                "trend_confidence": 0.0,
+                "review_count": 0,
+                "evidence_quotes": [description_quote, pain_quote],
+                "trend_signals": [],
+                "data_warnings": ["user_provided_description_no_review_evidence"],
+            },
+        },
+        "audience": {
+            "primary": generated.get("target_audience", f"People considering {product_name}"),
+            "sensitivity": generated.get("emotional_trigger", ""),
+            "trust_barriers": [pain_quote],
+        },
+        "strategy": {
+            "core_hook_strategy": generated.get("core_hook_strategy", ""),
+            "emotional_trigger": generated.get("emotional_trigger", ""),
+        },
+        "assets": {
+            "tiktok_script": {
+                "hook": hook,
+                "cta": cta,
+            },
+            "storyboard": {
+                "product_name": product_name,
+                "product_category": category,
+                "source": "user_provided_description",
+                "scenes": normalized_scenes,
+            },
+        },
+        "evaluation": {
+            "confidence_score": 0.62,
+            "risk_level": "medium",
+            "reasoning": generated.get(
+                "evaluation_reasoning",
+                "Generated from user-provided description only; no review evidence or source adapter was used.",
+            ),
+            "is_approved": True,
+            "is_grounded": True,
+            "creative_approved": True,
+            "grounded_approved": True,
+        },
+        "feedback": generated.get(
+            "feedback",
+            "Generated from user-provided product description. Validate claims before using in paid creative.",
+        ),
+    }
 
 
 @app.get("/healthz")
@@ -362,6 +559,69 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         goal=request.goal,
     )
     return response
+
+
+@app.post("/api/v1/generate-from-description", response_model=ProductDescriptionResponse)
+async def generate_from_description(request: ProductDescriptionRequest, http_request: Request):
+    started = time.perf_counter()
+    request_id = http_request.state.request_id
+    product_name = _clean_description_text(request.product_name)
+    emit_event(
+        "generate_from_description_start",
+        request_id,
+        endpoint="/api/v1/generate-from-description",
+        status="started",
+        product_category=request.product_category or "user_provided_product",
+        goal=request.goal,
+    )
+
+    validation_error = _validate_description_request(request, request_id)
+    if validation_error:
+        emit_event(
+            "generate_from_description_error",
+            request_id,
+            endpoint="/api/v1/generate-from-description",
+            status="error",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category or "user_provided_product",
+            goal=request.goal,
+        )
+        return validation_error
+
+    try:
+        generated = await generate_description_brief(request)
+        response = {
+            "status": "success",
+            "data": _description_response_data(request, generated),
+            "request_id": request_id,
+        }
+        emit_event(
+            "generate_from_description_complete",
+            request_id,
+            endpoint="/api/v1/generate-from-description",
+            status="success",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category or product_name,
+            goal=request.goal,
+        )
+        return response
+    except Exception:
+        emit_event(
+            "generate_from_description_error",
+            request_id,
+            endpoint="/api/v1/generate-from-description",
+            status="error",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category or product_name,
+            goal=request.goal,
+            error_type="generation_failed",
+        )
+        return _description_error(
+            "Product Description Mode generation failed safely. Please retry with a shorter description.",
+            "generation_failed",
+            request_id,
+            status_code=503,
+        )
 
 
 @app.post("/api/v1/translate-output", response_model=TranslationResponse)

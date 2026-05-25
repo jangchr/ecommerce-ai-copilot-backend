@@ -1,221 +1,123 @@
-# L13.1-B Product Description API Contract Design
+# Product Description API Contract Design
 
-???ready
+Status: L13.1-D backend endpoint draft.
 
-????? API contract ????????
+## Purpose
 
-## ?? endpoint
+`POST /api/v1/generate-from-description` adds a Product Description Mode for users who want a creative brief from their own product copy and pain point summary.
 
-???????
+It is separate from the stable slug Product Mode:
 
-POST /api/v1/generate-from-description
+- It does not change `/api/v1/generate-copilot`.
+- It does not use the 10 local grounded slug retrieval path.
+- It does not enable Amazon URL Product Mode.
+- It does not call Amazon adapters, Source Probe or Amazon Shadow.
+- It does not write memory.
+- It does not add a database, login or payment.
 
-????????
+## Request
 
-POST /api/v1/generate-copilot
+```json
+{
+  "product_name": "SoftGlow Desk Lamp",
+  "product_category": "desk_lamp",
+  "product_description": "A compact desk lamp with soft adjustable lighting for late-night work.",
+  "customer_pain_points": "Users complain about glare, messy desks, and eye fatigue at night.",
+  "target_platform": "TikTok",
+  "goal": "tiktok_ctr"
+}
+```
 
-## ????
+Required:
 
-???? stable slug Product Mode ???
+- `product_name`
+- `product_description`
+- `customer_pain_points`
 
-?????????????
+Optional:
 
-- ???
-- ???
-- ?????
-- ????? 10 ? stable slug
-- ??? Amazon Debug / Shadow ??
+- `product_category`
+- `target_platform`, default `TikTok`
+- `goal`, default `tiktok_ctr`
 
-## Request ??
+## Validation Errors
 
-?? request body ???
+Validation failures return HTTP 400 with safe JSON:
 
-- product_name
-- product_category
-- product_description
-- customer_pain_points
-- target_platform
-- goal
+```json
+{
+  "status": "error",
+  "error": "product_name is required.",
+  "error_type": "missing_product_name",
+  "request_id": "..."
+}
+```
 
-## ??????
+Supported validation `error_type` values:
 
-??????
+- `missing_product_name`
+- `missing_product_description`
+- `missing_customer_pain_points`
+- `input_too_short`
+- `input_too_long`
 
-- product_name
-- product_description
-- customer_pain_points
+Generation failure returns safe JSON with `error_type="generation_failed"` and does not expose traceback, prompt text, API keys or environment secrets.
 
-???
+## Success Response
 
-- product_category
-- target_platform
-- goal
+Success returns a Product-like creative brief:
 
-???
+```json
+{
+  "status": "success",
+  "request_id": "...",
+  "data": {
+    "insights": {},
+    "audience": {},
+    "strategy": {},
+    "assets": {},
+    "evaluation": {},
+    "feedback": ""
+  }
+}
+```
 
-- target_platform = TikTok
-- goal = tiktok_ctr
+The response follows the Product Mode visible shape:
 
-## Request ??
+- `data.insights`
+- `data.audience`
+- `data.strategy`
+- `data.assets`
+- `data.evaluation`
+- `data.feedback`
 
-?????
+## Source Policy
 
-product_name?
+The evidence source is always:
 
-?????
-
-product_category?
-
-?????
-
-product_description?
-
-????????????
-
-customer_pain_points?
-
-???????????????????????
-
-target_platform?
-
-?? TikTok?
-
-goal?
-
-?? tiktok_ctr?
-
-## Response ????
-
-??????? Product-like creative brief?
-
-- status
-- data.insights
-- data.audience
-- data.strategy
-- data.assets
-- data.evaluation
-- data.feedback
-- request_id
-
-?? source ???????
-
+```text
 user_provided_description
+```
 
-????? Amazon review?
+The endpoint must not label user-provided copy as:
 
-????????????
+- Amazon review evidence
+- local dataset evidence
+- shadow source evidence
 
-## Response ????
+It also must not fabricate review evidence. `review_count` remains `0`, and `data_warnings` includes `user_provided_description_no_review_evidence`.
 
-??????????
+## Product / Debug Boundary
 
-- status = error
-- error
-- error_type
-- request_id
-
-?? error_type?
-
-- missing_product_name
-- missing_product_description
-- missing_customer_pain_points
-- input_too_short
-- input_too_long
-- unsafe_input
-- generation_failed
-
-## ?????
-
-?????
+The endpoint must not return:
 
 - Debug Trace
-- telemetry_summary
-- shadow_sources
-- memory_observability
+- `telemetry_summary`
+- `shadow_sources`
+- `memory_observability`
 - raw prompt
 - API key
 - environment secrets
 - traceback
 
-## Source policy
-
-Product Description Mode ? source policy?
-
-- source = user_provided_description
-- ??? source adapter
-- ??? Amazon
-- ??? Source Probe
-- ??? Amazon Shadow
-- ?? memory
-- ??? review evidence
-
-## Recent Generations
-
-??????????? Recent Generations?
-
-??????????????
-
-- input type
-- product_name
-- generated timestamp
-- hook
-- storyboard
-- markdown
-- translation????
-
-??? debug-only ???
-
-## Download Markdown / JSON
-
-????????
-
-- Download Markdown
-- Download JSON
-
-????????
-
-source = user_provided_description
-
-## Translation
-
-????????
-
-- Full Chinese Translation
-- Section Chinese Translation
-
-## ????
-
-??????????
-
-- product_name ???? 400
-- product_description ???? 400
-- customer_pain_points ???? 400 ?????
-- input ????????
-- ????? Product-like response
-- ??? source adapter
-- ??? Amazon Shadow
-- ?? memory
-- ??? debug-only ??
-- Download Markdown / JSON ??
-- Translation ??
-- Recent Generations ??
-- ?? stable slug Product Mode ????
-
-## ????
-
-??????
-
-- ??? endpoint
-- ?? schema
-- ?? workflow
-- ?? frontend
-- ??????
-- ?????
-- ?????
-- ??? Amazon URL Product Mode
-
-## ??
-
-Product Description Mode ?????? endpoint ???
-
-?? Commercial MVP ?? Amazon URL ?????????????
+The endpoint does not call workflow, source adapters, Amazon Shadow or memory APIs.

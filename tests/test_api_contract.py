@@ -5,6 +5,8 @@ from schemas.api_contract import (
     DebugCopilotResponse,
     GenerateCopilotResponse,
     GrowthRequest,
+    ProductDescriptionRequest,
+    ProductDescriptionResponse,
     TranslationRequest,
     TranslationResponse,
 )
@@ -41,6 +43,12 @@ class ApiContractTest(unittest.TestCase):
         self.assertIs(
             route_response_model("/api/v1/translate-output"),
             TranslationResponse,
+        )
+
+    def test_product_description_endpoint_uses_description_response_contract(self):
+        self.assertIs(
+            route_response_model("/api/v1/generate-from-description"),
+            ProductDescriptionResponse,
         )
 
     def test_generate_contract_does_not_expose_debug_state(self):
@@ -89,6 +97,26 @@ class ApiContractTest(unittest.TestCase):
         self.assertIn("target_language", request_properties)
         self.assertIn("translated_text", response_properties)
         self.assertIn("target_language", response_properties)
+        self.assertIn("request_id", response_properties)
+
+    def test_product_description_contract_defaults_and_fields(self):
+        request = ProductDescriptionRequest(
+            product_name="Desk Lamp",
+            product_description="A compact desk lamp with soft adjustable lighting.",
+            customer_pain_points="Users complain about glare and late-night eye fatigue.",
+        )
+        self.assertEqual(request.target_platform, "TikTok")
+        self.assertEqual(request.goal, "tiktok_ctr")
+
+        request_properties = ProductDescriptionRequest.model_json_schema()["properties"]
+        response_properties = ProductDescriptionResponse.model_json_schema()["properties"]
+        self.assertIn("product_name", request_properties)
+        self.assertIn("product_description", request_properties)
+        self.assertIn("customer_pain_points", request_properties)
+        self.assertIn("target_platform", request_properties)
+        self.assertIn("goal", request_properties)
+        self.assertIn("status", response_properties)
+        self.assertIn("data", response_properties)
         self.assertIn("request_id", response_properties)
 
     def test_generate_contract_is_unchanged_by_translation_endpoint(self):

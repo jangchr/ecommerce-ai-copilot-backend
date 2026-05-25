@@ -142,6 +142,21 @@ Product Mode now includes a static Example Gallery:
 - The gallery does not display or read Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
 - No backend endpoint, database, login or payment was added.
 
+## L13.1-D Product Description Backend Endpoint
+
+Status: draft implementation.
+
+`POST /api/v1/generate-from-description` adds a Product Description Mode backend surface:
+
+- It accepts `product_name`, `product_description`, `customer_pain_points`, optional `product_category`, optional `target_platform`, and optional `goal`.
+- It returns the Product-like visible shape: `insights`, `audience`, `strategy`, `assets`, `evaluation`, and `feedback`.
+- The evidence source is always `user_provided_description`.
+- It does not change `/api/v1/generate-copilot`.
+- It does not call source adapters, Amazon adapter, Source Probe, Amazon Shadow, workflow memory, database, login, or payment.
+- It does not return Debug Trace, `telemetry_summary`, `shadow_sources`, `memory_observability`, raw prompt, traceback, API keys, or environment secrets.
+
+Contract details are documented in [Product Description API Contract Design](product_description_api_contract_design.md).
+
 The recommended first external deployment target is documented in [Deployment Provider Decision](deployment_provider_decision.md). Current recommendation: Render first, Railway as the closest alternate, with `ALLOW_REAL_SOURCE_ADAPTERS=false` preserved for the Product Mode MVP.
 
 Render-specific setup is documented in [Render Deployment Setup](render_deployment_setup.md), including Docker settings, required environment variables, `/healthz`, Product Mode frontend smoke, and the first-deployment persistent-storage decision.
