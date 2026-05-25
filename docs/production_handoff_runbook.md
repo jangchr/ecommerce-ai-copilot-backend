@@ -2134,3 +2134,27 @@ Documents:
 - Pasted Reviews Input Guide v1 可以归档
 - 下一步建议进入 Sample Review Library polish
 
+## L14.7-C / L14.7-D / L14.7-E / L14.7-F / L14.7-G Pasted Reviews Sample Library Batch
+
+Status: ready.
+
+Commit:
+
+2993a79
+
+Documents:
+
+- docs/pasted_reviews_sample_library_public_refresh.md
+- docs/pasted_reviews_sample_library_final_audit.md
+- docs/release_notes_l14_7_pasted_reviews_sample_library.md
+- docs/pasted_reviews_sample_library_v1_archive.md
+- docs/pasted_reviews_after_sample_library_decision.md
+
+结论：
+
+- Sample Review Library 已上线
+- Pet hair sample 和 desk lamp sample 已在公网可见
+- English / 中文 sample buttons 均可用
+- Pasted Reviews Sample Library v1 可以归档
+- 下一步建议进入 Review Count Preview polish
+

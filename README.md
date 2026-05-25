@@ -399,3 +399,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L14.6 Pasted Reviews Input Guide Release Notes](docs/release_notes_l14_6_pasted_reviews_input_guide.md) — L14.6 输入指南 release notes。
 - [Pasted Reviews Input Guide v1 Archive](docs/pasted_reviews_input_guide_v1_archive.md) — pasted-reviews-input-guide-v1 归档记录。
 - [Pasted Reviews Next Polish Decision](docs/pasted_reviews_next_polish_decision.md) — L14.6-G 下一步 polish 决策。
+- [Pasted Reviews Sample Library Public Refresh](docs/pasted_reviews_sample_library_public_refresh.md) — L14.7-C 示例评论库公网刷新记录。
+- [Pasted Reviews Sample Library Final Audit](docs/pasted_reviews_sample_library_final_audit.md) — L14.7-D 示例评论库最终审计。
+- [L14.7 Pasted Reviews Sample Library Release Notes](docs/release_notes_l14_7_pasted_reviews_sample_library.md) — L14.7 示例评论库 release notes。
+- [Pasted Reviews Sample Library v1 Archive](docs/pasted_reviews_sample_library_v1_archive.md) — pasted-reviews-sample-library-v1 归档记录。
+- [Pasted Reviews After Sample Library Decision](docs/pasted_reviews_after_sample_library_decision.md) — L14.7-G 示例评论库后续 polish 决策。
