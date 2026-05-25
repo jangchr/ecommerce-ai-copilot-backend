@@ -1530,3 +1530,23 @@ Document: docs/product_description_polish_final_audit.md
 
 L13.5 Public demo refresh for product-description-demo-v1
 
+## L13.5-A Public Demo Refresh for Product Description Demo v1
+
+Status: ready.
+
+Document: docs/public_demo_refresh_l13_5_product_description.md
+
+???
+
+- Public Demo ?????
+- Product Description Mode ??
+- Use sample product / Good inputs include ??
+- /api/v1/generate-from-description ????
+- source=user_provided_description
+- Feedback / Waitlist ??
+- Product / Debug ????
+
+???
+
+Product Description Demo v1 ????????????
+
