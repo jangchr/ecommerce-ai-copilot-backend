@@ -871,6 +871,8 @@
                 </div>
                 <div class="description-actions">
                     <button class="btn-secondary" id="reviewsSampleBtn" type="button" onclick="fillSamplePastedReviews()" data-i18n="useSampleReviews">Use sample reviews</button>
+                    <button class="btn-secondary" id="reviewsPetHairSampleBtn" type="button" onclick="fillSamplePetHairReviews()" data-i18n="usePetHairSampleReviews">Use pet hair sample</button>
+                    <button class="btn-secondary" id="reviewsDeskLampSampleBtn" type="button" onclick="fillSampleDeskLampReviews()" data-i18n="useDeskLampSampleReviews">Use desk lamp sample</button>
                     <button class="btn-primary" id="reviewsGenerateBtn" type="button" onclick="generateFromReviews()" data-i18n="generateFromReviews">Generate from reviews</button>
                     <span class="description-status" id="reviewsStatus"></span>
                 </div>
@@ -1207,8 +1209,12 @@
                 pastedReviewsHelper: 'Paste customer reviews, complaints, objections, or buyer feedback.',
                 goodReviewInputsInclude: 'Good review inputs include',
                 useSampleReviews: 'Use sample reviews',
+                usePetHairSampleReviews: 'Use pet hair sample',
+                useDeskLampSampleReviews: 'Use desk lamp sample',
                 generateFromReviews: 'Generate from reviews',
                 reviewsSampleFilled: 'Sample reviews filled. Click Generate from reviews when ready.',
+                petHairSampleFilled: 'Pet hair review sample filled. Click Generate from reviews when ready.',
+                deskLampSampleFilled: 'Desk lamp review sample filled. Click Generate from reviews when ready.',
                 generatingReviews: 'Generating from pasted reviews...',
                 reviewsGenerated: 'Pasted Reviews Mode result generated.',
                 reviewsFailed: 'Pasted Reviews Mode failed. Please try again.',
@@ -1308,8 +1314,12 @@
                 pastedReviewsHelper: '粘贴用户评论、差评、购买顾虑或买家反馈。',
                 goodReviewInputsInclude: '好的评论输入应该包含',
                 useSampleReviews: '使用示例评论',
+                usePetHairSampleReviews: '使用宠物毛发示例',
+                useDeskLampSampleReviews: '使用台灯示例',
                 generateFromReviews: '根据评论生成',
                 reviewsSampleFilled: '示例评论已填充。确认后点击根据评论生成。',
+                petHairSampleFilled: '宠物毛发示例评论已填充。确认后点击根据评论生成。',
+                deskLampSampleFilled: '台灯示例评论已填充。确认后点击根据评论生成。',
                 generatingReviews: '正在根据粘贴评论生成...',
                 reviewsGenerated: '粘贴评论模式结果已生成。',
                 reviewsFailed: '粘贴评论模式生成失败，请重试。',
@@ -1476,6 +1486,38 @@
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';
             document.getElementById('reviewsGoal').value = 'tiktok_ctr';
             setReviewsStatus(t('reviewsSampleFilled'));
+        }
+
+        function fillSamplePetHairReviews() {
+            document.getElementById('reviewsProductName').value = 'Pet hair vacuum brush';
+            document.getElementById('reviewsProductCategory').value = 'Pet cleaning accessory';
+            document.getElementById('reviewsProductDescription').value = 'A compact vacuum brush attachment designed to remove pet hair from couches, rugs, car seats, and corners.';
+            document.getElementById('reviewsPastedReviews').value = [
+                '- Pet hair sticks to my couch no matter how much I vacuum.',
+                '- My normal vacuum misses the corners and edges.',
+                '- The loud vacuum scares my cat every time.',
+                '- The brush gets clogged with fur too quickly.',
+                '- I need something easy for daily cleanup before guests arrive.'
+            ].join('\n');
+            document.getElementById('reviewsTargetPlatform').value = 'TikTok';
+            document.getElementById('reviewsGoal').value = 'tiktok_ctr';
+            setReviewsStatus(t('petHairSampleFilled'));
+        }
+
+        function fillSampleDeskLampReviews() {
+            document.getElementById('reviewsProductName').value = 'Adjustable desk lamp';
+            document.getElementById('reviewsProductCategory').value = 'Home office lighting';
+            document.getElementById('reviewsProductDescription').value = 'An adjustable LED desk lamp with soft lighting modes for work, studying, reading, and late-night desk setups.';
+            document.getElementById('reviewsPastedReviews').value = [
+                '- My cheap desk lamp flickers when I work late.',
+                '- The light is too harsh and gives me eye strain.',
+                '- I do not have much desk space for a bulky lamp.',
+                '- It is hard to adjust the angle while studying.',
+                '- I want softer lighting for night work without lighting up the whole room.'
+            ].join('\n');
+            document.getElementById('reviewsTargetPlatform').value = 'TikTok';
+            document.getElementById('reviewsGoal').value = 'tiktok_ctr';
+            setReviewsStatus(t('deskLampSampleFilled'));
         }
 
         function storyboardText(storyboard) {

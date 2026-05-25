@@ -62,11 +62,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Pasted Reviews Mode", self.source)
         self.assertIn("Pasted reviews", self.source)
         self.assertIn("Use sample reviews", self.source)
+        self.assertIn("Use pet hair sample", self.source)
+        self.assertIn("Use desk lamp sample", self.source)
         self.assertIn("Generate from reviews", self.source)
         self.assertIn("/api/v1/generate-from-reviews", self.source)
         self.assertIn("粘贴评论模式", self.source)
         self.assertIn("根据评论生成", self.source)
         self.assertIn("使用示例评论", self.source)
+        self.assertIn("使用宠物毛发示例", self.source)
+        self.assertIn("使用台灯示例", self.source)
         self.assertIn("What to paste", self.source)
         self.assertIn("Good example", self.source)
         self.assertIn("Weak example", self.source)
@@ -284,6 +288,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Pasted Reviews Mode", section_body)
         self.assertIn("Pasted reviews", section_body)
         self.assertIn("Use sample reviews", section_body)
+        self.assertIn("Use pet hair sample", section_body)
+        self.assertIn("Use desk lamp sample", section_body)
         self.assertIn("Generate from reviews", section_body)
         self.assertIn("reviewPasteGuide", section_body)
         self.assertIn("What to paste", section_body)
@@ -343,6 +349,11 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("reviewsTargetPlatform", body)
         self.assertIn("reviewsGoal", body)
 
+        self.assertIn("function fillSamplePetHairReviews()", self.source)
+        self.assertIn("function fillSampleDeskLampReviews()", self.source)
+        self.assertIn("Pet hair vacuum brush", self.source)
+        self.assertIn("Adjustable desk lamp", self.source)
+
         self.assertNotIn("postPastedReviews", body)
         self.assertNotIn("generate-from-reviews", body)
         self.assertNotIn("generate-copilot", body)
@@ -356,6 +367,39 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
+
+    def test_pasted_reviews_extra_samples_only_fill_inputs(self):
+        for function_name in ["fillSamplePetHairReviews", "fillSampleDeskLampReviews"]:
+            with self.subTest(sample_function=function_name):
+                match = re.search(
+                    rf"function {function_name}\(\) \{{(?P<body>.*?)\n        \}}",
+                    self.source,
+                    re.S,
+                )
+                self.assertIsNotNone(match)
+                body = match.group("body")
+
+                self.assertIn("reviewsProductName", body)
+                self.assertIn("reviewsProductCategory", body)
+                self.assertIn("reviewsProductDescription", body)
+                self.assertIn("reviewsPastedReviews", body)
+                self.assertIn("reviewsTargetPlatform", body)
+                self.assertIn("reviewsGoal", body)
+                self.assertIn("setReviewsStatus", body)
+
+                self.assertNotIn("postPastedReviews", body)
+                self.assertNotIn("generate-from-reviews", body)
+                self.assertNotIn("generate-copilot", body)
+                self.assertNotIn("debug-copilot", body)
+                self.assertNotIn("debug-source-probe", body)
+                self.assertNotIn("runSourceProbe", body)
+                self.assertNotIn("amazonShadowMode", body)
+                self.assertNotIn("saveCurrentGenerationToRecent", body)
+                self.assertNotIn("localStorage", body)
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("memory_observability", body)
 
     def test_language_mode_passes_output_language_without_debug_leakage(self):
         self.assertIn("const payload = { url, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)
