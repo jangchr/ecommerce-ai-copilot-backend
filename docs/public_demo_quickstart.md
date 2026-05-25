@@ -159,3 +159,7 @@ For a stable product demo, use `balsamic_vinegar` or another local grounded slug
 ??????????
 
 https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog
+
+## L12.3-A ????
+
+Public Demo ?????????Hero?????Example Gallery?????Copy / Download / Translation actions?Recent Generations?Feedback?Debug Mode advanced section?

@@ -328,3 +328,7 @@ The manual UI smoke protocol is complemented by fast API tests:
 ```
 
 The fast gate validates response contracts and live endpoint serialization with patched workflow execution; it does not replace the manual network-panel checks for the Debug Mode interaction.
+
+## L12.3-A Layout Smoke
+
+?? Product Mode ???????????Debug Mode Off ???? Debug Trace?Source Probe?Amazon Shadow Summary?

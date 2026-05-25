@@ -237,3 +237,7 @@ The local demo passes when:
 - Copy controls are visible and do not affect workflow execution.
 - Product translation controls work without invoking workflow, source probe or Amazon Shadow.
 - Section translation controls are manual, isolated per section and do not affect the original product result.
+
+## L12.3-A Layout Smoke
+
+???????Hero ? ??? ? Example Gallery ? Product Result ? Copy / Download / Translation actions ? Recent Generations ? Feedback ? Debug Mode advanced section?

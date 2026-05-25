@@ -311,3 +311,5 @@ The runtime is currently packaged around grounded local datasets, observable mem
 
 - [Example Gallery Public Smoke](docs/example_gallery_public_smoke.md) — L12.2-B 示例库公网验证。
 - [Commercial MVP Execution Final Audit](docs/commercial_mvp_execution_final_audit.md) ? L12.2-C Commercial MVP ?????????
+
+- L12.3-A Public demo layout polish ? ??????? Hero?????Example Gallery?????????Recent Generations?Feedback?Debug ????

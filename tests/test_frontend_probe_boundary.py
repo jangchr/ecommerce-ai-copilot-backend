@@ -44,6 +44,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             self.assertIn(slug, self.source)
         self.assertIn("Do not use Amazon URLs in Product Mode yet", self.source)
         self.assertIn("Amazon URLs are available only in Debug Mode / Amazon Shadow", self.source)
+        self.assertIn("Product Result", self.source)
+        self.assertIn("Copy / Download / Translation Actions", self.source)
+        self.assertIn("Feedback", self.source)
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
@@ -145,7 +148,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "Evidence Snapshot",
             "Target Audience",
             "Creative Strategy",
-            "Hook / Storyboard / Copy Actions",
+            "Hook / Storyboard",
+            "Copy / Download / Translation Actions",
             "Evaluation",
             "Core Hook Strategy",
             "Emotional Trigger",
@@ -285,6 +289,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
     def test_debug_trace_is_hidden_when_debug_mode_is_off(self):
         self.assertIn('id="debugTraceSection" hidden', self.source)
         self.assertIn('id="debugMode" onchange="syncDebugMode()"', self.source)
+        self.assertIn('class="advanced-debug" id="debugTraceSection" hidden', self.source)
+        self.assertIn("Debug Mode Advanced Section", self.source)
         self.assertIn("function clearDebugPanel()", self.source)
         self.assertIn("clearDebugPanel();", self.source)
         self.assertNotIn("renderDebugPanel(response.data.feedback, null, 'Off')", self.source)
