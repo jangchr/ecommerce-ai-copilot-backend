@@ -45,6 +45,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy Full Markdown", self.source)
         self.assertIn("Download Markdown", self.source)
         self.assertIn("Download JSON", self.source)
+        self.assertIn("Recent Generations", self.source)
+        self.assertIn("No recent generations yet.", self.source)
+        self.assertIn("View", self.source)
+        self.assertIn("Copy Markdown", self.source)
+        self.assertIn("Delete", self.source)
+        self.assertIn("Clear Recent Generations", self.source)
+        self.assertIn("crossgrowth_recent_generations_v1", self.source)
         self.assertIn("Translate to Chinese", self.source)
         self.assertIn("Copy Chinese Translation", self.source)
         self.assertIn("Translate this section", self.source)
@@ -54,6 +61,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("function copyFullMarkdown()", self.source)
         self.assertIn("function downloadMarkdown()", self.source)
         self.assertIn("function downloadJson()", self.source)
+        self.assertIn("function loadRecentGenerations()", self.source)
+        self.assertIn("function saveCurrentGenerationToRecent()", self.source)
+        self.assertIn("function renderRecentGenerations()", self.source)
+        self.assertIn("function viewRecentGeneration(id)", self.source)
+        self.assertIn("function copyRecentMarkdown(id)", self.source)
+        self.assertIn("function deleteRecentGeneration(id)", self.source)
+        self.assertIn("function clearRecentGenerations()", self.source)
         self.assertIn("function translateToChinese()", self.source)
         self.assertIn("function copyChineseTranslation()", self.source)
         self.assertIn("function translateSection(sectionKey)", self.source)
@@ -61,7 +75,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
     def test_product_renderer_does_not_display_observability_fields(self):
         match = re.search(
-            r"function renderProductDashboard\(data\) \{(?P<body>.*?)function renderAmazonShadowSummary",
+            r"function renderProductDashboard\(data, options = \{\}\) \{(?P<body>.*?)function renderAmazonShadowSummary",
             self.source,
             re.S,
         )
@@ -141,6 +155,41 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         for body in [markdown_body, json_body]:
             with self.subTest(export_body=body[:40]):
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("memory_observability", body)
+                self.assertNotIn("api_key", body.lower())
+
+    def test_recent_generations_store_product_visible_state_only(self):
+        self.assertIn("const RECENT_GENERATIONS_KEY = 'crossgrowth_recent_generations_v1';", self.source)
+        self.assertIn("const MAX_RECENT_GENERATIONS = 10;", self.source)
+        self.assertIn("localStorage.getItem(RECENT_GENERATIONS_KEY)", self.source)
+        self.assertIn("localStorage.setItem(", self.source)
+        self.assertIn(".slice(0, MAX_RECENT_GENERATIONS)", self.source)
+        self.assertIn("saveCurrentGenerationToRecent();", self.source)
+        self.assertIn("renderRecentGenerations();", self.source)
+        self.assertIn("full_chinese_translation: latestChineseTranslation || ''", self.source)
+        self.assertIn("section_translations: sectionTranslationPayload()", self.source)
+
+        record_match = re.search(
+            r"function currentRecentRecord\(\) \{(?P<body>.*?)function saveCurrentGenerationToRecent",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(record_match)
+        record_body = record_match.group("body")
+
+        visible_match = re.search(
+            r"function visibleProductData\(data\) \{(?P<body>.*?)function cloneVisibleProductData",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(visible_match)
+        visible_body = visible_match.group("body")
+
+        for body in [record_body, visible_body]:
+            with self.subTest(recent_body=body[:40]):
                 self.assertNotIn("data.debug", body)
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("telemetry_summary", body)

@@ -113,6 +113,22 @@ Product Mode now includes client-side export actions:
 - Downloads do not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe output, Amazon Shadow Summary, API keys or environment secrets.
 - No backend endpoint, database, login or payment was added.
 
+## L12.1-B Local Recent Generations
+
+Status: ready.
+
+Product Mode now includes browser-local recent generation history:
+
+- Recent records are stored in localStorage under `crossgrowth_recent_generations_v1`.
+- The browser keeps at most 10 Product Mode results, newest first.
+- Each record shows input slug, generated timestamp, hook summary, **View**, **Copy Markdown** and **Delete**.
+- **View** restores a saved Product Mode result without calling `/api/v1/generate-copilot`.
+- **Copy Markdown** copies saved Product Mode Markdown only.
+- **Clear Recent Generations** clears the local browser history.
+- Saved records include Product Mode user-visible fields and any generated full or section-level Chinese translations.
+- Saved records do not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe output, Amazon Shadow Summary, API keys or environment secrets.
+- No backend endpoint, database, login or payment was added.
+
 The recommended first external deployment target is documented in [Deployment Provider Decision](deployment_provider_decision.md). Current recommendation: Render first, Railway as the closest alternate, with `ALLOW_REAL_SOURCE_ADAPTERS=false` preserved for the Product Mode MVP.
 
 Render-specific setup is documented in [Render Deployment Setup](render_deployment_setup.md), including Docker settings, required environment variables, `/healthz`, Product Mode frontend smoke, and the first-deployment persistent-storage decision.

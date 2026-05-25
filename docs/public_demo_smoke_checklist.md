@@ -62,6 +62,10 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - **Download Markdown** works after a Product result renders.
    - **Download JSON** works after a Product result renders.
    - Downloaded files do not include Debug Trace, telemetry, `shadow_sources` or `memory_observability`.
+   - **Recent Generations** shows the latest result after generation.
+   - Recent Generations **View** restores the saved result without a new generate request.
+   - Recent Generations **Copy Markdown**, **Delete** and **Clear Recent Generations** work.
+   - Recent Generations keeps at most 10 browser-local records and does not store debug-only observability.
 
 7. Confirm translation controls:
 

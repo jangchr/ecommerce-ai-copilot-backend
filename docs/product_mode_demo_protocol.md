@@ -153,6 +153,24 @@ Expected results:
 - Downloaded files do not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe data or Amazon Shadow Summary.
 - Running a new Product Mode generation makes downloads use the latest result, not an older result.
 
+## Recent Generations Check
+
+1. Run Product Mode with `balsamic_vinegar`.
+2. Confirm **Recent Generations** shows a new row with slug, timestamp and hook summary.
+3. Click **View** on the row.
+4. Confirm the saved result is restored without triggering a new `/api/v1/generate-copilot` request.
+5. Confirm **Copy Hook**, **Copy Storyboard**, **Copy Full Markdown**, **Download Markdown** and **Download JSON** still work after restore.
+6. Click **Copy Markdown** on the recent row.
+7. Click **Delete** and confirm the row disappears.
+8. Generate again, then click **Clear Recent Generations**.
+
+Expected:
+
+- Recent Generations stores at most 10 browser-local Product Mode results under `crossgrowth_recent_generations_v1`.
+- The newest generation appears first.
+- Saved records include Product Mode user-visible output and any generated full or section-level Chinese translations.
+- Saved records do not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe data, Amazon Shadow Summary, API keys or environment secrets.
+
 ## Product Translation Check
 
 1. Run Product Mode with a stable local slug.

@@ -81,6 +81,18 @@ After Product Mode generates a result, use:
 
 Downloads include Product Mode user-visible output only: input slug, generated timestamp, Evidence Snapshot, Target Audience & Creative Strategy, Hook, Storyboard, Evaluation, feedback and any Chinese translations already generated. Downloads do not include Debug Trace, telemetry, `shadow_sources`, `memory_observability`, Source Probe data or Amazon Shadow Summary.
 
+## Recent Generations
+
+After each successful Product Mode run, the browser stores the latest user-visible result in localStorage under `crossgrowth_recent_generations_v1`.
+
+- The list keeps the newest 10 generations, newest first.
+- Each row shows the input slug, generated timestamp, hook summary, **View**, **Copy Markdown** and **Delete**.
+- **View** restores that result into Product Mode without calling `/api/v1/generate-copilot` again.
+- **Copy Markdown** copies that saved result's Product Mode Markdown only.
+- **Clear Recent Generations** removes all local browser history.
+
+Recent Generations are local to the current browser. They do not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe data, Amazon Shadow Summary, API keys or environment secrets.
+
 ## Chinese Translation
 
 After Product Mode generates a result, click **Translate to Chinese** to translate the visible creative brief into natural Chinese while preserving the Markdown structure. The translation uses only the Product Mode output text, not Debug Trace, telemetry, Amazon Shadow data or memory observability.

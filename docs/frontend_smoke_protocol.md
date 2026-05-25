@@ -74,6 +74,24 @@ Expected results:
 - Download content does not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe raw data or Amazon Shadow Summary.
 - The page still does not reference `data.debug`.
 
+## Smoke Test: Recent Generations
+
+1. Turn **Debug Mode** off.
+2. Run Product Mode with `balsamic_vinegar`.
+3. Confirm **Recent Generations** appears and shows a row for the newest generation.
+4. Confirm the row includes input slug, timestamp, hook summary, **View**, **Copy Markdown** and **Delete**.
+5. Click **View** and confirm the result is restored without a new generate request.
+6. Click **Copy Markdown** and confirm it copies the saved Product Mode Markdown.
+7. Click **Delete** and confirm the row is removed.
+8. Click **Clear Recent Generations** and confirm the empty state says `No recent generations yet.`
+
+Expected results:
+
+- Recent Generations uses localStorage key `crossgrowth_recent_generations_v1`.
+- It keeps at most 10 Product Mode results, newest first.
+- It stores Product Mode user-visible fields only.
+- It does not store Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe raw data or Amazon Shadow Summary.
+
 ## Smoke Test: Product Mode Result Readability
 
 1. Turn **Debug Mode** off.

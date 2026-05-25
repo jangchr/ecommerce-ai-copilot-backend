@@ -385,12 +385,78 @@
             min-height: 16px;
             margin-bottom: 6px;
         }
+        .recent-panel {
+            max-width: 1400px;
+            margin: -52px auto 80px;
+            padding: 0 24px;
+        }
+        .recent-shell {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+        }
+        .recent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .recent-header h3 {
+            font-size: 13px;
+            font-weight: 750;
+            text-transform: uppercase;
+        }
+        .recent-list {
+            display: grid;
+            gap: 10px;
+        }
+        .recent-empty {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .recent-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-base);
+        }
+        .recent-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .recent-hook {
+            font-size: 13px;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+        }
+        .recent-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+        }
         @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr; }
             .card.wide { grid-column: span 1; grid-template-columns: 1fr; }
             .control-panel { flex-direction: column; border-radius: 8px; }
             .btn-primary { min-height: 42px; }
             .probe-grid { grid-template-columns: 1fr; }
+            .recent-panel { margin-top: -54px; }
+            .recent-item { grid-template-columns: 1fr; }
+            .recent-actions { justify-content: flex-start; }
         }
     </style>
 </head>
@@ -493,6 +559,18 @@
                         </div>
                         <div id="res-source-probe" style="opacity: 0.65;">No probe run.</div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="recent-panel">
+            <div class="recent-shell">
+                <div class="recent-header">
+                    <h3>Recent Generations</h3>
+                    <button class="btn-secondary" id="clearRecentBtn" onclick="clearRecentGenerations()">Clear Recent Generations</button>
+                </div>
+                <div id="recentGenerationsList" class="recent-list">
+                    <div class="recent-empty">No recent generations yet.</div>
                 </div>
             </div>
         </section>
@@ -630,8 +708,11 @@
         let latestChineseTranslation = '';
         let latestInputSlug = '';
         let latestGeneratedAt = '';
+        let latestRecentId = '';
         let sectionTranslations = {};
         let sectionTextCache = {};
+        const RECENT_GENERATIONS_KEY = 'crossgrowth_recent_generations_v1';
+        const MAX_RECENT_GENERATIONS = 10;
         const SECTION_KEYS = ['evidence', 'strategy', 'hook', 'storyboard', 'evaluation'];
 
         function resetSectionTranslations() {
@@ -741,6 +822,145 @@
                 '## Feedback',
                 data.feedback || ''
             ].join('\n');
+        }
+
+        function visibleProductData(data) {
+            if (!data) return null;
+            return {
+                insights: data.insights || {},
+                audience: data.audience || {},
+                strategy: data.strategy || {},
+                assets: data.assets || {},
+                evaluation: data.evaluation || {},
+                feedback: data.feedback || ''
+            };
+        }
+
+        function cloneVisibleProductData(data) {
+            const visible = visibleProductData(data);
+            if (!visible) return null;
+            return JSON.parse(JSON.stringify(visible));
+        }
+
+        function loadRecentGenerations() {
+            try {
+                const records = JSON.parse(localStorage.getItem(RECENT_GENERATIONS_KEY) || '[]');
+                return Array.isArray(records) ? records.filter(Boolean) : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveRecentGenerations(records) {
+            localStorage.setItem(
+                RECENT_GENERATIONS_KEY,
+                JSON.stringify((records || []).filter(Boolean).slice(0, MAX_RECENT_GENERATIONS))
+            );
+        }
+
+        function currentRecentRecord() {
+            if (!latestProductData) return null;
+            latestRecentId = latestRecentId || `recent-${Date.now()}`;
+            return {
+                id: latestRecentId,
+                input_slug: latestInputSlug || '',
+                generated_at: latestGeneratedAt || new Date().toISOString(),
+                hook: latestProductData?.assets?.tiktok_script?.hook || '',
+                storyboard: storyboardText(latestProductData?.assets?.storyboard || {}),
+                full_markdown: buildDownloadMarkdown(latestProductData),
+                product_data: cloneVisibleProductData(latestProductData),
+                full_chinese_translation: latestChineseTranslation || '',
+                section_translations: sectionTranslationPayload()
+            };
+        }
+
+        function saveCurrentGenerationToRecent() {
+            const record = currentRecentRecord();
+            if (!record) return;
+            const existing = loadRecentGenerations().filter((item) => item.id !== record.id);
+            saveRecentGenerations([record, ...existing].slice(0, MAX_RECENT_GENERATIONS));
+            renderRecentGenerations();
+        }
+
+        function renderRecentGenerations() {
+            const target = document.getElementById('recentGenerationsList');
+            if (!target) return;
+            const records = loadRecentGenerations();
+            if (!records.length) {
+                target.innerHTML = '<div class="recent-empty">No recent generations yet.</div>';
+                return;
+            }
+            target.innerHTML = records.map((record) => {
+                const hook = record.hook || record.product_data?.assets?.tiktok_script?.hook || 'No hook saved.';
+                return `
+                    <div class="recent-item">
+                        <div>
+                            <div class="recent-meta">
+                                <span>${escapeHTML(record.input_slug || 'unknown_slug')}</span>
+                                <span>${escapeHTML(record.generated_at || '')}</span>
+                            </div>
+                            <div class="recent-hook">${escapeHTML(hook.slice(0, 180))}</div>
+                        </div>
+                        <div class="recent-actions">
+                            <button class="btn-secondary" onclick="viewRecentGeneration('${escapeHTML(record.id)}')">View</button>
+                            <button class="btn-secondary" onclick="copyRecentMarkdown('${escapeHTML(record.id)}')">Copy Markdown</button>
+                            <button class="btn-secondary" onclick="deleteRecentGeneration('${escapeHTML(record.id)}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function restoreSectionTranslations(savedTranslations) {
+            sectionTranslations = {};
+            SECTION_KEYS.forEach((key) => {
+                const text = savedTranslations?.[key] || '';
+                if (text) {
+                    sectionTranslations[key] = { loading: false, text, error: '' };
+                    const target = document.getElementById(`section-translation-${key}`);
+                    if (target) target.innerHTML = block('Chinese Translation', text);
+                    const copyBtn = document.getElementById(`copy-section-${key}`);
+                    if (copyBtn) copyBtn.disabled = false;
+                }
+            });
+        }
+
+        function viewRecentGeneration(id) {
+            const record = loadRecentGenerations().find((item) => item.id === id);
+            if (!record || !record.product_data) return;
+            latestRecentId = record.id || '';
+            latestChineseTranslation = record.full_chinese_translation || '';
+            document.getElementById('urlInput').value = record.input_slug || '';
+            renderProductDashboard(record.product_data, {
+                inputSlug: record.input_slug || '',
+                generatedAt: record.generated_at || new Date().toISOString()
+            });
+            latestChineseTranslation = record.full_chinese_translation || '';
+            document.getElementById('copyChineseBtn').disabled = !latestChineseTranslation;
+            const translationTarget = document.getElementById('res-translation');
+            translationTarget.style.opacity = latestChineseTranslation ? '1' : '0.5';
+            translationTarget.innerHTML = latestChineseTranslation ? block('Chinese Translation', latestChineseTranslation) : '';
+            restoreSectionTranslations(record.section_translations || {});
+            document.getElementById('copyStatus').textContent = 'Recent generation restored.';
+        }
+
+        function copyRecentMarkdown(id) {
+            const record = loadRecentGenerations().find((item) => item.id === id);
+            if (!record) return;
+            const markdown = record.full_markdown || productMarkdown(record.product_data);
+            copyText('Recent Markdown', markdown);
+        }
+
+        function deleteRecentGeneration(id) {
+            saveRecentGenerations(loadRecentGenerations().filter((item) => item.id !== id));
+            if (latestRecentId === id) latestRecentId = '';
+            renderRecentGenerations();
+        }
+
+        function clearRecentGenerations() {
+            localStorage.removeItem(RECENT_GENERATIONS_KEY);
+            latestRecentId = '';
+            renderRecentGenerations();
         }
 
         function copyFullMarkdown() {
@@ -863,6 +1083,7 @@
                 latestChineseTranslation = response.translated_text || '';
                 target.innerHTML = block('Chinese Translation', latestChineseTranslation || 'Translation returned empty.');
                 document.getElementById('copyChineseBtn').disabled = !latestChineseTranslation;
+                saveCurrentGenerationToRecent();
             } catch (error) {
                 target.innerHTML = block('Chinese Translation', 'Translation unavailable. Original English result is unchanged.');
             } finally {
@@ -911,6 +1132,7 @@
                 }
                 target.innerHTML = block('Chinese Translation', translated);
                 copyBtn.disabled = false;
+                saveCurrentGenerationToRecent();
             } catch (error) {
                 sectionTranslations[sectionKey] = { loading: false, text: '', error: error.message || 'Translation failed.' };
                 target.innerHTML = block('Chinese Translation', 'Translation failed. Please try again.');
@@ -1054,6 +1276,7 @@
             latestChineseTranslation = '';
             latestInputSlug = '';
             latestGeneratedAt = '';
+            latestRecentId = '';
             resetSectionTranslations();
             setCopyButtonsEnabled(false);
             document.getElementById('copyStatus').textContent = '';
@@ -1083,6 +1306,7 @@
             try {
                 const response = await postCopilot('generate-copilot', payload);
                 renderProductDashboard(response.data);
+                saveCurrentGenerationToRecent();
 
                 if (debugMode) {
                     try {
@@ -1106,10 +1330,10 @@
             }
         }
 
-        function renderProductDashboard(data) {
+        function renderProductDashboard(data, options = {}) {
             latestProductData = data;
-            latestInputSlug = (document.getElementById('urlInput').value || '').trim();
-            latestGeneratedAt = new Date().toISOString();
+            latestInputSlug = options.inputSlug ?? (document.getElementById('urlInput').value || '').trim();
+            latestGeneratedAt = options.generatedAt ?? new Date().toISOString();
             setCopyButtonsEnabled(true);
             document.getElementById('copyStatus').textContent = '';
 
@@ -1252,6 +1476,7 @@
             `;
         }
         syncDebugMode();
+        renderRecentGenerations();
     </script>
 </body>
 </html>

@@ -35,6 +35,12 @@
 
 8c. Confirm downloaded Markdown / JSON only include Product Mode visible output and do not include Debug Trace, telemetry_summary, shadow_sources or memory_observability.
 
+8d. Verify Recent Generations appears after a successful Product Mode run.
+
+8e. Verify Recent Generations supports View, Copy Markdown, Delete and Clear Recent Generations.
+
+8f. Confirm Recent Generations stores at most 10 local browser records under `crossgrowth_recent_generations_v1` and does not store Debug Trace, telemetry_summary, shadow_sources or memory_observability.
+
 9. ?? Translate to Chinese????????????
 
 10. ???? section ? Translate this section????????????
