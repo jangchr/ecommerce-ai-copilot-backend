@@ -319,3 +319,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Amazon Beta API Contract Design](docs/amazon_beta_api_contract_design.md) ? L12.4-C Amazon URL Beta API contract ???
 - [Amazon Beta Fallback Design](docs/amazon_beta_fallback_design.md) ? L12.4-D Amazon URL Beta ???????
 - [Amazon Beta Evaluation Checklist](docs/amazon_beta_evaluation_checklist.md) ? L12.4-E Amazon URL Beta ????????
+- [Amazon Beta Implementation Decision](docs/amazon_beta_implementation_decision.md) ? L12.4-F Amazon URL Beta ???????????
