@@ -97,6 +97,25 @@
             justify-content: flex-end;
             gap: 16px;
         }
+        .language-selector {
+            max-width: 680px;
+            margin: 0 auto 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .language-selector button {
+            min-width: 84px;
+        }
+        .language-selector button.active {
+            background: var(--text-primary);
+            color: #fff;
+            border-color: var(--text-primary);
+        }
         .toggle-option {
             display: inline-flex;
             align-items: center;
@@ -684,14 +703,21 @@
 
     <main>
         <section class="hero">
-            <h1>Generate TikTok creative strategy from grounded ecommerce review insights.</h1>
-            <h2>This public demo uses 10 stable local grounded product categories. Start with balsamic_vinegar.</h2>
+            <h1 data-i18n="heroTitle">Generate TikTok creative strategy from grounded ecommerce review insights.</h1>
+            <h2 data-i18n="heroSubtitle">This public demo uses 10 stable local grounded product categories. Start with balsamic_vinegar.</h2>
+            <div class="language-selector" aria-label="Language">
+                <span data-i18n="languageLabel">Language:</span>
+                <button class="btn-secondary active" id="languageEnglishBtn" type="button" onclick="setLanguageMode('en')">English</button>
+                <button class="btn-secondary" id="languageChineseBtn" type="button" onclick="setLanguageMode('zh-CN')">中文</button>
+            </div>
             <div class="control-panel">
                 <input type="text" id="urlInput" placeholder="Enter a local grounded slug, e.g. balsamic_vinegar" value="balsamic_vinegar">
-                <button class="btn-primary" id="startBtn" onclick="startSystem()">运行 Workflow</button>
+                <button class="btn-primary" id="startBtn" onclick="startSystem()" data-i18n="runWorkflow">Run Workflow</button>
+            </div>
+            <div class="input-guide" data-i18n="inputGuide">
+                Product Mode is stable for these 10 local grounded slugs. Pick one, then run the workflow to generate a TikTok hook, creative strategy and storyboard.
             </div>
             <div class="input-guide">
-                Product Mode is stable for these 10 local grounded slugs. Pick one, then run the workflow to generate a TikTok hook, creative strategy and storyboard.
                 <div class="slug-list">
                     <button class="slug-button" type="button" onclick="setDemoSlug('balsamic_vinegar')">Try balsamic_vinegar</button>
                     <button class="slug-button" type="button" onclick="setDemoSlug('printer')">printer</button>
@@ -705,7 +731,7 @@
                     <button class="slug-button" type="button" onclick="setDemoSlug('skincare_serum')">skincare_serum</button>
                 </div>
             </div>
-            <div class="demo-warning">
+            <div class="demo-warning" data-i18n="amazonWarning">
                 Do not use Amazon URLs in Product Mode yet. Amazon URLs are available only in Debug Mode / Amazon Shadow.
             </div>
             <div class="run-options">
@@ -724,52 +750,52 @@
             <div class="description-shell">
                 <div class="description-header">
                     <div>
-                        <h3>Product Description Mode</h3>
-                        <p>Use your own product copy and customer pain points to generate a Product-like creative brief. This mode uses `user_provided_description` as the source and does not call Amazon, Source Probe or Debug Mode.</p>
+                        <h3 data-i18n="productDescriptionMode">Product Description Mode</h3>
+                        <p data-i18n="descriptionIntro">Use your own product copy and customer pain points to generate a Product-like creative brief. This mode uses `user_provided_description` as the source and does not call Amazon, Source Probe or Debug Mode.</p>
                     </div>
                     <span class="source-badge">Source: user_provided_description</span>
                 </div>
                 <div class="description-grid">
                     <div class="description-field">
-                        <label for="descriptionProductName">Product name</label>
+                        <label for="descriptionProductName" data-i18n="productName">Product name</label>
                         <input id="descriptionProductName" type="text" placeholder="SoftGlow Desk Lamp">
                     </div>
                     <div class="description-field">
-                        <label for="descriptionProductCategory">Product category</label>
+                        <label for="descriptionProductCategory" data-i18n="productCategory">Product category</label>
                         <input id="descriptionProductCategory" type="text" placeholder="desk_lamp">
                     </div>
                     <div class="description-field wide">
-                        <label for="descriptionProductDescription">Product description</label>
-                        <div class="field-helper">Describe what the product is, who it is for, and what makes it useful.</div>
+                        <label for="descriptionProductDescription" data-i18n="productDescription">Product description</label>
+                        <div class="field-helper" data-i18n="productDescriptionHelper">Describe what the product is, who it is for, and what makes it useful.</div>
                         <textarea id="descriptionProductDescription" placeholder="Describe the product, its main features, and the situation it is used in."></textarea>
                     </div>
                     <div class="description-field wide">
-                        <label for="descriptionPainPoints">Customer pain points</label>
-                        <div class="field-helper">Paste customer complaints, review snippets, objections, or problems your buyers care about.</div>
+                        <label for="descriptionPainPoints" data-i18n="customerPainPoints">Customer pain points</label>
+                        <div class="field-helper" data-i18n="customerPainPointsHelper">Paste customer complaints, review snippets, objections, or problems your buyers care about.</div>
                         <textarea id="descriptionPainPoints" placeholder="Add customer pain points, objections, review snippets, or complaints you want the brief to address."></textarea>
                     </div>
                     <div class="description-field">
-                        <label for="descriptionTargetPlatform">Target platform</label>
+                        <label for="descriptionTargetPlatform" data-i18n="targetPlatform">Target platform</label>
                         <input id="descriptionTargetPlatform" type="text" value="TikTok">
                     </div>
                     <div class="description-field">
-                        <label for="descriptionGoal">Goal</label>
+                        <label for="descriptionGoal" data-i18n="goal">Goal</label>
                         <input id="descriptionGoal" type="text" value="tiktok_ctr">
                     </div>
                 </div>
                 <div class="good-inputs">
-                    <div class="good-inputs-title">Good inputs include</div>
+                    <div class="good-inputs-title" data-i18n="goodInputsInclude">Good inputs include</div>
                     <ul>
-                        <li>what the product is</li>
-                        <li>who it is for</li>
-                        <li>what problem it solves</li>
-                        <li>what customers complain about</li>
-                        <li>what makes it different</li>
+                        <li data-i18n="goodInputProduct">what the product is</li>
+                        <li data-i18n="goodInputAudience">who it is for</li>
+                        <li data-i18n="goodInputProblem">what problem it solves</li>
+                        <li data-i18n="goodInputComplaints">what customers complain about</li>
+                        <li data-i18n="goodInputDifference">what makes it different</li>
                     </ul>
                 </div>
                 <div class="description-actions">
-                    <button class="btn-secondary" id="descriptionSampleBtn" type="button" onclick="fillSampleProductDescription()">Use sample product</button>
-                    <button class="btn-primary" id="descriptionGenerateBtn" type="button" onclick="generateFromDescription()">Generate from description</button>
+                    <button class="btn-secondary" id="descriptionSampleBtn" type="button" onclick="fillSampleProductDescription()" data-i18n="useSampleProduct">Use sample product</button>
+                    <button class="btn-primary" id="descriptionGenerateBtn" type="button" onclick="generateFromDescription()" data-i18n="generateFromDescription">Generate from description</button>
                     <span class="description-status" id="descriptionStatus"></span>
                 </div>
             </div>
@@ -779,7 +805,7 @@
             <div class="example-shell">
                 <div class="example-header">
                     <div>
-                        <h3>Example Gallery</h3>
+                        <h3 data-i18n="exampleGallery">Example Gallery</h3>
                         <p>Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.</p>
                     </div>
                     <span class="source-badge">Static examples, no API call</span>
@@ -799,7 +825,7 @@
                             <div class="json-key">Storyboard</div>
                             <div class="example-summary">展示破损瓶盖、粘腻包装，再切到干净浓稠的替代方案。</div>
                         </div>
-                        <button class="btn-secondary" type="button" onclick="setExampleSlug('balsamic_vinegar')">Try This Product</button>
+                        <button class="btn-secondary" type="button" onclick="setExampleSlug('balsamic_vinegar')" data-i18n="tryThisProduct">Try This Product</button>
                     </article>
                     <article class="example-card">
                         <div class="example-slug">pet_hair_vacuum</div>
@@ -815,7 +841,7 @@
                             <div class="json-key">Storyboard</div>
                             <div class="example-summary">展示沙发、地毯和衣服上的宠物毛，再展示清理前后对比。</div>
                         </div>
-                        <button class="btn-secondary" type="button" onclick="setExampleSlug('pet_hair_vacuum')">Try This Product</button>
+                        <button class="btn-secondary" type="button" onclick="setExampleSlug('pet_hair_vacuum')" data-i18n="tryThisProduct">Try This Product</button>
                     </article>
                     <article class="example-card">
                         <div class="example-slug">desk_lamp</div>
@@ -831,7 +857,7 @@
                             <div class="json-key">Storyboard</div>
                             <div class="example-summary">展示昏暗桌面、眼疲劳，再展示柔和灯光和整洁工作区。</div>
                         </div>
-                        <button class="btn-secondary" type="button" onclick="setExampleSlug('desk_lamp')">Try This Product</button>
+                        <button class="btn-secondary" type="button" onclick="setExampleSlug('desk_lamp')" data-i18n="tryThisProduct">Try This Product</button>
                     </article>
                 </div>
             </div>
@@ -852,7 +878,7 @@
 
         <section class="page-section" id="productResultSection">
             <div class="section-shell">
-                <div class="section-kicker">Product Result</div>
+                <div class="section-kicker" data-i18n="productResult">Product Result</div>
                 <div class="dashboard-grid">
                     <div class="card">
                         <h3 style="color:var(--accent-blue);">1. Evidence Snapshot</h3>
@@ -876,13 +902,13 @@
 
         <section class="page-section" id="copyActionsSection">
             <div class="section-shell">
-                <div class="section-kicker">Copy / Download / Translation Actions</div>
+                <div class="section-kicker" data-i18n="copyActions">Copy / Download / Translation Actions</div>
                 <div class="copy-toolbar">
-                    <button class="btn-secondary" id="copyHookBtn" onclick="copyHook()" disabled>Copy Hook</button>
-                    <button class="btn-secondary" id="copyStoryboardBtn" onclick="copyStoryboard()" disabled>Copy Storyboard</button>
-                    <button class="btn-secondary" id="copyMarkdownBtn" onclick="copyFullMarkdown()" disabled>Copy Full Markdown</button>
-                    <button class="btn-secondary" id="downloadMarkdownBtn" onclick="downloadMarkdown()" disabled>Download Markdown</button>
-                    <button class="btn-secondary" id="downloadJsonBtn" onclick="downloadJson()" disabled>Download JSON</button>
+                    <button class="btn-secondary" id="copyHookBtn" onclick="copyHook()" disabled data-i18n="copyHook">Copy Hook</button>
+                    <button class="btn-secondary" id="copyStoryboardBtn" onclick="copyStoryboard()" disabled data-i18n="copyStoryboard">Copy Storyboard</button>
+                    <button class="btn-secondary" id="copyMarkdownBtn" onclick="copyFullMarkdown()" disabled data-i18n="copyFullMarkdown">Copy Full Markdown</button>
+                    <button class="btn-secondary" id="downloadMarkdownBtn" onclick="downloadMarkdown()" disabled data-i18n="downloadMarkdown">Download Markdown</button>
+                    <button class="btn-secondary" id="downloadJsonBtn" onclick="downloadJson()" disabled data-i18n="downloadJson">Download JSON</button>
                     <button class="btn-secondary" id="translateChineseBtn" onclick="translateToChinese()" disabled>Translate to Chinese</button>
                     <button class="btn-secondary" id="copyChineseBtn" onclick="copyChineseTranslation()" disabled>Copy Chinese Translation</button>
                 </div>
@@ -894,7 +920,7 @@
         <section class="recent-panel">
             <div class="recent-shell">
                 <div class="recent-header">
-                    <h3>Recent Generations</h3>
+                    <h3 data-i18n="recentGenerations">Recent Generations</h3>
                     <button class="btn-secondary" id="clearRecentBtn" onclick="clearRecentGenerations()">Clear Recent Generations</button>
                 </div>
                 <div id="recentGenerationsList" class="recent-list">
@@ -905,9 +931,9 @@
 
         <section class="feedback-panel" id="feedbackSection">
             <div class="feedback-shell">
-                <h3>Feedback</h3>
+                <h3 data-i18n="feedback">Feedback</h3>
                 <p>Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.</p>
-                <a class="feedback-link" href="https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">Give feedback</a>
+                <a class="feedback-link" href="https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" data-i18n="giveFeedback">Give feedback</a>
             </div>
         </section>
 
@@ -930,7 +956,7 @@
   <h2 style="margin-top: 0;">Join the waitlist</h2>
   <p>Want to use this for your own products? Join the waitlist for product-description input, saved history, more product sources, and future commercial plans.</p>
   <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 14px; border-radius: 8px; background: #111827; color: white; text-decoration: none;">
-    Join waitlist
+    <span data-i18n="joinWaitlist">Join waitlist</span>
   </a>
 </section>
 
@@ -1069,9 +1095,191 @@
         let latestRecentId = '';
         let sectionTranslations = {};
         let sectionTextCache = {};
+        let outputLanguage = 'en';
         const RECENT_GENERATIONS_KEY = 'crossgrowth_recent_generations_v1';
         const MAX_RECENT_GENERATIONS = 10;
         const SECTION_KEYS = ['evidence', 'strategy', 'hook', 'storyboard', 'evaluation'];
+        const LANGUAGE_COPY = {
+            en: {
+                heroTitle: 'Generate TikTok creative strategy from grounded ecommerce review insights.',
+                heroSubtitle: 'This public demo uses 10 stable local grounded product categories. Start with balsamic_vinegar.',
+                languageLabel: 'Language:',
+                runWorkflow: 'Run Workflow',
+                inputGuide: 'Product Mode is stable for these 10 local grounded slugs. Pick one, then run the workflow to generate a TikTok hook, creative strategy and storyboard.',
+                amazonWarning: 'Do not use Amazon URLs in Product Mode yet. Amazon URLs are available only in Debug Mode / Amazon Shadow.',
+                productDescriptionMode: 'Product Description Mode',
+                descriptionIntro: 'Use your own product copy and customer pain points to generate a Product-like creative brief. This mode uses `user_provided_description` as the source and does not call Amazon, Source Probe or Debug Mode.',
+                productName: 'Product name',
+                productCategory: 'Product category',
+                productDescription: 'Product description',
+                customerPainPoints: 'Customer pain points',
+                targetPlatform: 'Target platform',
+                goal: 'Goal',
+                productDescriptionHelper: 'Describe what the product is, who it is for, and what makes it useful.',
+                customerPainPointsHelper: 'Paste customer complaints, review snippets, objections, or problems your buyers care about.',
+                goodInputsInclude: 'Good inputs include',
+                goodInputProduct: 'what the product is',
+                goodInputAudience: 'who it is for',
+                goodInputProblem: 'what problem it solves',
+                goodInputComplaints: 'what customers complain about',
+                goodInputDifference: 'what makes it different',
+                useSampleProduct: 'Use sample product',
+                generateFromDescription: 'Generate from description',
+                exampleGallery: 'Example Gallery',
+                tryThisProduct: 'Try This Product',
+                productResult: 'Product Result',
+                copyActions: 'Copy / Download / Translation Actions',
+                copyHook: 'Copy Hook',
+                copyStoryboard: 'Copy Storyboard',
+                copyFullMarkdown: 'Copy Full Markdown',
+                downloadMarkdown: 'Download Markdown',
+                downloadJson: 'Download JSON',
+                recentGenerations: 'Recent Generations',
+                feedback: 'Feedback',
+                giveFeedback: 'Give feedback',
+                joinWaitlist: 'Join waitlist',
+                evidenceSnapshot: 'Evidence Snapshot',
+                targetAudienceStrategy: 'Target Audience & Creative Strategy',
+                targetAudience: 'Target Audience',
+                creativeStrategy: 'Creative Strategy',
+                hook: 'Hook',
+                storyboard: 'Storyboard',
+                evaluation: 'Evaluation',
+                feedbackLabel: 'Feedback',
+                sourceUnknown: 'unknown source',
+                reviewConfidence: 'Review confidence',
+                trendConfidence: 'Trend confidence',
+                evidenceAlignment: 'Evidence alignment',
+                seeDebugMode: 'See Debug Mode',
+                evidenceQuotes: 'Evidence Quotes',
+                evidenceQuoteNote: 'Short review-backed signals used by the creative brief',
+                customerPainPointBlock: 'Customer Pain Points',
+                trustBarriers: 'Trust Barriers',
+                coreHookStrategy: 'Core Hook Strategy',
+                emotionalTrigger: 'Emotional Trigger',
+                ctaLogic: 'CTA Logic',
+                cta: 'CTA',
+                retentionConfidence: 'Retention Confidence',
+                riskLevel: 'Risk Level',
+                approved: 'Approved',
+                grounded: 'Grounded',
+                groundedCtr: 'Grounded CTR',
+                qualityRationale: 'Quality Rationale',
+                sampleFilled: 'Sample product filled. Click Generate from description when ready.',
+                generatingDescription: 'Generating from your product description...',
+                descriptionGenerated: 'Product Description Mode result generated.',
+                descriptionFailed: 'Product Description Mode failed. Please try again.',
+                missingName: 'Please enter a product name.',
+                missingDescription: 'Please enter a product description.',
+                missingPainPoints: 'Please add customer pain points or review snippets.',
+                inputTooShort: 'Please add more detail before generating.',
+                running: 'Running...'
+            },
+            'zh-CN': {
+                heroTitle: '电商创意生成助手',
+                heroSubtitle: '这个公开演示使用 10 个稳定的本地证据产品类目。建议先试 balsamic_vinegar。',
+                languageLabel: 'Language:',
+                runWorkflow: '运行 Workflow',
+                inputGuide: 'Product Mode 当前稳定支持 10 个本地 grounded slug。选择一个后运行 workflow，即可生成 TikTok 创意策略、Hook 和分镜脚本。',
+                amazonWarning: '不要在 Product Mode 输入 Amazon URL。Amazon URL 目前只用于 Debug Mode / Amazon Shadow。',
+                productDescriptionMode: '产品描述模式',
+                descriptionIntro: '使用你自己的产品描述和用户痛点生成 Product-like creative brief。该模式的 source 为 `user_provided_description`，不会调用 Amazon、Source Probe 或 Debug Mode。',
+                productName: '产品名称',
+                productCategory: '产品类目',
+                productDescription: '产品描述',
+                customerPainPoints: '用户痛点',
+                targetPlatform: '目标平台',
+                goal: '生成目标',
+                productDescriptionHelper: '写清楚产品是什么、给谁用、解决什么问题。',
+                customerPainPointsHelper: '粘贴用户抱怨、评论片段、购买顾虑，或者目标用户最在意的问题。',
+                goodInputsInclude: '好的输入应该包含',
+                goodInputProduct: '产品是什么',
+                goodInputAudience: '给谁用',
+                goodInputProblem: '解决什么问题',
+                goodInputComplaints: '用户抱怨什么',
+                goodInputDifference: '产品有什么不同',
+                useSampleProduct: '使用示例产品',
+                generateFromDescription: '根据产品描述生成',
+                exampleGallery: '示例库',
+                tryThisProduct: '试试这个产品',
+                productResult: '产品结果',
+                copyActions: '复制 / 下载 / 翻译操作',
+                copyHook: '复制 Hook',
+                copyStoryboard: '复制分镜',
+                copyFullMarkdown: '复制完整 Markdown',
+                downloadMarkdown: '下载 Markdown',
+                downloadJson: '下载 JSON',
+                recentGenerations: '最近生成记录',
+                feedback: '反馈',
+                giveFeedback: '提交反馈',
+                joinWaitlist: '加入 waitlist',
+                evidenceSnapshot: '证据摘要',
+                targetAudienceStrategy: '目标受众与创意策略',
+                targetAudience: '目标受众',
+                creativeStrategy: '创意策略',
+                hook: '开场 Hook',
+                storyboard: '分镜脚本',
+                evaluation: '评估',
+                feedbackLabel: '改进建议',
+                sourceUnknown: '未知来源',
+                reviewConfidence: '评论置信度',
+                trendConfidence: '趋势置信度',
+                evidenceAlignment: '证据一致性',
+                seeDebugMode: '见 Debug Mode',
+                evidenceQuotes: '证据片段',
+                evidenceQuoteNote: '用于生成创意 brief 的短证据信号',
+                customerPainPointBlock: '用户痛点',
+                trustBarriers: '信任阻碍',
+                coreHookStrategy: '核心 Hook 策略',
+                emotionalTrigger: '情绪触发点',
+                ctaLogic: 'CTA 逻辑',
+                cta: 'CTA',
+                retentionConfidence: '留存置信度',
+                riskLevel: '风险等级',
+                approved: '通过',
+                grounded: '有证据支撑',
+                groundedCtr: 'Grounded CTR',
+                qualityRationale: '质量判断',
+                sampleFilled: '示例产品已填充。确认后点击根据产品描述生成。',
+                generatingDescription: '正在根据产品描述生成...',
+                descriptionGenerated: '产品描述模式结果已生成。',
+                descriptionFailed: '产品描述模式生成失败，请重试。',
+                missingName: 'Please enter a product name.',
+                missingDescription: 'Please enter a product description.',
+                missingPainPoints: 'Please add customer pain points or review snippets.',
+                inputTooShort: 'Please add more detail before generating.',
+                running: '运行中...'
+            }
+        };
+
+        function t(key) {
+            return LANGUAGE_COPY[outputLanguage]?.[key] || LANGUAGE_COPY.en[key] || key;
+        }
+
+        function currentOutputLanguage() {
+            return outputLanguage === 'zh-CN' ? 'zh-CN' : 'en';
+        }
+
+        function applyLanguageCopy() {
+            document.documentElement.lang = currentOutputLanguage();
+            document.querySelectorAll('[data-i18n]').forEach((node) => {
+                const key = node.getAttribute('data-i18n');
+                node.textContent = t(key);
+            });
+            document.getElementById('languageEnglishBtn').classList.toggle('active', outputLanguage === 'en');
+            document.getElementById('languageChineseBtn').classList.toggle('active', outputLanguage === 'zh-CN');
+        }
+
+        function setLanguageMode(language) {
+            outputLanguage = language === 'zh-CN' ? 'zh-CN' : 'en';
+            applyLanguageCopy();
+            if (latestProductData) {
+                renderProductDashboard(latestProductData, {
+                    inputSlug: latestInputSlug,
+                    generatedAt: latestGeneratedAt || new Date().toISOString()
+                });
+            }
+        }
 
         function resetSectionTranslations() {
             sectionTranslations = {};
@@ -1112,7 +1320,7 @@
             document.getElementById('descriptionPainPoints').value = 'Customers complain that large blenders are hard to clean, too loud, take too much counter space, and are inconvenient for single servings. Some users also say they skip smoothies because setup and cleanup feel like too much work.';
             document.getElementById('descriptionTargetPlatform').value = 'TikTok';
             document.getElementById('descriptionGoal').value = 'tiktok_ctr';
-            setDescriptionStatus('Sample product filled. Click Generate from description when ready.');
+            setDescriptionStatus(t('sampleFilled'));
         }
 
         function storyboardText(storyboard) {
@@ -1252,6 +1460,7 @@
                 storyboard: storyboardText(latestProductData?.assets?.storyboard || {}),
                 full_markdown: buildDownloadMarkdown(latestProductData),
                 product_data: cloneVisibleProductData(latestProductData),
+                output_language: currentOutputLanguage(),
                 full_chinese_translation: latestChineseTranslation || '',
                 section_translations: sectionTranslationPayload()
             };
@@ -1313,6 +1522,10 @@
             if (!record || !record.product_data) return;
             latestRecentId = record.id || '';
             latestChineseTranslation = record.full_chinese_translation || '';
+            if (record.output_language) {
+                outputLanguage = record.output_language === 'zh-CN' ? 'zh-CN' : 'en';
+                applyLanguageCopy();
+            }
             document.getElementById('urlInput').value = record.input_slug || '';
             renderProductDashboard(record.product_data, {
                 inputSlug: record.input_slug || '',
@@ -1379,6 +1592,7 @@
                 '',
                 `Input slug: ${latestInputSlug || 'unknown'}`,
                 `Generated at: ${latestGeneratedAt || ''}`,
+                `Output language: ${currentOutputLanguage()}`,
                 '',
                 productMarkdown(data),
                 '',
@@ -1395,6 +1609,7 @@
             return {
                 input_slug: latestInputSlug || '',
                 generated_at: latestGeneratedAt || '',
+                output_language: currentOutputLanguage(),
                 insights: data.insights || {},
                 audience: data.audience || {},
                 strategy: data.strategy || {},
@@ -1664,10 +1879,10 @@
             const btn = document.getElementById('startBtn');
             const url = document.getElementById('urlInput').value;
             const debugMode = document.getElementById('debugMode').checked;
-            const payload = { url, goal: 'tiktok_ctr' };
+            const payload = { url, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };
 
             btn.disabled = true;
-            btn.innerText = "运行中...";
+            btn.innerText = t('running');
             latestProductData = null;
             latestChineseTranslation = '';
             latestInputSlug = '';
@@ -1722,7 +1937,7 @@
                 alert("后端未启动或请求失败");
             } finally {
                 btn.disabled = false;
-                btn.innerText = "运行 Workflow";
+                btn.innerText = t('runWorkflow');
             }
         }
 
@@ -1736,24 +1951,24 @@
             const goal = descriptionInputValue('descriptionGoal') || 'tiktok_ctr';
 
             if (!productName) {
-                setDescriptionStatus('Please enter a product name.', 'error');
+                setDescriptionStatus(t('missingName'), 'error');
                 return;
             }
             if (!productDescription) {
-                setDescriptionStatus('Please enter a product description.', 'error');
+                setDescriptionStatus(t('missingDescription'), 'error');
                 return;
             }
             if (!customerPainPoints) {
-                setDescriptionStatus('Please add customer pain points or review snippets.', 'error');
+                setDescriptionStatus(t('missingPainPoints'), 'error');
                 return;
             }
             if (productDescription.length < 12 || customerPainPoints.length < 12) {
-                setDescriptionStatus('Please add more detail before generating.', 'error');
+                setDescriptionStatus(t('inputTooShort'), 'error');
                 return;
             }
 
             btn.disabled = true;
-            setDescriptionStatus('Generating from your product description...');
+            setDescriptionStatus(t('generatingDescription'));
             latestProductData = null;
             latestChineseTranslation = '';
             latestInputSlug = productName;
@@ -1777,16 +1992,17 @@
                     product_description: productDescription,
                     customer_pain_points: customerPainPoints,
                     target_platform: targetPlatform,
-                    goal
+                    goal,
+                    output_language: currentOutputLanguage()
                 });
                 renderProductDashboard(response.data, {
                     inputSlug: productName,
                     generatedAt: new Date().toISOString()
                 });
                 saveCurrentGenerationToRecent();
-                setDescriptionStatus('Product Description Mode result generated.', 'success');
+                setDescriptionStatus(t('descriptionGenerated'), 'success');
             } catch (error) {
-                setDescriptionStatus(error.message || 'Product Description Mode failed. Please try again.', 'error');
+                setDescriptionStatus(error.message || t('descriptionFailed'), 'error');
             } finally {
                 btn.disabled = false;
             }
@@ -1810,58 +2026,58 @@
 
             document.getElementById('res-insights').style.opacity = '1';
             document.getElementById('res-insights').innerHTML = `
-                ${renderSectionHeader('Evidence Snapshot', 'evidence')}
-                <span class="source-badge">${escapeHTML(evidence.source_type || 'unknown source')}</span>
+                ${renderSectionHeader(t('evidenceSnapshot'), 'evidence')}
+                <span class="source-badge">${escapeHTML(evidence.source_type || t('sourceUnknown'))}</span>
                 <div class="metric-strip">
-                    ${metricPill('Review confidence', formatMetric(evidence.review_confidence))}
-                    ${metricPill('Trend confidence', formatMetric(evidence.trend_confidence))}
-                    ${metricPill('Evidence alignment', 'See Debug Mode')}
+                    ${metricPill(t('reviewConfidence'), formatMetric(evidence.review_confidence))}
+                    ${metricPill(t('trendConfidence'), formatMetric(evidence.trend_confidence))}
+                    ${metricPill(t('evidenceAlignment'), t('seeDebugMode'))}
                 </div>
-                ${block('Evidence Quotes', 'Short review-backed signals used by the creative brief')}
+                ${block(t('evidenceQuotes'), t('evidenceQuoteNote'))}
                 ${quoteList(evidence.evidence_quotes)}
-                ${block('Customer Pain Points', (data.insights.pain_points || []).join('\n'))}
+                ${block(t('customerPainPointBlock'), (data.insights.pain_points || []).join('\n'))}
             `;
 
             document.getElementById('res-strategy').style.opacity = '1';
             document.getElementById('res-strategy').innerHTML = `
-                ${renderSectionHeader('Target Audience & Creative Strategy', 'strategy')}
-                ${block('Target Audience', data.audience.primary || '')}
-                ${block('Trust Barriers', (data.audience.trust_barriers || []).join('\n'))}
-                ${block('Core Hook Strategy', data.strategy.core_hook_strategy || '')}
-                ${block('Emotional Trigger', data.strategy.emotional_trigger || '')}
-                ${block('CTA Logic', data.assets?.tiktok_script?.cta || '')}
+                ${renderSectionHeader(t('targetAudienceStrategy'), 'strategy')}
+                ${block(t('targetAudience'), data.audience.primary || '')}
+                ${block(t('trustBarriers'), (data.audience.trust_barriers || []).join('\n'))}
+                ${block(t('coreHookStrategy'), data.strategy.core_hook_strategy || '')}
+                ${block(t('emotionalTrigger'), data.strategy.emotional_trigger || '')}
+                ${block(t('ctaLogic'), data.assets?.tiktok_script?.cta || '')}
             `;
 
             document.getElementById('res-assets').style.opacity = '1';
             document.getElementById('res-assets').innerHTML = `
                 <div class="section-block">
-                    ${renderSectionHeader('Hook', 'hook')}
-                    ${block('Hook', script.hook || '')}
-                    ${block('CTA', script.cta || '')}
+                    ${renderSectionHeader(t('hook'), 'hook')}
+                    ${block(t('hook'), script.hook || '')}
+                    ${block(t('cta'), script.cta || '')}
                 </div>
                 <div class="section-block">
-                    ${renderSectionHeader('Storyboard', 'storyboard')}
+                    ${renderSectionHeader(t('storyboard'), 'storyboard')}
                     ${renderStoryboardBrief(storyboard)}
                 </div>
             `;
 
             document.getElementById('res-evaluation').style.opacity = '1';
             document.getElementById('res-evaluation').innerHTML = `
-                ${renderSectionHeader('Evaluation', 'evaluation')}
+                ${renderSectionHeader(t('evaluation'), 'evaluation')}
                 <div class="eval-box ${escapeHTML(riskCls)}">
                     <div style="display:flex; justify-content:space-between; font-weight:700;">
-                        <span>Retention Confidence</span>
+                        <span>${escapeHTML(t('retentionConfidence'))}</span>
                         <span style="color:var(--accent-green);">${score}%</span>
                     </div>
                     <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
-                    ${block('Risk Level', evalData.risk_level || 'low')}
+                    ${block(t('riskLevel'), evalData.risk_level || 'low')}
                     <div class="metric-strip">
-                        ${metricPill('Approved', boolText(evalData.is_approved))}
-                        ${metricPill('Grounded', boolText(evalData.is_grounded))}
-                        ${metricPill('Grounded CTR', 'See Debug Mode')}
-                        ${metricPill('Evidence Alignment', 'See Debug Mode')}
+                        ${metricPill(t('approved'), boolText(evalData.is_approved))}
+                        ${metricPill(t('grounded'), boolText(evalData.is_grounded))}
+                        ${metricPill(t('groundedCtr'), t('seeDebugMode'))}
+                        ${metricPill(t('evidenceAlignment'), t('seeDebugMode'))}
                     </div>
-                    ${block('Quality Rationale', evalData.reasoning || '')}
+                    ${block(t('qualityRationale'), evalData.reasoning || '')}
                 </div>
             `;
         }
@@ -1937,6 +2153,7 @@
                 <pre class="debug">${escapeHTML(JSON.stringify(trace, null, 2))}</pre>
             `;
         }
+        applyLanguageCopy();
         syncDebugMode();
         renderRecentGenerations();
     </script>

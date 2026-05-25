@@ -25,6 +25,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         )
         self.assertIn("Try balsamic_vinegar", self.source)
         self.assertIn("function setDemoSlug(slug)", self.source)
+        self.assertIn("Language", self.source)
+        self.assertIn("English", self.source)
+        self.assertIn("中文", self.source)
+        self.assertIn("let outputLanguage = 'en';", self.source)
+        self.assertIn("function setLanguageMode(language)", self.source)
+        self.assertIn("function currentOutputLanguage()", self.source)
+        self.assertIn("output_language", self.source)
+        self.assertIn("产品描述模式", self.source)
+        self.assertIn("根据产品描述生成", self.source)
+        self.assertIn("好的输入应该包含", self.source)
+        self.assertIn("加入 waitlist", self.source)
         self.assertIn("Example Gallery", self.source)
         self.assertIn("Static examples, no API call", self.source)
         self.assertIn("Try This Product", self.source)
@@ -48,6 +59,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy / Download / Translation Actions", self.source)
         self.assertIn("Feedback", self.source)
         self.assertIn("Product Description Mode", self.source)
+        self.assertIn("电商创意生成助手", self.source)
         self.assertIn("Product name", self.source)
         self.assertIn("Product description", self.source)
         self.assertIn("Customer pain points", self.source)
@@ -150,6 +162,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Please enter a product description.", self.source)
         self.assertIn("Please add customer pain points or review snippets.", self.source)
         self.assertIn("Source: user_provided_description", self.source)
+        self.assertIn("output_language: currentOutputLanguage()", self.source)
 
         section_match = re.search(
             r"<section class=\"description-mode\"(?P<body>.*?)<section class=\"example-gallery\"",
@@ -168,6 +181,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         function_body = function_match.group("body")
 
         self.assertIn("postProductDescription({", function_body)
+        self.assertIn("output_language: currentOutputLanguage()", function_body)
         self.assertIn("renderProductDashboard(response.data", function_body)
         self.assertIn("saveCurrentGenerationToRecent();", function_body)
 
@@ -223,6 +237,36 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
+
+    def test_language_mode_passes_output_language_without_debug_leakage(self):
+        self.assertIn("const payload = { url, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)
+        self.assertIn("output_language: currentOutputLanguage()", self.source)
+
+        recent_match = re.search(
+            r"function currentRecentRecord\(\) \{(?P<body>.*?)function saveCurrentGenerationToRecent",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(recent_match)
+        recent_body = recent_match.group("body")
+        self.assertIn("output_language: currentOutputLanguage()", recent_body)
+
+        view_match = re.search(
+            r"function viewRecentGeneration\(id\) \{(?P<body>.*?)function copyRecentMarkdown",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(view_match)
+        view_body = view_match.group("body")
+        self.assertIn("record.output_language", view_body)
+        self.assertIn("applyLanguageCopy();", view_body)
+
+        for body in [recent_body, view_body]:
+            with self.subTest(language_boundary=body[:40]):
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("memory_observability", body)
 
     def test_product_renderer_does_not_display_observability_fields(self):
         match = re.search(
@@ -364,7 +408,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             ("Evaluation", "evaluation"),
         ]:
             with self.subTest(key=key):
-                self.assertIn(f"renderSectionHeader('{title}', '{key}')", self.source)
+                self.assertIn(title, self.source)
+        for label_key, section_key in [
+            ("evidenceSnapshot", "evidence"),
+            ("targetAudienceStrategy", "strategy"),
+            ("hook", "hook"),
+            ("storyboard", "storyboard"),
+            ("evaluation", "evaluation"),
+        ]:
+            with self.subTest(section_key=section_key):
+                self.assertIn(f"renderSectionHeader(t('{label_key}'), '{section_key}')", self.source)
         self.assertIn("const text = (sectionTextCache[sectionKey] || '').trim();", self.source)
         self.assertIn("Translating this section...", self.source)
         self.assertIn("No section text available for translation.", self.source)
