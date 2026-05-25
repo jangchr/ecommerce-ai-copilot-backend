@@ -1167,3 +1167,23 @@ Document: docs/product_description_mode_final_audit.md
 
 L13.1-I Tag product-description-demo-v1
 
+## L13.1-I Product Description Demo v1 Archive
+
+Status: ready.
+
+Document: docs/product_description_demo_v1_archive.md
+
+Tag:
+
+product-description-demo-v1
+
+???
+
+- Product Description Mode v1 ???
+- /api/v1/generate-from-description ??
+- ?? Product Description Mode ??
+- source=user_provided_description
+- Copy / Download / Translation / Recent Generations ??
+- Stable slug Product Mode ????
+- Product / Debug ????
+
