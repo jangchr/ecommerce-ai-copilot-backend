@@ -346,3 +346,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Pricing / Waitlist Design](docs/pricing_waitlist_design.md) ? L13.3-A pricing ? waitlist ???
 - [Waitlist Form Design](docs/waitlist_form_design.md) ? L13.3-B waitlist ?????
 - Waitlist form: https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor
+- [Pricing Validation Checklist](docs/pricing_validation_checklist.md) ? L13.3-E pricing ?????
