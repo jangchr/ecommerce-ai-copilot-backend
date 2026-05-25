@@ -1550,3 +1550,23 @@ Document: docs/public_demo_refresh_l13_5_product_description.md
 
 Product Description Demo v1 ????????????
 
+## L13.5-B Public Demo Refresh Final Audit
+
+Status: ready.
+
+Document: docs/public_demo_refresh_final_audit.md
+
+???
+
+- Public Demo refresh ???
+- Product Description Mode ????
+- Use sample product / Good inputs include ??
+- /api/v1/generate-from-description ????
+- source=user_provided_description ???
+- Feedback / Waitlist ??
+- Product / Debug ????
+
+???
+
+Product Description Demo v1 polish ??????????????
+
