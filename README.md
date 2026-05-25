@@ -315,3 +315,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - L12.3-A Public demo layout polish ? ??????? Hero?????Example Gallery?????????Recent Generations?Feedback?Debug ????
 - [Public Demo Commercial Polish Final Audit](docs/public_demo_commercial_polish_final_audit.md) ? L12.3-C Public Demo ??????????
 - [Controlled Amazon Primary Design](docs/controlled_amazon_primary_design.md) ? L12.4-A ?? Amazon URL beta ???
+- [Amazon Beta UX Copy](docs/amazon_beta_ux_copy.md) ? L12.4-B Amazon URL Beta ?????
