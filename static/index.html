@@ -801,6 +801,60 @@
             </div>
         </section>
 
+        <section class="description-mode" id="pastedReviewsMode">
+            <div class="description-shell">
+                <div class="description-header">
+                    <div>
+                        <h3 data-i18n="pastedReviewsMode">Pasted Reviews Mode</h3>
+                        <p data-i18n="pastedReviewsIntro">Paste customer reviews, complaints, objections, or buyer feedback. The creative brief will use these review snippets as user-provided evidence.</p>
+                    </div>
+                    <span class="source-badge">Source: user_pasted_reviews</span>
+                </div>
+                <div class="description-grid">
+                    <div class="description-field">
+                        <label for="reviewsProductName" data-i18n="productName">Product name</label>
+                        <input id="reviewsProductName" type="text" placeholder="Portable mini blender">
+                    </div>
+                    <div class="description-field">
+                        <label for="reviewsProductCategory" data-i18n="productCategory">Product category</label>
+                        <input id="reviewsProductCategory" type="text" placeholder="Kitchen appliance">
+                    </div>
+                    <div class="description-field wide">
+                        <label for="reviewsProductDescription" data-i18n="productDescription">Product description</label>
+                        <textarea id="reviewsProductDescription" placeholder="A compact rechargeable blender for smoothies, protein shakes, and travel use."></textarea>
+                    </div>
+                    <div class="description-field wide">
+                        <label for="reviewsPastedReviews" data-i18n="pastedReviews">Pasted reviews</label>
+                        <div class="field-helper" data-i18n="pastedReviewsHelper">Paste customer reviews, complaints, objections, or buyer feedback.</div>
+                        <textarea id="reviewsPastedReviews" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment."></textarea>
+                    </div>
+                    <div class="description-field">
+                        <label for="reviewsTargetPlatform" data-i18n="targetPlatform">Target platform</label>
+                        <input id="reviewsTargetPlatform" type="text" value="TikTok">
+                    </div>
+                    <div class="description-field">
+                        <label for="reviewsGoal" data-i18n="goal">Goal</label>
+                        <input id="reviewsGoal" type="text" value="tiktok_ctr">
+                    </div>
+                </div>
+                <div class="good-inputs">
+                    <div class="good-inputs-title" data-i18n="goodReviewInputsInclude">Good review inputs include</div>
+                    <ul>
+                        <li>customer complaints</li>
+                        <li>review snippets</li>
+                        <li>buyer objections</li>
+                        <li>use-case frustrations</li>
+                        <li>reasons people hesitate to buy</li>
+                    </ul>
+                </div>
+                <div class="description-actions">
+                    <button class="btn-secondary" id="reviewsSampleBtn" type="button" onclick="fillSamplePastedReviews()" data-i18n="useSampleReviews">Use sample reviews</button>
+                    <button class="btn-primary" id="reviewsGenerateBtn" type="button" onclick="generateFromReviews()" data-i18n="generateFromReviews">Generate from reviews</button>
+                    <span class="description-status" id="reviewsStatus"></span>
+                </div>
+            </div>
+        </section>
+
         <section class="example-gallery" id="exampleGallery">
             <div class="example-shell">
                 <div class="example-header">
@@ -1125,6 +1179,18 @@
                 goodInputDifference: 'what makes it different',
                 useSampleProduct: 'Use sample product',
                 generateFromDescription: 'Generate from description',
+                pastedReviewsMode: 'Pasted Reviews Mode',
+                pastedReviews: 'Pasted reviews',
+                pastedReviewsIntro: 'Paste customer reviews, complaints, objections, or buyer feedback. The creative brief will use these review snippets as user-provided evidence.',
+                pastedReviewsHelper: 'Paste customer reviews, complaints, objections, or buyer feedback.',
+                goodReviewInputsInclude: 'Good review inputs include',
+                useSampleReviews: 'Use sample reviews',
+                generateFromReviews: 'Generate from reviews',
+                reviewsSampleFilled: 'Sample reviews filled. Click Generate from reviews when ready.',
+                generatingReviews: 'Generating from pasted reviews...',
+                reviewsGenerated: 'Pasted Reviews Mode result generated.',
+                reviewsFailed: 'Pasted Reviews Mode failed. Please try again.',
+                missingReviews: 'Please paste customer reviews or buyer feedback.',
                 exampleGallery: 'Example Gallery',
                 tryThisProduct: 'Try This Product',
                 productResult: 'Product Result',
@@ -1200,6 +1266,18 @@
                 goodInputDifference: '产品有什么不同',
                 useSampleProduct: '使用示例产品',
                 generateFromDescription: '根据产品描述生成',
+                pastedReviewsMode: '粘贴评论模式',
+                pastedReviews: '粘贴评论',
+                pastedReviewsIntro: '粘贴用户评论、差评、购买顾虑或买家反馈。系统会把这些评论片段作为用户提供的证据来生成创意简报。',
+                pastedReviewsHelper: '粘贴用户评论、差评、购买顾虑或买家反馈。',
+                goodReviewInputsInclude: '好的评论输入应该包含',
+                useSampleReviews: '使用示例评论',
+                generateFromReviews: '根据评论生成',
+                reviewsSampleFilled: '示例评论已填充。确认后点击根据评论生成。',
+                generatingReviews: '正在根据粘贴评论生成...',
+                reviewsGenerated: '粘贴评论模式结果已生成。',
+                reviewsFailed: '粘贴评论模式生成失败，请重试。',
+                missingReviews: 'Please paste customer reviews or buyer feedback.',
                 exampleGallery: '示例库',
                 tryThisProduct: '试试这个产品',
                 productResult: '产品结果',
@@ -1313,6 +1391,17 @@
             if (state) target.classList.add(state);
         }
 
+        function reviewsInputValue(id) {
+            return (document.getElementById(id)?.value || '').trim();
+        }
+
+        function setReviewsStatus(message, state = '') {
+            const target = document.getElementById('reviewsStatus');
+            target.textContent = message || '';
+            target.classList.remove('error', 'success');
+            if (state) target.classList.add(state);
+        }
+
         function fillSampleProductDescription() {
             document.getElementById('descriptionProductName').value = 'Portable mini blender';
             document.getElementById('descriptionProductCategory').value = 'Kitchen appliance';
@@ -1321,6 +1410,22 @@
             document.getElementById('descriptionTargetPlatform').value = 'TikTok';
             document.getElementById('descriptionGoal').value = 'tiktok_ctr';
             setDescriptionStatus(t('sampleFilled'));
+        }
+
+        function fillSamplePastedReviews() {
+            document.getElementById('reviewsProductName').value = 'Portable mini blender';
+            document.getElementById('reviewsProductCategory').value = 'Kitchen appliance';
+            document.getElementById('reviewsProductDescription').value = 'A compact rechargeable blender for smoothies, protein shakes, and travel use.';
+            document.getElementById('reviewsPastedReviews').value = [
+                '- I hate cleaning my big blender every morning.',
+                '- It is too loud for my apartment.',
+                '- I only need one smoothie, not a huge blender jar.',
+                '- I skip protein shakes because cleanup takes too long.',
+                '- I wish I could blend something quickly at work.'
+            ].join('\n');
+            document.getElementById('reviewsTargetPlatform').value = 'TikTok';
+            document.getElementById('reviewsGoal').value = 'tiktok_ctr';
+            setReviewsStatus(t('reviewsSampleFilled'));
         }
 
         function storyboardText(storyboard) {
@@ -1800,6 +1905,19 @@
             return body;
         }
 
+        async function postPastedReviews(payload) {
+            const response = await fetch('/api/v1/generate-from-reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || 'Pasted Reviews Mode request failed.');
+            }
+            return body;
+        }
+
         async function runSourceProbe() {
             if (!document.getElementById('debugMode').checked) return;
 
@@ -2003,6 +2121,69 @@
                 setDescriptionStatus(t('descriptionGenerated'), 'success');
             } catch (error) {
                 setDescriptionStatus(error.message || t('descriptionFailed'), 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function generateFromReviews() {
+            const btn = document.getElementById('reviewsGenerateBtn');
+            const productName = reviewsInputValue('reviewsProductName');
+            const productCategory = reviewsInputValue('reviewsProductCategory');
+            const productDescription = reviewsInputValue('reviewsProductDescription');
+            const pastedReviews = reviewsInputValue('reviewsPastedReviews');
+            const targetPlatform = reviewsInputValue('reviewsTargetPlatform') || 'TikTok';
+            const goal = reviewsInputValue('reviewsGoal') || 'tiktok_ctr';
+
+            if (!productName) {
+                setReviewsStatus(t('missingName'), 'error');
+                return;
+            }
+            if (!pastedReviews) {
+                setReviewsStatus(t('missingReviews'), 'error');
+                return;
+            }
+            if (pastedReviews.length < 24) {
+                setReviewsStatus(t('inputTooShort'), 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            setReviewsStatus(t('generatingReviews'));
+            latestProductData = null;
+            latestChineseTranslation = '';
+            latestInputSlug = productName;
+            latestGeneratedAt = '';
+            latestRecentId = '';
+            latestDebugCategory = '';
+            resetSectionTranslations();
+            setCopyButtonsEnabled(false);
+            document.getElementById('copyStatus').textContent = '';
+            const translationTarget = document.getElementById('res-translation');
+            translationTarget.style.opacity = '0.5';
+            translationTarget.innerHTML = '';
+            document.getElementById('debugMode').checked = false;
+            document.getElementById('amazonShadowMode').checked = false;
+            syncDebugMode();
+
+            try {
+                const response = await postPastedReviews({
+                    product_name: productName,
+                    product_category: productCategory,
+                    product_description: productDescription,
+                    pasted_reviews: pastedReviews,
+                    target_platform: targetPlatform,
+                    goal,
+                    output_language: currentOutputLanguage()
+                });
+                renderProductDashboard(response.data, {
+                    inputSlug: productName,
+                    generatedAt: new Date().toISOString()
+                });
+                saveCurrentGenerationToRecent();
+                setReviewsStatus(t('reviewsGenerated'), 'success');
+            } catch (error) {
+                setReviewsStatus(error.message || t('reviewsFailed'), 'error');
             } finally {
                 btn.disabled = false;
             }

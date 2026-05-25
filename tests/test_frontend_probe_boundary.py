@@ -59,6 +59,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy / Download / Translation Actions", self.source)
         self.assertIn("Feedback", self.source)
         self.assertIn("Product Description Mode", self.source)
+        self.assertIn("Pasted Reviews Mode", self.source)
+        self.assertIn("Pasted reviews", self.source)
+        self.assertIn("Use sample reviews", self.source)
+        self.assertIn("Generate from reviews", self.source)
+        self.assertIn("/api/v1/generate-from-reviews", self.source)
+        self.assertIn("粘贴评论模式", self.source)
+        self.assertIn("根据评论生成", self.source)
+        self.assertIn("使用示例评论", self.source)
         self.assertIn("电商创意生成助手", self.source)
         self.assertIn("Product name", self.source)
         self.assertIn("Product description", self.source)
@@ -226,6 +234,92 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         self.assertNotIn("postProductDescription", body)
         self.assertNotIn("generate-from-description", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
+
+    def test_pasted_reviews_mode_calls_only_reviews_endpoint(self):
+        self.assertIn("postPastedReviews", self.source)
+        self.assertIn("/api/v1/generate-from-reviews", self.source)
+        self.assertIn("function generateFromReviews()", self.source)
+        self.assertIn("function fillSamplePastedReviews()", self.source)
+        self.assertIn("Source: user_pasted_reviews", self.source)
+
+        section_match = re.search(
+            r"<section class=\"description-mode\" id=\"pastedReviewsMode\"(?P<body>.*?)<section class=\"example-gallery\"",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(section_match)
+        section_body = section_match.group("body")
+        self.assertIn("Pasted Reviews Mode", section_body)
+        self.assertIn("Pasted reviews", section_body)
+        self.assertIn("Use sample reviews", section_body)
+        self.assertIn("Generate from reviews", section_body)
+
+        function_match = re.search(
+            r"async function generateFromReviews\(\) \{(?P<body>.*?)\n        function renderProductDashboard",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(function_match)
+        function_body = function_match.group("body")
+        self.assertIn("postPastedReviews({", function_body)
+        self.assertIn("output_language: currentOutputLanguage()", function_body)
+        self.assertIn("renderProductDashboard(response.data", function_body)
+        self.assertIn("saveCurrentGenerationToRecent();", function_body)
+
+        for body in [section_body, function_body]:
+            with self.subTest(reviews_boundary=body[:40]):
+                self.assertNotIn("generate-copilot", body)
+                self.assertNotIn("debug-source-probe", body)
+                self.assertNotIn("debug-copilot", body)
+                self.assertNotIn("runSourceProbe", body)
+                self.assertNotIn("renderDebugPanel", body)
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("memory_observability", body)
+
+    def test_pasted_reviews_sample_only_fills_inputs(self):
+        function_match = re.search(
+            r"function fillSamplePastedReviews\(\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(function_match)
+        body = function_match.group("body")
+
+        for text in [
+            "Portable mini blender",
+            "Kitchen appliance",
+            "A compact rechargeable blender for smoothies, protein shakes, and travel use.",
+            "I hate cleaning my big blender every morning.",
+            "It is too loud for my apartment.",
+            "I wish I could blend something quickly at work.",
+            "TikTok",
+            "tiktok_ctr",
+        ]:
+            with self.subTest(text=text):
+                self.assertIn(text, body)
+
+        self.assertIn("reviewsProductName", body)
+        self.assertIn("reviewsProductCategory", body)
+        self.assertIn("reviewsProductDescription", body)
+        self.assertIn("reviewsPastedReviews", body)
+        self.assertIn("reviewsTargetPlatform", body)
+        self.assertIn("reviewsGoal", body)
+
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("generate-from-reviews", body)
         self.assertNotIn("generate-copilot", body)
         self.assertNotIn("debug-copilot", body)
         self.assertNotIn("debug-source-probe", body)
