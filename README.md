@@ -29,6 +29,7 @@ Current Product Mode actions include copy controls, full and section-level Chine
 - [Commercial MVP User Workflow](docs/commercial_mvp_user_workflow.md) ? L12.0-B user workflow from public demo entry to generation, translation, copy actions, and feedback.
 - [Public Landing Conversion Copy](docs/public_landing_conversion_copy.md) ? L12.0-C landing-page copy for commercial MVP conversion.
 - [Feedback Collection Flow](docs/feedback_collection_flow.md) ? L12.0-D ??????????????
+- [Example Gallery Planning](docs/example_gallery_planning.md) ? L12.1-D ??????
 - [Export and Local History Planning](docs/export_local_history_planning.md) ? L12.0-E ???????????????
 - [MVP Workflow Smoke Protocol](docs/mvp_workflow_smoke_protocol.md) ? L12.0-F Public Demo ? Commercial MVP ???????????
 - [Commercial MVP Planning Final Audit](docs/commercial_mvp_planning_final_audit.md) ? L12.0-G Commercial MVP ???????
