@@ -1660,3 +1660,26 @@ Document: docs/language_mode_frontend_copy_map.md
 - ?????
 - ?????
 
+## L13.6-F Language Mode Smoke Record
+
+Status: ready.
+
+Document: docs/language_mode_smoke_record.md
+
+???
+
+- Language selector ??
+- English / ?? ??
+- output_language ???????
+- generate-copilot / generate-from-description ?? output_language
+- ???? UI ????
+- Frontend boundary test PASS
+- Fast gate PASS?133 tests
+
+???
+
+- ??? data.debug
+- ??? telemetry_summary / shadow_sources / memory_observability
+- ??? Source Probe / Amazon Shadow
+- ??? Amazon URL Product Mode
+
