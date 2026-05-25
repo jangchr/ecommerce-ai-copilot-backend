@@ -380,3 +380,6 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Pasted Reviews Mode Smoke Record](docs/pasted_reviews_mode_smoke_record.md) ? L14.2-B ?????? smoke ???
 - [L14 Pasted Reviews Mode Release Notes](docs/release_notes_l14_pasted_reviews_mode.md) ? L14 ?????? release notes?
 - [Pasted Reviews Mode Final Audit](docs/pasted_reviews_mode_final_audit.md) ? L14.2-D ???????????
+- [Public Demo Refresh L14.3 Pasted Reviews](docs/public_demo_refresh_l14_3_pasted_reviews.md) ? L14.3-A Pasted Reviews Mode ???????
+- [Pasted Reviews Public Refresh Final Audit](docs/pasted_reviews_public_refresh_final_audit.md) ? L14.3-B Pasted Reviews Mode ?????????
+- [Pasted Reviews Mode v1 Archive](docs/pasted_reviews_mode_v1_archive.md) ? pasted-reviews-mode-v1 ?????

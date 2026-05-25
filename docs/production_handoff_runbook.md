@@ -2018,3 +2018,30 @@ Documents:
 - Product / Debug ????
 - ????? L14.3 Public demo refresh for Pasted Reviews Mode
 
+## L14.3-A / L14.3-B / L14.3-C Pasted Reviews Public Refresh Batch
+
+Status: ready.
+
+Runtime verified commit:
+
+36de906
+
+Documents:
+
+- docs/public_demo_refresh_l14_3_pasted_reviews.md
+- docs/pasted_reviews_public_refresh_final_audit.md
+- docs/pasted_reviews_mode_v1_archive.md
+
+Tag:
+
+pasted-reviews-mode-v1
+
+???
+
+- Pasted Reviews Mode ??????
+- /api/v1/generate-from-reviews ????
+- English / zh-CN ???
+- zh-CN mojibake ???
+- Product / Debug ????
+- Pasted Reviews Mode v1 ????????????
+
