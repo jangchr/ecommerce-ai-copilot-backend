@@ -91,6 +91,25 @@ Expected results:
 - Translation failure displays a friendly error while keeping the original English result visible.
 - The page still does not reference `data.debug`.
 
+## Smoke Test: Section-Level Product Translation
+
+1. Turn **Debug Mode** off.
+2. Run Product Mode with `balsamic_vinegar`.
+3. Click **Translate this section** under Evidence Snapshot.
+4. Click **Translate this section** under Storyboard.
+5. Use **Copy section translation** for one translated section.
+
+Expected results:
+
+- Section translation uses `POST /api/v1/translate-output`.
+- The clicked section shows `Translating this section...` while the request is in flight.
+- The translated text appears only beneath that section.
+- Other Product Mode sections remain unchanged.
+- The original English section remains visible.
+- Section translation does not automatically run on page load or generation.
+- A new workflow run clears old section translations.
+- The section text source is Product Mode visible text only; it must not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe data or Amazon Shadow Summary.
+
 ## Smoke Test: Debug Mode Off
 
 1. Turn **Debug Mode** off.

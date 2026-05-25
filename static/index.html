@@ -352,6 +352,15 @@
             gap: 8px;
             margin-bottom: 12px;
         }
+        .section-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0 8px;
+        }
+        .section-translation {
+            margin-top: 8px;
+        }
         .copy-status {
             color: var(--accent-green);
             font-size: 12px;
@@ -507,6 +516,16 @@
             return value ? 'Yes' : 'No';
         }
 
+        function sectionTranslationControls(key) {
+            return `
+                <div class="section-actions">
+                    <button class="btn-secondary" id="translate-section-${escapeHTML(key)}" onclick="translateSection('${escapeHTML(key)}')">Translate this section</button>
+                    <button class="btn-secondary" id="copy-section-${escapeHTML(key)}" onclick="copySectionTranslation('${escapeHTML(key)}')" disabled>Copy section translation</button>
+                </div>
+                <div class="section-translation" id="section-translation-${escapeHTML(key)}"></div>
+            `;
+        }
+
         function quoteList(quotes) {
             const items = (quotes || []).slice(0, 5);
             if (!items.length) return briefText('No evidence quotes returned yet.');
@@ -540,6 +559,22 @@
         let latestDebugCategory = '';
         let latestProductData = null;
         let latestChineseTranslation = '';
+        let sectionTranslations = {};
+        let sectionTextCache = {};
+        const SECTION_KEYS = ['evidence', 'strategy', 'hook', 'storyboard', 'evaluation'];
+
+        function resetSectionTranslations() {
+            sectionTranslations = {};
+            sectionTextCache = {};
+            SECTION_KEYS.forEach((key) => {
+                const target = document.getElementById(`section-translation-${key}`);
+                if (target) target.innerHTML = '';
+                const copyBtn = document.getElementById(`copy-section-${key}`);
+                if (copyBtn) copyBtn.disabled = true;
+                const translateBtn = document.getElementById(`translate-section-${key}`);
+                if (translateBtn) translateBtn.disabled = false;
+            });
+        }
 
         function setDemoSlug(slug) {
             document.getElementById('urlInput').value = slug;
@@ -675,6 +710,54 @@
             copyText('Chinese Translation', latestChineseTranslation);
         }
 
+        async function translateSection(sectionKey) {
+            const target = document.getElementById(`section-translation-${sectionKey}`);
+            const translateBtn = document.getElementById(`translate-section-${sectionKey}`);
+            const copyBtn = document.getElementById(`copy-section-${sectionKey}`);
+            const cached = sectionTranslations[sectionKey]?.text || '';
+            if (cached) {
+                target.innerHTML = block('Chinese Translation', cached);
+                copyBtn.disabled = false;
+                return;
+            }
+
+            const text = sectionTextCache[sectionKey] || '';
+            if (!text) {
+                target.innerHTML = block('Chinese Translation', 'Run the workflow before translating this section.');
+                return;
+            }
+
+            translateBtn.disabled = true;
+            copyBtn.disabled = true;
+            sectionTranslations[sectionKey] = { loading: true, text: '', error: '' };
+            target.innerHTML = block('Chinese Translation', 'Translating this section...');
+
+            try {
+                const response = await postCopilot('translate-output', {
+                    text,
+                    target_language: 'zh-CN'
+                });
+                const translated = response.translated_text || '';
+                sectionTranslations[sectionKey] = { loading: false, text: translated, error: '' };
+                target.innerHTML = block('Chinese Translation', translated || 'Translation returned empty.');
+                copyBtn.disabled = !translated;
+            } catch (error) {
+                sectionTranslations[sectionKey] = { loading: false, text: '', error: error.message || 'Translation failed.' };
+                target.innerHTML = block('Chinese Translation', 'Section translation unavailable. Original section is unchanged.');
+            } finally {
+                translateBtn.disabled = false;
+            }
+        }
+
+        function copySectionTranslation(sectionKey) {
+            const text = sectionTranslations[sectionKey]?.text || '';
+            if (!text) {
+                copyText('Section translation', 'Translate this section first.');
+                return;
+            }
+            copyText('Section translation', text);
+        }
+
         function syncDebugMode() {
             const enabled = document.getElementById('debugMode').checked;
             document.getElementById('debugTraceSection').hidden = !enabled;
@@ -799,6 +882,7 @@
             btn.innerText = "运行中...";
             latestProductData = null;
             latestChineseTranslation = '';
+            resetSectionTranslations();
             setCopyButtonsEnabled(false);
             document.getElementById('copyStatus').textContent = '';
             const translationTarget = document.getElementById('res-translation');
@@ -856,6 +940,52 @@
             document.getElementById('copyStatus').textContent = '';
 
             const evidence = data.insights.evidence || {};
+            const script = data.assets.tiktok_script || {};
+            const storyboard = data.assets.storyboard || {};
+            const evalData = data.evaluation || {};
+            const score = Math.max(0, Math.min(100, Number((evalData.confidence_score * 100).toFixed(0)) || 0));
+            const riskCls = evalData.risk_level === 'high' ? 'risk-high' : (evalData.risk_level === 'medium' ? 'risk-medium' : '');
+
+            sectionTextCache = {
+                evidence: [
+                    'Evidence Snapshot',
+                    `Source Type: ${evidence.source_type || 'unknown source'}`,
+                    `Review confidence: ${formatMetric(evidence.review_confidence)}`,
+                    `Trend confidence: ${formatMetric(evidence.trend_confidence)}`,
+                    'Evidence quotes:',
+                    ...(evidence.evidence_quotes || []).slice(0, 5).map((quote) => `- ${quote}`),
+                    'Customer pain points:',
+                    ...(data.insights.pain_points || []).map((pain) => `- ${pain}`),
+                ].join('\n'),
+                strategy: [
+                    'Target Audience & Creative Strategy',
+                    `Target Audience: ${data.audience.primary || ''}`,
+                    `Trust Barriers: ${(data.audience.trust_barriers || []).join('; ')}`,
+                    `Core Hook Strategy: ${data.strategy.core_hook_strategy || ''}`,
+                    `Emotional Trigger: ${data.strategy.emotional_trigger || ''}`,
+                    `CTA Logic: ${script.cta || ''}`,
+                ].join('\n'),
+                hook: [
+                    'Hook',
+                    script.hook || '',
+                    '',
+                    'CTA',
+                    script.cta || '',
+                ].join('\n'),
+                storyboard: [
+                    'Storyboard',
+                    storyboardText(storyboard),
+                ].join('\n'),
+                evaluation: [
+                    'Evaluation',
+                    `Retention Confidence: ${score}%`,
+                    `Risk Level: ${evalData.risk_level || 'low'}`,
+                    `Approved: ${boolText(evalData.is_approved)}`,
+                    `Grounded: ${boolText(evalData.is_grounded)}`,
+                    `Quality Rationale: ${evalData.reasoning || ''}`,
+                ].join('\n'),
+            };
+
             document.getElementById('res-insights').style.opacity = '1';
             document.getElementById('res-insights').innerHTML = `
                 <span class="source-badge">${escapeHTML(evidence.source_type || 'unknown source')}</span>
@@ -867,6 +997,7 @@
                 ${block('Evidence Quotes', 'Short review-backed signals used by the creative brief')}
                 ${quoteList(evidence.evidence_quotes)}
                 ${block('Customer Pain Points', (data.insights.pain_points || []).join('\n'))}
+                ${sectionTranslationControls('evidence')}
             `;
 
             document.getElementById('res-strategy').style.opacity = '1';
@@ -876,21 +1007,19 @@
                 ${block('Core Hook Strategy', data.strategy.core_hook_strategy || '')}
                 ${block('Emotional Trigger', data.strategy.emotional_trigger || '')}
                 ${block('CTA Logic', data.assets?.tiktok_script?.cta || '')}
+                ${sectionTranslationControls('strategy')}
             `;
 
-            const script = data.assets.tiktok_script || {};
-            const storyboard = data.assets.storyboard || {};
             document.getElementById('res-assets').style.opacity = '1';
             document.getElementById('res-assets').innerHTML = `
                 ${block('Hook', script.hook || '')}
                 ${block('CTA', script.cta || '')}
+                ${sectionTranslationControls('hook')}
                 <div class="json-key">Storyboard</div>
                 ${renderStoryboardBrief(storyboard)}
+                ${sectionTranslationControls('storyboard')}
             `;
 
-            const evalData = data.evaluation || {};
-            const score = Math.max(0, Math.min(100, Number((evalData.confidence_score * 100).toFixed(0)) || 0));
-            const riskCls = evalData.risk_level === 'high' ? 'risk-high' : (evalData.risk_level === 'medium' ? 'risk-medium' : '');
             document.getElementById('res-evaluation').style.opacity = '1';
             document.getElementById('res-evaluation').innerHTML = `
                 <div class="eval-box ${escapeHTML(riskCls)}">
@@ -908,6 +1037,7 @@
                     </div>
                     ${block('Quality Rationale', evalData.reasoning || '')}
                 </div>
+                ${sectionTranslationControls('evaluation')}
             `;
         }
 

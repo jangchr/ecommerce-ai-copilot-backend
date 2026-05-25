@@ -66,6 +66,9 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - Clicking it shows a loading state and then a Chinese Translation block.
    - **Copy Chinese Translation** works after translation succeeds.
    - Translation failure does not clear the original English result.
+   - **Translate this section** is visible under Product Mode result sections.
+   - **Copy section translation** works after a section translation succeeds.
+   - Section translation affects only the clicked section and leaves the original English output visible.
 
 ## Render Cold Start Expectations
 
@@ -113,6 +116,7 @@ Run this 5 minutes before a live demo:
    - `approved=true`.
    - Copy buttons are usable.
    - Translation controls are usable or any translation failure is isolated from the product result.
+   - Section translation controls are visible and isolated per section.
 
 5. Leave the browser tab open for the demo.
 

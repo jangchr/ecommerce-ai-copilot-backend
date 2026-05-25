@@ -45,11 +45,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy Full Markdown", self.source)
         self.assertIn("Translate to Chinese", self.source)
         self.assertIn("Copy Chinese Translation", self.source)
+        self.assertIn("Translate this section", self.source)
+        self.assertIn("Copy section translation", self.source)
         self.assertIn("function copyHook()", self.source)
         self.assertIn("function copyStoryboard()", self.source)
         self.assertIn("function copyFullMarkdown()", self.source)
         self.assertIn("function translateToChinese()", self.source)
         self.assertIn("function copyChineseTranslation()", self.source)
+        self.assertIn("function translateSection(sectionKey)", self.source)
+        self.assertIn("function copySectionTranslation(sectionKey)", self.source)
 
     def test_product_renderer_does_not_display_observability_fields(self):
         match = re.search(
@@ -61,6 +65,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         body = match.group("body")
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("telemetry", body)
+        self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("memory_observability", body)
 
     def test_product_mode_result_readability_sections_are_present(self):
@@ -91,12 +96,27 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy Full Markdown", self.source)
         self.assertIn("Translate to Chinese", self.source)
         self.assertIn("Copy Chinese Translation", self.source)
+        self.assertIn("Translate this section", self.source)
+        self.assertIn("Copy section translation", self.source)
 
     def test_translation_button_uses_product_markdown_only(self):
         self.assertIn("postCopilot('translate-output'", self.source)
         self.assertIn("const text = productMarkdown(latestProductData);", self.source)
         self.assertIn("Translation unavailable. Original English result is unchanged.", self.source)
         self.assertIn("latestChineseTranslation = '';", self.source)
+
+    def test_section_translation_uses_product_visible_section_cache(self):
+        self.assertIn("let sectionTranslations = {};", self.source)
+        self.assertIn("let sectionTextCache = {};", self.source)
+        self.assertIn("function resetSectionTranslations()", self.source)
+        self.assertIn("resetSectionTranslations();", self.source)
+        self.assertIn("sectionTextCache = {", self.source)
+        for key in ["evidence", "strategy", "hook", "storyboard", "evaluation"]:
+            with self.subTest(key=key):
+                self.assertIn(f"sectionTranslationControls('{key}')", self.source)
+        self.assertIn("const text = sectionTextCache[sectionKey] || '';", self.source)
+        self.assertIn("Translating this section...", self.source)
+        self.assertIn("Section translation unavailable. Original section is unchanged.", self.source)
 
     def test_source_probe_is_guarded_by_debug_mode(self):
         self.assertIn("postCopilot('debug-source-probe'", self.source)

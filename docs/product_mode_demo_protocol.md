@@ -152,6 +152,24 @@ Expected results:
 - The translation request does not include Debug Trace, telemetry, `shadow_sources` or memory observability.
 - Debug Mode can be off or on; translation remains a Product Mode user action.
 
+## Section Translation Check
+
+1. Run Product Mode with a stable local slug.
+2. Click **Translate this section** under Evidence Snapshot.
+3. Click **Translate this section** under Storyboard.
+4. Copy one section translation with **Copy section translation**.
+
+Expected results:
+
+- Each section translation request uses `/api/v1/translate-output`.
+- Only the clicked section's user-visible Product Mode text is translated.
+- The translation appears beneath that section only.
+- Other sections and the original English content remain unchanged.
+- `Copy section translation` copies only that section's Chinese translation.
+- Running a new Product Mode generation clears old section translations.
+- Debug Mode Off still permits section translation because it is a Product Mode user feature.
+- Section translation does not send Debug Trace, telemetry, `shadow_sources`, memory observability, Source Probe output or Amazon Shadow Summary.
+
 ## Demo Pass Criteria
 
 The local demo passes when:
@@ -164,3 +182,4 @@ The local demo passes when:
 - Product Mode does not show `DEBUG TRACE`.
 - Copy controls are visible and do not affect workflow execution.
 - Product translation controls work without invoking workflow, source probe or Amazon Shadow.
+- Section translation controls are manual, isolated per section and do not affect the original product result.

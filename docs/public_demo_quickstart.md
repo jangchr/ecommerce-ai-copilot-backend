@@ -76,6 +76,13 @@ After Product Mode generates a result, click **Translate to Chinese** to transla
 
 If translation fails, the original English result remains visible and unchanged.
 
+Each major Product Mode section also has section-level translation controls:
+
+- **Translate this section**
+- **Copy section translation**
+
+Use these when you only need a Chinese version of Evidence Snapshot, Target Audience & Creative Strategy, Hook, Storyboard or Evaluation. Section translation is manual and does not run automatically, so it does not add cost unless clicked.
+
 ## Product Mode Boundaries
 
 Product Mode stable input is the 10 local grounded slugs listed above.
