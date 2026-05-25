@@ -331,3 +331,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Feedback Round 1 Summary Template](docs/feedback_round_1_summary_template.md) ? L13.0-F ??????????????
 - [Feedback Collection Launch Final Audit](docs/feedback_collection_launch_final_audit.md) ? L13.0-G ???????????
 - [Product Description Input Design](docs/product_description_input_design.md) ? L13.1-A ?????????
+- [Product Description API Contract Design](docs/product_description_api_contract_design.md) ? L13.1-B ?????? API contract ???
