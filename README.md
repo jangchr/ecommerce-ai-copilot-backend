@@ -365,3 +365,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Public Demo Refresh L13.7 Language Mode](docs/public_demo_refresh_l13_7_language_mode.md) ? L13.7-A Language Mode ???????
 - [Language Mode Public Refresh Final Audit](docs/language_mode_public_refresh_final_audit.md) ? L13.7-B Language Mode ?????????
 - [Language Mode Heading Encoding Final Audit](docs/language_mode_heading_encoding_final_audit.md) ? L13.7-D Language Mode ???????????
+- [Language Mode v1 Archive](docs/language_mode_v1_archive.md) ? language-mode-v1 ?????

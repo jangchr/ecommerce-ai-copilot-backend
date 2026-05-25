@@ -1766,3 +1766,26 @@ b75dae8
 
 L13.7-E Tag language-mode-v1
 
+## L13.7-E Language Mode v1 Archive
+
+Status: ready.
+
+Document: docs/language_mode_v1_archive.md
+
+Tag:
+
+language-mode-v1
+
+Archive base commit:
+
+7309582
+
+???
+
+- Language Mode v1 ???
+- English / ?? selector ??
+- Product Description Mode ??????
+- Stable slug Product Mode ??????
+- Product / Debug ????
+- ???????????
+
