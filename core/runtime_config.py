@@ -13,6 +13,7 @@ def _env_flag(name: str, default: bool = False) -> bool:
 
 
 ALLOW_REAL_SOURCE_ADAPTERS = _env_flag("ALLOW_REAL_SOURCE_ADAPTERS", default=False)
+ENABLE_HF_RUNTIME_MODELS = _env_flag("ENABLE_HF_RUNTIME_MODELS", default=False)
 
 
 def enabled_source_tools() -> list[str]:
@@ -21,3 +22,7 @@ def enabled_source_tools() -> list[str]:
     # These tools are only exposed behind the explicit flag. Their adapters remain
     # unavailable shells until provider-specific implementations are added.
     return [*DEFAULT_ENABLED_TOOLS, *REAL_SOURCE_TOOLS]
+
+
+def hf_runtime_models_enabled() -> bool:
+    return _env_flag("ENABLE_HF_RUNTIME_MODELS", default=False)

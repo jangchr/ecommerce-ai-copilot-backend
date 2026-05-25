@@ -3,7 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import time
 import uvicorn
@@ -37,6 +37,27 @@ STATIC_DIR = BASE_DIR / "static"
 
 def get_server_port() -> int:
     return int(os.getenv("PORT", "8001"))
+
+
+def _safe_product_category_hint(url: str) -> str:
+    value = (url or "").strip()
+    if not value:
+        return ""
+    if "://" in value or "/" in value or len(value) > 80:
+        return "external_url"
+    return value
+
+
+def _error_type(exc: Exception) -> str:
+    name = type(exc).__name__
+    text = f"{name}: {exc}".lower()
+    if "huggingface" in text or "hf hub" in text or "sentence-transformers" in text:
+        return "runtime_model_unavailable"
+    if "timeout" in text or "timed out" in text:
+        return "timeout"
+    if "memory" in text or "out of memory" in text:
+        return "memory_failure"
+    return name
 INDEX_HTML = STATIC_DIR / "index.html"
 SOURCE_PROBE_PROVIDERS = {
     "amazon_review_api",
@@ -174,11 +195,22 @@ async def healthz(request: Request):
 async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
     started = time.perf_counter()
     request_id = http_request.state.request_id
+    product_category_hint = _safe_product_category_hint(request.url)
     emit_event(
         "generate_copilot_start",
         request_id,
         endpoint="/api/v1/generate-copilot",
         status="started",
+        product_category=product_category_hint,
+        goal=request.goal,
+    )
+    emit_event(
+        "generate_copilot_after_request_parse",
+        request_id,
+        endpoint="/api/v1/generate-copilot",
+        status="success",
+        latency_ms=(time.perf_counter() - started) * 1000,
+        product_category=product_category_hint,
         goal=request.goal,
     )
 
@@ -192,9 +224,48 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         "next_nodes": [],
     }
 
-    final_state = await copilot_engine.ainvoke(initial_state)
+    emit_event(
+        "generate_copilot_before_workflow",
+        request_id,
+        endpoint="/api/v1/generate-copilot",
+        status="started",
+        latency_ms=(time.perf_counter() - started) * 1000,
+        product_category=product_category_hint,
+        goal=request.goal,
+    )
+    try:
+        final_state = await copilot_engine.ainvoke(initial_state)
+    except Exception as exc:
+        error_type = _error_type(exc)
+        emit_event(
+            "generate_copilot_error",
+            request_id,
+            endpoint="/api/v1/generate-copilot",
+            status="error",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=product_category_hint,
+            goal=request.goal,
+            error_type=error_type,
+        )
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "generate-copilot workflow failed safely. Please retry after the service is warm.",
+                "error_type": error_type,
+                "request_id": request_id,
+            },
+        )
 
     env_state = final_state.get("env_state", {})
+    emit_event(
+        "generate_copilot_after_workflow",
+        request_id,
+        endpoint="/api/v1/generate-copilot",
+        status="success",
+        latency_ms=(time.perf_counter() - started) * 1000,
+        product_category=env_state.get("product_category") or product_category_hint,
+        goal=request.goal,
+    )
     cog_state = final_state.get("cognitive_state", {})
     exec_state = final_state.get("execution_state", {})
     world_metrics = final_state.get("world_metrics", {})

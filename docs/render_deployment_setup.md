@@ -63,6 +63,7 @@ OPENAI_API_KEY=<Render secret value>
 OPENAI_API_BASE=https://api.deepseek.com/v1
 MODEL_NAME=deepseek-chat
 ALLOW_REAL_SOURCE_ADAPTERS=false
+ENABLE_HF_RUNTIME_MODELS=false
 MEMORY_MAX_RECORD_COUNT=500
 ```
 
@@ -70,6 +71,7 @@ Notes:
 
 - `OPENAI_API_KEY` must be injected by Render as a secret/environment variable.
 - `ALLOW_REAL_SOURCE_ADAPTERS=false` is required for the Product Mode MVP.
+- `ENABLE_HF_RUNTIME_MODELS=false` is recommended for the Render public demo so Product Mode generation does not try to download or initialize Hugging Face embedding models during a request.
 - `MEMORY_MAX_RECORD_COUNT=500` preserves the bounded-memory policy.
 - Render injects `PORT` for Web Services. The application and Docker command read `PORT` at startup, with a local fallback of `8001`.
 - Do not rely on a hard-coded `8001` binding in Render. If `PORT` is manually set, it must match the port Render expects to scan.
@@ -92,6 +94,29 @@ Local development and Docker smoke can continue to use `8001`. Render deployment
 - Inject `OPENAI_API_KEY` through the Render dashboard.
 - Do not print secrets in logs.
 - Structured logs should remain limited to request ID, endpoint, status, latency, product category, goal and safe source-probe aggregate fields.
+
+## Hugging Face Runtime Models
+
+The workflow can use FAISS plus Hugging Face embeddings for semantic memory when runtime model loading is explicitly enabled. Render free or low-memory instances should not download or initialize those models during a public request.
+
+Recommended public demo setting:
+
+```dotenv
+ENABLE_HF_RUNTIME_MODELS=false
+```
+
+With this setting, Product Mode keeps using local grounded evidence and deterministic JSON memory fallback. `generate-copilot` should not block on Hugging Face Hub availability, unauthenticated HF Hub access, model download latency, or memory pressure.
+
+`HF_TOKEN` or `HUGGINGFACEHUB_API_TOKEN` is optional and only needed for environments that explicitly enable runtime HF models:
+
+```dotenv
+ENABLE_HF_RUNTIME_MODELS=true
+HF_TOKEN=<optional Hugging Face token>
+# or
+HUGGINGFACEHUB_API_TOKEN=<optional Hugging Face token>
+```
+
+Do not enable this path for the public Product Mode demo until startup/runtime memory and model cache behavior are validated.
 
 ## Health Check
 

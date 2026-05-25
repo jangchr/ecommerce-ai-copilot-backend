@@ -38,6 +38,22 @@ class RuntimeConfigTest(unittest.TestCase):
         )
         importlib.reload(runtime_config)
 
+    def test_hf_runtime_models_are_disabled_by_default(self):
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("ENABLE_HF_RUNTIME_MODELS", None)
+            config = importlib.reload(runtime_config)
+
+        self.assertFalse(config.ENABLE_HF_RUNTIME_MODELS)
+        self.assertFalse(config.hf_runtime_models_enabled())
+
+    def test_hf_runtime_models_require_explicit_enable_flag(self):
+        with patch.dict(os.environ, {"ENABLE_HF_RUNTIME_MODELS": "true"}):
+            config = importlib.reload(runtime_config)
+            self.assertTrue(config.ENABLE_HF_RUNTIME_MODELS)
+            self.assertTrue(config.hf_runtime_models_enabled())
+
+        importlib.reload(runtime_config)
+
 
 if __name__ == "__main__":
     unittest.main()

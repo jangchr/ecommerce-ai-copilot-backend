@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from core.agent_state import GraphState
-from core.runtime_config import enabled_source_tools
+from core.runtime_config import enabled_source_tools, hf_runtime_models_enabled
 from source_adapters import SourceAdapterRegistry
 
 load_dotenv()
@@ -500,6 +500,9 @@ class FaissMemoryEngine:
         if self.embeddings is not None:
             self.stats["backend"] = "faiss"
             return True
+        if not hf_runtime_models_enabled():
+            self._set_faiss_fallback(operation, RuntimeError("hf_runtime_models_disabled"))
+            return False
         previous_backend = self.stats.get("backend")
         try:
             from langchain_community.vectorstores import FAISS

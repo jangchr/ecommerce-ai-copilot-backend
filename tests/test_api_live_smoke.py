@@ -114,6 +114,27 @@ class ApiLiveSmokeTest(unittest.TestCase):
             with self.subTest(field=field):
                 self.assertIn(field, payload["data"])
 
+    def test_generate_endpoint_returns_safe_json_error_on_runtime_model_failure(self):
+        with patch(
+            "main.copilot_engine.ainvoke",
+            new=AsyncMock(side_effect=RuntimeError("HF Hub model loading failed")),
+        ):
+            response = self.client.post(
+                "/api/v1/generate-copilot",
+                json={"url": "balsamic_vinegar"},
+                headers={"X-Request-ID": "hf-failure-smoke"},
+            )
+
+        self.assertEqual(response.status_code, 503)
+        payload = response.json()
+        self.assertEqual(payload["request_id"], "hf-failure-smoke")
+        self.assertEqual(payload["error_type"], "runtime_model_unavailable")
+        self.assertIn("error", payload)
+        self.assertNotIn("telemetry_summary", payload)
+        self.assertNotIn("shadow_sources", payload)
+        self.assertNotIn("memory_observability", payload)
+        self.assertEqual(response.headers["X-Request-ID"], "hf-failure-smoke")
+
     def test_debug_endpoint_returns_full_observability_payload(self):
         with patch(
             "main.copilot_engine.ainvoke",

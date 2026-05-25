@@ -89,6 +89,9 @@ Recommended response:
 - Retry `balsamic_vinegar`.
 - If failures continue, check Render service logs.
 - If a new deploy shows `Port scan timeout reached, no open ports detected`, verify the service binds to the Render-provided `PORT` environment variable and falls back to `8001` only for local runs.
+- If `generate-copilot` returns `502`, closes the connection or logs `generate_copilot_start` without `generate_copilot_complete`, inspect the matching `X-Request-ID` in Render logs.
+- If logs stop after a Hugging Face Hub warning, verify `ENABLE_HF_RUNTIME_MODELS=false` for the public demo. Request-time HF model download/loading is not required for the stable Product Mode path.
+- If `generate-copilot` returns a safe JSON `503`, capture `request_id` and `error_type`; the process should remain alive and `/healthz` should continue to pass.
 
 ## Five-Minute Pre-Demo Warmup
 

@@ -118,6 +118,21 @@ class MemoryBucketTest(unittest.TestCase):
         self.assertEqual(snapshot["faiss_observability"]["fallback_count"], 3)
         self.assertEqual(snapshot["backend"], "json_fallback")
 
+    def test_hf_runtime_models_disabled_skips_faiss_loading(self):
+        engine = FaissMemoryEngine(load_records=False)
+
+        with patch("core.workflow.hf_runtime_models_enabled", return_value=False):
+            self.assertFalse(engine._ensure_faiss(operation="retrieval"))
+
+        snapshot = engine.observability_snapshot()
+        self.assertEqual(snapshot["backend"], "json_fallback")
+        self.assertEqual(snapshot["faiss_error"], "hf_runtime_models_disabled")
+        self.assertEqual(snapshot["faiss_observability"]["fallback_count"], 1)
+        self.assertEqual(
+            snapshot["faiss_observability"]["fallback_trace"][0]["operation"],
+            "retrieval",
+        )
+
     def test_dopamine_telemetry_carries_memory_observability(self):
         state = {
             "env_state": {

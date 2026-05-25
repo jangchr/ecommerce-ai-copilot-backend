@@ -48,6 +48,7 @@ Expected results:
 - Product sections read like a TikTok creative brief: Evidence Snapshot, Target Audience, Creative Strategy, Hook, Storyboard, Evaluation and Copy Actions.
 - Product Mode does not display telemetry, `shadow_sources` or memory observability.
 - Product Mode does not display a `DEBUG TRACE` / Debug Trace panel while Debug Mode is off.
+- If Product Mode returns `502` or a safe JSON `503`, record the `X-Request-ID` response header and compare it with Render structured logs. Product API failures must not expose `telemetry_summary`, `shadow_sources` or `memory_observability`.
 - Copy controls are visible:
   - `Copy Hook`
   - `Copy Storyboard`
