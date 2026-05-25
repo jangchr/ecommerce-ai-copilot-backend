@@ -1460,3 +1460,26 @@ Document: docs/product_description_sample_input_design.md
 - ?????
 - ?????
 
+## L13.4-E Product Description Polish Smoke Record
+
+Status: ready.
+
+Document: docs/product_description_polish_smoke_record.md
+
+???
+
+- Product Description helper text ??
+- Good inputs include ??
+- Use sample product ??
+- Use sample product ???????????? API
+- Frontend boundary test PASS
+- Fast gate PASS?123 tests
+
+???
+
+- ??? Amazon
+- ??? Source Probe
+- ??? Amazon Shadow
+- ??? data.debug
+- ??? telemetry_summary / shadow_sources / memory_observability
+
