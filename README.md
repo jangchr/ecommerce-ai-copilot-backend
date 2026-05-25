@@ -26,6 +26,7 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [Commercial MVP Scope](docs/commercial_mvp_scope.md): target users, beachhead segment, pricing hypotheses and commercial roadmap.
 - [Commercial MVP User Workflow](docs/commercial_mvp_user_workflow.md) ? L12.0-B user workflow from public demo entry to generation, translation, copy actions, and feedback.
 - [Public Landing Conversion Copy](docs/public_landing_conversion_copy.md) ? L12.0-C landing-page copy for commercial MVP conversion.
+- [Feedback Collection Flow](docs/feedback_collection_flow.md) ? L12.0-D ??????????????
 - [Commercial MVP User Workflow](docs/commercial_mvp_user_workflow.md) — L12.0-B user workflow from public demo entry to generation, translation, copy actions, and feedback.
 
 ## Runtime
