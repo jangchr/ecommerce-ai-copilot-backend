@@ -383,3 +383,6 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Public Demo Refresh L14.3 Pasted Reviews](docs/public_demo_refresh_l14_3_pasted_reviews.md) ? L14.3-A Pasted Reviews Mode ???????
 - [Pasted Reviews Public Refresh Final Audit](docs/pasted_reviews_public_refresh_final_audit.md) ? L14.3-B Pasted Reviews Mode ?????????
 - [Pasted Reviews Mode v1 Archive](docs/pasted_reviews_mode_v1_archive.md) ? pasted-reviews-mode-v1 ?????
+- [Pasted Reviews Trial Launch Checklist](docs/pasted_reviews_trial_launch_checklist.md) ? L14.4-A Pasted Reviews ???????????
+- [Pasted Reviews Trial Outreach Tracker](docs/pasted_reviews_trial_outreach_tracker.md) ? L14.4-B Pasted Reviews ????????
+- [Pasted Reviews Trial Round 1 Summary Template](docs/pasted_reviews_trial_round_1_summary_template.md) ? L14.4-C Pasted Reviews ??????????
