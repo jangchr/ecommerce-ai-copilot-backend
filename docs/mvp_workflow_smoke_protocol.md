@@ -29,6 +29,12 @@
 
 8. ?? Copy Full Markdown??????
 
+8a. Verify Download Markdown works after Product Mode output renders.
+
+8b. Verify Download JSON works after Product Mode output renders.
+
+8c. Confirm downloaded Markdown / JSON only include Product Mode visible output and do not include Debug Trace, telemetry_summary, shadow_sources or memory_observability.
+
 9. ?? Translate to Chinese????????????
 
 10. ???? section ? Translate this section????????????
@@ -104,6 +110,8 @@ Get-Content "$env:TEMP\translate_response.json" -Encoding UTF8
 - Copy Hook ??
 - Copy Storyboard ??
 - Copy Full Markdown ??
+- Download Markdown ??
+- Download JSON ??
 - ????????
 - ????????
 - Product / Debug ????

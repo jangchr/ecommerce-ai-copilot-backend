@@ -53,8 +53,26 @@ Expected results:
   - `Copy Hook`
   - `Copy Storyboard`
   - `Copy Full Markdown`
+  - `Download Markdown`
+  - `Download JSON`
   - `Translate to Chinese`
   - `Copy Chinese Translation`
+
+## Smoke Test: Product Downloads
+
+1. Turn **Debug Mode** off.
+2. Run Product Mode with `balsamic_vinegar`.
+3. Confirm **Download Markdown** and **Download JSON** are disabled before generation and enabled after generation.
+4. Click each download action.
+
+Expected results:
+
+- Download Markdown creates `creative_brief_<slug>_<timestamp>.md`.
+- Download JSON creates `creative_brief_<slug>_<timestamp>.json`.
+- Download content is built only from Product Mode visible output.
+- Download content may include full Chinese translation and section translations if they have already been generated.
+- Download content does not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe raw data or Amazon Shadow Summary.
+- The page still does not reference `data.debug`.
 
 ## Smoke Test: Product Mode Result Readability
 

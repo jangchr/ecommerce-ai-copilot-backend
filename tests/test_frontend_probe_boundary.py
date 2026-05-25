@@ -43,6 +43,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
+        self.assertIn("Download Markdown", self.source)
+        self.assertIn("Download JSON", self.source)
         self.assertIn("Translate to Chinese", self.source)
         self.assertIn("Copy Chinese Translation", self.source)
         self.assertIn("Translate this section", self.source)
@@ -50,6 +52,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("function copyHook()", self.source)
         self.assertIn("function copyStoryboard()", self.source)
         self.assertIn("function copyFullMarkdown()", self.source)
+        self.assertIn("function downloadMarkdown()", self.source)
+        self.assertIn("function downloadJson()", self.source)
         self.assertIn("function translateToChinese()", self.source)
         self.assertIn("function copyChineseTranslation()", self.source)
         self.assertIn("function translateSection(sectionKey)", self.source)
@@ -94,6 +98,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
+        self.assertIn("Download Markdown", self.source)
+        self.assertIn("Download JSON", self.source)
         self.assertIn("Translate to Chinese", self.source)
         self.assertIn("Copy Chinese Translation", self.source)
         self.assertIn("Translate this section", self.source)
@@ -104,6 +110,42 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("const text = productMarkdown(latestProductData);", self.source)
         self.assertIn("Translation unavailable. Original English result is unchanged.", self.source)
         self.assertIn("latestChineseTranslation = '';", self.source)
+
+    def test_download_actions_export_only_product_visible_state(self):
+        self.assertIn("function buildDownloadMarkdown(data)", self.source)
+        self.assertIn("function exportVisibleProductJson(data)", self.source)
+        self.assertIn("function downloadMarkdown()", self.source)
+        self.assertIn("function downloadJson()", self.source)
+        self.assertIn("function downloadTextFile(filename, content, mimeType)", self.source)
+        self.assertIn("creative_brief_${slug}_${exportTimestamp()}.md", self.source)
+        self.assertIn("creative_brief_${slug}_${exportTimestamp()}.json", self.source)
+        self.assertIn("input_slug: latestInputSlug || ''", self.source)
+        self.assertIn("generated_at: latestGeneratedAt || ''", self.source)
+        self.assertIn("translations: {", self.source)
+
+        markdown_match = re.search(
+            r"function buildDownloadMarkdown\(data\) \{(?P<body>.*?)function exportVisibleProductJson",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(markdown_match)
+        markdown_body = markdown_match.group("body")
+
+        json_match = re.search(
+            r"function exportVisibleProductJson\(data\) \{(?P<body>.*?)function downloadTextFile",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(json_match)
+        json_body = json_match.group("body")
+
+        for body in [markdown_body, json_body]:
+            with self.subTest(export_body=body[:40]):
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("memory_observability", body)
+                self.assertNotIn("api_key", body.lower())
 
     def test_section_translation_uses_product_visible_section_cache(self):
         self.assertIn("let sectionTranslations = {};", self.source)

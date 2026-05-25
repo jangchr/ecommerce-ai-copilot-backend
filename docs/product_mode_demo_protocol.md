@@ -132,10 +132,26 @@ After Product Mode output renders, verify:
 - **Copy Hook** copies the generated hook text.
 - **Copy Storyboard** copies the scene graph/storyboard text.
 - **Copy Full Markdown** copies a complete Markdown package with evidence, pain points, audience, strategy, hook, storyboard, CTA, evaluation and feedback.
+- **Download Markdown** saves the Product Mode visible brief as `creative_brief_<slug>_<timestamp>.md`.
+- **Download JSON** saves the Product Mode visible brief as `creative_brief_<slug>_<timestamp>.json`.
 - **Translate to Chinese** sends only the Product Mode Markdown output to `/api/v1/translate-output`.
 - **Copy Chinese Translation** copies the translated text after translation completes.
 
 If browser clipboard permissions are unavailable, the UI should show a copy-unavailable status without breaking the product result.
+
+## Download Check
+
+1. Run Product Mode with a stable local slug.
+2. Confirm **Download Markdown** and **Download JSON** are enabled only after a result renders.
+3. Click **Download Markdown**.
+4. Click **Download JSON**.
+
+Expected results:
+
+- The Markdown file includes the input slug, generated timestamp, Evidence Snapshot, Target Audience & Creative Strategy, Hook, Storyboard, Evaluation and any Chinese translations already generated.
+- The JSON file includes `input_slug`, `generated_at`, `insights`, `audience`, `strategy`, `assets`, `evaluation`, `feedback` and `translations`.
+- Downloaded files do not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe data or Amazon Shadow Summary.
+- Running a new Product Mode generation makes downloads use the latest result, not an older result.
 
 ## Product Translation Check
 

@@ -59,6 +59,9 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - **Copy Hook** works.
    - **Copy Storyboard** works.
    - **Copy Full Markdown** works.
+   - **Download Markdown** works after a Product result renders.
+   - **Download JSON** works after a Product result renders.
+   - Downloaded files do not include Debug Trace, telemetry, `shadow_sources` or `memory_observability`.
 
 7. Confirm translation controls:
 
@@ -121,6 +124,7 @@ Run this 5 minutes before a live demo:
    - `grounded=true`.
    - `approved=true`.
    - Copy buttons are usable.
+   - Download Markdown / JSON buttons are usable.
    - Translation controls are usable or any translation failure is isolated from the product result.
    - Section translation controls are visible and isolated per section.
    - Evidence Snapshot and Storyboard section translations do not show an unavailable message after product output renders.

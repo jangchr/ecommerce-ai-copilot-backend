@@ -468,6 +468,8 @@
                     <button class="btn-secondary" id="copyHookBtn" onclick="copyHook()" disabled>Copy Hook</button>
                     <button class="btn-secondary" id="copyStoryboardBtn" onclick="copyStoryboard()" disabled>Copy Storyboard</button>
                     <button class="btn-secondary" id="copyMarkdownBtn" onclick="copyFullMarkdown()" disabled>Copy Full Markdown</button>
+                    <button class="btn-secondary" id="downloadMarkdownBtn" onclick="downloadMarkdown()" disabled>Download Markdown</button>
+                    <button class="btn-secondary" id="downloadJsonBtn" onclick="downloadJson()" disabled>Download JSON</button>
                     <button class="btn-secondary" id="translateChineseBtn" onclick="translateToChinese()" disabled>Translate to Chinese</button>
                     <button class="btn-secondary" id="copyChineseBtn" onclick="copyChineseTranslation()" disabled>Copy Chinese Translation</button>
                 </div>
@@ -626,6 +628,8 @@
         let latestDebugCategory = '';
         let latestProductData = null;
         let latestChineseTranslation = '';
+        let latestInputSlug = '';
+        let latestGeneratedAt = '';
         let sectionTranslations = {};
         let sectionTextCache = {};
         const SECTION_KEYS = ['evidence', 'strategy', 'hook', 'storyboard', 'evaluation'];
@@ -680,7 +684,7 @@
         }
 
         function setCopyButtonsEnabled(enabled) {
-            ['copyHookBtn', 'copyStoryboardBtn', 'copyMarkdownBtn', 'translateChineseBtn'].forEach((id) => {
+            ['copyHookBtn', 'copyStoryboardBtn', 'copyMarkdownBtn', 'downloadMarkdownBtn', 'downloadJsonBtn', 'translateChineseBtn'].forEach((id) => {
                 document.getElementById(id).disabled = !enabled;
             });
             document.getElementById('copyChineseBtn').disabled = !latestChineseTranslation;
@@ -741,6 +745,99 @@
 
         function copyFullMarkdown() {
             copyText('Full Markdown', productMarkdown(latestProductData));
+        }
+
+        function exportTimestamp() {
+            return (latestGeneratedAt || new Date().toISOString()).replace(/[:.]/g, '-');
+        }
+
+        function safeFileSlug(value) {
+            const slug = String(value || 'product').trim().replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+            return slug || 'product';
+        }
+
+        function sectionTranslationPayload() {
+            return Object.fromEntries(
+                SECTION_KEYS.map((key) => [key, sectionTranslations[key]?.text || ''])
+                    .filter(([, text]) => Boolean(text))
+            );
+        }
+
+        function buildDownloadMarkdown(data) {
+            if (!data) return '';
+            const sections = sectionTranslationPayload();
+            const sectionLines = Object.entries(sections).flatMap(([key, text]) => [
+                `### ${key}`,
+                text,
+                ''
+            ]);
+            return [
+                '# Grounded Ecommerce Creative Brief',
+                '',
+                `Input slug: ${latestInputSlug || 'unknown'}`,
+                `Generated at: ${latestGeneratedAt || ''}`,
+                '',
+                productMarkdown(data),
+                '',
+                latestChineseTranslation ? '## Full Chinese Translation' : '',
+                latestChineseTranslation || '',
+                latestChineseTranslation ? '' : '',
+                sectionLines.length ? '## Section Chinese Translations' : '',
+                ...sectionLines,
+            ].filter((line) => line !== '').join('\n');
+        }
+
+        function exportVisibleProductJson(data) {
+            if (!data) return {};
+            return {
+                input_slug: latestInputSlug || '',
+                generated_at: latestGeneratedAt || '',
+                insights: data.insights || {},
+                audience: data.audience || {},
+                strategy: data.strategy || {},
+                assets: data.assets || {},
+                evaluation: data.evaluation || {},
+                feedback: data.feedback || '',
+                translations: {
+                    full_chinese: latestChineseTranslation || '',
+                    sections: sectionTranslationPayload()
+                }
+            };
+        }
+
+        function downloadTextFile(filename, content, mimeType) {
+            if (!content) {
+                copyText('Download', 'Run the workflow before downloading.');
+                return;
+            }
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadMarkdown() {
+            const slug = safeFileSlug(latestInputSlug);
+            downloadTextFile(
+                `creative_brief_${slug}_${exportTimestamp()}.md`,
+                buildDownloadMarkdown(latestProductData),
+                'text/markdown;charset=utf-8'
+            );
+        }
+
+        function downloadJson() {
+            const slug = safeFileSlug(latestInputSlug);
+            const payload = exportVisibleProductJson(latestProductData);
+            downloadTextFile(
+                `creative_brief_${slug}_${exportTimestamp()}.json`,
+                latestProductData ? JSON.stringify(payload, null, 2) : '',
+                'application/json;charset=utf-8'
+            );
         }
 
         async function translateToChinese() {
@@ -955,6 +1052,8 @@
             btn.innerText = "运行中...";
             latestProductData = null;
             latestChineseTranslation = '';
+            latestInputSlug = '';
+            latestGeneratedAt = '';
             resetSectionTranslations();
             setCopyButtonsEnabled(false);
             document.getElementById('copyStatus').textContent = '';
@@ -1009,6 +1108,8 @@
 
         function renderProductDashboard(data) {
             latestProductData = data;
+            latestInputSlug = (document.getElementById('urlInput').value || '').trim();
+            latestGeneratedAt = new Date().toISOString();
             setCopyButtonsEnabled(true);
             document.getElementById('copyStatus').textContent = '';
 

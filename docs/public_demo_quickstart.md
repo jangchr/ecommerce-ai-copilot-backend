@@ -65,10 +65,21 @@ Use the copy buttons after generation:
 - **Copy Hook**
 - **Copy Storyboard**
 - **Copy Full Markdown**
+- **Download Markdown**
+- **Download JSON**
 - **Translate to Chinese**
 - **Copy Chinese Translation**
 
 These are intended for quick demo handoff, review, or manual editing.
+
+## Download Controls
+
+After Product Mode generates a result, use:
+
+- **Download Markdown** to save a copy-ready creative brief as `creative_brief_<slug>_<timestamp>.md`.
+- **Download JSON** to save the same Product Mode visible result as `creative_brief_<slug>_<timestamp>.json`.
+
+Downloads include Product Mode user-visible output only: input slug, generated timestamp, Evidence Snapshot, Target Audience & Creative Strategy, Hook, Storyboard, Evaluation, feedback and any Chinese translations already generated. Downloads do not include Debug Trace, telemetry, `shadow_sources`, `memory_observability`, Source Probe data or Amazon Shadow Summary.
 
 ## Chinese Translation
 
