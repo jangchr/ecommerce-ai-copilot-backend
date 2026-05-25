@@ -374,3 +374,6 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Trial Feedback Deferred Roadmap Decision](docs/trial_feedback_deferred_roadmap_decision.md) ? L13.9-A ??????????????
 - [Pasted Reviews Input Design](docs/pasted_reviews_input_design.md) ? L14.0-A ?????????
 - [Pasted Reviews API Contract Design](docs/pasted_reviews_api_contract_design.md) ? L14.0-B ?????? API contract ???
+- [Pasted Reviews Frontend UX Design](docs/pasted_reviews_frontend_ux_design.md) ? L14.0-C ???????? UX ???
+- [Pasted Reviews Implementation Plan](docs/pasted_reviews_implementation_plan.md) ? L14.0-D ???????????
+- [Pasted Reviews Boundary Checklist](docs/pasted_reviews_boundary_checklist.md) ? L14.0-E ?????????????
