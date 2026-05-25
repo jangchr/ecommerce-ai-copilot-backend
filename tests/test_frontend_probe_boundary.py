@@ -74,6 +74,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("好例子", self.source)
         self.assertIn("弱例子", self.source)
         self.assertIn("用户抱怨", self.source)
+
+        zh_reviews_copy_match = re.search(
+            r"pastedReviewsMode: '粘贴评论模式',(?P<body>.*?)exampleGallery: '示例库',",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(zh_reviews_copy_match)
+        zh_reviews_copy_body = zh_reviews_copy_match.group("body")
+        self.assertIn("reviewGuideTitle: '应该粘贴什么'", zh_reviews_copy_body)
+        self.assertIn("goodReviewExampleTitle: '好例子'", zh_reviews_copy_body)
+        self.assertIn("weakReviewExampleTitle: '弱例子'", zh_reviews_copy_body)
+        self.assertNotIn("reviewGuideTitle: 'What to paste'", zh_reviews_copy_body)
+        self.assertNotIn("goodReviewExampleTitle: 'Good example'", zh_reviews_copy_body)
+        self.assertNotIn("weakReviewExampleTitle: 'Weak example'", zh_reviews_copy_body)
         self.assertIn("电商创意生成助手", self.source)
         self.assertIn("Product name", self.source)
         self.assertIn("Product description", self.source)
