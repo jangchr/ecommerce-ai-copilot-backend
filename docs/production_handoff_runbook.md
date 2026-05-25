@@ -409,3 +409,30 @@ Product Mode continues to use 10 stable local grounded slugs.
 Amazon URL remains Debug Mode / Amazon Shadow only.
 Product API continues not to expose Debug Trace, telemetry_summary, shadow_sources, or memory_observability.
 ```
+
+## L12.0-C Public Landing Conversion Copy
+
+Status: ready.
+
+Document:
+
+```text
+docs/public_landing_conversion_copy.md
+```
+
+Recommended landing copy:
+
+```text
+Generate TikTok ad hooks and storyboards from ecommerce review pain points.
+
+Pick a stable demo product, generate a grounded creative brief, translate it to Chinese, and copy the hook or storyboard for your next ad test.
+```
+
+Boundary:
+
+```text
+This is copy planning only.
+No runtime behavior changed.
+Product Mode continues to use 10 stable local grounded slugs.
+Amazon URL remains Debug Mode / Amazon Shadow only.
+```
