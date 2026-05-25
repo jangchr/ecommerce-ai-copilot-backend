@@ -50,6 +50,14 @@ The default Product Mode input is:
 balsamic_vinegar
 ```
 
+The public landing page should explain that this is a grounded ecommerce creative agent demo and should show the headline:
+
+```text
+Generate TikTok creative strategy from grounded ecommerce review insights.
+```
+
+It should also show a **Try balsamic_vinegar** quick-pick button plus visible quick-pick controls for all stable slugs. Quick-pick buttons only update the input value; they must not automatically call the API.
+
 Use one of the 10 local grounded slugs for stable product demos:
 
 ```text
@@ -76,6 +84,8 @@ Do not enter an Amazon URL in Product Mode. Amazon URLs are only for Debug Mode 
 
 Expected results:
 
+- The public landing copy explains the 10 stable local grounded categories and recommends `balsamic_vinegar`.
+- Quick-pick slug controls are visible and can fill the input without triggering a request.
 - One product request is issued: `POST /api/v1/generate-copilot`.
 - No `POST /api/v1/debug-copilot` request is issued.
 - No `POST /api/v1/debug-source-probe` request is issued.
@@ -122,6 +132,7 @@ The local demo passes when:
 
 - A stable local slug produces grounded product output.
 - Debug Mode Off does not issue debug or source-probe requests.
+- The public landing copy clearly warns not to use Amazon URLs in Product Mode.
 - Amazon URLs are clearly marked as Debug Mode / Amazon Shadow only.
 - Product Mode does not show telemetry, `shadow_sources` or memory observability.
 - Product Mode does not show `DEBUG TRACE`.

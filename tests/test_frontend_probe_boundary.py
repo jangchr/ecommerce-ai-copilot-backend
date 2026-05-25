@@ -15,6 +15,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("data.debug", self.source)
 
     def test_product_mode_guidance_and_copy_controls_are_present(self):
+        self.assertIn(
+            "Generate TikTok creative strategy from grounded ecommerce review insights.",
+            self.source,
+        )
+        self.assertIn(
+            "This public demo uses 10 stable local grounded product categories. Start with balsamic_vinegar.",
+            self.source,
+        )
+        self.assertIn("Try balsamic_vinegar", self.source)
+        self.assertIn("function setDemoSlug(slug)", self.source)
         for slug in [
             "balsamic_vinegar",
             "printer",
@@ -28,7 +38,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "skincare_serum",
         ]:
             self.assertIn(slug, self.source)
-        self.assertIn("Amazon URLs are for Debug Mode / Amazon Shadow only", self.source)
+        self.assertIn("Do not use Amazon URLs in Product Mode yet", self.source)
+        self.assertIn("Amazon URLs are available only in Debug Mode / Amazon Shadow", self.source)
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
@@ -59,6 +70,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
     def test_debug_trace_is_hidden_when_debug_mode_is_off(self):
         self.assertIn('id="debugTraceSection" hidden', self.source)
+        self.assertIn('id="debugMode" onchange="syncDebugMode()"', self.source)
         self.assertIn("function clearDebugPanel()", self.source)
         self.assertIn("clearDebugPanel();", self.source)
         self.assertNotIn("renderDebugPanel(response.data.feedback, null, 'Off')", self.source)

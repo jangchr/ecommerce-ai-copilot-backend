@@ -16,7 +16,7 @@ Use:
 balsamic_vinegar
 ```
 
-Then click **Run Workflow** and wait for the result.
+The landing page also includes a **Try balsamic_vinegar** quick-pick button. Quick-pick buttons only fill the input; they do not automatically call the API. After selecting a slug, click **Run Workflow** and wait for the result.
 
 Render may cold start the service, so the first page load or first generation can be slower than later requests.
 
@@ -38,6 +38,14 @@ skincare_serum
 ```
 
 ## What To Look At
+
+The public landing copy should make the demo intent clear:
+
+- It is a grounded ecommerce creative agent demo.
+- It uses 10 stable local grounded product categories.
+- It recommends starting with `balsamic_vinegar`.
+- Running the workflow generates TikTok creative strategy, hook and storyboard output.
+- Amazon URLs are Debug Mode / Amazon Shadow only, not Product Mode stable input.
 
 After the workflow finishes, review:
 

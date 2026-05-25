@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrossGrowth AI - Agent Debugger</title>
+    <title>Grounded Ecommerce Creative Agent Demo</title>
     <style>
         :root {
             --nav-bg: rgba(255, 255, 255, 0.92);
@@ -265,6 +265,28 @@
             color: var(--text-primary);
             font-weight: 650;
         }
+        .slug-button {
+            border: 1px solid var(--border-light);
+            background: var(--bg-surface);
+            border-radius: 999px;
+            padding: 6px 10px;
+            color: var(--text-primary);
+            font-weight: 650;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .slug-button:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+        .demo-warning {
+            max-width: 720px;
+            margin: 10px auto 0;
+            color: var(--accent-amber);
+            font-size: 12px;
+            font-weight: 650;
+            line-height: 1.45;
+        }
         .copy-toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -297,30 +319,33 @@
 
     <main>
         <section class="hero">
-            <h1>Agent 可视化调试台</h1>
-            <h2>真实证据边界、结构认知、策略决策、Scene Graph、Reward 与 Reflection Trace</h2>
+            <h1>Generate TikTok creative strategy from grounded ecommerce review insights.</h1>
+            <h2>This public demo uses 10 stable local grounded product categories. Start with balsamic_vinegar.</h2>
             <div class="control-panel">
                 <input type="text" id="urlInput" placeholder="Enter a local grounded slug, e.g. balsamic_vinegar" value="balsamic_vinegar">
                 <button class="btn-primary" id="startBtn" onclick="startSystem()">运行 Workflow</button>
             </div>
             <div class="input-guide">
-                Product Mode is stable for these local grounded slugs. Amazon URLs are for Debug Mode / Amazon Shadow only.
+                Product Mode is stable for these 10 local grounded slugs. Pick one, then run the workflow to generate a TikTok hook, creative strategy and storyboard.
                 <div class="slug-list">
-                    <span class="slug-pill">balsamic_vinegar</span>
-                    <span class="slug-pill">printer</span>
-                    <span class="slug-pill">women_bras</span>
-                    <span class="slug-pill">girls_overalls</span>
-                    <span class="slug-pill">protein_powder</span>
-                    <span class="slug-pill">phone_case</span>
-                    <span class="slug-pill">desk_lamp</span>
-                    <span class="slug-pill">baby_stroller</span>
-                    <span class="slug-pill">pet_hair_vacuum</span>
-                    <span class="slug-pill">skincare_serum</span>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('balsamic_vinegar')">Try balsamic_vinegar</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('printer')">printer</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('women_bras')">women_bras</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('girls_overalls')">girls_overalls</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('protein_powder')">protein_powder</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('phone_case')">phone_case</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('desk_lamp')">desk_lamp</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('baby_stroller')">baby_stroller</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('pet_hair_vacuum')">pet_hair_vacuum</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('skincare_serum')">skincare_serum</button>
                 </div>
+            </div>
+            <div class="demo-warning">
+                Do not use Amazon URLs in Product Mode yet. Amazon URLs are available only in Debug Mode / Amazon Shadow.
             </div>
             <div class="run-options">
                 <label class="toggle-option" for="debugMode">
-                    <input type="checkbox" id="debugMode" checked onchange="syncDebugMode()">
+                    <input type="checkbox" id="debugMode" onchange="syncDebugMode()">
                     <span>Debug Mode</span>
                 </label>
                 <label class="toggle-option" for="amazonShadowMode" id="amazonShadowOption">
@@ -402,6 +427,10 @@
 
         let latestDebugCategory = '';
         let latestProductData = null;
+
+        function setDemoSlug(slug) {
+            document.getElementById('urlInput').value = slug;
+        }
 
         function storyboardText(storyboard) {
             const scenes = storyboard?.scenes || [];

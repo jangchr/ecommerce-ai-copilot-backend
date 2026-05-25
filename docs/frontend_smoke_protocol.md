@@ -32,12 +32,17 @@ The API surfaces have distinct responsibilities:
 ## Smoke Test: Product Mode Slug UX
 
 1. Turn **Debug Mode** off.
-2. Confirm the input helper says Product Mode is stable for the 10 local grounded slugs.
-3. Enter one stable slug, for example `balsamic_vinegar`.
-4. Run the workflow.
+2. Confirm the public landing headline says: `Generate TikTok creative strategy from grounded ecommerce review insights.`
+3. Confirm the input helper says the public demo uses 10 stable local grounded product categories and recommends `balsamic_vinegar`.
+4. Confirm the page shows quick-pick controls, including **Try balsamic_vinegar**.
+5. Confirm quick-pick controls only fill the input and do not automatically call the API.
+6. Confirm the warning says not to use Amazon URLs in Product Mode and that Amazon URLs are only for Debug Mode / Amazon Shadow.
+7. Enter one stable slug, for example `balsamic_vinegar`.
+8. Run the workflow.
 
 Expected results:
 
+- The page clearly presents itself as a grounded ecommerce creative agent public demo.
 - The page explains that Amazon URLs are for Debug Mode / Amazon Shadow only.
 - The visible slug list includes `balsamic_vinegar`, `printer`, `women_bras`, `girls_overalls`, `protein_powder`, `phone_case`, `desk_lamp`, `baby_stroller`, `pet_hair_vacuum` and `skincare_serum`.
 - Product sections focus on product response fields: `insights`, `audience`, `strategy`, `assets`, `evaluation` and `feedback`.
