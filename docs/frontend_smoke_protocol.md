@@ -58,6 +58,23 @@ Expected results:
   - `Translate to Chinese`
   - `Copy Chinese Translation`
 
+## Smoke Test: Example Gallery
+
+1. Keep **Debug Mode** off.
+2. Confirm **Example Gallery** appears below the Product Mode input and above the result area.
+3. Confirm cards exist for `balsamic_vinegar`, `pet_hair_vacuum` and `desk_lamp`.
+4. Confirm each card shows pain point, hook and storyboard summaries.
+5. Click **Try This Product** on each card.
+
+Expected results:
+
+- The matching slug fills the input.
+- No workflow request is sent.
+- Debug Mode remains off.
+- Source Probe and Amazon Shadow are not triggered.
+- Recent Generations is unchanged by gallery clicks.
+- The gallery does not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
+
 ## Smoke Test: Product Downloads
 
 1. Turn **Debug Mode** off.

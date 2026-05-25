@@ -2,7 +2,7 @@
 
 This backend is an evidence-driven ecommerce creative agent runtime. It turns grounded product-review evidence and trend context into structured strategy, executable short-video scene graphs, reward evaluation, reflection routing and bounded memory. Local curated review datasets remain the stable regression anchor while external source adapters stay feature-flagged and safely degradable.
 
-Current Product Mode actions include copy controls, full and section-level Chinese translation, client-side **Download Markdown** / **Download JSON** exports, and browser-local **Recent Generations** for user-visible creative briefs.
+Current Product Mode actions include a static **Example Gallery**, copy controls, full and section-level Chinese translation, client-side **Download Markdown** / **Download JSON** exports, and browser-local **Recent Generations** for user-visible creative briefs.
 
 ## Documentation Map
 

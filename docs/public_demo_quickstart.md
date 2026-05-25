@@ -47,6 +47,16 @@ The public landing copy should make the demo intent clear:
 - Running the workflow generates TikTok creative strategy, hook and storyboard output.
 - Amazon URLs are Debug Mode / Amazon Shadow only, not Product Mode stable input.
 
+## Example Gallery
+
+The public landing page includes a static Example Gallery for:
+
+- `balsamic_vinegar`
+- `pet_hair_vacuum`
+- `desk_lamp`
+
+Each card shows a pain point summary, hook summary and storyboard summary. **Try This Product** only fills the Product Mode input with that slug. It does not call `/api/v1/generate-copilot`, does not enable Debug Mode, does not run Source Probe, does not run Amazon Shadow and does not save anything to Recent Generations.
+
 After the workflow finishes, review:
 
 - Evidence Snapshot: source badge, confidence indicators and short review-backed quotes.

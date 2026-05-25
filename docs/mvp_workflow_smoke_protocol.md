@@ -14,6 +14,10 @@
 
 3. ???? Workflow?
 
+3a. Verify Example Gallery shows static cards for balsamic_vinegar, pet_hair_vacuum, and desk_lamp.
+
+3b. Verify Try This Product only fills the input and does not call generate-copilot, Debug Mode, Source Probe, Amazon Shadow, or localStorage recent generations.
+
 4. ?? Product Mode ??????
 
 5. ???????

@@ -39,6 +39,9 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - Page loads.
    - Product Mode helper is visible.
    - `balsamic_vinegar` appears as the default or recommended input.
+   - **Example Gallery** is visible.
+   - Example Gallery cards exist for `balsamic_vinegar`, `pet_hair_vacuum` and `desk_lamp`.
+   - **Try This Product** fills the input only and does not run the workflow or enable Debug Mode.
 
 4. Run Product Mode:
 

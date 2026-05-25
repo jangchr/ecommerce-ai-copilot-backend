@@ -25,6 +25,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         )
         self.assertIn("Try balsamic_vinegar", self.source)
         self.assertIn("function setDemoSlug(slug)", self.source)
+        self.assertIn("Example Gallery", self.source)
+        self.assertIn("Static examples, no API call", self.source)
+        self.assertIn("Try This Product", self.source)
+        self.assertIn("function setExampleSlug(slug)", self.source)
         for slug in [
             "balsamic_vinegar",
             "printer",
@@ -72,6 +76,56 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("function copyChineseTranslation()", self.source)
         self.assertIn("function translateSection(sectionKey)", self.source)
         self.assertIn("function copySectionTranslation(sectionKey)", self.source)
+
+    def test_static_example_gallery_only_sets_product_input(self):
+        for text in [
+            "balsamic_vinegar",
+            "pet_hair_vacuum",
+            "desk_lamp",
+            "瓶盖破裂、泄漏、口感稀薄",
+            "宠物毛清不干净、吸力不够、反复清理",
+            "光线刺眼、桌面杂乱、夜间工作疲劳",
+            "别再让一瓶漏得到处都是的香醋毁掉你的沙拉。",
+            "如果你每天都在和沙发上的宠物毛打仗，这个开场能直接抓住目标用户。",
+            "你的桌灯是在帮你工作，还是正在让你更累？",
+            "展示破损瓶盖、粘腻包装，再切到干净浓稠的替代方案。",
+            "展示沙发、地毯和衣服上的宠物毛，再展示清理前后对比。",
+            "展示昏暗桌面、眼疲劳，再展示柔和灯光和整洁工作区。",
+        ]:
+            with self.subTest(text=text):
+                self.assertIn(text, self.source)
+
+        gallery_match = re.search(
+            r"<section class=\"example-gallery\"(?P<body>.*?)<section class=\"agent-track\"",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(gallery_match)
+        gallery_body = gallery_match.group("body")
+        self.assertIn("setExampleSlug('balsamic_vinegar')", gallery_body)
+        self.assertIn("setExampleSlug('pet_hair_vacuum')", gallery_body)
+        self.assertIn("setExampleSlug('desk_lamp')", gallery_body)
+
+        function_match = re.search(
+            r"function setExampleSlug\(slug\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(function_match)
+        function_body = function_match.group("body")
+        self.assertIn("setDemoSlug(slug);", function_body)
+        for body in [gallery_body, function_body]:
+            with self.subTest(gallery_boundary=body[:40]):
+                self.assertNotIn("startSystem(", body)
+                self.assertNotIn("postCopilot", body)
+                self.assertNotIn("generate-copilot", body)
+                self.assertNotIn("debug-source-probe", body)
+                self.assertNotIn("amazonShadowMode", body)
+                self.assertNotIn("localStorage", body)
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("memory_observability", body)
 
     def test_product_renderer_does_not_display_observability_fields(self):
         match = re.search(

@@ -75,6 +75,23 @@ skincare_serum
 
 Do not enter an Amazon URL in Product Mode. Amazon URLs are only for Debug Mode / Amazon Shadow checks and are not the stable product input path.
 
+## Example Gallery Check
+
+1. Open the Product Mode page.
+2. Confirm **Example Gallery** appears below the input area and above the result/agent sections.
+3. Confirm the static cards are visible for `balsamic_vinegar`, `pet_hair_vacuum` and `desk_lamp`.
+4. Confirm each card shows pain point, hook and storyboard summaries.
+5. Click **Try This Product** on each card.
+
+Expected:
+
+- The matching slug is placed into the Product Mode input.
+- The workflow does not run automatically.
+- Debug Mode is not opened.
+- Source Probe and Amazon Shadow are not triggered.
+- The gallery does not save anything to Recent Generations.
+- The gallery does not display or read Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
+
 ## Product Mode: Debug Mode Off
 
 1. Turn **Debug Mode** off.

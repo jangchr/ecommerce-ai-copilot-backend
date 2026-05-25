@@ -129,6 +129,19 @@ Product Mode now includes browser-local recent generation history:
 - Saved records do not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe output, Amazon Shadow Summary, API keys or environment secrets.
 - No backend endpoint, database, login or payment was added.
 
+## L12.2-A Static Example Gallery
+
+Status: ready.
+
+Product Mode now includes a static Example Gallery:
+
+- The first gallery cards cover `balsamic_vinegar`, `pet_hair_vacuum` and `desk_lamp`.
+- Each card shows a pain point summary, hook summary and storyboard summary.
+- **Try This Product** fills the Product Mode input with the card slug only.
+- Gallery clicks do not call `/api/v1/generate-copilot`, do not open Debug Mode, do not run Source Probe, do not run Amazon Shadow and do not save to Recent Generations.
+- The gallery does not display or read Debug Trace, telemetry, `telemetry_summary`, `shadow_sources` or `memory_observability`.
+- No backend endpoint, database, login or payment was added.
+
 The recommended first external deployment target is documented in [Deployment Provider Decision](deployment_provider_decision.md). Current recommendation: Render first, Railway as the closest alternate, with `ALLOW_REAL_SOURCE_ADAPTERS=false` preserved for the Product Mode MVP.
 
 Render-specific setup is documented in [Render Deployment Setup](render_deployment_setup.md), including Docker settings, required environment variables, `/healthz`, Product Mode frontend smoke, and the first-deployment persistent-storage decision.
