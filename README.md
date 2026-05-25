@@ -339,3 +339,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Product Description Mode Final Audit](docs/product_description_mode_final_audit.md) ? L13.1-H Product Description Mode ?????
 - [Product Description Demo v1 Archive](docs/product_description_demo_v1_archive.md) ? product-description-demo-v1 ?????
 - [Product Description Trial Launch Checklist](docs/product_description_trial_launch_checklist.md) ? L13.2-A ?????????????????
+- [Product Description Trial Outreach Tracker](docs/product_description_trial_outreach_tracker.md) ? L13.2-B ??????????????????
