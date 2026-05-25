@@ -356,10 +356,27 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin: 12px 0 8px;
         }
         .section-translation {
             margin-top: 8px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .section-header-title {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+        .section-block + .section-block {
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
         }
         .copy-status {
             color: var(--accent-green);
@@ -516,14 +533,64 @@
             return value ? 'Yes' : 'No';
         }
 
-        function sectionTranslationControls(key) {
+        function renderSectionHeader(title, key) {
             return `
-                <div class="section-actions">
-                    <button class="btn-secondary" id="translate-section-${escapeHTML(key)}" onclick="translateSection('${escapeHTML(key)}')">Translate this section</button>
-                    <button class="btn-secondary" id="copy-section-${escapeHTML(key)}" onclick="copySectionTranslation('${escapeHTML(key)}')" disabled>Copy section translation</button>
+                <div class="section-header">
+                    <div class="section-header-title">${escapeHTML(title)}</div>
+                    <div class="section-actions">
+                        <button class="btn-secondary" id="translate-section-${escapeHTML(key)}" onclick="translateSection('${escapeHTML(key)}')">Translate this section</button>
+                        <button class="btn-secondary" id="copy-section-${escapeHTML(key)}" onclick="copySectionTranslation('${escapeHTML(key)}')" disabled>Copy section translation</button>
+                    </div>
                 </div>
                 <div class="section-translation" id="section-translation-${escapeHTML(key)}"></div>
             `;
+        }
+
+        function buildSectionText(data) {
+            const evidence = data.insights?.evidence || {};
+            const script = data.assets?.tiktok_script || {};
+            const storyboard = data.assets?.storyboard || {};
+            const evaluation = data.evaluation || {};
+            const score = Math.max(0, Math.min(100, Number((evaluation.confidence_score * 100).toFixed(0)) || 0));
+            return {
+                evidence: [
+                    'Evidence Snapshot',
+                    `Source Type: ${evidence.source_type || 'unknown source'}`,
+                    `Review confidence: ${formatMetric(evidence.review_confidence)}`,
+                    `Trend confidence: ${formatMetric(evidence.trend_confidence)}`,
+                    'Evidence quotes:',
+                    ...((evidence.evidence_quotes || []).slice(0, 5).map((quote) => `- ${quote}`)),
+                    'Customer pain points:',
+                    ...((data.insights?.pain_points || []).map((pain) => `- ${pain}`)),
+                ].filter(Boolean).join('\n').trim(),
+                strategy: [
+                    'Target Audience & Creative Strategy',
+                    `Target Audience: ${data.audience?.primary || ''}`,
+                    `Trust Barriers: ${(data.audience?.trust_barriers || []).join('; ')}`,
+                    `Core Hook Strategy: ${data.strategy?.core_hook_strategy || ''}`,
+                    `Emotional Trigger: ${data.strategy?.emotional_trigger || ''}`,
+                    `CTA Logic: ${script.cta || ''}`,
+                ].filter(Boolean).join('\n').trim(),
+                hook: [
+                    'Hook',
+                    script.hook || '',
+                    '',
+                    'CTA',
+                    script.cta || '',
+                ].join('\n').trim(),
+                storyboard: [
+                    'Storyboard',
+                    storyboardText(storyboard),
+                ].join('\n').trim(),
+                evaluation: [
+                    'Evaluation',
+                    `Retention Confidence: ${score}%`,
+                    `Risk Level: ${evaluation.risk_level || 'low'}`,
+                    `Approved: ${boolText(evaluation.is_approved)}`,
+                    `Grounded: ${boolText(evaluation.is_grounded)}`,
+                    `Quality Rationale: ${evaluation.reasoning || ''}`,
+                ].filter(Boolean).join('\n').trim(),
+            };
         }
 
         function quoteList(quotes) {
@@ -721,9 +788,10 @@
                 return;
             }
 
-            const text = sectionTextCache[sectionKey] || '';
+            const text = (sectionTextCache[sectionKey] || '').trim();
             if (!text) {
-                target.innerHTML = block('Chinese Translation', 'Run the workflow before translating this section.');
+                console.warn(`No section text available for translation: ${sectionKey}`);
+                target.innerHTML = block('Chinese Translation', 'No section text available for translation.');
                 return;
             }
 
@@ -739,11 +807,16 @@
                 });
                 const translated = response.translated_text || '';
                 sectionTranslations[sectionKey] = { loading: false, text: translated, error: '' };
-                target.innerHTML = block('Chinese Translation', translated || 'Translation returned empty.');
-                copyBtn.disabled = !translated;
+                if (!translated) {
+                    target.innerHTML = block('Chinese Translation', 'Translation returned empty result. Please try again.');
+                    copyBtn.disabled = true;
+                    return;
+                }
+                target.innerHTML = block('Chinese Translation', translated);
+                copyBtn.disabled = false;
             } catch (error) {
                 sectionTranslations[sectionKey] = { loading: false, text: '', error: error.message || 'Translation failed.' };
-                target.innerHTML = block('Chinese Translation', 'Section translation unavailable. Original section is unchanged.');
+                target.innerHTML = block('Chinese Translation', 'Translation failed. Please try again.');
             } finally {
                 translateBtn.disabled = false;
             }
@@ -946,48 +1019,11 @@
             const score = Math.max(0, Math.min(100, Number((evalData.confidence_score * 100).toFixed(0)) || 0));
             const riskCls = evalData.risk_level === 'high' ? 'risk-high' : (evalData.risk_level === 'medium' ? 'risk-medium' : '');
 
-            sectionTextCache = {
-                evidence: [
-                    'Evidence Snapshot',
-                    `Source Type: ${evidence.source_type || 'unknown source'}`,
-                    `Review confidence: ${formatMetric(evidence.review_confidence)}`,
-                    `Trend confidence: ${formatMetric(evidence.trend_confidence)}`,
-                    'Evidence quotes:',
-                    ...(evidence.evidence_quotes || []).slice(0, 5).map((quote) => `- ${quote}`),
-                    'Customer pain points:',
-                    ...(data.insights.pain_points || []).map((pain) => `- ${pain}`),
-                ].join('\n'),
-                strategy: [
-                    'Target Audience & Creative Strategy',
-                    `Target Audience: ${data.audience.primary || ''}`,
-                    `Trust Barriers: ${(data.audience.trust_barriers || []).join('; ')}`,
-                    `Core Hook Strategy: ${data.strategy.core_hook_strategy || ''}`,
-                    `Emotional Trigger: ${data.strategy.emotional_trigger || ''}`,
-                    `CTA Logic: ${script.cta || ''}`,
-                ].join('\n'),
-                hook: [
-                    'Hook',
-                    script.hook || '',
-                    '',
-                    'CTA',
-                    script.cta || '',
-                ].join('\n'),
-                storyboard: [
-                    'Storyboard',
-                    storyboardText(storyboard),
-                ].join('\n'),
-                evaluation: [
-                    'Evaluation',
-                    `Retention Confidence: ${score}%`,
-                    `Risk Level: ${evalData.risk_level || 'low'}`,
-                    `Approved: ${boolText(evalData.is_approved)}`,
-                    `Grounded: ${boolText(evalData.is_grounded)}`,
-                    `Quality Rationale: ${evalData.reasoning || ''}`,
-                ].join('\n'),
-            };
+            sectionTextCache = buildSectionText(data);
 
             document.getElementById('res-insights').style.opacity = '1';
             document.getElementById('res-insights').innerHTML = `
+                ${renderSectionHeader('Evidence Snapshot', 'evidence')}
                 <span class="source-badge">${escapeHTML(evidence.source_type || 'unknown source')}</span>
                 <div class="metric-strip">
                     ${metricPill('Review confidence', formatMetric(evidence.review_confidence))}
@@ -997,31 +1033,34 @@
                 ${block('Evidence Quotes', 'Short review-backed signals used by the creative brief')}
                 ${quoteList(evidence.evidence_quotes)}
                 ${block('Customer Pain Points', (data.insights.pain_points || []).join('\n'))}
-                ${sectionTranslationControls('evidence')}
             `;
 
             document.getElementById('res-strategy').style.opacity = '1';
             document.getElementById('res-strategy').innerHTML = `
+                ${renderSectionHeader('Target Audience & Creative Strategy', 'strategy')}
                 ${block('Target Audience', data.audience.primary || '')}
                 ${block('Trust Barriers', (data.audience.trust_barriers || []).join('\n'))}
                 ${block('Core Hook Strategy', data.strategy.core_hook_strategy || '')}
                 ${block('Emotional Trigger', data.strategy.emotional_trigger || '')}
                 ${block('CTA Logic', data.assets?.tiktok_script?.cta || '')}
-                ${sectionTranslationControls('strategy')}
             `;
 
             document.getElementById('res-assets').style.opacity = '1';
             document.getElementById('res-assets').innerHTML = `
-                ${block('Hook', script.hook || '')}
-                ${block('CTA', script.cta || '')}
-                ${sectionTranslationControls('hook')}
-                <div class="json-key">Storyboard</div>
-                ${renderStoryboardBrief(storyboard)}
-                ${sectionTranslationControls('storyboard')}
+                <div class="section-block">
+                    ${renderSectionHeader('Hook', 'hook')}
+                    ${block('Hook', script.hook || '')}
+                    ${block('CTA', script.cta || '')}
+                </div>
+                <div class="section-block">
+                    ${renderSectionHeader('Storyboard', 'storyboard')}
+                    ${renderStoryboardBrief(storyboard)}
+                </div>
             `;
 
             document.getElementById('res-evaluation').style.opacity = '1';
             document.getElementById('res-evaluation').innerHTML = `
+                ${renderSectionHeader('Evaluation', 'evaluation')}
                 <div class="eval-box ${escapeHTML(riskCls)}">
                     <div style="display:flex; justify-content:space-between; font-weight:700;">
                         <span>Retention Confidence</span>
@@ -1037,7 +1076,6 @@
                     </div>
                     ${block('Quality Rationale', evalData.reasoning || '')}
                 </div>
-                ${sectionTranslationControls('evaluation')}
             `;
         }
 

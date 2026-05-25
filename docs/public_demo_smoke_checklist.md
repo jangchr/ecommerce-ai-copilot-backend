@@ -67,8 +67,10 @@ https://ecommerce-ai-copilot-backend.onrender.com/
    - **Copy Chinese Translation** works after translation succeeds.
    - Translation failure does not clear the original English result.
    - **Translate this section** is visible under Product Mode result sections.
+   - Section translation buttons appear in the section header row, next to the section title.
    - **Copy section translation** works after a section translation succeeds.
    - Section translation affects only the clicked section and leaves the original English output visible.
+   - At minimum, translate Evidence Snapshot and Storyboard before a live demo.
 
 ## Render Cold Start Expectations
 
@@ -117,6 +119,7 @@ Run this 5 minutes before a live demo:
    - Copy buttons are usable.
    - Translation controls are usable or any translation failure is isolated from the product result.
    - Section translation controls are visible and isolated per section.
+   - Evidence Snapshot and Storyboard section translations do not show an unavailable message after product output renders.
 
 5. Leave the browser tab open for the demo.
 

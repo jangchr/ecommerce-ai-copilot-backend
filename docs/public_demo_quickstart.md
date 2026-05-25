@@ -76,7 +76,7 @@ After Product Mode generates a result, click **Translate to Chinese** to transla
 
 If translation fails, the original English result remains visible and unchanged.
 
-Each major Product Mode section also has section-level translation controls:
+Each major Product Mode section also has section-level translation controls at the top of the section header:
 
 - **Translate this section**
 - **Copy section translation**

@@ -162,6 +162,7 @@ Expected results:
 Expected results:
 
 - Each section translation request uses `/api/v1/translate-output`.
+- Each section shows **Translate this section** and **Copy section translation** in the section header, next to the section title.
 - Only the clicked section's user-visible Product Mode text is translated.
 - The translation appears beneath that section only.
 - Other sections and the original English content remain unchanged.
@@ -169,6 +170,8 @@ Expected results:
 - Running a new Product Mode generation clears old section translations.
 - Debug Mode Off still permits section translation because it is a Product Mode user feature.
 - Section translation does not send Debug Trace, telemetry, `shadow_sources`, memory observability, Source Probe output or Amazon Shadow Summary.
+- If a section has no available text, the UI shows `No section text available for translation.`
+- If translation fails, the UI shows `Translation failed. Please try again.`
 
 ## Demo Pass Criteria
 

@@ -102,6 +102,7 @@ Expected results:
 Expected results:
 
 - Section translation uses `POST /api/v1/translate-output`.
+- Section translation buttons appear in the section header row next to the title, not at the bottom of the section.
 - The clicked section shows `Translating this section...` while the request is in flight.
 - The translated text appears only beneath that section.
 - Other Product Mode sections remain unchanged.
@@ -109,6 +110,7 @@ Expected results:
 - Section translation does not automatically run on page load or generation.
 - A new workflow run clears old section translations.
 - The section text source is Product Mode visible text only; it must not include Debug Trace, telemetry, `telemetry_summary`, `shadow_sources`, `memory_observability`, Source Probe data or Amazon Shadow Summary.
+- Evidence Snapshot and Storyboard section translation should not return an unavailable message when Product Mode output has rendered.
 
 ## Smoke Test: Debug Mode Off
 

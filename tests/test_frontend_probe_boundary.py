@@ -110,13 +110,23 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("let sectionTextCache = {};", self.source)
         self.assertIn("function resetSectionTranslations()", self.source)
         self.assertIn("resetSectionTranslations();", self.source)
-        self.assertIn("sectionTextCache = {", self.source)
-        for key in ["evidence", "strategy", "hook", "storyboard", "evaluation"]:
+        self.assertIn("function buildSectionText(data)", self.source)
+        self.assertIn("sectionTextCache = buildSectionText(data);", self.source)
+        self.assertIn("function renderSectionHeader(title, key)", self.source)
+        for title, key in [
+            ("Evidence Snapshot", "evidence"),
+            ("Target Audience & Creative Strategy", "strategy"),
+            ("Hook", "hook"),
+            ("Storyboard", "storyboard"),
+            ("Evaluation", "evaluation"),
+        ]:
             with self.subTest(key=key):
-                self.assertIn(f"sectionTranslationControls('{key}')", self.source)
-        self.assertIn("const text = sectionTextCache[sectionKey] || '';", self.source)
+                self.assertIn(f"renderSectionHeader('{title}', '{key}')", self.source)
+        self.assertIn("const text = (sectionTextCache[sectionKey] || '').trim();", self.source)
         self.assertIn("Translating this section...", self.source)
-        self.assertIn("Section translation unavailable. Original section is unchanged.", self.source)
+        self.assertIn("No section text available for translation.", self.source)
+        self.assertIn("Translation failed. Please try again.", self.source)
+        self.assertIn("Translation returned empty result. Please try again.", self.source)
 
     def test_source_probe_is_guarded_by_debug_mode(self):
         self.assertIn("postCopilot('debug-source-probe'", self.source)
