@@ -1704,3 +1704,24 @@ Document: docs/language_mode_final_audit.md
 
 L13.7 Public demo refresh for Language Mode
 
+## L13.7-A Public Demo Refresh for Language Mode
+
+Status: ready.
+
+Document: docs/public_demo_refresh_l13_7_language_mode.md
+
+???
+
+- Public Demo ?????
+- Language selector ??
+- English / ?? ??
+- Product Description Mode ??????
+- Stable slug Product Mode ??????
+- output_language=zh-CN ??
+- Feedback / Waitlist ??
+- Product / Debug ????
+
+???
+
+Language Mode v1 ????????????
+

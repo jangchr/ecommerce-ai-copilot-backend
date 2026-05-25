@@ -362,3 +362,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Language Mode Frontend Copy Map](docs/language_mode_frontend_copy_map.md) ? L13.6-C Language Mode ??????????
 - [Language Mode Smoke Record](docs/language_mode_smoke_record.md) ? L13.6-F Language Mode smoke ???
 - [Language Mode Final Audit](docs/language_mode_final_audit.md) ? L13.6-G Language Mode ?????
+- [Public Demo Refresh L13.7 Language Mode](docs/public_demo_refresh_l13_7_language_mode.md) ? L13.7-A Language Mode ???????
