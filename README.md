@@ -386,3 +386,11 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Pasted Reviews Trial Launch Checklist](docs/pasted_reviews_trial_launch_checklist.md) ? L14.4-A Pasted Reviews ???????????
 - [Pasted Reviews Trial Outreach Tracker](docs/pasted_reviews_trial_outreach_tracker.md) ? L14.4-B Pasted Reviews ????????
 - [Pasted Reviews Trial Round 1 Summary Template](docs/pasted_reviews_trial_round_1_summary_template.md) ? L14.4-C Pasted Reviews ??????????
+- [Pasted Reviews Trial Launch Final Audit](docs/pasted_reviews_trial_launch_final_audit.md) — Pasted Reviews 后续规划文档。
+- [Pasted Reviews Next Roadmap Decision](docs/pasted_reviews_next_roadmap_decision.md) — Pasted Reviews 后续规划文档。
+- [Pasted Reviews Input Guide Planning](docs/pasted_reviews_input_guide_planning.md) — Pasted Reviews 后续规划文档。
+- [Pasted Reviews Sample Review Library Planning](docs/pasted_reviews_sample_review_library_planning.md) — Pasted Reviews 后续规划文档。
+- [Pasted Reviews Polish Backlog](docs/pasted_reviews_polish_backlog.md) — Pasted Reviews 后续规划文档。
+- [Pasted Reviews Quality Rubric](docs/pasted_reviews_quality_rubric.md) — Pasted Reviews 后续规划文档。
+- [Pasted Reviews Public Demo Followup Checklist](docs/pasted_reviews_public_demo_followup_checklist.md) — Pasted Reviews 后续规划文档。
+- [Pasted Reviews V1 Batch Final Audit](docs/pasted_reviews_v1_batch_final_audit.md) — Pasted Reviews 后续规划文档。

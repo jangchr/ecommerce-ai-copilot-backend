@@ -2075,3 +2075,38 @@ Documents:
 - ?????
 - ?????
 
+## L14.4-D / L14.5-A-G Pasted Reviews Planning Batch
+
+Status: ready.
+
+Commit base:
+
+fa21658
+
+Documents:
+
+- docs/pasted_reviews_trial_launch_final_audit.md
+- docs/pasted_reviews_next_roadmap_decision.md
+- docs/pasted_reviews_input_guide_planning.md
+- docs/pasted_reviews_sample_review_library_planning.md
+- docs/pasted_reviews_polish_backlog.md
+- docs/pasted_reviews_quality_rubric.md
+- docs/pasted_reviews_public_demo_followup_checklist.md
+- docs/pasted_reviews_v1_batch_final_audit.md
+
+结论：
+
+- Pasted Reviews trial launch 已完成最终审计
+- 下一阶段优先 Pasted Reviews polish
+- 重点是 paste guide、示例库、输入质量提示、中文质量和公网后续检查
+- 继续不阻塞真实用户反馈收集
+
+边界：
+
+- 本批次只做文档规划
+- 不改 runtime
+- 不新增后端接口
+- 不新增数据库
+- 不新增登录
+- 不新增支付
+
