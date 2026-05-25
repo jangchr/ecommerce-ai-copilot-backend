@@ -837,3 +837,21 @@ Document: docs/commercial_demo_final_audit.md
 
 L12.5-C Tag commercial-demo-v1
 
+## L12.5-C Commercial Demo v1 Archive
+
+Status: ready.
+
+Document: docs/commercial_demo_v1_archive.md
+
+Tag:
+
+commercial-demo-v1
+
+???
+
+- Commercial Demo v1 ???
+- Product Mode ???
+- Copy / Download / Translation / Recent Generations / Feedback / Example Gallery ??
+- Amazon Beta ?????????
+- Product Mode ???? 10 ? stable local grounded slug
+
