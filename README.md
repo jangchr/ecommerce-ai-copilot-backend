@@ -377,3 +377,6 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Pasted Reviews Frontend UX Design](docs/pasted_reviews_frontend_ux_design.md) ? L14.0-C ???????? UX ???
 - [Pasted Reviews Implementation Plan](docs/pasted_reviews_implementation_plan.md) ? L14.0-D ???????????
 - [Pasted Reviews Boundary Checklist](docs/pasted_reviews_boundary_checklist.md) ? L14.0-E ?????????????
+- [Pasted Reviews Mode Smoke Record](docs/pasted_reviews_mode_smoke_record.md) ? L14.2-B ?????? smoke ???
+- [L14 Pasted Reviews Mode Release Notes](docs/release_notes_l14_pasted_reviews_mode.md) ? L14 ?????? release notes?
+- [Pasted Reviews Mode Final Audit](docs/pasted_reviews_mode_final_audit.md) ? L14.2-D ???????????

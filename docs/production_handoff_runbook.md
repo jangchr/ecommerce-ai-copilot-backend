@@ -1995,3 +1995,26 @@ Documents:
 - ?????
 - ?????
 
+## L14.2-B / L14.2-C / L14.2-D Pasted Reviews Mode Batch
+
+Status: ready.
+
+Commit:
+
+7ddf5c8
+
+Documents:
+
+- docs/pasted_reviews_mode_smoke_record.md
+- docs/release_notes_l14_pasted_reviews_mode.md
+- docs/pasted_reviews_mode_final_audit.md
+
+???
+
+- Pasted Reviews Mode v1 ???
+- Backend endpoint ???
+- Frontend mode ???
+- Fast gate PASS?146 tests
+- Product / Debug ????
+- ????? L14.3 Public demo refresh for Pasted Reviews Mode
+

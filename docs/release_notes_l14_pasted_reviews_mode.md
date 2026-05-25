@@ -1,0 +1,97 @@
+# L14 Pasted Reviews Mode Release Notes
+
+???ready
+
+## Commit
+
+7ddf5c8
+
+## Release ??
+
+Pasted Reviews Mode ????? endpoint ??????
+
+## ????
+
+Endpoint:
+
+POST /api/v1/generate-from-reviews
+
+???
+
+- product_name
+- product_category
+- product_description
+- pasted_reviews
+- target_platform
+- goal
+- output_language
+
+## ????
+
+Public Demo ???
+
+Pasted Reviews Mode / ??????
+
+???
+
+- Product name
+- Product category
+- Product description
+- Pasted reviews
+- Target platform
+- Goal
+- Use sample reviews
+- Generate from reviews
+
+## ????
+
+- English
+- ??
+
+??????
+
+- ??????
+- ??? output_language=zh-CN
+- ??????
+
+## ??????
+
+- Stable slug Product Mode
+- Product Description Mode
+- Pasted Reviews Mode
+- Language Mode
+- Use sample product
+- Use sample reviews
+- Example Gallery
+- Copy Hook
+- Copy Storyboard
+- Copy Full Markdown
+- Download Markdown
+- Download JSON
+- Recent Generations
+- Feedback Form
+- Waitlist Form
+- Debug Mode advanced section
+
+## ????
+
+- Pasted Reviews endpoint tests?PASS
+- Frontend boundary test?PASS
+- Fast gate?PASS?146 tests
+
+## ????
+
+- ??? Amazon
+- ??? Source Probe
+- ??? Amazon Shadow
+- ??? data.debug
+- ??? telemetry_summary
+- ??? shadow_sources
+- ??? memory_observability
+- ?????
+- ?????
+- ??????
+
+## ??
+
+Pasted Reviews Mode ?????? refresh?
