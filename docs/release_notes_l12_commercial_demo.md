@@ -1,0 +1,80 @@
+# L12 Commercial Demo Release Notes
+
+???ready
+
+## Release ??
+
+Commercial Demo v1 ready
+
+## ????
+
+- Public Demo ????
+- Product Mode ???
+- 10 ? stable local grounded slug
+- Example Gallery
+- Copy Hook
+- Copy Storyboard
+- Copy Full Markdown
+- Download Markdown
+- Download JSON
+- Full Chinese Translation
+- Section Chinese Translation
+- Recent Generations
+- Feedback form link
+- Debug Mode advanced section
+
+## ??????
+
+- balsamic_vinegar
+- printer
+- women_bras
+- girls_overalls
+- protein_powder
+- phone_case
+- desk_lamp
+- baby_stroller
+- pet_hair_vacuum
+- skincare_serum
+
+## ????
+
+- Amazon URL ????? Debug Mode / Amazon Shadow
+- amazon_primary ???
+- Product API ??? Debug Trace
+- Product API ??? telemetry_summary
+- Product API ??? shadow_sources
+- Product API ??? memory_observability
+- Recent Generations ??? debug-only ??
+- Download Markdown / JSON ??? debug-only ??
+
+## L12 ???
+
+- L12.0 Commercial MVP planning
+- L12.1 Download / history / feedback
+- L12.2 Example Gallery
+- L12.3 Public demo layout polish
+- L12.4 Controlled Amazon primary design
+
+## ????
+
+Amazon Beta ?????????????
+
+????
+
+Commercial Demo ???? > Amazon URL Beta ??
+
+## ????
+
+Render ?????? cold start?
+
+?????????
+
+1. ? 1 ? 3 ??
+2. ????
+3. ???? balsamic_vinegar
+
+## ?????
+
+- L12.5-B Commercial demo final audit
+- L12.5-C Tag commercial-demo-v1
+- L13.0 ???????????
