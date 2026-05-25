@@ -603,3 +603,24 @@ Document: docs/example_gallery_planning.md
 - Product Mode ???? 10 ? stable local grounded slug
 - Amazon URL ????? Debug Mode / Amazon Shadow
 
+
+## L12.2-B Example Gallery Public Smoke
+
+Status: ready.
+
+Document: docs/example_gallery_public_smoke.md
+
+结果：
+- Public 页面可访问
+- Example Gallery 可见
+- 3 个静态示例卡片可见
+- Try This Product 可见
+- Feedback 入口可见
+- generate-copilot with balsamic_vinegar 返回 200
+
+边界：
+- 不改 runtime 行为
+- 不新增后端接口
+- 不新增数据库
+- Product Mode 继续使用 10 个 stable local grounded slug
+- Amazon URL 仍然只属于 Debug Mode / Amazon Shadow

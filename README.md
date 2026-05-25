@@ -308,3 +308,5 @@ Public Demo v1 is archived at commit `81aeffa` and documented in [docs/public_de
 The runtime is currently packaged around grounded local datasets, observable memory/FAISS behavior, protected product/debug API boundaries and fast/full regression gates.
 
 - Feedback form: https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog
+
+- [Example Gallery Public Smoke](docs/example_gallery_public_smoke.md) — L12.2-B 示例库公网验证。
