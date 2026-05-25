@@ -7,6 +7,8 @@ from schemas.api_contract import (
     DebugCopilotResponse,
     GenerateCopilotResponse,
     GrowthRequest,
+    PastedReviewsRequest,
+    PastedReviewsResponse,
     ProductDescriptionRequest,
     ProductDescriptionResponse,
     TranslationRequest,
@@ -51,6 +53,12 @@ class ApiContractTest(unittest.TestCase):
         self.assertIs(
             route_response_model("/api/v1/generate-from-description"),
             ProductDescriptionResponse,
+        )
+
+    def test_pasted_reviews_endpoint_uses_reviews_response_contract(self):
+        self.assertIs(
+            route_response_model("/api/v1/generate-from-reviews"),
+            PastedReviewsResponse,
         )
 
     def test_generate_contract_does_not_expose_debug_state(self):
@@ -124,6 +132,48 @@ class ApiContractTest(unittest.TestCase):
         self.assertIn("request_id", response_properties)
         self.assertIn("output_language", response_properties)
         self.assertEqual(request.output_language, "en")
+
+    def test_pasted_reviews_contract_defaults_and_fields(self):
+        request = PastedReviewsRequest(
+            product_name="Mini Blender",
+            pasted_reviews="Hard to clean after one smoothie.\nToo loud for early mornings.",
+        )
+        self.assertEqual(request.target_platform, "TikTok")
+        self.assertEqual(request.goal, "tiktok_ctr")
+        self.assertEqual(request.output_language, "en")
+
+        request_properties = PastedReviewsRequest.model_json_schema()["properties"]
+        response_properties = PastedReviewsResponse.model_json_schema()["properties"]
+        self.assertIn("product_name", request_properties)
+        self.assertIn("product_category", request_properties)
+        self.assertIn("product_description", request_properties)
+        self.assertIn("pasted_reviews", request_properties)
+        self.assertIn("target_platform", request_properties)
+        self.assertIn("goal", request_properties)
+        self.assertIn("output_language", request_properties)
+        self.assertIn("status", response_properties)
+        self.assertIn("data", response_properties)
+        self.assertIn("request_id", response_properties)
+        self.assertIn("output_language", response_properties)
+
+    def test_pasted_reviews_invalid_output_language_returns_safe_error(self):
+        client = TestClient(app)
+
+        response = client.post(
+            "/api/v1/generate-from-reviews",
+            json={
+                "product_name": "Mini Blender",
+                "pasted_reviews": "Hard to clean after smoothies. Too loud for early mornings.",
+                "output_language": "fr",
+            },
+            headers={"X-Request-ID": "reviews-invalid-language"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["error_type"], "unsupported_output_language")
+        self.assertEqual(payload["request_id"], "reviews-invalid-language")
 
     def test_generate_contract_exposes_output_language_without_debug_fields(self):
         request_properties = GrowthRequest.model_json_schema()["properties"]

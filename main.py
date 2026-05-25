@@ -19,6 +19,8 @@ from schemas.api_contract import (
     DebugCopilotResponse,
     GenerateCopilotResponse,
     GrowthRequest,
+    PastedReviewsRequest,
+    PastedReviewsResponse,
     ProductDescriptionRequest,
     ProductDescriptionResponse,
     TranslationRequest,
@@ -81,8 +83,15 @@ DESCRIPTION_SYSTEM_PROMPT = (
     "do not claim Amazon or local dataset sources, and return compact JSON only."
 )
 
+PASTED_REVIEWS_SYSTEM_PROMPT = (
+    "You create concise ecommerce TikTok creative briefs from user-pasted review snippets. "
+    "Use only the supplied product context and pasted reviews. Do not claim Amazon, local dataset, "
+    "or external source access. Return compact JSON only."
+)
+
 DESCRIPTION_MIN_CHARS = 12
 DESCRIPTION_MAX_CHARS = 6000
+PASTED_REVIEWS_MIN_CHARS = 24
 SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
 
 app.add_middleware(
@@ -317,6 +326,51 @@ def _validate_description_request(request: ProductDescriptionRequest, request_id
     return None
 
 
+def _split_pasted_review_quotes(text: str, limit: int = 6) -> list[str]:
+    cleaned_lines = []
+    for raw_line in (text or "").replace("\r", "\n").split("\n"):
+        line = raw_line.strip().lstrip("-*•0123456789. )(").strip()
+        if line:
+            cleaned_lines.append(line)
+
+    if not cleaned_lines:
+        normalized = " ".join((text or "").split())
+        pieces = [piece.strip() for piece in normalized.replace("!", ".").replace("?", ".").split(".")]
+        cleaned_lines = [piece for piece in pieces if piece]
+
+    quotes = []
+    for line in cleaned_lines:
+        quote = _safe_evidence_quote(line, limit=240)
+        if quote and quote not in quotes:
+            quotes.append(quote)
+        if len(quotes) >= limit:
+            break
+    return quotes
+
+
+def _validate_pasted_reviews_request(request: PastedReviewsRequest, request_id: str):
+    product_name = _clean_description_text(request.product_name)
+    pasted_reviews = _clean_description_text(request.pasted_reviews)
+
+    if not product_name:
+        return _description_error("product_name is required.", "missing_product_name", request_id)
+    if not pasted_reviews:
+        return _description_error("pasted_reviews is required.", "missing_pasted_reviews", request_id)
+    if len(pasted_reviews) < PASTED_REVIEWS_MIN_CHARS:
+        return _description_error(
+            "Pasted Reviews Mode needs a few concrete review snippets or customer complaints.",
+            "pasted_reviews_too_short",
+            request_id,
+        )
+    if len(product_name) + len(_clean_description_text(request.product_description or "")) + len(pasted_reviews) > DESCRIPTION_MAX_CHARS:
+        return _description_error(
+            "Input is too long for Pasted Reviews Mode. Please shorten the pasted reviews.",
+            "input_too_long",
+            request_id,
+        )
+    return None
+
+
 def _safe_evidence_quote(text: str, limit: int = 220) -> str:
     cleaned = " ".join(_clean_description_text(text).split())
     return cleaned[:limit]
@@ -354,6 +408,42 @@ async def generate_description_brief(request: ProductDescriptionRequest) -> dict
     parsed = json.loads(raw)
     if not isinstance(parsed, dict):
         raise ValueError("Description generation returned non-object JSON.")
+    return parsed
+
+
+async def generate_pasted_reviews_brief(request: PastedReviewsRequest, evidence_quotes: list[str]) -> dict:
+    llm = ChatOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_API_BASE", "https://api.deepseek.com/v1"),
+        model=os.getenv("MODEL_NAME", "deepseek-chat"),
+        temperature=0.4,
+        max_retries=0,
+    )
+    content = (
+        "Return JSON with keys: target_audience, core_hook_strategy, emotional_trigger, hook, "
+        "cta, storyboard_scenes, evaluation_reasoning, feedback. "
+        "storyboard_scenes must be a list of exactly 4 objects with visual_description, narration, evidence_quote_used.\n\n"
+        f"Product name: {request.product_name}\n"
+        f"Product category: {request.product_category or 'unspecified'}\n"
+        f"Product description: {request.product_description or 'unspecified'}\n"
+        f"Target platform: {request.target_platform or 'TikTok'}\n"
+        f"Goal: {request.goal or 'tiktok_ctr'}\n"
+        "Pasted review evidence:\n"
+        + "\n".join(f"- {quote}" for quote in evidence_quotes)
+    )
+    message = await llm.ainvoke(
+        [
+            SystemMessage(content=PASTED_REVIEWS_SYSTEM_PROMPT),
+            HumanMessage(content=content),
+        ]
+    )
+    raw = str(message.content or "").strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        raw = raw.replace("json\n", "", 1).replace("JSON\n", "", 1).strip()
+    parsed = json.loads(raw)
+    if not isinstance(parsed, dict):
+        raise ValueError("Pasted reviews generation returned non-object JSON.")
     return parsed
 
 
@@ -447,6 +537,113 @@ def _description_response_data(request: ProductDescriptionRequest, generated: di
         "feedback": generated.get(
             "feedback",
             "Generated from user-provided product description. Validate claims before using in paid creative.",
+        ),
+    }
+
+
+def _pasted_reviews_response_data(
+    request: PastedReviewsRequest,
+    generated: dict,
+    evidence_quotes: list[str],
+) -> dict:
+    product_name = _clean_description_text(request.product_name)
+    category = _clean_description_text(request.product_category or "user_pasted_reviews_product")
+    description_quote = _safe_evidence_quote(request.product_description or "")
+    primary_quote = evidence_quotes[0] if evidence_quotes else _safe_evidence_quote(request.pasted_reviews)
+    scenes = generated.get("storyboard_scenes") or []
+    if not isinstance(scenes, list):
+        scenes = []
+
+    normalized_scenes = []
+    for index, scene in enumerate(scenes[:4]):
+        if not isinstance(scene, dict):
+            continue
+        fallback_quote = evidence_quotes[index % len(evidence_quotes)] if evidence_quotes else primary_quote
+        quote = scene.get("evidence_quote_used") or fallback_quote
+        normalized_scenes.append(
+            {
+                "scene_id": index + 1,
+                "scene_goal": scene.get("scene_goal", f"Show {product_name} review pain point"),
+                "visual_description": scene.get("visual_description", ""),
+                "narration": scene.get("narration", ""),
+                "evidence_quote_used": quote,
+                "linked_painpoint": quote,
+            }
+        )
+
+    while len(normalized_scenes) < 4:
+        index = len(normalized_scenes) + 1
+        quote = evidence_quotes[(index - 1) % len(evidence_quotes)] if evidence_quotes else primary_quote
+        normalized_scenes.append(
+            {
+                "scene_id": index,
+                "scene_goal": f"Turn pasted review pain point into a {request.target_platform or 'TikTok'} moment",
+                "visual_description": f"Show {product_name} addressing this customer complaint in a simple product scene.",
+                "narration": f"This review pain point becomes the creative angle: {quote}",
+                "evidence_quote_used": quote,
+                "linked_painpoint": quote,
+            }
+        )
+
+    hook = generated.get("hook") or f"If this review sounds familiar, {product_name} needs a better creative angle."
+    cta = generated.get("cta") or f"Use {product_name} to answer the pain point your buyers already mention."
+    pain_points = evidence_quotes[:4] or [primary_quote]
+
+    return {
+        "insights": {
+            "pain_points": pain_points,
+            "user_complaint_cluster": pain_points,
+            "evidence": {
+                "source_type": "user_pasted_reviews",
+                "source_url": "",
+                "confidence": 0.64,
+                "review_confidence": 0.64,
+                "trend_confidence": 0.0,
+                "review_count": len(evidence_quotes),
+                "evidence_quotes": evidence_quotes,
+                "trend_signals": [],
+                "data_warnings": [
+                    "user_pasted_reviews_unverified",
+                    "user_pasted_reviews_no_external_fetch",
+                ],
+            },
+        },
+        "audience": {
+            "primary": generated.get("target_audience", f"People considering {product_name}"),
+            "sensitivity": generated.get("emotional_trigger", ""),
+            "trust_barriers": pain_points,
+        },
+        "strategy": {
+            "core_hook_strategy": generated.get("core_hook_strategy", ""),
+            "emotional_trigger": generated.get("emotional_trigger", ""),
+        },
+        "assets": {
+            "tiktok_script": {
+                "hook": hook,
+                "cta": cta,
+            },
+            "storyboard": {
+                "product_name": product_name,
+                "product_category": category,
+                "source": "user_pasted_reviews",
+                "scenes": normalized_scenes,
+            },
+        },
+        "evaluation": {
+            "confidence_score": 0.66,
+            "risk_level": "medium",
+            "reasoning": generated.get(
+                "evaluation_reasoning",
+                "Generated from user-pasted review snippets only; no external fetch or source adapter was used.",
+            ),
+            "is_approved": True,
+            "is_grounded": True,
+            "creative_approved": True,
+            "grounded_approved": True,
+        },
+        "feedback": generated.get(
+            "feedback",
+            "Generated from pasted reviews. Verify claims and review authenticity before using in paid creative.",
         ),
     }
 
@@ -755,6 +952,84 @@ async def generate_from_description(request: ProductDescriptionRequest, http_req
         )
         return _description_error(
             "Product Description Mode generation failed safely. Please retry with a shorter description.",
+            "generation_failed",
+            request_id,
+            status_code=503,
+        )
+
+
+@app.post("/api/v1/generate-from-reviews", response_model=PastedReviewsResponse)
+async def generate_from_reviews(request: PastedReviewsRequest, http_request: Request):
+    started = time.perf_counter()
+    request_id = http_request.state.request_id
+    output_language, language_error = _validate_output_language(
+        request.output_language,
+        request_id,
+    )
+    if language_error:
+        return language_error
+
+    product_name = _clean_description_text(request.product_name)
+    emit_event(
+        "generate_from_reviews_start",
+        request_id,
+        endpoint="/api/v1/generate-from-reviews",
+        status="started",
+        product_category=request.product_category or "user_pasted_reviews_product",
+        goal=request.goal,
+        output_language=output_language,
+    )
+
+    validation_error = _validate_pasted_reviews_request(request, request_id)
+    if validation_error:
+        emit_event(
+            "generate_from_reviews_error",
+            request_id,
+            endpoint="/api/v1/generate-from-reviews",
+            status="error",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category or "user_pasted_reviews_product",
+            goal=request.goal,
+            output_language=output_language,
+        )
+        return validation_error
+
+    evidence_quotes = _split_pasted_review_quotes(request.pasted_reviews)
+    try:
+        generated = await generate_pasted_reviews_brief(request, evidence_quotes)
+        data = _pasted_reviews_response_data(request, generated, evidence_quotes)
+        data = await translate_product_visible_data(data, output_language)
+        response = {
+            "status": "success",
+            "data": data,
+            "request_id": request_id,
+            "output_language": output_language,
+        }
+        emit_event(
+            "generate_from_reviews_complete",
+            request_id,
+            endpoint="/api/v1/generate-from-reviews",
+            status="success",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category or product_name,
+            goal=request.goal,
+            output_language=output_language,
+        )
+        return response
+    except Exception:
+        emit_event(
+            "generate_from_reviews_error",
+            request_id,
+            endpoint="/api/v1/generate-from-reviews",
+            status="error",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category or product_name,
+            goal=request.goal,
+            error_type="generation_failed",
+            output_language=output_language,
+        )
+        return _description_error(
+            "Pasted Reviews Mode generation failed safely. Please retry with fewer review snippets.",
             "generation_failed",
             request_id,
             status_code=503,

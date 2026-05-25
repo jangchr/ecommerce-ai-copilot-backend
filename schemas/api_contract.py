@@ -102,6 +102,23 @@ class ProductDescriptionResponse(BaseModel):
     output_language: str = "en"
 
 
+class PastedReviewsRequest(BaseModel):
+    product_name: str
+    product_category: Optional[str] = None
+    product_description: Optional[str] = None
+    pasted_reviews: str
+    target_platform: str = "TikTok"
+    goal: str = "tiktok_ctr"
+    output_language: str = "en"
+
+
+class PastedReviewsResponse(BaseModel):
+    status: str
+    data: GenerateCopilotData
+    request_id: Optional[str] = None
+    output_language: str = "en"
+
+
 class DebugCopilotResponse(BaseModel):
     request_id: Optional[str] = None
     product_category: Optional[str] = None
