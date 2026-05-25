@@ -45,13 +45,29 @@ Expected results:
 - The page clearly presents itself as a grounded ecommerce creative agent public demo.
 - The page explains that Amazon URLs are for Debug Mode / Amazon Shadow only.
 - The visible slug list includes `balsamic_vinegar`, `printer`, `women_bras`, `girls_overalls`, `protein_powder`, `phone_case`, `desk_lamp`, `baby_stroller`, `pet_hair_vacuum` and `skincare_serum`.
-- Product sections focus on product response fields: `insights`, `audience`, `strategy`, `assets`, `evaluation` and `feedback`.
+- Product sections read like a TikTok creative brief: Evidence Snapshot, Target Audience, Creative Strategy, Hook, Storyboard, Evaluation and Copy Actions.
 - Product Mode does not display telemetry, `shadow_sources` or memory observability.
 - Product Mode does not display a `DEBUG TRACE` / Debug Trace panel while Debug Mode is off.
 - Copy controls are visible:
   - `Copy Hook`
   - `Copy Storyboard`
   - `Copy Full Markdown`
+
+## Smoke Test: Product Mode Result Readability
+
+1. Turn **Debug Mode** off.
+2. Run the workflow with `balsamic_vinegar`.
+3. Inspect the rendered Product Mode result.
+
+Expected results:
+
+- Evidence Snapshot displays a compact source badge, review/trend confidence and short evidence quote list.
+- Target Audience is visible without raw cognitive state.
+- Creative Strategy highlights Core Hook Strategy, Emotional Trigger and CTA Logic.
+- Hook is visible as a first-class output.
+- Storyboard renders Scene 1 / Scene 2 / Scene 3 / Scene 4 style shooting-script blocks with Visual, Narration and Evidence.
+- Evaluation displays Approved, Grounded, Risk Level and rationale in user-facing language.
+- Raw telemetry, `shadow_sources`, `memory_observability` and raw internal state remain hidden unless Debug Mode is on.
 
 ## Smoke Test: Debug Mode Off
 

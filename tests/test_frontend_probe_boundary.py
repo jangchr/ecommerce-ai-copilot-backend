@@ -59,6 +59,33 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry", body)
         self.assertNotIn("memory_observability", body)
 
+    def test_product_mode_result_readability_sections_are_present(self):
+        for label in [
+            "Evidence Snapshot",
+            "Target Audience",
+            "Creative Strategy",
+            "Hook / Storyboard / Copy Actions",
+            "Evaluation",
+            "Core Hook Strategy",
+            "Emotional Trigger",
+            "CTA Logic",
+            "Visual",
+            "Narration",
+            "Evidence",
+            "Approved",
+            "Grounded",
+            "Risk Level",
+            "Grounded CTR",
+            "Evidence Alignment",
+        ]:
+            with self.subTest(label=label):
+                self.assertIn(label, self.source)
+        self.assertIn("function renderStoryboardBrief(storyboard)", self.source)
+        self.assertIn("class=\"scene-card\"", self.source)
+        self.assertIn("Copy Hook", self.source)
+        self.assertIn("Copy Storyboard", self.source)
+        self.assertIn("Copy Full Markdown", self.source)
+
     def test_source_probe_is_guarded_by_debug_mode(self):
         self.assertIn("postCopilot('debug-source-probe'", self.source)
         self.assertIn("async function runSourceProbe()", self.source)

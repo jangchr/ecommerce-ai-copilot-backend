@@ -49,11 +49,12 @@ The public landing copy should make the demo intent clear:
 
 After the workflow finishes, review:
 
-- Evidence
-- Audience
-- Strategy
-- Storyboard
-- Evaluation
+- Evidence Snapshot: source badge, confidence indicators and short review-backed quotes.
+- Target Audience: who the creative is speaking to and which trust barriers matter.
+- Creative Strategy: core hook strategy, emotional trigger and CTA logic.
+- Hook: the first-line TikTok creative hook.
+- Storyboard: Scene 1-4 with Visual, Narration and Evidence.
+- Evaluation: approved/grounded status, risk level and quality rationale.
 
 The output is generated from local grounded review evidence plus mock trend context.
 

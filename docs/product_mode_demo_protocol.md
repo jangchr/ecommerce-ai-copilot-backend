@@ -95,12 +95,21 @@ Expected results:
 
 Expected Product output sections:
 
-- `insights`
-- `audience`
-- `strategy`
-- `assets`
-- `evaluation`
-- `feedback`
+- Evidence Snapshot
+- Target Audience
+- Creative Strategy
+- Hook
+- Storyboard
+- Evaluation
+- Copy Actions
+
+Result readability expectations:
+
+- Evidence Snapshot should show short evidence quotes rather than raw internal state.
+- Creative Strategy should highlight Core Hook Strategy, Emotional Trigger and CTA Logic.
+- Storyboard should read like a shooting script with Scene, Visual, Narration and Evidence fields.
+- Evaluation should show user-facing quality judgment: Approved, Grounded, Risk Level and rationale.
+- Grounded CTR and Evidence Alignment can be reviewed in Debug Mode; Product Mode should not expose raw telemetry.
 
 ## Debug Mode On
 

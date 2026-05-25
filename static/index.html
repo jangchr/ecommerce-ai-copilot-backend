@@ -174,6 +174,65 @@
             white-space: pre-wrap;
             overflow-wrap: anywhere;
         }
+        .brief-note {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            overflow-wrap: anywhere;
+        }
+        .metric-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 12px;
+        }
+        .metric-pill {
+            border: 1px solid var(--border-light);
+            border-radius: 999px;
+            padding: 5px 9px;
+            background: var(--bg-base);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 4px 8px;
+            background: rgba(0, 122, 255, 0.08);
+            color: var(--accent-blue);
+            font-size: 11px;
+            font-weight: 750;
+            margin-bottom: 10px;
+        }
+        .quote-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .quote-item {
+            background: var(--bg-base);
+            border-left: 3px solid var(--accent-blue);
+            border-radius: 6px;
+            padding: 9px 10px;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .scene-card {
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            background: #fff;
+        }
+        .scene-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
         .eval-box { padding: 14px; border-radius: 8px; border: 1px solid var(--accent-green); background: rgba(31, 157, 85, 0.06); }
         .eval-box.risk-medium { border-color: var(--accent-amber); background: rgba(183, 110, 0, 0.06); }
         .eval-box.risk-high { border-color: var(--accent-red); background: rgba(217, 45, 32, 0.06); }
@@ -370,15 +429,15 @@
 
         <section class="dashboard-grid">
             <div class="card">
-                <h3 style="color:var(--accent-blue);">1. Evidence</h3>
+                <h3 style="color:var(--accent-blue);">1. Evidence Snapshot</h3>
                 <div id="res-insights" style="opacity: 0.5;">等待执行...</div>
             </div>
             <div class="card">
-                <h3 style="color:var(--accent-purple);">2. Strategy</h3>
+                <h3 style="color:var(--accent-purple);">2. Target Audience & Creative Strategy</h3>
                 <div id="res-strategy" style="opacity: 0.5;">等待执行...</div>
             </div>
             <div class="card">
-                <h3>3. Scene Graph</h3>
+                <h3>3. Hook / Storyboard / Copy Actions</h3>
                 <div class="copy-toolbar">
                     <button class="btn-secondary" id="copyHookBtn" onclick="copyHook()" disabled>Copy Hook</button>
                     <button class="btn-secondary" id="copyStoryboardBtn" onclick="copyStoryboard()" disabled>Copy Storyboard</button>
@@ -390,7 +449,7 @@
 
             <div class="card wide">
                 <div>
-                    <h3 style="color:var(--accent-green);">4. Reward</h3>
+                    <h3 style="color:var(--accent-green);">4. Evaluation</h3>
                     <div id="res-evaluation" style="opacity: 0.5;">等待评估...</div>
                 </div>
                 <div id="debugTraceSection" hidden>
@@ -423,6 +482,56 @@
                 <div class="json-key">${escapeHTML(label)}</div>
                 <div class="json-val">${escapeHTML(value)}</div>
             `;
+        }
+
+        function briefText(value) {
+            return `<div class="brief-note">${escapeHTML(value || '')}</div>`;
+        }
+
+        function metricPill(label, value) {
+            return `<span class="metric-pill">${escapeHTML(label)}: ${escapeHTML(value)}</span>`;
+        }
+
+        function formatMetric(value) {
+            if (value === undefined || value === null || value === '') return 'n/a';
+            if (typeof value === 'number') {
+                return value <= 1 ? value.toFixed(2) : String(value);
+            }
+            return String(value);
+        }
+
+        function boolText(value) {
+            return value ? 'Yes' : 'No';
+        }
+
+        function quoteList(quotes) {
+            const items = (quotes || []).slice(0, 5);
+            if (!items.length) return briefText('No evidence quotes returned yet.');
+            return `
+                <div class="quote-list">
+                    ${items.map((quote) => `<div class="quote-item">${escapeHTML(quote)}</div>`).join('')}
+                </div>
+            `;
+        }
+
+        function renderStoryboardBrief(storyboard) {
+            const scenes = storyboard?.scenes || [];
+            if (!scenes.length) {
+                return block('Storyboard', JSON.stringify(storyboard || {}, null, 2));
+            }
+            return scenes.map((scene, index) => {
+                const visual = scene.visual_description || scene.visual || '';
+                const narration = scene.narration || '';
+                const quote = scene.evidence_quote_used || '';
+                return `
+                    <div class="scene-card">
+                        <div class="scene-title">Scene ${index + 1}</div>
+                        ${block('Visual', visual)}
+                        ${block('Narration', narration)}
+                        ${block('Evidence', quote)}
+                    </div>
+                `;
+            }).join('');
         }
 
         let latestDebugCategory = '';
@@ -705,28 +814,36 @@
 
             const evidence = data.insights.evidence || {};
             document.getElementById('res-insights').style.opacity = '1';
-            document.getElementById('res-insights').innerHTML =
-                block('Source Type', evidence.source_type || 'unknown') +
-                block('Confidence', evidence.confidence ?? 0) +
-                block('Review Confidence', evidence.review_confidence ?? 0) +
-                block('Trend Confidence', evidence.trend_confidence ?? 0) +
-                block('Evidence Quotes', (evidence.evidence_quotes || []).join('\n')) +
-                block('Trend Signals', (evidence.trend_signals || []).join('\n')) +
-                block('Pain Points', (data.insights.pain_points || []).join('\n')) +
-                block('Audience', data.audience.primary || '');
+            document.getElementById('res-insights').innerHTML = `
+                <span class="source-badge">${escapeHTML(evidence.source_type || 'unknown source')}</span>
+                <div class="metric-strip">
+                    ${metricPill('Review confidence', formatMetric(evidence.review_confidence))}
+                    ${metricPill('Trend confidence', formatMetric(evidence.trend_confidence))}
+                    ${metricPill('Evidence alignment', 'See Debug Mode')}
+                </div>
+                ${block('Evidence Quotes', 'Short review-backed signals used by the creative brief')}
+                ${quoteList(evidence.evidence_quotes)}
+                ${block('Customer Pain Points', (data.insights.pain_points || []).join('\n'))}
+            `;
 
             document.getElementById('res-strategy').style.opacity = '1';
-            document.getElementById('res-strategy').innerHTML =
-                block('Core Hook Strategy', data.strategy.core_hook_strategy || '') +
-                block('Emotional Trigger', data.strategy.emotional_trigger || '');
+            document.getElementById('res-strategy').innerHTML = `
+                ${block('Target Audience', data.audience.primary || '')}
+                ${block('Trust Barriers', (data.audience.trust_barriers || []).join('\n'))}
+                ${block('Core Hook Strategy', data.strategy.core_hook_strategy || '')}
+                ${block('Emotional Trigger', data.strategy.emotional_trigger || '')}
+                ${block('CTA Logic', data.assets?.tiktok_script?.cta || '')}
+            `;
 
             const script = data.assets.tiktok_script || {};
             const storyboard = data.assets.storyboard || {};
             document.getElementById('res-assets').style.opacity = '1';
-            document.getElementById('res-assets').innerHTML =
-                block('Hook Scene', script.hook || '') +
-                block('Storyboard', storyboardText(storyboard)) +
-                block('CTA Scene', script.cta || '');
+            document.getElementById('res-assets').innerHTML = `
+                ${block('Hook', script.hook || '')}
+                ${block('CTA', script.cta || '')}
+                <div class="json-key">Storyboard</div>
+                ${renderStoryboardBrief(storyboard)}
+            `;
 
             const evalData = data.evaluation || {};
             const score = Math.max(0, Math.min(100, Number((evalData.confidence_score * 100).toFixed(0)) || 0));
@@ -740,9 +857,13 @@
                     </div>
                     <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
                     ${block('Risk Level', evalData.risk_level || 'low')}
-                    ${block('Reward Reasoning', evalData.reasoning || '')}
-                    ${block('Approved', evalData.is_approved ? 'true' : 'false')}
-                    ${block('Grounded', evalData.is_grounded ? 'true' : 'false')}
+                    <div class="metric-strip">
+                        ${metricPill('Approved', boolText(evalData.is_approved))}
+                        ${metricPill('Grounded', boolText(evalData.is_grounded))}
+                        ${metricPill('Grounded CTR', 'See Debug Mode')}
+                        ${metricPill('Evidence Alignment', 'See Debug Mode')}
+                    </div>
+                    ${block('Quality Rationale', evalData.reasoning || '')}
                 </div>
             `;
         }
