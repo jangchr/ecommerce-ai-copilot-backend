@@ -379,3 +379,33 @@ Before production handoff:
 - [Render Deployment Setup](render_deployment_setup.md): Render Docker Web Service configuration and post-deploy Product Mode smoke checklist.
 - [Public Product Mode Handoff Audit](public_product_mode_handoff_audit.md): public Render handoff artifact, boundary and live-recheck notes.
 - [Render First Deployment Smoke 2026-05-24](render_first_deployment_smoke_20260524.md): public Render health, static frontend and Product Mode generation smoke results.
+
+## L12.0-B Commercial MVP User Workflow
+
+Status: ready.
+
+Document:
+
+```text
+docs/commercial_mvp_user_workflow.md
+```
+
+Current workflow:
+
+```text
+Open public demo
+? select stable demo product
+? run Product Mode
+? review Evidence / Strategy / Hook / Storyboard / Evaluation
+? translate full output or individual sections if needed
+? copy Hook / Storyboard / Markdown / Chinese translation
+? give feedback
+```
+
+Boundary:
+
+```text
+Product Mode continues to use 10 stable local grounded slugs.
+Amazon URL remains Debug Mode / Amazon Shadow only.
+Product API continues not to expose Debug Trace, telemetry_summary, shadow_sources, or memory_observability.
+```

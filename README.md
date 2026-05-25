@@ -24,6 +24,8 @@ This backend is an evidence-driven ecommerce creative agent runtime. It turns gr
 - [Public Demo Polish Final Audit](docs/public_demo_polish_final_audit.md): final audit for public Product Mode, translation and Product/Debug boundary status.
 - [Public Demo v1 Archive](docs/public_demo_v1_archive.md): archived public demo v1 snapshot at commit `81aeffa`.
 - [Commercial MVP Scope](docs/commercial_mvp_scope.md): target users, beachhead segment, pricing hypotheses and commercial roadmap.
+- [Commercial MVP User Workflow](docs/commercial_mvp_user_workflow.md) ? L12.0-B user workflow from public demo entry to generation, translation, copy actions, and feedback.
+- [Commercial MVP User Workflow](docs/commercial_mvp_user_workflow.md) — L12.0-B user workflow from public demo entry to generation, translation, copy actions, and feedback.
 
 ## Runtime
 
