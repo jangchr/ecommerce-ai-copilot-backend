@@ -371,3 +371,6 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Language Mode Trial Smoke Record](docs/language_mode_trial_smoke_record.md) ? L13.8-C Language Mode ??? smoke ???
 - [Language Mode Trial Round 1 Summary Template](docs/language_mode_trial_round_1_summary_template.md) ? L13.8-D Language Mode ??????????
 - [Language Mode Trial Launch Final Audit](docs/language_mode_trial_launch_final_audit.md) ? L13.8-E Language Mode ?????????
+- [Trial Feedback Deferred Roadmap Decision](docs/trial_feedback_deferred_roadmap_decision.md) ? L13.9-A ??????????????
+- [Pasted Reviews Input Design](docs/pasted_reviews_input_design.md) ? L14.0-A ?????????
+- [Pasted Reviews API Contract Design](docs/pasted_reviews_api_contract_design.md) ? L14.0-B ?????? API contract ???
