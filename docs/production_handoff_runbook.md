@@ -1570,3 +1570,23 @@ Document: docs/public_demo_refresh_final_audit.md
 
 Product Description Demo v1 polish ??????????????
 
+## L13.5-C Product Description Polish v1 Archive
+
+Status: ready.
+
+Document: docs/product_description_polish_v1_archive.md
+
+Tag:
+
+product-description-polish-v1
+
+???
+
+- Product Description Polish v1 ???
+- Public Demo refresh ???
+- Product Description Mode ????
+- Use sample product / Good inputs include ??
+- Feedback / Waitlist ??
+- Product / Debug ????
+- ?????????
+
