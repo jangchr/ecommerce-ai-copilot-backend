@@ -1123,3 +1123,27 @@ Document: docs/product_description_mode_smoke.md
 - ??? data.debug
 - ??? telemetry_summary / shadow_sources / memory_observability
 
+## L13.1-G Product Description Mode Release Notes
+
+Status: ready.
+
+Document: docs/release_notes_l13_1_product_description_mode.md
+
+???
+
+- Product Description Mode ?? endpoint ???
+- Product Description Mode ?????
+- /api/v1/generate-from-description ??
+- source=user_provided_description
+- Copy / Download / Translation / Recent Generations ????
+- Stable slug Product Mode ????
+- Product / Debug ????
+
+???
+
+- ??? Amazon
+- ??? Source Probe
+- ??? Amazon Shadow
+- ??? telemetry_summary / shadow_sources / memory_observability
+- Amazon URL ??? stable Product Mode input
+
