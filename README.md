@@ -345,3 +345,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Product Description Trial Launch Final Audit](docs/product_description_trial_launch_final_audit.md) ? L13.2-E ???????????????
 - [Pricing / Waitlist Design](docs/pricing_waitlist_design.md) ? L13.3-A pricing ? waitlist ???
 - [Waitlist Form Design](docs/waitlist_form_design.md) ? L13.3-B waitlist ?????
+- Waitlist form: https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor

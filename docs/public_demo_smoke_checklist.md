@@ -177,3 +177,9 @@ https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZX
 ## L12.3-A Layout Check
 
 ????? Example Gallery?Recent Generations?Feedback ????????Debug Mode advanced section ??????????
+
+## Waitlist Link Check
+
+?? Public Demo ???? waitlist ???
+
+https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor
