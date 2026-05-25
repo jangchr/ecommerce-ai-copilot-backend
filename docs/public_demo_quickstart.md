@@ -65,8 +65,16 @@ Use the copy buttons after generation:
 - **Copy Hook**
 - **Copy Storyboard**
 - **Copy Full Markdown**
+- **Translate to Chinese**
+- **Copy Chinese Translation**
 
 These are intended for quick demo handoff, review, or manual editing.
+
+## Chinese Translation
+
+After Product Mode generates a result, click **Translate to Chinese** to translate the visible creative brief into natural Chinese while preserving the Markdown structure. The translation uses only the Product Mode output text, not Debug Trace, telemetry, Amazon Shadow data or memory observability.
+
+If translation fails, the original English result remains visible and unchanged.
 
 ## Product Mode Boundaries
 

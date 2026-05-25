@@ -5,6 +5,8 @@ from schemas.api_contract import (
     DebugCopilotResponse,
     GenerateCopilotResponse,
     GrowthRequest,
+    TranslationRequest,
+    TranslationResponse,
 )
 from schemas.source_probe_contract import SourceProbeRequest, SourceProbeResponse
 
@@ -33,6 +35,12 @@ class ApiContractTest(unittest.TestCase):
         self.assertIs(
             route_response_model("/api/v1/debug-source-probe"),
             SourceProbeResponse,
+        )
+
+    def test_translation_endpoint_uses_translation_response_contract(self):
+        self.assertIs(
+            route_response_model("/api/v1/translate-output"),
+            TranslationResponse,
         )
 
     def test_generate_contract_does_not_expose_debug_state(self):
@@ -70,6 +78,24 @@ class ApiContractTest(unittest.TestCase):
         self.assertIn("debug_only", response_properties)
         self.assertIn("memory_write_allowed", response_properties)
         self.assertIn("request_id", response_properties)
+
+    def test_translation_contract_defaults_and_fields(self):
+        request = TranslationRequest(text="hello")
+        self.assertEqual(request.target_language, "zh-CN")
+
+        request_properties = TranslationRequest.model_json_schema()["properties"]
+        response_properties = TranslationResponse.model_json_schema()["properties"]
+        self.assertIn("text", request_properties)
+        self.assertIn("target_language", request_properties)
+        self.assertIn("translated_text", response_properties)
+        self.assertIn("target_language", response_properties)
+        self.assertIn("request_id", response_properties)
+
+    def test_generate_contract_is_unchanged_by_translation_endpoint(self):
+        response_properties = GenerateCopilotResponse.model_json_schema()["properties"]
+        data_schema = GenerateCopilotResponse.model_json_schema()["$defs"]["GenerateCopilotData"]
+        self.assertNotIn("translated_text", response_properties)
+        self.assertNotIn("translation", data_schema["properties"])
 
 
 if __name__ == "__main__":

@@ -72,6 +72,17 @@ class GenerateCopilotResponse(BaseModel):
     data: GenerateCopilotData
 
 
+class TranslationRequest(BaseModel):
+    text: str
+    target_language: str = "zh-CN"
+
+
+class TranslationResponse(BaseModel):
+    translated_text: str
+    target_language: str
+    request_id: Optional[str] = None
+
+
 class DebugCopilotResponse(BaseModel):
     request_id: Optional[str] = None
     product_category: Optional[str] = None

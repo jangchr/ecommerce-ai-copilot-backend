@@ -43,9 +43,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
+        self.assertIn("Translate to Chinese", self.source)
+        self.assertIn("Copy Chinese Translation", self.source)
         self.assertIn("function copyHook()", self.source)
         self.assertIn("function copyStoryboard()", self.source)
         self.assertIn("function copyFullMarkdown()", self.source)
+        self.assertIn("function translateToChinese()", self.source)
+        self.assertIn("function copyChineseTranslation()", self.source)
 
     def test_product_renderer_does_not_display_observability_fields(self):
         match = re.search(
@@ -85,6 +89,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
+        self.assertIn("Translate to Chinese", self.source)
+        self.assertIn("Copy Chinese Translation", self.source)
+
+    def test_translation_button_uses_product_markdown_only(self):
+        self.assertIn("postCopilot('translate-output'", self.source)
+        self.assertIn("const text = productMarkdown(latestProductData);", self.source)
+        self.assertIn("Translation unavailable. Original English result is unchanged.", self.source)
+        self.assertIn("latestChineseTranslation = '';", self.source)
 
     def test_source_probe_is_guarded_by_debug_mode(self):
         self.assertIn("postCopilot('debug-source-probe'", self.source)

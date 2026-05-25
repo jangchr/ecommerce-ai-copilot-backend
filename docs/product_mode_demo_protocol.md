@@ -132,8 +132,25 @@ After Product Mode output renders, verify:
 - **Copy Hook** copies the generated hook text.
 - **Copy Storyboard** copies the scene graph/storyboard text.
 - **Copy Full Markdown** copies a complete Markdown package with evidence, pain points, audience, strategy, hook, storyboard, CTA, evaluation and feedback.
+- **Translate to Chinese** sends only the Product Mode Markdown output to `/api/v1/translate-output`.
+- **Copy Chinese Translation** copies the translated text after translation completes.
 
 If browser clipboard permissions are unavailable, the UI should show a copy-unavailable status without breaking the product result.
+
+## Product Translation Check
+
+1. Run Product Mode with a stable local slug.
+2. Click **Translate to Chinese**.
+3. Wait for the translation result.
+
+Expected results:
+
+- The UI shows `Translating...` while the request is in flight.
+- The Chinese Translation block appears after success.
+- The original English Product Mode result remains unchanged.
+- Translation failure shows a friendly error and does not clear the product result.
+- The translation request does not include Debug Trace, telemetry, `shadow_sources` or memory observability.
+- Debug Mode can be off or on; translation remains a Product Mode user action.
 
 ## Demo Pass Criteria
 
@@ -146,3 +163,4 @@ The local demo passes when:
 - Product Mode does not show telemetry, `shadow_sources` or memory observability.
 - Product Mode does not show `DEBUG TRACE`.
 - Copy controls are visible and do not affect workflow execution.
+- Product translation controls work without invoking workflow, source probe or Amazon Shadow.

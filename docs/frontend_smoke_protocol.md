@@ -52,6 +52,8 @@ Expected results:
   - `Copy Hook`
   - `Copy Storyboard`
   - `Copy Full Markdown`
+  - `Translate to Chinese`
+  - `Copy Chinese Translation`
 
 ## Smoke Test: Product Mode Result Readability
 
@@ -68,6 +70,26 @@ Expected results:
 - Storyboard renders Scene 1 / Scene 2 / Scene 3 / Scene 4 style shooting-script blocks with Visual, Narration and Evidence.
 - Evaluation displays Approved, Grounded, Risk Level and rationale in user-facing language.
 - Raw telemetry, `shadow_sources`, `memory_observability` and raw internal state remain hidden unless Debug Mode is on.
+
+## Smoke Test: Product Translation
+
+1. Turn **Debug Mode** off.
+2. Run Product Mode with `balsamic_vinegar`.
+3. Click **Translate to Chinese**.
+4. Inspect the Network panel and the Product Mode result.
+
+Expected results:
+
+- One translation request is issued: `POST /api/v1/translate-output`.
+- The request body is based on Product Mode full Markdown output.
+- No `POST /api/v1/debug-copilot` request is required.
+- No `POST /api/v1/debug-source-probe` request is issued.
+- No Amazon Shadow request is issued.
+- The UI shows `Translating...` during translation.
+- A `Chinese Translation` block appears after success.
+- `Copy Chinese Translation` becomes usable after translation succeeds.
+- Translation failure displays a friendly error while keeping the original English result visible.
+- The page still does not reference `data.debug`.
 
 ## Smoke Test: Debug Mode Off
 

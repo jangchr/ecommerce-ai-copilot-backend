@@ -212,6 +212,58 @@ The product and debug endpoints are deliberately separate:
 
 API response contracts are defined in `schemas/api_contract.py`, and smoke-tested by `tests/test_api_contract.py` and `tests/test_api_live_smoke.py`.
 
+## Product Output Translation API
+
+### Endpoint
+
+```http
+POST /api/v1/translate-output
+```
+
+Use this endpoint to translate already-generated Product Mode Markdown/text into Chinese. It does not run the workflow, does not call source adapters, does not write memory and does not expose debug observability.
+
+### Request Body
+
+```json
+{
+  "text": "# Grounded Creative Output\n\n## Hook\nScene text...",
+  "target_language": "zh-CN"
+}
+```
+
+### curl
+
+```bash
+curl -X POST "http://127.0.0.1:8001/api/v1/translate-output" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"# Grounded Creative Output\n\n## Hook\nScene text...","target_language":"zh-CN"}'
+```
+
+### PowerShell
+
+```powershell
+$body = @{
+    text = "# Grounded Creative Output`n`n## Hook`nScene text..."
+    target_language = "zh-CN"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri "http://127.0.0.1:8001/api/v1/translate-output" `
+    -Method POST `
+    -ContentType "application/json" `
+    -Body $body
+```
+
+### Response Fields
+
+| Field | Meaning |
+| --- | --- |
+| `translated_text` | Natural Chinese translation of the visible product output. Markdown structure is preserved. |
+| `target_language` | Requested target language, default `zh-CN`. |
+| `request_id` | Same correlation ID returned in the `X-Request-ID` response header. |
+
+The response intentionally does not include `telemetry_summary`, `shadow_sources`, `memory_observability`, raw prompts, API keys or internal workflow state.
+
 ## Debug-Only Real Source Probe
 
 ### Endpoint

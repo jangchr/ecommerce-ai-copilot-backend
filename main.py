@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -11,7 +12,15 @@ from uuid import uuid4
 from core.logging_utils import emit_event
 from core.telemetry_utils import summarize_telemetry
 from core.workflow import copilot_engine, memory_engine
-from schemas.api_contract import DebugCopilotResponse, GenerateCopilotResponse, GrowthRequest
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from schemas.api_contract import (
+    DebugCopilotResponse,
+    GenerateCopilotResponse,
+    GrowthRequest,
+    TranslationRequest,
+    TranslationResponse,
+)
 from schemas.source_probe_contract import (
     SourceProbeRequest,
     SourceProbeResponse,
@@ -30,6 +39,13 @@ SOURCE_PROBE_PROVIDERS = {
     "tiktok_trend_api",
     "reddit_review_api",
 }
+
+TRANSLATION_SYSTEM_PROMPT = (
+    "You translate product creative briefs into natural Chinese. "
+    "Preserve Markdown structure. Preserve English product slugs, numbers, percentages, "
+    "and necessary technical field names. Do not add facts. Do not change strategy meaning. "
+    "Do not translate JSON/code keys inside code blocks unless the value is natural language."
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -108,6 +124,29 @@ def _amazon_shadow_sources(url: str, product_category: str) -> dict:
             "memory_write_allowed": False,
             "used_for_generation": False,
         }
+
+
+async def translate_visible_output(text: str, target_language: str = "zh-CN") -> str:
+    llm = ChatOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_API_BASE", "https://api.deepseek.com/v1"),
+        model=os.getenv("MODEL_NAME", "deepseek-chat"),
+        temperature=0.2,
+        max_retries=0,
+    )
+    message = await llm.ainvoke(
+        [
+            SystemMessage(content=TRANSLATION_SYSTEM_PROMPT),
+            HumanMessage(
+                content=(
+                    f"Target language: {target_language}\n\n"
+                    "Translate only the visible product output below:\n\n"
+                    f"{text}"
+                )
+            ),
+        ]
+    )
+    return str(message.content or "").strip()
 
 
 @app.get("/healthz")
@@ -248,6 +287,38 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         goal=request.goal,
     )
     return response
+
+
+@app.post("/api/v1/translate-output", response_model=TranslationResponse)
+async def translate_output(request: TranslationRequest, http_request: Request):
+    started = time.perf_counter()
+    request_id = http_request.state.request_id
+    emit_event(
+        "translate_output_start",
+        request_id,
+        endpoint="/api/v1/translate-output",
+        status="started",
+        target_language=request.target_language,
+        input_size_char=len(request.text or ""),
+    )
+    translated_text = await translate_visible_output(
+        request.text,
+        request.target_language,
+    )
+    emit_event(
+        "translate_output_complete",
+        request_id,
+        endpoint="/api/v1/translate-output",
+        status="success",
+        latency_ms=(time.perf_counter() - started) * 1000,
+        target_language=request.target_language,
+        input_size_char=len(request.text or ""),
+    )
+    return TranslationResponse(
+        translated_text=translated_text,
+        target_language=request.target_language,
+        request_id=request_id,
+    )
 
 
 @app.post("/api/v1/debug-copilot", response_model=DebugCopilotResponse)
