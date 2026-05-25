@@ -67,6 +67,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("粘贴评论模式", self.source)
         self.assertIn("根据评论生成", self.source)
         self.assertIn("使用示例评论", self.source)
+        self.assertIn("What to paste", self.source)
+        self.assertIn("Good example", self.source)
+        self.assertIn("Weak example", self.source)
+        self.assertIn("应该粘贴什么", self.source)
+        self.assertIn("好例子", self.source)
+        self.assertIn("弱例子", self.source)
+        self.assertIn("用户抱怨", self.source)
         self.assertIn("电商创意生成助手", self.source)
         self.assertIn("Product name", self.source)
         self.assertIn("Product description", self.source)
@@ -264,6 +271,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Pasted reviews", section_body)
         self.assertIn("Use sample reviews", section_body)
         self.assertIn("Generate from reviews", section_body)
+        self.assertIn("reviewPasteGuide", section_body)
+        self.assertIn("What to paste", section_body)
+        self.assertIn("Good example", section_body)
+        self.assertIn("Weak example", section_body)
 
         function_match = re.search(
             r"async function generateFromReviews\(\) \{(?P<body>.*?)\n        function renderProductDashboard",
