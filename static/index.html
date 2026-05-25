@@ -408,6 +408,30 @@
             font-weight: 750;
             color: var(--text-secondary);
         }
+        .field-helper {
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .good-inputs {
+            margin: 12px 0 4px;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-base);
+        }
+        .good-inputs-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .good-inputs ul {
+            margin-left: 18px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.55;
+        }
         .description-field input,
         .description-field textarea {
             width: 100%;
@@ -716,10 +740,12 @@
                     </div>
                     <div class="description-field wide">
                         <label for="descriptionProductDescription">Product description</label>
+                        <div class="field-helper">Describe what the product is, who it is for, and what makes it useful.</div>
                         <textarea id="descriptionProductDescription" placeholder="Describe the product, its main features, and the situation it is used in."></textarea>
                     </div>
                     <div class="description-field wide">
                         <label for="descriptionPainPoints">Customer pain points</label>
+                        <div class="field-helper">Paste customer complaints, review snippets, objections, or problems your buyers care about.</div>
                         <textarea id="descriptionPainPoints" placeholder="Add customer pain points, objections, review snippets, or complaints you want the brief to address."></textarea>
                     </div>
                     <div class="description-field">
@@ -731,7 +757,18 @@
                         <input id="descriptionGoal" type="text" value="tiktok_ctr">
                     </div>
                 </div>
+                <div class="good-inputs">
+                    <div class="good-inputs-title">Good inputs include</div>
+                    <ul>
+                        <li>what the product is</li>
+                        <li>who it is for</li>
+                        <li>what problem it solves</li>
+                        <li>what customers complain about</li>
+                        <li>what makes it different</li>
+                    </ul>
+                </div>
                 <div class="description-actions">
+                    <button class="btn-secondary" id="descriptionSampleBtn" type="button" onclick="fillSampleProductDescription()">Use sample product</button>
                     <button class="btn-primary" id="descriptionGenerateBtn" type="button" onclick="generateFromDescription()">Generate from description</button>
                     <span class="description-status" id="descriptionStatus"></span>
                 </div>
@@ -1066,6 +1103,16 @@
             target.textContent = message || '';
             target.classList.remove('error', 'success');
             if (state) target.classList.add(state);
+        }
+
+        function fillSampleProductDescription() {
+            document.getElementById('descriptionProductName').value = 'Portable mini blender';
+            document.getElementById('descriptionProductCategory').value = 'Kitchen appliance';
+            document.getElementById('descriptionProductDescription').value = 'A compact rechargeable blender for smoothies, protein shakes, and travel use. It is designed for busy people who want quick drinks at home, work, the gym, or while traveling. The product is small enough for a backpack and easy to rinse after use.';
+            document.getElementById('descriptionPainPoints').value = 'Customers complain that large blenders are hard to clean, too loud, take too much counter space, and are inconvenient for single servings. Some users also say they skip smoothies because setup and cleanup feel like too much work.';
+            document.getElementById('descriptionTargetPlatform').value = 'TikTok';
+            document.getElementById('descriptionGoal').value = 'tiktok_ctr';
+            setDescriptionStatus('Sample product filled. Click Generate from description when ready.');
         }
 
         function storyboardText(storyboard) {
@@ -1698,6 +1745,10 @@
             }
             if (!customerPainPoints) {
                 setDescriptionStatus('Please add customer pain points or review snippets.', 'error');
+                return;
+            }
+            if (productDescription.length < 12 || customerPainPoints.length < 12) {
+                setDescriptionStatus('Please add more detail before generating.', 'error');
                 return;
             }
 

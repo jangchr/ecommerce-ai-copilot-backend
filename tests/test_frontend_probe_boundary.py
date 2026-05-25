@@ -52,7 +52,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Product description", self.source)
         self.assertIn("Customer pain points", self.source)
         self.assertIn("Generate from description", self.source)
+        self.assertIn("Use sample product", self.source)
+        self.assertIn("Good inputs include", self.source)
+        self.assertIn("Describe what the product is, who it is for, and what makes it useful.", self.source)
+        self.assertIn("Paste customer complaints, review snippets, objections, or problems your buyers care about.", self.source)
+        self.assertIn("Portable mini blender", self.source)
+        self.assertIn("Please add more detail before generating.", self.source)
         self.assertIn("function generateFromDescription()", self.source)
+        self.assertIn("function fillSampleProductDescription()", self.source)
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
@@ -175,6 +182,47 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("telemetry_summary", body)
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("memory_observability", body)
+
+    def test_product_description_sample_only_fills_inputs(self):
+        function_match = re.search(
+            r"function fillSampleProductDescription\(\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(function_match)
+        body = function_match.group("body")
+
+        for text in [
+            "Portable mini blender",
+            "Kitchen appliance",
+            "A compact rechargeable blender for smoothies, protein shakes, and travel use.",
+            "Customers complain that large blenders are hard to clean",
+            "TikTok",
+            "tiktok_ctr",
+        ]:
+            with self.subTest(text=text):
+                self.assertIn(text, body)
+
+        self.assertIn("descriptionProductName", body)
+        self.assertIn("descriptionProductCategory", body)
+        self.assertIn("descriptionProductDescription", body)
+        self.assertIn("descriptionPainPoints", body)
+        self.assertIn("descriptionTargetPlatform", body)
+        self.assertIn("descriptionGoal", body)
+
+        self.assertNotIn("postProductDescription", body)
+        self.assertNotIn("generate-from-description", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
 
     def test_product_renderer_does_not_display_observability_fields(self):
         match = re.search(
