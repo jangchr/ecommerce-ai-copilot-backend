@@ -350,3 +350,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Pricing / Waitlist Final Audit](docs/pricing_waitlist_final_audit.md) ? L13.3-F pricing / waitlist ?????
 - [Product Description Mode Polish Planning](docs/product_description_mode_polish_planning.md) ? L13.4-A ?????????????
 - [Product Description Helper Copy](docs/product_description_helper_copy.md) ? L13.4-B ???????????
+- [Product Description Sample Input Design](docs/product_description_sample_input_design.md) ? L13.4-C ???????????
