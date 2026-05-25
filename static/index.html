@@ -826,8 +826,9 @@
                     <div class="description-field wide">
                         <label for="reviewsPastedReviews" data-i18n="pastedReviews">Pasted reviews</label>
                         <div class="field-helper" data-i18n="pastedReviewsHelper">Paste customer reviews, complaints, objections, or buyer feedback.</div>
-                        <textarea id="reviewsPastedReviews" oninput="updateReviewCountPreview()" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment."></textarea>
+                        <textarea id="reviewsPastedReviews" oninput="updateReviewInputPreviews()" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment."></textarea>
                         <div id="reviewCountPreview" class="field-helper" data-i18n="reviewCountEmpty">Review count: 0. Paste at least 3 specific review snippets for stronger output.</div>
+                        <div id="reviewPainPointPreview" class="field-helper" data-i18n="painPointPreviewEmpty">Pain point preview: specific complaints will appear here.</div>
                         <div id="reviewPasteGuide" style="margin-top:10px; padding:12px; border:1px solid #dbe4f0; border-radius:10px; background:#f8fafc;">
                             <strong data-i18n="reviewGuideTitle">What to paste</strong>
                             <p style="margin:6px 0 10px 0;" data-i18n="reviewGuideBody">Paste real customer language: complaints, objections, review snippets, or things buyers wish were easier.</p>
@@ -1221,6 +1222,8 @@
                 reviewsFailed: 'Pasted Reviews Mode failed. Please try again.',
                 missingReviews: 'Please paste customer reviews or buyer feedback.',
                 reviewCountEmpty: 'Review count: 0. Paste at least 3 specific review snippets for stronger output.',
+                painPointPreviewEmpty: 'Pain point preview: specific complaints will appear here.',
+                painPointPreviewTitle: 'Potential pain points',
                 reviewGuideTitle: 'What to paste',
                 reviewGuideBody: 'Paste real customer language: complaints, objections, review snippets, or things buyers wish were easier.',
                 goodReviewExampleTitle: 'Good example',
@@ -1327,6 +1330,8 @@
                 reviewsFailed: '粘贴评论模式生成失败，请重试。',
                 missingReviews: '请粘贴用户评论或买家反馈。',
                 reviewCountEmpty: '评论条数：0。建议至少粘贴 3 条具体评论，生成效果会更好。',
+                painPointPreviewEmpty: '痛点预览：具体抱怨会显示在这里。',
+                painPointPreviewTitle: '可能的痛点',
                 reviewGuideTitle: '应该粘贴什么',
                 reviewGuideBody: '粘贴真实用户原话：抱怨、购买顾虑、评论片段，或者买家希望哪里更方便。',
                 goodReviewExampleTitle: '好例子',
@@ -1499,6 +1504,45 @@
                 : `Detected ${count} review snippets. This is enough to generate.`;
         }
 
+        function reviewPainPointCandidates(value) {
+            const markers = [
+                'hate', 'too ', 'hard', 'difficult', 'annoying', 'clogged', 'skip',
+                'wish', 'problem', 'issue', 'frustrating', 'loud', 'harsh', 'bulky',
+                'expensive', 'messy', 'slow', 'cleaning', 'misses', 'scares', 'strain',
+                'cheap', 'flickers', '讨厌', '太', '难', '麻烦', '吵', '问题', '希望',
+                '不方便', '清洗', '费时', '顾虑'
+            ];
+
+            return (value || '')
+                .split('\n')
+                .map(line => line.replace(/^[-*•\d.\s]+/, '').trim())
+                .filter(line => line.length >= 8)
+                .filter(line => markers.some(marker => line.toLowerCase().includes(marker.toLowerCase())))
+                .slice(0, 3);
+        }
+
+        function updatePainPointPreview() {
+            const target = document.getElementById('reviewPainPointPreview');
+            if (!target) return;
+
+            const candidates = reviewPainPointCandidates(document.getElementById('reviewsPastedReviews')?.value || '');
+            target.classList.remove('error', 'success');
+
+            if (!candidates.length) {
+                target.textContent = t('painPointPreviewEmpty');
+                return;
+            }
+
+            target.classList.add('success');
+            const title = t('painPointPreviewTitle');
+            target.textContent = `${title}: ${candidates.map(item => `• ${item}`).join(' ')}`;
+        }
+
+        function updateReviewInputPreviews() {
+            updateReviewCountPreview();
+            updatePainPointPreview();
+        }
+
         function fillSampleProductDescription() {
             document.getElementById('descriptionProductName').value = 'Portable mini blender';
             document.getElementById('descriptionProductCategory').value = 'Kitchen appliance';
@@ -1523,7 +1567,7 @@
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';
             document.getElementById('reviewsGoal').value = 'tiktok_ctr';
             setReviewsStatus(t('reviewsSampleFilled'));
-            updateReviewCountPreview();
+            updateReviewInputPreviews();
         }
 
         function fillSamplePetHairReviews() {
@@ -1540,7 +1584,7 @@
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';
             document.getElementById('reviewsGoal').value = 'tiktok_ctr';
             setReviewsStatus(t('petHairSampleFilled'));
-            updateReviewCountPreview();
+            updateReviewInputPreviews();
         }
 
         function fillSampleDeskLampReviews() {
@@ -1557,7 +1601,7 @@
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';
             document.getElementById('reviewsGoal').value = 'tiktok_ctr';
             setReviewsStatus(t('deskLampSampleFilled'));
-            updateReviewCountPreview();
+            updateReviewInputPreviews();
         }
 
         function storyboardText(storyboard) {
@@ -2264,7 +2308,7 @@
             const productCategory = reviewsInputValue('reviewsProductCategory');
             const productDescription = reviewsInputValue('reviewsProductDescription');
             const pastedReviews = reviewsInputValue('reviewsPastedReviews');
-            updateReviewCountPreview();
+            updateReviewInputPreviews();
             const targetPlatform = reviewsInputValue('reviewsTargetPlatform') || 'TikTok';
             const goal = reviewsInputValue('reviewsGoal') || 'tiktok_ctr';
 

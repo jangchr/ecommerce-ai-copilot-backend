@@ -76,6 +76,12 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("评论条数：0", self.source)
         self.assertIn("function reviewLineCount(value)", self.source)
         self.assertIn("function updateReviewCountPreview()", self.source)
+        self.assertIn("reviewPainPointPreview", self.source)
+        self.assertIn("Pain point preview", self.source)
+        self.assertIn("痛点预览", self.source)
+        self.assertIn("function reviewPainPointCandidates(value)", self.source)
+        self.assertIn("function updatePainPointPreview()", self.source)
+        self.assertIn("function updateReviewInputPreviews()", self.source)
         self.assertIn("What to paste", self.source)
         self.assertIn("Good example", self.source)
         self.assertIn("Weak example", self.source)
@@ -301,7 +307,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Good example", section_body)
         self.assertIn("Weak example", section_body)
         self.assertIn("reviewCountPreview", section_body)
-        self.assertIn("oninput=\"updateReviewCountPreview()\"", section_body)
+        self.assertIn("reviewPainPointPreview", section_body)
+        self.assertIn("oninput=\"updateReviewInputPreviews()\"", section_body)
 
         function_match = re.search(
             r"async function generateFromReviews\(\) \{(?P<body>.*?)\n        function renderProductDashboard",
@@ -411,6 +418,12 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
     def test_pasted_reviews_review_count_preview_is_frontend_only(self):
         self.assertIn("function reviewLineCount(value)", self.source)
         self.assertIn("function updateReviewCountPreview()", self.source)
+        self.assertIn("reviewPainPointPreview", self.source)
+        self.assertIn("Pain point preview", self.source)
+        self.assertIn("痛点预览", self.source)
+        self.assertIn("function reviewPainPointCandidates(value)", self.source)
+        self.assertIn("function updatePainPointPreview()", self.source)
+        self.assertIn("function updateReviewInputPreviews()", self.source)
         self.assertIn("reviewCountEmpty", self.source)
 
         match = re.search(
@@ -424,6 +437,40 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("reviewLineCount", body)
         self.assertIn("reviewCountPreview", body)
         self.assertIn("currentOutputLanguage()", body)
+
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("generate-from-reviews", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
+
+    def test_pasted_reviews_pain_point_preview_is_frontend_only(self):
+        self.assertIn("function reviewPainPointCandidates(value)", self.source)
+        self.assertIn("function updatePainPointPreview()", self.source)
+        self.assertIn("function updateReviewInputPreviews()", self.source)
+        self.assertIn("painPointPreviewEmpty", self.source)
+        self.assertIn("painPointPreviewTitle", self.source)
+
+        match = re.search(
+            r"function updatePainPointPreview\(\) \{(?P<body>.*?)\n        \}\n\n        function updateReviewInputPreviews",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("reviewPainPointPreview", body)
+        self.assertIn("reviewPainPointCandidates", body)
+        self.assertIn("painPointPreviewEmpty", body)
+        self.assertIn("painPointPreviewTitle", body)
 
         self.assertNotIn("postPastedReviews", body)
         self.assertNotIn("generate-from-reviews", body)
