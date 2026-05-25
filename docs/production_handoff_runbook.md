@@ -1147,3 +1147,23 @@ Document: docs/release_notes_l13_1_product_description_mode.md
 - ??? telemetry_summary / shadow_sources / memory_observability
 - Amazon URL ??? stable Product Mode input
 
+## L13.1-H Product Description Mode Final Audit
+
+Status: ready.
+
+Document: docs/product_description_mode_final_audit.md
+
+???
+
+- Product Description Mode v1 ready
+- /api/v1/generate-from-description ??
+- ?? Product Description Mode ??
+- source=user_provided_description
+- Copy / Download / Translation / Recent Generations ????
+- Stable slug Product Mode ????
+- Product / Debug ????
+
+????
+
+L13.1-I Tag product-description-demo-v1
+
