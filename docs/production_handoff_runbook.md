@@ -505,3 +505,25 @@ Document: docs/mvp_workflow_smoke_protocol.md
 - Product Mode ???? 10 ? stable local grounded slug
 - Amazon URL ????? Debug Mode / Amazon Shadow
 
+## L12.0-G Commercial MVP ??????
+
+Status: ready.
+
+Document: docs/commercial_mvp_planning_final_audit.md
+
+???
+
+- L12.0 Commercial MVP planning ???
+- ?? beachhead user: Small ecommerce brand owner
+- Product Mode ???? 10 ? stable local grounded slug
+- Amazon URL ????? Debug Mode / Amazon Shadow
+- ???????? L12.1 Commercial MVP execution
+
+?????
+
+- Download Markdown / JSON
+- localStorage recent generations
+- feedback form link
+- example gallery
+- landing copy UI polish
+

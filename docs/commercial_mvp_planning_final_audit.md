@@ -1,0 +1,66 @@
+# L12.0-G Commercial MVP ??????
+
+???ready
+
+## ?????
+
+- docs/commercial_mvp_scope.md
+- docs/commercial_mvp_user_workflow.md
+- docs/public_landing_conversion_copy.md
+- docs/feedback_collection_flow.md
+- docs/export_local_history_planning.md
+- docs/mvp_workflow_smoke_protocol.md
+
+## ????
+
+L12.0 Commercial MVP planning ????
+
+???????
+
+- Small ecommerce brand owner
+
+??????
+
+- TikTok ad creative freelancer
+- small creative agency
+
+## MVP ??
+
+???????
+
+- Product Mode ?? 10 ? stable local grounded slug
+- Amazon URL ??? Debug Mode / Amazon Shadow
+- amazon_primary ???
+- Product API ??? Debug Trace
+- Product API ??? telemetry_summary
+- Product API ??? shadow_sources
+- Product API ??? memory_observability
+
+## ??????
+
+???? L12.1 Commercial MVP execution?
+
+?????
+
+1. Download Markdown / JSON
+2. Local recent generations
+3. Feedback form link
+4. Example gallery
+5. Landing copy UI polish
+
+## ????
+
+- login
+- payment
+- database history
+- team workspace
+- default Amazon URL Product Mode input
+- automated Amazon scraping as primary source
+
+## ????
+
+Public Demo v1 ????
+
+Commercial MVP planning ????
+
+???????????????????
