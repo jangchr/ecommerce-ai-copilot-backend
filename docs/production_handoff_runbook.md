@@ -1483,3 +1483,31 @@ Document: docs/product_description_polish_smoke_record.md
 - ??? data.debug
 - ??? telemetry_summary / shadow_sources / memory_observability
 
+## L13.4-F Product Description Polish Release Notes
+
+Status: ready.
+
+Document: docs/release_notes_l13_4_product_description_polish.md
+
+???
+
+- Product Description Mode ????????
+- helper text ??
+- Good inputs include ??
+- Use sample product ??
+- Use sample product ???????????? API
+- Frontend boundary test PASS
+- Fast gate PASS?123 tests
+
+???
+
+- ??? Amazon
+- ??? Source Probe
+- ??? Amazon Shadow
+- ??? data.debug
+- ??? telemetry_summary / shadow_sources / memory_observability
+
+????
+
+L13.4-G Product Description polish final audit
+
