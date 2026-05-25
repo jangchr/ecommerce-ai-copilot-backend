@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -408,7 +408,7 @@
             <h2>This public demo uses 10 stable local grounded product categories. Start with balsamic_vinegar.</h2>
             <div class="control-panel">
                 <input type="text" id="urlInput" placeholder="Enter a local grounded slug, e.g. balsamic_vinegar" value="balsamic_vinegar">
-                <button class="btn-primary" id="startBtn" onclick="startSystem()">运行 Workflow</button>
+                <button class="btn-primary" id="startBtn" onclick="startSystem()">杩愯 Workflow</button>
             </div>
             <div class="input-guide">
                 Product Mode is stable for these 10 local grounded slugs. Pick one, then run the workflow to generate a TikTok hook, creative strategy and storyboard.
@@ -456,11 +456,11 @@
         <section class="dashboard-grid">
             <div class="card">
                 <h3 style="color:var(--accent-blue);">1. Evidence Snapshot</h3>
-                <div id="res-insights" style="opacity: 0.5;">等待执行...</div>
+                <div id="res-insights" style="opacity: 0.5;">绛夊緟鎵ц...</div>
             </div>
             <div class="card">
                 <h3 style="color:var(--accent-purple);">2. Target Audience & Creative Strategy</h3>
-                <div id="res-strategy" style="opacity: 0.5;">等待执行...</div>
+                <div id="res-strategy" style="opacity: 0.5;">绛夊緟鎵ц...</div>
             </div>
             <div class="card">
                 <h3>3. Hook / Storyboard / Copy Actions</h3>
@@ -472,18 +472,18 @@
                     <button class="btn-secondary" id="copyChineseBtn" onclick="copyChineseTranslation()" disabled>Copy Chinese Translation</button>
                 </div>
                 <div class="copy-status" id="copyStatus"></div>
-                <div id="res-assets" style="opacity: 0.5;">等待执行...</div>
+                <div id="res-assets" style="opacity: 0.5;">绛夊緟鎵ц...</div>
                 <div id="res-translation" style="opacity: 0.5;"></div>
             </div>
 
             <div class="card wide">
                 <div>
                     <h3 style="color:var(--accent-green);">4. Evaluation</h3>
-                    <div id="res-evaluation" style="opacity: 0.5;">等待评估...</div>
+                    <div id="res-evaluation" style="opacity: 0.5;">绛夊緟璇勪及...</div>
                 </div>
                 <div id="debugTraceSection" hidden>
                     <h3 style="color:var(--accent-amber);">5. Debug Trace</h3>
-                    <div id="res-analytics" style="opacity: 0.5;">等待完整状态...</div>
+                    <div id="res-analytics" style="opacity: 0.5;">绛夊緟瀹屾暣鐘舵€?..</div>
                     <div class="probe-tools" id="sourceProbeTools">
                         <div class="probe-header">
                             <h4>Source Probe</h4>
@@ -859,7 +859,7 @@
         }
 
         async function postCopilot(endpoint, payload) {
-            const response = await fetch(`http://127.0.0.1:8001/api/v1/${endpoint}`, {
+            const response = await fetch(`/api/v1/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -952,7 +952,7 @@
             const payload = { url, goal: 'tiktok_ctr' };
 
             btn.disabled = true;
-            btn.innerText = "运行中...";
+            btn.innerText = "杩愯涓?..";
             latestProductData = null;
             latestChineseTranslation = '';
             resetSectionTranslations();
@@ -1000,10 +1000,10 @@
                     clearDebugPanel();
                 }
             } catch(e) {
-                alert("后端未启动或请求失败");
+                alert("鍚庣鏈惎鍔ㄦ垨璇锋眰澶辫触");
             } finally {
                 btn.disabled = false;
-                btn.innerText = "运行 Workflow";
+                btn.innerText = "杩愯 Workflow";
             }
         }
 
@@ -1154,3 +1154,4 @@
     </script>
 </body>
 </html>
+
