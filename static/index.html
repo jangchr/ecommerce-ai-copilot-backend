@@ -751,7 +751,17 @@
                 <div class="description-header">
                     <div>
                         <h3 data-i18n="productDescriptionMode">Product Description Mode</h3>
+                        <div class="field-helper" data-i18n="productDescriptionBestFor">Best if you can describe the product, audience, and pain points yourself.</div>
                         <p data-i18n="descriptionIntro">Use your own product copy and customer pain points to generate a Product-like creative brief. This mode uses `user_provided_description` as the source and does not call Amazon, Source Probe or Debug Mode.</p>
+                <div id="quickStartPanel" style="margin-top:18px; padding:16px; border:1px solid #dbe4f0; border-radius:14px; background:#f8fafc;">
+                    <div style="font-weight:700; margin-bottom:6px;" data-i18n="quickStartTitle">Try the fastest path</div>
+                    <div style="margin-bottom:12px; color:#475569;" data-i18n="quickStartSubtitle">No login required. Use a sample product or paste your own product notes.</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <button class="btn-primary" type="button" onclick="scrollToProductDescriptionMode()" data-i18n="startWithProductDescription">Start with product description</button>
+                        <button class="btn-secondary" type="button" onclick="scrollToPastedReviewsMode()" data-i18n="startWithPastedReviews">Start with pasted reviews</button>
+                        <button class="btn-secondary" type="button" onclick="scrollToFeedbackWaitlist()" data-i18n="giveFeedbackQuickStart">Give feedback</button>
+                    </div>
+                </div>
                     </div>
                     <span class="source-badge">Source: user_provided_description</span>
                 </div>
@@ -806,6 +816,7 @@
                 <div class="description-header">
                     <div>
                         <h3 data-i18n="pastedReviewsMode">Pasted Reviews Mode</h3>
+                        <div class="field-helper" data-i18n="pastedReviewsBestFor">Best if you have customer reviews, complaints, objections, or buyer feedback.</div>
                         <p data-i18n="pastedReviewsIntro">Paste customer reviews, complaints, objections, or buyer feedback. The creative brief will use these review snippets as user-provided evidence.</p>
                     </div>
                     <span class="source-badge">Source: user_pasted_reviews</span>
@@ -1205,6 +1216,13 @@
                 goodInputDifference: 'what makes it different',
                 useSampleProduct: 'Use sample product',
                 generateFromDescription: 'Generate from description',
+                quickStartTitle: 'Try the fastest path',
+                quickStartSubtitle: 'No login required. Use a sample product or paste your own product notes.',
+                startWithProductDescription: 'Start with product description',
+                startWithPastedReviews: 'Start with pasted reviews',
+                giveFeedbackQuickStart: 'Give feedback',
+                productDescriptionBestFor: 'Best if you can describe the product, audience, and pain points yourself.',
+                pastedReviewsBestFor: 'Best if you have customer reviews, complaints, objections, or buyer feedback.',
                 pastedReviewsMode: 'Pasted Reviews Mode',
                 pastedReviews: 'Pasted reviews',
                 pastedReviewsIntro: 'Paste customer reviews, complaints, objections, or buyer feedback. The creative brief will use these review snippets as user-provided evidence.',
@@ -1313,6 +1331,13 @@
                 goodInputDifference: '产品有什么不同',
                 useSampleProduct: '使用示例产品',
                 generateFromDescription: '根据产品描述生成',
+                quickStartTitle: '快速试用',
+                quickStartSubtitle: '无需登录。可以使用示例产品，也可以粘贴你自己的产品信息。',
+                startWithProductDescription: '从产品描述开始',
+                startWithPastedReviews: '从粘贴评论开始',
+                giveFeedbackQuickStart: '提交反馈',
+                productDescriptionBestFor: '适合你能自己描述产品、受众和痛点的情况。',
+                pastedReviewsBestFor: '适合你有用户评论、差评、购买顾虑或买家反馈的情况。',
                 pastedReviewsMode: '粘贴评论模式',
                 pastedReviews: '粘贴评论',
                 pastedReviewsIntro: '粘贴用户评论、差评、购买顾虑或买家反馈。系统会把这些评论片段作为用户提供的证据来生成创意简报。',
@@ -1461,6 +1486,27 @@
 
         function reviewsInputValue(id) {
             return (document.getElementById(id)?.value || '').trim();
+        }
+
+        function scrollToSectionById(sectionId) {
+            const target = document.getElementById(sectionId);
+            if (!target) return;
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function scrollToProductDescriptionMode() {
+            scrollToSectionById('descriptionMode');
+        }
+
+        function scrollToPastedReviewsMode() {
+            scrollToSectionById('pastedReviewsMode');
+        }
+
+        function scrollToFeedbackWaitlist() {
+            const feedbackLink = document.querySelector('.feedback-link');
+            if (feedbackLink) {
+                feedbackLink.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         function setReviewsStatus(message, state = '') {

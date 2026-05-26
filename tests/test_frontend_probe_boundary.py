@@ -59,6 +59,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy / Download / Translation Actions", self.source)
         self.assertIn("Feedback", self.source)
         self.assertIn("Product Description Mode", self.source)
+        self.assertIn("quickStartPanel", self.source)
+        self.assertIn("Try the fastest path", self.source)
+        self.assertIn("No login required", self.source)
+        self.assertIn("Start with product description", self.source)
+        self.assertIn("Start with pasted reviews", self.source)
+        self.assertIn("快速试用", self.source)
+        self.assertIn("无需登录", self.source)
+        self.assertIn("从产品描述开始", self.source)
+        self.assertIn("从粘贴评论开始", self.source)
         self.assertIn("Pasted Reviews Mode", self.source)
         self.assertIn("Pasted reviews", self.source)
         self.assertIn("Use sample reviews", self.source)
@@ -197,6 +206,43 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("data.debug", body)
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("memory_observability", body)
+
+    def test_public_demo_quick_start_ctas_are_frontend_only(self):
+        self.assertIn("function scrollToProductDescriptionMode()", self.source)
+        self.assertIn("function scrollToPastedReviewsMode()", self.source)
+        self.assertIn("function scrollToFeedbackWaitlist()", self.source)
+        self.assertIn("scrollToSectionById('descriptionMode')", self.source)
+        self.assertIn("scrollToSectionById('pastedReviewsMode')", self.source)
+
+        for function_name in [
+            "scrollToSectionById",
+            "scrollToProductDescriptionMode",
+            "scrollToPastedReviewsMode",
+            "scrollToFeedbackWaitlist",
+        ]:
+            with self.subTest(function_name=function_name):
+                match = re.search(
+                    rf"function {function_name}\([^)]*\) \{{(?P<body>.*?)\n        \}}",
+                    self.source,
+                    re.S,
+                )
+                self.assertIsNotNone(match)
+                body = match.group("body")
+
+                self.assertNotIn("fetch(", body)
+                self.assertNotIn("postPastedReviews", body)
+                self.assertNotIn("postProductDescription", body)
+                self.assertNotIn("generate-copilot", body)
+                self.assertNotIn("debug-copilot", body)
+                self.assertNotIn("debug-source-probe", body)
+                self.assertNotIn("runSourceProbe", body)
+                self.assertNotIn("amazonShadowMode", body)
+                self.assertNotIn("saveCurrentGenerationToRecent", body)
+                self.assertNotIn("localStorage", body)
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("memory_observability", body)
 
     def test_product_description_mode_calls_only_description_endpoint(self):
