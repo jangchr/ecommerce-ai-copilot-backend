@@ -1825,10 +1825,10 @@
             <div class="recent-shell">
                 <div class="recent-header">
                     <h3 data-i18n="recentGenerations">Recent Generations</h3>
-                    <button class="btn-secondary" id="clearRecentBtn" onclick="clearRecentGenerations()" data-i18n="clearRecentGenerations">Clear Recent Generations</button>
+                    <button class="btn-secondary" id="clearRecentBtn" onclick="clearRecentGenerations()" data-i18n="clearRecentGenerations">${escapeHTML(t('clearRecentGenerations'))}</button>
                 </div>
                 <div id="recentGenerationsList" class="recent-list">
-                    <div class="recent-empty" data-i18n="recentEmptyState">No recent generations yet.</div>
+                    <div class="recent-empty" data-i18n="recentEmptyState">${escapeHTML(t('recentEmptyState'))}</div>
                 </div>
             </div>
         </section>
@@ -2991,7 +2991,7 @@
             if (!target) return;
             const records = loadRecentGenerations();
             if (!records.length) {
-                target.innerHTML = '<div class="recent-empty">No recent generations yet.</div>';
+                target.innerHTML = '<div class="recent-empty" data-i18n="recentEmptyState">' + escapeHTML(t('recentEmptyState')) + '</div>';
                 return;
             }
             target.innerHTML = records.map((record) => {

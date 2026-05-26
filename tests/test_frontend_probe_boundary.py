@@ -1363,5 +1363,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("pastedReviewsMode: 'Use customer feedback'", self.source)
 
 
+    def test_recent_empty_state_uses_i18n_runtime_copy(self):
+        self.assertIn("recentEmptyState: '还没有最近生成记录。'", self.source)
+        self.assertIn("clearRecentGenerations: '清空最近生成记录'", self.source)
+        self.assertIn("t('recentEmptyState')", self.source)
+        self.assertIn("recent-empty", self.source)
+
+        # English fallback can exist in the English dictionary, but the rendered recent-empty state must not be hard-coded.
+        self.assertNotIn('<div class="recent-empty">No recent generations yet.</div>', self.source)
+
+
 if __name__ == "__main__":
     unittest.main()
