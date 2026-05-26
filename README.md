@@ -452,3 +452,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Trial Outreach Message Pack v1 Archive](docs/trial_outreach_message_pack_v1_archive.md) — trial-outreach-message-pack-v1 归档记录。
 - [Trial Outreach First Round Execution Plan](docs/trial_outreach_first_round_execution_plan.md) — L15.5-I 第一轮真实试用执行计划。
 - [Trial Outreach After Message Pack Decision](docs/trial_outreach_after_message_pack_decision.md) — L15.5-J 文案包后续决策。
+- [Trial Feedback Round 1 Tracker](docs/trial_feedback_round_1_tracker.md) — L15.6-A 第一轮真实试用反馈 tracker。
+- [Trial Feedback Signal Rubric](docs/trial_feedback_signal_rubric.md) — L15.6-B 反馈信号判断规则。
+- [Trial Feedback Round 1 Summary Template](docs/trial_feedback_round_1_summary_template.md) — L15.6-C 第一轮反馈总结模板。
+- [Trial Feedback Decision Matrix](docs/trial_feedback_decision_matrix.md) — L15.6-D 反馈后续路线矩阵。
+- [Trial Feedback Tracker v1 Archive](docs/trial_feedback_tracker_v1_archive.md) — trial-feedback-tracker-v1 归档记录。

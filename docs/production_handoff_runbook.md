@@ -2386,3 +2386,30 @@ trial-outreach-message-pack-v1
 - 可以开始第一轮 5 人真实试用邀请
 - 下一步建议进入 First Round Trial Feedback Tracker
 
+## L15.6-A / B / C / D / E Trial Feedback Tracker Batch
+
+Status: ready.
+
+Commit:
+
+bb2d840
+
+Documents:
+
+- docs/trial_feedback_round_1_tracker.md
+- docs/trial_feedback_signal_rubric.md
+- docs/trial_feedback_round_1_summary_template.md
+- docs/trial_feedback_decision_matrix.md
+- docs/trial_feedback_tracker_v1_archive.md
+
+Tag:
+
+trial-feedback-tracker-v1
+
+结论：
+
+- 第一轮 trial feedback tracker 已准备
+- 反馈信号判断规则已准备
+- 第一轮 summary template 已准备
+- 下一步可以真实发送 5 人试用邀请
+
