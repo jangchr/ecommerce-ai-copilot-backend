@@ -2338,3 +2338,26 @@ Documents:
 - 下一步进入真实用户试用邀请文案准备
 - 优先准备中文 / 英文短私信、详细私信、follow-up 和 feedback reminder
 
+## L15.5-B / C / D / E / F Trial Outreach Message Pack
+
+Status: ready.
+
+Commit base:
+
+54d972e
+
+Documents:
+
+- docs/trial_outreach_message_pack_v1.md
+- docs/trial_outreach_cn_messages.md
+- docs/trial_outreach_en_messages.md
+- docs/trial_outreach_followup_messages.md
+- docs/trial_outreach_sending_checklist.md
+
+结论：
+
+- 中文 / 英文试用邀请文案已准备
+- follow-up 和 feedback reminder 已准备
+- 第一轮建议只发 5 人
+- 真实反馈不阻塞后续规划
+

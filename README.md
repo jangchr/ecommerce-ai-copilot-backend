@@ -443,3 +443,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Public Demo Conversion Polish v1 Archive](docs/public_demo_conversion_v1_archive.md) — public-demo-conversion-polish-v1 归档记录。
 - [Public Demo Conversion Next Decision](docs/public_demo_conversion_next_decision.md) — L15.4-D 后续路线决策。
 - [Trial Outreach Message Pack Planning](docs/trial_outreach_message_pack_planning.md) — L15.5-A 真实用户试用邀请文案规划。
+- [Trial Outreach Message Pack v1](docs/trial_outreach_message_pack_v1.md) — L15.5-B 试用邀请文案包总览。
+- [Trial Outreach CN Messages](docs/trial_outreach_cn_messages.md) — L15.5-C 中文试用邀请文案。
+- [Trial Outreach EN Messages](docs/trial_outreach_en_messages.md) — L15.5-D 英文试用邀请文案。
+- [Trial Outreach Follow-up Messages](docs/trial_outreach_followup_messages.md) — L15.5-E follow-up / feedback reminder 文案。
+- [Trial Outreach Sending Checklist](docs/trial_outreach_sending_checklist.md) — L15.5-F 发送检查清单。
