@@ -448,3 +448,7 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Trial Outreach EN Messages](docs/trial_outreach_en_messages.md) — L15.5-D 英文试用邀请文案。
 - [Trial Outreach Follow-up Messages](docs/trial_outreach_followup_messages.md) — L15.5-E follow-up / feedback reminder 文案。
 - [Trial Outreach Sending Checklist](docs/trial_outreach_sending_checklist.md) — L15.5-F 发送检查清单。
+- [Trial Outreach Message Pack Final Audit](docs/trial_outreach_message_pack_final_audit.md) — L15.5-G 试用邀请文案包最终审计。
+- [Trial Outreach Message Pack v1 Archive](docs/trial_outreach_message_pack_v1_archive.md) — trial-outreach-message-pack-v1 归档记录。
+- [Trial Outreach First Round Execution Plan](docs/trial_outreach_first_round_execution_plan.md) — L15.5-I 第一轮真实试用执行计划。
+- [Trial Outreach After Message Pack Decision](docs/trial_outreach_after_message_pack_decision.md) — L15.5-J 文案包后续决策。
