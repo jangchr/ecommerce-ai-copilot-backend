@@ -1784,5 +1784,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("latestQuickUseScript = script.hook", self.source)
 
 
+    def test_l24_copy_ready_script_contract_script_exists(self):
+        script = Path("scripts/check_copy_ready_script_contract.py").read_text(encoding="utf-8")
+        self.assertIn("Copy-ready script contract check passed.", script)
+        self.assertIn("REQUIRED_MARKERS", script)
+        self.assertIn("FORBIDDEN_PATTERNS", script)
+        self.assertIn("renderQuickUsePack(script, storyboard, data)", script)
+        self.assertIn("${quickUsePackCard}", script)
+        self.assertIn("escapeHTML(script.hook || '')", script)
+        self.assertIn("latestQuickUseScript = script.hook", script)
+        self.assertIn("renderHookHighlightCard should not render raw script.hook", script)
+
+
 if __name__ == "__main__":
     unittest.main()
