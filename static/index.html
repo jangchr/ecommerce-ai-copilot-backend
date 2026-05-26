@@ -1419,6 +1419,18 @@
             background: #f8fafc;
         }
 
+
+        /* L18.6-A localized recent actions and language label polish */
+        .language-selector [data-i18n="languageLabel"] {
+            white-space: nowrap;
+            flex: 0 0 auto;
+            min-width: max-content;
+        }
+
+        .language-selector {
+            overflow: visible;
+        }
+
 </style>
 </head>
 <body>
@@ -2360,7 +2372,7 @@
                 reviewsProductCategoryPlaceholder: '厨房小家电',
                 reviewsProductDescriptionPlaceholder: '一款适合奶昔、蛋白饮和出行使用的充电便携搅拌机。',
                 reviewsPastedReviewsPlaceholder: '- 我讨厌每天早上清洗大搅拌机。\n- 它对我的公寓来说太吵了。',
-                languageLabel: 'Language:',
+                languageLabel: '语言：',
                 navTagline: '基于证据的创意助手',
                 runWorkflow: '用示例产品生成',
                 inputGuide: '这里是示例产品库：先选一个示例产品跑一次，理解流程后，再换成你自己的产品想法。',
@@ -2557,6 +2569,9 @@
         function setLanguageMode(language) {
             outputLanguage = language === 'zh-CN' ? 'zh-CN' : 'en';
             applyLanguageCopy();
+            if (typeof renderRecentGenerations === 'function') {
+                renderRecentGenerations();
+            }
             if (latestProductData) {
                 renderProductDashboard(latestProductData, {
                     inputSlug: latestInputSlug,
@@ -3006,9 +3021,9 @@
                             <div class="recent-hook">${escapeHTML(hook.slice(0, 180))}</div>
                         </div>
                         <div class="recent-actions">
-                            <button class="btn-secondary" onclick="viewRecentGeneration('${escapeHTML(record.id)}')">${escapeHTML(t('recentView'))}</button>
-                            <button class="btn-secondary" onclick="copyRecentMarkdown('${escapeHTML(record.id)}')">${escapeHTML(t('recentCopyMarkdown'))}</button>
-                            <button class="btn-secondary" onclick="deleteRecentGeneration('${escapeHTML(record.id)}')">${escapeHTML(t('recentDelete'))}</button>
+                            <button class="btn-secondary" onclick="viewRecentGeneration('${escapeHTML(record.id)}')"><span data-i18n="recentView">${escapeHTML(t('recentView'))}</span></button>
+                            <button class="btn-secondary" onclick="copyRecentMarkdown('${escapeHTML(record.id)}')"><span data-i18n="recentCopyMarkdown">${escapeHTML(t('recentCopyMarkdown'))}</span></button>
+                            <button class="btn-secondary" onclick="deleteRecentGeneration('${escapeHTML(record.id)}')"><span data-i18n="recentDelete">${escapeHTML(t('recentDelete'))}</span></button>
                         </div>
                     </div>
                 `;

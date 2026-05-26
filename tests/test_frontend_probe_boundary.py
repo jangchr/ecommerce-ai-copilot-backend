@@ -1373,5 +1373,34 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn('<div class="recent-empty">No recent generations yet.</div>', self.source)
 
 
+    def test_l18_recent_actions_and_language_label_update_in_chinese_mode(self):
+        self.assertIn("/* L18.6-A localized recent actions and language label polish */", self.source)
+        self.assertIn('.language-selector [data-i18n="languageLabel"]', self.source)
+        self.assertIn("languageLabel: '语言：'", self.source)
+
+        self.assertIn("recentView: '查看'", self.source)
+        self.assertIn("recentCopyMarkdown: '复制 Markdown'", self.source)
+        self.assertIn("recentDelete: '删除'", self.source)
+
+        self.assertIn('data-i18n="recentView"', self.source)
+        self.assertIn('data-i18n="recentCopyMarkdown"', self.source)
+        self.assertIn('data-i18n="recentDelete"', self.source)
+
+        set_language_start = self.source.find("function setLanguageMode")
+        self.assertNotEqual(set_language_start, -1)
+        set_language_block = self.source[set_language_start:set_language_start + 700]
+        self.assertIn("renderRecentGenerations();", set_language_block)
+
+        zh_start = self.source.find("'zh-CN': {")
+        self.assertNotEqual(zh_start, -1)
+        zh_end = self.source.find("\n        };\n\n        function t", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        self.assertNotIn("languageLabel: 'Language:'", zh_copy)
+        self.assertNotIn("recentView: 'View'", zh_copy)
+        self.assertNotIn("recentDelete: 'Delete'", zh_copy)
+
+
 if __name__ == "__main__":
     unittest.main()
