@@ -1292,5 +1292,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Shadow Used For Generation", self.source)
 
 
+    def test_l18_simplified_active_workspace_flow_hides_legacy_guides(self):
+        self.assertIn("/* L18.2-A simplified active workspace flow */", self.source)
+        self.assertIn(".hero > #stableProductWorkspace", self.source)
+        self.assertIn("#activeWorkspacePanel #quickStartPanel", self.source)
+        self.assertIn("#activeWorkspacePanel #chineseOnboardingPanel", self.source)
+        self.assertIn("#activeWorkspacePanel #sampleProductLibraryGuide", self.source)
+        self.assertIn("#activeWorkspacePanel #firstRunGuidePanel", self.source)
+        self.assertIn("#activeWorkspacePanel .demo-warning", self.source)
+        self.assertIn("#activeWorkspacePanel .run-options", self.source)
+
+        self.assertIn('data-i18n="navTagline"', self.source)
+        self.assertIn("navTagline: 'Evidence Driven Agent'", self.source)
+        self.assertIn("navTagline: '基于证据的创意助手'", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()
