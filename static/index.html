@@ -1534,6 +1534,8 @@
             }
         }
 
+
+        /* L19-E localized sample input content */
 </style>
 </head>
 <body>
@@ -1692,7 +1694,7 @@
                 <div class="description-grid">
                     <div class="description-field">
                         <label for="descriptionProductName" data-i18n="productName">Product name</label>
-                        <input id="descriptionProductName" type="text" placeholder="SoftGlow Desk Lamp" data-i18n-placeholder="descriptionProductNamePlaceholder">
+                        <input id="descriptionProductName" type="text" placeholder="柔光桌面台灯" data-i18n-placeholder="descriptionProductNamePlaceholder">
                     </div>
                     <div class="description-field">
                         <label for="descriptionProductCategory" data-i18n="productCategory">Product category</label>
@@ -1752,15 +1754,15 @@
                 <div class="description-grid">
                     <div class="description-field">
                         <label for="reviewsProductName" data-i18n="productName">Product name</label>
-                        <input id="reviewsProductName" type="text" placeholder="Portable mini blender" data-i18n-placeholder="reviewsProductNamePlaceholder">
+                        <input id="reviewsProductName" type="text" placeholder="便携迷你榨汁杯" data-i18n-placeholder="reviewsProductNamePlaceholder">
                     </div>
                     <div class="description-field">
                         <label for="reviewsProductCategory" data-i18n="productCategory">Product category</label>
-                        <input id="reviewsProductCategory" type="text" placeholder="Kitchen appliance" data-i18n-placeholder="reviewsProductCategoryPlaceholder">
+                        <input id="reviewsProductCategory" type="text" placeholder="厨房小家电" data-i18n-placeholder="reviewsProductCategoryPlaceholder">
                     </div>
                     <div class="description-field wide">
                         <label for="reviewsProductDescription" data-i18n="productDescription">Product description</label>
-                        <textarea id="reviewsProductDescription" placeholder="A compact rechargeable blender for smoothies, protein shakes, and travel use." data-i18n-placeholder="reviewsProductDescriptionPlaceholder"></textarea>
+                        <textarea id="reviewsProductDescription" placeholder="一款可充电的便携榨汁杯，适合做奶昔、蛋白饮和外出携带。" data-i18n-placeholder="reviewsProductDescriptionPlaceholder"></textarea>
                     </div>
                     <div class="description-field wide">
                         <label for="reviewsPastedReviews" data-i18n="pastedReviews">Pasted reviews</label>
@@ -2267,14 +2269,14 @@
                 pathSampleProductTitle: 'Show me a sample',
                 pathSampleProductBody: 'Try a sample product without filling your own product details.',
                 urlInputPlaceholder: 'Choose a sample product, e.g. desk_lamp',
-                descriptionProductNamePlaceholder: 'SoftGlow Desk Lamp',
+                descriptionProductNamePlaceholder: '柔光桌面台灯',
                 descriptionProductCategoryPlaceholder: 'desk_lamp',
                 descriptionProductDescriptionPlaceholder: 'Describe the product, its main features, and when it is used.',
                 descriptionPainPointsPlaceholder: 'Add buyer problems, objections, or complaints you want the brief to address.',
-                reviewsProductNamePlaceholder: 'Portable mini blender',
-                reviewsProductCategoryPlaceholder: 'Kitchen appliance',
-                reviewsProductDescriptionPlaceholder: 'A compact rechargeable blender for smoothies, protein shakes, and travel use.',
-                reviewsPastedReviewsPlaceholder: '- I hate cleaning my big blender every morning.\n- It is too loud for my apartment.',
+                reviewsProductNamePlaceholder: '便携迷你榨汁杯',
+                reviewsProductCategoryPlaceholder: '厨房小家电',
+                reviewsProductDescriptionPlaceholder: '一款可充电的便携榨汁杯，适合做奶昔、蛋白饮和外出携带。',
+                reviewsPastedReviewsPlaceholder: '- 我每天早上都不想清洗大搅拌机。\n- 它在公寓里声音太大。',
                 languageLabel: 'Language:',
                 navTagline: 'Evidence Driven Agent',
                 runWorkflow: 'Generate from sample product',
@@ -2924,9 +2926,9 @@
         }
 
         function fillSampleProductDescription() {
-            document.getElementById('descriptionProductName').value = 'Portable mini blender';
-            document.getElementById('descriptionProductCategory').value = 'Kitchen appliance';
-            document.getElementById('descriptionProductDescription').value = 'A compact rechargeable blender for smoothies, protein shakes, and travel use. It is designed for busy people who want quick drinks at home, work, the gym, or while traveling. The product is small enough for a backpack and easy to rinse after use.';
+            document.getElementById('descriptionProductName').value = '便携迷你榨汁杯';
+            document.getElementById('descriptionProductCategory').value = '厨房小家电';
+            document.getElementById('descriptionProductDescription').value = '一款可充电的便携榨汁杯，适合做奶昔、蛋白饮和外出携带。 It is designed for busy people who want quick drinks at home, work, the gym, or while traveling. The product is small enough for a backpack and easy to rinse after use.';
             document.getElementById('descriptionPainPoints').value = 'Customers complain that large blenders are hard to clean, too loud, take too much counter space, and are inconvenient for single servings. Some users also say they skip smoothies because setup and cleanup feel like too much work.';
             document.getElementById('descriptionTargetPlatform').value = 'TikTok';
             document.getElementById('descriptionGoal').value = 'tiktok_ctr';
@@ -2934,9 +2936,9 @@
         }
 
         function fillSamplePastedReviews() {
-            document.getElementById('reviewsProductName').value = 'Portable mini blender';
-            document.getElementById('reviewsProductCategory').value = 'Kitchen appliance';
-            document.getElementById('reviewsProductDescription').value = 'A compact rechargeable blender for smoothies, protein shakes, and travel use.';
+            document.getElementById('reviewsProductName').value = '便携迷你榨汁杯';
+            document.getElementById('reviewsProductCategory').value = '厨房小家电';
+            document.getElementById('reviewsProductDescription').value = '一款可充电的便携榨汁杯，适合做奶昔、蛋白饮和外出携带。';
             document.getElementById('reviewsPastedReviews').value = [
                 '- I hate cleaning my big blender every morning.',
                 '- It is too loud for my apartment.',
@@ -2951,14 +2953,14 @@
         }
 
         function fillSamplePetHairReviews() {
-            document.getElementById('reviewsProductName').value = 'Pet hair vacuum brush';
-            document.getElementById('reviewsProductCategory').value = 'Pet cleaning accessory';
-            document.getElementById('reviewsProductDescription').value = 'A compact vacuum brush attachment designed to remove pet hair from couches, rugs, car seats, and corners.';
+            document.getElementById('reviewsProductName').value = '宠物毛发清洁刷';
+            document.getElementById('reviewsProductCategory').value = '宠物清洁配件';
+            document.getElementById('reviewsProductDescription').value = '一款小型吸尘刷头，用来清理沙发、地毯、车座和角落里的宠物毛发。';
             document.getElementById('reviewsPastedReviews').value = [
-                '- Pet hair sticks to my couch no matter how much I vacuum.',
-                '- My normal vacuum misses the corners and edges.',
-                '- The loud vacuum scares my cat every time.',
-                '- The brush gets clogged with fur too quickly.',
+                '- 不管我怎么吸，沙发上还是粘着宠物毛。',
+                '- 普通吸尘器吸不到角落和边缘。',
+                '- 吸尘器声音太大，每次都会吓到我的猫。',
+                '- 刷头很快就被毛发堵住了。',
                 '- I need something easy for daily cleanup before guests arrive.'
             ].join('\n');
             document.getElementById('reviewsTargetPlatform').value = 'TikTok';

@@ -289,7 +289,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Good inputs include", self.source)
         self.assertIn("Describe what the product is, who it is for, and what makes it useful.", self.source)
         self.assertIn("Paste customer complaints, review snippets, objections, or problems your buyers care about.", self.source)
-        self.assertIn("Portable mini blender", self.source)
+        self.assertIn("便携迷你榨汁杯", self.source)
         self.assertIn("Please add more detail before generating.", self.source)
         self.assertIn("function generateFromDescription()", self.source)
         self.assertIn("function fillSampleProductDescription()", self.source)
@@ -820,7 +820,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         body = function_match.group("body")
 
         for text in [
-            "Portable mini blender",
+            "便携迷你榨汁杯",
             "Kitchen appliance",
             "A compact rechargeable blender for smoothies, protein shakes, and travel use.",
             "Customers complain that large blenders are hard to clean",
@@ -913,7 +913,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         body = function_match.group("body")
 
         for text in [
-            "Portable mini blender",
+            "便携迷你榨汁杯",
             "Kitchen appliance",
             "A compact rechargeable blender for smoothies, protein shakes, and travel use.",
             "I hate cleaning my big blender every morning.",
@@ -934,7 +934,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         self.assertIn("function fillSamplePetHairReviews()", self.source)
         self.assertIn("function fillSampleDeskLampReviews()", self.source)
-        self.assertIn("Pet hair vacuum brush", self.source)
+        self.assertIn("宠物毛发清洁刷", self.source)
         self.assertIn("Adjustable desk lamp", self.source)
 
         self.assertNotIn("postPastedReviews", body)
@@ -1443,6 +1443,19 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         self.assertIn("shotListTitle: 'Shot list'", self.source)
         self.assertIn("captionTitle: 'Caption draft'", self.source)
+
+
+    def test_l19_sample_inputs_are_localized_for_chinese_demo(self):
+        self.assertIn("/* L19-E localized sample input content */", self.source)
+        self.assertIn("柔光桌面台灯", self.source)
+        self.assertIn("便携迷你榨汁杯", self.source)
+        self.assertIn("宠物毛发清洁刷", self.source)
+        self.assertIn("宠物清洁配件", self.source)
+        self.assertIn("不管我怎么吸，沙发上还是粘着宠物毛。", self.source)
+        self.assertIn("普通吸尘器吸不到角落和边缘。", self.source)
+        self.assertIn("吸尘器声音太大，每次都会吓到我的猫。", self.source)
+        self.assertIn("刷头很快就被毛发堵住了。", self.source)
+        self.assertIn("我每天早上都不想清洗大搅拌机。", self.source)
 
 
 if __name__ == "__main__":
