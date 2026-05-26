@@ -1707,5 +1707,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("mixed pet hair display", script)
 
 
+    def test_l23_public_demo_render_smoke_script_exists(self):
+        script = Path("scripts/check_public_demo_render_smoke.py").read_text(encoding="utf-8")
+        self.assertIn("Public demo Render smoke check passed.", script)
+        self.assertIn("REQUIRED_MARKERS", script)
+        self.assertIn("FORBIDDEN_PATTERNS", script)
+        self.assertIn("L21-A workflow entry hierarchy", script)
+        self.assertIn("sample workspace language map", script)
+        self.assertIn("language class helper", script)
+        self.assertIn("mixed balsamic display", script)
+        self.assertIn("old inline panel fallback", script)
+        self.assertIn("render-smoke-", script)
+
+
 if __name__ == "__main__":
     unittest.main()
