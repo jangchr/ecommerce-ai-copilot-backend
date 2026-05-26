@@ -1419,5 +1419,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("copyReadyScript: 'Copy-ready short video script'", self.source)
 
 
+    def test_l19_copy_ready_script_action_is_present(self):
+        self.assertIn("/* L19-B copy-ready script action */", self.source)
+        self.assertIn("let latestQuickUseScript = '';", self.source)
+        self.assertIn("latestQuickUseScript = copyReady;", self.source)
+        self.assertIn("function copyQuickUseScript()", self.source)
+        self.assertIn('data-i18n="copyReadyScriptButton"', self.source)
+        self.assertIn("copyReadyScriptButton: '复制短视频脚本'", self.source)
+        self.assertIn("copyReadyScriptCopied: '短视频脚本已复制。'", self.source)
+        self.assertIn("copyReadyScriptButton: 'Copy short video script'", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()

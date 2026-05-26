@@ -1481,6 +1481,23 @@
             line-height: 1.5;
         }
 
+
+        /* L19-B copy-ready script action */
+        .quick-use-pack-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 8px;
+        }
+
+        .quick-use-copy-status {
+            min-height: 16px;
+            color: var(--accent-green);
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
 </style>
 </head>
 <body>
@@ -2179,6 +2196,7 @@
 
         let latestDebugCategory = '';
         let latestProductData = null;
+        let latestQuickUseScript = '';
         let latestChineseTranslation = '';
         let latestInputSlug = '';
         let latestGeneratedAt = '';
@@ -2357,6 +2375,8 @@
                 scriptScenes: 'Scenes',
                 scriptOpening: 'Opening',
                 copyReadyScript: 'Copy-ready short video script',
+                copyReadyScriptCopied: 'Short video script copied.',
+                copyReadyScriptButton: 'Copy short video script',
                 quickUseStepThree: 'Keep the CTA at the end and adjust only the product details.',
                 quickUseStepTwo: 'Use the storyboard scenes as your shot list.',
                 quickUseStepOne: 'Copy the hook and use it as the opening line.',
@@ -2567,6 +2587,8 @@
                 scriptScenes: '分镜',
                 scriptOpening: '开头',
                 copyReadyScript: '可直接复制的短视频脚本',
+                copyReadyScriptCopied: '短视频脚本已复制。',
+                copyReadyScriptButton: '复制短视频脚本',
                 quickUseStepThree: '保留最后的 CTA，只替换成你的产品链接或购买方式。',
                 quickUseStepTwo: '把分镜当作拍摄清单，一条一条拍。',
                 quickUseStepOne: '复制 Hook，当作视频开头第一句话。',
@@ -3284,6 +3306,17 @@
             }
         }
 
+
+        function copyQuickUseScript() {
+            const text = latestQuickUseScript || '';
+            if (!text) return;
+            copyText(t('copyReadyScript'), text);
+            const status = document.getElementById('quickUseCopyStatus');
+            if (status) {
+                status.textContent = t('copyReadyScriptCopied');
+            }
+        }
+
         function copyChineseTranslation() {
             copyText('Chinese Translation', latestChineseTranslation);
         }
@@ -3696,6 +3729,7 @@
                 '',
                 `${t('scriptCTA')}: ${cta}`
             ].filter((line) => line !== '').join('\n');
+            latestQuickUseScript = copyReady;
 
             return `
                 <div class="quick-use-pack-card" id="quickUsePackCard">
@@ -3707,7 +3741,11 @@
                         <div class="quick-use-pack-step">${escapeHTML(t('quickUseStepThree'))}</div>
                     </div>
                     <div class="json-key">${escapeHTML(t('copyReadyScript'))}</div>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" type="button" onclick="copyQuickUseScript()" data-i18n="copyReadyScriptButton">${escapeHTML(t('copyReadyScriptButton'))}</button>
+                    </div>
                     <div class="quick-use-script">${escapeHTML(copyReady)}</div>
+                    <div class="quick-use-copy-status" id="quickUseCopyStatus"></div>
                 </div>
             `;
         }
