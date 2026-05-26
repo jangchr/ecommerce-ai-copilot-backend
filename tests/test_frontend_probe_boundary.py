@@ -1430,5 +1430,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("copyReadyScriptButton: 'Copy short video script'", self.source)
 
 
+    def test_l19_script_pack_includes_shot_list_and_caption(self):
+        self.assertIn("/* L19-D script, shot list, and caption pack */", self.source)
+        self.assertIn("const shotList = scenes.length ? scenes.join", self.source)
+        self.assertIn("const captionDraft = [hook, cta].filter(Boolean).join(' ')", self.source)
+        self.assertIn("quick-use-mini-grid", self.source)
+
+        self.assertIn("shotListTitle: '拍摄清单'", self.source)
+        self.assertIn("captionTitle: '发布文案草稿'", self.source)
+        self.assertIn("captionTemplate: '可以直接当作发布文案", self.source)
+        self.assertIn("shotListFallback: '把每个分镜当成一个镜头来拍。'", self.source)
+
+        self.assertIn("shotListTitle: 'Shot list'", self.source)
+        self.assertIn("captionTitle: 'Caption draft'", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()

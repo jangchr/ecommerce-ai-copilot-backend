@@ -1498,6 +1498,42 @@
             margin-top: 6px;
         }
 
+
+        /* L19-D script, shot list, and caption pack */
+        .quick-use-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .quick-use-mini-card {
+            padding: 12px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid #fef3c7;
+        }
+
+        .quick-use-mini-title {
+            font-size: 12px;
+            font-weight: 850;
+            color: #92400e;
+            margin-bottom: 6px;
+        }
+
+        .quick-use-mini-body {
+            color: #111827;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 720px) {
+            .quick-use-mini-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -2375,6 +2411,10 @@
                 scriptScenes: 'Scenes',
                 scriptOpening: 'Opening',
                 copyReadyScript: 'Copy-ready short video script',
+                shotListFallback: 'Use each storyboard scene as one shot.',
+                captionTemplate: 'Use this as your caption and replace product details if needed.',
+                captionTitle: 'Caption draft',
+                shotListTitle: 'Shot list',
                 copyReadyScriptCopied: 'Short video script copied.',
                 copyReadyScriptButton: 'Copy short video script',
                 quickUseStepThree: 'Keep the CTA at the end and adjust only the product details.',
@@ -2587,6 +2627,10 @@
                 scriptScenes: '分镜',
                 scriptOpening: '开头',
                 copyReadyScript: '可直接复制的短视频脚本',
+                shotListFallback: '把每个分镜当成一个镜头来拍。',
+                captionTemplate: '可以直接当作发布文案，再按你的产品细节微调。',
+                captionTitle: '发布文案草稿',
+                shotListTitle: '拍摄清单',
                 copyReadyScriptCopied: '短视频脚本已复制。',
                 copyReadyScriptButton: '复制短视频脚本',
                 quickUseStepThree: '保留最后的 CTA，只替换成你的产品链接或购买方式。',
@@ -3721,13 +3765,18 @@
                 .map((scene, index) => `${index + 1}. ${scene.narration || scene.visual_description || ''}`)
                 .filter(Boolean);
 
+            const shotList = scenes.length ? scenes.join('\n') : t('shotListFallback');
+            const captionDraft = [hook, cta].filter(Boolean).join(' ');
             const copyReady = [
                 `${t('scriptOpening')}: ${hook}`,
                 '',
                 `${t('scriptScenes')}:`,
-                scenes.join('\n'),
+                shotList,
                 '',
-                `${t('scriptCTA')}: ${cta}`
+                `${t('scriptCTA')}: ${cta}`,
+                '',
+                `${t('captionTitle')}:`,
+                captionDraft
             ].filter((line) => line !== '').join('\n');
             latestQuickUseScript = copyReady;
 
