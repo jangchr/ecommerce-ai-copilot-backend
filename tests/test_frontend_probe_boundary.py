@@ -124,6 +124,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("inlineResultPanelTitle: '生成结果预览'", self.source)
         self.assertIn("inlineResultEmptyState: '点击生成后，Hook、创意摘要和分镜脚本会显示在这里。'", self.source)
         self.assertIn("recentEmptyState: '还没有最近生成记录。'", self.source)
+        self.assertIn("/* L18.1-D dedupe bottom feedback/waitlist UI */", self.source)
+        self.assertIn(".feedback-panel,", self.source)
+        self.assertIn("#waitlistPanel", self.source)
+        self.assertIn("recentView: '查看'", self.source)
+        self.assertIn("recentCopyMarkdown: '复制 Markdown'", self.source)
+        self.assertIn("recentDelete: '删除'", self.source)
+        self.assertIn("${escapeHTML(t('recentView'))}", self.source)
+        self.assertIn("${escapeHTML(t('recentCopyMarkdown'))}", self.source)
+        self.assertIn("${escapeHTML(t('recentDelete'))}", self.source)
         self.assertIn("clearRecentGenerations: '清空最近生成记录'", self.source)
         self.assertIn("feedbackBody: '告诉我们这个创意 brief 是否有用", self.source)
         self.assertIn("waitlistTitle: '加入试用名单'", self.source)
@@ -468,6 +477,29 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
+
+    def test_chinese_recent_actions_and_bottom_ctas_are_deduped(self):
+        self.assertIn("/* L18.1-D dedupe bottom feedback/waitlist UI */", self.source)
+        self.assertIn(".feedback-panel,", self.source)
+        self.assertIn("#waitlistPanel", self.source)
+
+        self.assertIn("recentView: '查看'", self.source)
+        self.assertIn("recentCopyMarkdown: '复制 Markdown'", self.source)
+        self.assertIn("recentDelete: '删除'", self.source)
+
+        self.assertIn("${escapeHTML(t('recentView'))}", self.source)
+        self.assertIn("${escapeHTML(t('recentCopyMarkdown'))}", self.source)
+        self.assertIn("${escapeHTML(t('recentDelete'))}", self.source)
+
+        zh_start = self.source.find("'zh-CN': {")
+        self.assertNotEqual(zh_start, -1)
+        zh_end = self.source.find("\n        };\n\n        function t", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        self.assertNotIn("recentView: 'View'", zh_copy)
+        self.assertNotIn("recentCopyMarkdown: 'Copy Markdown'", zh_copy)
+        self.assertNotIn("recentDelete: 'Delete'", zh_copy)
 
     def test_chinese_mode_bottom_sections_are_localized(self):
         self.assertIn("inlineResultPanelTitle: '生成结果预览'", self.source)

@@ -1268,6 +1268,17 @@
             }
         }
 
+
+        /* L18.1-D dedupe bottom feedback/waitlist UI */
+        .feedback-panel,
+        .waitlist-panel,
+        #feedbackPanel,
+        #waitlistPanel,
+        #feedbackSection,
+        #waitlistSection {
+            display: none !important;
+        }
+
 </style>
 </head>
 <body>
@@ -1983,6 +1994,9 @@
                 inlineResultPanelTitle: 'Inline Result Panel',
                 inlineResultEmptyState: 'Generate from the active workspace and the creative brief will appear here in the same task flow.',
                 recentEmptyState: 'No recent generations yet.',
+                recentView: 'View',
+                recentCopyMarkdown: 'Copy Markdown',
+                recentDelete: 'Delete',
                 clearRecentGenerations: 'Clear Recent Generations',
                 feedbackBody: 'Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.',
                 waitlistTitle: 'Join the waitlist',
@@ -2172,6 +2186,9 @@
                 inlineResultPanelTitle: '生成结果预览',
                 inlineResultEmptyState: '点击生成后，Hook、创意摘要和分镜脚本会显示在这里。',
                 recentEmptyState: '还没有最近生成记录。',
+                recentView: '查看',
+                recentCopyMarkdown: '复制 Markdown',
+                recentDelete: '删除',
                 clearRecentGenerations: '清空最近生成记录',
                 feedbackBody: '告诉我们这个创意 brief 是否有用、是否清楚、能不能改成真实 TikTok 广告。',
                 waitlistTitle: '加入试用名单',
@@ -2831,9 +2848,9 @@
                             <div class="recent-hook">${escapeHTML(hook.slice(0, 180))}</div>
                         </div>
                         <div class="recent-actions">
-                            <button class="btn-secondary" onclick="viewRecentGeneration('${escapeHTML(record.id)}')">View</button>
-                            <button class="btn-secondary" onclick="copyRecentMarkdown('${escapeHTML(record.id)}')">Copy Markdown</button>
-                            <button class="btn-secondary" onclick="deleteRecentGeneration('${escapeHTML(record.id)}')">Delete</button>
+                            <button class="btn-secondary" onclick="viewRecentGeneration('${escapeHTML(record.id)}')">${escapeHTML(t('recentView'))}</button>
+                            <button class="btn-secondary" onclick="copyRecentMarkdown('${escapeHTML(record.id)}')">${escapeHTML(t('recentCopyMarkdown'))}</button>
+                            <button class="btn-secondary" onclick="deleteRecentGeneration('${escapeHTML(record.id)}')">${escapeHTML(t('recentDelete'))}</button>
                         </div>
                     </div>
                 `;
