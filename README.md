@@ -428,3 +428,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Public Demo Feedback Waitlist Tracking Plan](docs/public_demo_feedback_waitlist_tracking_plan.md) — L15.0-F Feedback / Waitlist 追踪计划。
 - [Public Demo Conversion Polish Backlog](docs/public_demo_conversion_polish_backlog.md) — L15.0-G 转化优化 backlog。
 - [Public Demo Conversion Polish Implementation Plan](docs/public_demo_conversion_polish_implementation_plan.md) — L15.0-H 实现计划。
+- [Public Demo Hero CTA Public Refresh](docs/public_demo_hero_cta_public_refresh.md) ? L15.1-C Hero CTA ???????
+- [Public Demo Hero CTA Final Audit](docs/public_demo_hero_cta_final_audit.md) ? L15.1-D Hero CTA ?????
+- [L15.1 Public Demo Hero CTA Release Notes](docs/release_notes_l15_1_public_demo_hero_cta.md) ? L15.1 Hero CTA release notes?
+- [Public Demo Hero CTA v1 Archive](docs/public_demo_hero_cta_v1_archive.md) ? public-demo-hero-cta-v1 ?????
+- [Public Demo After Hero CTA Decision](docs/public_demo_after_hero_cta_decision.md) ? L15.1-G Hero CTA ?????

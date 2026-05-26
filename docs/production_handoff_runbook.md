@@ -2259,3 +2259,31 @@ Documents:
 - 继续保持无登录、无数据库、无外部抓取边界
 - 推荐下一步 L15.1-A Hero and Primary CTA Polish
 
+## L15.1-C / L15.1-D / L15.1-E / L15.1-F / L15.1-G Public Demo Hero CTA Batch
+
+Status: ready.
+
+Commit:
+
+20e5938
+
+Documents:
+
+- docs/public_demo_hero_cta_public_refresh.md
+- docs/public_demo_hero_cta_final_audit.md
+- docs/release_notes_l15_1_public_demo_hero_cta.md
+- docs/public_demo_hero_cta_v1_archive.md
+- docs/public_demo_after_hero_cta_decision.md
+
+Tag:
+
+public-demo-hero-cta-v1
+
+???
+
+- Hero Quick Start CTA ???
+- No login required note ???
+- Product Description / Pasted Reviews / Feedback CTA ???
+- Public demo refresh ??
+- ??????? Feedback and Waitlist CTA polish
+
