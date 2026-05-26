@@ -1431,6 +1431,56 @@
             overflow: visible;
         }
 
+
+        /* L19-A publish-ready result pack */
+        .quick-use-pack-card {
+            margin: 0 0 16px 0;
+            padding: 16px;
+            border: 1px solid #fde68a;
+            border-radius: 14px;
+            background: #fffbeb;
+        }
+
+        .quick-use-pack-title {
+            font-size: 0.95rem;
+            font-weight: 850;
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+
+        .quick-use-pack-body {
+            color: #78350f;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            font-weight: 650;
+        }
+
+        .quick-use-pack-steps {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .quick-use-pack-step {
+            padding: 10px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid #fef3c7;
+            color: #451a03;
+            line-height: 1.45;
+        }
+
+        .quick-use-script {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            padding: 12px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px dashed #f59e0b;
+            color: #111827;
+            line-height: 1.5;
+        }
+
 </style>
 </head>
 <body>
@@ -2303,6 +2353,15 @@
                 targetAudience: 'Target Audience',
                 creativeStrategy: 'Creative Strategy',
                 hook: 'Hook',
+                scriptCTA: 'CTA',
+                scriptScenes: 'Scenes',
+                scriptOpening: 'Opening',
+                copyReadyScript: 'Copy-ready short video script',
+                quickUseStepThree: 'Keep the CTA at the end and adjust only the product details.',
+                quickUseStepTwo: 'Use the storyboard scenes as your shot list.',
+                quickUseStepOne: 'Copy the hook and use it as the opening line.',
+                quickUsePackBody: 'Turn the result into a short video draft before changing anything else.',
+                quickUsePackTitle: 'Use this result next',
                 storyboard: 'Storyboard',
                 sceneLabel: 'Scene',
                 sceneGoal: 'Scene goal',
@@ -2504,6 +2563,15 @@
                 targetAudience: '目标受众',
                 creativeStrategy: '创意策略',
                 hook: '开场 Hook',
+                scriptCTA: '结尾 CTA',
+                scriptScenes: '分镜',
+                scriptOpening: '开头',
+                copyReadyScript: '可直接复制的短视频脚本',
+                quickUseStepThree: '保留最后的 CTA，只替换成你的产品链接或购买方式。',
+                quickUseStepTwo: '把分镜当作拍摄清单，一条一条拍。',
+                quickUseStepOne: '复制 Hook，当作视频开头第一句话。',
+                quickUsePackBody: '先不要继续改页面。把这次结果当成一个短视频草稿，直接复制去改产品细节。',
+                quickUsePackTitle: '下一步可以直接这样用',
                 storyboard: '分镜脚本',
                 sceneLabel: '场景',
                 sceneGoal: '场景目标',
@@ -3610,6 +3678,38 @@
             } finally {
                 btn.disabled = false;
             }
+        }
+
+
+        function renderQuickUsePack(script, storyboard) {
+            const hook = script.hook || '';
+            const cta = script.cta || '';
+            const scenes = (storyboard.scenes || [])
+                .map((scene, index) => `${index + 1}. ${scene.narration || scene.visual_description || ''}`)
+                .filter(Boolean);
+
+            const copyReady = [
+                `${t('scriptOpening')}: ${hook}`,
+                '',
+                `${t('scriptScenes')}:`,
+                scenes.join('\n'),
+                '',
+                `${t('scriptCTA')}: ${cta}`
+            ].filter((line) => line !== '').join('\n');
+
+            return `
+                <div class="quick-use-pack-card" id="quickUsePackCard">
+                    <div class="quick-use-pack-title">${escapeHTML(t('quickUsePackTitle'))}</div>
+                    <div class="quick-use-pack-body">${escapeHTML(t('quickUsePackBody'))}</div>
+                    <div class="quick-use-pack-steps">
+                        <div class="quick-use-pack-step">${escapeHTML(t('quickUseStepOne'))}</div>
+                        <div class="quick-use-pack-step">${escapeHTML(t('quickUseStepTwo'))}</div>
+                        <div class="quick-use-pack-step">${escapeHTML(t('quickUseStepThree'))}</div>
+                    </div>
+                    <div class="json-key">${escapeHTML(t('copyReadyScript'))}</div>
+                    <div class="quick-use-script">${escapeHTML(copyReady)}</div>
+                </div>
+            `;
         }
 
         function renderProductDashboard(data, options = {}) {

@@ -1402,5 +1402,22 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("recentDelete: 'Delete'", zh_copy)
 
 
+    def test_l19_publish_ready_result_pack_is_present(self):
+        self.assertIn("/* L19-A publish-ready result pack */", self.source)
+        self.assertIn("function renderQuickUsePack(script, storyboard)", self.source)
+        self.assertIn("renderQuickUsePack(script, storyboard)", self.source)
+        self.assertIn('id="quickUsePackCard"', self.source)
+
+        self.assertIn("quickUsePackTitle: '下一步可以直接这样用'", self.source)
+        self.assertIn("quickUsePackBody: '先不要继续改页面。", self.source)
+        self.assertIn("quickUseStepOne: '复制 Hook，当作视频开头第一句话。'", self.source)
+        self.assertIn("quickUseStepTwo: '把分镜当作拍摄清单，一条一条拍。'", self.source)
+        self.assertIn("quickUseStepThree: '保留最后的 CTA，只替换成你的产品链接或购买方式。'", self.source)
+        self.assertIn("copyReadyScript: '可直接复制的短视频脚本'", self.source)
+
+        self.assertIn("quickUsePackTitle: 'Use this result next'", self.source)
+        self.assertIn("copyReadyScript: 'Copy-ready short video script'", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()
