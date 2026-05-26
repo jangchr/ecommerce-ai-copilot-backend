@@ -1695,5 +1695,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);", self.source)
 
 
+    def test_l22_public_demo_ui_contract_script_exists(self):
+        script = Path("scripts/check_public_demo_ui_contract.py").read_text(encoding="utf-8")
+        self.assertIn("Public demo UI contract check passed.", script)
+        self.assertIn("L21-A workflow entry hierarchy", script)
+        self.assertIn("L21-F actionable empty state", script)
+        self.assertIn("sample workspace language map", script)
+        self.assertIn("garbled question marks", script)
+        self.assertIn("mixed balsamic display", script)
+        self.assertIn("mixed desk lamp display", script)
+        self.assertIn("mixed pet hair display", script)
+
+
 if __name__ == "__main__":
     unittest.main()
