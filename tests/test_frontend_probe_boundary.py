@@ -1535,5 +1535,49 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn('"balsamic_vinegar": "香醋"', self.source)
 
 
+
+
+    def test_l20_sample_workspace_has_explicit_language_isolation_contract(self):
+        self.assertIn("const SAMPLE_WORKSPACE_COPY", self.source)
+        self.assertIn("function refreshSampleWorkspaceCopyForLanguage()", self.source)
+
+        en_start = self.source.find('"en": {')
+        self.assertNotEqual(en_start, -1)
+        zh_start = self.source.find('"zh-CN": {', en_start)
+        self.assertNotEqual(zh_start, -1)
+
+        en_copy = self.source[en_start:zh_start]
+        zh_end = self.source.find("        };", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        zh_balsamic = "\u9999\u918b"
+        zh_pet_hair = "\u5ba0\u7269\u6bdb\u53d1\u6e05\u7406"
+        zh_desk_lamp = "\u53f0\u706f"
+        zh_pain = "\u75db\u70b9"
+        zh_hook = "\u5f00\u5934"
+        zh_storyboard = "\u5206\u955c"
+
+        self.assertIn('"balsamic_vinegar": "balsamic_vinegar"', en_copy)
+        self.assertIn('"pet_hair_vacuum": "pet_hair_vacuum"', en_copy)
+        self.assertIn('"desk_lamp": "desk_lamp"', en_copy)
+        self.assertIn('"examplePainPointsLabel": "Pain points"', en_copy)
+        self.assertIn('"exampleHookLabel": "Hook"', en_copy)
+        self.assertIn('"exampleStoryboardLabel": "Storyboard"', en_copy)
+
+        self.assertIn(f'"balsamic_vinegar": "{zh_balsamic}"', zh_copy)
+        self.assertIn(f'"pet_hair_vacuum": "{zh_pet_hair}"', zh_copy)
+        self.assertIn(f'"desk_lamp": "{zh_desk_lamp}"', zh_copy)
+        self.assertIn(f'"examplePainPointsLabel": "{zh_pain}"', zh_copy)
+        self.assertIn(f'"exampleHookLabel": "{zh_hook}"', zh_copy)
+        self.assertIn(f'"exampleStoryboardLabel": "{zh_storyboard}"', zh_copy)
+
+        self.assertNotIn(f'"balsamic_vinegar": "{zh_balsamic}"', en_copy)
+        self.assertNotIn(f'"examplePainPointsLabel": "{zh_pain}"', en_copy)
+        self.assertNotIn('"balsamic_vinegar": "balsamic_vinegar"', zh_copy)
+        self.assertNotIn('"examplePainPointsLabel": "Pain points"', zh_copy)
+
+        self.assertIn("const urlInput = sampleWorkspaceSlugFromValue(document.getElementById('urlInput').value.trim());", self.source)
+        self.assertIn("const payload = { url: urlInput, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)
 if __name__ == "__main__":
     unittest.main()
