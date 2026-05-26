@@ -506,3 +506,7 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L18 After Action Decision](docs/public_demo_l18_after_action_decision.md) — L18 后续决策。
 - [L18 Friend Feedback Record](docs/public_demo_l18_friend_feedback_record.md) — L18 中文朋友反馈记录。
 - [L18 Next Trial Plan](docs/public_demo_l18_next_trial_plan.md) — L18 下一轮中文试用计划。
+- [L18 Public Demo Closure Summary](docs/public_demo_l18_closure_summary.md) — L18 收尾总结。
+- [L18 Trial Feedback Template](docs/public_demo_l18_trial_feedback_template.md) — L18 试用反馈记录模板。
+- [L18 Next Decision Gate](docs/public_demo_l18_next_decision_gate.md) — L18 后续是否继续改的决策门槛。
+- [L18 Trial Round 2 Tracker](docs/public_demo_l18_trial_round_2_tracker.md) — L18 第二轮中文朋友试用记录表。

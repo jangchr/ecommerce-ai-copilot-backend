@@ -2661,3 +2661,23 @@ Summary:
 - 核心问题包括中文完整性、dataset 概念困惑、流程不清晰、非电商用户需要更强引导。
 - L18 已响应主要 UX 问题。
 - 下一步不是继续无限 polish，而是继续找朋友完成真实试用。
+
+## L18 Closure and Trial Round 2
+
+Status: open
+
+Commit: c3050a4
+
+Docs:
+
+- docs/public_demo_l18_closure_summary.md
+- docs/public_demo_l18_trial_feedback_template.md
+- docs/public_demo_l18_next_decision_gate.md
+- docs/public_demo_l18_trial_round_2_tracker.md
+
+Summary:
+
+- L18 前端 UX 改造进入试用阶段。
+- 暂停无反馈前端 polish。
+- 下一步收集 3 个中文朋友真实试用反馈。
+- 后续是否继续改，由 decision gate 决定。
