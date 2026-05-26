@@ -1104,6 +1104,60 @@
             }
         }
 
+
+        /* L17.4-A Chinese first-run guide polish */
+        .first-run-guide-panel {
+            max-width: 760px;
+            margin: 12px auto 0;
+            padding: 14px 16px;
+            border: 1px solid #bbf7d0;
+            border-radius: 14px;
+            background: #f0fdf4;
+            text-align: left;
+        }
+
+        .first-run-guide-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #166534;
+            margin-bottom: 6px;
+        }
+
+        .first-run-guide-body {
+            color: #14532d;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .first-run-guide-steps {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            padding-left: 18px;
+            color: #052e16;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .first-run-guide-question-box {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid #dcfce7;
+            color: #14532d;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 720px) {
+            .first-run-guide-panel {
+                padding: 12px;
+                border-radius: 12px;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -1166,6 +1220,18 @@
                 </div>
             </div>
 
+
+            <div id="firstRunGuidePanel" class="first-run-guide-panel">
+                <div class="first-run-guide-title" data-i18n="firstRunGuideTitle">First time here? Do only this.</div>
+                <div class="first-run-guide-body" data-i18n="firstRunGuideBody">Do not try to understand every section first. Run one sample and look at the result format.</div>
+                <ol class="first-run-guide-steps">
+                    <li data-i18n="firstRunGuideStepOne">Click a sample product such as desk lamp.</li>
+                    <li data-i18n="firstRunGuideStepTwo">Click generate and wait for the creative summary, hook, and storyboard.</li>
+                    <li data-i18n="firstRunGuideStepThree">If the format makes sense, replace the sample with your own product idea.</li>
+                </ol>
+                <div class="first-run-guide-question-box" data-i18n="firstRunGuideQuestionBox">For your own product, you only need to answer: what is it, who would want it, and what problem does it solve?</div>
+            </div>
+
             <div class="demo-warning" data-i18n="amazonWarning">
                 Do not use Amazon URLs in Product Mode yet. Amazon URLs are available only in Debug Mode / Amazon Shadow.
             </div>
@@ -1200,6 +1266,10 @@
                 </div>
                     </div>
                     <span class="source-badge" data-i18n="sourceBadgeProductDescription">Input source: product description</span>
+                </div>
+
+                <div id="descriptionFirstRunGuide" class="first-run-guide-question-box" style="margin-top:12px;" data-i18n="descriptionFirstRunGuide">
+                    If you are not sure what to write, use one sentence for the product, one sentence for the buyer, and one sentence for the problem.
                 </div>
                 <div class="description-grid">
                     <div class="description-field">
@@ -1256,6 +1326,10 @@
                         <p data-i18n="pastedReviewsIntro">Paste customer reviews, complaints, objections, or buyer feedback. The creative brief will use these review snippets as user-provided evidence.</p>
                     </div>
                     <span class="source-badge" data-i18n="sourceBadgePastedReviews">Input source: pasted customer feedback</span>
+                </div>
+
+                <div id="reviewsFirstRunGuide" class="first-run-guide-question-box" style="margin-top:12px;" data-i18n="reviewsFirstRunGuide">
+                    If you do not have real reviews yet, use the sample reviews first. Later, paste buyer comments, objections, or complaints.
                 </div>
                 <div class="description-grid">
                     <div class="description-field">
@@ -1768,6 +1842,14 @@
                 sampleProductLibraryTipOne: 'Recommended first try: desk lamp or pet hair cleaner.',
                 sampleProductLibraryTipTwo: 'Click one sample, then click generate to see the result format.',
                 sampleProductLibraryTipThree: 'After that, replace it with your own product idea.',
+                firstRunGuideTitle: 'First time here? Do only this.',
+                firstRunGuideBody: 'Do not try to understand every section first. Run one sample and look at the result format.',
+                firstRunGuideStepOne: 'Click a sample product such as desk lamp.',
+                firstRunGuideStepTwo: 'Click generate and wait for the creative summary, hook, and storyboard.',
+                firstRunGuideStepThree: 'If the format makes sense, replace the sample with your own product idea.',
+                firstRunGuideQuestionBox: 'For your own product, you only need to answer: what is it, who would want it, and what problem does it solve?',
+                descriptionFirstRunGuide: 'If you are not sure what to write, use one sentence for the product, one sentence for the buyer, and one sentence for the problem.',
+                reviewsFirstRunGuide: 'If you do not have real reviews yet, use the sample reviews first. Later, paste buyer comments, objections, or complaints.',
                 sourceBadgeProductDescription: 'Input source: product description',
                 sourceBadgePastedReviews: 'Input source: pasted customer feedback',
                 amazonWarning: 'Do not paste Amazon links here yet. Use a sample product, Product Description Mode, or Pasted Reviews Mode.',
@@ -1924,6 +2006,14 @@
                 sampleProductLibraryTipOne: '第一次建议先试：台灯，或宠物毛发清理。',
                 sampleProductLibraryTipTwo: '点一个示例产品，再点“用示例产品生成”，先看结果长什么样。',
                 sampleProductLibraryTipThree: '看懂流程后，再换成你自己的产品想法。',
+                firstRunGuideTitle: '第一次来？只做这三步',
+                firstRunGuideBody: '先不要试图理解所有区块。先跑一个示例，看懂结果长什么样。',
+                firstRunGuideStepOne: '点一个示例产品，比如“台灯”。',
+                firstRunGuideStepTwo: '点击生成，等待创意摘要、Hook 和分镜脚本。',
+                firstRunGuideStepThree: '如果你看懂了结果格式，再换成你自己的产品想法。',
+                firstRunGuideQuestionBox: '换成自己的产品时，只需要回答：产品是什么、谁会想买、它解决什么麻烦？',
+                descriptionFirstRunGuide: '不知道怎么写也没关系：一句话写产品，一句话写谁会买，一句话写它解决什么麻烦。',
+                reviewsFirstRunGuide: '如果你还没有真实评论，先用示例评论。之后可以粘贴买家评论、购买顾虑或差评。',
                 sourceBadgeProductDescription: '输入来源：产品描述',
                 sourceBadgePastedReviews: '输入来源：粘贴的用户反馈',
                 amazonWarning: '这里暂时不要输入 Amazon 链接。想试用请先点示例产品，或使用下面的产品描述 / 粘贴评论模式。',
