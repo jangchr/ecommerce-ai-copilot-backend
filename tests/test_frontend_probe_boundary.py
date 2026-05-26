@@ -1658,5 +1658,19 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("max-height: 260px;", self.source)
 
 
+    def test_l21_copy_actions_are_the_next_obvious_step(self):
+        self.assertIn("/* L21-D make copy actions the next obvious step */", self.source)
+        self.assertIn("#inlineResultContent .copy-toolbar", self.source)
+        self.assertIn("#inlineResultContent .section-actions", self.source)
+        self.assertIn("#inlineResultContent .copy-toolbar::before", self.source)
+        self.assertIn("#inlineResultContent .section-actions::before", self.source)
+        self.assertIn('content: "Next: copy what you need";', self.source)
+        self.assertIn("body.zh-mode #inlineResultContent .copy-toolbar::before", self.source)
+        self.assertIn('content: "下一步：复制你要用的内容";', self.source)
+        self.assertIn("#inlineResultContent .copy-status", self.source)
+        self.assertIn("#inlineResultContent .quick-use-copy-status", self.source)
+        self.assertIn("border-color: #86efac;", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()

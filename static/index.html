@@ -1891,6 +1891,83 @@
             }
         }
 
+
+        /* L21-D make copy actions the next obvious step */
+        #inlineResultContent .copy-toolbar,
+        #inlineResultContent .section-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin: 4px 0 14px;
+            padding: 12px;
+            border: 1px solid #bbf7d0;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+            box-shadow: 0 10px 24px rgba(22, 101, 52, 0.10);
+        }
+
+        #inlineResultContent .copy-toolbar::before,
+        #inlineResultContent .section-actions::before {
+            content: "Next: copy what you need";
+            flex: 1 0 160px;
+            color: #166534;
+            font-size: 13px;
+            font-weight: 850;
+            line-height: 1.35;
+        }
+
+        body.zh-mode #inlineResultContent .copy-toolbar::before,
+        body.zh-mode #inlineResultContent .section-actions::before {
+            content: "下一步：复制你要用的内容";
+        }
+
+        #inlineResultContent .copy-toolbar .btn-secondary,
+        #inlineResultContent .section-actions .btn-secondary,
+        #inlineResultContent .copy-toolbar button,
+        #inlineResultContent .section-actions button {
+            border-color: #86efac;
+            background: #ffffff;
+            color: #14532d;
+            font-weight: 800;
+        }
+
+        #inlineResultContent .copy-toolbar .btn-secondary:hover,
+        #inlineResultContent .section-actions .btn-secondary:hover,
+        #inlineResultContent .copy-toolbar button:hover,
+        #inlineResultContent .section-actions button:hover {
+            border-color: #22c55e;
+            background: #dcfce7;
+        }
+
+        #inlineResultContent .copy-status,
+        #inlineResultContent .quick-use-copy-status {
+            color: #15803d;
+            font-weight: 800;
+        }
+
+        @media (max-width: 720px) {
+            #inlineResultContent .copy-toolbar,
+            #inlineResultContent .section-actions {
+                flex-direction: column;
+                align-items: stretch;
+                position: static;
+                padding: 12px;
+            }
+
+            #inlineResultContent .copy-toolbar::before,
+            #inlineResultContent .section-actions::before {
+                flex-basis: auto;
+            }
+
+            #inlineResultContent .copy-toolbar button,
+            #inlineResultContent .section-actions button,
+            #inlineResultContent .copy-toolbar .btn-secondary,
+            #inlineResultContent .section-actions .btn-secondary {
+                width: 100%;
+            }
+        }
+
 </style>
 </head>
 <body>
