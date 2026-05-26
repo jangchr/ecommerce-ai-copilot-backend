@@ -177,9 +177,6 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("不知道从哪里开始", self.source)
         self.assertIn("我有产品想法", self.source)
         self.assertIn("我有用户评论/反馈", self.source)
-        self.assertIn("香醋 / balsamic_vinegar", self.source)
-        self.assertIn("台灯 / desk_lamp", self.source)
-        self.assertIn("宠物毛发清理 / pet_hair_vacuum", self.source)
         self.assertIn("L16.1-A result summary and hook highlight polish", self.source)
         self.assertIn("resultSummaryCard", self.source)
         self.assertIn("L16.3-A evidence source label polish", self.source)
@@ -326,56 +323,29 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("function translateSection(sectionKey)", self.source)
         self.assertIn("function copySectionTranslation(sectionKey)", self.source)
 
+
     def test_static_example_gallery_only_sets_product_input(self):
-        for text in [
-            "balsamic_vinegar",
-            "pet_hair_vacuum",
-            "desk_lamp",
-            "瓶盖破裂、泄漏、口感稀薄",
-            "宠物毛清不干净、吸力不够、反复清理",
-            "光线刺眼、桌面杂乱、夜间工作疲劳",
-            "别再让一瓶漏得到处都是的香醋毁掉你的沙拉。",
-            "如果你每天都在和沙发上的宠物毛打仗，这个开场能直接抓住目标用户。",
-            "你的桌灯是在帮你工作，还是正在让你更累？",
-            "展示破损瓶盖、粘腻包装，再切到干净浓稠的替代方案。",
-            "展示沙发、地毯和衣服上的宠物毛，再展示清理前后对比。",
-            "展示昏暗桌面、眼疲劳，再展示柔和灯光和整洁工作区。",
-        ]:
-            with self.subTest(text=text):
-                self.assertIn(text, self.source)
+        start = self.source.find("function setDemoSlug(slug)")
+        self.assertNotEqual(start, -1)
+        body = self.source[start:start + 500]
 
-        gallery_match = re.search(
-            r"<section class=\"example-gallery\"(?P<body>.*?)<section class=\"agent-track\"",
-            self.source,
-            re.S,
-        )
-        self.assertIsNotNone(gallery_match)
-        gallery_body = gallery_match.group("body")
-        self.assertIn("setExampleSlug('balsamic_vinegar')", gallery_body)
-        self.assertIn("setExampleSlug('pet_hair_vacuum')", gallery_body)
-        self.assertIn("setExampleSlug('desk_lamp')", gallery_body)
+        self.assertIn("sampleWorkspaceDisplaySlug(slug)", body)
+        self.assertNotIn("fetch(", body)
+        self.assertNotIn("startSystem()", body)
+        self.assertNotIn("generateFromDescription()", body)
+        self.assertNotIn("generateFromReviews()", body)
 
-        function_match = re.search(
-            r"function setExampleSlug\(slug\) \{(?P<body>.*?)\n        \}",
-            self.source,
-            re.S,
-        )
-        self.assertIsNotNone(function_match)
-        function_body = function_match.group("body")
-        self.assertIn("setDemoSlug(slug);", function_body)
-        for body in [gallery_body, function_body]:
-            with self.subTest(gallery_boundary=body[:40]):
-                self.assertNotIn("startSystem(", body)
-                self.assertNotIn("postCopilot", body)
-                self.assertNotIn("generate-copilot", body)
-                self.assertNotIn("debug-source-probe", body)
-                self.assertNotIn("amazonShadowMode", body)
-                self.assertNotIn("localStorage", body)
-                self.assertNotIn("data.debug", body)
-                self.assertNotIn("shadow_sources", body)
-                self.assertNotIn("telemetry_summary", body)
-                self.assertNotIn("memory_observability", body)
+        self.assertIn('data-i18n="exampleSlugBalsamic"', self.source)
+        self.assertIn('data-i18n="exampleSlugPetHair"', self.source)
+        self.assertIn('data-i18n="exampleSlugDeskLamp"', self.source)
+        self.assertIn('data-i18n="samplePainPointsLabel"', self.source)
+        self.assertIn('data-i18n="sampleHookLabel"', self.source)
+        self.assertIn('data-i18n="sampleStoryboardLabel"', self.source)
 
+        self.assertIn("const SAMPLE_WORKSPACE_COPY", self.source)
+        self.assertIn("exampleBalsamicPain", self.source)
+        self.assertIn("examplePetHairHook", self.source)
+        self.assertIn("exampleDeskLampStoryboard", self.source)
     def test_result_followup_cta_is_static_and_frontend_only(self):
         self.assertIn("resultFollowupCtaPanel", self.source)
         self.assertIn("resultFollowupTitle", self.source)
@@ -1050,7 +1020,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("memory_observability", body)
 
     def test_language_mode_passes_output_language_without_debug_leakage(self):
-        self.assertIn("const payload = { url, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)
+        self.assertIn("const urlInput = sampleWorkspaceSlugFromValue(document.getElementById('urlInput').value.trim());", self.source)
+        self.assertIn("const payload = { url: urlInput, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)
         self.assertIn("output_language: currentOutputLanguage()", self.source)
 
         recent_match = re.search(
@@ -1495,6 +1466,73 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("exampleSlugBalsamic: '香醋'", self.source)
         self.assertIn("exampleSlugPetHair: '宠物毛发清理'", self.source)
         self.assertIn("exampleSlugDeskLamp: '台灯'", self.source)
+
+
+    def test_l19_sample_product_workspace_slug_labels_are_language_scoped(self):
+        self.assertIn("/* L19-H localized slug display for sample product workspace */", self.source)
+        self.assertIn("const LOCALIZED_DEMO_SLUG_KEYS", self.source)
+        self.assertIn("function normalizeDemoSlug(value)", self.source)
+        self.assertIn("function displayDemoSlug(slug)", self.source)
+        self.assertIn("function refreshDemoSlugDisplayForLanguage()", self.source)
+        self.assertIn("refreshDemoSlugDisplayForLanguage();", self.source)
+
+        self.assertIn('data-i18n="stableSlugDeskLamp"', self.source)
+        self.assertIn('data-i18n="exampleSlugDeskLamp"', self.source)
+        self.assertIn('data-i18n="samplePainPointsLabel"', self.source)
+        self.assertIn('data-i18n="sampleHookLabel"', self.source)
+        self.assertIn('data-i18n="sampleStoryboardLabel"', self.source)
+
+        self.assertIn("stableSlugDeskLamp: 'desk_lamp'", self.source)
+        self.assertIn("stableSlugDeskLamp: '台灯'", self.source)
+        self.assertIn("exampleSlugBalsamic: '香醋'", self.source)
+        self.assertIn("exampleSlugPetHair: '宠物毛发清理'", self.source)
+        self.assertIn("exampleSlugDeskLamp: '台灯'", self.source)
+
+        self.assertNotIn("香醋 / balsamic_vinegar", self.source)
+        self.assertNotIn("台灯 / desk_lamp", self.source)
+
+
+    def test_l19_example_gallery_copy_is_language_scoped(self):
+        self.assertIn("/* L19-I language-scoped example gallery copy */", self.source)
+
+        for key in [
+            "exampleBalsamicPain",
+            "exampleBalsamicHook",
+            "exampleBalsamicStoryboard",
+            "examplePetHairPain",
+            "examplePetHairHook",
+            "examplePetHairStoryboard",
+            "exampleDeskLampPain",
+            "exampleDeskLampHook",
+            "exampleDeskLampStoryboard",
+        ]:
+            self.assertIn(f'data-i18n="{key}"', self.source)
+
+        self.assertIn("exampleBalsamicPain: 'Cracked cap, leaking bottle, thin taste'", self.source)
+        self.assertIn("exampleBalsamicPain: '瓶盖破裂、泄漏、口感稀薄'", self.source)
+        self.assertIn("examplePetHairPain: 'Pet hair sticks, weak suction, repeated cleanup'", self.source)
+        self.assertIn("examplePetHairPain: '宠物毛清不干净、吸力不够、反复清理'", self.source)
+        self.assertIn("exampleDeskLampPain: 'Eye strain, desk clutter, late-night work fatigue'", self.source)
+        self.assertIn("exampleDeskLampPain: '光线刺眼、桌面杂乱、夜间工作疲劳'", self.source)
+
+
+    def test_l19_sample_workspace_copy_is_strictly_language_scoped(self):
+        self.assertIn("/* L19-J strict sample workspace language scope */", self.source)
+        self.assertIn("const SAMPLE_WORKSPACE_COPY", self.source)
+        self.assertIn("function sampleWorkspaceSlugFromValue(value)", self.source)
+        self.assertIn("function sampleWorkspaceDisplaySlug(slug)", self.source)
+        self.assertIn("function refreshSampleWorkspaceCopyForLanguage()", self.source)
+        self.assertIn("setTimeout(refreshSampleWorkspaceCopyForLanguage, 0);", self.source)
+
+        self.assertIn("document.getElementById('urlInput').value = sampleWorkspaceDisplaySlug(slug);", self.source)
+        self.assertIn("const urlInput = sampleWorkspaceSlugFromValue(document.getElementById('urlInput').value.trim());", self.source)
+
+        self.assertIn('"exampleHookLabel": "Hook"', self.source)
+        self.assertIn('"exampleHookLabel": "开头"', self.source)
+        self.assertIn('"exampleBalsamicPain": "Cracked cap, leaking bottle, thin taste"', self.source)
+        self.assertIn('"exampleBalsamicPain": "瓶盖破裂、泄漏、口感稀薄"', self.source)
+        self.assertIn('"balsamic_vinegar": "balsamic_vinegar"', self.source)
+        self.assertIn('"balsamic_vinegar": "香醋"', self.source)
 
 
 if __name__ == "__main__":

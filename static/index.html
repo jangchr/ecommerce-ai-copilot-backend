@@ -1543,6 +1543,27 @@
             overflow-wrap: anywhere;
         }
 
+
+        /* L19-H localized slug display for sample product workspace */
+        .slug-button span,
+        .example-slug {
+            overflow-wrap: anywhere;
+        }
+
+
+        /* L19-I language-scoped example gallery copy */
+        .example-summary[data-i18n] {
+            overflow-wrap: anywhere;
+        }
+
+
+        /* L19-J strict sample workspace language scope */
+        .example-summary[data-i18n],
+        .example-slug[data-i18n],
+        .slug-button {
+            overflow-wrap: anywhere;
+        }
+
 </style>
 </head>
 <body>
@@ -1583,16 +1604,16 @@
 
             <div class="input-guide">
                 <div class="slug-list">
-                    <button class="slug-button" type="button" onclick="setDemoSlug('balsamic_vinegar')">香醋 / balsamic_vinegar</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('printer')">打印机 / printer</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('women_bras')">女士内衣 / women_bras</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('girls_overalls')">儿童背带裤 / girls_overalls</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('protein_powder')">蛋白粉 / protein_powder</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('phone_case')">手机壳 / phone_case</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('desk_lamp')">台灯 / desk_lamp</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('baby_stroller')">婴儿推车 / baby_stroller</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('pet_hair_vacuum')">宠物毛发清理 / pet_hair_vacuum</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('skincare_serum')">护肤精华 / skincare_serum</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('balsamic_vinegar')"><span data-i18n="stableSlugBalsamic">balsamic_vinegar</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('printer')"><span data-i18n="stableSlugPrinter">printer</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('women_bras')"><span data-i18n="stableSlugWomenBras">women_bras</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('girls_overalls')"><span data-i18n="stableSlugGirlsOveralls">girls_overalls</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('protein_powder')"><span data-i18n="stableSlugProteinPowder">protein_powder</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('phone_case')"><span data-i18n="stableSlugPhoneCase">phone_case</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('desk_lamp')"><span data-i18n="stableSlugDeskLamp">desk_lamp</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('baby_stroller')"><span data-i18n="stableSlugBabyStroller">baby_stroller</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('pet_hair_vacuum')"><span data-i18n="stableSlugPetHair">pet_hair_vacuum</span></button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('skincare_serum')"><span data-i18n="stableSlugSkincareSerum">skincare_serum</span></button>
                 </div>
             </div>
 
@@ -1842,48 +1863,48 @@
                     <article class="example-card">
                         <div class="example-slug" data-i18n="exampleSlugBalsamic">balsamic_vinegar</div>
                         <div>
-                            <div class="json-key" data-i18n="samplePainPointsLabel">痛点</div>
-                            <div class="example-summary">瓶盖破裂、泄漏、口感稀薄</div>
+                            <div class="json-key" data-i18n="samplePainPointsLabel">Pain points</div>
+                            <div class="example-summary" data-i18n="exampleBalsamicPain">Cracked cap, leaking bottle, thin taste</div>
                         </div>
                         <div>
                             <div class="json-key" data-i18n="sampleHookLabel">Hook</div>
-                            <div class="example-summary">别再让一瓶漏得到处都是的香醋毁掉你的沙拉。</div>
+                            <div class="example-summary" data-i18n="exampleBalsamicHook">Stop letting a leaky balsamic bottle ruin your salad.</div>
                         </div>
                         <div>
-                            <div class="json-key" data-i18n="sampleStoryboardLabel">分镜</div>
-                            <div class="example-summary">展示破损瓶盖、粘腻包装，再切到干净浓稠的替代方案。</div>
+                            <div class="json-key" data-i18n="sampleStoryboardLabel">Storyboard</div>
+                            <div class="example-summary" data-i18n="exampleBalsamicStoryboard">Show a cracked cap and sticky packaging, then cut to a clean, rich alternative.</div>
                         </div>
                         <button class="btn-secondary" type="button" onclick="setExampleSlug('balsamic_vinegar')" data-i18n="tryThisProduct">Try This Product</button>
                     </article>
                     <article class="example-card">
                         <div class="example-slug" data-i18n="exampleSlugPetHair">pet_hair_vacuum</div>
                         <div>
-                            <div class="json-key" data-i18n="samplePainPointsLabel">痛点</div>
-                            <div class="example-summary">宠物毛清不干净、吸力不够、反复清理</div>
+                            <div class="json-key" data-i18n="samplePainPointsLabel">Pain points</div>
+                            <div class="example-summary" data-i18n="examplePetHairPain">Pet hair sticks, weak suction, repeated cleanup</div>
                         </div>
                         <div>
                             <div class="json-key" data-i18n="sampleHookLabel">Hook</div>
-                            <div class="example-summary">如果你每天都在和沙发上的宠物毛打仗，这个开场能直接抓住目标用户。</div>
+                            <div class="example-summary" data-i18n="examplePetHairHook">If pet hair takes over your sofa every day, this brush grabs the target user immediately.</div>
                         </div>
                         <div>
-                            <div class="json-key" data-i18n="sampleStoryboardLabel">分镜</div>
-                            <div class="example-summary">展示沙发、地毯和衣服上的宠物毛，再展示清理前后对比。</div>
+                            <div class="json-key" data-i18n="sampleStoryboardLabel">Storyboard</div>
+                            <div class="example-summary" data-i18n="examplePetHairStoryboard">Show pet hair on the sofa, rug, and clothes, then show the before-and-after cleanup.</div>
                         </div>
                         <button class="btn-secondary" type="button" onclick="setExampleSlug('pet_hair_vacuum')" data-i18n="tryThisProduct">Try This Product</button>
                     </article>
                     <article class="example-card">
                         <div class="example-slug" data-i18n="exampleSlugDeskLamp">desk_lamp</div>
                         <div>
-                            <div class="json-key" data-i18n="samplePainPointsLabel">痛点</div>
-                            <div class="example-summary">光线刺眼、桌面杂乱、夜间工作疲劳</div>
+                            <div class="json-key" data-i18n="samplePainPointsLabel">Pain points</div>
+                            <div class="example-summary" data-i18n="exampleDeskLampPain">Eye strain, desk clutter, late-night work fatigue</div>
                         </div>
                         <div>
                             <div class="json-key" data-i18n="sampleHookLabel">Hook</div>
-                            <div class="example-summary">你的桌灯是在帮你工作，还是正在让你更累？</div>
+                            <div class="example-summary" data-i18n="exampleDeskLampHook">Is your desk lamp helping you work, or making you more tired?</div>
                         </div>
                         <div>
-                            <div class="json-key" data-i18n="sampleStoryboardLabel">分镜</div>
-                            <div class="example-summary">展示昏暗桌面、眼疲劳，再展示柔和灯光和整洁工作区。</div>
+                            <div class="json-key" data-i18n="sampleStoryboardLabel">Storyboard</div>
+                            <div class="example-summary" data-i18n="exampleDeskLampStoryboard">Show a dim desk, eye strain, then softer light and a cleaner workspace.</div>
                         </div>
                         <button class="btn-secondary" type="button" onclick="setExampleSlug('desk_lamp')" data-i18n="tryThisProduct">Try This Product</button>
                     </article>
@@ -2381,7 +2402,7 @@
                 goodReviewInputHesitation: 'reasons people hesitate to buy',
                 sampleStoryboardLabel: 'Storyboard',
                 sampleHookLabel: 'Hook',
-                samplePainPointsLabel: 'Pain Points',
+                samplePainPointsLabel: 'Pain points',
                 exampleGallerySourceBadge: 'Static examples, no API call',
                 exampleGalleryIntro: 'Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.',
                 amazonShadowLabel: 'Amazon Shadow',
@@ -2471,6 +2492,50 @@
                 exampleSlugBalsamic: 'balsamic_vinegar',
                 exampleSlugPetHair: 'pet_hair_vacuum',
                 exampleSlugDeskLamp: 'desk_lamp',
+                stableSlugBalsamic: 'balsamic_vinegar',
+                stableSlugPrinter: 'printer',
+                stableSlugWomenBras: 'women_bras',
+                stableSlugGirlsOveralls: 'girls_overalls',
+                stableSlugProteinPowder: 'protein_powder',
+                stableSlugPhoneCase: 'phone_case',
+                stableSlugDeskLamp: 'desk_lamp',
+                stableSlugBabyStroller: 'baby_stroller',
+                stableSlugPetHair: 'pet_hair_vacuum',
+                stableSlugSkincareSerum: 'skincare_serum',
+                examplePainPointsLabel: 'Pain points',
+                exampleHookLabel: 'Hook',
+                exampleStoryboardLabel: 'Storyboard',
+                exampleBalsamicPain: 'Cracked cap, leaking bottle, thin taste',
+                exampleBalsamicHook: 'Stop letting a leaky balsamic bottle ruin your salad.',
+                exampleBalsamicStoryboard: 'Show a cracked cap and sticky packaging, then cut to a clean, rich alternative.',
+                examplePetHairPain: 'Pet hair sticks, weak suction, repeated cleanup',
+                examplePetHairHook: 'If pet hair takes over your sofa every day, this brush grabs the target user immediately.',
+                examplePetHairStoryboard: 'Show pet hair on the sofa, rug, and clothes, then show the before-and-after cleanup.',
+                exampleDeskLampPain: 'Eye strain, desk clutter, late-night work fatigue',
+                exampleDeskLampHook: 'Is your desk lamp helping you work, or making you more tired?',
+                exampleDeskLampStoryboard: 'Show a dim desk, eye strain, then softer light and a cleaner workspace.',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2602,7 +2667,7 @@
                 exampleGallery: '示例产品库',
                 goodReviewInputHesitation: '用户犹豫购买的原因',
                 sampleStoryboardLabel: '分镜',
-                sampleHookLabel: 'Hook',
+                sampleHookLabel: '开头',
                 samplePainPointsLabel: '痛点',
                 exampleGallerySourceBadge: '静态示例，不调用 API',
                 exampleGalleryIntro: '这些是稳定示例产品的静态示例。点击“试用这个产品”只会填入示例，不会自动生成，也不会开启调试模式。',
@@ -2694,6 +2759,50 @@
                 exampleSlugBalsamic: '香醋',
                 exampleSlugPetHair: '宠物毛发清理',
                 exampleSlugDeskLamp: '台灯',
+                stableSlugBalsamic: '香醋',
+                stableSlugPrinter: '打印机',
+                stableSlugWomenBras: '女士内衣',
+                stableSlugGirlsOveralls: '儿童背带裤',
+                stableSlugProteinPowder: '蛋白粉',
+                stableSlugPhoneCase: '手机壳',
+                stableSlugDeskLamp: '台灯',
+                stableSlugBabyStroller: '婴儿推车',
+                stableSlugPetHair: '宠物毛发清理',
+                stableSlugSkincareSerum: '护肤精华',
+                examplePainPointsLabel: '痛点',
+                exampleHookLabel: '开头',
+                exampleStoryboardLabel: '分镜',
+                exampleBalsamicPain: '瓶盖破裂、泄漏、口感稀薄',
+                exampleBalsamicHook: '别再让一瓶漏得到处都是的香醋毁掉你的沙拉。',
+                exampleBalsamicStoryboard: '展示破损瓶盖、粘腻包装，再切到干净浓稠的替代方案。',
+                examplePetHairPain: '宠物毛清不干净、吸力不够、反复清理',
+                examplePetHairHook: '如果你每天都在和沙发上的宠物毛打仗，这个开场就直接抓住目标用户。',
+                examplePetHairStoryboard: '展示沙发、地毯和衣服上的宠物毛，再展示清理前后对比。',
+                exampleDeskLampPain: '光线刺眼、桌面杂乱、夜间工作疲劳',
+                exampleDeskLampHook: '你的桌灯是在帮你工作，还是正在让你更累？',
+                exampleDeskLampStoryboard: '展示昏暗桌面、眼疲劳，再展示柔和灯光和整洁工作区。',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2724,9 +2833,12 @@
         function setLanguageMode(language) {
             outputLanguage = language === 'zh-CN' ? 'zh-CN' : 'en';
             applyLanguageCopy();
+            refreshDemoSlugDisplayForLanguage();
+            refreshSampleWorkspaceCopyForLanguage();
             maybeRefreshSampleInputsForLanguage();
             if (typeof renderRecentGenerations === 'function') {
                 renderRecentGenerations();
+        setTimeout(refreshSampleWorkspaceCopyForLanguage, 0);
             }
             if (latestProductData) {
                 renderProductDashboard(latestProductData, {
@@ -2749,8 +2861,185 @@
             });
         }
 
+
+        // L19-H localized stable slug display
+        const LOCALIZED_DEMO_SLUG_KEYS = {
+            balsamic_vinegar: 'stableSlugBalsamic',
+            printer: 'stableSlugPrinter',
+            women_bras: 'stableSlugWomenBras',
+            girls_overalls: 'stableSlugGirlsOveralls',
+            protein_powder: 'stableSlugProteinPowder',
+            phone_case: 'stableSlugPhoneCase',
+            desk_lamp: 'stableSlugDeskLamp',
+            baby_stroller: 'stableSlugBabyStroller',
+            pet_hair_vacuum: 'stableSlugPetHair',
+            skincare_serum: 'stableSlugSkincareSerum'
+        };
+
+        function normalizeDemoSlug(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return raw;
+            if (LOCALIZED_DEMO_SLUG_KEYS[raw]) return raw;
+            for (const [slug, key] of Object.entries(LOCALIZED_DEMO_SLUG_KEYS)) {
+                if (raw === t(key)) return slug;
+            }
+            return raw;
+        }
+
+        function displayDemoSlug(slug) {
+            const normalized = normalizeDemoSlug(slug);
+            const key = LOCALIZED_DEMO_SLUG_KEYS[normalized];
+            return key ? t(key) : normalized;
+        }
+
+        function refreshDemoSlugDisplayForLanguage() {
+            const input = document.getElementById('urlInput');
+            if (!input) return;
+            const normalized = normalizeDemoSlug(input.value);
+            if (LOCALIZED_DEMO_SLUG_KEYS[normalized]) {
+                input.value = displayDemoSlug(normalized);
+            }
+        }
+
+
+        // L19-J force language-scoped sample workspace copy
+        const SAMPLE_WORKSPACE_COPY = {
+            "en": {
+                        "slugs": {
+                                    "balsamic_vinegar": "balsamic_vinegar",
+                                    "printer": "printer",
+                                    "women_bras": "women_bras",
+                                    "girls_overalls": "girls_overalls",
+                                    "protein_powder": "protein_powder",
+                                    "phone_case": "phone_case",
+                                    "desk_lamp": "desk_lamp",
+                                    "baby_stroller": "baby_stroller",
+                                    "pet_hair_vacuum": "pet_hair_vacuum",
+                                    "skincare_serum": "skincare_serum"
+                        },
+                        "exampleSlugBalsamic": "balsamic_vinegar",
+                        "exampleSlugPetHair": "pet_hair_vacuum",
+                        "exampleSlugDeskLamp": "desk_lamp",
+                        "examplePainPointsLabel": "Pain points",
+                        "exampleHookLabel": "Hook",
+                        "exampleStoryboardLabel": "Storyboard",
+                        "exampleBalsamicPain": "Cracked cap, leaking bottle, thin taste",
+                        "exampleBalsamicHook": "Stop letting a leaky balsamic bottle ruin your salad.",
+                        "exampleBalsamicStoryboard": "Show a cracked cap and sticky packaging, then cut to a clean, rich alternative.",
+                        "examplePetHairPain": "Pet hair sticks, weak suction, repeated cleanup",
+                        "examplePetHairHook": "If pet hair takes over your sofa every day, this brush grabs the target user immediately.",
+                        "examplePetHairStoryboard": "Show pet hair on the sofa, rug, and clothes, then show the before-and-after cleanup.",
+                        "exampleDeskLampPain": "Eye strain, desk clutter, late-night work fatigue",
+                        "exampleDeskLampHook": "Is your desk lamp helping you work, or making you more tired?",
+                        "exampleDeskLampStoryboard": "Show a dim desk, eye strain, then softer light and a cleaner workspace."
+            },
+            "zh-CN": {
+                        "slugs": {
+                                    "balsamic_vinegar": "香醋",
+                                    "printer": "打印机",
+                                    "women_bras": "女士内衣",
+                                    "girls_overalls": "儿童背带裤",
+                                    "protein_powder": "蛋白粉",
+                                    "phone_case": "手机壳",
+                                    "desk_lamp": "台灯",
+                                    "baby_stroller": "婴儿推车",
+                                    "pet_hair_vacuum": "宠物毛发清理",
+                                    "skincare_serum": "护肤精华"
+                        },
+                        "exampleSlugBalsamic": "香醋",
+                        "exampleSlugPetHair": "宠物毛发清理",
+                        "exampleSlugDeskLamp": "台灯",
+                        "examplePainPointsLabel": "痛点",
+                        "exampleHookLabel": "开头",
+                        "exampleStoryboardLabel": "分镜",
+                        "exampleBalsamicPain": "瓶盖破裂、泄漏、口感稀薄",
+                        "exampleBalsamicHook": "别再让一瓶漏得到处都是的香醋毁掉你的沙拉。",
+                        "exampleBalsamicStoryboard": "展示破损瓶盖、粘腻包装，再切到干净浓稠的替代方案。",
+                        "examplePetHairPain": "宠物毛清不干净、吸力不够、反复清理",
+                        "examplePetHairHook": "如果你每天都在和沙发上的宠物毛打仗，这个开场就直接抓住目标用户。",
+                        "examplePetHairStoryboard": "展示沙发、地毯和衣服上的宠物毛，再展示清理前后对比。",
+                        "exampleDeskLampPain": "光线刺眼、桌面杂乱、夜间工作疲劳",
+                        "exampleDeskLampHook": "你的桌灯是在帮你工作，还是正在让你更累？",
+                        "exampleDeskLampStoryboard": "展示昏暗桌面、眼疲劳，再展示柔和灯光和整洁工作区。"
+            }
+};
+
+        function sampleWorkspaceLanguage() {
+            return currentOutputLanguage();
+        }
+
+        function sampleWorkspaceCopy() {
+            return SAMPLE_WORKSPACE_COPY[sampleWorkspaceLanguage()] || SAMPLE_WORKSPACE_COPY.en;
+        }
+
+        function sampleWorkspaceSlugFromValue(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return raw;
+            if (SAMPLE_WORKSPACE_COPY.en.slugs[raw]) return raw;
+
+            for (const localeCopy of Object.values(SAMPLE_WORKSPACE_COPY)) {
+                for (const [slug, label] of Object.entries(localeCopy.slugs || {})) {
+                    if (raw === label) return slug;
+                }
+            }
+            return raw;
+        }
+
+        function sampleWorkspaceDisplaySlug(slug) {
+            const normalized = sampleWorkspaceSlugFromValue(slug);
+            return sampleWorkspaceCopy().slugs[normalized] || normalized;
+        }
+
+        function setSampleTextByI18n(key, value) {
+            document.querySelectorAll(`[data-i18n="${key}"]`).forEach((node) => {
+                node.textContent = value;
+            });
+        }
+
+        function refreshSampleWorkspaceCopyForLanguage() {
+            const workspaceCopy = sampleWorkspaceCopy();
+
+            const input = document.getElementById('urlInput');
+            if (input) {
+                const normalized = sampleWorkspaceSlugFromValue(input.value);
+                if (SAMPLE_WORKSPACE_COPY.en.slugs[normalized]) {
+                    input.value = sampleWorkspaceDisplaySlug(normalized);
+                }
+            }
+
+            document.querySelectorAll('.slug-button').forEach((button) => {
+                const onclick = button.getAttribute('onclick') || '';
+                const match = onclick.match(/setDemoSlug\('([^']+)'\)/);
+                if (!match) return;
+                const slug = match[1];
+                button.textContent = workspaceCopy.slugs[slug] || slug;
+            });
+
+            setSampleTextByI18n('exampleSlugBalsamic', workspaceCopy.exampleSlugBalsamic);
+            setSampleTextByI18n('exampleSlugPetHair', workspaceCopy.exampleSlugPetHair);
+            setSampleTextByI18n('exampleSlugDeskLamp', workspaceCopy.exampleSlugDeskLamp);
+            setSampleTextByI18n('samplePainPointsLabel', workspaceCopy.examplePainPointsLabel);
+            setSampleTextByI18n('examplePainPointsLabel', workspaceCopy.examplePainPointsLabel);
+            setSampleTextByI18n('sampleHookLabel', workspaceCopy.exampleHookLabel);
+            setSampleTextByI18n('exampleHookLabel', workspaceCopy.exampleHookLabel);
+            setSampleTextByI18n('sampleStoryboardLabel', workspaceCopy.exampleStoryboardLabel);
+            setSampleTextByI18n('exampleStoryboardLabel', workspaceCopy.exampleStoryboardLabel);
+
+            setSampleTextByI18n('exampleBalsamicPain', workspaceCopy.exampleBalsamicPain);
+            setSampleTextByI18n('exampleBalsamicHook', workspaceCopy.exampleBalsamicHook);
+            setSampleTextByI18n('exampleBalsamicStoryboard', workspaceCopy.exampleBalsamicStoryboard);
+            setSampleTextByI18n('examplePetHairPain', workspaceCopy.examplePetHairPain);
+            setSampleTextByI18n('examplePetHairHook', workspaceCopy.examplePetHairHook);
+            setSampleTextByI18n('examplePetHairStoryboard', workspaceCopy.examplePetHairStoryboard);
+            setSampleTextByI18n('exampleDeskLampPain', workspaceCopy.exampleDeskLampPain);
+            setSampleTextByI18n('exampleDeskLampHook', workspaceCopy.exampleDeskLampHook);
+            setSampleTextByI18n('exampleDeskLampStoryboard', workspaceCopy.exampleDeskLampStoryboard);
+        }
+        // L19-J end force language-scoped sample workspace copy
+
         function setDemoSlug(slug) {
-            document.getElementById('urlInput').value = slug;
+            document.getElementById('urlInput').value = sampleWorkspaceDisplaySlug(slug);
+            refreshSampleWorkspaceCopyForLanguage();
         }
 
         function setExampleSlug(slug) {
@@ -3705,9 +3994,9 @@
 
         async function startSystem() {
             const btn = document.getElementById('startBtn');
-            const url = document.getElementById('urlInput').value;
+            const urlInput = sampleWorkspaceSlugFromValue(document.getElementById('urlInput').value.trim());
             const debugMode = document.getElementById('debugMode').checked;
-            const payload = { url, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };
+            const payload = { url: urlInput, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };
 
             btn.disabled = true;
             btn.innerText = t('running');
