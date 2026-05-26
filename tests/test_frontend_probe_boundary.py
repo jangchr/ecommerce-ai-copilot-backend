@@ -1307,5 +1307,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("navTagline: '基于证据的创意助手'", self.source)
 
 
+    def test_l18_inline_result_experience_is_polished(self):
+        self.assertIn("/* L18.3-A inline result experience polish */", self.source)
+        self.assertIn("#inlineResultContent .result-hook-highlight-card", self.source)
+        self.assertIn("#inlineResultContent .copy-toolbar", self.source)
+        self.assertIn("inlineResultPanelTitle: '你的生成结果'", self.source)
+        self.assertIn("inlineResultEmptyState: '点击生成后，Hook、分镜脚本和复制按钮会直接出现在这里，不用滑到页面底部找结果。'", self.source)
+        self.assertIn("inlineResultPanelTitle: 'Your generated brief'", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()

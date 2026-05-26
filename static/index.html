@@ -1322,6 +1322,74 @@
             }
         }
 
+
+        /* L18.3-A inline result experience polish */
+        #inlineResultPanel {
+            border-top: 1px solid #dbe4f0;
+            margin-top: 24px;
+            padding-top: 20px;
+        }
+
+        #inlineResultPanel .section-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 850;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        #inlineResultPanel .section-kicker::before {
+            content: "✨";
+            font-size: 16px;
+        }
+
+        #inlineResultEmptyState {
+            border: 1px solid #dbe4f0;
+            background: #f8fafc;
+            color: #475569;
+            border-radius: 14px;
+            padding: 16px;
+            line-height: 1.55;
+        }
+
+        #inlineResultContent .result-hook-highlight-card {
+            border-width: 2px;
+            box-shadow: 0 10px 24px rgba(22, 101, 52, 0.10);
+        }
+
+        #inlineResultContent .result-hook-highlight-text {
+            font-size: 1.3rem;
+        }
+
+        #inlineResultContent .evidence-source-card {
+            opacity: 0.88;
+        }
+
+        #inlineResultContent .copy-toolbar,
+        #inlineResultContent .section-actions {
+            position: sticky;
+            bottom: 12px;
+            z-index: 5;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+        }
+
+        @media (max-width: 720px) {
+            #inlineResultContent .result-hook-highlight-text {
+                font-size: 1.1rem;
+            }
+
+            #inlineResultContent .copy-toolbar,
+            #inlineResultContent .section-actions {
+                position: static;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -2034,8 +2102,8 @@
             en: {
                 heroTitle: 'Turn a product idea into a TikTok hook and storyboard in 10 minutes.',
                 heroSubtitle: 'No login required. Start with a sample product, your own product description, or pasted customer feedback.',
-                inlineResultPanelTitle: 'Inline Result Panel',
-                inlineResultEmptyState: 'Generate from the active workspace and the creative brief will appear here in the same task flow.',
+                inlineResultPanelTitle: 'Your generated brief',
+                inlineResultEmptyState: 'After you generate, the Hook, storyboard, and copy actions will appear here in this same workspace.',
                 recentEmptyState: 'No recent generations yet.',
                 recentView: 'View',
                 recentCopyMarkdown: 'Copy Markdown',
@@ -2227,8 +2295,8 @@
             'zh-CN': {
                 heroTitle: '用 10 分钟，把一个产品想法变成 TikTok 视频脚本',
                 heroSubtitle: '不需要电商经验。可以先用示例产品，也可以粘贴你的产品描述或用户评论。',
-                inlineResultPanelTitle: '生成结果预览',
-                inlineResultEmptyState: '点击生成后，Hook、创意摘要和分镜脚本会显示在这里。',
+                inlineResultPanelTitle: '你的生成结果',
+                inlineResultEmptyState: '点击生成后，Hook、分镜脚本和复制按钮会直接出现在这里，不用滑到页面底部找结果。',
                 recentEmptyState: '还没有最近生成记录。',
                 recentView: '查看',
                 recentCopyMarkdown: '复制 Markdown',
