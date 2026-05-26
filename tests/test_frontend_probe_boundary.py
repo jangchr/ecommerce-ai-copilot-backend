@@ -69,6 +69,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("font-size: 16px", self.source)
         self.assertIn("overflow-wrap: anywhere", self.source)
         self.assertIn("feedbackWaitlistCtaPanel", self.source)
+        self.assertIn("resultFollowupCtaPanel", self.source)
+        self.assertIn("After generating, help shape the next version", self.source)
+        self.assertIn("Was the hook useful?", self.source)
+        self.assertIn("生成后，帮我们决定下一版怎么改", self.source)
+        self.assertIn("Hook 有用吗", self.source)
+        self.assertIn("resultFollowupFeedback", self.source)
+        self.assertIn("resultFollowupWaitlist", self.source)
         self.assertIn("Join waitlist", self.source)
         self.assertIn("What should we improve next?", self.source)
         self.assertIn("After you generate a result", self.source)
@@ -221,6 +228,39 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("telemetry_summary", body)
                 self.assertNotIn("memory_observability", body)
+
+    def test_result_followup_cta_is_static_and_frontend_only(self):
+        self.assertIn("resultFollowupCtaPanel", self.source)
+        self.assertIn("resultFollowupTitle", self.source)
+        self.assertIn("resultFollowupFeedback", self.source)
+        self.assertIn("resultFollowupWaitlist", self.source)
+        self.assertIn("docs.google.com/forms", self.source)
+
+        match = re.search(
+            r'<div id="resultFollowupCtaPanel"(?P<body>.*?)</div>\s*</div>',
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("Give feedback", body)
+        self.assertIn("Join waitlist", body)
+
+        self.assertNotIn("fetch(", body)
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("postProductDescription", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
 
     def test_mobile_readability_polish_is_css_only(self):
         self.assertIn("L15.3-A mobile readability polish", self.source)
