@@ -1736,5 +1736,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("post_json_with_endpoint_discovery", script)
 
 
+    def test_l23_public_demo_smoke_suite_script_exists(self):
+        script = Path("scripts/run_public_demo_smoke_suite.py").read_text(encoding="utf-8")
+        self.assertIn("All public demo smoke checks passed.", script)
+        self.assertIn("scripts/check_public_demo_ui_contract.py", script)
+        self.assertIn("scripts/check_public_demo_render_smoke.py", script)
+        self.assertIn("scripts/check_public_demo_generation_smoke.py", script)
+        self.assertIn("deployed generation smoke EN", script)
+        self.assertIn("deployed generation smoke zh-CN", script)
+        self.assertIn("--skip-remote", script)
+        self.assertIn("--include-tests", script)
+        self.assertIn("--save-artifacts", script)
+
+
 if __name__ == "__main__":
     unittest.main()
