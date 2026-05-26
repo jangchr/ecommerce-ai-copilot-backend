@@ -457,3 +457,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Trial Feedback Round 1 Summary Template](docs/trial_feedback_round_1_summary_template.md) — L15.6-C 第一轮反馈总结模板。
 - [Trial Feedback Decision Matrix](docs/trial_feedback_decision_matrix.md) — L15.6-D 反馈后续路线矩阵。
 - [Trial Feedback Tracker v1 Archive](docs/trial_feedback_tracker_v1_archive.md) — trial-feedback-tracker-v1 归档记录。
+- [Result Readability Polish Planning](docs/result_readability_polish_planning.md) — L16.0-A 结果可读性优化规划。
+- [Result Readability Section Map](docs/result_readability_section_map.md) — L16.0-B 结果区信息结构设计。
+- [Result Readability Frontend Backlog](docs/result_readability_frontend_backlog.md) — L16.0-C 结果区前端 backlog。
+- [Result Readability Boundary Checklist](docs/result_readability_boundary_checklist.md) — L16.0-D 结果可读性边界清单。
+- [Result Readability Implementation Plan](docs/result_readability_implementation_plan.md) — L16.0-E 结果可读性实现计划。
