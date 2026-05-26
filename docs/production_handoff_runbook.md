@@ -2622,3 +2622,24 @@ Documents:
 - ????????? / ???? / ????
 - ????????? active workspace
 - ??? Codex ????????
+
+## L18 Public Demo Final
+
+Status: passed
+
+Commit: 4e40ef7
+
+Docs:
+
+- docs/public_demo_l18_final_audit.md
+- docs/public_demo_l18_release_notes.md
+- docs/public_demo_l18_archive.md
+- docs/public_demo_l18_after_action_decision.md
+
+Summary:
+
+- Public Demo 已重构为用户任务流。
+- 中文模式主路径已本地化。
+- 结果就地展示。
+- Recent actions 和语言标签已修复。
+- 后续应进入真实朋友试用反馈阶段，不继续无限前端 polish。

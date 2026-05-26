@@ -500,3 +500,7 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L18 Frontend UX Result Placement Spec](docs/frontend_ux_result_placement_spec_l18.md) ? L18.0-E ?????????
 - [L18 Codex Implementation Prompt](docs/frontend_ux_codex_prompt_l18.md) ? L18.0-F Codex ?????
 - [L18 Frontend UX Boundary Checklist](docs/frontend_ux_boundary_checklist_l18.md) ? L18.0-G ?? UX ???????
+- [L18 Public Demo Final Audit](docs/public_demo_l18_final_audit.md) — L18 final 中文试用版最终验收。
+- [L18 Public Demo Release Notes](docs/public_demo_l18_release_notes.md) — L18 final 发布说明。
+- [L18 Public Demo Archive](docs/public_demo_l18_archive.md) — L18 UX 重构归档。
+- [L18 After Action Decision](docs/public_demo_l18_after_action_decision.md) — L18 后续决策。
