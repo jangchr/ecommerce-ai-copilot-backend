@@ -60,6 +60,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Feedback", self.source)
         self.assertIn("Product Description Mode", self.source)
         self.assertIn("quickStartPanel", self.source)
+        self.assertIn("L15.3-A mobile readability polish", self.source)
+        self.assertIn("@media (max-width: 720px)", self.source)
+        self.assertIn("#quickStartPanel", self.source)
+        self.assertIn("#feedbackWaitlistCtaPanel", self.source)
+        self.assertIn("#reviewPasteGuide", self.source)
+        self.assertIn("scroll-margin-top", self.source)
+        self.assertIn("font-size: 16px", self.source)
+        self.assertIn("overflow-wrap: anywhere", self.source)
         self.assertIn("feedbackWaitlistCtaPanel", self.source)
         self.assertIn("Join waitlist", self.source)
         self.assertIn("What should we improve next?", self.source)
@@ -213,6 +221,39 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("telemetry_summary", body)
                 self.assertNotIn("memory_observability", body)
+
+    def test_mobile_readability_polish_is_css_only(self):
+        self.assertIn("L15.3-A mobile readability polish", self.source)
+
+        css_match = re.search(
+            r"/\* L15\.3-A mobile readability polish \*/(?P<body>.*?)</style>",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(css_match)
+        css_body = css_match.group("body")
+
+        self.assertIn("@media (max-width: 720px)", css_body)
+        self.assertIn("#quickStartPanel", css_body)
+        self.assertIn("#feedbackWaitlistCtaPanel", css_body)
+        self.assertIn("#reviewPasteGuide", css_body)
+        self.assertIn("scroll-margin-top", css_body)
+        self.assertIn("overflow-wrap: anywhere", css_body)
+
+        self.assertNotIn("fetch(", css_body)
+        self.assertNotIn("postPastedReviews", css_body)
+        self.assertNotIn("postProductDescription", css_body)
+        self.assertNotIn("generate-copilot", css_body)
+        self.assertNotIn("debug-copilot", css_body)
+        self.assertNotIn("debug-source-probe", css_body)
+        self.assertNotIn("runSourceProbe", css_body)
+        self.assertNotIn("amazonShadowMode", css_body)
+        self.assertNotIn("saveCurrentGenerationToRecent", css_body)
+        self.assertNotIn("localStorage", css_body)
+        self.assertNotIn("data.debug", css_body)
+        self.assertNotIn("telemetry_summary", css_body)
+        self.assertNotIn("shadow_sources", css_body)
+        self.assertNotIn("memory_observability", css_body)
 
     def test_feedback_waitlist_cta_is_static_and_frontend_only(self):
         self.assertIn("feedbackWaitlistCtaPanel", self.source)
