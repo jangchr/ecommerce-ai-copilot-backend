@@ -475,3 +475,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Result Readability Smoke v1 Archive](docs/result_readability_smoke_v1_archive.md) ? result-readability-smoke-v1 ?????
 - [Result Readability After Smoke Decision](docs/result_readability_after_smoke_decision.md) ? L16.4-D smoke ?????
 - [Trial Round 1 Execution Record](docs/trial_round_1_execution_record.md) ? L17.0-A ????????????
+- [Trial Round 1 Send Log](docs/trial_round_1_send_log.md) ? L17.0-B ??????????
+- [Trial Round 1 Feedback Inbox](docs/trial_round_1_feedback_inbox.md) ? L17.0-C ?????????
+- [Trial Round 1 Daily Review Checklist](docs/trial_round_1_daily_review_checklist.md) ? L17.0-D ???????
+- [Trial Round 1 Completion Criteria](docs/trial_round_1_completion_criteria.md) ? L17.0-E ????????
+- [Trial Round 1 v1 Archive](docs/trial_round_1_v1_archive.md) ? trial-round-1-execution-v1 ?????
