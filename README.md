@@ -480,3 +480,9 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Trial Round 1 Daily Review Checklist](docs/trial_round_1_daily_review_checklist.md) ? L17.0-D ???????
 - [Trial Round 1 Completion Criteria](docs/trial_round_1_completion_criteria.md) ? L17.0-E ????????
 - [Trial Round 1 v1 Archive](docs/trial_round_1_v1_archive.md) ? trial-round-1-execution-v1 ?????
+- [Trial Round 1 Simulated Feedback Record](docs/trial_round_1_simulated_feedback_record.md) ? L17.1-A ?????????
+- [Chinese Onboarding Localization Decision](docs/chinese_onboarding_localization_decision.md) ? L17.1-B ?? onboarding ??????
+- [Chinese Onboarding Flow Plan](docs/chinese_onboarding_flow_plan.md) ? L17.1-C ????????????
+- [Dataset Language Gap Observation](docs/dataset_language_gap_observation.md) ? L17.1-D ??????????
+- [Chat Guided Input Idea Note](docs/chat_guided_input_idea_note.md) ? L17.1-E ????????????
+- [L17.1 Next Implementation Plan](docs/l17_1_next_implementation_plan.md) ? L17.1-F ????????
