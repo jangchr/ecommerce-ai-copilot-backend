@@ -1683,5 +1683,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("body.zh-mode #inlineResultContent .copy-toolbar::before", self.source)
 
 
+    def test_l21_empty_result_state_explains_next_action(self):
+        self.assertIn("/* L21-F actionable empty result state */", self.source)
+        self.assertIn("#inlineResultEmptyState", self.source)
+        self.assertIn("#inlineResultEmptyState::before", self.source)
+        self.assertIn("#inlineResultEmptyState::after", self.source)
+        self.assertIn('content: "Pick a path above, add a product idea or sample, then generate.";', self.source)
+        self.assertIn("body.zh-mode #inlineResultEmptyState::after", self.source)
+        self.assertIn('content: "先选择上面的入口，填写产品或选择示例，然后点击生成。";', self.source)
+        self.assertIn("border: 1px dashed #93c5fd;", self.source)
+        self.assertIn("background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()
