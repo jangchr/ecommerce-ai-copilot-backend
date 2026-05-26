@@ -760,6 +760,7 @@
                         <button class="btn-primary" type="button" onclick="scrollToProductDescriptionMode()" data-i18n="startWithProductDescription">Start with product description</button>
                         <button class="btn-secondary" type="button" onclick="scrollToPastedReviewsMode()" data-i18n="startWithPastedReviews">Start with pasted reviews</button>
                         <button class="btn-secondary" type="button" onclick="scrollToFeedbackWaitlist()" data-i18n="giveFeedbackQuickStart">Give feedback</button>
+                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="joinWaitlistQuickStart" style="text-decoration:none;">Join waitlist</a>
                     </div>
                 </div>
                     </div>
@@ -1025,6 +1026,14 @@
                 <h3 data-i18n="feedback">Feedback</h3>
                 <p>Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.</p>
                 <a class="feedback-link" href="https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" data-i18n="giveFeedback">Give feedback</a>
+                <div id="feedbackWaitlistCtaPanel" style="margin-top:16px; padding:16px; border:1px solid #dbe4f0; border-radius:14px; background:#f8fafc;">
+                    <div style="font-weight:700; margin-bottom:6px;" data-i18n="feedbackWaitlistTitle">What should we improve next?</div>
+                    <div style="margin-bottom:12px; color:#475569;" data-i18n="feedbackWaitlistSubtitle">After you generate a result, tell us what was useful or join the waitlist for future product input options.</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <a class="btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" data-i18n="feedbackWaitlistFeedback" style="text-decoration:none;">Give feedback</a>
+                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="feedbackWaitlistJoin" style="text-decoration:none;">Join waitlist</a>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1221,6 +1230,11 @@
                 startWithProductDescription: 'Start with product description',
                 startWithPastedReviews: 'Start with pasted reviews',
                 giveFeedbackQuickStart: 'Give feedback',
+                joinWaitlistQuickStart: 'Join waitlist',
+                feedbackWaitlistTitle: 'What should we improve next?',
+                feedbackWaitlistSubtitle: 'After you generate a result, tell us what was useful or join the waitlist for future product input options.',
+                feedbackWaitlistFeedback: 'Give feedback',
+                feedbackWaitlistJoin: 'Join waitlist',
                 productDescriptionBestFor: 'Best if you can describe the product, audience, and pain points yourself.',
                 pastedReviewsBestFor: 'Best if you have customer reviews, complaints, objections, or buyer feedback.',
                 pastedReviewsMode: 'Pasted Reviews Mode',
@@ -1336,6 +1350,11 @@
                 startWithProductDescription: '从产品描述开始',
                 startWithPastedReviews: '从粘贴评论开始',
                 giveFeedbackQuickStart: '提交反馈',
+                joinWaitlistQuickStart: '加入 waitlist',
+                feedbackWaitlistTitle: '下一步应该改进什么？',
+                feedbackWaitlistSubtitle: '生成结果后，可以告诉我们哪里有用，或者加入 waitlist 优先试用后续输入方式。',
+                feedbackWaitlistFeedback: '提交反馈',
+                feedbackWaitlistJoin: '加入 waitlist',
                 productDescriptionBestFor: '适合你能自己描述产品、受众和痛点的情况。',
                 pastedReviewsBestFor: '适合你有用户评论、差评、购买顾虑或买家反馈的情况。',
                 pastedReviewsMode: '粘贴评论模式',

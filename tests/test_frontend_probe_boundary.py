@@ -60,6 +60,12 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Feedback", self.source)
         self.assertIn("Product Description Mode", self.source)
         self.assertIn("quickStartPanel", self.source)
+        self.assertIn("feedbackWaitlistCtaPanel", self.source)
+        self.assertIn("Join waitlist", self.source)
+        self.assertIn("What should we improve next?", self.source)
+        self.assertIn("After you generate a result", self.source)
+        self.assertIn("加入 waitlist", self.source)
+        self.assertIn("下一步应该改进什么", self.source)
         self.assertIn("Try the fastest path", self.source)
         self.assertIn("No login required", self.source)
         self.assertIn("Start with product description", self.source)
@@ -207,6 +213,39 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("telemetry_summary", body)
                 self.assertNotIn("memory_observability", body)
+
+    def test_feedback_waitlist_cta_is_static_and_frontend_only(self):
+        self.assertIn("feedbackWaitlistCtaPanel", self.source)
+        self.assertIn("feedbackWaitlistTitle", self.source)
+        self.assertIn("feedbackWaitlistJoin", self.source)
+        self.assertIn("joinWaitlistQuickStart", self.source)
+        self.assertIn("docs.google.com/forms", self.source)
+
+        match = re.search(
+            r'<div id="feedbackWaitlistCtaPanel"(?P<body>.*?)</div>\s*</div>',
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("Give feedback", body)
+        self.assertIn("Join waitlist", body)
+
+        self.assertNotIn("fetch(", body)
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("postProductDescription", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
 
     def test_public_demo_quick_start_ctas_are_frontend_only(self):
         self.assertIn("function scrollToProductDescriptionMode()", self.source)
