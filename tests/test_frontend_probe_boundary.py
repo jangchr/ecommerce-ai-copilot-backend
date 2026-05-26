@@ -1720,5 +1720,21 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("render-smoke-", script)
 
 
+    def test_l23_public_demo_generation_smoke_script_exists(self):
+        script = Path("scripts/check_public_demo_generation_smoke.py").read_text(encoding="utf-8")
+        self.assertIn("Public demo generation smoke check passed.", script)
+        self.assertIn("DEFAULT_ENDPOINT = \"auto\"", script)
+        self.assertIn("ENDPOINT_CANDIDATES", script)
+        self.assertIn("\"/api/generate-copilot\"", script)
+        self.assertIn("\"url\": args.product", script)
+        self.assertIn("\"goal\": \"tiktok_ctr\"", script)
+        self.assertIn("\"output_language\": args.language", script)
+        self.assertIn("failure_type", script)
+        self.assertIn("\"hook\"", script)
+        self.assertIn("\"storyboard\"", script)
+        self.assertIn("--save-json", script)
+        self.assertIn("post_json_with_endpoint_discovery", script)
+
+
 if __name__ == "__main__":
     unittest.main()
