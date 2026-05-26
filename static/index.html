@@ -2716,12 +2716,76 @@
             `;
         }
 
+
+        // L24-B copy-ready script extraction from structured model output
+        function stripStructuredScriptPrefix(text) {
+            const raw = String(text || '').trim();
+            if (!raw) return '';
+
+            const narrationMatch = raw.match(/(?:Narration|旁白)[:：]\s*([^\n]+)/i);
+            if (narrationMatch) return narrationMatch[1].trim();
+
+            const textMatch = raw.match(/(?:Text|文字)[:：]\s*([^\n]+)/i);
+            if (textMatch) return textMatch[1].trim();
+
+            return raw
+                .replace(/^\s*\d+(?:-\d+(?:\.\d+)?s?|-\d+(?:\.\d+)?秒|\s*-\s*\d+(?:\.\d+)?s?)\s*\|?\s*/i, '')
+                .replace(/^\s*(?:Final scene|最终场景)\s*\|?\s*/i, '')
+                .replace(/\n(?:Visual|视觉|Text|文字|Retention|留存|Painpoint|痛点)[:：][\s\S]*$/i, '')
+                .trim();
+        }
+
+        function cleanHookLine(script) {
+            return stripStructuredScriptPrefix(script?.hook || '');
+        }
+
+        function cleanCtaLine(script) {
+            return stripStructuredScriptPrefix(script?.cta || '');
+        }
+
+        function copyReadyScriptText(data) {
+            const script = data?.assets?.tiktok_script || {};
+            const scenes = data?.assets?.storyboard?.scenes || [];
+            const isZh = currentOutputLanguage() === 'zh-CN';
+
+            const lines = [];
+            const hook = cleanHookLine(script);
+            const cta = cleanCtaLine(script);
+
+            if (hook) {
+                lines.push(isZh ? 'Hook：' : 'Hook:');
+                lines.push(hook);
+                lines.push('');
+            }
+
+            scenes.forEach((scene, index) => {
+                const visual = scene.visual_description || scene.visual || '';
+                const narration = scene.narration || '';
+                if (!visual && !narration) return;
+
+                lines.push(isZh ? `场景 ${index + 1}：` : `Scene ${index + 1}:`);
+                if (visual) lines.push(isZh ? `画面：${visual}` : `Visual: ${visual}`);
+                if (narration) lines.push(isZh ? `旁白：${narration}` : `Narration: ${narration}`);
+                lines.push('');
+            });
+
+            if (cta) {
+                lines.push(isZh ? 'CTA：' : 'CTA:');
+                lines.push(cta);
+            }
+
+            return lines.join('\n').trim();
+        }
+
+
         function renderHookHighlightCard(script) {
+            const hook = cleanHookLine(script);
+            const cta = cleanCtaLine(script);
             return `
                 <div id="resultHookHighlightCard" class="result-hook-highlight-card">
                     <div class="result-hook-highlight-label">${escapeHTML(t('hookHighlight'))}</div>
-                    <div class="result-hook-highlight-text">${escapeHTML(script.hook || '')}</div>
-                    <div class="result-hook-highlight-cta">${escapeHTML(script.cta || '')}</div>
+                    <div class="result-hook-highlight-text">${escapeHTML(hook)}</div>
+                    <div class="result-hook-highlight-cta">${escapeHTML(cta)}</div>
                 </div>
             `;
         }
@@ -3930,8 +3994,9 @@
             document.getElementById('copyChineseBtn').disabled = !latestChineseTranslation;
         }
 
+
         function copyHook() {
-            const hook = latestProductData?.assets?.tiktok_script?.hook || '';
+            const hook = cleanHookLine(latestProductData?.assets?.tiktok_script || {});
             copyText('Hook', hook);
         }
 
@@ -4024,7 +4089,7 @@
                 id: latestRecentId,
                 input_slug: latestInputSlug || '',
                 generated_at: latestGeneratedAt || new Date().toISOString(),
-                hook: latestProductData?.assets?.tiktok_script?.hook || '',
+                hook: cleanHookLine(latestProductData?.assets?.tiktok_script || {}),
                 storyboard: storyboardText(latestProductData?.assets?.storyboard || {}),
                 full_markdown: buildDownloadMarkdown(latestProductData),
                 product_data: cloneVisibleProductData(latestProductData),
@@ -4665,26 +4730,23 @@
         }
 
 
-        function renderQuickUsePack(script, storyboard) {
-            const hook = script.hook || '';
-            const cta = script.cta || '';
+
+        function renderQuickUsePack(script, storyboard, data = null) {
+            const fallbackData = data || { assets: { tiktok_script: script || {}, storyboard: storyboard || {} } };
+            const hook = cleanHookLine(script);
+            const cta = cleanCtaLine(script);
             const scenes = (storyboard.scenes || [])
-                .map((scene, index) => `${index + 1}. ${scene.narration || scene.visual_description || ''}`)
+                .map((scene, index) => {
+                    const narration = scene.narration || '';
+                    const visual = scene.visual_description || scene.visual || '';
+                    const line = narration || visual;
+                    return line ? `${index + 1}. ${line}` : '';
+                })
                 .filter(Boolean);
 
             const shotList = scenes.length ? scenes.join('\n') : t('shotListFallback');
             const captionDraft = [hook, cta].filter(Boolean).join(' ');
-            const copyReady = [
-                `${t('scriptOpening')}: ${hook}`,
-                '',
-                `${t('scriptScenes')}:`,
-                shotList,
-                '',
-                `${t('scriptCTA')}: ${cta}`,
-                '',
-                `${t('captionTitle')}:`,
-                captionDraft
-            ].filter((line) => line !== '').join('\n');
+            const copyReady = copyReadyScriptText(fallbackData);
             latestQuickUseScript = copyReady;
 
             return `
@@ -4702,6 +4764,16 @@
                     </div>
                     <div class="quick-use-script">${escapeHTML(copyReady)}</div>
                     <div class="quick-use-copy-status" id="quickUseCopyStatus"></div>
+                    <div class="quick-use-mini-grid">
+                        <div class="quick-use-mini-card">
+                            <div class="quick-use-mini-title">${escapeHTML(t('shotListTitle'))}</div>
+                            <div class="quick-use-mini-body">${escapeHTML(shotList)}</div>
+                        </div>
+                        <div class="quick-use-mini-card">
+                            <div class="quick-use-mini-title">${escapeHTML(t('captionTitle'))}</div>
+                            <div class="quick-use-mini-body">${escapeHTML(captionDraft || t('captionTemplate'))}</div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -4724,6 +4796,7 @@
             sectionTextCache = buildSectionText(data);
             const resultSummaryCard = renderResultSummaryCard(data, evidence, evalData, score);
             const hookHighlightCard = renderHookHighlightCard(script);
+            const quickUsePackCard = renderQuickUsePack(script, storyboard, data);
 
             document.getElementById('res-insights').style.opacity = '1';
             document.getElementById('res-insights').innerHTML = `
@@ -4756,6 +4829,7 @@
                 <div class="section-block">
                     ${renderSectionHeader(t('hook'), 'hook')}
                     ${hookHighlightCard}
+                ${quickUsePackCard}
                     ${block(t('hook'), script.hook || '')}
                     ${block(t('cta'), script.cta || '')}
                 </div>

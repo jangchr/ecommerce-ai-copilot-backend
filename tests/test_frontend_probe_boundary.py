@@ -1369,8 +1369,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
     def test_l19_publish_ready_result_pack_is_present(self):
         self.assertIn("/* L19-A publish-ready result pack */", self.source)
-        self.assertIn("function renderQuickUsePack(script, storyboard)", self.source)
-        self.assertIn("renderQuickUsePack(script, storyboard)", self.source)
+        self.assertIn("function renderQuickUsePack(script, storyboard, data = null)", self.source)
+        self.assertIn("renderQuickUsePack(script, storyboard, data)", self.source)
         self.assertIn('id="quickUsePackCard"', self.source)
 
         self.assertIn("quickUsePackTitle: '下一步可以直接这样用'", self.source)
@@ -1764,6 +1764,24 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Countertop Blender", script)
         self.assertIn("--workflow", script)
         self.assertIn("--save-json", script)
+
+
+    def test_l24_copy_ready_script_extracts_user_facing_lines(self):
+        self.assertIn("// L24-B copy-ready script extraction from structured model output", self.source)
+        self.assertIn("function stripStructuredScriptPrefix(text)", self.source)
+        self.assertIn("function cleanHookLine(script)", self.source)
+        self.assertIn("function cleanCtaLine(script)", self.source)
+        self.assertIn("function copyReadyScriptText(data)", self.source)
+        self.assertIn("Narration|旁白", self.source)
+        self.assertIn("Visual: ${visual}", self.source)
+        self.assertIn("画面：${visual}", self.source)
+        self.assertIn("Narration: ${narration}", self.source)
+        self.assertIn("旁白：${narration}", self.source)
+        self.assertIn("const hook = cleanHookLine(script);", self.source)
+        self.assertIn("const cta = cleanCtaLine(script);", self.source)
+        self.assertIn("const copyReady = copyReadyScriptText(fallbackData);", self.source)
+        self.assertIn("latestQuickUseScript = copyReady;", self.source)
+        self.assertNotIn("latestQuickUseScript = script.hook", self.source)
 
 
 if __name__ == "__main__":
