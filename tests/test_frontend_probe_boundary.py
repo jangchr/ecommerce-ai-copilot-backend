@@ -1579,5 +1579,37 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         self.assertIn("const urlInput = sampleWorkspaceSlugFromValue(document.getElementById('urlInput').value.trim());", self.source)
         self.assertIn("const payload = { url: urlInput, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)
+
+
+    def test_l20_chinese_entry_copy_avoids_english_slug_jargon(self):
+        self.assertIn("/* L20-B localized non-technical Chinese entry copy */", self.source)
+
+        zh_start = self.source.find("'zh-CN': {")
+        self.assertNotEqual(zh_start, -1)
+        zh_end = self.source.find("\n        };\n\n        function t", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        self.assertIn("heroSubtitle: '这个公开 Demo 提供 10 个本地示例产品。建议先试“香醋”或“台灯”。'", zh_copy)
+        self.assertIn("urlInputPlaceholder: '选择一个示例产品，例如：台灯'", zh_copy)
+        self.assertIn("pathSampleProductBody: '不用填写内容，先用香醋、台灯或宠物毛发清理这类示例产品，看完整生成流程。'", zh_copy)
+        self.assertIn("sampleProductLibraryBody: '这些只是用来试流程的示例产品，不需要把它理解成“数据集”。'", zh_copy)
+
+        self.assertNotIn("balsamic_vinegar", zh_copy)
+        self.assertNotIn("desk_lamp", zh_copy)
+        self.assertNotIn("stable local grounded slug", zh_copy)
+        self.assertNotIn("dataset", zh_copy)
+
+        en_start = self.source.find("en: {")
+        self.assertNotEqual(en_start, -1)
+        en_end = self.source.find("\n            },\n            'zh-CN': {", en_start)
+        self.assertNotEqual(en_end, -1)
+        en_copy = self.source[en_start:en_end]
+
+        self.assertIn("balsamic_vinegar", en_copy)
+        self.assertIn("desk_lamp", en_copy)
+        self.assertIn("stable local grounded slug", en_copy)
+
+
 if __name__ == "__main__":
     unittest.main()
