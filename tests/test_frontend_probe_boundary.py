@@ -61,6 +61,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Product Description Mode", self.source)
         self.assertIn("L16.1-A result summary and hook highlight polish", self.source)
         self.assertIn("resultSummaryCard", self.source)
+        self.assertIn("L16.3-A evidence source label polish", self.source)
+        self.assertIn("evidenceSourceCard", self.source)
+        self.assertIn("Evidence Source", self.source)
+        self.assertIn("证据来源", self.source)
+        self.assertIn("Source type", self.source)
+        self.assertIn("来源类型", self.source)
+        self.assertIn("function renderEvidenceSourceCard(evidence)", self.source)
+        self.assertIn("${renderEvidenceSourceCard(evidence)}", self.source)
         self.assertIn("resultHookHighlightCard", self.source)
         self.assertIn("L16.2-A storyboard scene readability polish", self.source)
         self.assertIn("storyboard-scene-list", self.source)
@@ -264,6 +272,42 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         self.assertIn("Give feedback", body)
         self.assertIn("Join waitlist", body)
+
+        self.assertNotIn("fetch(", body)
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("postProductDescription", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
+
+    def test_evidence_source_label_is_frontend_only(self):
+        self.assertIn("function renderEvidenceSourceCard(evidence)", self.source)
+        self.assertIn("evidenceSourceCard", self.source)
+        self.assertIn("evidenceSourceTitle", self.source)
+        self.assertIn("sourceTypeLabel", self.source)
+        self.assertIn("sourceConfidenceLabel", self.source)
+        self.assertIn("reviewCountLabel", self.source)
+        self.assertIn("dataWarningsLabel", self.source)
+
+        start = self.source.find("function renderEvidenceSourceCard(evidence)")
+        end = self.source.find("function resultCreativeSummary", start)
+        self.assertNotEqual(start, -1)
+        self.assertNotEqual(end, -1)
+
+        body = self.source[start:end]
+
+        self.assertIn("source_type", body)
+        self.assertIn("data_warnings", body)
+        self.assertIn("review_count", body)
+        self.assertIn("review_confidence", body)
 
         self.assertNotIn("fetch(", body)
         self.assertNotIn("postPastedReviews", body)

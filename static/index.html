@@ -949,6 +949,60 @@
             }
         }
 
+
+        /* L16.3-A evidence source label polish */
+        .evidence-source-card {
+            margin: 0 0 14px 0;
+            padding: 14px;
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            background: #eff6ff;
+        }
+
+        .evidence-source-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+            margin-bottom: 6px;
+        }
+
+        .evidence-source-body {
+            color: #1e3a8a;
+            line-height: 1.45;
+            font-weight: 650;
+        }
+
+        .evidence-source-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .evidence-source-warning {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-left: 3px solid #f59e0b;
+            background: #fffbeb;
+            border-radius: 8px;
+            color: #92400e;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 720px) {
+            .evidence-source-card {
+                padding: 12px;
+                border-radius: 12px;
+            }
+
+            .evidence-source-meta {
+                flex-direction: column;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -1491,6 +1545,27 @@
             return source || t('sourceUnknown');
         }
 
+        function renderEvidenceSourceCard(evidence) {
+            const sourceType = evidence?.source_type || '';
+            const sourceLabel = resultSourceLabel(sourceType);
+            const warnings = evidence?.data_warnings || [];
+            const reviewCount = evidence?.review_count ?? 0;
+            const confidence = formatMetric(evidence?.confidence ?? evidence?.review_confidence ?? '');
+
+            return `
+                <div id="evidenceSourceCard" class="evidence-source-card">
+                    <div class="evidence-source-title">${escapeHTML(t('evidenceSourceTitle'))}</div>
+                    <div class="evidence-source-body">${escapeHTML(t('evidenceSourceBody'))}</div>
+                    <div class="evidence-source-meta">
+                        ${metricPill(t('sourceTypeLabel'), sourceLabel)}
+                        ${metricPill(t('sourceConfidenceLabel'), confidence)}
+                        ${metricPill(t('reviewCountLabel'), reviewCount)}
+                    </div>
+                    ${warnings.length ? `<div class="evidence-source-warning">${escapeHTML(t('dataWarningsLabel'))}: ${escapeHTML(warnings.join(', '))}</div>` : ''}
+                </div>
+            `;
+        }
+
         function resultCreativeSummary(data, sourceLabel) {
             const script = data.assets?.tiktok_script || {};
             const audience = data.audience?.primary || '';
@@ -1647,6 +1722,12 @@
                 sourceProductDescription: 'product description',
                 sourceStableDemo: 'stable demo product',
                 hookHighlight: 'Hook highlight',
+                evidenceSourceTitle: 'Evidence Source',
+                evidenceSourceBody: 'This label shows what the creative brief is grounded on before you review the hook and storyboard.',
+                sourceTypeLabel: 'Source type',
+                sourceConfidenceLabel: 'Source confidence',
+                reviewCountLabel: 'Review count',
+                dataWarningsLabel: 'Data warnings',
                 evidenceSnapshot: 'Evidence Snapshot',
                 targetAudienceStrategy: 'Target Audience & Creative Strategy',
                 targetAudience: 'Target Audience',
@@ -1784,6 +1865,12 @@
                 sourceProductDescription: '产品描述',
                 sourceStableDemo: '稳定示例产品',
                 hookHighlight: 'Hook 重点',
+                evidenceSourceTitle: '证据来源',
+                evidenceSourceBody: '这里说明本次创意简报基于什么输入生成，方便先判断结果是否有依据。',
+                sourceTypeLabel: '来源类型',
+                sourceConfidenceLabel: '来源置信度',
+                reviewCountLabel: '评论数量',
+                dataWarningsLabel: '数据提示',
                 evidenceSnapshot: '证据摘要',
                 targetAudienceStrategy: '目标受众与创意策略',
                 targetAudience: '目标受众',
@@ -2839,6 +2926,7 @@
             document.getElementById('res-insights').style.opacity = '1';
             document.getElementById('res-insights').innerHTML = `
                 ${resultSummaryCard}
+                ${renderEvidenceSourceCard(evidence)}
                 ${renderSectionHeader(t('evidenceSnapshot'), 'evidence')}
                 <span class="source-badge">${escapeHTML(evidence.source_type || t('sourceUnknown'))}</span>
                 <div class="metric-strip">
