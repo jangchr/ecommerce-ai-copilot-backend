@@ -1055,6 +1055,55 @@
             }
         }
 
+
+        /* L17.3-A Chinese example product library polish */
+        .sample-product-library-guide {
+            max-width: 760px;
+            margin: 12px auto 0;
+            padding: 14px 16px;
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            background: #f8fafc;
+            text-align: left;
+        }
+
+        .sample-product-library-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .sample-product-library-body {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .sample-product-library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+        }
+
+        .sample-product-library-tip {
+            padding: 10px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.45;
+            border: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 720px) {
+            .sample-product-library-guide {
+                padding: 12px;
+                border-radius: 12px;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -1075,7 +1124,7 @@
                 <button class="btn-secondary" id="languageChineseBtn" type="button" onclick="setLanguageMode('zh-CN')">中文</button>
             </div>
             <div class="control-panel">
-                <input type="text" id="urlInput" placeholder="Enter a local grounded slug, e.g. balsamic_vinegar" value="balsamic_vinegar">
+                <input type="text" id="urlInput" placeholder="Choose a sample product, e.g. desk_lamp" value="balsamic_vinegar">
                 <button class="btn-primary" id="startBtn" onclick="startSystem()" data-i18n="runWorkflow">Run Workflow</button>
             </div>
             <div class="input-guide" data-i18n="inputGuide">
@@ -1106,6 +1155,17 @@
                     <button class="slug-button" type="button" onclick="setDemoSlug('skincare_serum')">护肤精华 / skincare_serum</button>
                 </div>
             </div>
+
+            <div id="sampleProductLibraryGuide" class="sample-product-library-guide">
+                <div class="sample-product-library-title" data-i18n="sampleProductLibraryTitle">Sample product library</div>
+                <div class="sample-product-library-body" data-i18n="sampleProductLibraryBody">These are sample products for trying the demo flow. They are not something you need to understand as a dataset.</div>
+                <div class="sample-product-library-grid">
+                    <div class="sample-product-library-tip" data-i18n="sampleProductLibraryTipOne">Recommended first try: desk lamp or pet hair cleaner.</div>
+                    <div class="sample-product-library-tip" data-i18n="sampleProductLibraryTipTwo">Click one sample, then click generate to see the result format.</div>
+                    <div class="sample-product-library-tip" data-i18n="sampleProductLibraryTipThree">After that, replace it with your own product idea.</div>
+                </div>
+            </div>
+
             <div class="demo-warning" data-i18n="amazonWarning">
                 Do not use Amazon URLs in Product Mode yet. Amazon URLs are available only in Debug Mode / Amazon Shadow.
             </div>
@@ -1139,7 +1199,7 @@
                     </div>
                 </div>
                     </div>
-                    <span class="source-badge">Source: user_provided_description</span>
+                    <span class="source-badge" data-i18n="sourceBadgeProductDescription">Input source: product description</span>
                 </div>
                 <div class="description-grid">
                     <div class="description-field">
@@ -1195,7 +1255,7 @@
                         <div class="field-helper" data-i18n="pastedReviewsBestFor">Best if you have customer reviews, complaints, objections, or buyer feedback.</div>
                         <p data-i18n="pastedReviewsIntro">Paste customer reviews, complaints, objections, or buyer feedback. The creative brief will use these review snippets as user-provided evidence.</p>
                     </div>
-                    <span class="source-badge">Source: user_pasted_reviews</span>
+                    <span class="source-badge" data-i18n="sourceBadgePastedReviews">Input source: pasted customer feedback</span>
                 </div>
                 <div class="description-grid">
                     <div class="description-field">
@@ -1695,7 +1755,7 @@
                 heroTitle: 'Turn a product idea into a TikTok hook and storyboard in 10 minutes.',
                 heroSubtitle: 'No login required. Start with a sample product, your own product description, or pasted customer feedback.',
                 languageLabel: 'Language:',
-                runWorkflow: 'Run Workflow',
+                runWorkflow: 'Generate from sample product',
                 inputGuide: 'Sample products are here so you can see the flow first. Pick one, run it once, then replace it with your own product idea.',
                 chineseOnboardingTitle: 'Not sure where to start?',
                 chineseOnboardingBody: 'Use a sample product first, then replace it with your own product idea when you understand the flow.',
@@ -1703,6 +1763,13 @@
                 chineseOnboardingStepTwo: 'Tell us what the product is, who it is for, and what problem it solves.',
                 chineseOnboardingStepThree: 'Generate a TikTok hook, creative summary, and storyboard.',
                 chineseOnboardingNote: 'You do not need ecommerce experience to try the demo.',
+                sampleProductLibraryTitle: 'Sample product library',
+                sampleProductLibraryBody: 'These are sample products for trying the demo flow. They are not something you need to understand as a dataset.',
+                sampleProductLibraryTipOne: 'Recommended first try: desk lamp or pet hair cleaner.',
+                sampleProductLibraryTipTwo: 'Click one sample, then click generate to see the result format.',
+                sampleProductLibraryTipThree: 'After that, replace it with your own product idea.',
+                sourceBadgeProductDescription: 'Input source: product description',
+                sourceBadgePastedReviews: 'Input source: pasted customer feedback',
                 amazonWarning: 'Do not paste Amazon links here yet. Use a sample product, Product Description Mode, or Pasted Reviews Mode.',
                 productDescriptionMode: 'Product Description Mode',
                 descriptionIntro: 'Write what the product is, who it is for, and what problem it solves. The demo will turn it into a TikTok hook, creative summary, and storyboard.',
@@ -1844,7 +1911,7 @@
                 heroTitle: '用 10 分钟，把一个产品想法变成 TikTok 视频脚本',
                 heroSubtitle: '不需要电商经验。可以先用示例产品，也可以粘贴你的产品描述或用户评论。',
                 languageLabel: 'Language:',
-                runWorkflow: '运行 Workflow',
+                runWorkflow: '用示例产品生成',
                 inputGuide: '这里是示例产品库：先选一个示例产品跑一次，理解流程后，再换成你自己的产品想法。',
                 chineseOnboardingTitle: '不知道从哪里开始？',
                 chineseOnboardingBody: '先用一个示例产品跑通流程。看懂以后，再换成你自己的产品想法。',
@@ -1852,6 +1919,13 @@
                 chineseOnboardingStepTwo: '写清楚：产品是什么、谁会买、它解决什么麻烦。',
                 chineseOnboardingStepThree: '点击生成，得到 TikTok Hook、创意摘要和分镜脚本。',
                 chineseOnboardingNote: '你不需要已经是电商卖家，也可以先测试一个产品想法。',
+                sampleProductLibraryTitle: '示例产品库',
+                sampleProductLibraryBody: '这些只是用来试流程的示例产品，不需要把它理解成“数据集”。',
+                sampleProductLibraryTipOne: '第一次建议先试：台灯，或宠物毛发清理。',
+                sampleProductLibraryTipTwo: '点一个示例产品，再点“用示例产品生成”，先看结果长什么样。',
+                sampleProductLibraryTipThree: '看懂流程后，再换成你自己的产品想法。',
+                sourceBadgeProductDescription: '输入来源：产品描述',
+                sourceBadgePastedReviews: '输入来源：粘贴的用户反馈',
                 amazonWarning: '这里暂时不要输入 Amazon 链接。想试用请先点示例产品，或使用下面的产品描述 / 粘贴评论模式。',
                 productDescriptionMode: '产品描述模式',
                 descriptionIntro: '写下产品是什么、谁会用、他们遇到什么问题。系统会把它整理成 TikTok Hook、创意摘要和分镜脚本。',
