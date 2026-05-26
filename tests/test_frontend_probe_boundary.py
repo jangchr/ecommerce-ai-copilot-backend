@@ -59,6 +59,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Copy / Download / Translation Actions", self.source)
         self.assertIn("Feedback", self.source)
         self.assertIn("Product Description Mode", self.source)
+        self.assertIn("L16.1-A result summary and hook highlight polish", self.source)
+        self.assertIn("resultSummaryCard", self.source)
+        self.assertIn("resultHookHighlightCard", self.source)
+        self.assertIn("Creative Summary", self.source)
+        self.assertIn("Hook highlight", self.source)
+        self.assertIn("创意摘要", self.source)
+        self.assertIn("Hook 重点", self.source)
+        self.assertIn("function renderResultSummaryCard", self.source)
+        self.assertIn("function renderHookHighlightCard", self.source)
         self.assertIn("quickStartPanel", self.source)
         self.assertIn("L15.3-A mobile readability polish", self.source)
         self.assertIn("@media (max-width: 720px)", self.source)
@@ -261,6 +270,37 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
+
+    def test_result_summary_and_hook_highlight_are_frontend_only(self):
+        self.assertIn("function renderResultSummaryCard", self.source)
+        self.assertIn("function renderHookHighlightCard", self.source)
+        self.assertIn("resultSummaryCard", self.source)
+        self.assertIn("resultHookHighlightCard", self.source)
+
+        for function_name in ["renderResultSummaryCard", "renderHookHighlightCard", "resultCreativeSummary"]:
+            with self.subTest(function_name=function_name):
+                match = re.search(
+                    rf"function {function_name}\([^)]*\) \{{(?P<body>.*?)\n        \}}",
+                    self.source,
+                    re.S,
+                )
+                self.assertIsNotNone(match)
+                body = match.group("body")
+
+                self.assertNotIn("fetch(", body)
+                self.assertNotIn("postPastedReviews", body)
+                self.assertNotIn("postProductDescription", body)
+                self.assertNotIn("generate-copilot", body)
+                self.assertNotIn("debug-copilot", body)
+                self.assertNotIn("debug-source-probe", body)
+                self.assertNotIn("runSourceProbe", body)
+                self.assertNotIn("amazonShadowMode", body)
+                self.assertNotIn("saveCurrentGenerationToRecent", body)
+                self.assertNotIn("localStorage", body)
+                self.assertNotIn("data.debug", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("memory_observability", body)
 
     def test_mobile_readability_polish_is_css_only(self):
         self.assertIn("L15.3-A mobile readability polish", self.source)
