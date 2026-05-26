@@ -486,3 +486,10 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Dataset Language Gap Observation](docs/dataset_language_gap_observation.md) ? L17.1-D ??????????
 - [Chat Guided Input Idea Note](docs/chat_guided_input_idea_note.md) ? L17.1-E ????????????
 - [L17.1 Next Implementation Plan](docs/l17_1_next_implementation_plan.md) ? L17.1-F ????????
+- [Chinese Onboarding Public Refresh L17.2-L17.4](docs/chinese_onboarding_public_refresh_l17_2_3_4.md) — L17.2 / L17.3 / L17.4 公网刷新记录。
+- [Chinese Onboarding Final Audit](docs/chinese_onboarding_final_audit.md) — L17.2 中文 onboarding 最终审计。
+- [Chinese Sample Product Library Final Audit](docs/chinese_sample_product_library_final_audit.md) — L17.3 示例产品库最终审计。
+- [Chinese First-Run Guide Final Audit](docs/chinese_first_run_guide_final_audit.md) — L17.4 第一次试用引导最终审计。
+- [L17 Chinese Onboarding Release Notes](docs/release_notes_l17_chinese_onboarding.md) — L17 中文 onboarding release notes。
+- [Chinese Onboarding v1 Archive](docs/chinese_onboarding_v1_archive.md) — chinese-onboarding-polish-v1 归档记录。
+- [Chinese Onboarding After v1 Decision](docs/chinese_onboarding_after_v1_decision.md) — L17.4-D 后续决策。

@@ -2565,3 +2565,35 @@ Documents:
 - Chat guided input ??????????????
 - ????? L17.2-A Chinese Landing / Onboarding Copy Polish
 
+## L17.2 / L17.3 / L17.4 Chinese Onboarding Polish Batch
+
+Status: ready.
+
+Commit:
+
+d9aa2da
+
+Documents:
+
+- docs/chinese_onboarding_public_refresh_l17_2_3_4.md
+- docs/chinese_onboarding_final_audit.md
+- docs/chinese_sample_product_library_final_audit.md
+- docs/chinese_first_run_guide_final_audit.md
+- docs/release_notes_l17_chinese_onboarding.md
+- docs/chinese_onboarding_v1_archive.md
+- docs/chinese_onboarding_after_v1_decision.md
+
+Tags:
+
+- chinese-onboarding-copy-v1
+- chinese-sample-product-library-v1
+- chinese-first-run-guide-v1
+- chinese-onboarding-polish-v1
+
+结论：
+
+- L17.2 / L17.3 / L17.4 已集中部署
+- Public demo HTML smoke 通过
+- 中文 onboarding v1 可以归档
+- 下一步建议进入真实中文用户试用观察
+
