@@ -442,3 +442,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L15.2-15.4 Public Demo Conversion Batch Final Audit](docs/public_demo_conversion_batch_final_audit_l15_2_3_4.md) — L15.2 / L15.3 / L15.4 批次最终审计。
 - [Public Demo Conversion Polish v1 Archive](docs/public_demo_conversion_v1_archive.md) — public-demo-conversion-polish-v1 归档记录。
 - [Public Demo Conversion Next Decision](docs/public_demo_conversion_next_decision.md) — L15.4-D 后续路线决策。
+- [Trial Outreach Message Pack Planning](docs/trial_outreach_message_pack_planning.md) — L15.5-A 真实用户试用邀请文案规划。

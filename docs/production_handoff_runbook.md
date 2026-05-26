@@ -2320,3 +2320,21 @@ Tags:
 - Public Demo Conversion Polish v1 可以归档
 - 下一步建议进入 Trial Outreach Message Pack
 
+## L15.5-A Trial Outreach Message Pack Planning
+
+Status: ready.
+
+Commit base:
+
+1f81796
+
+Documents:
+
+- docs/trial_outreach_message_pack_planning.md
+
+结论：
+
+- Public Demo Conversion Polish v1 已完成
+- 下一步进入真实用户试用邀请文案准备
+- 优先准备中文 / 英文短私信、详细私信、follow-up 和 feedback reminder
+
