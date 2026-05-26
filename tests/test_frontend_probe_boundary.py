@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 import re
 import unittest
 
@@ -94,7 +94,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("产品描述模式", self.source)
         self.assertIn("根据产品描述生成", self.source)
         self.assertIn("好的输入应该包含", self.source)
-        self.assertIn("加入 waitlist", self.source)
+        self.assertIn("加入试用名单", self.source)
         self.assertIn("Example Gallery", self.source)
         self.assertIn("Static examples, no API call", self.source)
         self.assertIn("Try This Product", self.source)
@@ -121,6 +121,19 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("L17.2-A Chinese landing and onboarding copy polish", self.source)
         self.assertIn("chineseOnboardingPanel", self.source)
         self.assertIn("workflowPathTitle: '选择你的生成方式'", self.source)
+        self.assertIn("inlineResultPanelTitle: '生成结果预览'", self.source)
+        self.assertIn("inlineResultEmptyState: '点击生成后，Hook、创意摘要和分镜脚本会显示在这里。'", self.source)
+        self.assertIn("recentEmptyState: '还没有最近生成记录。'", self.source)
+        self.assertIn("clearRecentGenerations: '清空最近生成记录'", self.source)
+        self.assertIn("feedbackBody: '告诉我们这个创意 brief 是否有用", self.source)
+        self.assertIn("waitlistTitle: '加入试用名单'", self.source)
+        self.assertIn("waitlistBody: '想把它用在你自己的产品上？", self.source)
+        self.assertIn('data-i18n="inlineResultPanelTitle"', self.source)
+        self.assertIn('data-i18n="inlineResultEmptyState"', self.source)
+        self.assertIn('data-i18n="recentEmptyState"', self.source)
+        self.assertIn('data-i18n="clearRecentGenerations"', self.source)
+        self.assertIn('data-i18n="waitlistTitle"', self.source)
+        self.assertIn('data-i18n="waitlistBody"', self.source)
         self.assertIn("pathProductIdeaTitle: '我有产品想法'", self.source)
         self.assertIn("pathCustomerFeedbackTitle: '我有用户评论/反馈'", self.source)
         self.assertIn("pathSampleProductTitle: '我先看示例'", self.source)
@@ -201,10 +214,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Hook 有用吗", self.source)
         self.assertIn("resultFollowupFeedback", self.source)
         self.assertIn("resultFollowupWaitlist", self.source)
-        self.assertIn("Join waitlist", self.source)
+        self.assertIn("Join the waitlist", self.source)
         self.assertIn("What should we improve next?", self.source)
         self.assertIn("After you generate a result", self.source)
-        self.assertIn("加入 waitlist", self.source)
+        self.assertIn("加入试用名单", self.source)
         self.assertIn("下一步应该改进什么", self.source)
         self.assertIn("Try the fastest path", self.source)
         self.assertIn("No login required", self.source)
@@ -370,7 +383,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         body = match.group("body")
 
         self.assertIn("Give feedback", body)
-        self.assertIn("Join waitlist", body)
+        self.assertIn("Join the waitlist", body)
 
         self.assertNotIn("fetch(", body)
         self.assertNotIn("postPastedReviews", body)
@@ -455,6 +468,24 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
+
+    def test_chinese_mode_bottom_sections_are_localized(self):
+        self.assertIn("inlineResultPanelTitle: '生成结果预览'", self.source)
+        self.assertIn("recentEmptyState: '还没有最近生成记录。'", self.source)
+        self.assertIn("clearRecentGenerations: '清空最近生成记录'", self.source)
+        self.assertIn("waitlistTitle: '加入试用名单'", self.source)
+        self.assertIn("waitlistBody: '想把它用在你自己的产品上？", self.source)
+
+        zh_start = self.source.find("'zh-CN': {")
+        self.assertNotEqual(zh_start, -1)
+        zh_end = self.source.find("\n        };\n\n        function t", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        self.assertNotIn("Join the waitlist", zh_copy)
+        self.assertNotIn("No recent generations yet.", zh_copy)
+        self.assertNotIn("Clear Recent Generations", zh_copy)
+        self.assertNotIn("Generate from the active workspace", zh_copy)
 
     def test_chinese_mode_microcopy_and_placeholders_are_localized(self):
         self.assertIn("workflowPathTitle: '选择你的生成方式'", self.source)
@@ -651,7 +682,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         body = match.group("body")
 
         self.assertIn("Give feedback", body)
-        self.assertIn("Join waitlist", body)
+        self.assertIn("Join the waitlist", body)
 
         self.assertNotIn("fetch(", body)
         self.assertNotIn("postPastedReviews", body)

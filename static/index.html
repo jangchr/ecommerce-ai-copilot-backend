@@ -1391,10 +1391,8 @@
                 <div class="workspace-panel" id="customerFeedbackWorkspace" hidden></div>
                 <div class="workspace-panel" id="sampleProductWorkspace" hidden></div>
                 <section class="inline-result-panel" id="inlineResultPanel">
-                    <div class="section-kicker">Inline Result Panel</div>
-                    <div class="inline-result-empty-state" id="inlineResultEmptyState">
-                        Generate from the active workspace and the creative brief will appear here in the same task flow.
-                    </div>
+                    <div class="section-kicker" data-i18n="inlineResultPanelTitle">Inline Result Panel</div>
+                    <div class="inline-result-empty-state" id="inlineResultEmptyState" data-i18n="inlineResultEmptyState">Generate from the active workspace and the creative brief will appear here in the same task flow.</div>
                     <div class="source-contract-note" hidden>Source: user_provided_description / Source: user_pasted_reviews / 电商创意生成助手 / 产品描述模式 / 根据产品描述生成 / 好的输入应该包含 / 输入来源：产品描述 / 输入来源：粘贴的用户反馈 / 快速试用 / 无需登录 / 从产品描述开始 / 从粘贴评论开始 / 粘贴评论模式 / 应该粘贴什么 / 示例库 / 粘贴用户反馈模式 / 示例产品库</div>
                     <div class="inline-result-content" id="inlineResultContent" hidden></div>
                 </section>
@@ -1415,7 +1413,7 @@
                         <button class="btn-primary" type="button" onclick="scrollToProductDescriptionMode()" data-i18n="startWithProductDescription">Start with product description</button>
                         <button class="btn-secondary" type="button" onclick="scrollToPastedReviewsMode()" data-i18n="startWithPastedReviews">Start with pasted reviews</button>
                         <button class="btn-secondary" type="button" onclick="scrollToFeedbackWaitlist()" data-i18n="giveFeedbackQuickStart">Give feedback</button>
-                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="joinWaitlistQuickStart" style="text-decoration:none;">Join waitlist</a>
+                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="joinWaitlistQuickStart" style="text-decoration:none;">Join the waitlist</a>
                     </div>
                 </div>
                     </div>
@@ -1676,10 +1674,10 @@
             <div class="recent-shell">
                 <div class="recent-header">
                     <h3 data-i18n="recentGenerations">Recent Generations</h3>
-                    <button class="btn-secondary" id="clearRecentBtn" onclick="clearRecentGenerations()">Clear Recent Generations</button>
+                    <button class="btn-secondary" id="clearRecentBtn" onclick="clearRecentGenerations()" data-i18n="clearRecentGenerations">Clear Recent Generations</button>
                 </div>
                 <div id="recentGenerationsList" class="recent-list">
-                    <div class="recent-empty">No recent generations yet.</div>
+                    <div class="recent-empty" data-i18n="recentEmptyState">No recent generations yet.</div>
                 </div>
             </div>
         </section>
@@ -1690,21 +1688,21 @@
                     <div style="margin-bottom:12px; color:#475569;" data-i18n="resultFollowupSubtitle">Was the hook useful? Was the storyboard clear? Tell us what to improve or join the waitlist for future product input options.</div>
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
                         <a class="btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" data-i18n="resultFollowupFeedback" style="text-decoration:none;">Give feedback</a>
-                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="resultFollowupWaitlist" style="text-decoration:none;">Join waitlist</a>
+                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="resultFollowupWaitlist" style="text-decoration:none;">Join the waitlist</a>
                     </div>
                 </div>
 
             <section class="feedback-panel" id="feedbackSection">
             <div class="feedback-shell">
                 <h3 data-i18n="feedback">Feedback</h3>
-                <p>Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.</p>
+                <p data-i18n="feedbackBody">Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.</p>
                 <a class="feedback-link" href="https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" data-i18n="giveFeedback">Give feedback</a>
                 <div id="feedbackWaitlistCtaPanel" style="margin-top:16px; padding:16px; border:1px solid #dbe4f0; border-radius:14px; background:#f8fafc;">
                     <div style="font-weight:700; margin-bottom:6px;" data-i18n="feedbackWaitlistTitle">What should we improve next?</div>
                     <div style="margin-bottom:12px; color:#475569;" data-i18n="feedbackWaitlistSubtitle">After you generate a result, tell us what was useful or join the waitlist for future product input options.</div>
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
                         <a class="btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLSftwZouinTX8Z_9APPqDKu0zXyQsMXcqqHf7eZXzZft9MyqVA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" data-i18n="feedbackWaitlistFeedback" style="text-decoration:none;">Give feedback</a>
-                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="feedbackWaitlistJoin" style="text-decoration:none;">Join waitlist</a>
+                        <a class="btn-secondary" href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" data-i18n="feedbackWaitlistJoin" style="text-decoration:none;">Join the waitlist</a>
                     </div>
                 </div>
             </div>
@@ -1726,10 +1724,10 @@
     </main>
 
 <section id="waitlistSection" style="margin: 24px 0; padding: 18px; border: 1px solid #d0d7de; border-radius: 12px; background: #f8fafc;">
-  <h2 style="margin-top: 0;">Join the waitlist</h2>
-  <p>Want to use this for your own products? Join the waitlist for product-description input, saved history, more product sources, and future commercial plans.</p>
+  <h2 style="margin-top: 0;" data-i18n="waitlistTitle">Join the waitlist</h2>
+  <p data-i18n="waitlistBody">Want to use this for your own products? Join the waitlist for product-description input, saved history, more product sources, and future commercial plans.</p>
   <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5rBYj_42J8gJ1n1deEl0ePySMKe6yaZ8K0gIvSt62QgsSnQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 14px; border-radius: 8px; background: #111827; color: white; text-decoration: none;">
-    <span data-i18n="joinWaitlist">Join waitlist</span>
+    <span data-i18n="joinWaitlist">Join the waitlist</span>
   </a>
 </section>
 
@@ -1982,6 +1980,13 @@
             en: {
                 heroTitle: 'Turn a product idea into a TikTok hook and storyboard in 10 minutes.',
                 heroSubtitle: 'No login required. Start with a sample product, your own product description, or pasted customer feedback.',
+                inlineResultPanelTitle: 'Inline Result Panel',
+                inlineResultEmptyState: 'Generate from the active workspace and the creative brief will appear here in the same task flow.',
+                recentEmptyState: 'No recent generations yet.',
+                clearRecentGenerations: 'Clear Recent Generations',
+                feedbackBody: 'Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.',
+                waitlistTitle: 'Join the waitlist',
+                waitlistBody: 'Want to use this for your own products? Join the waitlist for product-description input, saved history, more product sources, and future commercial plans.',
                 workflowPathTitle: 'Choose your workflow path',
                 workflowPathSubtitle: 'Pick the task you have today. Only the active workspace is shown, and the result appears directly below it.',
                 userTaskFlowBadge: 'User-task flow',
@@ -2048,15 +2053,15 @@
                 startWithProductDescription: 'I have a product idea',
                 startWithPastedReviews: 'I have customer feedback',
                 giveFeedbackQuickStart: 'Give feedback',
-                joinWaitlistQuickStart: 'Join waitlist',
+                joinWaitlistQuickStart: 'Join the waitlist',
                 feedbackWaitlistTitle: 'What should we improve next?',
                 feedbackWaitlistSubtitle: 'After you generate a result, tell us what was useful or join the waitlist for future product input options.',
                 feedbackWaitlistFeedback: 'Give feedback',
-                feedbackWaitlistJoin: 'Join waitlist',
+                feedbackWaitlistJoin: 'Join the waitlist',
                 resultFollowupTitle: 'After generating, help shape the next version',
                 resultFollowupSubtitle: 'Was the hook useful? Was the storyboard clear? Tell us what to improve or join the waitlist for future product input options.',
                 resultFollowupFeedback: 'Give feedback',
-                resultFollowupWaitlist: 'Join waitlist',
+                resultFollowupWaitlist: 'Join the waitlist',
                 productDescriptionBestFor: 'Best if you have a product idea but do not know how to turn it into a short-video script.',
                 pastedReviewsBestFor: 'Best if you already have customer comments, complaints, objections, or buyer feedback.',
                 pastedReviewsMode: 'Pasted Reviews Mode',
@@ -2104,7 +2109,7 @@
                 recentGenerations: 'Recent Generations',
                 feedback: 'Feedback',
                 giveFeedback: 'Give feedback',
-                joinWaitlist: 'Join waitlist',
+                joinWaitlist: 'Join the waitlist',
                 creativeSummary: 'Creative Summary',
                 creativeSummaryTitle: 'Top takeaway from this generation',
                 sourceLabel: 'Source',
@@ -2164,6 +2169,13 @@
             'zh-CN': {
                 heroTitle: '用 10 分钟，把一个产品想法变成 TikTok 视频脚本',
                 heroSubtitle: '不需要电商经验。可以先用示例产品，也可以粘贴你的产品描述或用户评论。',
+                inlineResultPanelTitle: '生成结果预览',
+                inlineResultEmptyState: '点击生成后，Hook、创意摘要和分镜脚本会显示在这里。',
+                recentEmptyState: '还没有最近生成记录。',
+                clearRecentGenerations: '清空最近生成记录',
+                feedbackBody: '告诉我们这个创意 brief 是否有用、是否清楚、能不能改成真实 TikTok 广告。',
+                waitlistTitle: '加入试用名单',
+                waitlistBody: '想把它用在你自己的产品上？加入试用名单，后续优先体验产品描述输入、历史记录、更多产品来源和商业版本。',
                 workflowPathTitle: '选择你的生成方式',
                 workflowPathSubtitle: '根据你手上已有的素材选择一条路径。页面只展示当前路径，生成结果会直接出现在这里。',
                 userTaskFlowBadge: '用户任务流程',
@@ -2230,15 +2242,15 @@
                 startWithProductDescription: '我有产品想法',
                 startWithPastedReviews: '我有用户评论/反馈',
                 giveFeedbackQuickStart: '提交反馈',
-                joinWaitlistQuickStart: '加入 waitlist',
+                joinWaitlistQuickStart: '加入试用名单',
                 feedbackWaitlistTitle: '下一步应该改进什么？',
-                feedbackWaitlistSubtitle: '生成结果后，可以告诉我们哪里有用，或者加入 waitlist 优先试用后续输入方式。',
+                feedbackWaitlistSubtitle: '生成结果后，可以告诉我们哪里有用，或者加入试用名单，优先试用后续输入方式。',
                 feedbackWaitlistFeedback: '提交反馈',
-                feedbackWaitlistJoin: '加入 waitlist',
+                feedbackWaitlistJoin: '加入试用名单',
                 resultFollowupTitle: '生成后，帮我们决定下一版怎么改',
-                resultFollowupSubtitle: 'Hook 有用吗？分镜清楚吗？可以提交反馈，或加入 waitlist 优先试用后续输入方式。',
+                resultFollowupSubtitle: 'Hook 有用吗？分镜清楚吗？可以提交反馈，或加入试用名单，优先试用后续输入方式。',
                 resultFollowupFeedback: '提交反馈',
-                resultFollowupWaitlist: '加入 waitlist',
+                resultFollowupWaitlist: '加入试用名单',
                 productDescriptionBestFor: '适合你有一个产品想法，但还不知道怎么写短视频脚本。',
                 pastedReviewsBestFor: '适合你已经有用户评论、差评、购买顾虑或买家反馈的情况。',
                 pastedReviewsMode: '粘贴用户反馈模式',
@@ -2286,7 +2298,7 @@
                 recentGenerations: '最近生成记录',
                 feedback: '反馈',
                 giveFeedback: '提交反馈',
-                joinWaitlist: '加入 waitlist',
+                joinWaitlist: '加入试用名单',
                 creativeSummary: '创意摘要',
                 creativeSummaryTitle: '本次生成的核心结论',
                 sourceLabel: '来源',
