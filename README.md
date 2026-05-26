@@ -409,3 +409,8 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L14.8 Pasted Reviews Review Count Release Notes](docs/release_notes_l14_8_pasted_reviews_review_count.md) ? L14.8 ?????? release notes?
 - [Pasted Reviews Review Count v1 Archive](docs/pasted_reviews_review_count_v1_archive.md) ? pasted-reviews-review-count-v1 ?????
 - [Pasted Reviews After Review Count Decision](docs/pasted_reviews_after_review_count_decision.md) ? L14.8-G ???????? polish ???
+- [Pasted Reviews Pain Point Preview Public Refresh](docs/pasted_reviews_pain_point_preview_public_refresh.md) ? L14.9-C ???????????
+- [Pasted Reviews Pain Point Preview Final Audit](docs/pasted_reviews_pain_point_preview_final_audit.md) ? L14.9-D ?????????
+- [L14.9 Pasted Reviews Pain Point Preview Release Notes](docs/release_notes_l14_9_pasted_reviews_pain_point_preview.md) ? L14.9 ???? release notes?
+- [Pasted Reviews Pain Point Preview v1 Archive](docs/pasted_reviews_pain_point_preview_v1_archive.md) ? pasted-reviews-pain-point-preview-v1 ?????
+- [Pasted Reviews After Pain Point Preview Decision](docs/pasted_reviews_after_pain_point_preview_decision.md) ? L14.9-G ?????????
