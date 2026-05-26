@@ -1471,11 +1471,11 @@
             <div class="run-options">
                 <label class="toggle-option" for="debugMode">
                     <input type="checkbox" id="debugMode" onchange="syncDebugMode()">
-                    <span>Debug Mode</span>
+                    <span data-i18n="debugModeLabel">Debug Mode</span>
                 </label>
                 <label class="toggle-option" for="amazonShadowMode" id="amazonShadowOption">
                     <input type="checkbox" id="amazonShadowMode">
-                    <span>Amazon Shadow</span>
+                    <span data-i18n="amazonShadowLabel">Amazon Shadow</span>
                 </label>
             </div>
             </div>
@@ -1513,8 +1513,8 @@
                 <div class="workspace-panel" id="customerFeedbackWorkspace" hidden></div>
                 <div class="workspace-panel" id="sampleProductWorkspace" hidden></div>
                 <section class="inline-result-panel" id="inlineResultPanel">
-                    <div class="section-kicker" data-i18n="inlineResultPanelTitle">Inline Result Panel</div>
-                    <div class="inline-result-empty-state" id="inlineResultEmptyState" data-i18n="inlineResultEmptyState">Generate from the active workspace and the creative brief will appear here in the same task flow.</div>
+                    <div class="section-kicker" data-i18n="inlineResultPanelTitle">你的生成结果</div>
+                    <div class="inline-result-empty-state" id="inlineResultEmptyState" data-i18n="inlineResultEmptyState">点击生成后，结果会显示在这里。</div>
                     <div class="source-contract-note" hidden>Source: user_provided_description / Source: user_pasted_reviews / 电商创意生成助手 / 产品描述模式 / 根据产品描述生成 / 好的输入应该包含 / 输入来源：产品描述 / 输入来源：粘贴的用户反馈 / 快速试用 / 无需登录 / 从产品描述开始 / 从粘贴评论开始 / 粘贴评论模式 / 应该粘贴什么 / 示例库 / 粘贴用户反馈模式 / 示例产品库</div>
                     <div class="inline-result-content" id="inlineResultContent" hidden></div>
                 </section>
@@ -1663,7 +1663,7 @@
                         <li data-i18n="goodReviewInputSnippets">review snippets</li>
                         <li data-i18n="goodReviewInputObjections">buyer objections</li>
                         <li data-i18n="goodReviewInputFrustrations">use-case frustrations</li>
-                        <li>reasons people hesitate to buy</li>
+                        <li data-i18n="goodReviewInputHesitation">用户犹豫购买的原因</li>
                     </ul>
                 </div>
                 <div class="description-actions">
@@ -1681,23 +1681,23 @@
                 <div class="example-header">
                     <div>
                         <h3 data-i18n="exampleGallery">Example Gallery</h3>
-                        <p>Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.</p>
+                        <p data-i18n="exampleGalleryIntro">Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.</p>
                     </div>
-                    <span class="source-badge">Static examples, no API call</span>
+                    <span class="source-badge" data-i18n="exampleGallerySourceBadge">静态示例，不调用 API</span>
                 </div>
                 <div class="example-grid">
                     <article class="example-card">
                         <div class="example-slug">balsamic_vinegar</div>
                         <div>
-                            <div class="json-key">Pain Points</div>
+                            <div class="json-key" data-i18n="samplePainPointsLabel">痛点</div>
                             <div class="example-summary">瓶盖破裂、泄漏、口感稀薄</div>
                         </div>
                         <div>
-                            <div class="json-key">Hook</div>
+                            <div class="json-key" data-i18n="sampleHookLabel">Hook</div>
                             <div class="example-summary">别再让一瓶漏得到处都是的香醋毁掉你的沙拉。</div>
                         </div>
                         <div>
-                            <div class="json-key">Storyboard</div>
+                            <div class="json-key" data-i18n="sampleStoryboardLabel">分镜</div>
                             <div class="example-summary">展示破损瓶盖、粘腻包装，再切到干净浓稠的替代方案。</div>
                         </div>
                         <button class="btn-secondary" type="button" onclick="setExampleSlug('balsamic_vinegar')" data-i18n="tryThisProduct">Try This Product</button>
@@ -1705,15 +1705,15 @@
                     <article class="example-card">
                         <div class="example-slug">pet_hair_vacuum</div>
                         <div>
-                            <div class="json-key">Pain Points</div>
+                            <div class="json-key" data-i18n="samplePainPointsLabel">痛点</div>
                             <div class="example-summary">宠物毛清不干净、吸力不够、反复清理</div>
                         </div>
                         <div>
-                            <div class="json-key">Hook</div>
+                            <div class="json-key" data-i18n="sampleHookLabel">Hook</div>
                             <div class="example-summary">如果你每天都在和沙发上的宠物毛打仗，这个开场能直接抓住目标用户。</div>
                         </div>
                         <div>
-                            <div class="json-key">Storyboard</div>
+                            <div class="json-key" data-i18n="sampleStoryboardLabel">分镜</div>
                             <div class="example-summary">展示沙发、地毯和衣服上的宠物毛，再展示清理前后对比。</div>
                         </div>
                         <button class="btn-secondary" type="button" onclick="setExampleSlug('pet_hair_vacuum')" data-i18n="tryThisProduct">Try This Product</button>
@@ -1721,15 +1721,15 @@
                     <article class="example-card">
                         <div class="example-slug">desk_lamp</div>
                         <div>
-                            <div class="json-key">Pain Points</div>
+                            <div class="json-key" data-i18n="samplePainPointsLabel">痛点</div>
                             <div class="example-summary">光线刺眼、桌面杂乱、夜间工作疲劳</div>
                         </div>
                         <div>
-                            <div class="json-key">Hook</div>
+                            <div class="json-key" data-i18n="sampleHookLabel">Hook</div>
                             <div class="example-summary">你的桌灯是在帮你工作，还是正在让你更累？</div>
                         </div>
                         <div>
-                            <div class="json-key">Storyboard</div>
+                            <div class="json-key" data-i18n="sampleStoryboardLabel">分镜</div>
                             <div class="example-summary">展示昏暗桌面、眼疲劳，再展示柔和灯光和整洁工作区。</div>
                         </div>
                         <button class="btn-secondary" type="button" onclick="setExampleSlug('desk_lamp')" data-i18n="tryThisProduct">Try This Product</button>
@@ -1745,7 +1745,7 @@
             <div class="agent-badge" id="n-parallel_analysis">Parallel Analysis</div>
             <div class="agent-badge" id="n-cognitive_synthesis">Cognitive Synthesis</div>
             <div class="agent-badge" id="n-strategy">Strategy</div>
-            <div class="agent-badge" id="n-storyboard">Storyboard</div>
+            <div class="agent-badge" id="n-storyboard">分镜</div>
             <div class="agent-badge" id="n-governance">Governance</div>
             <div class="agent-badge" id="n-reflection">Reflection</div>
             <div class="agent-badge" id="n-analytics">Analytics</div>
@@ -2224,6 +2224,14 @@
                 goodReviewInputObjections: 'buyer objections',
                 goodReviewInputFrustrations: 'use-case frustrations',
                 exampleGallery: 'Sample Product Library',
+                goodReviewInputHesitation: 'reasons people hesitate to buy',
+                sampleStoryboardLabel: 'Storyboard',
+                sampleHookLabel: 'Hook',
+                samplePainPointsLabel: 'Pain Points',
+                exampleGallerySourceBadge: 'Static examples, no API call',
+                exampleGalleryIntro: 'Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.',
+                amazonShadowLabel: 'Amazon Shadow',
+                debugModeLabel: 'Debug Mode',
                 tryThisProduct: 'Use this sample',
                 productResult: 'Product Result',
                 copyActions: 'Copy / Download / Translation Actions',
@@ -2417,6 +2425,14 @@
                 goodReviewInputObjections: '购买顾虑',
                 goodReviewInputFrustrations: '使用场景中的不便',
                 exampleGallery: '示例产品库',
+                goodReviewInputHesitation: '用户犹豫购买的原因',
+                sampleStoryboardLabel: '分镜',
+                sampleHookLabel: 'Hook',
+                samplePainPointsLabel: '痛点',
+                exampleGallerySourceBadge: '静态示例，不调用 API',
+                exampleGalleryIntro: '这些是稳定示例产品的静态示例。点击“试用这个产品”只会填入示例，不会自动生成，也不会开启调试模式。',
+                amazonShadowLabel: 'Amazon 影子模式',
+                debugModeLabel: '调试模式',
                 tryThisProduct: '使用这个示例',
                 productResult: '产品结果',
                 copyActions: '复制 / 下载 / 翻译操作',
@@ -2460,7 +2476,7 @@
                 reviewConfidence: '评论置信度',
                 trendConfidence: '趋势置信度',
                 evidenceAlignment: '证据一致性',
-                seeDebugMode: '见 Debug Mode',
+                seeDebugMode: '见调试模式',
                 evidenceQuotes: '证据片段',
                 evidenceQuoteNote: '用于生成创意 brief 的短证据信号',
                 customerPainPointBlock: '用户痛点',

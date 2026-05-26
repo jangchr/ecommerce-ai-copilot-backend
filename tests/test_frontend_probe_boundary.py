@@ -31,7 +31,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "I have customer feedback",
             "Show me a sample",
             "Only the active workspace is shown",
-            "Generate from the active workspace",
+            "After you generate, the Hook, storyboard, and copy actions will appear here in this same workspace.",
             "function setActiveWorkspace(name, options = {})",
             "function mountUserTaskFlow()",
             "function showInlineResultPanel()",
@@ -517,7 +517,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("Join the waitlist", zh_copy)
         self.assertNotIn("No recent generations yet.", zh_copy)
         self.assertNotIn("Clear Recent Generations", zh_copy)
-        self.assertNotIn("Generate from the active workspace", zh_copy)
+        self.assertNotIn("After you generate, the Hook, storyboard, and copy actions will appear here in this same workspace.", zh_copy)
 
     def test_chinese_mode_microcopy_and_placeholders_are_localized(self):
         self.assertIn("workflowPathTitle: '选择你的生成方式'", self.source)
@@ -1314,6 +1314,35 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("inlineResultPanelTitle: '你的生成结果'", self.source)
         self.assertIn("inlineResultEmptyState: '点击生成后，Hook、分镜脚本和复制按钮会直接出现在这里，不用滑到页面底部找结果。'", self.source)
         self.assertIn("inlineResultPanelTitle: 'Your generated brief'", self.source)
+
+
+    def test_l18_chinese_residual_visible_copy_is_localized(self):
+        self.assertIn('data-i18n="debugModeLabel"', self.source)
+        self.assertIn('data-i18n="amazonShadowLabel"', self.source)
+        self.assertIn('data-i18n="exampleGalleryIntro"', self.source)
+        self.assertIn('data-i18n="exampleGallerySourceBadge"', self.source)
+        self.assertIn('data-i18n="samplePainPointsLabel"', self.source)
+        self.assertIn('data-i18n="sampleHookLabel"', self.source)
+        self.assertIn('data-i18n="sampleStoryboardLabel"', self.source)
+        self.assertIn('data-i18n="goodReviewInputHesitation"', self.source)
+
+        self.assertIn("debugModeLabel: '调试模式'", self.source)
+        self.assertIn("amazonShadowLabel: 'Amazon 影子模式'", self.source)
+        self.assertIn("exampleGallerySourceBadge: '静态示例，不调用 API'", self.source)
+        self.assertIn("samplePainPointsLabel: '痛点'", self.source)
+        self.assertIn("sampleStoryboardLabel: '分镜'", self.source)
+        self.assertIn("goodReviewInputHesitation: '用户犹豫购买的原因'", self.source)
+
+        zh_start = self.source.find("'zh-CN': {")
+        self.assertNotEqual(zh_start, -1)
+        zh_end = self.source.find("\n        };\n\n        function t", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        self.assertNotIn("Static examples, no API call", zh_copy)
+        self.assertNotIn("reasons people hesitate to buy", zh_copy)
+        self.assertNotIn("Debug Mode',", zh_copy)
+        self.assertNotIn("Amazon Shadow',", zh_copy)
 
 
 if __name__ == "__main__":
