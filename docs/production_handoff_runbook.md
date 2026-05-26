@@ -2287,3 +2287,36 @@ public-demo-hero-cta-v1
 - Public demo refresh ??
 - ??????? Feedback and Waitlist CTA polish
 
+## L15.2 / L15.3 / L15.4 Public Demo Conversion Batch
+
+Status: ready.
+
+Commit:
+
+7bf4694
+
+Documents:
+
+- docs/public_demo_feedback_waitlist_cta_public_refresh.md
+- docs/public_demo_feedback_waitlist_cta_final_audit.md
+- docs/public_demo_mobile_readability_final_audit.md
+- docs/public_demo_result_followup_cta_public_refresh.md
+- docs/public_demo_result_followup_cta_final_audit.md
+- docs/release_notes_l15_2_3_4_public_demo_conversion.md
+- docs/public_demo_conversion_batch_final_audit_l15_2_3_4.md
+- docs/public_demo_conversion_v1_archive.md
+- docs/public_demo_conversion_next_decision.md
+
+Tags:
+
+- public-demo-feedback-waitlist-cta-v1
+- public-demo-mobile-readability-v1
+- public-demo-result-followup-cta-v1
+- public-demo-conversion-polish-v1
+
+结论：
+
+- L15.2 / L15.3 / L15.4 已集中部署并通过公网 smoke
+- Public Demo Conversion Polish v1 可以归档
+- 下一步建议进入 Trial Outreach Message Pack
+

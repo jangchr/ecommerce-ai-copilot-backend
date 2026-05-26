@@ -433,3 +433,12 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L15.1 Public Demo Hero CTA Release Notes](docs/release_notes_l15_1_public_demo_hero_cta.md) ? L15.1 Hero CTA release notes?
 - [Public Demo Hero CTA v1 Archive](docs/public_demo_hero_cta_v1_archive.md) ? public-demo-hero-cta-v1 ?????
 - [Public Demo After Hero CTA Decision](docs/public_demo_after_hero_cta_decision.md) ? L15.1-G Hero CTA ?????
+- [Public Demo Feedback Waitlist CTA Public Refresh](docs/public_demo_feedback_waitlist_cta_public_refresh.md) — L15.2-B Feedback / Waitlist CTA 公网刷新记录。
+- [Public Demo Feedback Waitlist CTA Final Audit](docs/public_demo_feedback_waitlist_cta_final_audit.md) — L15.2-C Feedback / Waitlist CTA 最终审计。
+- [Public Demo Mobile Readability Final Audit](docs/public_demo_mobile_readability_final_audit.md) — L15.3-B 移动端可读性最终审计。
+- [Public Demo Result Follow-up CTA Public Refresh](docs/public_demo_result_followup_cta_public_refresh.md) — L15.4-B Result follow-up CTA 公网刷新记录。
+- [Public Demo Result Follow-up CTA Final Audit](docs/public_demo_result_followup_cta_final_audit.md) — L15.4-C Result follow-up CTA 最终审计。
+- [L15.2-15.4 Public Demo Conversion Release Notes](docs/release_notes_l15_2_3_4_public_demo_conversion.md) — L15.2 / L15.3 / L15.4 release notes。
+- [L15.2-15.4 Public Demo Conversion Batch Final Audit](docs/public_demo_conversion_batch_final_audit_l15_2_3_4.md) — L15.2 / L15.3 / L15.4 批次最终审计。
+- [Public Demo Conversion Polish v1 Archive](docs/public_demo_conversion_v1_archive.md) — public-demo-conversion-polish-v1 归档记录。
+- [Public Demo Conversion Next Decision](docs/public_demo_conversion_next_decision.md) — L15.4-D 后续路线决策。
