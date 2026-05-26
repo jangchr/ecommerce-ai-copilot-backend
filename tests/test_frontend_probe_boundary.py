@@ -1742,12 +1742,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("scripts/check_public_demo_ui_contract.py", script)
         self.assertIn("scripts/check_public_demo_render_smoke.py", script)
         self.assertIn("scripts/check_public_demo_generation_smoke.py", script)
+        self.assertIn("scripts/check_public_demo_workflow_smoke.py", script)
         self.assertIn("deployed generation smoke EN", script)
         self.assertIn("deployed generation smoke zh-CN", script)
+        self.assertIn("deployed workflow smoke EN", script)
+        self.assertIn("deployed workflow smoke zh-CN", script)
         self.assertIn("--skip-remote", script)
         self.assertIn("--include-tests", script)
+        self.assertIn("--include-workflows", script)
+        self.assertIn("--full", script)
         self.assertIn("--save-artifacts", script)
-
 
     def test_l23_public_demo_workflow_smoke_script_exists(self):
         script = Path("scripts/check_public_demo_workflow_smoke.py").read_text(encoding="utf-8")

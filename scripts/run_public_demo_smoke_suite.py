@@ -43,11 +43,25 @@ def main() -> int:
         help="Also run frontend boundary and fast regression tests.",
     )
     parser.add_argument(
+        "--include-workflows",
+        action="store_true",
+        help="Also run all deployed user workflow smoke checks.",
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Run remote render smoke, generation smoke, workflow smoke, and tests.",
+    )
+    parser.add_argument(
         "--save-artifacts",
         action="store_true",
         help="Save fetched HTML / JSON artifacts to temp files.",
     )
     args = parser.parse_args()
+
+    if args.full:
+        args.include_tests = True
+        args.include_workflows = True
 
     py = sys.executable
     failures: list[str] = []
@@ -101,6 +115,35 @@ def main() -> int:
                 ("deployed generation smoke zh-CN", generation_zh_cmd),
             ]
         )
+
+        if args.include_workflows:
+            workflow_en_cmd = [
+                py,
+                "scripts/check_public_demo_workflow_smoke.py",
+                "--base-url",
+                args.base_url,
+                "--language",
+                "en",
+            ]
+            workflow_zh_cmd = [
+                py,
+                "scripts/check_public_demo_workflow_smoke.py",
+                "--base-url",
+                args.base_url,
+                "--language",
+                "zh-CN",
+            ]
+
+            if args.save_artifacts:
+                workflow_en_cmd.append("--save-json")
+                workflow_zh_cmd.append("--save-json")
+
+            steps.extend(
+                [
+                    ("deployed workflow smoke EN", workflow_en_cmd),
+                    ("deployed workflow smoke zh-CN", workflow_zh_cmd),
+                ]
+            )
 
     if args.include_tests:
         steps.extend(
