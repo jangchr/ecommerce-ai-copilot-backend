@@ -462,3 +462,10 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Result Readability Frontend Backlog](docs/result_readability_frontend_backlog.md) — L16.0-C 结果区前端 backlog。
 - [Result Readability Boundary Checklist](docs/result_readability_boundary_checklist.md) — L16.0-D 结果可读性边界清单。
 - [Result Readability Implementation Plan](docs/result_readability_implementation_plan.md) — L16.0-E 结果可读性实现计划。
+- [L16.1-L16.3 Result Readability Public Refresh](docs/result_readability_public_refresh_l16_1_2_3.md) ? L16.1 / L16.2 / L16.3 ???????
+- [Result Summary Hook Highlight Final Audit](docs/result_summary_hook_highlight_final_audit.md) ? L16.1 ?????
+- [Storyboard Scene Readability Final Audit](docs/storyboard_scene_readability_final_audit.md) ? L16.2 ?????
+- [Evidence Source Label Final Audit](docs/evidence_source_label_final_audit.md) ? L16.3 ?????
+- [L16.1-L16.3 Result Readability Release Notes](docs/release_notes_l16_1_2_3_result_readability.md) ? L16.1 / L16.2 / L16.3 release notes?
+- [Result Readability Polish v1 Archive](docs/result_readability_v1_archive.md) ? result-readability-polish-v1 ?????
+- [Result Readability After v1 Decision](docs/result_readability_after_v1_decision.md) ? L16.3-D ?????

@@ -2436,3 +2436,35 @@ Documents:
 - 继续保持不改后端、不改 API、不新增数据库、不新增登录
 - 推荐下一步 L16.1-A Result Summary and Hook Highlight Polish
 
+## L16.1 / L16.2 / L16.3 Result Readability Batch
+
+Status: ready.
+
+Commit:
+
+cf5dd7b
+
+Documents:
+
+- docs/result_readability_public_refresh_l16_1_2_3.md
+- docs/result_summary_hook_highlight_final_audit.md
+- docs/storyboard_scene_readability_final_audit.md
+- docs/evidence_source_label_final_audit.md
+- docs/release_notes_l16_1_2_3_result_readability.md
+- docs/result_readability_v1_archive.md
+- docs/result_readability_after_v1_decision.md
+
+Tags:
+
+- result-summary-hook-highlight-v1
+- storyboard-scene-readability-v1
+- evidence-source-label-v1
+- result-readability-polish-v1
+
+???
+
+- L16.1 / L16.2 / L16.3 ?????
+- Public demo HTML smoke ??
+- Result Readability Polish v1 ????
+- ?????????? smoke record
+
