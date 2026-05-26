@@ -2643,3 +2643,21 @@ Summary:
 - 结果就地展示。
 - Recent actions 和语言标签已修复。
 - 后续应进入真实朋友试用反馈阶段，不继续无限前端 polish。
+
+## L18 Friend Feedback and Next Trial
+
+Status: recorded
+
+Commit: 24b468f
+
+Docs:
+
+- docs/public_demo_l18_friend_feedback_record.md
+- docs/public_demo_l18_next_trial_plan.md
+
+Summary:
+
+- 已记录中文朋友反馈。
+- 核心问题包括中文完整性、dataset 概念困惑、流程不清晰、非电商用户需要更强引导。
+- L18 已响应主要 UX 问题。
+- 下一步不是继续无限 polish，而是继续找朋友完成真实试用。

@@ -504,3 +504,5 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L18 Public Demo Release Notes](docs/public_demo_l18_release_notes.md) — L18 final 发布说明。
 - [L18 Public Demo Archive](docs/public_demo_l18_archive.md) — L18 UX 重构归档。
 - [L18 After Action Decision](docs/public_demo_l18_after_action_decision.md) — L18 后续决策。
+- [L18 Friend Feedback Record](docs/public_demo_l18_friend_feedback_record.md) — L18 中文朋友反馈记录。
+- [L18 Next Trial Plan](docs/public_demo_l18_next_trial_plan.md) — L18 下一轮中文试用计划。
