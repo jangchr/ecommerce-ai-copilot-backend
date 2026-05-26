@@ -1672,5 +1672,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("border-color: #86efac;", self.source)
 
 
+    def test_l21_language_mode_body_classes_support_css_copy(self):
+        self.assertIn("/* L21-E language mode body class contract */", self.source)
+        self.assertIn("// L21-E stable language body classes for CSS-driven copy", self.source)
+        self.assertIn("function updateLanguageBodyClass(language)", self.source)
+        self.assertIn("document.body.classList.toggle('zh-mode', language === 'zh-CN');", self.source)
+        self.assertIn("document.body.classList.toggle('en-mode', language !== 'zh-CN');", self.source)
+        self.assertIn("updateLanguageBodyClass(language);", self.source)
+        self.assertIn("updateLanguageBodyClass(currentOutputLanguage());", self.source)
+        self.assertIn("body.zh-mode #inlineResultContent .copy-toolbar::before", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()

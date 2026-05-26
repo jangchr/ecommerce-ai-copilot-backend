@@ -1968,6 +1968,13 @@
             }
         }
 
+
+        /* L21-E language mode body class contract */
+        body.zh-mode .language-mode-visible-zh,
+        body.en-mode .language-mode-visible-en {
+            display: initial;
+        }
+
 </style>
 </head>
 <body>
@@ -3234,7 +3241,15 @@
             document.getElementById('languageChineseBtn').classList.toggle('active', outputLanguage === 'zh-CN');
         }
 
+
+        // L21-E stable language body classes for CSS-driven copy
+        function updateLanguageBodyClass(language) {
+            document.body.classList.toggle('zh-mode', language === 'zh-CN');
+            document.body.classList.toggle('en-mode', language !== 'zh-CN');
+        }
+
         function setLanguageMode(language) {
+            updateLanguageBodyClass(language);
             outputLanguage = language === 'zh-CN' ? 'zh-CN' : 'en';
             applyLanguageCopy();
             refreshDemoSlugDisplayForLanguage();
@@ -3242,6 +3257,7 @@
             maybeRefreshSampleInputsForLanguage();
             if (typeof renderRecentGenerations === 'function') {
                 renderRecentGenerations();
+        updateLanguageBodyClass(currentOutputLanguage());
         setTimeout(refreshSampleWorkspaceCopyForLanguage, 0);
             }
             if (latestProductData) {
