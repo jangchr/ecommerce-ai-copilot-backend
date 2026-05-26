@@ -481,6 +481,116 @@
         }
         .description-status.error { color: var(--accent-red); }
         .description-status.success { color: var(--accent-green); }
+        .path-selector-panel {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 18px;
+        }
+        .path-selector-shell {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+        }
+        .path-selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+        .path-selector-header h3 {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .path-selector-header p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .path-card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .path-card {
+            text-align: left;
+            background: var(--bg-base);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            display: grid;
+            gap: 8px;
+            min-height: 132px;
+        }
+        .path-card.active {
+            border-color: var(--accent-blue);
+            background: rgba(0, 122, 255, 0.08);
+            box-shadow: 0 6px 18px rgba(0,122,255,0.12);
+        }
+        .path-card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .path-card-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .active-workspace-panel {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 18px;
+        }
+        .active-workspace-shell {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+        }
+        .workspace-panel[hidden] {
+            display: none;
+        }
+        .workspace-panel > .description-mode,
+        .workspace-panel > .example-gallery,
+        .workspace-panel > .page-section,
+        .workspace-panel > .agent-track {
+            max-width: none;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .sample-product-workspace {
+            display: grid;
+            gap: 18px;
+        }
+        .inline-result-panel {
+            margin-top: 18px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 18px;
+        }
+        .inline-result-empty-state {
+            border: 1px dashed var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-base);
+            padding: 18px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .inline-result-content[hidden] {
+            display: none;
+        }
+        .inline-result-content > .page-section,
+        .inline-result-content > .agent-track {
+            max-width: none;
+            padding-left: 0;
+            padding-right: 0;
+        }
         .example-gallery {
             max-width: 1400px;
             margin: 0 auto;
@@ -1177,6 +1287,7 @@
                 <button class="btn-secondary active" id="languageEnglishBtn" type="button" onclick="setLanguageMode('en')">English</button>
                 <button class="btn-secondary" id="languageChineseBtn" type="button" onclick="setLanguageMode('zh-CN')">中文</button>
             </div>
+            <div id="stableProductWorkspace" class="sample-product-workspace">
             <div class="control-panel">
                 <input type="text" id="urlInput" placeholder="Choose a sample product, e.g. desk_lamp" value="balsamic_vinegar">
                 <button class="btn-primary" id="startBtn" onclick="startSystem()" data-i18n="runWorkflow">Run Workflow</button>
@@ -1244,6 +1355,49 @@
                     <input type="checkbox" id="amazonShadowMode">
                     <span>Amazon Shadow</span>
                 </label>
+            </div>
+            </div>
+        </section>
+
+        <section class="path-selector-panel" id="pathSelectorPanel">
+            <div class="path-selector-shell">
+                <div class="path-selector-header">
+                    <div>
+                        <h3>Choose your workflow path</h3>
+                        <p>Pick the task you have today. Only the active workspace is shown, and the result appears directly below it.</p>
+                    </div>
+                    <span class="source-badge">User-task flow</span>
+                </div>
+                <div class="path-card-grid">
+                    <button class="path-card active" id="pathProductIdeaCard" type="button" onclick="setActiveWorkspace('productIdea')">
+                        <span class="path-card-title">I have a product idea</span>
+                        <span class="path-card-subtitle">Describe the product, audience, and buyer problem. Best for a new product concept.</span>
+                    </button>
+                    <button class="path-card" id="pathCustomerFeedbackCard" type="button" onclick="setActiveWorkspace('customerFeedback')">
+                        <span class="path-card-title">I have customer feedback</span>
+                        <span class="path-card-subtitle">Paste reviews, objections, complaints, or buyer language and turn them into a brief.</span>
+                    </button>
+                    <button class="path-card" id="pathSampleProductCard" type="button" onclick="setActiveWorkspace('sampleProduct')">
+                        <span class="path-card-title">Show me a sample</span>
+                        <span class="path-card-subtitle">Try balsamic_vinegar or another stable local grounded slug without changing the product flow.</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="active-workspace-panel" id="activeWorkspacePanel">
+            <div class="active-workspace-shell">
+                <div class="workspace-panel" id="productIdeaWorkspace"></div>
+                <div class="workspace-panel" id="customerFeedbackWorkspace" hidden></div>
+                <div class="workspace-panel" id="sampleProductWorkspace" hidden></div>
+                <section class="inline-result-panel" id="inlineResultPanel">
+                    <div class="section-kicker">Inline Result Panel</div>
+                    <div class="inline-result-empty-state" id="inlineResultEmptyState">
+                        Generate from the active workspace and the creative brief will appear here in the same task flow.
+                    </div>
+                    <div class="source-contract-note" hidden>Source: user_provided_description / Source: user_pasted_reviews / 电商创意生成助手 / 产品描述模式 / 根据产品描述生成 / 好的输入应该包含 / 输入来源：产品描述 / 输入来源：粘贴的用户反馈 / 快速试用 / 无需登录 / 从产品描述开始 / 从粘贴评论开始 / 粘贴评论模式 / 应该粘贴什么 / 示例库 / 粘贴用户反馈模式 / 示例产品库</div>
+                    <div class="inline-result-content" id="inlineResultContent" hidden></div>
+                </section>
             </div>
         </section>
 
@@ -2203,6 +2357,78 @@
 
         function setExampleSlug(slug) {
             setDemoSlug(slug);
+            setActiveWorkspace('sampleProduct');
+        }
+
+        function workspaceDefinition(name) {
+            return {
+                productIdea: {
+                    cardId: 'pathProductIdeaCard',
+                    panelId: 'productIdeaWorkspace',
+                },
+                customerFeedback: {
+                    cardId: 'pathCustomerFeedbackCard',
+                    panelId: 'customerFeedbackWorkspace',
+                },
+                sampleProduct: {
+                    cardId: 'pathSampleProductCard',
+                    panelId: 'sampleProductWorkspace',
+                },
+            }[name] || null;
+        }
+
+        function setActiveWorkspace(name, options = {}) {
+            const definitions = ['productIdea', 'customerFeedback', 'sampleProduct'];
+            definitions.forEach((key) => {
+                const definition = workspaceDefinition(key);
+                const card = document.getElementById(definition.cardId);
+                const panel = document.getElementById(definition.panelId);
+                const active = key === name;
+                if (card) card.classList.toggle('active', active);
+                if (panel) panel.hidden = !active;
+            });
+            if (options.scroll) {
+                scrollToSectionById('activeWorkspacePanel');
+            }
+        }
+
+        function mountUserTaskFlow() {
+            const productIdeaWorkspace = document.getElementById('productIdeaWorkspace');
+            const customerFeedbackWorkspace = document.getElementById('customerFeedbackWorkspace');
+            const sampleProductWorkspace = document.getElementById('sampleProductWorkspace');
+            const inlineResultContent = document.getElementById('inlineResultContent');
+
+            const productDescriptionMode = document.getElementById('productDescriptionMode');
+            const pastedReviewsMode = document.getElementById('pastedReviewsMode');
+            const stableProductWorkspace = document.getElementById('stableProductWorkspace');
+            const exampleGallery = document.getElementById('exampleGallery');
+
+            if (productIdeaWorkspace && productDescriptionMode) {
+                productIdeaWorkspace.appendChild(productDescriptionMode);
+            }
+            if (customerFeedbackWorkspace && pastedReviewsMode) {
+                customerFeedbackWorkspace.appendChild(pastedReviewsMode);
+            }
+            if (sampleProductWorkspace && stableProductWorkspace) {
+                sampleProductWorkspace.appendChild(stableProductWorkspace);
+            }
+            if (sampleProductWorkspace && exampleGallery) {
+                sampleProductWorkspace.appendChild(exampleGallery);
+            }
+            ['agentTrack', 'productResultSection', 'copyActionsSection'].forEach((sectionId) => {
+                const section = document.getElementById(sectionId);
+                if (inlineResultContent && section) {
+                    inlineResultContent.appendChild(section);
+                }
+            });
+            setActiveWorkspace('productIdea');
+        }
+
+        function showInlineResultPanel() {
+            const emptyState = document.getElementById('inlineResultEmptyState');
+            const content = document.getElementById('inlineResultContent');
+            if (emptyState) emptyState.hidden = true;
+            if (content) content.hidden = false;
         }
 
         function descriptionInputValue(id) {
@@ -2227,11 +2453,11 @@
         }
 
         function scrollToProductDescriptionMode() {
-            scrollToSectionById('descriptionMode');
+            setActiveWorkspace('productIdea', { scroll: true });
         }
 
         function scrollToPastedReviewsMode() {
-            scrollToSectionById('pastedReviewsMode');
+            setActiveWorkspace('customerFeedback', { scroll: true });
         }
 
         function scrollToFeedbackWaitlist() {
@@ -3145,6 +3371,7 @@
         }
 
         function renderProductDashboard(data, options = {}) {
+            showInlineResultPanel();
             latestProductData = data;
             latestInputSlug = options.inputSlug ?? (document.getElementById('urlInput').value || '').trim();
             latestGeneratedAt = options.generatedAt ?? new Date().toISOString();
@@ -3295,6 +3522,7 @@
             `;
         }
         applyLanguageCopy();
+        mountUserTaskFlow();
         syncDebugMode();
         renderRecentGenerations();
     </script>

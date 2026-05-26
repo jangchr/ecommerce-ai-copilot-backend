@@ -14,6 +14,65 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
     def test_product_frontend_does_not_read_embedded_debug_state(self):
         self.assertNotIn("data.debug", self.source)
 
+    def test_public_demo_uses_user_task_flow_shell(self):
+        for marker in [
+            "pathSelectorPanel",
+            "pathProductIdeaCard",
+            "pathCustomerFeedbackCard",
+            "pathSampleProductCard",
+            "activeWorkspacePanel",
+            "inlineResultPanel",
+            "inlineResultEmptyState",
+            "inlineResultContent",
+            "productIdeaWorkspace",
+            "customerFeedbackWorkspace",
+            "sampleProductWorkspace",
+            "I have a product idea",
+            "I have customer feedback",
+            "Show me a sample",
+            "Only the active workspace is shown",
+            "Generate from the active workspace",
+            "function setActiveWorkspace(name, options = {})",
+            "function mountUserTaskFlow()",
+            "function showInlineResultPanel()",
+            "showInlineResultPanel();",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, self.source)
+
+        self.assertIn("productIdeaWorkspace.appendChild(productDescriptionMode);", self.source)
+        self.assertIn("customerFeedbackWorkspace.appendChild(pastedReviewsMode);", self.source)
+        self.assertIn("sampleProductWorkspace.appendChild(stableProductWorkspace);", self.source)
+        self.assertIn("sampleProductWorkspace.appendChild(exampleGallery);", self.source)
+        self.assertIn("inlineResultContent.appendChild(section);", self.source)
+        self.assertIn("setActiveWorkspace('productIdea');", self.source)
+
+    def test_user_task_flow_shell_does_not_trigger_debug_or_generation(self):
+        selector_match = re.search(
+            r"<section class=\"path-selector-panel\" id=\"pathSelectorPanel\">(?P<body>.*?)<section class=\"active-workspace-panel\"",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(selector_match)
+        selector_body = selector_match.group("body")
+
+        inline_match = re.search(
+            r"<section class=\"inline-result-panel\" id=\"inlineResultPanel\">(?P<body>.*?)</section>",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(inline_match)
+        inline_body = inline_match.group("body")
+
+        for body in [selector_body, inline_body]:
+            with self.subTest(flow_boundary=body[:40]):
+                self.assertNotIn("debug-copilot", body)
+                self.assertNotIn("debug-source-probe", body)
+                self.assertNotIn("telemetry_summary", body)
+                self.assertNotIn("shadow_sources", body)
+                self.assertNotIn("memory_observability", body)
+                self.assertNotIn("postCopilot(", body)
+
     def test_product_mode_guidance_and_copy_controls_are_present(self):
         self.assertIn(
             "Generate TikTok creative strategy from grounded ecommerce review insights.",
@@ -176,13 +235,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("用户抱怨", self.source)
 
         zh_reviews_copy_match = re.search(
-            r"pastedReviewsMode: '粘贴评论模式',(?P<body>.*?)exampleGallery: '示例库',",
+            r"pastedReviewsMode: '粘贴用户反馈模式',(?P<body>.*?)exampleGallery: '示例产品库',",
             self.source,
             re.S,
         )
         self.assertIsNotNone(zh_reviews_copy_match)
         zh_reviews_copy_body = zh_reviews_copy_match.group("body")
-        self.assertIn("reviewGuideTitle: '应该粘贴什么'", zh_reviews_copy_body)
+        self.assertIn("reviewGuideTitle: '应该粘贴什么？'", zh_reviews_copy_body)
         self.assertIn("goodReviewExampleTitle: '好例子'", zh_reviews_copy_body)
         self.assertIn("weakReviewExampleTitle: '弱例子'", zh_reviews_copy_body)
         self.assertNotIn("reviewGuideTitle: 'What to paste'", zh_reviews_copy_body)
@@ -395,7 +454,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         start = self.source.find('id="firstRunGuidePanel"')
         self.assertNotEqual(start, -1)
-        body = self.source[start:start + 2200]
+        end = self.source.find('<div class="demo-warning"', start)
+        self.assertNotEqual(end, -1)
+        body = self.source[start:end]
 
         self.assertIn("data-i18n", body)
         self.assertIn("first-run-guide-steps", body)
@@ -576,8 +637,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("function scrollToProductDescriptionMode()", self.source)
         self.assertIn("function scrollToPastedReviewsMode()", self.source)
         self.assertIn("function scrollToFeedbackWaitlist()", self.source)
-        self.assertIn("scrollToSectionById('descriptionMode')", self.source)
-        self.assertIn("scrollToSectionById('pastedReviewsMode')", self.source)
+        self.assertIn("setActiveWorkspace('productIdea', { scroll: true });", self.source)
+        self.assertIn("setActiveWorkspace('customerFeedback', { scroll: true });", self.source)
 
         for function_name in [
             "scrollToSectionById",
