@@ -2468,3 +2468,33 @@ Tags:
 - Result Readability Polish v1 ????
 - ?????????? smoke record
 
+## L16.4-A / B / C / D Result Readability Real Generation Smoke
+
+Status: ready.
+
+Commit:
+
+bcad3f5
+
+Documents:
+
+- docs/result_readability_real_generation_smoke_record.md
+- docs/result_readability_real_generation_final_audit.md
+- docs/result_readability_encoding_observation.md
+- docs/result_readability_smoke_v1_archive.md
+- docs/result_readability_after_smoke_decision.md
+
+Tag:
+
+result-readability-smoke-v1
+
+???
+
+- Product Description API smoke ??
+- Pasted Reviews API smoke ??
+- Product Description UI smoke ??
+- Pasted Reviews UI smoke ??
+- ?? UI smoke ??
+- PowerShell ???? ? punctuation artifact ???????
+- ??????????? trial outreach???? UI ?????? punctuation sanitize
+
