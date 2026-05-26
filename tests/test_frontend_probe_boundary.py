@@ -121,8 +121,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("L17.2-A Chinese landing and onboarding copy polish", self.source)
         self.assertIn("chineseOnboardingPanel", self.source)
         self.assertIn("workflowPathTitle: '选择你的生成方式'", self.source)
-        self.assertIn("inlineResultPanelTitle: '生成结果预览'", self.source)
-        self.assertIn("inlineResultEmptyState: '点击生成后，Hook、创意摘要和分镜脚本会显示在这里。'", self.source)
+        self.assertIn("inlineResultPanelTitle: '你的生成结果'", self.source)
+        self.assertIn("inlineResultEmptyState: '点击生成后，Hook、分镜脚本和复制按钮会直接出现在这里，不用滑到页面底部找结果。'", self.source)
         self.assertIn("recentEmptyState: '还没有最近生成记录。'", self.source)
         self.assertIn("/* L18.1-D dedupe bottom feedback/waitlist UI */", self.source)
         self.assertIn(".feedback-panel,", self.source)
@@ -502,7 +502,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("recentDelete: 'Delete'", zh_copy)
 
     def test_chinese_mode_bottom_sections_are_localized(self):
-        self.assertIn("inlineResultPanelTitle: '生成结果预览'", self.source)
+        self.assertIn("inlineResultPanelTitle: '你的生成结果'", self.source)
         self.assertIn("recentEmptyState: '还没有最近生成记录。'", self.source)
         self.assertIn("clearRecentGenerations: '清空最近生成记录'", self.source)
         self.assertIn("waitlistTitle: '加入试用名单'", self.source)
