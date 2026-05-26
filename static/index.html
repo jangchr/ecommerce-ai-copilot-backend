@@ -861,6 +861,94 @@
             }
         }
 
+
+        /* L16.2-A storyboard scene readability polish */
+        .storyboard-scene-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .storyboard-scene-card {
+            padding: 14px;
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        }
+
+        .storyboard-scene-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .storyboard-scene-number {
+            flex: 0 0 auto;
+            min-width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: #111827;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .storyboard-scene-goal {
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.35;
+        }
+
+        .storyboard-scene-fields {
+            display: grid;
+            gap: 8px;
+        }
+
+        .storyboard-scene-field {
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .storyboard-scene-label {
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+
+        .storyboard-scene-value {
+            color: #111827;
+            line-height: 1.45;
+        }
+
+        .storyboard-scene-evidence {
+            border-left: 3px solid #22c55e;
+            background: #f0fdf4;
+        }
+
+        @media (max-width: 720px) {
+            .storyboard-scene-card {
+                padding: 12px;
+                border-radius: 12px;
+            }
+
+            .storyboard-scene-header {
+                gap: 8px;
+            }
+
+            .storyboard-scene-number {
+                min-width: 30px;
+                height: 30px;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -1352,19 +1440,46 @@
             if (!scenes.length) {
                 return block('Storyboard', JSON.stringify(storyboard || {}, null, 2));
             }
-            return scenes.map((scene, index) => {
-                const visual = scene.visual_description || scene.visual || '';
-                const narration = scene.narration || '';
-                const quote = scene.evidence_quote_used || '';
+
+            const field = (label, value, extraClass = '') => {
+                if (!value) return '';
                 return `
-                    <div class="scene-card">
-                        <div class="scene-title">Scene ${index + 1}</div>
-                        ${block('Visual', visual)}
-                        ${block('Narration', narration)}
-                        ${block('Evidence', quote)}
+                    <div class="storyboard-scene-field ${extraClass}">
+                        <div class="storyboard-scene-label">${escapeHTML(label)}</div>
+                        <div class="storyboard-scene-value">${escapeHTML(value)}</div>
                     </div>
                 `;
-            }).join('');
+            };
+
+            return `
+                <div class="storyboard-scene-list">
+                    ${scenes.map((scene, index) => {
+                        const visual = scene.visual_description || scene.visual || '';
+                        const narration = scene.narration || '';
+                        const quote = scene.evidence_quote_used || '';
+                        const goal = scene.scene_goal || `${t('sceneLabel')} ${index + 1}`;
+                        const linkedPainPoint = scene.linked_painpoint || '';
+
+                        return `
+                            <div class="storyboard-scene-card">
+                                <div class="storyboard-scene-header">
+                                    <div class="storyboard-scene-number">${index + 1}</div>
+                                    <div>
+                                        <div class="storyboard-scene-label">${escapeHTML(t('sceneGoal'))}</div>
+                                        <div class="storyboard-scene-goal">${escapeHTML(goal)}</div>
+                                    </div>
+                                </div>
+                                <div class="storyboard-scene-fields">
+                                    ${field(t('visualLabel'), visual)}
+                                    ${field(t('narrationLabel'), narration)}
+                                    ${field(t('evidenceQuoteLabel'), quote, 'storyboard-scene-evidence')}
+                                    ${field(t('linkedPainPointLabel'), linkedPainPoint)}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
         }
 
 
@@ -1538,6 +1653,12 @@
                 creativeStrategy: 'Creative Strategy',
                 hook: 'Hook',
                 storyboard: 'Storyboard',
+                sceneLabel: 'Scene',
+                sceneGoal: 'Scene goal',
+                visualLabel: 'Visual',
+                narrationLabel: 'Narration',
+                evidenceQuoteLabel: 'Evidence quote',
+                linkedPainPointLabel: 'Linked pain point',
                 evaluation: 'Evaluation',
                 feedbackLabel: 'Feedback',
                 sourceUnknown: 'unknown source',
@@ -1669,6 +1790,12 @@
                 creativeStrategy: '创意策略',
                 hook: '开场 Hook',
                 storyboard: '分镜脚本',
+                sceneLabel: '场景',
+                sceneGoal: '场景目标',
+                visualLabel: '画面',
+                narrationLabel: '旁白',
+                evidenceQuoteLabel: '证据片段',
+                linkedPainPointLabel: '关联痛点',
                 evaluation: '评估',
                 feedbackLabel: '改进建议',
                 sourceUnknown: '未知来源',

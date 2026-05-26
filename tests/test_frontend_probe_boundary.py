@@ -62,6 +62,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("L16.1-A result summary and hook highlight polish", self.source)
         self.assertIn("resultSummaryCard", self.source)
         self.assertIn("resultHookHighlightCard", self.source)
+        self.assertIn("L16.2-A storyboard scene readability polish", self.source)
+        self.assertIn("storyboard-scene-list", self.source)
+        self.assertIn("storyboard-scene-card", self.source)
+        self.assertIn("storyboard-scene-number", self.source)
+        self.assertIn("storyboard-scene-evidence", self.source)
+        self.assertIn("Scene goal", self.source)
+        self.assertIn("场景目标", self.source)
+        self.assertIn("Linked pain point", self.source)
+        self.assertIn("关联痛点", self.source)
         self.assertIn("Creative Summary", self.source)
         self.assertIn("Hook highlight", self.source)
         self.assertIn("创意摘要", self.source)
@@ -255,6 +264,39 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         self.assertIn("Give feedback", body)
         self.assertIn("Join waitlist", body)
+
+        self.assertNotIn("fetch(", body)
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("postProductDescription", body)
+        self.assertNotIn("generate-copilot", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("runSourceProbe", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
+        self.assertNotIn("localStorage", body)
+        self.assertNotIn("data.debug", body)
+        self.assertNotIn("telemetry_summary", body)
+        self.assertNotIn("shadow_sources", body)
+        self.assertNotIn("memory_observability", body)
+
+    def test_storyboard_scene_readability_is_frontend_only(self):
+        self.assertIn("function renderStoryboardBrief(storyboard)", self.source)
+        self.assertIn("storyboard-scene-list", self.source)
+        self.assertIn("storyboard-scene-card", self.source)
+        self.assertIn("storyboard-scene-evidence", self.source)
+
+        start = self.source.find("function renderStoryboardBrief(storyboard)")
+        end = self.source.find("let latestDebugCategory", start)
+        self.assertNotEqual(start, -1)
+        self.assertNotEqual(end, -1)
+
+        body = self.source[start:end]
+
+        self.assertIn("scene_goal", body)
+        self.assertIn("visual_description", body)
+        self.assertIn("evidence_quote_used", body)
+        self.assertIn("linked_painpoint", body)
 
         self.assertNotIn("fetch(", body)
         self.assertNotIn("postPastedReviews", body)
@@ -758,7 +800,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             with self.subTest(label=label):
                 self.assertIn(label, self.source)
         self.assertIn("function renderStoryboardBrief(storyboard)", self.source)
-        self.assertIn("class=\"scene-card\"", self.source)
+        self.assertIn("storyboard-scene-list", self.source)
+        self.assertIn("storyboard-scene-card", self.source)
+        self.assertIn("storyboard-scene-number", self.source)
+        self.assertIn("storyboard-scene-evidence", self.source)
         self.assertIn("Copy Hook", self.source)
         self.assertIn("Copy Storyboard", self.source)
         self.assertIn("Copy Full Markdown", self.source)
