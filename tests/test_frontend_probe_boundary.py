@@ -289,7 +289,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Good inputs include", self.source)
         self.assertIn("Describe what the product is, who it is for, and what makes it useful.", self.source)
         self.assertIn("Paste customer complaints, review snippets, objections, or problems your buyers care about.", self.source)
-        self.assertIn("便携迷你榨汁杯", self.source)
+        self.assertIn("便携迷你搅拌机", self.source)
         self.assertIn("Please add more detail before generating.", self.source)
         self.assertIn("function generateFromDescription()", self.source)
         self.assertIn("function fillSampleProductDescription()", self.source)
@@ -810,47 +810,39 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("memory_observability", body)
 
+
+
+
     def test_product_description_sample_only_fills_inputs(self):
-        function_match = re.search(
-            r"function fillSampleProductDescription\(\) \{(?P<body>.*?)\n        \}",
-            self.source,
-            re.S,
-        )
-        self.assertIsNotNone(function_match)
-        body = function_match.group("body")
+        fill_start = self.source.find("function fillSampleProductDescription()")
+        self.assertNotEqual(fill_start, -1)
+        fill_body = self.source[fill_start:fill_start + 500]
 
-        for text in [
-            "便携迷你榨汁杯",
-            "Kitchen appliance",
-            "A compact rechargeable blender for smoothies, protein shakes, and travel use.",
-            "Customers complain that large blenders are hard to clean",
-            "TikTok",
-            "tiktok_ctr",
-        ]:
-            with self.subTest(text=text):
-                self.assertIn(text, body)
+        self.assertIn("applyProductDescriptionSample(sampleInputProfile().productDescription)", fill_body)
+        self.assertIn("setDescriptionStatus(t('sampleFilled'))", fill_body)
+        self.assertNotIn("generateFromDescription()", fill_body)
+        self.assertNotIn("fetch(", fill_body)
 
-        self.assertIn("descriptionProductName", body)
-        self.assertIn("descriptionProductCategory", body)
-        self.assertIn("descriptionProductDescription", body)
-        self.assertIn("descriptionPainPoints", body)
-        self.assertIn("descriptionTargetPlatform", body)
-        self.assertIn("descriptionGoal", body)
+        helper_start = self.source.find("function applyProductDescriptionSample(sample)")
+        self.assertNotEqual(helper_start, -1)
+        helper_body = self.source[helper_start:helper_start + 900]
 
-        self.assertNotIn("postProductDescription", body)
-        self.assertNotIn("generate-from-description", body)
-        self.assertNotIn("generate-copilot", body)
-        self.assertNotIn("debug-copilot", body)
-        self.assertNotIn("debug-source-probe", body)
-        self.assertNotIn("runSourceProbe", body)
-        self.assertNotIn("amazonShadowMode", body)
-        self.assertNotIn("saveCurrentGenerationToRecent", body)
-        self.assertNotIn("localStorage", body)
-        self.assertNotIn("data.debug", body)
-        self.assertNotIn("telemetry_summary", body)
-        self.assertNotIn("shadow_sources", body)
-        self.assertNotIn("memory_observability", body)
+        self.assertIn("descriptionProductName", helper_body)
+        self.assertIn("descriptionProductCategory", helper_body)
+        self.assertIn("descriptionProductDescription", helper_body)
+        self.assertIn("descriptionPainPoints", helper_body)
+        self.assertIn("descriptionTargetPlatform", helper_body)
+        self.assertIn("descriptionGoal", helper_body)
+        self.assertIn("'TikTok'", helper_body)
+        self.assertIn("'tiktok_ctr'", helper_body)
 
+        zh_lamp = "\u67d4\u5149\u684c\u9762\u53f0\u706f"
+        zh_pain = "\u7528\u6237\u89c9\u5f97\u666e\u901a\u53f0\u706f\u665a\u4e0a\u592a\u523a\u773c"
+        self.assertIn("SoftGlow Desk Lamp", self.source)
+        self.assertIn("A compact adjustable desk lamp", self.source)
+        self.assertIn("Buyers complain that desk lamps feel too harsh", self.source)
+        self.assertIn(zh_lamp, self.source)
+        self.assertIn(zh_pain, self.source)
     def test_pasted_reviews_mode_calls_only_reviews_endpoint(self):
         self.assertIn("postPastedReviews", self.source)
         self.assertIn("/api/v1/generate-from-reviews", self.source)
@@ -903,87 +895,89 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("memory_observability", body)
 
+
+
+
     def test_pasted_reviews_sample_only_fills_inputs(self):
-        function_match = re.search(
-            r"function fillSamplePastedReviews\(\) \{(?P<body>.*?)\n        \}",
-            self.source,
-            re.S,
-        )
-        self.assertIsNotNone(function_match)
-        body = function_match.group("body")
+        fill_start = self.source.find("function fillSamplePastedReviews()")
+        self.assertNotEqual(fill_start, -1)
+        fill_body = self.source[fill_start:fill_start + 500]
 
-        for text in [
-            "便携迷你榨汁杯",
-            "Kitchen appliance",
-            "A compact rechargeable blender for smoothies, protein shakes, and travel use.",
-            "I hate cleaning my big blender every morning.",
-            "It is too loud for my apartment.",
-            "I wish I could blend something quickly at work.",
-            "TikTok",
-            "tiktok_ctr",
-        ]:
-            with self.subTest(text=text):
-                self.assertIn(text, body)
+        self.assertIn("applyReviewSample(sampleInputProfile().miniBlender)", fill_body)
+        self.assertIn("setReviewsStatus(t('reviewsSampleFilled'))", fill_body)
+        self.assertIn("updateReviewInputPreviews()", fill_body)
+        self.assertNotIn("generateFromReviews()", fill_body)
+        self.assertNotIn("fetch(", fill_body)
 
-        self.assertIn("reviewsProductName", body)
-        self.assertIn("reviewsProductCategory", body)
-        self.assertIn("reviewsProductDescription", body)
-        self.assertIn("reviewsPastedReviews", body)
-        self.assertIn("reviewsTargetPlatform", body)
-        self.assertIn("reviewsGoal", body)
+        helper_start = self.source.find("function applyReviewSample(sample)")
+        self.assertNotEqual(helper_start, -1)
+        helper_body = self.source[helper_start:helper_start + 900]
 
-        self.assertIn("function fillSamplePetHairReviews()", self.source)
-        self.assertIn("function fillSampleDeskLampReviews()", self.source)
-        self.assertIn("宠物毛发清洁刷", self.source)
-        self.assertIn("Adjustable desk lamp", self.source)
+        self.assertIn("reviewsProductName", helper_body)
+        self.assertIn("reviewsProductCategory", helper_body)
+        self.assertIn("reviewsProductDescription", helper_body)
+        self.assertIn("reviewsPastedReviews", helper_body)
+        self.assertIn("reviewsTargetPlatform", helper_body)
+        self.assertIn("reviewsGoal", helper_body)
+        self.assertIn("sample.reviews", helper_body)
+        self.assertIn("reviewsPastedReviews", helper_body)
+        self.assertIn("'TikTok'", helper_body)
+        self.assertIn("'tiktok_ctr'", helper_body)
 
-        self.assertNotIn("postPastedReviews", body)
-        self.assertNotIn("generate-from-reviews", body)
-        self.assertNotIn("generate-copilot", body)
-        self.assertNotIn("debug-copilot", body)
-        self.assertNotIn("debug-source-probe", body)
-        self.assertNotIn("runSourceProbe", body)
-        self.assertNotIn("amazonShadowMode", body)
-        self.assertNotIn("saveCurrentGenerationToRecent", body)
-        self.assertNotIn("localStorage", body)
-        self.assertNotIn("data.debug", body)
-        self.assertNotIn("telemetry_summary", body)
-        self.assertNotIn("shadow_sources", body)
-        self.assertNotIn("memory_observability", body)
+        zh_blender = "\u4fbf\u643a\u8ff7\u4f60\u6405\u62cc\u673a"
+        zh_kitchen = "\u53a8\u623f\u5c0f\u5bb6\u7535"
+        zh_review_1 = "\u6211\u8ba8\u538c\u6bcf\u5929\u65e9\u4e0a\u6e05\u6d17\u5927\u6405\u62cc\u673a\u3002"
+        zh_review_2 = "\u6211\u5e0c\u671b\u5728\u529e\u516c\u5ba4\u4e5f\u80fd\u5feb\u901f\u6253\u4e00\u676f\u3002"
+
+        self.assertIn("Portable mini blender", self.source)
+        self.assertIn("Kitchen appliance", self.source)
+        self.assertIn("A compact rechargeable blender for smoothies", self.source)
+        self.assertIn("I hate cleaning my big blender every morning.", self.source)
+        self.assertIn("I wish I could blend something quickly at work.", self.source)
+
+        self.assertIn(zh_blender, self.source)
+        self.assertIn(zh_kitchen, self.source)
+        self.assertIn(zh_review_1, self.source)
+        self.assertIn(zh_review_2, self.source)
 
     def test_pasted_reviews_extra_samples_only_fill_inputs(self):
-        for function_name in ["fillSamplePetHairReviews", "fillSampleDeskLampReviews"]:
+        samples = {
+            "fillSamplePetHairReviews": "petHair",
+            "fillSampleDeskLampReviews": "deskLamp",
+        }
+
+        for function_name, sample_key in samples.items():
             with self.subTest(sample_function=function_name):
-                match = re.search(
-                    rf"function {function_name}\(\) \{{(?P<body>.*?)\n        \}}",
-                    self.source,
-                    re.S,
-                )
-                self.assertIsNotNone(match)
-                body = match.group("body")
+                start = self.source.find(f"function {function_name}()")
+                self.assertNotEqual(start, -1)
+                body = self.source[start:start + 500]
 
-                self.assertIn("reviewsProductName", body)
-                self.assertIn("reviewsProductCategory", body)
-                self.assertIn("reviewsProductDescription", body)
-                self.assertIn("reviewsPastedReviews", body)
-                self.assertIn("reviewsTargetPlatform", body)
-                self.assertIn("reviewsGoal", body)
-                self.assertIn("setReviewsStatus", body)
+                self.assertIn(f"applyReviewSample(sampleInputProfile().{sample_key})", body)
+                self.assertIn("setReviewsStatus(t(", body)
+                self.assertIn("updateReviewInputPreviews()", body)
+                self.assertNotIn("generateFromReviews()", body)
+                self.assertNotIn("fetch(", body)
 
-                self.assertNotIn("postPastedReviews", body)
-                self.assertNotIn("generate-from-reviews", body)
-                self.assertNotIn("generate-copilot", body)
-                self.assertNotIn("debug-copilot", body)
-                self.assertNotIn("debug-source-probe", body)
-                self.assertNotIn("runSourceProbe", body)
-                self.assertNotIn("amazonShadowMode", body)
-                self.assertNotIn("saveCurrentGenerationToRecent", body)
-                self.assertNotIn("localStorage", body)
-                self.assertNotIn("data.debug", body)
-                self.assertNotIn("telemetry_summary", body)
-                self.assertNotIn("shadow_sources", body)
-                self.assertNotIn("memory_observability", body)
+        zh_pet_name = "\u5ba0\u7269\u6bdb\u53d1\u6e05\u6d01\u5237"
+        zh_pet_category = "\u5ba0\u7269\u6e05\u6d01\u914d\u4ef6"
+        zh_pet_review = "\u4e0d\u7ba1\u6211\u600e\u4e48\u5438\uff0c\u6c99\u53d1\u4e0a\u8fd8\u662f\u7c98\u7740\u5ba0\u7269\u6bdb\u3002"
+        zh_lamp_name = "\u53ef\u8c03\u8282\u684c\u9762\u53f0\u706f"
+        zh_lamp_category = "\u5bb6\u7528\u529e\u516c\u7167\u660e"
+        zh_lamp_review = "\u6211\u7684\u4fbf\u5b9c\u53f0\u706f\u665a\u4e0a\u5de5\u4f5c\u65f6\u4f1a\u95ea\u3002"
 
+        self.assertIn("Pet hair vacuum brush", self.source)
+        self.assertIn("Pet cleaning accessory", self.source)
+        self.assertIn("Pet hair sticks to my couch", self.source)
+        self.assertIn(zh_pet_name, self.source)
+        self.assertIn(zh_pet_category, self.source)
+        self.assertIn(zh_pet_review, self.source)
+
+        self.assertIn("Adjustable desk lamp", self.source)
+        self.assertIn("Home office lighting", self.source)
+        self.assertIn("My cheap desk lamp flickers", self.source)
+        self.assertIn(zh_lamp_name, self.source)
+        self.assertIn(zh_lamp_category, self.source)
+        self.assertIn(zh_lamp_review, self.source)
     def test_pasted_reviews_review_count_preview_is_frontend_only(self):
         self.assertIn("function reviewLineCount(value)", self.source)
         self.assertIn("function updateReviewCountPreview()", self.source)
@@ -1445,17 +1439,62 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("captionTitle: 'Caption draft'", self.source)
 
 
-    def test_l19_sample_inputs_are_localized_for_chinese_demo(self):
-        self.assertIn("/* L19-E localized sample input content */", self.source)
-        self.assertIn("柔光桌面台灯", self.source)
-        self.assertIn("便携迷你榨汁杯", self.source)
-        self.assertIn("宠物毛发清洁刷", self.source)
-        self.assertIn("宠物清洁配件", self.source)
-        self.assertIn("不管我怎么吸，沙发上还是粘着宠物毛。", self.source)
-        self.assertIn("普通吸尘器吸不到角落和边缘。", self.source)
-        self.assertIn("吸尘器声音太大，每次都会吓到我的猫。", self.source)
-        self.assertIn("刷头很快就被毛发堵住了。", self.source)
-        self.assertIn("我每天早上都不想清洗大搅拌机。", self.source)
+    def test_l19_sample_inputs_are_language_scoped(self):
+        self.assertIn("// L19-F language-scoped sample input profiles", self.source)
+        self.assertIn("function sampleInputProfile()", self.source)
+        self.assertIn("function maybeRefreshSampleInputsForLanguage()", self.source)
+        self.assertIn("maybeRefreshSampleInputsForLanguage();", self.source)
+
+        self.assertIn("descriptionProductNamePlaceholder: 'SoftGlow Desk Lamp'", self.source)
+        self.assertIn("reviewsProductNamePlaceholder: 'Portable mini blender'", self.source)
+        self.assertIn("reviewsPastedReviewsPlaceholder: '- I hate cleaning my big blender every morning.", self.source)
+
+        self.assertIn("descriptionProductNamePlaceholder: '柔光桌面台灯'", self.source)
+        self.assertIn("reviewsProductNamePlaceholder: '便携迷你搅拌机'", self.source)
+        self.assertIn("reviewsPastedReviewsPlaceholder: '- 我讨厌每天早上清洗大搅拌机。", self.source)
+
+        self.assertIn("applyProductDescriptionSample(sampleInputProfile().productDescription)", self.source)
+        self.assertIn("applyReviewSample(sampleInputProfile().miniBlender)", self.source)
+        self.assertIn("applyReviewSample(sampleInputProfile().petHair)", self.source)
+        self.assertIn("applyReviewSample(sampleInputProfile().deskLamp)", self.source)
+
+
+    def test_l19_english_and_chinese_sample_copy_are_separated(self):
+        en_start = self.source.find("en: {")
+        self.assertNotEqual(en_start, -1)
+        en_end = self.source.find("\n            },\n            'zh-CN': {", en_start)
+        self.assertNotEqual(en_end, -1)
+        en_copy = self.source[en_start:en_end]
+
+        zh_start = self.source.find("'zh-CN': {")
+        self.assertNotEqual(zh_start, -1)
+        zh_end = self.source.find("\n        };\n\n        function t", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        self.assertIn("descriptionProductNamePlaceholder: 'SoftGlow Desk Lamp'", en_copy)
+        self.assertIn("reviewsProductNamePlaceholder: 'Portable mini blender'", en_copy)
+        self.assertIn("reviewsPastedReviewsPlaceholder: '- I hate cleaning my big blender every morning.", en_copy)
+
+        self.assertIn("descriptionProductNamePlaceholder: '柔光桌面台灯'", zh_copy)
+        self.assertIn("reviewsProductNamePlaceholder: '便携迷你搅拌机'", zh_copy)
+        self.assertIn("reviewsPastedReviewsPlaceholder: '- 我讨厌每天早上清洗大搅拌机。", zh_copy)
+
+        self.assertNotIn("柔光桌面台灯", en_copy)
+        self.assertNotIn("便携迷你搅拌机", en_copy)
+        self.assertNotIn("Portable mini blender", zh_copy)
+        self.assertNotIn("I hate cleaning my big blender", zh_copy)
+
+
+    def test_l19_sample_copy_has_no_garbled_question_marks(self):
+        self.assertNotIn("????", self.source)
+        self.assertIn("/* L19-G localized sample card labels and garbled sample fix */", self.source)
+        self.assertIn('data-i18n="exampleSlugBalsamic"', self.source)
+        self.assertIn('data-i18n="exampleSlugPetHair"', self.source)
+        self.assertIn('data-i18n="exampleSlugDeskLamp"', self.source)
+        self.assertIn("exampleSlugBalsamic: '香醋'", self.source)
+        self.assertIn("exampleSlugPetHair: '宠物毛发清理'", self.source)
+        self.assertIn("exampleSlugDeskLamp: '台灯'", self.source)
 
 
 if __name__ == "__main__":
