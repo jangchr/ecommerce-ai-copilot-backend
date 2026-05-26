@@ -2233,3 +2233,29 @@ pasted-reviews-polish-v1
 - L14 ??
 - ???????? L15 Public Demo Conversion Polish
 
+## L15.0-A / B / C / D / E / F / G / H Public Demo Conversion Polish Planning Batch
+
+Status: ready.
+
+Commit base:
+
+d35bf1e
+
+Documents:
+
+- docs/public_demo_conversion_polish_planning.md
+- docs/public_demo_landing_hierarchy_design.md
+- docs/public_demo_primary_cta_waitlist_copy_plan.md
+- docs/public_demo_path_simplification_plan.md
+- docs/public_demo_mobile_readability_checklist.md
+- docs/public_demo_feedback_waitlist_tracking_plan.md
+- docs/public_demo_conversion_polish_backlog.md
+- docs/public_demo_conversion_polish_implementation_plan.md
+
+结论：
+
+- L15 进入 Public Demo Conversion Polish
+- 优先优化首次试用路径、CTA、Feedback / Waitlist 转化
+- 继续保持无登录、无数据库、无外部抓取边界
+- 推荐下一步 L15.1-A Hero and Primary CTA Polish
+

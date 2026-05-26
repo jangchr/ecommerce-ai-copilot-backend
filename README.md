@@ -420,3 +420,11 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Pasted Reviews Input Experience Summary](docs/pasted_reviews_input_experience_summary.md) ? L14.10-D ???????
 - [Pasted Reviews Post-Polish Roadmap Decision](docs/pasted_reviews_post_polish_roadmap_decision.md) ? L14.10-E ???????
 - [L14 Final Handoff](docs/l14_pasted_reviews_final_handoff.md) ? L14 Pasted Reviews ???????
+- [Public Demo Conversion Polish Planning](docs/public_demo_conversion_polish_planning.md) — L15.0-A 公网 demo 转化优化规划。
+- [Public Demo Landing Hierarchy Design](docs/public_demo_landing_hierarchy_design.md) — L15.0-B Landing 层级设计。
+- [Public Demo Primary CTA Waitlist Copy Plan](docs/public_demo_primary_cta_waitlist_copy_plan.md) — L15.0-C CTA / Waitlist 文案规划。
+- [Public Demo Path Simplification Plan](docs/public_demo_path_simplification_plan.md) — L15.0-D 试用路径简化规划。
+- [Public Demo Mobile Readability Checklist](docs/public_demo_mobile_readability_checklist.md) — L15.0-E 移动端可读性清单。
+- [Public Demo Feedback Waitlist Tracking Plan](docs/public_demo_feedback_waitlist_tracking_plan.md) — L15.0-F Feedback / Waitlist 追踪计划。
+- [Public Demo Conversion Polish Backlog](docs/public_demo_conversion_polish_backlog.md) — L15.0-G 转化优化 backlog。
+- [Public Demo Conversion Polish Implementation Plan](docs/public_demo_conversion_polish_implementation_plan.md) — L15.0-H 实现计划。
