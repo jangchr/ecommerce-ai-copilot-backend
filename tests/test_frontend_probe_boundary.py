@@ -1625,5 +1625,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("#pathSelectorPanel .path-card-subtitle", self.source)
 
 
+    def test_l21_result_area_prioritizes_hook_and_copy_ready_script(self):
+        self.assertIn("/* L21-B result-first content hierarchy */", self.source)
+        self.assertIn("#inlineResultContent .result-hook-highlight-card", self.source)
+        self.assertIn("#inlineResultContent .result-hook-highlight-text", self.source)
+        self.assertIn("#inlineResultContent .quick-use-pack-card", self.source)
+        self.assertIn("#inlineResultContent .quick-use-script", self.source)
+        self.assertIn("#inlineResultContent .copy-toolbar", self.source)
+        self.assertIn("#inlineResultContent .section-actions", self.source)
+        self.assertIn("#inlineResultContent .evidence-source-card", self.source)
+        self.assertIn("#inlineResultContent .metric-strip", self.source)
+        self.assertIn("#inlineResultContent pre.debug", self.source)
+        self.assertIn("opacity: 0.72;", self.source)
+        self.assertIn("#inlineResultContent .evidence-source-card:hover", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()

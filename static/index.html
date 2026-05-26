@@ -1689,6 +1689,118 @@
             }
         }
 
+
+        /* L21-B result-first content hierarchy */
+        #inlineResultPanel {
+            border-top: 1px solid #dbe4f0;
+            margin-top: 28px;
+            padding-top: 22px;
+        }
+
+        #inlineResultPanel .section-kicker {
+            font-size: 18px;
+            font-weight: 900;
+            color: #111827;
+            margin-bottom: 14px;
+        }
+
+        #inlineResultContent {
+            display: grid;
+            gap: 16px;
+        }
+
+        #inlineResultContent .result-hook-highlight-card {
+            margin-bottom: 0;
+            padding: 20px;
+            border: 2px solid #86efac;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+            box-shadow: 0 16px 34px rgba(22, 101, 52, 0.14);
+        }
+
+        #inlineResultContent .result-hook-highlight-label {
+            font-size: 13px;
+            color: #166534;
+        }
+
+        #inlineResultContent .result-hook-highlight-text {
+            font-size: 1.45rem;
+            line-height: 1.35;
+            color: #052e16;
+        }
+
+        #inlineResultContent .quick-use-pack-card {
+            margin-bottom: 0;
+            padding: 18px;
+            border: 2px solid #fde68a;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+            box-shadow: 0 12px 28px rgba(146, 64, 14, 0.10);
+        }
+
+        #inlineResultContent .quick-use-pack-title {
+            font-size: 1.05rem;
+        }
+
+        #inlineResultContent .quick-use-script {
+            font-size: 14px;
+            line-height: 1.6;
+            border-style: solid;
+        }
+
+        #inlineResultContent .copy-toolbar,
+        #inlineResultContent .section-actions {
+            margin-top: 0;
+            border-color: #cbd5e1;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+
+        #inlineResultContent .evidence-source-card,
+        #inlineResultContent .metric-strip,
+        #inlineResultContent .quote-list,
+        #inlineResultContent pre.debug,
+        #inlineResultContent .probe-tools {
+            opacity: 0.72;
+        }
+
+        #inlineResultContent .evidence-source-card:hover,
+        #inlineResultContent .metric-strip:hover,
+        #inlineResultContent .quote-list:hover,
+        #inlineResultContent pre.debug:hover,
+        #inlineResultContent .probe-tools:hover {
+            opacity: 1;
+        }
+
+        #inlineResultContent .section-block {
+            border-radius: 16px;
+        }
+
+        @media (max-width: 720px) {
+            #inlineResultPanel {
+                margin-top: 22px;
+                padding-top: 18px;
+            }
+
+            #inlineResultPanel .section-kicker {
+                font-size: 16px;
+            }
+
+            #inlineResultContent .result-hook-highlight-card,
+            #inlineResultContent .quick-use-pack-card {
+                padding: 14px;
+                border-radius: 14px;
+            }
+
+            #inlineResultContent .result-hook-highlight-text {
+                font-size: 1.16rem;
+            }
+
+            #inlineResultContent .copy-toolbar,
+            #inlineResultContent .section-actions {
+                box-shadow: none;
+            }
+        }
+
 </style>
 </head>
 <body>
