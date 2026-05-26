@@ -1289,7 +1289,7 @@
             </div>
             <div id="stableProductWorkspace" class="sample-product-workspace">
             <div class="control-panel">
-                <input type="text" id="urlInput" placeholder="Choose a sample product, e.g. desk_lamp" value="balsamic_vinegar">
+                <input type="text" id="urlInput" placeholder="Choose a sample product, e.g. desk_lamp" value="balsamic_vinegar" data-i18n-placeholder="urlInputPlaceholder">
                 <button class="btn-primary" id="startBtn" onclick="startSystem()" data-i18n="runWorkflow">Run Workflow</button>
             </div>
             <div class="input-guide" data-i18n="inputGuide">
@@ -1363,23 +1363,23 @@
             <div class="path-selector-shell">
                 <div class="path-selector-header">
                     <div>
-                        <h3>Choose your workflow path</h3>
-                        <p>Pick the task you have today. Only the active workspace is shown, and the result appears directly below it.</p>
+                        <h3 data-i18n="workflowPathTitle">Choose your workflow path</h3>
+                        <p data-i18n="workflowPathSubtitle">Pick the task you have today. Only the active workspace is shown, and the result appears directly below it.</p>
                     </div>
-                    <span class="source-badge">User-task flow</span>
+                    <span class="source-badge" data-i18n="userTaskFlowBadge">User-task flow</span>
                 </div>
                 <div class="path-card-grid">
                     <button class="path-card active" id="pathProductIdeaCard" type="button" onclick="setActiveWorkspace('productIdea')">
-                        <span class="path-card-title">I have a product idea</span>
-                        <span class="path-card-subtitle">Describe the product, audience, and buyer problem. Best for a new product concept.</span>
+                        <span class="path-card-title" data-i18n="pathProductIdeaTitle">I have a product idea</span>
+                        <span class="path-card-subtitle" data-i18n="pathProductIdeaBody">Describe the product, audience, and buyer problem. Best for a new product concept.</span>
                     </button>
                     <button class="path-card" id="pathCustomerFeedbackCard" type="button" onclick="setActiveWorkspace('customerFeedback')">
-                        <span class="path-card-title">I have customer feedback</span>
-                        <span class="path-card-subtitle">Paste reviews, objections, complaints, or buyer language and turn them into a brief.</span>
+                        <span class="path-card-title" data-i18n="pathCustomerFeedbackTitle">I have customer feedback</span>
+                        <span class="path-card-subtitle" data-i18n="pathCustomerFeedbackBody">Paste reviews, objections, complaints, or buyer language and turn them into a brief.</span>
                     </button>
                     <button class="path-card" id="pathSampleProductCard" type="button" onclick="setActiveWorkspace('sampleProduct')">
-                        <span class="path-card-title">Show me a sample</span>
-                        <span class="path-card-subtitle">Try balsamic_vinegar or another stable local grounded slug without changing the product flow.</span>
+                        <span class="path-card-title" data-i18n="pathSampleProductTitle">Show me a sample</span>
+                        <span class="path-card-subtitle" data-i18n="pathSampleProductBody">Try balsamic_vinegar or another stable local grounded slug without changing the product flow.</span>
                     </button>
                 </div>
             </div>
@@ -1428,21 +1428,21 @@
                 <div class="description-grid">
                     <div class="description-field">
                         <label for="descriptionProductName" data-i18n="productName">Product name</label>
-                        <input id="descriptionProductName" type="text" placeholder="SoftGlow Desk Lamp">
+                        <input id="descriptionProductName" type="text" placeholder="SoftGlow Desk Lamp" data-i18n-placeholder="descriptionProductNamePlaceholder">
                     </div>
                     <div class="description-field">
                         <label for="descriptionProductCategory" data-i18n="productCategory">Product category</label>
-                        <input id="descriptionProductCategory" type="text" placeholder="desk_lamp">
+                        <input id="descriptionProductCategory" type="text" placeholder="desk_lamp" data-i18n-placeholder="descriptionProductCategoryPlaceholder">
                     </div>
                     <div class="description-field wide">
                         <label for="descriptionProductDescription" data-i18n="productDescription">Product description</label>
                         <div class="field-helper" data-i18n="productDescriptionHelper">Describe what the product is, who it is for, and what makes it useful.</div>
-                        <textarea id="descriptionProductDescription" placeholder="Describe the product, its main features, and the situation it is used in."></textarea>
+                        <textarea id="descriptionProductDescription" placeholder="Describe the product, its main features, and the situation it is used in." data-i18n-placeholder="descriptionProductDescriptionPlaceholder"></textarea>
                     </div>
                     <div class="description-field wide">
                         <label for="descriptionPainPoints" data-i18n="customerPainPoints">Customer pain points</label>
                         <div class="field-helper" data-i18n="customerPainPointsHelper">Paste customer complaints, review snippets, objections, or problems your buyers care about.</div>
-                        <textarea id="descriptionPainPoints" placeholder="Add customer pain points, objections, review snippets, or complaints you want the brief to address."></textarea>
+                        <textarea id="descriptionPainPoints" placeholder="Add customer pain points, objections, review snippets, or complaints you want the brief to address." data-i18n-placeholder="descriptionPainPointsPlaceholder"></textarea>
                     </div>
                     <div class="description-field">
                         <label for="descriptionTargetPlatform" data-i18n="targetPlatform">Target platform</label>
@@ -1488,20 +1488,20 @@
                 <div class="description-grid">
                     <div class="description-field">
                         <label for="reviewsProductName" data-i18n="productName">Product name</label>
-                        <input id="reviewsProductName" type="text" placeholder="Portable mini blender">
+                        <input id="reviewsProductName" type="text" placeholder="Portable mini blender" data-i18n-placeholder="reviewsProductNamePlaceholder">
                     </div>
                     <div class="description-field">
                         <label for="reviewsProductCategory" data-i18n="productCategory">Product category</label>
-                        <input id="reviewsProductCategory" type="text" placeholder="Kitchen appliance">
+                        <input id="reviewsProductCategory" type="text" placeholder="Kitchen appliance" data-i18n-placeholder="reviewsProductCategoryPlaceholder">
                     </div>
                     <div class="description-field wide">
                         <label for="reviewsProductDescription" data-i18n="productDescription">Product description</label>
-                        <textarea id="reviewsProductDescription" placeholder="A compact rechargeable blender for smoothies, protein shakes, and travel use."></textarea>
+                        <textarea id="reviewsProductDescription" placeholder="A compact rechargeable blender for smoothies, protein shakes, and travel use." data-i18n-placeholder="reviewsProductDescriptionPlaceholder"></textarea>
                     </div>
                     <div class="description-field wide">
                         <label for="reviewsPastedReviews" data-i18n="pastedReviews">Pasted reviews</label>
                         <div class="field-helper" data-i18n="pastedReviewsHelper">Paste customer reviews, complaints, objections, or buyer feedback.</div>
-                        <textarea id="reviewsPastedReviews" oninput="updateReviewInputPreviews()" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment."></textarea>
+                        <textarea id="reviewsPastedReviews" oninput="updateReviewInputPreviews()" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment." data-i18n-placeholder="reviewsPastedReviewsPlaceholder"></textarea>
                         <div id="reviewCountPreview" class="field-helper" data-i18n="reviewCountEmpty">Review count: 0. Paste at least 3 specific review snippets for stronger output.</div>
                         <div id="reviewPainPointPreview" class="field-helper" data-i18n="painPointPreviewEmpty">Pain point preview: specific complaints will appear here.</div>
                         <div id="reviewPasteGuide" style="margin-top:10px; padding:12px; border:1px solid #dbe4f0; border-radius:10px; background:#f8fafc;">
@@ -1982,6 +1982,24 @@
             en: {
                 heroTitle: 'Turn a product idea into a TikTok hook and storyboard in 10 minutes.',
                 heroSubtitle: 'No login required. Start with a sample product, your own product description, or pasted customer feedback.',
+                workflowPathTitle: 'Choose your workflow path',
+                workflowPathSubtitle: 'Pick the task you have today. Only the active workspace is shown, and the result appears directly below it.',
+                userTaskFlowBadge: 'User-task flow',
+                pathProductIdeaTitle: 'I have a product idea',
+                pathProductIdeaBody: 'Describe the product, audience, and buyer problem. Best for a new product concept.',
+                pathCustomerFeedbackTitle: 'I have customer feedback',
+                pathCustomerFeedbackBody: 'Paste reviews, objections, complaints, or buyer language and turn them into a brief.',
+                pathSampleProductTitle: 'Show me a sample',
+                pathSampleProductBody: 'Try a sample product without filling your own product details.',
+                urlInputPlaceholder: 'Choose a sample product, e.g. desk_lamp',
+                descriptionProductNamePlaceholder: 'SoftGlow Desk Lamp',
+                descriptionProductCategoryPlaceholder: 'desk_lamp',
+                descriptionProductDescriptionPlaceholder: 'Describe the product, its main features, and when it is used.',
+                descriptionPainPointsPlaceholder: 'Add buyer problems, objections, or complaints you want the brief to address.',
+                reviewsProductNamePlaceholder: 'Portable mini blender',
+                reviewsProductCategoryPlaceholder: 'Kitchen appliance',
+                reviewsProductDescriptionPlaceholder: 'A compact rechargeable blender for smoothies, protein shakes, and travel use.',
+                reviewsPastedReviewsPlaceholder: '- I hate cleaning my big blender every morning.\n- It is too loud for my apartment.',
                 languageLabel: 'Language:',
                 runWorkflow: 'Generate from sample product',
                 inputGuide: 'Sample products are here so you can see the flow first. Pick one, run it once, then replace it with your own product idea.',
@@ -2146,6 +2164,24 @@
             'zh-CN': {
                 heroTitle: '用 10 分钟，把一个产品想法变成 TikTok 视频脚本',
                 heroSubtitle: '不需要电商经验。可以先用示例产品，也可以粘贴你的产品描述或用户评论。',
+                workflowPathTitle: '选择你的生成方式',
+                workflowPathSubtitle: '根据你手上已有的素材选择一条路径。页面只展示当前路径，生成结果会直接出现在这里。',
+                userTaskFlowBadge: '用户任务流程',
+                pathProductIdeaTitle: '我有产品想法',
+                pathProductIdeaBody: '适合你知道产品是什么，但还没有用户评论的情况。',
+                pathCustomerFeedbackTitle: '我有用户评论/反馈',
+                pathCustomerFeedbackBody: '适合你已经有差评、评论、社媒留言或买家抱怨的情况。',
+                pathSampleProductTitle: '我先看示例',
+                pathSampleProductBody: '不用填写内容，先用示例产品看一次结果长什么样。',
+                urlInputPlaceholder: '选择一个示例产品，例如：desk_lamp',
+                descriptionProductNamePlaceholder: '柔光台灯',
+                descriptionProductCategoryPlaceholder: '台灯',
+                descriptionProductDescriptionPlaceholder: '用一句话描述产品。例如：一盏适合夜间学习的柔光台灯。',
+                descriptionPainPointsPlaceholder: '写用户遇到的问题。例如：灯太刺眼、桌面线太乱、晚上工作容易累。',
+                reviewsProductNamePlaceholder: '便携迷你搅拌机',
+                reviewsProductCategoryPlaceholder: '厨房小家电',
+                reviewsProductDescriptionPlaceholder: '一款适合奶昔、蛋白饮和出行使用的充电便携搅拌机。',
+                reviewsPastedReviewsPlaceholder: '- 我讨厌每天早上清洗大搅拌机。\n- 它对我的公寓来说太吵了。',
                 languageLabel: 'Language:',
                 runWorkflow: '用示例产品生成',
                 inputGuide: '这里是示例产品库：先选一个示例产品跑一次，理解流程后，再换成你自己的产品想法。',
@@ -2301,10 +2337,10 @@
                 generatingDescription: '正在根据产品描述生成...',
                 descriptionGenerated: '产品描述模式结果已生成。',
                 descriptionFailed: '产品描述模式生成失败，请重试。',
-                missingName: 'Please enter a product name.',
-                missingDescription: 'Please enter a product description.',
-                missingPainPoints: 'Please add customer pain points or review snippets.',
-                inputTooShort: 'Please add more detail before generating.',
+                missingName: '请输入产品名称。',
+                missingDescription: '请输入产品描述。',
+                missingPainPoints: '请补充用户痛点、评论片段或购买顾虑。',
+                inputTooShort: '生成前请补充更多具体信息。',
                 running: '运行中...'
             }
         };
@@ -2322,6 +2358,10 @@
             document.querySelectorAll('[data-i18n]').forEach((node) => {
                 const key = node.getAttribute('data-i18n');
                 node.textContent = t(key);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
+                const key = node.getAttribute('data-i18n-placeholder');
+                node.setAttribute('placeholder', t(key));
             });
             document.getElementById('languageEnglishBtn').classList.toggle('active', outputLanguage === 'en');
             document.getElementById('languageChineseBtn').classList.toggle('active', outputLanguage === 'zh-CN');

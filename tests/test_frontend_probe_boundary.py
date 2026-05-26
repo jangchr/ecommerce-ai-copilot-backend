@@ -120,6 +120,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Product Description Mode", self.source)
         self.assertIn("L17.2-A Chinese landing and onboarding copy polish", self.source)
         self.assertIn("chineseOnboardingPanel", self.source)
+        self.assertIn("workflowPathTitle: '选择你的生成方式'", self.source)
+        self.assertIn("pathProductIdeaTitle: '我有产品想法'", self.source)
+        self.assertIn("pathCustomerFeedbackTitle: '我有用户评论/反馈'", self.source)
+        self.assertIn("pathSampleProductTitle: '我先看示例'", self.source)
+        self.assertIn("userTaskFlowBadge: '用户任务流程'", self.source)
+        self.assertIn("data-i18n-placeholder", self.source)
+        self.assertIn("descriptionProductDescriptionPlaceholder: '用一句话描述产品。", self.source)
+        self.assertIn("descriptionPainPointsPlaceholder: '写用户遇到的问题。", self.source)
+        self.assertIn("reviewsPastedReviewsPlaceholder: '- 我讨厌每天早上清洗大搅拌机。", self.source)
+        self.assertIn("missingName: '请输入产品名称。'", self.source)
+        self.assertIn("inputTooShort: '生成前请补充更多具体信息。'", self.source)
         self.assertIn("L17.3-A Chinese example product library polish", self.source)
         self.assertIn("sampleProductLibraryGuide", self.source)
         self.assertIn("L17.4-A Chinese first-run guide polish", self.source)
@@ -444,6 +455,30 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
+
+    def test_chinese_mode_microcopy_and_placeholders_are_localized(self):
+        self.assertIn("workflowPathTitle: '选择你的生成方式'", self.source)
+        self.assertIn("workflowPathSubtitle: '根据你手上已有的素材选择一条路径。", self.source)
+        self.assertIn("pathProductIdeaBody: '适合你知道产品是什么", self.source)
+        self.assertIn("pathCustomerFeedbackBody: '适合你已经有差评", self.source)
+        self.assertIn("pathSampleProductBody: '不用填写内容", self.source)
+        self.assertIn("document.querySelectorAll('[data-i18n-placeholder]')", self.source)
+        self.assertIn('id="descriptionProductDescription"', self.source)
+        self.assertIn('data-i18n-placeholder="descriptionProductDescriptionPlaceholder"', self.source)
+        self.assertIn('id="descriptionPainPoints"', self.source)
+        self.assertIn('data-i18n-placeholder="descriptionPainPointsPlaceholder"', self.source)
+        self.assertIn('id="reviewsPastedReviews"', self.source)
+        self.assertIn('data-i18n-placeholder="reviewsPastedReviewsPlaceholder"', self.source)
+
+        zh_start = self.source.find("'zh-CN': {")
+        self.assertNotEqual(zh_start, -1)
+        zh_end = self.source.find("        };", zh_start)
+        self.assertNotEqual(zh_end, -1)
+        zh_copy = self.source[zh_start:zh_end]
+
+        self.assertNotIn("missingName: 'Please enter a product name.'", zh_copy)
+        self.assertNotIn("missingDescription: 'Please enter a product description.'", zh_copy)
+        self.assertNotIn("inputTooShort: 'Please add more detail before generating.'", zh_copy)
 
     def test_first_run_guide_copy_is_frontend_only(self):
         self.assertIn("firstRunGuidePanel", self.source)
