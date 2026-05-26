@@ -474,3 +474,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [Result Readability Encoding Observation](docs/result_readability_encoding_observation.md) ? L16.4-C encoding / punctuation ?????
 - [Result Readability Smoke v1 Archive](docs/result_readability_smoke_v1_archive.md) ? result-readability-smoke-v1 ?????
 - [Result Readability After Smoke Decision](docs/result_readability_after_smoke_decision.md) ? L16.4-D smoke ?????
+- [Trial Round 1 Execution Record](docs/trial_round_1_execution_record.md) ? L17.0-A ????????????
