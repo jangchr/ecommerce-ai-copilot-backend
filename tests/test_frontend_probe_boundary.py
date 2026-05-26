@@ -1640,5 +1640,23 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("#inlineResultContent .evidence-source-card:hover", self.source)
 
 
+    def test_l21_technical_diagnostics_are_secondary_to_user_flow(self):
+        self.assertIn("/* L21-C keep technical diagnostics secondary */", self.source)
+        self.assertIn(".agent-track", self.source)
+        self.assertIn(".agent-track:hover", self.source)
+        self.assertIn(".agent-badge", self.source)
+        self.assertIn(".advanced-debug", self.source)
+        self.assertIn(".advanced-debug:hover", self.source)
+        self.assertIn(".probe-tools", self.source)
+        self.assertIn(".probe-tools:hover", self.source)
+        self.assertIn("pre.debug", self.source)
+        self.assertIn(".metric-pill", self.source)
+        self.assertIn(".evidence-source-card", self.source)
+        self.assertIn(".demo-warning,", self.source)
+        self.assertIn(".run-options", self.source)
+        self.assertIn("opacity: 0.72;", self.source)
+        self.assertIn("max-height: 260px;", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()

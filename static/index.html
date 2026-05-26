@@ -1801,6 +1801,96 @@
             }
         }
 
+
+        /* L21-C keep technical diagnostics secondary */
+        .agent-track {
+            opacity: 0.72;
+            transform: scale(0.985);
+            transform-origin: center top;
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+
+        .agent-track:hover {
+            opacity: 1;
+        }
+
+        .agent-badge {
+            font-size: 11px;
+            padding: 6px 9px;
+        }
+
+        .advanced-debug {
+            opacity: 0.74;
+        }
+
+        .advanced-debug:hover {
+            opacity: 1;
+        }
+
+        .probe-tools {
+            opacity: 0.74;
+        }
+
+        .probe-tools:hover {
+            opacity: 1;
+        }
+
+        pre.debug {
+            max-height: 260px;
+            opacity: 0.86;
+        }
+
+        .metric-strip {
+            margin-top: 8px;
+            margin-bottom: 10px;
+        }
+
+        .metric-pill {
+            font-size: 11px;
+            padding: 4px 8px;
+            color: #475569;
+        }
+
+        .evidence-source-card {
+            border-color: #dbeafe;
+            background: #f8fbff;
+        }
+
+        .quote-item {
+            color: #334155;
+            background: #f8fafc;
+        }
+
+        .demo-warning,
+        .run-options {
+            opacity: 0.72;
+        }
+
+        .demo-warning:hover,
+        .run-options:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 720px) {
+            .agent-track {
+                justify-content: flex-start;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+
+            .agent-badge {
+                white-space: nowrap;
+                flex: 0 0 auto;
+            }
+
+            pre.debug {
+                max-height: 220px;
+            }
+        }
+
 </style>
 </head>
 <body>
