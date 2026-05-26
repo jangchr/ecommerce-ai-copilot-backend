@@ -1003,6 +1003,58 @@
             }
         }
 
+
+        /* L17.2-A Chinese landing and onboarding copy polish */
+        .chinese-onboarding-panel {
+            max-width: 760px;
+            margin: 14px auto 0;
+            padding: 14px 16px;
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            background: #ffffff;
+            text-align: left;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+        }
+
+        .chinese-onboarding-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .chinese-onboarding-body {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .chinese-onboarding-steps {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            padding-left: 18px;
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .chinese-onboarding-note {
+            margin-top: 10px;
+            color: var(--accent-blue);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 720px) {
+            .chinese-onboarding-panel {
+                padding: 12px;
+                border-radius: 12px;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -1029,18 +1081,29 @@
             <div class="input-guide" data-i18n="inputGuide">
                 Product Mode is stable for these 10 local grounded slugs. Pick one, then run the workflow to generate a TikTok hook, creative strategy and storyboard.
             </div>
+            <div id="chineseOnboardingPanel" class="chinese-onboarding-panel">
+                <div class="chinese-onboarding-title" data-i18n="chineseOnboardingTitle">Not sure where to start?</div>
+                <div class="chinese-onboarding-body" data-i18n="chineseOnboardingBody">Use a sample product first, then replace it with your own product idea when you understand the flow.</div>
+                <ol class="chinese-onboarding-steps">
+                    <li data-i18n="chineseOnboardingStepOne">Pick a sample product or choose Product Description Mode.</li>
+                    <li data-i18n="chineseOnboardingStepTwo">Tell us what the product is, who it is for, and what problem it solves.</li>
+                    <li data-i18n="chineseOnboardingStepThree">Generate a TikTok hook, creative summary, and storyboard.</li>
+                </ol>
+                <div class="chinese-onboarding-note" data-i18n="chineseOnboardingNote">You do not need ecommerce experience to try the demo.</div>
+            </div>
+
             <div class="input-guide">
                 <div class="slug-list">
-                    <button class="slug-button" type="button" onclick="setDemoSlug('balsamic_vinegar')">Try balsamic_vinegar</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('printer')">printer</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('women_bras')">women_bras</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('girls_overalls')">girls_overalls</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('protein_powder')">protein_powder</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('phone_case')">phone_case</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('desk_lamp')">desk_lamp</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('baby_stroller')">baby_stroller</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('pet_hair_vacuum')">pet_hair_vacuum</button>
-                    <button class="slug-button" type="button" onclick="setDemoSlug('skincare_serum')">skincare_serum</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('balsamic_vinegar')">香醋 / balsamic_vinegar</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('printer')">打印机 / printer</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('women_bras')">女士内衣 / women_bras</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('girls_overalls')">儿童背带裤 / girls_overalls</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('protein_powder')">蛋白粉 / protein_powder</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('phone_case')">手机壳 / phone_case</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('desk_lamp')">台灯 / desk_lamp</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('baby_stroller')">婴儿推车 / baby_stroller</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('pet_hair_vacuum')">宠物毛发清理 / pet_hair_vacuum</button>
+                    <button class="slug-button" type="button" onclick="setDemoSlug('skincare_serum')">护肤精华 / skincare_serum</button>
                 </div>
             </div>
             <div class="demo-warning" data-i18n="amazonWarning">
@@ -1629,34 +1692,40 @@
         const SECTION_KEYS = ['evidence', 'strategy', 'hook', 'storyboard', 'evaluation'];
         const LANGUAGE_COPY = {
             en: {
-                heroTitle: 'Generate TikTok creative strategy from grounded ecommerce review insights.',
-                heroSubtitle: 'This public demo uses 10 stable local grounded product categories. Start with balsamic_vinegar.',
+                heroTitle: 'Turn a product idea into a TikTok hook and storyboard in 10 minutes.',
+                heroSubtitle: 'No login required. Start with a sample product, your own product description, or pasted customer feedback.',
                 languageLabel: 'Language:',
                 runWorkflow: 'Run Workflow',
-                inputGuide: 'Product Mode is stable for these 10 local grounded slugs. Pick one, then run the workflow to generate a TikTok hook, creative strategy and storyboard.',
-                amazonWarning: 'Do not use Amazon URLs in Product Mode yet. Amazon URLs are available only in Debug Mode / Amazon Shadow.',
+                inputGuide: 'Sample products are here so you can see the flow first. Pick one, run it once, then replace it with your own product idea.',
+                chineseOnboardingTitle: 'Not sure where to start?',
+                chineseOnboardingBody: 'Use a sample product first, then replace it with your own product idea when you understand the flow.',
+                chineseOnboardingStepOne: 'Pick a sample product or choose Product Description Mode.',
+                chineseOnboardingStepTwo: 'Tell us what the product is, who it is for, and what problem it solves.',
+                chineseOnboardingStepThree: 'Generate a TikTok hook, creative summary, and storyboard.',
+                chineseOnboardingNote: 'You do not need ecommerce experience to try the demo.',
+                amazonWarning: 'Do not paste Amazon links here yet. Use a sample product, Product Description Mode, or Pasted Reviews Mode.',
                 productDescriptionMode: 'Product Description Mode',
-                descriptionIntro: 'Use your own product copy and customer pain points to generate a Product-like creative brief. This mode uses `user_provided_description` as the source and does not call Amazon, Source Probe or Debug Mode.',
+                descriptionIntro: 'Write what the product is, who it is for, and what problem it solves. The demo will turn it into a TikTok hook, creative summary, and storyboard.',
                 productName: 'Product name',
                 productCategory: 'Product category',
                 productDescription: 'Product description',
                 customerPainPoints: 'Customer pain points',
                 targetPlatform: 'Target platform',
                 goal: 'Goal',
-                productDescriptionHelper: 'Describe what the product is, who it is for, and what makes it useful.',
-                customerPainPointsHelper: 'Paste customer complaints, review snippets, objections, or problems your buyers care about.',
-                goodInputsInclude: 'Good inputs include',
-                goodInputProduct: 'what the product is',
-                goodInputAudience: 'who it is for',
-                goodInputProblem: 'what problem it solves',
-                goodInputComplaints: 'what customers complain about',
-                goodInputDifference: 'what makes it different',
+                productDescriptionHelper: 'Describe the product in one sentence.',
+                customerPainPointsHelper: 'Describe the buyer problem, complaint, hesitation, or use-case frustration.',
+                goodInputsInclude: 'Not sure what to write? Answer these questions',
+                goodInputProduct: 'What is the product?',
+                goodInputAudience: 'Who would want it?',
+                goodInputProblem: 'What problem does it solve?',
+                goodInputComplaints: 'What do users complain about now?',
+                goodInputDifference: 'What makes it different?',
                 useSampleProduct: 'Use sample product',
                 generateFromDescription: 'Generate from description',
-                quickStartTitle: 'Try the fastest path',
-                quickStartSubtitle: 'No login required. Use a sample product or paste your own product notes.',
-                startWithProductDescription: 'Start with product description',
-                startWithPastedReviews: 'Start with pasted reviews',
+                quickStartTitle: 'Start with the easiest path',
+                quickStartSubtitle: 'No ecommerce experience needed. Try a sample first, then use your own product idea.',
+                startWithProductDescription: 'I have a product idea',
+                startWithPastedReviews: 'I have customer feedback',
                 giveFeedbackQuickStart: 'Give feedback',
                 joinWaitlistQuickStart: 'Join waitlist',
                 feedbackWaitlistTitle: 'What should we improve next?',
@@ -1667,12 +1736,12 @@
                 resultFollowupSubtitle: 'Was the hook useful? Was the storyboard clear? Tell us what to improve or join the waitlist for future product input options.',
                 resultFollowupFeedback: 'Give feedback',
                 resultFollowupWaitlist: 'Join waitlist',
-                productDescriptionBestFor: 'Best if you can describe the product, audience, and pain points yourself.',
-                pastedReviewsBestFor: 'Best if you have customer reviews, complaints, objections, or buyer feedback.',
+                productDescriptionBestFor: 'Best if you have a product idea but do not know how to turn it into a short-video script.',
+                pastedReviewsBestFor: 'Best if you already have customer comments, complaints, objections, or buyer feedback.',
                 pastedReviewsMode: 'Pasted Reviews Mode',
                 pastedReviews: 'Pasted reviews',
-                pastedReviewsIntro: 'Paste customer reviews, complaints, objections, or buyer feedback. The creative brief will use these review snippets as user-provided evidence.',
-                pastedReviewsHelper: 'Paste customer reviews, complaints, objections, or buyer feedback.',
+                pastedReviewsIntro: 'Paste real customer language. The demo will use those comments as the basis for the hook and storyboard.',
+                pastedReviewsHelper: 'Paste customer comments, complaints, objections, or buyer feedback.',
                 goodReviewInputsInclude: 'Good review inputs include',
                 useSampleReviews: 'Use sample reviews',
                 usePetHairSampleReviews: 'Use pet hair sample',
@@ -1702,8 +1771,8 @@
                 goodReviewInputSnippets: 'review snippets',
                 goodReviewInputObjections: 'buyer objections',
                 goodReviewInputFrustrations: 'use-case frustrations',
-                exampleGallery: 'Example Gallery',
-                tryThisProduct: 'Try This Product',
+                exampleGallery: 'Sample Product Library',
+                tryThisProduct: 'Use this sample',
                 productResult: 'Product Result',
                 copyActions: 'Copy / Download / Translation Actions',
                 copyHook: 'Copy Hook',
@@ -1723,7 +1792,7 @@
                 sourceStableDemo: 'stable demo product',
                 hookHighlight: 'Hook highlight',
                 evidenceSourceTitle: 'Evidence Source',
-                evidenceSourceBody: 'This label shows what the creative brief is grounded on before you review the hook and storyboard.',
+                evidenceSourceBody: 'This section explains what the result is based on: a sample product, your product description, or pasted customer feedback.',
                 sourceTypeLabel: 'Source type',
                 sourceConfidenceLabel: 'Source confidence',
                 reviewCountLabel: 'Review count',
@@ -1772,34 +1841,40 @@
                 running: 'Running...'
             },
             'zh-CN': {
-                heroTitle: '电商创意生成助手',
-                heroSubtitle: '这个公开演示使用 10 个稳定的本地证据产品类目。建议先试 balsamic_vinegar。',
+                heroTitle: '用 10 分钟，把一个产品想法变成 TikTok 视频脚本',
+                heroSubtitle: '不需要电商经验。可以先用示例产品，也可以粘贴你的产品描述或用户评论。',
                 languageLabel: 'Language:',
                 runWorkflow: '运行 Workflow',
-                inputGuide: 'Product Mode 当前稳定支持 10 个本地 grounded slug。选择一个后运行 workflow，即可生成 TikTok 创意策略、Hook 和分镜脚本。',
-                amazonWarning: '不要在 Product Mode 输入 Amazon URL。Amazon URL 目前只用于 Debug Mode / Amazon Shadow。',
+                inputGuide: '这里是示例产品库：先选一个示例产品跑一次，理解流程后，再换成你自己的产品想法。',
+                chineseOnboardingTitle: '不知道从哪里开始？',
+                chineseOnboardingBody: '先用一个示例产品跑通流程。看懂以后，再换成你自己的产品想法。',
+                chineseOnboardingStepOne: '先点一个示例产品，或选择“我有产品想法”。',
+                chineseOnboardingStepTwo: '写清楚：产品是什么、谁会买、它解决什么麻烦。',
+                chineseOnboardingStepThree: '点击生成，得到 TikTok Hook、创意摘要和分镜脚本。',
+                chineseOnboardingNote: '你不需要已经是电商卖家，也可以先测试一个产品想法。',
+                amazonWarning: '这里暂时不要输入 Amazon 链接。想试用请先点示例产品，或使用下面的产品描述 / 粘贴评论模式。',
                 productDescriptionMode: '产品描述模式',
-                descriptionIntro: '使用你自己的产品描述和用户痛点生成 Product-like creative brief。该模式的 source 为 `user_provided_description`，不会调用 Amazon、Source Probe 或 Debug Mode。',
+                descriptionIntro: '写下产品是什么、谁会用、他们遇到什么问题。系统会把它整理成 TikTok Hook、创意摘要和分镜脚本。',
                 productName: '产品名称',
                 productCategory: '产品类目',
                 productDescription: '产品描述',
                 customerPainPoints: '用户痛点',
                 targetPlatform: '目标平台',
                 goal: '生成目标',
-                productDescriptionHelper: '写清楚产品是什么、给谁用、解决什么问题。',
-                customerPainPointsHelper: '粘贴用户抱怨、评论片段、购买顾虑，或者目标用户最在意的问题。',
-                goodInputsInclude: '好的输入应该包含',
-                goodInputProduct: '产品是什么',
-                goodInputAudience: '给谁用',
-                goodInputProblem: '解决什么问题',
-                goodInputComplaints: '用户抱怨什么',
-                goodInputDifference: '产品有什么不同',
+                productDescriptionHelper: '用一句话写产品是什么。比如：一盏适合夜间学习的柔光台灯。',
+                customerPainPointsHelper: '写目标用户遇到的问题。比如：灯太刺眼、桌面线太乱、晚上工作容易累。',
+                goodInputsInclude: '不知道怎么填？回答这几个问题',
+                goodInputProduct: '产品是什么？',
+                goodInputAudience: '谁会想买？',
+                goodInputProblem: '它解决什么麻烦？',
+                goodInputComplaints: '用户现在抱怨什么？',
+                goodInputDifference: '它和普通产品哪里不同？',
                 useSampleProduct: '使用示例产品',
                 generateFromDescription: '根据产品描述生成',
-                quickStartTitle: '快速试用',
-                quickStartSubtitle: '无需登录。可以使用示例产品，也可以粘贴你自己的产品信息。',
-                startWithProductDescription: '从产品描述开始',
-                startWithPastedReviews: '从粘贴评论开始',
+                quickStartTitle: '不知道从哪开始？先走最短路径',
+                quickStartSubtitle: '不需要电商经验。先用示例产品跑一次，再换成你自己的产品想法。',
+                startWithProductDescription: '我有产品想法',
+                startWithPastedReviews: '我有用户评论/反馈',
                 giveFeedbackQuickStart: '提交反馈',
                 joinWaitlistQuickStart: '加入 waitlist',
                 feedbackWaitlistTitle: '下一步应该改进什么？',
@@ -1810,12 +1885,12 @@
                 resultFollowupSubtitle: 'Hook 有用吗？分镜清楚吗？可以提交反馈，或加入 waitlist 优先试用后续输入方式。',
                 resultFollowupFeedback: '提交反馈',
                 resultFollowupWaitlist: '加入 waitlist',
-                productDescriptionBestFor: '适合你能自己描述产品、受众和痛点的情况。',
-                pastedReviewsBestFor: '适合你有用户评论、差评、购买顾虑或买家反馈的情况。',
-                pastedReviewsMode: '粘贴评论模式',
-                pastedReviews: '粘贴评论',
-                pastedReviewsIntro: '粘贴用户评论、差评、购买顾虑或买家反馈。系统会把这些评论片段作为用户提供的证据来生成创意简报。',
-                pastedReviewsHelper: '粘贴用户评论、差评、购买顾虑或买家反馈。',
+                productDescriptionBestFor: '适合你有一个产品想法，但还不知道怎么写短视频脚本。',
+                pastedReviewsBestFor: '适合你已经有用户评论、差评、购买顾虑或买家反馈的情况。',
+                pastedReviewsMode: '粘贴用户反馈模式',
+                pastedReviews: '粘贴用户反馈 / 评论',
+                pastedReviewsIntro: '粘贴真实用户原话。系统会根据这些评论和反馈，整理出 Hook、创意摘要和分镜脚本。',
+                pastedReviewsHelper: '粘贴用户评论、差评、购买顾虑、买家反馈或社媒评论。',
                 goodReviewInputsInclude: '好的评论输入应该包含',
                 useSampleReviews: '使用示例评论',
                 usePetHairSampleReviews: '使用宠物毛发示例',
@@ -1831,7 +1906,7 @@
                 reviewCountEmpty: '评论条数：0。建议至少粘贴 3 条具体评论，生成效果会更好。',
                 painPointPreviewEmpty: '痛点预览：具体抱怨会显示在这里。',
                 painPointPreviewTitle: '可能的痛点',
-                reviewGuideTitle: '应该粘贴什么',
+                reviewGuideTitle: '应该粘贴什么？',
                 reviewGuideBody: '粘贴真实用户原话：抱怨、购买顾虑、评论片段，或者买家希望哪里更方便。',
                 goodReviewExampleTitle: '好例子',
                 goodReviewExampleOne: '我讨厌每天早上清洗大搅拌机。',
@@ -1845,8 +1920,8 @@
                 goodReviewInputSnippets: '评论片段',
                 goodReviewInputObjections: '购买顾虑',
                 goodReviewInputFrustrations: '使用场景中的不便',
-                exampleGallery: '示例库',
-                tryThisProduct: '试试这个产品',
+                exampleGallery: '示例产品库',
+                tryThisProduct: '使用这个示例',
                 productResult: '产品结果',
                 copyActions: '复制 / 下载 / 翻译操作',
                 copyHook: '复制 Hook',
@@ -1866,7 +1941,7 @@
                 sourceStableDemo: '稳定示例产品',
                 hookHighlight: 'Hook 重点',
                 evidenceSourceTitle: '证据来源',
-                evidenceSourceBody: '这里说明本次创意简报基于什么输入生成，方便先判断结果是否有依据。',
+                evidenceSourceBody: '这里说明结果是根据什么生成的，比如示例产品、你输入的产品描述，或你粘贴的用户评论。',
                 sourceTypeLabel: '来源类型',
                 sourceConfidenceLabel: '来源置信度',
                 reviewCountLabel: '评论数量',
