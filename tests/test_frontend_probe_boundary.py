@@ -1749,5 +1749,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("--save-artifacts", script)
 
 
+    def test_l23_public_demo_workflow_smoke_script_exists(self):
+        script = Path("scripts/check_public_demo_workflow_smoke.py").read_text(encoding="utf-8")
+        self.assertIn("All public demo workflow smoke checks passed.", script)
+        self.assertIn("\"sample_product\": \"/api/v1/generate-copilot\"", script)
+        self.assertIn("\"product_description\": \"/api/v1/generate-from-description\"", script)
+        self.assertIn("\"pasted_reviews\": \"/api/v1/generate-from-reviews\"", script)
+        self.assertIn("workflow_payloads(language)", script)
+        self.assertIn("SoftGlow Desk Lamp", script)
+        self.assertIn("Countertop Blender", script)
+        self.assertIn("--workflow", script)
+        self.assertIn("--save-json", script)
+
+
 if __name__ == "__main__":
     unittest.main()
