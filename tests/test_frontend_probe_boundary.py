@@ -268,7 +268,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("用户抱怨", self.source)
 
         zh_reviews_copy_match = re.search(
-            r"pastedReviewsMode: '粘贴用户反馈模式',(?P<body>.*?)exampleGallery: '示例产品库',",
+            r"pastedReviewsMode: '粘贴用户反馈',(?P<body>.*?)exampleGallery: '示例产品库',",
             self.source,
             re.S,
         )
@@ -1343,6 +1343,24 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("reasons people hesitate to buy", zh_copy)
         self.assertNotIn("Debug Mode',", zh_copy)
         self.assertNotIn("Amazon Shadow',", zh_copy)
+
+
+    def test_l18_workspace_inputs_are_simplified_and_user_question_oriented(self):
+        self.assertIn("/* L18.5-A simplify workspace inputs */", self.source)
+        self.assertIn("advanced-input-field", self.source)
+        self.assertIn("#activeWorkspacePanel .advanced-input-field", self.source)
+
+        self.assertIn("productDescriptionMode: '填写你的产品想法'", self.source)
+        self.assertIn("pastedReviewsMode: '粘贴用户反馈'", self.source)
+        self.assertIn("productName: '产品是什么？'", self.source)
+        self.assertIn("productDescription: '用普通话描述这个产品'", self.source)
+        self.assertIn("customerPainPoints: '用户遇到什么问题？'", self.source)
+        self.assertIn("pastedReviews: '粘贴用户原话 / 评论'", self.source)
+        self.assertIn("generateFromDescription: '生成 TikTok 创意'", self.source)
+        self.assertIn("generateFromReviews: '根据用户反馈生成创意'", self.source)
+
+        self.assertIn("productDescriptionMode: 'Describe your product idea'", self.source)
+        self.assertIn("pastedReviewsMode: 'Use customer feedback'", self.source)
 
 
 if __name__ == "__main__":

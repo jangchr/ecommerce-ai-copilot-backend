@@ -1390,6 +1390,35 @@
             }
         }
 
+
+        /* L18.5-A simplify workspace inputs */
+        #activeWorkspacePanel .advanced-input-field {
+            display: none !important;
+        }
+
+        #activeWorkspacePanel .description-header h3 {
+            text-transform: none;
+            font-size: 16px;
+        }
+
+        #activeWorkspacePanel .description-grid {
+            gap: 14px;
+        }
+
+        #activeWorkspacePanel .description-field label {
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        #activeWorkspacePanel .field-helper {
+            color: #64748b;
+        }
+
+        #activeWorkspacePanel .good-inputs {
+            border-style: dashed;
+            background: #f8fafc;
+        }
+
 </style>
 </head>
 <body>
@@ -1564,11 +1593,11 @@
                         <div class="field-helper" data-i18n="customerPainPointsHelper">Paste customer complaints, review snippets, objections, or problems your buyers care about.</div>
                         <textarea id="descriptionPainPoints" placeholder="Add customer pain points, objections, review snippets, or complaints you want the brief to address." data-i18n-placeholder="descriptionPainPointsPlaceholder"></textarea>
                     </div>
-                    <div class="description-field">
+                    <div class="description-field" advanced-input-field">
                         <label for="descriptionTargetPlatform" data-i18n="targetPlatform">Target platform</label>
                         <input id="descriptionTargetPlatform" type="text" value="TikTok">
                     </div>
-                    <div class="description-field">
+                    <div class="description-field" advanced-input-field">
                         <label for="descriptionGoal" data-i18n="goal">Goal</label>
                         <input id="descriptionGoal" type="text" value="tiktok_ctr">
                     </div>
@@ -1647,11 +1676,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="description-field">
+                    <div class="description-field" advanced-input-field">
                         <label for="reviewsTargetPlatform" data-i18n="targetPlatform">Target platform</label>
                         <input id="reviewsTargetPlatform" type="text" value="TikTok">
                     </div>
-                    <div class="description-field">
+                    <div class="description-field" advanced-input-field">
                         <label for="reviewsGoal" data-i18n="goal">Goal</label>
                         <input id="reviewsGoal" type="text" value="tiktok_ctr">
                     </div>
@@ -2156,24 +2185,24 @@
                 sourceBadgeProductDescription: 'Input source: product description',
                 sourceBadgePastedReviews: 'Input source: pasted customer feedback',
                 amazonWarning: 'Do not paste Amazon links here yet. Use a sample product, Product Description Mode, or Pasted Reviews Mode.',
-                productDescriptionMode: 'Product Description Mode',
+                productDescriptionMode: 'Describe your product idea',
                 descriptionIntro: 'Write what the product is, who it is for, and what problem it solves. The demo will turn it into a TikTok hook, creative summary, and storyboard.',
-                productName: 'Product name',
-                productCategory: 'Product category',
-                productDescription: 'Product description',
-                customerPainPoints: 'Customer pain points',
+                productName: 'What is the product?',
+                productCategory: 'Product type',
+                productDescription: 'Describe the product in plain language',
+                customerPainPoints: 'What problem does the buyer have?',
                 targetPlatform: 'Target platform',
                 goal: 'Goal',
-                productDescriptionHelper: 'Describe the product in one sentence.',
-                customerPainPointsHelper: 'Describe the buyer problem, complaint, hesitation, or use-case frustration.',
-                goodInputsInclude: 'Not sure what to write? Answer these questions',
+                productDescriptionHelper: 'Write what the product is, who it helps, and when it is used.',
+                customerPainPointsHelper: 'Write the buyer problem, complaint, hesitation, or annoying situation.',
+                goodInputsInclude: 'Answer these questions if you are not sure',
                 goodInputProduct: 'What is the product?',
                 goodInputAudience: 'Who would want it?',
                 goodInputProblem: 'What problem does it solve?',
                 goodInputComplaints: 'What do users complain about now?',
                 goodInputDifference: 'What makes it different?',
                 useSampleProduct: 'Use sample product',
-                generateFromDescription: 'Generate from description',
+                generateFromDescription: 'Generate TikTok creative',
                 quickStartTitle: 'Start with the easiest path',
                 quickStartSubtitle: 'No ecommerce experience needed. Try a sample first, then use your own product idea.',
                 startWithProductDescription: 'I have a product idea',
@@ -2188,17 +2217,17 @@
                 resultFollowupSubtitle: 'Was the hook useful? Was the storyboard clear? Tell us what to improve or join the waitlist for future product input options.',
                 resultFollowupFeedback: 'Give feedback',
                 resultFollowupWaitlist: 'Join the waitlist',
-                productDescriptionBestFor: 'Best if you have a product idea but do not know how to turn it into a short-video script.',
-                pastedReviewsBestFor: 'Best if you already have customer comments, complaints, objections, or buyer feedback.',
-                pastedReviewsMode: 'Pasted Reviews Mode',
-                pastedReviews: 'Pasted reviews',
+                productDescriptionBestFor: 'Use this when you have a product idea but no reviews yet.',
+                pastedReviewsBestFor: 'Use this when you already have reviews, complaints, objections, or buyer feedback.',
+                pastedReviewsMode: 'Use customer feedback',
+                pastedReviews: 'Paste customer words / reviews',
                 pastedReviewsIntro: 'Paste real customer language. The demo will use those comments as the basis for the hook and storyboard.',
-                pastedReviewsHelper: 'Paste customer comments, complaints, objections, or buyer feedback.',
-                goodReviewInputsInclude: 'Good review inputs include',
+                pastedReviewsHelper: 'Paste real customer words: reviews, complaints, objections, social comments, or buyer questions.',
+                goodReviewInputsInclude: 'Useful feedback usually includes',
                 useSampleReviews: 'Use sample reviews',
                 usePetHairSampleReviews: 'Use pet hair sample',
                 useDeskLampSampleReviews: 'Use desk lamp sample',
-                generateFromReviews: 'Generate from reviews',
+                generateFromReviews: 'Generate from customer feedback',
                 reviewsSampleFilled: 'Sample reviews filled. Click Generate from reviews when ready.',
                 petHairSampleFilled: 'Pet hair review sample filled. Click Generate from reviews when ready.',
                 deskLampSampleFilled: 'Desk lamp review sample filled. Click Generate from reviews when ready.',
@@ -2357,24 +2386,24 @@
                 sourceBadgeProductDescription: '输入来源：产品描述',
                 sourceBadgePastedReviews: '输入来源：粘贴的用户反馈',
                 amazonWarning: '这里暂时不要输入 Amazon 链接。想试用请先点示例产品，或使用下面的产品描述 / 粘贴评论模式。',
-                productDescriptionMode: '产品描述模式',
+                productDescriptionMode: '填写你的产品想法',
                 descriptionIntro: '写下产品是什么、谁会用、他们遇到什么问题。系统会把它整理成 TikTok Hook、创意摘要和分镜脚本。',
-                productName: '产品名称',
-                productCategory: '产品类目',
-                productDescription: '产品描述',
-                customerPainPoints: '用户痛点',
+                productName: '产品是什么？',
+                productCategory: '产品类型',
+                productDescription: '用普通话描述这个产品',
+                customerPainPoints: '用户遇到什么问题？',
                 targetPlatform: '目标平台',
                 goal: '生成目标',
-                productDescriptionHelper: '用一句话写产品是什么。比如：一盏适合夜间学习的柔光台灯。',
-                customerPainPointsHelper: '写目标用户遇到的问题。比如：灯太刺眼、桌面线太乱、晚上工作容易累。',
-                goodInputsInclude: '不知道怎么填？回答这几个问题',
+                productDescriptionHelper: '写清楚产品是什么、帮谁解决问题、通常在什么场景使用。',
+                customerPainPointsHelper: '写用户的麻烦、抱怨、购买顾虑，或者他们现在觉得不方便的地方。',
+                goodInputsInclude: '不知道怎么写？回答这几个问题',
                 goodInputProduct: '产品是什么？',
                 goodInputAudience: '谁会想买？',
                 goodInputProblem: '它解决什么麻烦？',
                 goodInputComplaints: '用户现在抱怨什么？',
                 goodInputDifference: '它和普通产品哪里不同？',
                 useSampleProduct: '使用示例产品',
-                generateFromDescription: '根据产品描述生成',
+                generateFromDescription: '生成 TikTok 创意',
                 quickStartTitle: '不知道从哪开始？先走最短路径',
                 quickStartSubtitle: '不需要电商经验。先用示例产品跑一次，再换成你自己的产品想法。',
                 startWithProductDescription: '我有产品想法',
@@ -2389,17 +2418,17 @@
                 resultFollowupSubtitle: 'Hook 有用吗？分镜清楚吗？可以提交反馈，或加入试用名单，优先试用后续输入方式。',
                 resultFollowupFeedback: '提交反馈',
                 resultFollowupWaitlist: '加入试用名单',
-                productDescriptionBestFor: '适合你有一个产品想法，但还不知道怎么写短视频脚本。',
-                pastedReviewsBestFor: '适合你已经有用户评论、差评、购买顾虑或买家反馈的情况。',
-                pastedReviewsMode: '粘贴用户反馈模式',
-                pastedReviews: '粘贴用户反馈 / 评论',
+                productDescriptionBestFor: '适合你有一个产品想法，但还没有用户评论的情况。',
+                pastedReviewsBestFor: '适合你已经有评论、差评、购买顾虑或买家反馈的情况。',
+                pastedReviewsMode: '粘贴用户反馈',
+                pastedReviews: '粘贴用户原话 / 评论',
                 pastedReviewsIntro: '粘贴真实用户原话。系统会根据这些评论和反馈，整理出 Hook、创意摘要和分镜脚本。',
-                pastedReviewsHelper: '粘贴用户评论、差评、购买顾虑、买家反馈或社媒评论。',
-                goodReviewInputsInclude: '好的评论输入应该包含',
+                pastedReviewsHelper: '粘贴真实用户原话：评论、差评、购买顾虑、社媒留言或买家问题。',
+                goodReviewInputsInclude: '有用的用户反馈通常包含',
                 useSampleReviews: '使用示例评论',
                 usePetHairSampleReviews: '使用宠物毛发示例',
                 useDeskLampSampleReviews: '使用台灯示例',
-                generateFromReviews: '根据评论生成',
+                generateFromReviews: '根据用户反馈生成创意',
                 reviewsSampleFilled: '示例评论已填充。确认后点击根据评论生成。',
                 petHairSampleFilled: '宠物毛发示例评论已填充。确认后点击根据评论生成。',
                 deskLampSampleFilled: '台灯示例评论已填充。确认后点击根据评论生成。',
