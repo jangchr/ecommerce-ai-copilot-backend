@@ -1611,5 +1611,19 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("stable local grounded slug", en_copy)
 
 
+    def test_l21_primary_workflow_entry_has_clear_visual_hierarchy(self):
+        self.assertIn("/* L21-A primary workflow entry hierarchy */", self.source)
+        self.assertIn("#pathSelectorPanel .path-selector-shell", self.source)
+        self.assertIn("#pathSelectorPanel .path-card-grid", self.source)
+        self.assertIn("#pathSelectorPanel .path-card.active", self.source)
+        self.assertIn("#pathSelectorPanel .path-card:hover", self.source)
+        self.assertIn("#pathSelectorPanel .path-card::before", self.source)
+        self.assertIn('#pathProductIdeaCard::before { content: "1"; }', self.source)
+        self.assertIn('#pathCustomerFeedbackCard::before { content: "2"; }', self.source)
+        self.assertIn('#pathSampleProductCard::before { content: "3"; }', self.source)
+        self.assertIn("#pathSelectorPanel .path-card-title", self.source)
+        self.assertIn("#pathSelectorPanel .path-card-subtitle", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()
