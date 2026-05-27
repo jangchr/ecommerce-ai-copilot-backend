@@ -52,6 +52,10 @@ class AmazonProbeAdapterTest(unittest.TestCase):
 
         metadata = evidence.metadata
         self.assertEqual(metadata["product_title"], "Premium Balsamic Glaze")
+        self.assertEqual(metadata["asin"], "B000TEST00")
+        self.assertEqual(metadata["normalized_url"], "https://www.amazon.com/dp/B000TEST00")
+        self.assertEqual(metadata["intake_status"], "supported")
+        self.assertEqual(metadata["intake_source_type"], "amazon_product_url")
         self.assertEqual(metadata["rating"], "4.4")
         self.assertEqual(metadata["review_count"], "1,234")
         self.assertEqual(metadata["price"], "$14.99")
@@ -83,6 +87,8 @@ class AmazonProbeAdapterTest(unittest.TestCase):
             evidence = adapter.fetch("https://example.com/product", "balsamic_vinegar")
 
         self.assertEqual(evidence.source_type, "unavailable")
+        self.assertEqual(evidence.metadata["intake_status"], "unsupported")
+        self.assertEqual(evidence.metadata["intake_reason"], "non_amazon_com_url")
         self.assertIn("non_amazon_url", evidence.data_warnings)
         self.assertIn("invalid_or_redirected_url", evidence.data_warnings)
 
@@ -92,6 +98,8 @@ class AmazonProbeAdapterTest(unittest.TestCase):
             evidence = adapter.fetch("https://www.amazon.com/s?k=printer", "printer")
 
         self.assertEqual(evidence.source_type, "unavailable")
+        self.assertEqual(evidence.metadata["intake_status"], "unsupported")
+        self.assertEqual(evidence.metadata["intake_reason"], "not_amazon_product_detail_url")
         self.assertIn("invalid_or_redirected_url", evidence.data_warnings)
         self.assertEqual(evidence.metadata["error_type"], "invalid_or_redirected_url")
 

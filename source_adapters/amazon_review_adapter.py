@@ -7,6 +7,7 @@ from typing import Optional
 from urllib.error import HTTPError, URLError
 
 from schemas.source_contract import SourceEvidence
+from source_adapters.amazon_url_utils import normalize_amazon_product_url
 from source_adapters.base import BaseSourceAdapter
 
 
@@ -312,6 +313,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             data_warnings=warnings,
             metadata={
                 "adapter": self.__class__.__name__,
+                **_intake_metadata(url),
                 "product_title": title,
                 "rating": rating,
                 "review_count": review_count,
@@ -353,6 +355,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
     ) -> SourceEvidence:
         metadata = {
             "adapter": self.__class__.__name__,
+            **_intake_metadata(url),
             "error_type": error_type or warning,
             "retry_count": retry_count,
         }
@@ -372,6 +375,25 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             data_warnings=warnings,
             metadata=metadata,
         )
+
+
+def _intake_metadata(url: str) -> dict:
+    intake = normalize_amazon_product_url(url)
+    if intake.is_supported:
+        return {
+            "asin": intake.asin,
+            "normalized_url": intake.normalized_url,
+            "intake_status": "supported",
+            "intake_source_type": intake.source_type,
+        }
+
+    return {
+        "asin": "",
+        "normalized_url": "",
+        "intake_status": "unsupported",
+        "intake_reason": intake.reason,
+        "intake_source_type": intake.source_type,
+    }
 
 
 def _clean_text(value: str) -> str:
