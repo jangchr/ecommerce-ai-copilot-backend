@@ -65,22 +65,29 @@ class AmazonProbeAdapterTest(unittest.TestCase):
 
     def test_parse_html_cleans_mojibake_category_separators(self):
         adapter = AmazonReviewAdapter()
-        separator = chr(0x00E2) + chr(0x00BA)
-        html_text = AMAZON_HTML.replace(
-            "Grocery & Gourmet Food > Vinegars",
-            f"Grocery & Gourmet Food {separator} Pantry Staples {separator} Balsamic",
-        )
+        cases = [
+            chr(0x00E2) + chr(0x00BA),
+            chr(0x00E2) + chr(0x0080) + chr(0x00BA),
+            chr(0x00E2) + chr(0x20AC) + chr(0x00BA),
+        ]
 
-        evidence = adapter.parse_html(
-            html_text,
-            "https://www.amazon.com/dp/B000TEST00",
-            "balsamic_vinegar",
-        )
+        for separator in cases:
+            with self.subTest(separator=[hex(ord(ch)) for ch in separator]):
+                html_text = AMAZON_HTML.replace(
+                    "Grocery & Gourmet Food > Vinegars",
+                    f"Grocery & Gourmet Food {separator} Pantry Staples {separator} Balsamic",
+                )
 
-        self.assertEqual(
-            evidence.metadata["category_hint"],
-            "Grocery & Gourmet Food > Pantry Staples > Balsamic",
-        )
+                evidence = adapter.parse_html(
+                    html_text,
+                    "https://www.amazon.com/dp/B000TEST00",
+                    "balsamic_vinegar",
+                )
+
+                self.assertEqual(
+                    evidence.metadata["category_hint"],
+                    "Grocery & Gourmet Food > Pantry Staples > Balsamic",
+                )
 
     def test_fetch_uses_mocked_network_response(self):
         adapter = AmazonReviewAdapter()

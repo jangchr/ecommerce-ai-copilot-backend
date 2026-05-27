@@ -405,6 +405,7 @@ def _clean_category_text(value: str) -> str:
     separators = [
         chr(0x203A),
         chr(0x00E2) + chr(0x00BA),
+        chr(0x00E2) + chr(0x0080) + chr(0x00BA),
         chr(0x00E2) + chr(0x20AC) + chr(0x00BA),
     ]
     for separator in separators:
