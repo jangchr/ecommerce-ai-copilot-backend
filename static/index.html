@@ -2106,7 +2106,7 @@
             </div>
 
             <div class="demo-warning" data-i18n="amazonWarning">
-                Do not use Amazon URLs in Product Mode yet. Amazon URLs are available only in Debug Mode / Amazon Shadow.
+                Amazon.com links are now supported in the Amazon Link panel inside Product Idea. The old sample slug input still expects stable local demo slugs.
             </div>
             <div class="run-options">
                 <label class="toggle-option" for="debugMode">
@@ -2167,7 +2167,7 @@
                     <div>
                         <h3 data-i18n="productDescriptionMode">Product Description Mode</h3>
                         <div class="field-helper" data-i18n="productDescriptionBestFor">Best if you can describe the product, audience, and pain points yourself.</div>
-                        <p data-i18n="descriptionIntro">Use your own product copy and customer pain points to generate a Product-like creative brief. This mode uses `user_provided_description` as the source and does not call Amazon, Source Probe or Debug Mode.</p>
+                        <p data-i18n="descriptionIntro">Use your own product copy and customer pain points to generate a Product-like creative brief. You can also fetch Amazon.com product signals below, then use them to fill this form.</p>
                 <div id="quickStartPanel" style="margin-top:18px; padding:16px; border:1px solid #dbe4f0; border-radius:14px; background:#f8fafc;">
                     <div style="font-weight:700; margin-bottom:6px;" data-i18n="quickStartTitle">Try the fastest path</div>
                     <div style="margin-bottom:12px; color:#475569;" data-i18n="quickStartSubtitle">No login required. Use a sample product or paste your own product notes.</div>
@@ -2185,6 +2185,26 @@
                 <div id="descriptionFirstRunGuide" class="first-run-guide-question-box" style="margin-top:12px;" data-i18n="descriptionFirstRunGuide">
                     If you are not sure what to write, use one sentence for the product, one sentence for the buyer, and one sentence for the problem.
                 </div>
+
+                <!-- L26-E1 Amazon intake panel. Reserved upgrade target: L26-E2 dedicated Amazon path card. -->
+                <div id="amazonIntakePanel" class="good-inputs" data-amazon-intake-panel data-upgrade-target="amazon-path-card" style="margin-top:12px;">
+                    <div class="good-inputs-title" data-i18n="amazonIntakeTitle">Paste an Amazon.com product link</div>
+                    <div class="field-helper" data-i18n="amazonIntakeHelper">Fetch product signals first, then use them to fill the product description form.</div>
+                    <div class="description-grid" style="margin-top:12px;">
+                        <div class="description-field wide">
+                            <label for="amazonIntakeUrl" data-i18n="amazonIntakeUrlLabel">Amazon.com product URL</label>
+                            <input id="amazonIntakeUrl" type="text" placeholder="https://www.amazon.com/dp/B00QIIMCCW" data-i18n-placeholder="amazonIntakeUrlPlaceholder">
+                        </div>
+                    </div>
+                    <div class="description-actions">
+                        <button class="btn-secondary" id="amazonIntakeBtn" type="button" onclick="runAmazonIntake()" data-i18n="amazonIntakeFetchBtn">Fetch Amazon signals</button>
+                        <button class="btn-primary" id="amazonIntakeApplyBtn" type="button" onclick="applyAmazonIntakeToDescriptionForm()" data-i18n="amazonIntakeApplyBtn" hidden>Use this info in form</button>
+                        <span class="description-status" id="amazonIntakeStatus"></span>
+                    </div>
+                    <div id="amazonIntakeResult" class="probe-result" hidden></div>
+                    <div id="amazonIntakeUpgradeAnchor" hidden data-upgrade-target="l26-e2-amazon-path-card"></div>
+                </div>
+
                 <div class="description-grid">
                     <div class="description-field">
                         <label for="descriptionProductName" data-i18n="productName">Product name</label>
@@ -2792,6 +2812,7 @@
 
         let latestDebugCategory = '';
         let latestProductData = null;
+        let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
         let latestChineseTranslation = '';
         let latestInputSlug = '';
@@ -2860,9 +2881,31 @@
                 reviewsFirstRunGuide: 'If you do not have real reviews yet, use the sample reviews first. Later, paste buyer comments, objections, or complaints.',
                 sourceBadgeProductDescription: 'Input source: product description',
                 sourceBadgePastedReviews: 'Input source: pasted customer feedback',
-                amazonWarning: 'Do not paste Amazon links here yet. Use a sample product, Product Description Mode, or Pasted Reviews Mode.',
+                amazonWarning: 'Amazon links are now supported in the Amazon Link panel below. The sample slug input still expects stable local demo slugs.',
+
+                amazonIntakeTitle: 'Paste an Amazon.com product link',
+
+                amazonIntakeHelper: 'Fetch product signals first, then use them to fill the product description form.',
+
+                amazonIntakeUrlLabel: 'Amazon.com product URL',
+
+                amazonIntakeUrlPlaceholder: 'https://www.amazon.com/dp/B00QIIMCCW',
+
+                amazonIntakeFetchBtn: 'Fetch Amazon signals',
+
+                amazonIntakeApplyBtn: 'Use this info in form',
+
+                amazonIntakeRunning: 'Fetching Amazon signals...',
+
+                amazonIntakeReady: 'Amazon signals are ready. Review the summary or use them in the form.',
+
+                amazonIntakeUnavailable: 'Amazon signals are unavailable. Paste reviews or product bullets manually.',
+
+                amazonIntakeApplied: 'Amazon signals were added to the product form.',
+
+                amazonIntakeUpgradeNote: 'Reserved for future Amazon path card upgrade.',
                 productDescriptionMode: 'Describe your product idea',
-                descriptionIntro: 'Write what the product is, who it is for, and what problem it solves. The demo will turn it into a TikTok hook, creative summary, and storyboard.',
+                descriptionIntro: 'Write what the product is, who it is for, and what problem it solves. You can also fetch Amazon.com signals first, then fill this form before generating a TikTok hook, creative summary, and storyboard.',
                 productName: 'What is the product?',
                 productCategory: 'Product type',
                 productDescription: 'Describe the product in plain language',
@@ -3126,9 +3169,31 @@
                 reviewsFirstRunGuide: '如果你还没有真实评论，先用示例评论。之后可以粘贴买家评论、购买顾虑或差评。',
                 sourceBadgeProductDescription: '输入来源：产品描述',
                 sourceBadgePastedReviews: '输入来源：粘贴的用户反馈',
-                amazonWarning: '这里暂时不要输入 Amazon 链接。想试用请先点示例产品，或使用下面的产品描述 / 粘贴评论模式。',
+                amazonWarning: '\u73b0\u5728\u53ef\u4ee5\u5728\u4e0b\u65b9 Amazon \u94fe\u63a5\u9762\u677f\u7c98\u8d34 amazon.com \u5546\u54c1\u94fe\u63a5\u3002\u4e0a\u65b9\u65e7\u7684\u793a\u4f8b\u8f93\u5165\u4ecd\u7528\u4e8e\u7a33\u5b9a\u793a\u4f8b slug\u3002',
+
+                amazonIntakeTitle: '\u7c98\u8d34 Amazon.com \u5546\u54c1\u94fe\u63a5',
+
+                amazonIntakeHelper: '\u5148\u6293\u53d6\u5546\u54c1\u4fe1\u53f7\uff0c\u518d\u5c06\u7ed3\u679c\u586b\u5165\u4ea7\u54c1\u63cf\u8ff0\u8868\u5355\u3002',
+
+                amazonIntakeUrlLabel: 'Amazon.com \u5546\u54c1\u94fe\u63a5',
+
+                amazonIntakeUrlPlaceholder: 'https://www.amazon.com/dp/B00QIIMCCW',
+
+                amazonIntakeFetchBtn: '\u6293\u53d6 Amazon \u4fe1\u53f7',
+
+                amazonIntakeApplyBtn: '\u586b\u5165\u4ea7\u54c1\u8868\u5355',
+
+                amazonIntakeRunning: '\u6b63\u5728\u6293\u53d6 Amazon \u4fe1\u53f7...',
+
+                amazonIntakeReady: 'Amazon \u4fe1\u53f7\u5df2\u51c6\u5907\u597d\u3002\u53ef\u4ee5\u67e5\u770b\u6458\u8981\u6216\u586b\u5165\u8868\u5355\u3002',
+
+                amazonIntakeUnavailable: '\u6682\u65f6\u65e0\u6cd5\u6293\u53d6 Amazon \u4fe1\u53f7\u3002\u8bf7\u624b\u52a8\u7c98\u8d34\u8bc4\u8bba\u6216\u4ea7\u54c1\u5356\u70b9\u3002',
+
+                amazonIntakeApplied: 'Amazon \u4fe1\u53f7\u5df2\u586b\u5165\u4ea7\u54c1\u8868\u5355\u3002',
+
+                amazonIntakeUpgradeNote: '\u5df2\u4e3a\u672a\u6765 Amazon \u72ec\u7acb\u5165\u53e3\u5361\u7247\u9884\u7559\u4f4d\u7f6e\u3002',
                 productDescriptionMode: '填写你的产品想法',
-                descriptionIntro: '写下产品是什么、谁会用、他们遇到什么问题。系统会把它整理成 TikTok Hook、创意摘要和分镜脚本。',
+                descriptionIntro: '\u5199\u4e0b\u4ea7\u54c1\u662f\u4ec0\u4e48\u3001\u8c01\u4f1a\u7528\u3001\u4ed6\u4eec\u9047\u5230\u4ec0\u4e48\u95ee\u9898\u3002\u4f60\u4e5f\u53ef\u4ee5\u5148\u6293\u53d6 Amazon.com \u5546\u54c1\u4fe1\u53f7\uff0c\u518d\u586b\u5165\u8868\u5355\u5e76\u751f\u6210 TikTok Hook\u3001\u521b\u610f\u6458\u8981\u548c\u5206\u955c\u811a\u672c\u3002',
                 productName: '产品是什么？',
                 productCategory: '产品类型',
                 productDescription: '用普通话描述这个产品',
@@ -4455,6 +4520,136 @@
                 throw new Error(body.error || 'Pasted Reviews Mode request failed.');
             }
             return body;
+        }
+
+        async function postAmazonIntake(payload) {
+            const response = await fetch('/api/v1/amazon-intake', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || 'Amazon Intake request failed.');
+            }
+            return body;
+        }
+
+        function amazonIntakeDescriptionText(data) {
+            if (!data) return '';
+            const lines = [
+                data.product_title ? `Product title: ${data.product_title}` : '',
+                data.category_hint ? `Amazon category: ${data.category_hint}` : '',
+                data.rating ? `Amazon rating: ${data.rating}` : '',
+                data.review_count ? `Amazon review count: ${data.review_count}` : '',
+                data.price ? `Amazon price: ${data.price}` : '',
+                ...(data.bullet_points || []).map((item) => `Bullet: ${item}`)
+            ];
+            return lines.filter(Boolean).join('\n');
+        }
+
+        function amazonIntakePainPointsText(data) {
+            if (!data) return '';
+            return (data.evidence_preview || []).filter(Boolean).join('\n');
+        }
+
+        function renderAmazonIntakeResult(payload) {
+            const data = payload?.data || {};
+            const target = document.getElementById('amazonIntakeResult');
+            const applyBtn = document.getElementById('amazonIntakeApplyBtn');
+            if (!target || !applyBtn) return;
+
+            const warnings = data.data_warnings || [];
+            target.hidden = false;
+            target.innerHTML = `
+                <div class="probe-provider">
+                    <span>Amazon Intake Preview</span>
+                    <span class="probe-status ${escapeHTML(data.provider_status || '')}">${escapeHTML(data.provider_status || '')}</span>
+                </div>
+                <div class="probe-grid">
+                    ${block('ASIN', data.asin || '')}
+                    ${block('Normalized URL', data.normalized_url || '')}
+                    ${block('Source Confidence', data.source_confidence ?? 0)}
+                    ${block('Fallback Required', data.fallback_required ? 'true' : 'false')}
+                    ${block('Product Title', data.product_title || '')}
+                    ${block('Rating', data.rating || '')}
+                    ${block('Review Count', data.review_count || '')}
+                    ${block('Category Hint', data.category_hint || '')}
+                </div>
+                ${block('Bullet Points', (data.bullet_points || []).join('\n'))}
+                ${block('Evidence Preview', (data.evidence_preview || []).join('\n'))}
+                ${block('Data Warnings', warnings.join('\n'))}
+                ${block('Fallback Message', data.fallback_message || '')}
+                ${block('Upgrade Note', t('amazonIntakeUpgradeNote'))}
+            `;
+
+            applyBtn.hidden = !(data.is_supported && (data.product_title || data.bullet_points?.length || data.evidence_preview?.length));
+        }
+
+        async function runAmazonIntake() {
+            const input = document.getElementById('amazonIntakeUrl');
+            const btn = document.getElementById('amazonIntakeBtn');
+            const status = document.getElementById('amazonIntakeStatus');
+            const result = document.getElementById('amazonIntakeResult');
+            const url = (input?.value || '').trim();
+
+            if (!url) {
+                if (status) status.textContent = 'Paste an Amazon.com URL first.';
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('amazonIntakeRunning');
+            if (result) result.hidden = true;
+
+            try {
+                const payload = {
+                    url,
+                    product_category: document.getElementById('descriptionProductCategory')?.value || 'amazon_product'
+                };
+                const response = await postAmazonIntake(payload);
+                latestAmazonIntakeData = response.data || null;
+                renderAmazonIntakeResult(response);
+                if (status) {
+                    status.textContent = latestAmazonIntakeData?.fallback_required
+                        ? t('amazonIntakeUnavailable')
+                        : t('amazonIntakeReady');
+                }
+            } catch (error) {
+                latestAmazonIntakeData = null;
+                if (status) status.textContent = error.message || t('amazonIntakeUnavailable');
+                if (result) {
+                    result.hidden = false;
+                    result.innerHTML = block('Amazon Intake Error', error.message || 'Amazon Intake request failed.');
+                }
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function applyAmazonIntakeToDescriptionForm() {
+            const data = latestAmazonIntakeData || {};
+            const nameInput = document.getElementById('descriptionProductName');
+            const categoryInput = document.getElementById('descriptionProductCategory');
+            const descriptionInput = document.getElementById('descriptionProductDescription');
+            const painInput = document.getElementById('descriptionPainPoints');
+            const status = document.getElementById('amazonIntakeStatus');
+
+            if (nameInput && data.product_title) {
+                nameInput.value = data.product_title;
+            }
+            if (categoryInput && data.category_hint) {
+                categoryInput.value = data.category_hint;
+            }
+            if (descriptionInput) {
+                const description = amazonIntakeDescriptionText(data);
+                if (description) descriptionInput.value = description;
+            }
+            if (painInput) {
+                const painPoints = amazonIntakePainPointsText(data);
+                if (painPoints) painInput.value = painPoints;
+            }
+            if (status) status.textContent = t('amazonIntakeApplied');
         }
 
         async function runSourceProbe() {

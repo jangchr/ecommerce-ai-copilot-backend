@@ -112,8 +112,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "skincare_serum",
         ]:
             self.assertIn(slug, self.source)
-        self.assertIn("Do not use Amazon URLs in Product Mode yet", self.source)
-        self.assertIn("Amazon URLs are available only in Debug Mode / Amazon Shadow", self.source)
+        self.assertIn("Amazon.com links are now supported in the Amazon Link panel inside Product Idea", self.source)
+        self.assertIn("The old sample slug input still expects stable local demo slugs", self.source)
+        self.assertIn('id="amazonIntakePanel"', self.source)
+        self.assertIn("Amazon links are now supported in the Amazon Link panel below", self.source)
         self.assertIn("Product Result", self.source)
         self.assertIn("Copy / Download / Translation Actions", self.source)
         self.assertIn("Feedback", self.source)
@@ -1208,6 +1210,38 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("No section text available for translation.", self.source)
         self.assertIn("Translation failed. Please try again.", self.source)
         self.assertIn("Translation returned empty result. Please try again.", self.source)
+
+
+    def test_l26_amazon_intake_homepage_panel_is_primary_but_upgrade_ready(self):
+        self.assertIn('id="amazonIntakePanel"', self.source)
+        self.assertIn('data-amazon-intake-panel', self.source)
+        self.assertIn('data-upgrade-target="amazon-path-card"', self.source)
+        self.assertIn('id="amazonIntakeUpgradeAnchor"', self.source)
+        self.assertIn("async function postAmazonIntake(payload)", self.source)
+        self.assertIn("async function runAmazonIntake()", self.source)
+        self.assertIn("function applyAmazonIntakeToDescriptionForm()", self.source)
+        self.assertIn("/api/v1/amazon-intake", self.source)
+        self.assertIn("latestAmazonIntakeData", self.source)
+        self.assertIn("amazonIntakeUpgradeNote", self.source)
+
+        self.assertIn("function mountUserTaskFlow()", self.source)
+        self.assertIn("productIdeaWorkspace.appendChild(productDescriptionMode);", self.source)
+        self.assertIn("function setActiveWorkspace(name, options = {})", self.source)
+
+        self.assertNotIn("pathAmazonIntakeCard", self.source)
+
+        match = re.search(
+            r"async function runAmazonIntake\(\) \{(?P<body>.*?)function applyAmazonIntakeToDescriptionForm",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("generate-copilot", body)
+
 
     def test_source_probe_is_guarded_by_debug_mode(self):
         self.assertIn("postCopilot('debug-source-probe'", self.source)
