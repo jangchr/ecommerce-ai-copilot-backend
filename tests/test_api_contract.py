@@ -4,6 +4,8 @@ from fastapi.testclient import TestClient
 
 from main import app
 from schemas.api_contract import (
+    AmazonIntakeRequest,
+    AmazonIntakeResponse,
     DebugCopilotResponse,
     GenerateCopilotResponse,
     GrowthRequest,
@@ -29,6 +31,12 @@ class ApiContractTest(unittest.TestCase):
         self.assertIs(
             route_response_model("/api/v1/generate-copilot"),
             GenerateCopilotResponse,
+        )
+
+    def test_amazon_intake_endpoint_uses_amazon_intake_response_contract(self):
+        self.assertIs(
+            route_response_model("/api/v1/amazon-intake"),
+            AmazonIntakeResponse,
         )
 
     def test_debug_endpoint_uses_debug_response_contract(self):
@@ -88,6 +96,18 @@ class ApiContractTest(unittest.TestCase):
         self.assertEqual(GrowthRequest(url="x").goal, "tiktok_ctr")
         self.assertEqual(GrowthRequest(url="x").real_source_mode, "local")
         self.assertEqual(GrowthRequest(url="x").output_language, "en")
+
+    def test_amazon_intake_contract_defaults_and_fields(self):
+        request = AmazonIntakeRequest(url="https://www.amazon.com/dp/B000TEST00")
+        self.assertEqual(request.product_category, "amazon_product")
+
+        response_properties = AmazonIntakeResponse.model_json_schema()["properties"]
+        data_schema = AmazonIntakeResponse.model_json_schema()["$defs"]["AmazonIntakeData"]
+        self.assertIn("request_id", response_properties)
+        self.assertIn("fallback_required", data_schema["properties"])
+        self.assertIn("metadata", data_schema["properties"])
+        self.assertIn("asin", data_schema["properties"])
+        self.assertIn("normalized_url", data_schema["properties"])
 
     def test_source_probe_contract_exposes_debug_and_memory_guard_fields(self):
         request_properties = SourceProbeRequest.model_json_schema()["properties"]

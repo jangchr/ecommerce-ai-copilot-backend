@@ -16,6 +16,8 @@ from core.workflow import copilot_engine, memory_engine
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from schemas.api_contract import (
+    AmazonIntakeRequest,
+    AmazonIntakeResponse,
     DebugCopilotResponse,
     GenerateCopilotResponse,
     GrowthRequest,
@@ -33,6 +35,7 @@ from schemas.source_probe_contract import (
     SourceProbeTelemetry,
 )
 from source_adapters import SourceAdapterRegistry
+from source_adapters.amazon_url_utils import normalize_amazon_product_url
 
 app = FastAPI()
 source_probe_registry = SourceAdapterRegistry()
@@ -695,6 +698,146 @@ async def healthz(request: Request):
         "service": "grounded-ecommerce-creative-agent",
         "stable_baseline": "l9_9_stable",
     }
+
+
+def _amazon_intake_fallback_message() -> str:
+    return "Paste 3-5 Amazon reviews or product bullets to improve the creative brief."
+
+
+@app.post("/api/v1/amazon-intake", response_model=AmazonIntakeResponse)
+async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
+    started = time.perf_counter()
+    request_id = http_request.state.request_id
+    intake = normalize_amazon_product_url(request.url)
+
+    emit_event(
+        "amazon_intake_start",
+        request_id,
+        endpoint="/api/v1/amazon-intake",
+        status="started",
+        product_category=request.product_category,
+    )
+
+    base_data = {
+        "input_url": request.url,
+        "is_supported": intake.is_supported,
+        "asin": intake.asin,
+        "normalized_url": intake.normalized_url,
+        "provider_status": "unsupported" if not intake.is_supported else "pending",
+        "source_confidence": 0.0,
+        "product_title": "",
+        "rating": "",
+        "review_count": "",
+        "price": "",
+        "category_hint": "",
+        "bullet_points": [],
+        "evidence_preview": [],
+        "data_warnings": [],
+        "fallback_required": True,
+        "fallback_message": _amazon_intake_fallback_message(),
+        "error": "",
+        "metadata": {},
+    }
+
+    if not intake.is_supported:
+        base_data["data_warnings"] = ["unsupported_amazon_url", intake.reason]
+        base_data["metadata"] = {
+            "intake_status": "unsupported",
+            "intake_reason": intake.reason,
+            "intake_source_type": intake.source_type,
+        }
+        emit_event(
+            "amazon_intake_complete",
+            request_id,
+            endpoint="/api/v1/amazon-intake",
+            status="success",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category,
+            fallback_required=True,
+        )
+        return {
+            "status": "success",
+            "data": base_data,
+            "request_id": request_id,
+        }
+
+    try:
+        evidence = source_probe_registry.fetch(
+            "amazon_review_api",
+            intake.normalized_url,
+            request.product_category,
+        )
+        metadata = dict(evidence.metadata or {})
+        provider_status = _probe_status_from_evidence(evidence)
+        fallback_required = not (provider_status == "success" and evidence.confidence >= 0.70)
+
+        base_data.update(
+            {
+                "provider_status": provider_status,
+                "source_confidence": evidence.confidence,
+                "product_title": metadata.get("product_title", ""),
+                "rating": metadata.get("rating", ""),
+                "review_count": metadata.get("review_count", ""),
+                "price": metadata.get("price", ""),
+                "category_hint": metadata.get("category_hint", ""),
+                "bullet_points": list(metadata.get("bullet_points") or []),
+                "evidence_preview": list(evidence.evidence_quotes[:3]),
+                "data_warnings": list(evidence.data_warnings or []),
+                "fallback_required": fallback_required,
+                "fallback_message": _amazon_intake_fallback_message() if fallback_required else "",
+                "error": metadata.get("error", ""),
+                "metadata": {
+                    **metadata,
+                    "source_type": evidence.source_type,
+                    "data_warnings": list(evidence.data_warnings or []),
+                },
+            }
+        )
+
+        emit_event(
+            "amazon_intake_complete",
+            request_id,
+            endpoint="/api/v1/amazon-intake",
+            status="success",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category,
+            fallback_required=fallback_required,
+        )
+        return {
+            "status": "success",
+            "data": base_data,
+            "request_id": request_id,
+        }
+    except Exception as exc:
+        base_data.update(
+            {
+                "provider_status": "error",
+                "data_warnings": ["amazon_fetch_error"],
+                "fallback_required": True,
+                "fallback_message": _amazon_intake_fallback_message(),
+                "error": str(exc),
+                "metadata": {
+                    "intake_status": "supported",
+                    "asin": intake.asin,
+                    "normalized_url": intake.normalized_url,
+                    "error_type": "amazon_fetch_error",
+                },
+            }
+        )
+        emit_event(
+            "amazon_intake_complete",
+            request_id,
+            endpoint="/api/v1/amazon-intake",
+            status="success",
+            latency_ms=(time.perf_counter() - started) * 1000,
+            product_category=request.product_category,
+            fallback_required=True,
+        )
+        return {
+            "status": "success",
+            "data": base_data,
+            "request_id": request_id,
+        }
 
 
 @app.post("/api/v1/generate-copilot", response_model=GenerateCopilotResponse)

@@ -119,6 +119,38 @@ class PastedReviewsResponse(BaseModel):
     output_language: str = "en"
 
 
+class AmazonIntakeRequest(BaseModel):
+    url: str
+    product_category: str = "amazon_product"
+
+
+class AmazonIntakeData(BaseModel):
+    input_url: str = ""
+    is_supported: bool = False
+    asin: str = ""
+    normalized_url: str = ""
+    provider_status: str = ""
+    source_confidence: float = 0.0
+    product_title: str = ""
+    rating: str = ""
+    review_count: str = ""
+    price: str = ""
+    category_hint: str = ""
+    bullet_points: List[str] = Field(default_factory=list)
+    evidence_preview: List[str] = Field(default_factory=list)
+    data_warnings: List[str] = Field(default_factory=list)
+    fallback_required: bool = True
+    fallback_message: str = ""
+    error: str = ""
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AmazonIntakeResponse(BaseModel):
+    status: str
+    data: AmazonIntakeData
+    request_id: Optional[str] = None
+
+
 class DebugCopilotResponse(BaseModel):
     request_id: Optional[str] = None
     product_category: Optional[str] = None
