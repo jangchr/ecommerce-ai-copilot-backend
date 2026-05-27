@@ -280,7 +280,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
         price = _first(parser.fields["price"]) or _meta_content(html_text, "product:price:amount")
         bullets = _unique(parser.fields["bullet_points"], limit=6)
         snippets = _unique(parser.fields["review_snippets"], limit=6)
-        category_hint = _clean_text(
+        category_hint = _clean_category_text(
             _first(parser.fields["category_hint"])
             or _meta_content(html_text, "product:category")
             or product_category
@@ -398,6 +398,19 @@ def _intake_metadata(url: str) -> dict:
 
 def _clean_text(value: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(value or "")).strip()
+
+
+def _clean_category_text(value: str) -> str:
+    text = _clean_text(value)
+    separators = [
+        chr(0x203A),
+        chr(0x00E2) + chr(0x00BA),
+        chr(0x00E2) + chr(0x20AC) + chr(0x00BA),
+    ]
+    for separator in separators:
+        text = text.replace(separator, " > ")
+    text = re.sub(r"\s*>\s*", " > ", text)
+    return text.strip(" >")
 
 
 def _first(values: list[str]) -> str:

@@ -62,6 +62,26 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         self.assertIn("Vinegars", metadata["category_hint"])
         self.assertIn("Thick glaze for salads and cheese boards.", metadata["bullet_points"])
 
+
+    def test_parse_html_cleans_mojibake_category_separators(self):
+        adapter = AmazonReviewAdapter()
+        separator = chr(0x00E2) + chr(0x00BA)
+        html_text = AMAZON_HTML.replace(
+            "Grocery & Gourmet Food > Vinegars",
+            f"Grocery & Gourmet Food {separator} Pantry Staples {separator} Balsamic",
+        )
+
+        evidence = adapter.parse_html(
+            html_text,
+            "https://www.amazon.com/dp/B000TEST00",
+            "balsamic_vinegar",
+        )
+
+        self.assertEqual(
+            evidence.metadata["category_hint"],
+            "Grocery & Gourmet Food > Pantry Staples > Balsamic",
+        )
+
     def test_fetch_uses_mocked_network_response(self):
         adapter = AmazonReviewAdapter()
         with patch.object(adapter, "_fetch_html", return_value=AMAZON_HTML):
