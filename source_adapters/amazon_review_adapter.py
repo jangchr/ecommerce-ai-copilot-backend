@@ -286,12 +286,17 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             or product_category
         )
 
+        cleaned_review_snippets = [
+            _clean_review_snippet(snippet)
+            for snippet in snippets
+            if _clean_review_snippet(snippet)
+        ]
         review_records = [
             ReviewRecord(
                 text=_short_quote(snippet),
                 source="amazon_review_snippet",
             )
-            for snippet in snippets
+            for snippet in cleaned_review_snippets
             if _short_quote(snippet)
         ][:6]
         evidence_quotes = [review.text for review in review_records if review.text]
@@ -407,6 +412,19 @@ def _intake_metadata(url: str) -> dict:
 
 def _clean_text(value: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(value or "")).strip()
+
+
+def _clean_review_snippet(value: str) -> str:
+    text = _clean_text(value)
+    noise_phrases = [
+        "Brief content visible, double tap to read full content.",
+        "Full content visible, double tap to read brief content.",
+        "Read more Read less",
+    ]
+    for phrase in noise_phrases:
+        text = text.replace(phrase, " ")
+    text = re.sub(r"\s+", " ", text).strip()
+    return text.strip(" -")
 
 
 def _clean_category_text(value: str) -> str:

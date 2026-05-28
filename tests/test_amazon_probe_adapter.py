@@ -66,6 +66,32 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         self.assertIn("Thick glaze for salads and cheese boards.", metadata["bullet_points"])
 
 
+
+    def test_parse_html_cleans_amazon_review_ui_noise(self):
+        noisy_html = AMAZON_HTML.replace(
+            "The cap cracked during shipping and leaked all over the box.",
+            """
+            Brief content visible, double tap to read full content.
+            Full content visible, double tap to read brief content.
+            The cap cracked during shipping and leaked all over the box.
+            Read more Read less
+            """,
+        )
+
+        evidence = AmazonReviewAdapter().parse_html(
+            noisy_html,
+            "https://www.amazon.com/dp/B000TEST00",
+            "balsamic_vinegar",
+        )
+
+        combined = " ".join(evidence.evidence_quotes + [review.text for review in evidence.reviews])
+        self.assertIn("cap cracked during shipping", combined)
+        self.assertNotIn("Brief content visible", combined)
+        self.assertNotIn("Full content visible", combined)
+        self.assertNotIn("Read more Read less", combined)
+        self.assertTrue(all(review.text for review in evidence.reviews))
+
+
     def test_parse_html_cleans_mojibake_category_separators(self):
         adapter = AmazonReviewAdapter()
         cases = [
