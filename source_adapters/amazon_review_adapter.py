@@ -174,7 +174,20 @@ class AmazonReviewAdapter(BaseSourceAdapter):
                 raise
 
     def _fetch_html(self, url: str) -> str:
-        return self.crawler.fetch_html(url).html
+        detail_result = self.crawler.fetch_html(url)
+        html_parts = [detail_result.html or ""]
+
+        reviews_url = _amazon_reviews_url(url)
+        if reviews_url:
+            try:
+                reviews_result = self.crawler.fetch_html(reviews_url)
+                if reviews_result.html:
+                    html_parts.append(reviews_result.html)
+            except Exception:
+                # Review-page crawl is a best-effort enrichment. Keep the detail page result usable.
+                pass
+
+        return "\n".join(part for part in html_parts if part)
 
     def _is_amazon_detail_url(self, url: str) -> bool:
         lowered = (url or "").lower()
@@ -445,6 +458,15 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             data_warnings=warnings,
             metadata=metadata,
         )
+
+
+
+def _amazon_reviews_url(url: str) -> str:
+    metadata = _intake_metadata(url)
+    asin = metadata.get("asin") or ""
+    if not asin:
+        return ""
+    return f"https://www.amazon.com/product-reviews/{asin}?reviewerType=all_reviews&sortBy=recent"
 
 
 def _intake_metadata(url: str) -> dict:
