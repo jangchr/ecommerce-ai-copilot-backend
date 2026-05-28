@@ -1,4 +1,4 @@
-# Grounded Ecommerce Creative Agent Backend
+﻿# Grounded Ecommerce Creative Agent Backend
 
 This backend is an evidence-driven ecommerce creative agent runtime. It turns grounded product-review evidence and trend context into structured strategy, executable short-video scene graphs, reward evaluation, reflection routing and bounded memory. Local curated review datasets remain the stable regression anchor while external source adapters stay feature-flagged and safely degradable.
 
@@ -510,3 +510,4 @@ The runtime is currently packaged around grounded local datasets, observable mem
 - [L18 Trial Feedback Template](docs/public_demo_l18_trial_feedback_template.md) — L18 试用反馈记录模板。
 - [L18 Next Decision Gate](docs/public_demo_l18_next_decision_gate.md) — L18 后续是否继续改的决策门槛。
 - [L18 Trial Round 2 Tracker](docs/public_demo_l18_trial_round_2_tracker.md) — L18 第二轮中文朋友试用记录表。
+- [Amazon Product Link v1 Handoff](docs/amazon_product_link_v1_handoff.md) — L26-G Amazon Product Link primary path shipped and publicly verified.

@@ -1,4 +1,4 @@
-# Production Handoff Runbook
+﻿# Production Handoff Runbook
 
 ## Purpose
 
@@ -2681,3 +2681,38 @@ Summary:
 - 暂停无反馈前端 polish。
 - 下一步收集 3 个中文朋友真实试用反馈。
 - 后续是否继续改，由 decision gate 决定。
+## L26-G Amazon Product Link v1
+
+Status: shipped and publicly verified.
+
+Commit:
+
+2518f8f
+
+Document:
+
+- docs/amazon_product_link_v1_handoff.md
+
+Summary:
+
+- Amazon Product Link is now a primary public demo entry path.
+- The workflow supports Fetch Amazon signals and Generate from Amazon.
+- Generate from Amazon reuses the existing Product Description generation and rendering flow.
+- Local browser smoke passed.
+- Frontend boundary tests passed.
+- Fast gate passed.
+- Public Render health, Amazon intake API, public HTML marker check, and browser smoke passed.
+
+Boundary:
+
+- No new /api/v1/amazon-generate endpoint.
+- No schema changes.
+- No source adapter changes.
+- No Debug / Amazon Shadow behavior changes.
+- No duplicate Amazon-only result renderer.
+
+Next:
+
+- Treat L26-G as shipped.
+- Do not create more intermediate documents for this release.
+- Choose the next product step from real usage feedback or a clear final-product objective.
