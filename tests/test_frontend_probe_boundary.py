@@ -1288,6 +1288,58 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
 
 
+
+
+    def test_l30_generate_from_amazon_uses_full_review_insight_pack(self):
+        self.assertIn("function amazonInsightSectionText(label, items)", self.source)
+        self.assertIn("function amazonIntakePainPointsText(data)", self.source)
+
+        match = re.search(
+            r"function amazonIntakePainPointsText\(data\) \{(?P<body>.*?)\n        \}\n\n        function renderAmazonIntakeResult",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("data.review_insights", body)
+        self.assertIn("amazonLocalizedLabel('reviewInsightPack')", body)
+        self.assertIn("amazonLocalizedLabel('painPoints')", body)
+        self.assertIn("insights.pain_points", body)
+        self.assertIn("amazonLocalizedLabel('buyerObjections')", body)
+        self.assertIn("insights.buyer_objections", body)
+        self.assertIn("amazonLocalizedLabel('useCases')", body)
+        self.assertIn("insights.use_cases", body)
+        self.assertIn("amazonLocalizedLabel('emotionalTriggers')", body)
+        self.assertIn("insights.emotional_triggers", body)
+        self.assertIn("amazonLocalizedLabel('evidenceQuotes')", body)
+        self.assertIn("insights.evidence_quotes", body)
+        self.assertIn("amazonLocalizedLabel('capturedReviewSnippets')", body)
+        self.assertIn("data.review_items", body)
+        self.assertIn("amazonLocalizedLabel('evidencePreview')", body)
+        self.assertIn("data.evidence_preview", body)
+        self.assertIn("String.fromCharCode(10)", body)
+
+        apply_match = re.search(
+            r"function applyAmazonIntakeToDescriptionForm\(\) \{(?P<body>.*?)\n        \}\n\n        async function generateFromAmazonIntake",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(apply_match)
+        apply_body = apply_match.group("body")
+        self.assertIn("amazonIntakePainPointsText(data)", apply_body)
+        self.assertIn("painInput.value = painPoints", apply_body)
+
+        generate_match = re.search(
+            r"async function generateFromAmazonIntake\(\) \{(?P<body>.*?)\n        \}\n\n        async function runSourceProbe",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(generate_match)
+        generate_body = generate_match.group("body")
+        self.assertIn("applyAmazonIntakeToDescriptionForm()", generate_body)
+        self.assertIn("await generateFromDescription()", generate_body)
+
     def test_l29b_amazon_review_insight_pack_follows_language_mode(self):
         self.assertIn("function amazonLocalizedLabel(key)", self.source)
         self.assertIn("function amazonLocalizedBoolean(value)", self.source)

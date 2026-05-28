@@ -4698,19 +4698,38 @@
                 .join(newline + newline);
         }
 
+        function amazonInsightSectionText(label, items) {
+            const newline = String.fromCharCode(10);
+            const lines = (items || []).filter(Boolean);
+            if (!lines.length) return '';
+            return `${label}:${newline}${lines.map((item) => `- ${item}`).join(newline)}`;
+        }
+
+        function amazonInsightSectionText(label, items) {
+            const newline = String.fromCharCode(10);
+            const lines = (items || []).filter(Boolean);
+            if (!lines.length) return '';
+            return `${label}:${newline}${lines.map((item) => `- ${item}`).join(newline)}`;
+        }
+
         function amazonIntakePainPointsText(data) {
             if (!data) return '';
+            const newline = String.fromCharCode(10);
+            const insights = data.review_insights || {};
             const reviewItemText = (data.review_items || [])
                 .map((item) => item.text || '')
                 .filter(Boolean);
-            const insights = data.review_insights || {};
+
             return [
-                ...(insights.pain_points || []),
-                ...(insights.buyer_objections || []),
-                ...(insights.emotional_triggers || []),
-                ...reviewItemText,
-                ...(data.evidence_preview || [])
-            ].filter(Boolean).join('\n');
+                amazonLocalizedLabel('reviewInsightPack'),
+                amazonInsightSectionText(amazonLocalizedLabel('painPoints'), insights.pain_points),
+                amazonInsightSectionText(amazonLocalizedLabel('buyerObjections'), insights.buyer_objections),
+                amazonInsightSectionText(amazonLocalizedLabel('useCases'), insights.use_cases),
+                amazonInsightSectionText(amazonLocalizedLabel('emotionalTriggers'), insights.emotional_triggers),
+                amazonInsightSectionText(amazonLocalizedLabel('evidenceQuotes'), insights.evidence_quotes),
+                amazonInsightSectionText(amazonLocalizedLabel('capturedReviewSnippets'), reviewItemText),
+                amazonInsightSectionText(amazonLocalizedLabel('evidencePreview'), data.evidence_preview || [])
+            ].filter(Boolean).join(newline + newline);
         }
 
         function renderAmazonIntakeResult(payload) {
