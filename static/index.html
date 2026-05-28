@@ -3502,6 +3502,15 @@
                     generatedAt: latestGeneratedAt || new Date().toISOString()
                 });
             }
+            if (latestAmazonIntakeData) {
+                renderAmazonIntakeResult({ data: latestAmazonIntakeData });
+                const amazonStatus = document.getElementById('amazonIntakeStatus');
+                if (amazonStatus && amazonStatus.textContent.trim()) {
+                    amazonStatus.textContent = latestAmazonIntakeData.fallback_required
+                        ? t('amazonIntakeUnavailable')
+                        : t('amazonIntakeReady');
+                }
+            }
         }
 
         function resetSectionTranslations() {

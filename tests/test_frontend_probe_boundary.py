@@ -1328,6 +1328,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("String.fromCharCode(10)", render_body.group("body"))
         self.assertIn("join(newline)", render_body.group("body"))
 
+        set_language_body = re.search(
+            r"function setLanguageMode\(language\) \{(?P<body>.*?)\n        \}\n\n        function resetSectionTranslations",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(set_language_body)
+        set_language_body_text = set_language_body.group("body")
+        self.assertIn("latestAmazonIntakeData", set_language_body_text)
+        self.assertIn("renderAmazonIntakeResult({ data: latestAmazonIntakeData })", set_language_body_text)
+        self.assertIn("amazonIntakeUnavailable", set_language_body_text)
+        self.assertIn("amazonIntakeReady", set_language_body_text)
+
 
     def test_l29_amazon_review_insight_pack_is_rendered_and_used_without_new_backend(self):
         self.assertIn("review_insights", self.source)
