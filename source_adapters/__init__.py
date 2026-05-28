@@ -1,6 +1,6 @@
 """Grounded evidence source adapters."""
 
-from source_adapters.amazon_crawler import AmazonCrawlerResult, RequestsAmazonCrawler
+from source_adapters.amazon_crawler import AmazonCrawlerResult, ExternalAmazonCrawler, HybridAmazonCrawler, RequestsAmazonCrawler
 from source_adapters.amazon_review_adapter import AmazonReviewAdapter
 from source_adapters.local_review_adapter import LocalReviewAdapter
 from source_adapters.mock_trend_adapter import MockTrendAdapter
@@ -10,6 +10,8 @@ from source_adapters.tiktok_trend_adapter import TikTokTrendAdapter
 
 __all__ = [
     "AmazonCrawlerResult",
+    "ExternalAmazonCrawler",
+    "HybridAmazonCrawler",
     "AmazonReviewAdapter",
     "RequestsAmazonCrawler",
     "LocalReviewAdapter",

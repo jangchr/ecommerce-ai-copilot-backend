@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
-from source_adapters.amazon_crawler import AmazonCrawlerResult, RequestsAmazonCrawler
+from source_adapters.amazon_crawler import AmazonCrawlerResult, ExternalAmazonCrawler, HybridAmazonCrawler, RequestsAmazonCrawler
 from source_adapters.amazon_review_adapter import AmazonReviewAdapter
 
 
@@ -281,6 +281,79 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         self.assertIn("small size makes it easier", combined)
         self.assertNotIn("sparse_reviews", evidence.data_warnings)
 
+
+
+
+    def test_external_crawler_converts_json_payload_to_parseable_html(self):
+        adapter = AmazonReviewAdapter(
+            crawler=ExternalAmazonCrawler(endpoint_url="https://crawler.example.com/amazon")
+        )
+
+        with patch("source_adapters.amazon_crawler.requests.post") as post:
+            response = post.return_value
+            response.status_code = 200
+            response.headers = {}
+            response.json.return_value = {
+                "product_title": "External Worker Product",
+                "price": "$9.99",
+                "rating": "4.7",
+                "review_count": "321",
+                "category_hint": "Kitchen > Tools",
+                "bullet_points": ["Compact draining tool", "Easy to store"],
+                "review_items": [
+                    {"title": "Saves time", "text": "This saves time when draining cans."},
+                    {"text": "Small enough to store in a drawer."},
+                ],
+            }
+
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000EXT123", "amazon_product")
+
+        self.assertEqual(evidence.source_type, "amazon_review_api")
+        self.assertEqual(evidence.metadata["product_title"], "External Worker Product")
+        self.assertEqual(evidence.metadata["price"], "$9.99")
+        self.assertEqual(evidence.metadata["rating"], "4.7")
+        self.assertEqual(evidence.review_count, 321)
+        self.assertEqual(len(evidence.reviews), 3)
+        combined = " ".join(review.text for review in evidence.reviews)
+        self.assertIn("This saves time when draining cans", combined)
+        self.assertIn("Small enough to store", combined)
+        self.assertNotIn("sparse_reviews", evidence.data_warnings)
+
+    def test_hybrid_crawler_uses_external_fallback_when_primary_is_blocked(self):
+        class BlockedCrawler:
+            def fetch_html(self, url):
+                return AmazonCrawlerResult(
+                    url=url,
+                    html="<html><title>Robot Check</title><body>Enter the characters you see below</body></html>",
+                    status_code=200,
+                    final_url=url,
+                )
+
+        class FallbackCrawler:
+            def fetch_html(self, url):
+                return AmazonCrawlerResult(
+                    url=url,
+                    html="""
+                    <span id="productTitle">Fallback Product</span>
+                    <span class="a-offscreen">$11.49</span>
+                    <span class="a-icon-alt">4.8 out of 5 stars</span>
+                    <span id="acrCustomerReviewText">88 ratings</span>
+                    <span data-hook="review-body">Fallback worker captured this review.</span>
+                    <span data-hook="review-body">Second fallback review is useful.</span>
+                    """,
+                    status_code=200,
+                    final_url=url,
+                )
+
+        evidence = AmazonReviewAdapter(
+            crawler=HybridAmazonCrawler(BlockedCrawler(), FallbackCrawler())
+        ).fetch("https://www.amazon.com/dp/B000EXT123", "amazon_product")
+
+        self.assertEqual(evidence.source_type, "amazon_review_api")
+        self.assertEqual(evidence.metadata["product_title"], "Fallback Product")
+        self.assertEqual(evidence.metadata["price"], "$11.49")
+        self.assertEqual(len(evidence.reviews), 2)
+        self.assertNotIn("blocked", evidence.data_warnings)
 
 
     def test_fetch_attempts_multiple_review_page_fallbacks(self):
