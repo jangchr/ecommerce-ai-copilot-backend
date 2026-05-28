@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
+from source_adapters.amazon_crawler import AmazonCrawlerResult, RequestsAmazonCrawler
 from source_adapters.amazon_review_adapter import AmazonReviewAdapter
 
 
@@ -197,6 +198,52 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         self.assertIn("missing_bullet_points", evidence.data_warnings)
         self.assertIn("sparse_reviews", evidence.data_warnings)
         self.assertIn("partial_parse", evidence.data_warnings)
+
+
+
+    def test_fetch_uses_injected_crawler_execution_layer(self):
+        class FakeCrawler:
+            crawler_name = "fake_amazon_crawler"
+
+            def __init__(self):
+                self.urls = []
+
+            def fetch_html(self, url):
+                self.urls.append(url)
+                return AmazonCrawlerResult(
+                    url=url,
+                    html=AMAZON_HTML,
+                    status_code=200,
+                    final_url=url,
+                    crawler_name=self.crawler_name,
+                )
+
+        crawler = FakeCrawler()
+        adapter = AmazonReviewAdapter(crawler=crawler)
+
+        evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "balsamic_vinegar")
+
+        self.assertEqual(crawler.urls, ["https://www.amazon.com/dp/B000TEST00"])
+        self.assertEqual(evidence.source_type, "amazon_review_api")
+        self.assertEqual(evidence.metadata["product_title"], "Premium Balsamic Glaze")
+        self.assertIn("cap cracked", " ".join(evidence.evidence_quotes))
+
+    def test_requests_crawler_converts_http_error_for_adapter_classification(self):
+        adapter = AmazonReviewAdapter(crawler=RequestsAmazonCrawler())
+
+        with patch("source_adapters.amazon_crawler.requests.get") as get:
+            response = get.return_value
+            response.status_code = 404
+            response.reason = "Not Found"
+            response.url = "https://www.amazon.com/dp/B000MISSNG"
+            response.headers = {}
+            response.text = ""
+
+            evidence = adapter.fetch("https://www.amazon.com/dp/B000MISSNG", "amazon_product")
+
+        self.assertEqual(evidence.source_type, "unavailable")
+        self.assertIn("not_found", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["error_type"], "not_found")
 
 
     def test_fetch_uses_mocked_network_response(self):

@@ -7,6 +7,7 @@ from typing import Optional
 from urllib.error import HTTPError, URLError
 
 from schemas.source_contract import ReviewRecord, SourceEvidence
+from source_adapters.amazon_crawler import BaseAmazonCrawler, build_amazon_crawler
 from source_adapters.amazon_url_utils import normalize_amazon_product_url
 from source_adapters.base import BaseSourceAdapter
 
@@ -100,6 +101,9 @@ class AmazonReviewAdapter(BaseSourceAdapter):
     source_type = "amazon_review_api"
     max_retries = 1
 
+    def __init__(self, crawler: Optional[BaseAmazonCrawler] = None):
+        self.crawler = crawler or build_amazon_crawler()
+
     def fetch(self, url: str, product_category: str) -> SourceEvidence:
         if not url:
             return self._unavailable(
@@ -170,23 +174,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
                 raise
 
     def _fetch_html(self, url: str) -> str:
-        request = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": (
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/120.0 Safari/537.36"
-                ),
-                "Accept-Language": "en-US,en;q=0.9",
-            },
-        )
-        with urllib.request.urlopen(request, timeout=8) as response:
-            final_url = response.geturl()
-            if final_url and not self._is_amazon_detail_url(final_url):
-                raise InvalidAmazonDetailURL(f"Invalid or redirected Amazon URL: {final_url}")
-            content_type = response.headers.get_content_charset() or "utf-8"
-            return response.read().decode(content_type, errors="replace")
+        return self.crawler.fetch_html(url).html
 
     def _is_amazon_detail_url(self, url: str) -> bool:
         lowered = (url or "").lower()
