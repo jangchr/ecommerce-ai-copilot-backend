@@ -2716,3 +2716,33 @@ Next:
 - Treat L26-G as shipped.
 - Do not create more intermediate documents for this release.
 - Choose the next product step from real usage feedback or a clear final-product objective.
+## L27-A Amazon Fallback Customer Feedback Path
+
+Status: shipped and publicly verified.
+
+Document:
+
+- docs/amazon_product_link_v1_handoff.md
+
+Summary:
+
+- Amazon Product Link now has a clear fallback path when product signals are unavailable.
+- Unsupported or unavailable URLs show `Paste reviews or bullets instead`.
+- The fallback button opens Customer Feedback and preloads the pasted reviews field with an Amazon fallback note and original URL.
+- Existing Generate from customer feedback flow remains the continuation path.
+
+Validation:
+
+- Frontend boundary tests passed.
+- Fast gate passed.
+- Local browser fallback smoke passed.
+- Public Render marker smoke passed.
+- Public browser fallback smoke passed.
+- Amazon success path still shows Use this info in form and Generate from Amazon.
+
+Boundary:
+
+- No new backend endpoint.
+- No source adapter changes.
+- No Debug / Amazon Shadow behavior changes.
+- No duplicate result renderer.

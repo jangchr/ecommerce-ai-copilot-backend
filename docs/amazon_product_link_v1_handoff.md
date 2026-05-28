@@ -123,3 +123,51 @@ Recommended next product work should be chosen from actual usage feedback or a c
 - Real user trial with Amazon Product Link as the first path.
 
 Until then, L26-G should be treated as shipped.
+## L27-A Amazon Fallback Customer Feedback Path
+
+Status: shipped and publicly verified
+
+Feature: Amazon Product Link fallback path for unsupported or unavailable product signals.
+
+Final user experience:
+
+1. User opens Amazon Product Link.
+2. User pastes an unsupported or unavailable URL.
+3. Fetch Amazon signals returns fallback state.
+4. The page shows `Paste reviews or bullets instead`.
+5. Clicking the fallback button opens Customer Feedback.
+6. The pasted reviews field is prefilled with an Amazon fallback note and the original URL.
+7. The user can continue with the existing Generate from customer feedback path.
+
+Verified fallback URL:
+
+    https://example.com/not-amazon
+
+Verified public markers:
+
+- amazonIntakeFallbackBtn
+- useAmazonFallbackReviews
+- amazonFallbackReviewsReady
+- fallbackBtn.hidden = canUseAmazonSignals
+
+Validation:
+
+- Frontend boundary tests passed: 69 tests OK.
+- Fast gate passed: 205 tests OK.
+- Local browser fallback smoke passed.
+- Public Render marker smoke passed.
+- Public browser fallback smoke passed.
+- Public Amazon success path still shows Use this info in form and Generate from Amazon.
+
+Protected boundaries:
+
+- No new backend endpoint.
+- No Amazon generate endpoint.
+- No source adapter changes.
+- No Debug / Amazon Shadow behavior changes.
+- No automatic fallback generation.
+- No duplicate result renderer.
+
+Product value:
+
+This closes the main Amazon Product Link failure path. If Amazon signals are unavailable, the user is no longer blocked and can continue with customer reviews, product bullets, or buyer language.
