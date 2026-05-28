@@ -1281,6 +1281,42 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("generate-copilot", body)
 
 
+
+    def test_l27_amazon_fallback_routes_to_customer_feedback_without_new_backend(self):
+        self.assertIn('id="amazonIntakeFallbackBtn"', self.source)
+        self.assertIn('data-i18n="amazonIntakeFallbackBtn"', self.source)
+        self.assertIn("function useAmazonFallbackReviews()", self.source)
+        self.assertIn("scrollToPastedReviewsMode();", self.source)
+        self.assertIn("setReviewsStatus(t('amazonFallbackReviewsReady'), 'success')", self.source)
+        self.assertIn("amazonFallbackOpenedReviews", self.source)
+        self.assertIn("reviewsPastedReviews", self.source)
+        self.assertIn("fallbackBtn.hidden = canUseAmazonSignals;", self.source)
+
+        match = re.search(
+            r"function useAmazonFallbackReviews\(\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("reviewsProductName", body)
+        self.assertIn("reviewsProductCategory", body)
+        self.assertIn("reviewsProductDescription", body)
+        self.assertIn("reviewsPastedReviews", body)
+        self.assertIn("updateReviewInputPreviews();", body)
+        self.assertIn("scrollToPastedReviewsMode();", body)
+
+        self.assertNotIn("fetch(", body)
+        self.assertNotIn("postAmazonIntake", body)
+        self.assertNotIn("postPastedReviews", body)
+        self.assertNotIn("postProductDescription", body)
+        self.assertNotIn("generateFromReviews()", body)
+        self.assertNotIn("generateFromDescription()", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("amazonShadowMode", body)
+        self.assertNotIn("saveCurrentGenerationToRecent", body)
     def test_source_probe_is_guarded_by_debug_mode(self):
         self.assertIn("postCopilot('debug-source-probe'", self.source)
         self.assertIn("async function runSourceProbe()", self.source)

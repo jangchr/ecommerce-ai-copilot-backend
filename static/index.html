@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2205,6 +2205,7 @@
                     <div class="description-actions">
                         <button class="btn-secondary" id="amazonIntakeBtn" type="button" onclick="runAmazonIntake()" data-i18n="amazonIntakeFetchBtn">Fetch Amazon signals</button>
                         <button class="btn-secondary" id="amazonIntakeApplyBtn" type="button" onclick="applyAmazonIntakeToDescriptionForm()" data-i18n="amazonIntakeApplyBtn" hidden>Use this info in form</button>
+                        <button class="btn-secondary" id="amazonIntakeFallbackBtn" type="button" onclick="useAmazonFallbackReviews()" data-i18n="amazonIntakeFallbackBtn" hidden>Paste reviews or bullets instead</button>
                         <button class="btn-primary" id="amazonIntakeGenerateBtn" type="button" onclick="generateFromAmazonIntake()" data-i18n="amazonIntakeGenerateBtn" hidden>Generate from Amazon</button>
                         <span class="description-status" id="amazonIntakeStatus"></span>
                     </div>
@@ -2905,6 +2906,7 @@
                 amazonIntakeFetchBtn: 'Fetch Amazon signals',
 
                 amazonIntakeApplyBtn: 'Use this info in form',
+                amazonIntakeFallbackBtn: 'Paste reviews or bullets instead',
 
 
                 amazonIntakeGenerateBtn: 'Generate from Amazon',
@@ -2925,7 +2927,9 @@
 
                 amazonIntakeReady: 'Amazon signals are ready. Review the summary or use them in the form.',
 
-                amazonIntakeUnavailable: 'Amazon signals are unavailable. Paste reviews or product bullets manually.',
+                amazonIntakeUnavailable: 'Amazon signals are unavailable. Paste reviews or product bullets manually, or use the customer feedback fallback.',
+                amazonFallbackReviewsReady: 'Paste reviews or bullets here, then generate from customer feedback.',
+                amazonFallbackOpenedReviews: 'Opened customer feedback fallback.',
 
                 amazonIntakeApplied: 'Amazon signals were added to the product form.',
 
@@ -3212,6 +3216,7 @@
                 amazonIntakeFetchBtn: '\u6293\u53d6 Amazon \u4fe1\u53f7',
 
                 amazonIntakeApplyBtn: '\u586b\u5165\u4ea7\u54c1\u8868\u5355',
+                amazonIntakeFallbackBtn: '改用评论或卖点继续',
 
 
                 amazonIntakeGenerateBtn: '\u6839\u636e Amazon \u76f4\u63a5\u751f\u6210',
@@ -3232,7 +3237,9 @@
 
                 amazonIntakeReady: 'Amazon \u4fe1\u53f7\u5df2\u51c6\u5907\u597d\u3002\u53ef\u4ee5\u67e5\u770b\u6458\u8981\u6216\u586b\u5165\u8868\u5355\u3002',
 
-                amazonIntakeUnavailable: '\u6682\u65f6\u65e0\u6cd5\u6293\u53d6 Amazon \u4fe1\u53f7\u3002\u8bf7\u624b\u52a8\u7c98\u8d34\u8bc4\u8bba\u6216\u4ea7\u54c1\u5356\u70b9\u3002',
+                amazonIntakeUnavailable: '暂时无法抓取 Amazon 信号。可以改用评论或产品卖点继续生成。',
+                amazonFallbackReviewsReady: '请在这里粘贴评论或产品卖点，然后根据用户反馈生成。',
+                amazonFallbackOpenedReviews: '已打开用户反馈 fallback。',
 
                 amazonIntakeApplied: 'Amazon \u4fe1\u53f7\u5df2\u586b\u5165\u4ea7\u54c1\u8868\u5355\u3002',
 
@@ -4611,8 +4618,9 @@
             const data = payload?.data || {};
             const target = document.getElementById('amazonIntakeResult');
             const applyBtn = document.getElementById('amazonIntakeApplyBtn');
+            const fallbackBtn = document.getElementById('amazonIntakeFallbackBtn');
             const generateBtn = document.getElementById('amazonIntakeGenerateBtn');
-            if (!target || !applyBtn || !generateBtn) return;
+            if (!target || !applyBtn || !fallbackBtn || !generateBtn) return;
 
             const warnings = data.data_warnings || [];
             target.hidden = false;
@@ -4640,6 +4648,7 @@
 
             const canUseAmazonSignals = data.is_supported && (data.product_title || data.bullet_points?.length || data.evidence_preview?.length);
             applyBtn.hidden = !canUseAmazonSignals;
+            fallbackBtn.hidden = canUseAmazonSignals;
             generateBtn.hidden = !canUseAmazonSignals;
         }
 
@@ -4648,6 +4657,7 @@
             const btn = document.getElementById('amazonIntakeBtn');
             const status = document.getElementById('amazonIntakeStatus');
             const result = document.getElementById('amazonIntakeResult');
+            const fallbackBtn = document.getElementById('amazonIntakeFallbackBtn');
             const url = (input?.value || '').trim();
 
             if (!url) {
@@ -4658,6 +4668,7 @@
             if (btn) btn.disabled = true;
             if (status) status.textContent = t('amazonIntakeRunning');
             if (result) result.hidden = true;
+            if (fallbackBtn) fallbackBtn.hidden = true;
 
             try {
                 const payload = {
@@ -4678,12 +4689,52 @@
                 if (result) {
                     result.hidden = false;
                     result.innerHTML = block('Amazon Intake Error', error.message || 'Amazon Intake request failed.');
+                    if (fallbackBtn) fallbackBtn.hidden = false;
                 }
             } finally {
                 if (btn) btn.disabled = false;
             }
         }
 
+        function useAmazonFallbackReviews() {
+            const data = latestAmazonIntakeData || {};
+            const nameInput = document.getElementById('reviewsProductName');
+            const categoryInput = document.getElementById('reviewsProductCategory');
+            const descriptionInput = document.getElementById('reviewsProductDescription');
+            const reviewsInput = document.getElementById('reviewsPastedReviews');
+            const amazonStatus = document.getElementById('amazonIntakeStatus');
+
+            if (nameInput && data.product_title) {
+                nameInput.value = data.product_title;
+            }
+            if (categoryInput && data.category_hint) {
+                categoryInput.value = data.category_hint;
+            }
+            if (descriptionInput) {
+                const description = amazonIntakeDescriptionText(data);
+                if (description) descriptionInput.value = description;
+            }
+            if (reviewsInput) {
+                const fallbackLines = [
+                    ...(data.evidence_preview || []),
+                    ...(data.bullet_points || []).map((item) => `Bullet: ${item}`),
+                    data.fallback_message ? `Amazon fallback note: ${data.fallback_message}` : '',
+                    data.input_url ? `Amazon URL: ${data.input_url}` : ''
+                ].filter(Boolean);
+                if (fallbackLines.length && !reviewsInput.value.trim()) {
+                    reviewsInput.value = fallbackLines.join('\n');
+                }
+            }
+
+            updateReviewInputPreviews();
+            scrollToPastedReviewsMode();
+            setReviewsStatus(t('amazonFallbackReviewsReady'), 'success');
+            if (amazonStatus) amazonStatus.textContent = t('amazonFallbackOpenedReviews');
+
+            window.setTimeout(() => {
+                document.getElementById('reviewsPastedReviews')?.focus();
+            }, 120);
+        }
         function applyAmazonIntakeToDescriptionForm() {
             const data = latestAmazonIntakeData || {};
             const nameInput = document.getElementById('descriptionProductName');
