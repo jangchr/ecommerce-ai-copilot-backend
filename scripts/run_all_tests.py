@@ -15,7 +15,7 @@ FAST_COMMANDS = [
         "tests.test_memory_bucket",
         "tests.test_source_adapters",
         "tests.test_amazon_probe_adapter",
-        "tests.test_amazon_external_crawler_contract",
+        "tests.test_amazon_external_crawler_contract",\n        "tests.test_apify_amazon_crawler_worker",
         "tests.test_amazon_intake_endpoint",
         "tests.test_amazon_shadow_eval_runner",
         "tests.test_source_registry",
