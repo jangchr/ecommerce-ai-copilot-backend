@@ -732,6 +732,7 @@ async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
         "category_hint": "",
         "bullet_points": [],
         "evidence_preview": [],
+        "review_items": [],
         "data_warnings": [],
         "fallback_required": True,
         "fallback_message": _amazon_intake_fallback_message(),
@@ -782,6 +783,16 @@ async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
                 "category_hint": metadata.get("category_hint", ""),
                 "bullet_points": list(metadata.get("bullet_points") or []),
                 "evidence_preview": list(evidence.evidence_quotes[:3]),
+                "review_items": [
+                    {
+                        "text": review.text,
+                        "source": review.source or evidence.source_type,
+                        "rating": review.rating,
+                        "date": review.date,
+                        "title": review.title,
+                    }
+                    for review in list(evidence.reviews or [])[:6]
+                ],
                 "data_warnings": list(evidence.data_warnings or []),
                 "fallback_required": fallback_required,
                 "fallback_message": _amazon_intake_fallback_message() if fallback_required else "",

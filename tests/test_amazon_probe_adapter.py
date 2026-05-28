@@ -48,6 +48,9 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         self.assertEqual(evidence.review_confidence, evidence.confidence)
         self.assertEqual(evidence.review_count, 1234)
         self.assertIn("cap cracked", " ".join(evidence.evidence_quotes))
+        self.assertTrue(evidence.reviews)
+        self.assertIn("cap cracked", evidence.reviews[0].text)
+        self.assertEqual(evidence.reviews[0].source, "amazon_review_snippet")
         self.assertLessEqual(max(len(quote) for quote in evidence.evidence_quotes), 240)
 
         metadata = evidence.metadata

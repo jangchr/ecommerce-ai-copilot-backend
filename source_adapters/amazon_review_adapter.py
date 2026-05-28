@@ -6,7 +6,7 @@ from html.parser import HTMLParser
 from typing import Optional
 from urllib.error import HTTPError, URLError
 
-from schemas.source_contract import SourceEvidence
+from schemas.source_contract import ReviewRecord, SourceEvidence
 from source_adapters.amazon_url_utils import normalize_amazon_product_url
 from source_adapters.base import BaseSourceAdapter
 
@@ -286,7 +286,15 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             or product_category
         )
 
-        evidence_quotes = [_short_quote(snippet) for snippet in snippets if _short_quote(snippet)]
+        review_records = [
+            ReviewRecord(
+                text=_short_quote(snippet),
+                source="amazon_review_snippet",
+            )
+            for snippet in snippets
+            if _short_quote(snippet)
+        ][:6]
+        evidence_quotes = [review.text for review in review_records if review.text]
         if not evidence_quotes:
             evidence_quotes = [
                 _short_quote(text)
@@ -309,6 +317,7 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             confidence=confidence,
             review_confidence=confidence,
             review_count=_safe_int(review_count),
+            reviews=review_records,
             evidence_quotes=evidence_quotes[:6],
             data_warnings=warnings,
             metadata={

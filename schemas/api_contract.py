@@ -124,6 +124,14 @@ class AmazonIntakeRequest(BaseModel):
     product_category: str = "amazon_product"
 
 
+class AmazonReviewItem(BaseModel):
+    text: str = ""
+    source: str = ""
+    rating: int = 0
+    date: str = ""
+    title: str = ""
+
+
 class AmazonIntakeData(BaseModel):
     input_url: str = ""
     is_supported: bool = False
@@ -138,6 +146,7 @@ class AmazonIntakeData(BaseModel):
     category_hint: str = ""
     bullet_points: List[str] = Field(default_factory=list)
     evidence_preview: List[str] = Field(default_factory=list)
+    review_items: List[AmazonReviewItem] = Field(default_factory=list)
     data_warnings: List[str] = Field(default_factory=list)
     fallback_required: bool = True
     fallback_message: str = ""

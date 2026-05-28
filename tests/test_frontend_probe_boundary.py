@@ -1282,6 +1282,31 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
 
 
+
+
+    def test_l28_amazon_review_signal_pack_is_rendered_without_new_backend(self):
+        self.assertIn("review_items", self.source)
+        self.assertIn("Captured Review Snippets", self.source)
+        self.assertIn("(data.review_items || [])", self.source)
+        self.assertIn("function amazonIntakePainPointsText(data)", self.source)
+
+        match = re.search(
+            r"function amazonIntakePainPointsText\(data\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("reviewItemText", body)
+        self.assertIn("data.review_items", body)
+        self.assertIn("data.evidence_preview", body)
+
+        self.assertNotIn("/api/v1/amazon-reviews", self.source)
+        self.assertNotIn("/api/v1/review-capture", self.source)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("amazonShadowMode", body)
+
     def test_l27_amazon_fallback_routes_to_customer_feedback_without_new_backend(self):
         self.assertIn('id="amazonIntakeFallbackBtn"', self.source)
         self.assertIn('data-i18n="amazonIntakeFallbackBtn"', self.source)

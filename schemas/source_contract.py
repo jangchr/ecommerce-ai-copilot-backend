@@ -7,6 +7,8 @@ class ReviewRecord(BaseModel):
     rating: int = 0
     text: str = ""
     date: str = ""
+    source: str = ""
+    title: str = ""
 
 
 class SourceEvidence(BaseModel):

@@ -4,7 +4,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from main import app
-from schemas.source_contract import SourceEvidence
+from schemas.source_contract import ReviewRecord, SourceEvidence
 
 
 class AmazonIntakeEndpointTest(unittest.TestCase):
@@ -36,6 +36,14 @@ class AmazonIntakeEndpointTest(unittest.TestCase):
             confidence=0.82,
             review_confidence=0.82,
             review_count=1234,
+            reviews=[
+                ReviewRecord(
+                    text="The cap cracked during shipping.",
+                    source="amazon_review_snippet",
+                    rating=4,
+                    title="Cap cracked",
+                )
+            ],
             evidence_quotes=["The cap cracked during shipping."],
             data_warnings=[],
             metadata={
@@ -82,6 +90,10 @@ class AmazonIntakeEndpointTest(unittest.TestCase):
         self.assertEqual(data["price"], "$14.99")
         self.assertIn("Thick glaze", data["bullet_points"][0])
         self.assertIn("cap cracked", data["evidence_preview"][0])
+        self.assertIn("cap cracked", data["review_items"][0]["text"])
+        self.assertEqual(data["review_items"][0]["source"], "amazon_review_snippet")
+        self.assertEqual(data["review_items"][0]["rating"], 4)
+        self.assertEqual(data["review_items"][0]["title"], "Cap cracked")
 
     def test_supported_url_fetch_unavailable_returns_fallback(self):
         evidence = SourceEvidence(

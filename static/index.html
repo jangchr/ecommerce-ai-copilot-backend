@@ -4611,7 +4611,13 @@
 
         function amazonIntakePainPointsText(data) {
             if (!data) return '';
-            return (data.evidence_preview || []).filter(Boolean).join('\n');
+            const reviewItemText = (data.review_items || [])
+                .map((item) => item.text || '')
+                .filter(Boolean);
+            return [
+                ...reviewItemText,
+                ...(data.evidence_preview || [])
+            ].filter(Boolean).join('\n');
         }
 
         function renderAmazonIntakeResult(payload) {
@@ -4641,6 +4647,7 @@
                 </div>
                 ${block('Bullet Points', (data.bullet_points || []).join('\n'))}
                 ${block('Evidence Preview', (data.evidence_preview || []).join('\n'))}
+                ${block('Captured Review Snippets', (data.review_items || []).map((item) => item.text || '').filter(Boolean).join('\n'))}
                 ${block('Data Warnings', warnings.join('\n'))}
                 ${block('Fallback Message', data.fallback_message || '')}
                 ${block('Upgrade Note', t('amazonIntakeUpgradeNote'))}
@@ -4716,6 +4723,7 @@
             }
             if (reviewsInput) {
                 const fallbackLines = [
+                    ...(data.review_items || []).map((item) => item.text || '').filter(Boolean),
                     ...(data.evidence_preview || []),
                     ...(data.bullet_points || []).map((item) => `Bullet: ${item}`),
                     data.fallback_message ? `Amazon fallback note: ${data.fallback_message}` : '',
