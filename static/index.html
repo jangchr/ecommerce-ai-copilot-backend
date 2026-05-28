@@ -4609,22 +4609,84 @@
             return lines.filter(Boolean).join('\n');
         }
 
+        function amazonLocalizedLabel(key) {
+            const labels = {
+                en: {
+                    amazonIntakePreview: 'Amazon Intake Preview',
+                    asin: 'ASIN',
+                    normalizedUrl: 'Normalized URL',
+                    sourceConfidence: 'Source Confidence',
+                    fallbackRequired: 'Fallback Required',
+                    productTitle: 'Product Title',
+                    rating: 'Rating',
+                    reviewCount: 'Review Count',
+                    categoryHint: 'Category Hint',
+                    bulletPoints: 'Bullet Points',
+                    evidencePreview: 'Evidence Preview',
+                    capturedReviewSnippets: 'Captured Review Snippets',
+                    reviewInsightPack: 'Review Insight Pack',
+                    dataWarnings: 'Data Warnings',
+                    fallbackMessage: 'Fallback Message',
+                    upgradeNote: 'Upgrade Note',
+                    painPoints: 'Pain points',
+                    buyerObjections: 'Buyer objections',
+                    useCases: 'Use cases',
+                    emotionalTriggers: 'Emotional triggers',
+                    evidenceQuotes: 'Evidence quotes',
+                    booleanTrue: 'true',
+                    booleanFalse: 'false',
+                },
+                'zh-CN': {
+                    amazonIntakePreview: 'Amazon \u4fe1\u53f7\u9884\u89c8',
+                    asin: 'ASIN',
+                    normalizedUrl: '\u6807\u51c6\u5316\u94fe\u63a5',
+                    sourceConfidence: '\u4fe1\u53f7\u7f6e\u4fe1\u5ea6',
+                    fallbackRequired: '\u662f\u5426\u9700\u8981 fallback',
+                    productTitle: '\u5546\u54c1\u6807\u9898',
+                    rating: '\u8bc4\u5206',
+                    reviewCount: '\u8bc4\u8bba\u6570',
+                    categoryHint: '\u7c7b\u76ee\u7ebf\u7d22',
+                    bulletPoints: '\u5546\u54c1\u5356\u70b9',
+                    evidencePreview: '\u8bc1\u636e\u9884\u89c8',
+                    capturedReviewSnippets: '\u5df2\u6355\u83b7\u8bc4\u8bba\u7247\u6bb5',
+                    reviewInsightPack: '\u8bc4\u8bba\u6d1e\u5bdf\u5305',
+                    dataWarnings: '\u6570\u636e\u63d0\u793a',
+                    fallbackMessage: 'Fallback \u63d0\u793a',
+                    upgradeNote: '\u5347\u7ea7\u8bf4\u660e',
+                    painPoints: '\u75db\u70b9',
+                    buyerObjections: '\u8d2d\u4e70\u987e\u8651',
+                    useCases: '\u4f7f\u7528\u573a\u666f',
+                    emotionalTriggers: '\u60c5\u7eea\u89e6\u53d1\u70b9',
+                    evidenceQuotes: '\u8bc1\u636e\u539f\u6587',
+                    booleanTrue: '\u662f',
+                    booleanFalse: '\u5426',
+                },
+            };
+            const language = currentOutputLanguage && currentOutputLanguage() === 'zh-CN' ? 'zh-CN' : 'en';
+            return labels[language]?.[key] || labels.en[key] || key;
+        }
+
+        function amazonLocalizedBoolean(value) {
+            return amazonLocalizedLabel(value ? 'booleanTrue' : 'booleanFalse');
+        }
+
         function amazonReviewInsightsText(insights) {
             if (!insights) return '';
+            const newline = String.fromCharCode(10);
             const sections = [
-                ['Pain points', insights.pain_points],
-                ['Buyer objections', insights.buyer_objections],
-                ['Use cases', insights.use_cases],
-                ['Emotional triggers', insights.emotional_triggers],
-                ['Evidence quotes', insights.evidence_quotes],
+                [amazonLocalizedLabel('painPoints'), insights.pain_points],
+                [amazonLocalizedLabel('buyerObjections'), insights.buyer_objections],
+                [amazonLocalizedLabel('useCases'), insights.use_cases],
+                [amazonLocalizedLabel('emotionalTriggers'), insights.emotional_triggers],
+                [amazonLocalizedLabel('evidenceQuotes'), insights.evidence_quotes],
             ];
             return sections
                 .map(([label, items]) => {
                     const lines = (items || []).filter(Boolean);
-                    return lines.length ? `${label}:\n${lines.map((item) => `- ${item}`).join('\n')}` : '';
+                    return lines.length ? `${label}:${newline}${lines.map((item) => `- ${item}`).join(newline)}` : '';
                 })
                 .filter(Boolean)
-                .join('\n\n');
+                .join(newline + newline);
         }
 
         function amazonIntakePainPointsText(data) {
@@ -4648,32 +4710,33 @@
             const applyBtn = document.getElementById('amazonIntakeApplyBtn');
             const fallbackBtn = document.getElementById('amazonIntakeFallbackBtn');
             const generateBtn = document.getElementById('amazonIntakeGenerateBtn');
+            const newline = String.fromCharCode(10);
             if (!target || !applyBtn || !fallbackBtn || !generateBtn) return;
 
             const warnings = data.data_warnings || [];
             target.hidden = false;
             target.innerHTML = `
                 <div class="probe-provider">
-                    <span>Amazon Intake Preview</span>
+                    <span>${escapeHTML(amazonLocalizedLabel('amazonIntakePreview'))}</span>
                     <span class="probe-status ${escapeHTML(data.provider_status || '')}">${escapeHTML(data.provider_status || '')}</span>
                 </div>
                 <div class="probe-grid">
-                    ${block('ASIN', data.asin || '')}
-                    ${block('Normalized URL', data.normalized_url || '')}
-                    ${block('Source Confidence', data.source_confidence ?? 0)}
-                    ${block('Fallback Required', data.fallback_required ? 'true' : 'false')}
-                    ${block('Product Title', data.product_title || '')}
-                    ${block('Rating', data.rating || '')}
-                    ${block('Review Count', data.review_count || '')}
-                    ${block('Category Hint', data.category_hint || '')}
+                    ${block(amazonLocalizedLabel('asin'), data.asin || '')}
+                    ${block(amazonLocalizedLabel('normalizedUrl'), data.normalized_url || '')}
+                    ${block(amazonLocalizedLabel('sourceConfidence'), data.source_confidence ?? 0)}
+                    ${block(amazonLocalizedLabel('fallbackRequired'), amazonLocalizedBoolean(data.fallback_required))}
+                    ${block(amazonLocalizedLabel('productTitle'), data.product_title || '')}
+                    ${block(amazonLocalizedLabel('rating'), data.rating || '')}
+                    ${block(amazonLocalizedLabel('reviewCount'), data.review_count || '')}
+                    ${block(amazonLocalizedLabel('categoryHint'), data.category_hint || '')}
                 </div>
-                ${block('Bullet Points', (data.bullet_points || []).join('\n'))}
-                ${block('Evidence Preview', (data.evidence_preview || []).join('\n'))}
-                ${block('Captured Review Snippets', (data.review_items || []).map((item) => item.text || '').filter(Boolean).join('\n'))}
-                ${block('Review Insight Pack', amazonReviewInsightsText(data.review_insights))}
-                ${block('Data Warnings', warnings.join('\n'))}
-                ${block('Fallback Message', data.fallback_message || '')}
-                ${block('Upgrade Note', t('amazonIntakeUpgradeNote'))}
+                ${block(amazonLocalizedLabel('bulletPoints'), (data.bullet_points || []).join(newline))}
+                ${block(amazonLocalizedLabel('evidencePreview'), (data.evidence_preview || []).join(newline))}
+                ${block(amazonLocalizedLabel('capturedReviewSnippets'), (data.review_items || []).map((item) => item.text || '').filter(Boolean).join(newline))}
+                ${block(amazonLocalizedLabel('reviewInsightPack'), amazonReviewInsightsText(data.review_insights))}
+                ${block(amazonLocalizedLabel('dataWarnings'), warnings.join(newline))}
+                ${block(amazonLocalizedLabel('fallbackMessage'), data.fallback_message || '')}
+                ${block(amazonLocalizedLabel('upgradeNote'), t('amazonIntakeUpgradeNote'))}
             `;
 
             const canUseAmazonSignals = data.is_supported && (data.product_title || data.bullet_points?.length || data.evidence_preview?.length);

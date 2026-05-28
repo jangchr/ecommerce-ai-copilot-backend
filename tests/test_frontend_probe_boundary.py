@@ -1286,6 +1286,49 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
 
 
+
+
+    def test_l29b_amazon_review_insight_pack_follows_language_mode(self):
+        self.assertIn("function amazonLocalizedLabel(key)", self.source)
+        self.assertIn("function amazonLocalizedBoolean(value)", self.source)
+        self.assertIn("currentOutputLanguage() === 'zh-CN'", self.source)
+        self.assertIn("Amazon \\u4fe1\\u53f7\\u9884\\u89c8", self.source)
+        self.assertIn("\\u8bc4\\u8bba\\u6d1e\\u5bdf\\u5305", self.source)
+        self.assertIn("\\u5df2\\u6355\\u83b7\\u8bc4\\u8bba\\u7247\\u6bb5", self.source)
+        self.assertIn("\\u8d2d\\u4e70\\u987e\\u8651", self.source)
+        self.assertIn("\\u4f7f\\u7528\\u573a\\u666f", self.source)
+        self.assertIn("\\u60c5\\u7eea\\u89e6\\u53d1\\u70b9", self.source)
+        self.assertIn("\\u8bc1\\u636e\\u539f\\u6587", self.source)
+
+        self.assertIn("amazonLocalizedLabel('amazonIntakePreview')", self.source)
+        self.assertIn("amazonLocalizedLabel('sourceConfidence')", self.source)
+        self.assertIn("amazonLocalizedLabel('capturedReviewSnippets')", self.source)
+        self.assertIn("amazonLocalizedLabel('reviewInsightPack')", self.source)
+        self.assertIn("amazonLocalizedLabel('painPoints')", self.source)
+        self.assertIn("amazonLocalizedLabel('buyerObjections')", self.source)
+        self.assertIn("amazonLocalizedLabel('emotionalTriggers')", self.source)
+
+        self.assertNotIn("/api/v1/translate-amazon-intake", self.source)
+        self.assertNotIn("/api/v1/amazon-i18n", self.source)
+        review_body = re.search(
+            r"function amazonReviewInsightsText\(insights\) \{(?P<body>.*?)\n        \}\n\n        function amazonIntakePainPointsText",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(review_body)
+        self.assertIn("String.fromCharCode(10)", review_body.group("body"))
+        self.assertNotIn("`${label}:\\n", review_body.group("body"))
+
+        render_body = re.search(
+            r"function renderAmazonIntakeResult\(payload\) \{(?P<body>.*?)\n        \}\n\n        async function runAmazonIntake",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(render_body)
+        self.assertIn("String.fromCharCode(10)", render_body.group("body"))
+        self.assertIn("join(newline)", render_body.group("body"))
+
+
     def test_l29_amazon_review_insight_pack_is_rendered_and_used_without_new_backend(self):
         self.assertIn("review_insights", self.source)
         self.assertIn("Review Insight Pack", self.source)
