@@ -141,5 +141,14 @@ class AmazonIntakeEndpointTest(unittest.TestCase):
         self.assertIn("amazon_fetch_error", data["data_warnings"])
 
 
+
+    def test_amazon_intake_fallback_message_mentions_sign_in(self):
+        from main import _amazon_intake_fallback_message
+
+        message = _amazon_intake_fallback_message(["review_sign_in_required"])
+
+        self.assertIn("Amazon reviews require sign-in", message)
+        self.assertIn("Paste 3-5 Amazon reviews", message)
+
 if __name__ == "__main__":
     unittest.main()

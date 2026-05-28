@@ -79,5 +79,47 @@ class AmazonExternalCrawlerContractTest(unittest.TestCase):
             else:
                 os.environ["AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS"] = old_timeout
 
+
+    def test_external_debug_review_sign_in_metadata_is_preserved(self):
+        from source_adapters.amazon_crawler import _append_external_debug_meta_html, _external_payload_to_html
+        from source_adapters.amazon_review_adapter import AmazonReviewAdapter
+
+        payload = {
+            "product_title": "Debug Product",
+            "price": "$4.22",
+            "rating": "4.6",
+            "review_count": "485",
+            "bullet_points": ["Useful kitchen item"],
+            "review_items": [],
+            "provider": "local_playwright",
+            "debug": {
+                "provider": "local_playwright",
+                "review_access_status": "sign_in_required",
+                "sign_in_required": True,
+                "review_selector_found": False,
+                "review_body_count": 0,
+                "review_page_final_urls": [
+                    "https://www.amazon.com/ap/signin?openid.return_to=reviews"
+                ],
+            },
+        }
+
+        html = _append_external_debug_meta_html(_external_payload_to_html(payload), payload)
+        evidence = AmazonReviewAdapter().parse_html(
+            html,
+            "https://www.amazon.com/dp/B00QIIMCCW",
+            "amazon_product",
+        )
+
+        self.assertIn("review_sign_in_required", evidence.data_warnings)
+        self.assertEqual(evidence.metadata["external_crawler_provider"], "local_playwright")
+        self.assertEqual(evidence.metadata["review_access_status"], "sign_in_required")
+        self.assertTrue(evidence.metadata["sign_in_required"])
+        self.assertEqual(evidence.metadata["review_body_count"], 0)
+        self.assertEqual(
+            evidence.metadata["review_page_final_urls"],
+            ["https://www.amazon.com/ap/signin?openid.return_to=reviews"],
+        )
+
 if __name__ == "__main__":
     unittest.main()

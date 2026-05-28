@@ -370,6 +370,14 @@ class AmazonReviewAdapter(BaseSourceAdapter):
 
         confidence = self._confidence(title, rating, review_count, evidence_quotes)
         source_type = "amazon_review_api" if confidence > 0 else "unavailable"
+
+        external_crawler_provider = _meta_content(html_text, "amazon-external-crawler-provider")
+        external_review_access_status = _meta_content(html_text, "amazon-review-access-status")
+        external_sign_in_required = _meta_content(html_text, "amazon-sign-in-required").lower() == "true"
+        external_review_page_final_urls = _meta_content(html_text, "amazon-review-page-final-urls")
+        external_review_body_count = _meta_content(html_text, "amazon-review-body-count")
+        external_review_selector_found = _meta_content(html_text, "amazon-review-selector-found").lower() == "true"
+
         warnings = _amazon_parse_warnings(
             source_type=source_type,
             title=title,
@@ -381,6 +389,9 @@ class AmazonReviewAdapter(BaseSourceAdapter):
             snippets=snippets,
             cleaned_review_snippets=cleaned_review_snippets,
         )
+
+        if external_sign_in_required or external_review_access_status == "sign_in_required":
+            warnings = _unique(["review_sign_in_required", *warnings], limit=10)
 
         return SourceEvidence(
             source_type=source_type,
@@ -402,6 +413,16 @@ class AmazonReviewAdapter(BaseSourceAdapter):
                 "category_hint": category_hint,
                 "bullet_points": bullets,
                 "retry_count": 0,
+                "external_crawler_provider": external_crawler_provider,
+                "review_access_status": external_review_access_status,
+                "sign_in_required": external_sign_in_required,
+                "review_page_final_urls": [
+                    item.strip()
+                    for item in external_review_page_final_urls.split(" | ")
+                    if item.strip()
+                ],
+                "review_body_count": _safe_int(external_review_body_count),
+                "review_selector_found": external_review_selector_found,
             },
         )
 

@@ -3,6 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from urllib.error import HTTPError, URLError
+import html
 
 import requests
 
@@ -280,7 +281,7 @@ class ExternalAmazonCrawler(BaseAmazonCrawler):
 
         return AmazonCrawlerResult(
             url=url,
-            html=html,
+            html=_append_external_debug_meta_html(html, payload),
             status_code=response.status_code,
             final_url=payload.get("final_url") or url,
             headers=dict(response.headers or {}),
@@ -304,6 +305,39 @@ class HybridAmazonCrawler(BaseAmazonCrawler):
             pass
 
         return self.fallback.fetch_html(url)
+
+
+def _external_debug_meta_tags(payload: dict) -> str:
+    debug = payload.get("debug") or {}
+    if not isinstance(debug, dict):
+        return ""
+
+    provider = payload.get("provider") or debug.get("provider") or ""
+    review_access_status = debug.get("review_access_status") or ""
+    sign_in_required = "true" if debug.get("sign_in_required") else "false"
+    review_page_final_urls = debug.get("review_page_final_urls") or []
+    review_body_count = debug.get("review_body_count")
+    review_selector_found = "true" if debug.get("review_selector_found") else "false"
+
+    def meta(name: str, value) -> str:
+        escaped = html.escape(str(value or ""), quote=True)
+        return f'<meta name="{name}" content="{escaped}">'
+
+    return "\n".join([
+        meta("amazon-external-crawler-provider", provider),
+        meta("amazon-review-access-status", review_access_status),
+        meta("amazon-sign-in-required", sign_in_required),
+        meta("amazon-review-page-final-urls", " | ".join(str(item) for item in review_page_final_urls)),
+        meta("amazon-review-body-count", "" if review_body_count is None else review_body_count),
+        meta("amazon-review-selector-found", review_selector_found),
+    ])
+
+
+def _append_external_debug_meta_html(html_text: str, payload: dict) -> str:
+    tags = _external_debug_meta_tags(payload)
+    if not tags:
+        return html_text or ""
+    return (html_text or "") + "\n" + tags
 
 
 def _external_payload_to_html(payload: dict) -> str:

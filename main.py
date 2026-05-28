@@ -700,7 +700,13 @@ async def healthz(request: Request):
     }
 
 
-def _amazon_intake_fallback_message() -> str:
+def _amazon_intake_fallback_message(data_warnings: list[str] | None = None) -> str:
+    warnings = set(data_warnings or [])
+    if "review_sign_in_required" in warnings:
+        return (
+            "Product signals were fetched, but Amazon reviews require sign-in. "
+            "Paste 3-5 Amazon reviews to improve the creative brief."
+        )
     return "Paste 3-5 Amazon reviews or product bullets to improve the creative brief."
 
 
@@ -875,6 +881,9 @@ async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
         metadata = dict(evidence.metadata or {})
         provider_status = _probe_status_from_evidence(evidence)
         fallback_required = not (provider_status == "success" and evidence.confidence >= 0.70)
+        data_warnings = list(evidence.data_warnings or [])
+        if "review_sign_in_required" in data_warnings:
+            fallback_required = True
         review_items = [
             {
                 "text": review.text,
@@ -899,14 +908,14 @@ async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
                 "evidence_preview": list(evidence.evidence_quotes[:3]),
                 "review_items": review_items,
                 "review_insights": _amazon_review_insights(review_items),
-                "data_warnings": list(evidence.data_warnings or []),
+                "data_warnings": data_warnings,
                 "fallback_required": fallback_required,
-                "fallback_message": _amazon_intake_fallback_message() if fallback_required else "",
+                "fallback_message": _amazon_intake_fallback_message(data_warnings) if fallback_required else "",
                 "error": metadata.get("error", ""),
                 "metadata": {
                     **metadata,
                     "source_type": evidence.source_type,
-                    "data_warnings": list(evidence.data_warnings or []),
+                    "data_warnings": data_warnings,
                 },
             }
         )
