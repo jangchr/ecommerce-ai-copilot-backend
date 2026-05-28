@@ -17,6 +17,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
     def test_public_demo_uses_user_task_flow_shell(self):
         for marker in [
             "pathSelectorPanel",
+            "pathAmazonProductCard",
             "pathProductIdeaCard",
             "pathCustomerFeedbackCard",
             "pathSampleProductCard",
@@ -24,6 +25,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "inlineResultPanel",
             "inlineResultEmptyState",
             "inlineResultContent",
+            "amazonProductWorkspace",
             "productIdeaWorkspace",
             "customerFeedbackWorkspace",
             "sampleProductWorkspace",
@@ -40,12 +42,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, self.source)
 
+        self.assertIn("amazonProductWorkspace.appendChild(amazonIntakePanel);", self.source)
         self.assertIn("productIdeaWorkspace.appendChild(productDescriptionMode);", self.source)
         self.assertIn("customerFeedbackWorkspace.appendChild(pastedReviewsMode);", self.source)
         self.assertIn("sampleProductWorkspace.appendChild(stableProductWorkspace);", self.source)
         self.assertIn("sampleProductWorkspace.appendChild(exampleGallery);", self.source)
         self.assertIn("inlineResultContent.appendChild(section);", self.source)
-        self.assertIn("setActiveWorkspace('productIdea');", self.source)
+        self.assertIn("setActiveWorkspace('amazonProduct');", self.source)
 
     def test_user_task_flow_shell_does_not_trigger_debug_or_generation(self):
         selector_match = re.search(
@@ -112,10 +115,12 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "skincare_serum",
         ]:
             self.assertIn(slug, self.source)
-        self.assertIn("Amazon.com links are now supported in the Amazon Link panel inside Product Idea", self.source)
+        self.assertIn("Amazon.com links are now supported in the Amazon Product Link workflow", self.source)
         self.assertIn("The old sample slug input still expects stable local demo slugs", self.source)
+        self.assertIn('id="pathAmazonProductCard"', self.source)
+        self.assertIn('id="amazonProductWorkspace"', self.source)
         self.assertIn('id="amazonIntakePanel"', self.source)
-        self.assertIn("Amazon links are now supported in the Amazon Link panel below", self.source)
+        self.assertIn("Amazon links are now supported in the Amazon Product Link workflow", self.source)
         self.assertIn("Product Result", self.source)
         self.assertIn("Copy / Download / Translation Actions", self.source)
         self.assertIn("Feedback", self.source)
@@ -1212,6 +1217,36 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Translation returned empty result. Please try again.", self.source)
 
 
+
+    def test_l26_amazon_product_path_reuses_description_generation_flow(self):
+        self.assertIn('id="pathAmazonProductCard"', self.source)
+        self.assertIn('id="amazonProductWorkspace"', self.source)
+        self.assertIn("amazonProductWorkspace.appendChild(amazonIntakePanel);", self.source)
+        self.assertIn("async function generateFromAmazonIntake()", self.source)
+        self.assertIn("amazonIntakeGenerateBtn", self.source)
+
+        match = re.search(
+            r"async function generateFromAmazonIntake\(\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("applyAmazonIntakeToDescriptionForm();", body)
+        self.assertIn("await generateFromDescription();", body)
+        self.assertIn("amazonGenerateMissing", body)
+        self.assertIn("amazonGenerated", body)
+
+        self.assertNotIn("/api/v1/amazon-generate", self.source)
+        self.assertNotIn("postProductDescription({", body)
+        self.assertNotIn("renderProductDashboard(response.data", body)
+        self.assertNotIn("saveCurrentGenerationToRecent();", body)
+        self.assertNotIn("debug-source-probe", body)
+        self.assertNotIn("debug-copilot", body)
+        self.assertNotIn("amazonShadowMode", body)
+
+
     def test_l26_amazon_intake_homepage_panel_is_primary_but_upgrade_ready(self):
         self.assertIn('id="amazonIntakePanel"', self.source)
         self.assertIn('data-amazon-intake-panel', self.source)
@@ -1220,6 +1255,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("async function postAmazonIntake(payload)", self.source)
         self.assertIn("async function runAmazonIntake()", self.source)
         self.assertIn("function applyAmazonIntakeToDescriptionForm()", self.source)
+        self.assertIn("async function generateFromAmazonIntake()", self.source)
+        self.assertIn("amazonIntakeGenerateBtn", self.source)
+        self.assertIn("pathAmazonProductTitle", self.source)
         self.assertIn("/api/v1/amazon-intake", self.source)
         self.assertIn("latestAmazonIntakeData", self.source)
         self.assertIn("amazonIntakeUpgradeNote", self.source)
@@ -1652,9 +1690,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("#pathSelectorPanel .path-card.active", self.source)
         self.assertIn("#pathSelectorPanel .path-card:hover", self.source)
         self.assertIn("#pathSelectorPanel .path-card::before", self.source)
-        self.assertIn('#pathProductIdeaCard::before { content: "1"; }', self.source)
-        self.assertIn('#pathCustomerFeedbackCard::before { content: "2"; }', self.source)
-        self.assertIn('#pathSampleProductCard::before { content: "3"; }', self.source)
+        self.assertIn('#pathAmazonProductCard::before { content: "1"; }', self.source)
+        self.assertIn('#pathProductIdeaCard::before { content: "2"; }', self.source)
+        self.assertIn('#pathCustomerFeedbackCard::before { content: "3"; }', self.source)
+        self.assertIn('#pathSampleProductCard::before { content: "4"; }', self.source)
         self.assertIn("#pathSelectorPanel .path-card-title", self.source)
         self.assertIn("#pathSelectorPanel .path-card-subtitle", self.source)
 

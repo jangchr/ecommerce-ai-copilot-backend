@@ -512,7 +512,7 @@
         }
         .path-card-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
         }
         .path-card {
@@ -1649,9 +1649,10 @@
             font-weight: 850;
         }
 
-        #pathProductIdeaCard::before { content: "1"; }
-        #pathCustomerFeedbackCard::before { content: "2"; }
-        #pathSampleProductCard::before { content: "3"; }
+        #pathAmazonProductCard::before { content: "1"; }
+        #pathProductIdeaCard::before { content: "2"; }
+        #pathCustomerFeedbackCard::before { content: "3"; }
+        #pathSampleProductCard::before { content: "4"; }
 
         #pathSelectorPanel .path-card-title {
             font-size: 16px;
@@ -2106,7 +2107,7 @@
             </div>
 
             <div class="demo-warning" data-i18n="amazonWarning">
-                Amazon.com links are now supported in the Amazon Link panel inside Product Idea. The old sample slug input still expects stable local demo slugs.
+                Amazon.com links are now supported in the Amazon Product Link workflow. The old sample slug input still expects stable local demo slugs.
             </div>
             <div class="run-options">
                 <label class="toggle-option" for="debugMode">
@@ -2131,7 +2132,11 @@
                     <span class="source-badge" data-i18n="userTaskFlowBadge">User-task flow</span>
                 </div>
                 <div class="path-card-grid">
-                    <button class="path-card active" id="pathProductIdeaCard" type="button" onclick="setActiveWorkspace('productIdea')">
+                    <button class="path-card active" id="pathAmazonProductCard" type="button" onclick="setActiveWorkspace('amazonProduct')">
+                        <span class="path-card-title" data-i18n="pathAmazonProductTitle">I have an Amazon product link</span>
+                        <span class="path-card-subtitle" data-i18n="pathAmazonProductBody">Paste an Amazon.com listing, fetch product signals, then generate the creative pack directly.</span>
+                    </button>
+                    <button class="path-card" id="pathProductIdeaCard" type="button" onclick="setActiveWorkspace('productIdea')">
                         <span class="path-card-title" data-i18n="pathProductIdeaTitle">I have a product idea</span>
                         <span class="path-card-subtitle" data-i18n="pathProductIdeaBody">Describe the product, audience, and buyer problem. Best for a new product concept.</span>
                     </button>
@@ -2149,7 +2154,8 @@
 
         <section class="active-workspace-panel" id="activeWorkspacePanel">
             <div class="active-workspace-shell">
-                <div class="workspace-panel" id="productIdeaWorkspace"></div>
+                <div class="workspace-panel" id="amazonProductWorkspace"></div>
+                <div class="workspace-panel" id="productIdeaWorkspace" hidden></div>
                 <div class="workspace-panel" id="customerFeedbackWorkspace" hidden></div>
                 <div class="workspace-panel" id="sampleProductWorkspace" hidden></div>
                 <section class="inline-result-panel" id="inlineResultPanel">
@@ -2198,7 +2204,8 @@
                     </div>
                     <div class="description-actions">
                         <button class="btn-secondary" id="amazonIntakeBtn" type="button" onclick="runAmazonIntake()" data-i18n="amazonIntakeFetchBtn">Fetch Amazon signals</button>
-                        <button class="btn-primary" id="amazonIntakeApplyBtn" type="button" onclick="applyAmazonIntakeToDescriptionForm()" data-i18n="amazonIntakeApplyBtn" hidden>Use this info in form</button>
+                        <button class="btn-secondary" id="amazonIntakeApplyBtn" type="button" onclick="applyAmazonIntakeToDescriptionForm()" data-i18n="amazonIntakeApplyBtn" hidden>Use this info in form</button>
+                        <button class="btn-primary" id="amazonIntakeGenerateBtn" type="button" onclick="generateFromAmazonIntake()" data-i18n="amazonIntakeGenerateBtn" hidden>Generate from Amazon</button>
                         <span class="description-status" id="amazonIntakeStatus"></span>
                     </div>
                     <div id="amazonIntakeResult" class="probe-result" hidden></div>
@@ -2841,6 +2848,10 @@
                 workflowPathTitle: 'Choose your workflow path',
                 workflowPathSubtitle: 'Pick the task you have today. Only the active workspace is shown, and the result appears directly below it.',
                 userTaskFlowBadge: 'User-task flow',
+                pathAmazonProductTitle: 'I have an Amazon product link',
+
+                pathAmazonProductBody: 'Paste an Amazon.com listing, fetch product signals, then generate the creative pack directly.',
+
                 pathProductIdeaTitle: 'I have a product idea',
                 pathProductIdeaBody: 'Describe the product, audience, and buyer problem. Best for a new product concept.',
                 pathCustomerFeedbackTitle: 'I have customer feedback',
@@ -2881,7 +2892,7 @@
                 reviewsFirstRunGuide: 'If you do not have real reviews yet, use the sample reviews first. Later, paste buyer comments, objections, or complaints.',
                 sourceBadgeProductDescription: 'Input source: product description',
                 sourceBadgePastedReviews: 'Input source: pasted customer feedback',
-                amazonWarning: 'Amazon links are now supported in the Amazon Link panel below. The sample slug input still expects stable local demo slugs.',
+                amazonWarning: 'Amazon links are now supported in the Amazon Product Link workflow. The sample slug input still expects stable local demo slugs.',
 
                 amazonIntakeTitle: 'Paste an Amazon.com product link',
 
@@ -2894,6 +2905,21 @@
                 amazonIntakeFetchBtn: 'Fetch Amazon signals',
 
                 amazonIntakeApplyBtn: 'Use this info in form',
+
+
+                amazonIntakeGenerateBtn: 'Generate from Amazon',
+
+
+                amazonGenerateMissing: 'Fetch Amazon signals before generating.',
+
+
+                amazonGenerating: 'Generating from Amazon signals...',
+
+
+                amazonGenerated: 'Creative pack generated from Amazon signals.',
+
+
+                amazonGenerateFailed: 'Amazon generation failed. Review the fetched signals or paste details manually.',
 
                 amazonIntakeRunning: 'Fetching Amazon signals...',
 
@@ -3129,6 +3155,10 @@
                 workflowPathTitle: '选择你的生成方式',
                 workflowPathSubtitle: '根据你手上已有的素材选择一条路径。页面只展示当前路径，生成结果会直接出现在这里。',
                 userTaskFlowBadge: '用户任务流程',
+                pathAmazonProductTitle: '\u6211\u6709 Amazon \u5546\u54c1\u94fe\u63a5',
+
+                pathAmazonProductBody: '\u7c98\u8d34 Amazon.com \u5546\u54c1\u94fe\u63a5\uff0c\u6293\u53d6\u4fe1\u53f7\uff0c\u7136\u540e\u76f4\u63a5\u751f\u6210\u521b\u610f\u5305\u3002',
+
                 pathProductIdeaTitle: '我有产品想法',
                 pathProductIdeaBody: '适合你知道产品是什么，但还没有用户评论的情况。',
                 pathCustomerFeedbackTitle: '我有用户评论/反馈',
@@ -3182,6 +3212,21 @@
                 amazonIntakeFetchBtn: '\u6293\u53d6 Amazon \u4fe1\u53f7',
 
                 amazonIntakeApplyBtn: '\u586b\u5165\u4ea7\u54c1\u8868\u5355',
+
+
+                amazonIntakeGenerateBtn: '\u6839\u636e Amazon \u76f4\u63a5\u751f\u6210',
+
+
+                amazonGenerateMissing: '\u8bf7\u5148\u6293\u53d6 Amazon \u5546\u54c1\u4fe1\u53f7\u518d\u751f\u6210\u3002',
+
+
+                amazonGenerating: '\u6b63\u5728\u6839\u636e Amazon \u4fe1\u53f7\u751f\u6210...',
+
+
+                amazonGenerated: '\u5df2\u6839\u636e Amazon \u4fe1\u53f7\u751f\u6210\u521b\u610f\u5305\u3002',
+
+
+                amazonGenerateFailed: 'Amazon \u751f\u6210\u5931\u8d25\u3002\u8bf7\u68c0\u67e5\u6293\u53d6\u4fe1\u53f7\u6216\u624b\u52a8\u7c98\u8d34\u4fe1\u606f\u3002',
 
                 amazonIntakeRunning: '\u6b63\u5728\u6293\u53d6 Amazon \u4fe1\u53f7...',
 
@@ -3653,6 +3698,10 @@
 
         function workspaceDefinition(name) {
             return {
+                amazonProduct: {
+                    cardId: 'pathAmazonProductCard',
+                    panelId: 'amazonProductWorkspace',
+                },
                 productIdea: {
                     cardId: 'pathProductIdeaCard',
                     panelId: 'productIdeaWorkspace',
@@ -3669,7 +3718,7 @@
         }
 
         function setActiveWorkspace(name, options = {}) {
-            const definitions = ['productIdea', 'customerFeedback', 'sampleProduct'];
+            const definitions = ['amazonProduct', 'productIdea', 'customerFeedback', 'sampleProduct'];
             definitions.forEach((key) => {
                 const definition = workspaceDefinition(key);
                 const card = document.getElementById(definition.cardId);
@@ -3684,16 +3733,21 @@
         }
 
         function mountUserTaskFlow() {
+            const amazonProductWorkspace = document.getElementById('amazonProductWorkspace');
             const productIdeaWorkspace = document.getElementById('productIdeaWorkspace');
             const customerFeedbackWorkspace = document.getElementById('customerFeedbackWorkspace');
             const sampleProductWorkspace = document.getElementById('sampleProductWorkspace');
             const inlineResultContent = document.getElementById('inlineResultContent');
 
+            const amazonIntakePanel = document.getElementById('amazonIntakePanel');
             const productDescriptionMode = document.getElementById('productDescriptionMode');
             const pastedReviewsMode = document.getElementById('pastedReviewsMode');
             const stableProductWorkspace = document.getElementById('stableProductWorkspace');
             const exampleGallery = document.getElementById('exampleGallery');
 
+            if (amazonProductWorkspace && amazonIntakePanel) {
+                amazonProductWorkspace.appendChild(amazonIntakePanel);
+            }
             if (productIdeaWorkspace && productDescriptionMode) {
                 productIdeaWorkspace.appendChild(productDescriptionMode);
             }
@@ -3712,7 +3766,7 @@
                     inlineResultContent.appendChild(section);
                 }
             });
-            setActiveWorkspace('productIdea');
+            setActiveWorkspace('amazonProduct');
         }
 
         function showInlineResultPanel() {
@@ -4557,7 +4611,8 @@
             const data = payload?.data || {};
             const target = document.getElementById('amazonIntakeResult');
             const applyBtn = document.getElementById('amazonIntakeApplyBtn');
-            if (!target || !applyBtn) return;
+            const generateBtn = document.getElementById('amazonIntakeGenerateBtn');
+            if (!target || !applyBtn || !generateBtn) return;
 
             const warnings = data.data_warnings || [];
             target.hidden = false;
@@ -4583,7 +4638,9 @@
                 ${block('Upgrade Note', t('amazonIntakeUpgradeNote'))}
             `;
 
-            applyBtn.hidden = !(data.is_supported && (data.product_title || data.bullet_points?.length || data.evidence_preview?.length));
+            const canUseAmazonSignals = data.is_supported && (data.product_title || data.bullet_points?.length || data.evidence_preview?.length);
+            applyBtn.hidden = !canUseAmazonSignals;
+            generateBtn.hidden = !canUseAmazonSignals;
         }
 
         async function runAmazonIntake() {
@@ -4650,6 +4707,36 @@
                 if (painPoints) painInput.value = painPoints;
             }
             if (status) status.textContent = t('amazonIntakeApplied');
+        }
+
+        async function generateFromAmazonIntake() {
+            const data = latestAmazonIntakeData || {};
+            const btn = document.getElementById('amazonIntakeGenerateBtn');
+            const status = document.getElementById('amazonIntakeStatus');
+
+            const hasSignals = data.is_supported && (
+                data.product_title ||
+                (data.bullet_points || []).length ||
+                (data.evidence_preview || []).length
+            );
+
+            if (!hasSignals) {
+                if (status) status.textContent = t('amazonGenerateMissing');
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('amazonGenerating');
+
+            try {
+                applyAmazonIntakeToDescriptionForm();
+                await generateFromDescription();
+                if (status) status.textContent = t('amazonGenerated');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('amazonGenerateFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         async function runSourceProbe() {
