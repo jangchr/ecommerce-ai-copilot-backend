@@ -1290,6 +1290,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
 
 
+
+
+    def test_l30b_multiline_placeholders_convert_literal_backslash_n(self):
+        self.assertIn("function normalizeLocalizedPlaceholderText(value)", self.source)
+        self.assertIn("replaceAll('\\\\n', String.fromCharCode(10))", self.source)
+        self.assertIn("normalizeLocalizedPlaceholderText(t(key))", self.source)
+        self.assertIn("reviewsPastedReviewsPlaceholder", self.source)
+
     def test_l30_generate_from_amazon_uses_full_review_insight_pack(self):
         self.assertIn("function amazonInsightSectionText(label, items)", self.source)
         self.assertIn("function amazonIntakePainPointsText(data)", self.source)

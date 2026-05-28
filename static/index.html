@@ -3463,6 +3463,10 @@
             return outputLanguage === 'zh-CN' ? 'zh-CN' : 'en';
         }
 
+        function normalizeLocalizedPlaceholderText(value) {
+            return String(value ?? '').replaceAll('\\n', String.fromCharCode(10));
+        }
+
         function applyLanguageCopy() {
             document.documentElement.lang = currentOutputLanguage();
             document.querySelectorAll('[data-i18n]').forEach((node) => {
@@ -3471,7 +3475,7 @@
             });
             document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
                 const key = node.getAttribute('data-i18n-placeholder');
-                node.setAttribute('placeholder', t(key));
+                node.setAttribute('placeholder', normalizeLocalizedPlaceholderText(t(key)));
             });
             document.getElementById('languageEnglishBtn').classList.toggle('active', outputLanguage === 'en');
             document.getElementById('languageChineseBtn').classList.toggle('active', outputLanguage === 'zh-CN');
