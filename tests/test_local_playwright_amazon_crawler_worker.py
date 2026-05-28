@@ -36,6 +36,17 @@ class LocalPlaywrightAmazonCrawlerWorkerTest(unittest.TestCase):
         self.assertTrue(review_debug["review_selector_found"])
         self.assertEqual(review_debug["review_body_count"], 1)
 
+    def test_detect_page_debug_classifies_amazon_sign_in(self):
+        debug = detect_page_debug(
+            "<html><title>Amazon Sign-In</title></html>",
+            final_url="https://www.amazon.com/ap/signin?openid.return_to=https%3A%2F%2Fwww.amazon.com%2Fproduct-reviews%2FB00QIIMCCW",
+            page_title="Amazon Sign-In",
+        )
+
+        self.assertTrue(debug["sign_in_required"])
+        self.assertFalse(debug["captcha_detected"])
+        self.assertFalse(debug["review_selector_found"])
+
     def test_build_external_payload_from_html_maps_to_external_contract(self):
         html = """
         <span id="productTitle">Free Local Worker Product</span>
@@ -71,6 +82,8 @@ class LocalPlaywrightAmazonCrawlerWorkerTest(unittest.TestCase):
         self.assertEqual(payload["review_count"], "77")
         self.assertEqual(payload["provider"], "local_playwright")
         self.assertEqual(payload["debug"]["review_body_count"], 2)
+        self.assertEqual(payload["debug"]["review_access_status"], "available")
+        self.assertFalse(payload["debug"]["sign_in_required"])
         self.assertGreaterEqual(len(payload["review_items"]), 2)
         combined = " ".join(item["text"] for item in payload["review_items"])
         self.assertIn("keeps beans from falling", combined)

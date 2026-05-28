@@ -61,6 +61,31 @@ def _captcha_detected(html: str) -> bool:
     return "captcha" in lowered or "enter the characters you see below" in lowered
 
 
+def _sign_in_required(html: str, final_url: str = "", page_title: str = "") -> bool:
+    lowered_html = (html or "").lower()
+    lowered_url = (final_url or "").lower()
+    lowered_title = (page_title or "").lower()
+    return (
+        "/ap/signin" in lowered_url
+        or "amazon sign-in" in lowered_title
+        or "sign in" in lowered_title
+        or "authportal" in lowered_html
+        or "openid.return_to" in lowered_url
+    )
+
+
+def _review_access_status(page: dict[str, Any]) -> str:
+    if page.get("sign_in_required"):
+        return "sign_in_required"
+    if page.get("captcha_detected"):
+        return "captcha"
+    if page.get("blocked_detected"):
+        return "blocked"
+    if page.get("review_selector_found") or int(page.get("review_body_count") or 0) > 0:
+        return "available"
+    return "no_review_selector"
+
+
 def _review_selector_found(html: str) -> bool:
     lowered = (html or "").lower()
     return (
@@ -83,6 +108,7 @@ def detect_page_debug(html: str, final_url: str = "", page_title: str = "") -> d
         "page_title": page_title,
         "blocked_detected": _blocked_detected(html),
         "captcha_detected": _captcha_detected(html),
+        "sign_in_required": _sign_in_required(html, final_url=final_url, page_title=page_title),
         "review_selector_found": _review_selector_found(html),
         "review_body_count": _review_body_count(html),
     }
@@ -125,11 +151,30 @@ def build_external_payload_from_html(
         for label, html in html_by_label.items()
     ]
 
+    review_pages = [page for page in debug_pages if str(page.get("label", "")).startswith("reviews_")]
+    review_statuses = [_review_access_status(page) for page in review_pages]
+    any_page_has_reviews = any(
+        page.get("review_selector_found") or int(page.get("review_body_count") or 0) > 0
+        for page in debug_pages
+    )
+    review_access_status = (
+        "available" if "available" in review_statuses or any_page_has_reviews
+        else "sign_in_required" if "sign_in_required" in review_statuses
+        else "captcha" if "captcha" in review_statuses
+        else "blocked" if "blocked" in review_statuses
+        else "not_checked" if not review_pages
+        else "no_review_selector"
+    )
+
     debug = {
         "provider": "local_playwright",
         "asin": asin_from_url(input_url),
         "blocked_detected": any(page.get("blocked_detected") for page in debug_pages),
         "captcha_detected": any(page.get("captcha_detected") for page in debug_pages),
+        "sign_in_required": any(page.get("sign_in_required") for page in debug_pages),
+        "review_access_status": review_access_status,
+        "review_page_final_urls": [page.get("final_url", "") for page in review_pages],
+        "review_page_debug_html_paths": [page.get("debug_html_path", "") for page in review_pages],
         "review_selector_found": any(page.get("review_selector_found") for page in debug_pages),
         "review_body_count": sum(int(page.get("review_body_count") or 0) for page in debug_pages),
         "pages": debug_pages,
