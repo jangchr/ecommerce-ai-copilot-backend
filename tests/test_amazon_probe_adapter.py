@@ -118,6 +118,87 @@ class AmazonProbeAdapterTest(unittest.TestCase):
                     "Grocery & Gourmet Food > Pantry Staples > Balsamic",
                 )
 
+
+    def test_parse_html_uses_fallback_patterns_for_sparse_amazon_html(self):
+        sparse_html = """
+        <html>
+          <head>
+            <script type="application/ld+json">
+              {
+                "@type": "Product",
+                "name": "JSON Silicone Can Strainer",
+                "offers": {"price": "8.99"},
+                "aggregateRating": {"ratingValue": "4.6", "reviewCount": "485"}
+              }
+            </script>
+          </head>
+          <body>
+            <span id="acrPopover" title="4.6 out of 5 stars"></span>
+            <span data-hook="total-review-count">485 global ratings</span>
+            <span class="a-offscreen">$8.99</span>
+            <div id="feature-bullets">
+              <ul>
+                <li><span>Flexible silicone strainer clips onto cans.</span></li>
+                <li><span>Compact kitchen gadget for draining beans and tuna.</span></li>
+              </ul>
+            </div>
+            <span data-hook="review-title">Easy to attach</span>
+            <span data-hook="review-body">
+              I love this. Easy to put on and remove.
+            </span>
+            <span class="review-text-content">
+              Keeps beans from falling into the sink.
+            </span>
+          </body>
+        </html>
+        """
+
+        evidence = AmazonReviewAdapter().parse_html(
+            sparse_html,
+            "https://www.amazon.com/dp/B000TEST00",
+            "amazon_product",
+        )
+
+        self.assertEqual(evidence.source_type, "amazon_review_api")
+        self.assertGreaterEqual(evidence.confidence, 0.70)
+        self.assertEqual(evidence.review_count, 485)
+
+        metadata = evidence.metadata
+        self.assertEqual(metadata["product_title"], "JSON Silicone Can Strainer")
+        self.assertEqual(metadata["rating"], "4.6")
+        self.assertEqual(metadata["review_count"], "485")
+        self.assertEqual(metadata["price"], "$8.99")
+        self.assertIn("Flexible silicone strainer", " ".join(metadata["bullet_points"]))
+
+        combined = " ".join(evidence.evidence_quotes + [review.text for review in evidence.reviews])
+        self.assertIn("Easy to put on and remove", combined)
+        self.assertIn("Keeps beans from falling", combined)
+        self.assertNotIn("missing_price", evidence.data_warnings)
+
+    def test_parse_html_reports_partial_parse_quality_warnings(self):
+        partial_html = """
+        <html>
+          <body>
+            <span id="productTitle">Minimal Product Page</span>
+            <span class="a-icon-alt">4.2 out of 5 stars</span>
+          </body>
+        </html>
+        """
+
+        evidence = AmazonReviewAdapter().parse_html(
+            partial_html,
+            "https://www.amazon.com/dp/B000TEST00",
+            "amazon_product",
+        )
+
+        self.assertEqual(evidence.source_type, "amazon_review_api")
+        self.assertIn("Minimal Product Page", evidence.evidence_quotes)
+        self.assertIn("missing_price", evidence.data_warnings)
+        self.assertIn("missing_bullet_points", evidence.data_warnings)
+        self.assertIn("sparse_reviews", evidence.data_warnings)
+        self.assertIn("partial_parse", evidence.data_warnings)
+
+
     def test_fetch_uses_mocked_network_response(self):
         adapter = AmazonReviewAdapter()
         with patch.object(adapter, "_fetch_html", return_value=AMAZON_HTML):

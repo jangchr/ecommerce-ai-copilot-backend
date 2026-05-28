@@ -274,15 +274,72 @@ class AmazonReviewAdapter(BaseSourceAdapter):
         parser = _AmazonHTMLTextParser()
         parser.feed(html_text)
 
-        title = _first(parser.fields["product_title"]) or _meta_content(html_text, "og:title")
-        rating = _first_match(parser.fields["rating"], r"\d+(?:\.\d+)?")
-        review_count = _first_match(parser.fields["review_count"], r"[\d,]+")
-        price = _first(parser.fields["price"]) or _meta_content(html_text, "product:price:amount")
-        bullets = _unique(parser.fields["bullet_points"], limit=6)
-        snippets = _unique(parser.fields["review_snippets"], limit=6)
+        title_candidates = (
+            parser.fields["product_title"]
+            + [_meta_content(html_text, "og:title"), _meta_content(html_text, "title")]
+            + _json_scalar_values(html_text, "name")
+            + _regex_values(
+                html_text,
+                [
+                    r'<[^>]+id=["\']productTitle["\'][^>]*>(.*?)</[^>]+>',
+                    r'<title[^>]*>(.*?)</title>',
+                ],
+            )
+        )
+        rating_candidates = (
+            parser.fields["rating"]
+            + _json_scalar_values(html_text, "ratingValue")
+            + _regex_values(
+                html_text,
+                [
+                    r'title=["\'](\d+(?:\.\d+)?)\s+out\s+of\s+5\s+stars["\']',
+                    r'(\d+(?:\.\d+)?)\s+out\s+of\s+5\s+stars',
+                ],
+            )
+        )
+        review_count_candidates = (
+            parser.fields["review_count"]
+            + _json_scalar_values(html_text, "reviewCount")
+            + _regex_values(
+                html_text,
+                [
+                    r'<[^>]+id=["\']acrCustomerReviewText["\'][^>]*>(.*?)</[^>]+>',
+                    r'<[^>]+data-hook=["\']total-review-count["\'][^>]*>(.*?)</[^>]+>',
+                    r'([\d,]+)\s+(?:global\s+)?ratings?',
+                    r'([\d,]+)\s+reviews?',
+                ],
+            )
+        )
+        price_candidates = (
+            parser.fields["price"]
+            + _regex_values(
+                html_text,
+                [
+                    r'<[^>]+class=["\'][^"\']*a-offscreen[^"\']*["\'][^>]*>(.*?)</[^>]+>',
+                    r'<[^>]+id=["\']priceblock_(?:ourprice|dealprice|saleprice)["\'][^>]*>(.*?)</[^>]+>',
+                ],
+            )
+            + [_meta_content(html_text, "product:price:amount")]
+            + _json_scalar_values(html_text, "price")
+        )
+
+        title = _clean_product_title(_first(title_candidates))
+        rating = _first_match(rating_candidates, r"\d+(?:\.\d+)?")
+        review_count = _first_match(review_count_candidates, r"[\d,]+")
+        price = _clean_price_text(_first(price_candidates))
+
+        bullets = _unique(
+            parser.fields["bullet_points"] + _feature_bullet_values(html_text),
+            limit=8,
+        )
+        snippets = _unique(
+            parser.fields["review_snippets"] + _review_snippet_values(html_text),
+            limit=10,
+        )
         category_hint = _clean_category_text(
             _first(parser.fields["category_hint"])
             or _meta_content(html_text, "product:category")
+            or _breadcrumb_text(html_text)
             or product_category
         )
 
@@ -307,13 +364,24 @@ class AmazonReviewAdapter(BaseSourceAdapter):
                     title,
                     f"Rating visible on page: {rating}" if rating else "",
                     f"Review count visible on page: {review_count}" if review_count else "",
+                    f"Product bullet visible on page: {bullets[0]}" if bullets else "",
                 ]
                 if _short_quote(text)
-            ][:3]
+            ][:4]
 
         confidence = self._confidence(title, rating, review_count, evidence_quotes)
         source_type = "amazon_review_api" if confidence > 0 else "unavailable"
-        warnings = [] if source_type == "amazon_review_api" else ["amazon_parse_empty"]
+        warnings = _amazon_parse_warnings(
+            source_type=source_type,
+            title=title,
+            rating=rating,
+            review_count=review_count,
+            price=price,
+            bullets=bullets,
+            review_records=review_records,
+            snippets=snippets,
+            cleaned_review_snippets=cleaned_review_snippets,
+        )
 
         return SourceEvidence(
             source_type=source_type,
@@ -439,6 +507,118 @@ def _clean_category_text(value: str) -> str:
         text = text.replace(separator, " > ")
     text = re.sub(r"\s*>\s*", " > ", text)
     return text.strip(" >")
+
+
+
+def _strip_tags(value: str) -> str:
+    return re.sub(r"<[^>]+>", " ", value or "")
+
+
+def _regex_values(html_text: str, patterns: list[str]) -> list[str]:
+    values = []
+    for pattern in patterns:
+        for match in re.finditer(pattern, html_text or "", flags=re.IGNORECASE | re.S):
+            values.append(_clean_text(_strip_tags(match.group(1))))
+    return [value for value in values if value]
+
+
+def _json_scalar_values(html_text: str, key: str) -> list[str]:
+    escaped_key = re.escape(key)
+    return _regex_values(
+        html_text,
+        [
+            rf'"{escaped_key}"\s*:\s*"([^"]+)"',
+            rf'"{escaped_key}"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
+        ],
+    )
+
+
+def _feature_bullet_values(html_text: str) -> list[str]:
+    containers = _regex_values(
+        html_text,
+        [
+            r'<div[^>]+id=["\']feature-bullets["\'][^>]*>(.*?)</div>',
+            r'<ul[^>]+class=["\'][^"\']*a-unordered-list[^"\']*a-vertical[^"\']*["\'][^>]*>(.*?)</ul>',
+        ],
+    )
+    values = []
+    for container in containers:
+        values.extend(_regex_values(container, [r"<li[^>]*>(.*?)</li>", r"<span[^>]*>(.*?)</span>"]))
+    return values
+
+
+def _review_snippet_values(html_text: str) -> list[str]:
+    return _regex_values(
+        html_text,
+        [
+            r'<[^>]+data-hook=["\']review-body["\'][^>]*>(.*?)</(?:span|div)>',
+            r'<[^>]+data-hook=["\']review-collapsed["\'][^>]*>(.*?)</(?:span|div)>',
+            r'<[^>]+data-hook=["\']review-title["\'][^>]*>(.*?)</(?:span|a|div)>',
+            r'<[^>]+class=["\'][^"\']*review-text-content[^"\']*["\'][^>]*>(.*?)</(?:span|div)>',
+        ],
+    )
+
+
+def _breadcrumb_text(html_text: str) -> str:
+    values = _regex_values(
+        html_text,
+        [
+            r'<[^>]+id=["\']wayfinding-breadcrumbs_feature_div["\'][^>]*>(.*?)</div>',
+            r'<[^>]+aria-label=["\']Breadcrumb["\'][^>]*>(.*?)</(?:ul|div|nav)>',
+        ],
+    )
+    return _first(values)
+
+
+def _clean_product_title(value: str) -> str:
+    title = _clean_text(value)
+    title = re.sub(r"\s*:\s*Amazon\.[A-Za-z.]+:.*$", "", title).strip()
+    return title
+
+
+def _clean_price_text(value: str) -> str:
+    price = _clean_text(value)
+    if not price:
+        return ""
+    match = re.search(r"[$??]\s*\d+(?:[.,]\d{2})?", price)
+    if match:
+        return match.group(0).replace(" ", "")
+    match = re.search(r"\d+(?:[.,]\d{2})", price)
+    return match.group(0) if match else price
+
+
+def _amazon_parse_warnings(
+    source_type: str,
+    title: str,
+    rating: str,
+    review_count: str,
+    price: str,
+    bullets: list[str],
+    review_records: list[ReviewRecord],
+    snippets: list[str],
+    cleaned_review_snippets: list[str],
+) -> list[str]:
+    if source_type != "amazon_review_api":
+        return ["amazon_parse_empty"]
+
+    warnings = []
+    if not title:
+        warnings.append("missing_product_title")
+    if not rating:
+        warnings.append("missing_rating")
+    if not review_count:
+        warnings.append("missing_review_count")
+    if not price:
+        warnings.append("missing_price")
+    if not bullets:
+        warnings.append("missing_bullet_points")
+    if len(review_records) < 2:
+        warnings.append("sparse_reviews")
+    if snippets and len(cleaned_review_snippets) < len(snippets):
+        warnings.append("low_review_text_quality")
+    if warnings:
+        warnings.append("partial_parse")
+    return _unique(warnings, limit=10)
 
 
 def _first(values: list[str]) -> str:
