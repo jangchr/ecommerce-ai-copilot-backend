@@ -1,6 +1,7 @@
 import os
 import threading
 import unittest
+from source_adapters.amazon_crawler import ExternalAmazonCrawler
 from http.server import HTTPServer
 
 from scripts.run_fake_amazon_crawler_worker import FakeAmazonCrawlerHandler
@@ -49,6 +50,34 @@ class AmazonExternalCrawlerContractTest(unittest.TestCase):
             server.shutdown()
             server.server_close()
 
+
+
+    def test_external_crawler_reads_timeout_from_environment(self):
+        old_timeout = os.environ.get("AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS")
+        try:
+            os.environ["AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS"] = "90"
+            crawler = ExternalAmazonCrawler(endpoint_url="http://127.0.0.1:8767/amazon")
+            self.assertEqual(crawler.timeout_seconds, 90.0)
+        finally:
+            if old_timeout is None:
+                os.environ.pop("AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS", None)
+            else:
+                os.environ["AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS"] = old_timeout
+
+    def test_external_crawler_constructor_timeout_overrides_environment(self):
+        old_timeout = os.environ.get("AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS")
+        try:
+            os.environ["AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS"] = "90"
+            crawler = ExternalAmazonCrawler(
+                endpoint_url="http://127.0.0.1:8767/amazon",
+                timeout_seconds=7,
+            )
+            self.assertEqual(crawler.timeout_seconds, 7.0)
+        finally:
+            if old_timeout is None:
+                os.environ.pop("AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS", None)
+            else:
+                os.environ["AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS"] = old_timeout
 
 if __name__ == "__main__":
     unittest.main()

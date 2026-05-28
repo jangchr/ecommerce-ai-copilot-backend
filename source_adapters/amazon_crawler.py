@@ -205,12 +205,28 @@ class ExternalAmazonCrawler(BaseAmazonCrawler):
         self,
         endpoint_url: str | None = None,
         api_token: str | None = None,
-        timeout_seconds: float = 30.0,
+        timeout_seconds: float | None = None,
     ):
         self.endpoint_url = (endpoint_url or os.getenv("AMAZON_EXTERNAL_CRAWLER_URL", "")).strip()
         self.api_token = api_token or os.getenv("AMAZON_EXTERNAL_CRAWLER_TOKEN", "")
         self.provider_name = os.getenv("AMAZON_EXTERNAL_CRAWLER_PROVIDER", "custom_external").strip() or "custom_external"
-        self.timeout_seconds = timeout_seconds
+        self.timeout_seconds = self._resolve_timeout_seconds(timeout_seconds)
+
+    @staticmethod
+    def _resolve_timeout_seconds(timeout_seconds: float | None) -> float:
+        if timeout_seconds is not None:
+            return float(timeout_seconds)
+
+        raw_timeout = os.getenv("AMAZON_EXTERNAL_CRAWLER_TIMEOUT_SECONDS", "").strip()
+        if not raw_timeout:
+            return 30.0
+
+        try:
+            value = float(raw_timeout)
+        except ValueError:
+            return 30.0
+
+        return max(1.0, value)
 
     def fetch_html(self, url: str) -> AmazonCrawlerResult:
         if not self.endpoint_url:
