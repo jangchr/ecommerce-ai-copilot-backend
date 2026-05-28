@@ -209,6 +209,7 @@ class ExternalAmazonCrawler(BaseAmazonCrawler):
     ):
         self.endpoint_url = (endpoint_url or os.getenv("AMAZON_EXTERNAL_CRAWLER_URL", "")).strip()
         self.api_token = api_token or os.getenv("AMAZON_EXTERNAL_CRAWLER_TOKEN", "")
+        self.provider_name = os.getenv("AMAZON_EXTERNAL_CRAWLER_PROVIDER", "custom_external").strip() or "custom_external"
         self.timeout_seconds = timeout_seconds
 
     def fetch_html(self, url: str) -> AmazonCrawlerResult:
@@ -225,7 +226,7 @@ class ExternalAmazonCrawler(BaseAmazonCrawler):
         try:
             response = requests.post(
                 self.endpoint_url,
-                json={"url": url},
+                json={"url": url, "provider": self.provider_name},
                 headers=headers,
                 timeout=self.timeout_seconds,
             )
