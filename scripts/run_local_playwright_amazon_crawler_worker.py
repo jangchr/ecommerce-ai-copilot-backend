@@ -234,7 +234,7 @@ def crawl_with_local_playwright(url: str) -> dict[str, Any]:
         raise RuntimeError("Playwright is not installed. Run: python -m pip install playwright && python -m playwright install chromium") from exc
 
     html_by_label: dict[str, str] = {}
-    page_debugs: list[dict[str, Any]] = {}
+    page_debugs: list[dict[str, Any]] = []
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
