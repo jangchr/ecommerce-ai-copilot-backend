@@ -25,6 +25,7 @@ class AmazonIntakeEndpointTest(unittest.TestCase):
         self.assertFalse(data["is_supported"])
         self.assertEqual(data["provider_status"], "unsupported")
         self.assertTrue(data["fallback_required"])
+        self.assertEqual(data["review_insights"]["pain_points"], [])
         self.assertIn("unsupported_amazon_url", data["data_warnings"])
         self.assertEqual(data["metadata"]["intake_reason"], "non_amazon_com_url")
 
@@ -94,6 +95,9 @@ class AmazonIntakeEndpointTest(unittest.TestCase):
         self.assertEqual(data["review_items"][0]["source"], "amazon_review_snippet")
         self.assertEqual(data["review_items"][0]["rating"], 4)
         self.assertEqual(data["review_items"][0]["title"], "Cap cracked")
+        self.assertIn("cap cracked", " ".join(data["review_insights"]["pain_points"]))
+        self.assertIn("cap cracked", " ".join(data["review_insights"]["buyer_objections"]))
+        self.assertIn("cap cracked", " ".join(data["review_insights"]["evidence_quotes"]))
 
     def test_supported_url_fetch_unavailable_returns_fallback(self):
         evidence = SourceEvidence(

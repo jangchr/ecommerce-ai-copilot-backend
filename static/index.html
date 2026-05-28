@@ -4609,12 +4609,34 @@
             return lines.filter(Boolean).join('\n');
         }
 
+        function amazonReviewInsightsText(insights) {
+            if (!insights) return '';
+            const sections = [
+                ['Pain points', insights.pain_points],
+                ['Buyer objections', insights.buyer_objections],
+                ['Use cases', insights.use_cases],
+                ['Emotional triggers', insights.emotional_triggers],
+                ['Evidence quotes', insights.evidence_quotes],
+            ];
+            return sections
+                .map(([label, items]) => {
+                    const lines = (items || []).filter(Boolean);
+                    return lines.length ? `${label}:\n${lines.map((item) => `- ${item}`).join('\n')}` : '';
+                })
+                .filter(Boolean)
+                .join('\n\n');
+        }
+
         function amazonIntakePainPointsText(data) {
             if (!data) return '';
             const reviewItemText = (data.review_items || [])
                 .map((item) => item.text || '')
                 .filter(Boolean);
+            const insights = data.review_insights || {};
             return [
+                ...(insights.pain_points || []),
+                ...(insights.buyer_objections || []),
+                ...(insights.emotional_triggers || []),
                 ...reviewItemText,
                 ...(data.evidence_preview || [])
             ].filter(Boolean).join('\n');
@@ -4648,6 +4670,7 @@
                 ${block('Bullet Points', (data.bullet_points || []).join('\n'))}
                 ${block('Evidence Preview', (data.evidence_preview || []).join('\n'))}
                 ${block('Captured Review Snippets', (data.review_items || []).map((item) => item.text || '').filter(Boolean).join('\n'))}
+                ${block('Review Insight Pack', amazonReviewInsightsText(data.review_insights))}
                 ${block('Data Warnings', warnings.join('\n'))}
                 ${block('Fallback Message', data.fallback_message || '')}
                 ${block('Upgrade Note', t('amazonIntakeUpgradeNote'))}

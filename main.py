@@ -704,6 +704,109 @@ def _amazon_intake_fallback_message() -> str:
     return "Paste 3-5 Amazon reviews or product bullets to improve the creative brief."
 
 
+def _amazon_empty_review_insights() -> dict:
+    return {
+        "pain_points": [],
+        "buyer_objections": [],
+        "use_cases": [],
+        "emotional_triggers": [],
+        "evidence_quotes": [],
+    }
+
+
+def _amazon_review_insights(review_items: list[dict]) -> dict:
+    texts = [
+        str(item.get("text") or "").strip()
+        for item in review_items
+        if str(item.get("text") or "").strip()
+    ]
+    if not texts:
+        return _amazon_empty_review_insights()
+
+    def pick(keywords: tuple[str, ...], fallback: list[str], limit: int = 3) -> list[str]:
+        matches = []
+        for text in texts:
+            lowered = text.lower()
+            if any(keyword in lowered for keyword in keywords):
+                matches.append(text)
+        return _dedupe_amazon_insight_lines(matches or fallback, limit)
+
+    pain_keywords = (
+        "leak",
+        "crack",
+        "broken",
+        "watery",
+        "thin",
+        "flavorless",
+        "terrible",
+        "problem",
+        "issue",
+        "hard to",
+        "too ",
+        "not ",
+        "failed",
+    )
+    objection_keywords = (
+        "price",
+        "expensive",
+        "worth",
+        "quality",
+        "shipping",
+        "delivery",
+        "box",
+        "bottle",
+        "size",
+        "received",
+        "return",
+    )
+    use_case_keywords = (
+        "salad",
+        "vinaigrette",
+        "cheese",
+        "cooking",
+        "use",
+        "used",
+        "order",
+        "favorite",
+        "bottle",
+    )
+    emotion_keywords = (
+        "favorite",
+        "love",
+        "like",
+        "good",
+        "great",
+        "fairly priced",
+        "terrible",
+        "disappointed",
+        "wateriest",
+        "flavorless",
+    )
+
+    return {
+        "pain_points": pick(pain_keywords, texts),
+        "buyer_objections": pick(objection_keywords, texts),
+        "use_cases": pick(use_case_keywords, texts),
+        "emotional_triggers": pick(emotion_keywords, texts),
+        "evidence_quotes": _dedupe_amazon_insight_lines(texts, 5),
+    }
+
+
+def _dedupe_amazon_insight_lines(values: list[str], limit: int) -> list[str]:
+    seen = set()
+    result = []
+    for value in values:
+        cleaned = _clean_description_text(value)
+        key = cleaned.lower()
+        if not cleaned or key in seen:
+            continue
+        seen.add(key)
+        result.append(cleaned)
+        if len(result) >= limit:
+            break
+    return result
+
+
 @app.post("/api/v1/amazon-intake", response_model=AmazonIntakeResponse)
 async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
     started = time.perf_counter()
@@ -733,6 +836,7 @@ async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
         "bullet_points": [],
         "evidence_preview": [],
         "review_items": [],
+        "review_insights": _amazon_empty_review_insights(),
         "data_warnings": [],
         "fallback_required": True,
         "fallback_message": _amazon_intake_fallback_message(),
@@ -771,6 +875,16 @@ async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
         metadata = dict(evidence.metadata or {})
         provider_status = _probe_status_from_evidence(evidence)
         fallback_required = not (provider_status == "success" and evidence.confidence >= 0.70)
+        review_items = [
+            {
+                "text": review.text,
+                "source": review.source or evidence.source_type,
+                "rating": review.rating,
+                "date": review.date,
+                "title": review.title,
+            }
+            for review in list(evidence.reviews or [])[:6]
+        ]
 
         base_data.update(
             {
@@ -783,16 +897,8 @@ async def amazon_intake(request: AmazonIntakeRequest, http_request: Request):
                 "category_hint": metadata.get("category_hint", ""),
                 "bullet_points": list(metadata.get("bullet_points") or []),
                 "evidence_preview": list(evidence.evidence_quotes[:3]),
-                "review_items": [
-                    {
-                        "text": review.text,
-                        "source": review.source or evidence.source_type,
-                        "rating": review.rating,
-                        "date": review.date,
-                        "title": review.title,
-                    }
-                    for review in list(evidence.reviews or [])[:6]
-                ],
+                "review_items": review_items,
+                "review_insights": _amazon_review_insights(review_items),
                 "data_warnings": list(evidence.data_warnings or []),
                 "fallback_required": fallback_required,
                 "fallback_message": _amazon_intake_fallback_message() if fallback_required else "",

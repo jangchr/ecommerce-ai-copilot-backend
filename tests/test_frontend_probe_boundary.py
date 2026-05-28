@@ -1284,6 +1284,35 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
 
 
+
+
+    def test_l29_amazon_review_insight_pack_is_rendered_and_used_without_new_backend(self):
+        self.assertIn("review_insights", self.source)
+        self.assertIn("Review Insight Pack", self.source)
+        self.assertIn("function amazonReviewInsightsText(insights)", self.source)
+        self.assertIn("amazonReviewInsightsText(data.review_insights)", self.source)
+        self.assertIn("insights.pain_points", self.source)
+        self.assertIn("insights.buyer_objections", self.source)
+        self.assertIn("insights.emotional_triggers", self.source)
+        self.assertIn("insights.evidence_quotes", self.source)
+
+        match = re.search(
+            r"function amazonIntakePainPointsText\(data\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+
+        self.assertIn("data.review_insights", body)
+        self.assertIn("insights.pain_points", body)
+        self.assertIn("insights.buyer_objections", body)
+        self.assertIn("insights.emotional_triggers", body)
+        self.assertIn("data.review_items", body)
+
+        self.assertNotIn("/api/v1/review-insights", self.source)
+        self.assertNotIn("/api/v1/amazon-insights", self.source)
+
     def test_l28_amazon_review_signal_pack_is_rendered_without_new_backend(self):
         self.assertIn("review_items", self.source)
         self.assertIn("Captured Review Snippets", self.source)

@@ -132,6 +132,14 @@ class AmazonReviewItem(BaseModel):
     title: str = ""
 
 
+class AmazonReviewInsights(BaseModel):
+    pain_points: List[str] = Field(default_factory=list)
+    buyer_objections: List[str] = Field(default_factory=list)
+    use_cases: List[str] = Field(default_factory=list)
+    emotional_triggers: List[str] = Field(default_factory=list)
+    evidence_quotes: List[str] = Field(default_factory=list)
+
+
 class AmazonIntakeData(BaseModel):
     input_url: str = ""
     is_supported: bool = False
@@ -147,6 +155,7 @@ class AmazonIntakeData(BaseModel):
     bullet_points: List[str] = Field(default_factory=list)
     evidence_preview: List[str] = Field(default_factory=list)
     review_items: List[AmazonReviewItem] = Field(default_factory=list)
+    review_insights: AmazonReviewInsights = Field(default_factory=AmazonReviewInsights)
     data_warnings: List[str] = Field(default_factory=list)
     fallback_required: bool = True
     fallback_message: str = ""
