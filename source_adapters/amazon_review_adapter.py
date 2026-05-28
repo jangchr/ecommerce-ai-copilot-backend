@@ -174,18 +174,16 @@ class AmazonReviewAdapter(BaseSourceAdapter):
                 raise
 
     def _fetch_html(self, url: str) -> str:
-        detail_result = self.crawler.fetch_html(url)
-        html_parts = [detail_result.html or ""]
-
-        reviews_url = _amazon_reviews_url(url)
-        if reviews_url:
+        html_parts = []
+        for index, candidate_url in enumerate([url, *_amazon_reviews_urls(url)]):
             try:
-                reviews_result = self.crawler.fetch_html(reviews_url)
-                if reviews_result.html:
-                    html_parts.append(reviews_result.html)
+                result = self.crawler.fetch_html(candidate_url)
             except Exception:
-                # Review-page crawl is a best-effort enrichment. Keep the detail page result usable.
-                pass
+                if index == 0:
+                    raise
+                continue
+            if result.html:
+                html_parts.append(result.html)
 
         return "\n".join(part for part in html_parts if part)
 
@@ -461,13 +459,17 @@ class AmazonReviewAdapter(BaseSourceAdapter):
 
 
 
-def _amazon_reviews_url(url: str) -> str:
+
+def _amazon_reviews_urls(url: str) -> list[str]:
     metadata = _intake_metadata(url)
     asin = metadata.get("asin") or ""
     if not asin:
-        return ""
-    return f"https://www.amazon.com/product-reviews/{asin}?reviewerType=all_reviews&sortBy=recent"
-
+        return []
+    return [
+        f"https://www.amazon.com/product-reviews/{asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=1",
+        f"https://www.amazon.com/product-reviews/{asin}?reviewerType=all_reviews&sortBy=recent&pageNumber=1",
+        f"https://www.amazon.com/hz/reviews-render/ajax/reviews/get/ref=cm_cr_getr_d_paging_btm_next_1?ie=UTF8&reviewerType=all_reviews&pageNumber=1&sortBy=recent&asin={asin}",
+    ]
 
 def _intake_metadata(url: str) -> dict:
     intake = normalize_amazon_product_url(url)

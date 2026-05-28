@@ -224,7 +224,11 @@ class AmazonProbeAdapterTest(unittest.TestCase):
         evidence = adapter.fetch("https://www.amazon.com/dp/B000TEST00", "balsamic_vinegar")
 
         self.assertEqual(crawler.urls[0], "https://www.amazon.com/dp/B000TEST00")
-        self.assertTrue(any("/product-reviews/B000TEST00" in url for url in crawler.urls))
+        review_urls = [
+            url for url in crawler.urls
+            if "/product-reviews/B000TEST00" in url or "/hz/reviews-render/" in url
+        ]
+        self.assertGreaterEqual(len(review_urls), 2)
         self.assertEqual(evidence.source_type, "amazon_review_api")
         self.assertEqual(evidence.metadata["product_title"], "Premium Balsamic Glaze")
         self.assertIn("cap cracked", " ".join(evidence.evidence_quotes))
@@ -256,7 +260,7 @@ class AmazonProbeAdapterTest(unittest.TestCase):
 
             def fetch_html(self, url):
                 self.urls.append(url)
-                html = reviews_html if "/product-reviews/" in url else product_html
+                html = reviews_html if ("/product-reviews/" in url or "/hz/reviews-render/" in url) else product_html
                 return AmazonCrawlerResult(url=url, html=html, status_code=200, final_url=url)
 
         crawler = FakeCrawler()
@@ -265,13 +269,42 @@ class AmazonProbeAdapterTest(unittest.TestCase):
             "amazon_product",
         )
 
-        self.assertTrue(any("/product-reviews/B000TEST00" in url for url in crawler.urls))
+        review_urls = [
+            url for url in crawler.urls
+            if "/product-reviews/B000TEST00" in url or "/hz/reviews-render/" in url
+        ]
+        self.assertGreaterEqual(len(review_urls), 2)
         self.assertEqual(evidence.source_type, "amazon_review_api")
         self.assertEqual(len(evidence.reviews), 2)
         combined = " ".join(review.text for review in evidence.reviews)
         self.assertIn("Easy to use and it saves time", combined)
         self.assertIn("small size makes it easier", combined)
         self.assertNotIn("sparse_reviews", evidence.data_warnings)
+
+
+
+    def test_fetch_attempts_multiple_review_page_fallbacks(self):
+        class FakeCrawler:
+            def __init__(self):
+                self.urls = []
+
+            def fetch_html(self, url):
+                self.urls.append(url)
+                html = AMAZON_HTML
+                return AmazonCrawlerResult(url=url, html=html, status_code=200, final_url=url)
+
+        crawler = FakeCrawler()
+        evidence = AmazonReviewAdapter(crawler=crawler).fetch(
+            "https://www.amazon.com/dp/B000TEST00",
+            "amazon_product",
+        )
+
+        review_urls = [
+            url for url in crawler.urls
+            if "/product-reviews/B000TEST00" in url or "/hz/reviews-render/" in url
+        ]
+        self.assertEqual(evidence.source_type, "amazon_review_api")
+        self.assertGreaterEqual(len(review_urls), 2)
 
 
     def test_requests_crawler_converts_http_error_for_adapter_classification(self):
