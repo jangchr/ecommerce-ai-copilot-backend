@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from schemas.review_workspace import ReviewWorkspaceProduct, ReviewWorkspaceReview
+from schemas.review_workspace import ReviewWorkspaceProduct, ReviewWorkspaceRequest, ReviewWorkspaceResponse, ReviewWorkspaceReview
 
 
 class ReviewPasteParseRequest(BaseModel):
@@ -20,3 +20,14 @@ class ReviewPasteParseResponse(BaseModel):
     reviews: list[ReviewWorkspaceReview]
     workspace_product: ReviewWorkspaceProduct
     data_warnings: list[str] = []
+
+
+class PastedReviewWorkspaceAnalyzeRequest(ReviewPasteParseRequest):
+    workspace_id: str = "pasted_review_workspace"
+    goal: str = "tiktok_ctr"
+    output_language: str = "en"
+
+
+class PastedReviewWorkspaceAnalyzeResponse(BaseModel):
+    parsed: ReviewPasteParseResponse
+    analysis: ReviewWorkspaceResponse

@@ -21,6 +21,7 @@ FAST_COMMANDS = [
         "tests.test_amazon_intake_endpoint",
         "tests.test_review_workspace_endpoint",
         "tests.test_review_paste_parser_endpoint",
+        "tests.test_pasted_review_workspace_endpoint",
         "tests.test_amazon_shadow_eval_runner",
         "tests.test_source_registry",
         "tests.test_runtime_config",

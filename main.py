@@ -1766,7 +1766,7 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
 
 # L37-C messy pasted review parser.
 import re
-from schemas.review_paste import ReviewPasteParseRequest, ReviewPasteParseResponse
+from schemas.review_paste import PastedReviewWorkspaceAnalyzeRequest, PastedReviewWorkspaceAnalyzeResponse, ReviewPasteParseRequest, ReviewPasteParseResponse
 from schemas.review_workspace import ReviewWorkspaceProduct, ReviewWorkspaceReview
 
 _REVIEW_PASTE_RATING_RE = re.compile(
@@ -1954,6 +1954,52 @@ def _parse_messy_reviews(raw_text: str, source_section: str) -> list[ReviewWorks
         deduped.append(review)
 
     return deduped
+
+
+
+
+@app.post("/api/v1/analyze-pasted-review-workspace", response_model=PastedReviewWorkspaceAnalyzeResponse)
+async def analyze_pasted_review_workspace(payload: PastedReviewWorkspaceAnalyzeRequest):
+    reviews = _parse_messy_reviews(payload.raw_text, payload.source_section)
+    high_signal_count = sum(1 for review in reviews if _paste_high_signal_score(review) >= 4)
+
+    warnings = []
+    if not _paste_clean_line(payload.raw_text):
+        warnings.append("empty_input")
+    if not reviews:
+        warnings.append("no_reviews_detected")
+    if reviews and high_signal_count == 0:
+        warnings.append("low_signal_reviews")
+
+    workspace_product = ReviewWorkspaceProduct(
+        platform=payload.platform,
+        url=payload.url,
+        asin=payload.asin,
+        title=payload.product_title or payload.asin or payload.url or "Pasted review product",
+        reviews=reviews,
+    )
+
+    parsed = ReviewPasteParseResponse(
+        review_count=len(reviews),
+        high_signal_review_count=high_signal_count,
+        reviews=reviews,
+        workspace_product=workspace_product,
+        data_warnings=warnings,
+    )
+
+    workspace_payload = ReviewWorkspaceRequest(
+        workspace_id=payload.workspace_id,
+        source="pasted_reviews",
+        products=[workspace_product],
+        goal=payload.goal,
+        output_language=payload.output_language,
+    )
+    analysis = await analyze_review_workspace(workspace_payload)
+
+    return PastedReviewWorkspaceAnalyzeResponse(
+        parsed=parsed,
+        analysis=analysis,
+    )
 
 
 @app.post("/api/v1/parse-review-paste", response_model=ReviewPasteParseResponse)
