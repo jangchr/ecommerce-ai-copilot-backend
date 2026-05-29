@@ -250,5 +250,65 @@ class ReviewWorkspaceEvidenceSentenceTest(unittest.TestCase):
         self.assertNotIn("I bought this after reading reviews", joined)
         self.assertTrue(all(len(quote) <= 240 for quote in quotes))
 
+
+
+class ReviewWorkspaceEvidenceFragmentCleanupTest(unittest.TestCase):
+    def test_review_workspace_drops_broken_fragments_and_positive_objection_noise(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "evidence_fragment_cleanup_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/B00QIIMCCW",
+                        "title": "Colavita Balsamic Vinegar - 8.5 oz",
+                        "brand": "Colavita",
+                        "description": "Balsamic vinegar for salad dressing and cooking.",
+                        "reviews": [
+                            {
+                                "rating": "4 out of 5 stars",
+                                "text": "Peter M. Ross, Ph.D. 4 out of 5 stars the stated size is wrong Reviewed in the United States on February 28, 2021 Size: 17 Fl Oz (Pack of 1) Verified Purchase I like the flavor and have used colavita balsamic for many years. I ordered this because I was out. I received the regular size (16 oz?) colavita, so this is good as long as they do not send the half size (8 oz).",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "4 out of 5 stars",
+                                "text": "Peter M. Ross, Ph.D. 4 out of 5 stars I have used this product for years. Reviewed in Canada on July 13, 2024 Size: 17 Fl Oz (Pack of 1) Verified Purchase Consistent good quality in my opinion. Not super complex, but great for cooking.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        all_quotes = []
+        for section in ["common_pain_points", "buyer_objections", "liked_points", "use_cases"]:
+            for item in body.get(section, []):
+                all_quotes.extend(item.get("evidence_quotes", []))
+
+        # Do not allow the old broken fragment that started mid-parenthesis,
+        # but allow normal text such as "(16 oz?) colavita".
+        self.assertTrue(all(not quote.lstrip().startswith(") colavita") for quote in all_quotes))
+
+        objection_quotes = []
+        for item in body.get("buyer_objections", []):
+            objection_quotes.extend(item.get("evidence_quotes", []))
+
+        # Positive cooking praise can appear elsewhere, but it should not be treated
+        # as a buyer objection.
+        self.assertTrue(all("great for cooking" not in quote for quote in objection_quotes))
+        self.assertTrue(all(not quote.lower().startswith("but great") for quote in objection_quotes))
+
+
 if __name__ == "__main__":
     unittest.main()

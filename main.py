@@ -1808,20 +1808,31 @@ def _rw_evidence_sentence_candidates(text: str) -> list[str]:
     if not cleaned:
         return []
 
-    # Split on strong sentence endings while preserving useful fragments.
-    normalized = cleaned.replace("!!!", ". ").replace("!!", ". ").replace("!", ". ").replace("?", ". ")
-    parts = re.split(r"(?<=[.])\s+", normalized)
+    # Do not blindly split on "?" because Amazon size text like "(16 oz?)"
+    # can create broken fragments such as ") colavita, so..."
+    normalized = cleaned.replace("!!!", ". ").replace("!!", ". ").replace("!", ". ")
+
+    parts = re.split(r"(?<=[.])\s+|(?<=[?])\s+(?=[A-Z\"'])", normalized)
     candidates = []
 
     for part in parts:
         sentence = part.strip(" -:;,.")
         if not sentence:
             continue
-        if len(sentence) < 18:
+
+        if "_rw_clean_evidence_fragment" in globals():
+            sentence = _rw_clean_evidence_fragment(sentence)
+
+        if not sentence or len(sentence) < 18:
             continue
+
+        lower = sentence.lower()
+        if lower.startswith(("so this is good", "but great for cooking", "and great for cooking")):
+            continue
+
         candidates.append(sentence)
 
-    return candidates or [cleaned]
+    return candidates or [_rw_clean_evidence_fragment(cleaned) if "_rw_clean_evidence_fragment" in globals() else cleaned]
 
 
 def _rw_evidence_sentence_score(sentence: str) -> int:
@@ -1862,6 +1873,11 @@ def _rw_evidence_sentence_score(sentence: str) -> int:
         if term in lower:
             score += 4
 
+    if "listed as" in lower and "what came was" in lower:
+        score += 8
+    if "received the regular size" in lower and "half size" in lower:
+        score += 8
+
     if 45 <= len(sentence) <= 220:
         score += 3
     elif len(sentence) > 220:
@@ -1874,10 +1890,15 @@ def _rw_evidence_sentence_score(sentence: str) -> int:
         "i throw in",
         "amazon's choice",
         "author of",
+        "but great for cooking",
+        "so this is good as long",
     ]
     for term in low_signal_terms:
         if term in lower:
-            score -= 3
+            score -= 6
+
+    if lower.startswith(("so ", "but ", "and ", "which ")):
+        score -= 5
 
     return score
 
@@ -1893,6 +1914,24 @@ def _rw_best_evidence_sentence(text: str) -> str:
         reverse=True,
     )
     return ranked[0][1]
+
+
+
+def _rw_clean_evidence_fragment(value: str) -> str:
+    text = " ".join(str(value or "").split()).strip(" -:;,.")
+
+    # Remove broken leading punctuation left by metadata cleanup.
+    text = re.sub(r"^[)\]\s]+", "", text).strip()
+
+    # Drop low-value revision prefix while keeping the actual claim.
+    text = re.sub(r"^Revised\s+\d{1,2}/\d{1,2}/\d{2,4}\s*-\s*", "", text, flags=re.IGNORECASE)
+
+    # If a candidate begins with a dangling conjunction and is only positive proof,
+    # it should not become an objection evidence quote.
+    if re.match(r"^(but|and)\s+great for cooking\.?$", text, flags=re.IGNORECASE):
+        return ""
+
+    return text.strip(" -:;,.")
 
 
 def _rw_compact_evidence_quote(value: str, max_len: int = 220) -> str:
@@ -1911,12 +1950,14 @@ def _rw_compact_evidence_quote(value: str, max_len: int = 220) -> str:
     text = re.sub(r"\b\d+\s+people found this\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\bone person found this\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+", " ", text).strip(" -:;,.")
+    text = _rw_clean_evidence_fragment(text)
 
     if not text:
         return ""
 
     best_sentence = _rw_best_evidence_sentence(text)
     if best_sentence:
+        best_sentence = _rw_clean_evidence_fragment(best_sentence)
         text = best_sentence
 
     if len(text) <= max_len:
@@ -2021,22 +2062,65 @@ def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
     return cleaned or "buyer hesitation"
 
 
+def _rw_quote_is_low_value_objection(quote: str) -> bool:
+    lower = str(quote or "").lower().strip()
+
+    if len(lower) < 18:
+        return True
+
+    # Positive proof / usage praise should not be treated as a buyer objection.
+    if "great for cooking" in lower and not any(term in lower for term in [
+        "wrong",
+        "half size",
+        "not sold",
+        "2-pack",
+        "single bottle",
+        "priced wrong",
+        "flavorless",
+        "terrible",
+    ]):
+        return True
+
+    if lower.startswith(("but great", "and great", "so this is good")):
+        return True
+
+    return False
+
+
 def _rw_refine_buyer_objection_summaries(themes):
-    refined = []
-    seen_labels = set()
+    grouped: dict[str, list[str]] = {}
+    exemplar_theme_by_label = {}
 
     for theme in _rw_compact_theme_summaries(themes):
+        theme_label = getattr(theme, "label", "")
         quotes = getattr(theme, "evidence_quotes", []) or []
-        label = _rw_objection_label_from_quotes(getattr(theme, "label", ""), quotes)
 
-        if label.startswith("objection:"):
-            label = label.replace("objection:", "").strip() or "buyer hesitation"
+        for quote in quotes:
+            if _rw_quote_is_low_value_objection(quote):
+                continue
 
-        if label in seen_labels:
-            continue
+            refined_label = _rw_objection_label_from_quotes(theme_label, [quote])
+            if refined_label.startswith("objection:"):
+                refined_label = refined_label.replace("objection:", "").strip() or "buyer hesitation"
 
-        seen_labels.add(label)
-        refined.append(_rw_rebuild_theme_summary(theme, label=label, evidence_quotes=quotes))
+            if refined_label in {"but", "not", "wish", "wrong", "too", "however", "?"}:
+                refined_label = "buyer hesitation"
+
+            grouped.setdefault(refined_label, [])
+            if quote not in grouped[refined_label]:
+                grouped[refined_label].append(quote)
+
+            exemplar_theme_by_label.setdefault(refined_label, theme)
+
+    refined = []
+    for label, quotes in grouped.items():
+        refined.append(
+            _rw_rebuild_theme_summary(
+                exemplar_theme_by_label[label],
+                label=label,
+                evidence_quotes=quotes[:2],
+            )
+        )
 
     return refined
 
