@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CrossGrowth Collector</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="popup">
+    <header>
+      <div class="eyebrow">CrossGrowth AI OS</div>
+      <h1>Review Collector</h1>
+      <p>Save visible product signals from the current tab and analyze high-signal buyer language.</p>
+    </header>
+
+    <section class="card">
+      <label for="backendUrl">Backend URL</label>
+      <input id="backendUrl" type="text" value="https://ecommerce-ai-copilot-backend.onrender.com">
+      <div class="helper">Use local backend for development: http://127.0.0.1:8001</div>
+    </section>
+
+    <section class="actions">
+      <button id="extractBtn" type="button">Save current product</button>
+      <button id="analyzeBtn" type="button">Analyze saved workspace</button>
+      <button id="clearBtn" type="button" class="secondary">Clear saved products</button>
+    </section>
+
+    <section class="card">
+      <div class="stat-row">
+        <span>Saved products</span>
+        <strong id="savedCount">0</strong>
+      </div>
+      <div class="stat-row">
+        <span>Visible reviews</span>
+        <strong id="reviewCount">0</strong>
+      </div>
+      <div id="status" class="status">Ready.</div>
+    </section>
+
+    <section class="card" id="previewCard" hidden>
+      <h2>Current capture</h2>
+      <pre id="preview"></pre>
+    </section>
+
+    <section class="card" id="analysisCard" hidden>
+      <h2>Workspace analysis</h2>
+      <pre id="analysisOutput"></pre>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
