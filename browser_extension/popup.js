@@ -115,8 +115,22 @@ async function getActiveTab() {
   return tabs[0];
 }
 
-async function extractCurrentProduct() {
-  const tab = await getActiveTab();
+
+function isCollectableTabUrl(url) {
+  const value = String(url || "").toLowerCase();
+  return (
+    value.includes("amazon.") ||
+    value.includes("tiktok.") ||
+    value.includes("platform=amazon") ||
+    value.includes("platform=tiktok")
+  );
+}
+
+async function extractProductFromTab(tab) {
+  if (!tab || !tab.id) {
+    throw new Error("No tab id available.");
+  }
+
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     files: ["content.js"]
@@ -129,9 +143,30 @@ async function extractCurrentProduct() {
 
   const product = results && results[0] ? results[0].result : null;
   if (!product || !product.title) {
-    throw new Error("Could not extract product details from this page.");
+    throw new Error("Could not extract product details from this tab.");
   }
   return product;
+}
+
+function mergeProductsByUrl(existingProducts, newProducts) {
+  const byUrl = new Map();
+  for (const product of existingProducts || []) {
+    if (product && product.url) {
+      byUrl.set(product.url, product);
+    }
+  }
+  for (const product of newProducts || []) {
+    if (product && product.url) {
+      byUrl.set(product.url, product);
+    }
+  }
+  return Array.from(byUrl.values());
+}
+
+
+async function extractCurrentProduct() {
+  const tab = await getActiveTab();
+  return extractProductFromTab(tab);
 }
 
 async function saveCurrentProduct() {
@@ -147,6 +182,46 @@ async function saveCurrentProduct() {
   $("preview").textContent = JSON.stringify(product, null, 2);
   setStatus(`Saved: ${product.title || product.url}. Reviews: ${(product.reviews || []).length}`);
 }
+
+
+async function collectOpenTabs() {
+  setStatus("Collecting open Amazon/TikTok tabs...");
+
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const candidates = tabs.filter((tab) => tab.id && isCollectableTabUrl(tab.url));
+
+  if (!candidates.length) {
+    throw new Error("No Amazon or TikTok tabs found in this window.");
+  }
+
+  const collected = [];
+  const failures = [];
+
+  for (const tab of candidates) {
+    try {
+      const product = await extractProductFromTab(tab);
+      collected.push(product);
+    } catch (error) {
+      failures.push(`${tab.title || tab.url || "Unknown tab"}: ${error.message || error}`);
+    }
+  }
+
+  if (!collected.length) {
+    throw new Error(`Could not collect any tabs. ${failures.slice(0, 2).join(" | ")}`);
+  }
+
+  const { products } = await getSavedProducts();
+  const merged = mergeProductsByUrl(products, collected);
+  await setSavedProducts(merged);
+
+  $("previewCard").hidden = false;
+  $("preview").textContent = JSON.stringify(collected[collected.length - 1], null, 2);
+
+  const reviewTotal = collected.reduce((sum, product) => sum + (product.reviews || []).length, 0);
+  const suffix = failures.length ? ` ${failures.length} tab(s) skipped.` : "";
+  setStatus(`Collected ${collected.length} tab(s), ${reviewTotal} visible review(s).${suffix}`);
+}
+
 
 async function analyzeWorkspace() {
   const backendUrl = $("backendUrl").value.trim().replace(/\/$/, "") || DEFAULT_BACKEND;
@@ -215,6 +290,7 @@ function bind(id, handler) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   bind("extractBtn", saveCurrentProduct);
+  bind("collectTabsBtn", collectOpenTabs);
   bind("analyzeBtn", analyzeWorkspace);
   bind("clearBtn", clearSavedProducts);
   $("backendUrl").addEventListener("change", async () => {

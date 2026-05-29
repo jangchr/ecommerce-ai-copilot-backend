@@ -22,6 +22,12 @@ class BrowserExtensionContractTest(unittest.TestCase):
         self.assertEqual(manifest["action"]["default_popup"], "popup.html")
 
 
+
+    def test_manifest_allows_tab_collection(self):
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+
+        self.assertIn("tabs", manifest["permissions"])
+
     def test_manifest_allows_tiktok_pages(self):
         manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
 
@@ -108,6 +114,27 @@ class BrowserExtensionContractTest(unittest.TestCase):
             ".raw-details",
         ]:
             self.assertIn(marker, css)
+
+
+    def test_popup_supports_collect_open_tabs(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "collectTabsBtn",
+            "Collect open tabs",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "collectOpenTabs",
+            "chrome.tabs.query",
+            "isCollectableTabUrl",
+            "extractProductFromTab",
+            "mergeProductsByUrl",
+            "bind(\"collectTabsBtn\", collectOpenTabs)",
+        ]:
+            self.assertIn(marker, js)
 
 if __name__ == "__main__":
     unittest.main()
