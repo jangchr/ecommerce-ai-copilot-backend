@@ -3,9 +3,14 @@
   "name": "CrossGrowth Review Collector",
   "version": "0.1.0",
   "description": "Collect visible ecommerce review signals from the current tab and analyze them with CrossGrowth AI OS.",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
   "host_permissions": [
     "https://www.amazon.com/*",
+    "https://*.tiktok.com/*",
     "https://ecommerce-ai-copilot-backend.onrender.com/*",
     "http://127.0.0.1:*/*",
     "http://localhost:*/*"

@@ -21,6 +21,12 @@ class BrowserExtensionContractTest(unittest.TestCase):
         self.assertIn("https://www.amazon.com/*", manifest["host_permissions"])
         self.assertEqual(manifest["action"]["default_popup"], "popup.html")
 
+
+    def test_manifest_allows_tiktok_pages(self):
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+
+        self.assertIn("https://*.tiktok.com/*", manifest["host_permissions"])
+
     def test_content_script_extracts_product_workspace_shape(self):
         source = (self.root / "content.js").read_text(encoding="utf-8")
 
@@ -35,7 +41,25 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "review_count",
             "bullet_points",
             "reviews",
-            "visible_tab_review",
+            "amazon_visible_review",
+        ]:
+            self.assertIn(marker, source)
+
+
+    def test_content_script_has_platform_adapters(self):
+        source = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "detectPlatform",
+            "extractAmazonPage",
+            "extractTikTokPage",
+            "extractGenericPage",
+            "platform=tiktok",
+            "tiktok_visible_comment",
+            "generic_visible_text",
+            "metadata",
+            "creator",
+            "hashtags",
         ]:
             self.assertIn(marker, source)
 
