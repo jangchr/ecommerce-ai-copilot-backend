@@ -1,4 +1,5 @@
 const DEFAULT_BACKEND = "https://ecommerce-ai-copilot-backend.onrender.com";
+let lastWorkspaceAnalysis = null;
 
 function $(id) {
   return document.getElementById(id);
@@ -84,6 +85,108 @@ function renderWorkspaceAnalysis(body) {
       ${listItems(body.hooks)}
     </div>
   `;
+}
+
+
+
+function compactThemeLines(title, themes) {
+  const rows = [`${title}:`];
+  const items = (themes || []).slice(0, 6);
+  if (!items.length) {
+    rows.push("- No repeated signals detected yet.");
+    return rows;
+  }
+
+  for (const theme of items) {
+    const count = theme.evidence_count ? ` (${theme.evidence_count})` : "";
+    rows.push(`- ${theme.label || "Theme"}${count}`);
+    for (const quote of (theme.evidence_quotes || []).slice(0, 2)) {
+      rows.push(`  Evidence: ${quote}`);
+    }
+  }
+  return rows;
+}
+
+function compactListLines(title, values) {
+  const rows = [`${title}:`];
+  const items = (values || []).filter(Boolean).slice(0, 8);
+  if (!items.length) {
+    rows.push("- No items generated yet.");
+    return rows;
+  }
+  for (const item of items) {
+    rows.push(`- ${item}`);
+  }
+  return rows;
+}
+
+function compactProductLines(products) {
+  const rows = ["Collected products:"];
+  const items = products || [];
+  if (!items.length) {
+    rows.push("- No products collected yet.");
+    return rows;
+  }
+
+  for (const product of items) {
+    const platform = String(product.platform || "web").toLowerCase();
+    const reviewCount = (product.reviews || []).length;
+    rows.push(`- ${platform} - ${shortProductTitle(product)} - ${reviewCount} review(s)`);
+  }
+  return rows;
+}
+
+function buildWorkspacePayload(products) {
+  return {
+    workspace_id: `extension_workspace_${Date.now()}`,
+    source: "chrome_extension",
+    output_language: "en",
+    products: products || []
+  };
+}
+
+async function copyTextToClipboard(text) {
+  await navigator.clipboard.writeText(text);
+}
+
+async function copyInsights() {
+  if (!lastWorkspaceAnalysis) {
+    throw new Error("Analyze a workspace before copying insights.");
+  }
+
+  const { products } = await getSavedProducts();
+  const body = lastWorkspaceAnalysis;
+
+  const lines = [
+    "CrossGrowth Review Workspace Insights",
+    "",
+    `Products: ${body.product_count ?? 0}`,
+    `Total reviews: ${body.total_reviews ?? 0}`,
+    `High-signal reviews: ${body.high_signal_review_count ?? 0}`,
+    "",
+    ...compactProductLines(products),
+    "",
+    ...compactThemeLines("Top pain points", body.common_pain_points),
+    "",
+    ...compactThemeLines("Buyer objections", body.buyer_objections),
+    "",
+    ...compactListLines("Creative angles", body.creative_angles),
+    "",
+    ...compactListLines("Hooks", body.hooks)
+  ];
+
+  await copyTextToClipboard(lines.join("\n"));
+  setStatus("Copied insights to clipboard.");
+}
+
+async function copyWorkspaceJson() {
+  const { products } = await getSavedProducts();
+  if (!products.length) {
+    throw new Error("Save or collect products before copying workspace JSON.");
+  }
+
+  await copyTextToClipboard(JSON.stringify(buildWorkspacePayload(products), null, 2));
+  setStatus("Copied workspace JSON to clipboard.");
 }
 
 
@@ -288,6 +391,7 @@ async function analyzeWorkspace() {
     throw new Error(body.error || "Workspace analysis failed.");
   }
 
+  lastWorkspaceAnalysis = body;
   $("analysisCard").hidden = false;
   renderWorkspaceAnalysis(body);
   $("analysisOutput").textContent = JSON.stringify({
@@ -330,6 +434,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("extractBtn", saveCurrentProduct);
   bind("collectTabsBtn", collectOpenTabs);
   bind("analyzeBtn", analyzeWorkspace);
+  bind("copyInsightsBtn", copyInsights);
+  bind("copyWorkspaceJsonBtn", copyWorkspaceJson);
   bind("clearBtn", clearSavedProducts);
   $("backendUrl").addEventListener("change", async () => {
     await chrome.storage.local.set({ backendUrl: $("backendUrl").value.trim() || DEFAULT_BACKEND });

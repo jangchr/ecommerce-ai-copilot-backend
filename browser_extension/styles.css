@@ -239,3 +239,16 @@ blockquote {
   color: #64748b;
   font-size: 11px;
 }
+
+
+.analysis-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+button.compact {
+  padding: 8px 10px;
+  font-size: 11px;
+}

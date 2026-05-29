@@ -165,5 +165,39 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, css)
 
+
+    def test_popup_supports_copy_actions(self):
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+        css = (self.root / "styles.css").read_text(encoding="utf-8")
+
+        self.assertIn("clipboardWrite", manifest["permissions"])
+
+        for marker in [
+            "copyInsightsBtn",
+            "copyWorkspaceJsonBtn",
+            "Copy insights",
+            "Copy workspace JSON",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "lastWorkspaceAnalysis",
+            "copyInsights",
+            "copyWorkspaceJson",
+            "buildWorkspacePayload",
+            "navigator.clipboard.writeText",
+            "bind(\"copyInsightsBtn\", copyInsights)",
+            "bind(\"copyWorkspaceJsonBtn\", copyWorkspaceJson)",
+        ]:
+            self.assertIn(marker, js)
+
+        for marker in [
+            ".analysis-actions",
+            "button.compact",
+        ]:
+            self.assertIn(marker, css)
+
 if __name__ == "__main__":
     unittest.main()
