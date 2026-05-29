@@ -10,6 +10,83 @@ function setStatus(message, isError = false) {
   node.style.color = isError ? "#b91c1c" : "#15803d";
 }
 
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function listItems(values, emptyMessage = "No signals detected yet.") {
+  const items = (values || []).filter(Boolean).slice(0, 6);
+  if (!items.length) {
+    return `<div class="empty">${escapeHTML(emptyMessage)}</div>`;
+  }
+  return `<ul>${items.map((value) => `<li>${escapeHTML(value)}</li>`).join("")}</ul>`;
+}
+
+function themeItems(themes, emptyMessage = "No repeated theme detected yet.") {
+  const items = (themes || []).slice(0, 6);
+  if (!items.length) {
+    return `<div class="empty">${escapeHTML(emptyMessage)}</div>`;
+  }
+
+  return `<ul>${items.map((theme) => {
+    const quotes = (theme.evidence_quotes || [])
+      .slice(0, 2)
+      .map((quote) => `<blockquote>${escapeHTML(quote)}</blockquote>`)
+      .join("");
+    const count = theme.evidence_count ? ` <span class="pill">${escapeHTML(theme.evidence_count)}</span>` : "";
+    return `<li><strong>${escapeHTML(theme.label || "Theme")}</strong>${count}${quotes}</li>`;
+  }).join("")}</ul>`;
+}
+
+function renderWorkspaceAnalysis(body) {
+  const summary = $("analysisSummary");
+  if (!summary) return;
+
+  summary.innerHTML = `
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span>Products</span>
+        <strong>${escapeHTML(body.product_count ?? 0)}</strong>
+      </div>
+      <div class="metric-card">
+        <span>Total reviews</span>
+        <strong>${escapeHTML(body.total_reviews ?? 0)}</strong>
+      </div>
+      <div class="metric-card">
+        <span>High-signal</span>
+        <strong>${escapeHTML(body.high_signal_review_count ?? 0)}</strong>
+      </div>
+    </div>
+
+    <div class="insight-section">
+      <h3>Top pain points</h3>
+      ${themeItems(body.common_pain_points)}
+    </div>
+
+    <div class="insight-section">
+      <h3>Buyer objections</h3>
+      ${themeItems(body.buyer_objections)}
+    </div>
+
+    <div class="insight-section">
+      <h3>Creative angles</h3>
+      ${listItems(body.creative_angles)}
+    </div>
+
+    <div class="insight-section">
+      <h3>Hooks</h3>
+      ${listItems(body.hooks)}
+    </div>
+  `;
+}
+
+
 async function getSavedProducts() {
   const result = await chrome.storage.local.get(["workspaceProducts", "backendUrl"]);
   return {
@@ -99,6 +176,7 @@ async function analyzeWorkspace() {
   }
 
   $("analysisCard").hidden = false;
+  renderWorkspaceAnalysis(body);
   $("analysisOutput").textContent = JSON.stringify({
     product_count: body.product_count,
     total_reviews: body.total_reviews,
@@ -118,6 +196,10 @@ async function clearSavedProducts() {
   $("analysisCard").hidden = true;
   $("preview").textContent = "";
   $("analysisOutput").textContent = "";
+  const analysisSummary = $("analysisSummary");
+  if (analysisSummary) {
+    analysisSummary.innerHTML = "";
+  }
   setStatus("Cleared saved products.");
 }
 

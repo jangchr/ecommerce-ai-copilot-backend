@@ -79,5 +79,35 @@ class BrowserExtensionContractTest(unittest.TestCase):
             self.assertIn(marker, source)
 
 
+
+    def test_popup_renders_productized_workspace_analysis(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+        css = (self.root / "styles.css").read_text(encoding="utf-8")
+
+        for marker in [
+            "analysisSummary",
+            "Raw response",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "renderWorkspaceAnalysis",
+            "Top pain points",
+            "Buyer objections",
+            "Creative angles",
+            "Hooks",
+            "renderWorkspaceAnalysis(body)",
+        ]:
+            self.assertIn(marker, js)
+
+        for marker in [
+            ".metric-grid",
+            ".insight-section",
+            ".metric-card",
+            ".raw-details",
+        ]:
+            self.assertIn(marker, css)
+
 if __name__ == "__main__":
     unittest.main()
