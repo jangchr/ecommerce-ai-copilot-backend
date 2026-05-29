@@ -204,5 +204,51 @@ class ReviewWorkspaceEvidenceQualityTest(unittest.TestCase):
         self.assertTrue(all("Reviewed in " not in quote for quote in all_quotes))
         self.assertTrue(all("Verified Purchase" not in quote for quote in all_quotes))
 
+
+
+class ReviewWorkspaceEvidenceSentenceTest(unittest.TestCase):
+    def test_review_workspace_extracts_key_evidence_sentence(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "evidence_sentence_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/B00QIIMCCW",
+                        "title": "Colavita Balsamic Vinegar - 8.5 oz",
+                        "brand": "Colavita",
+                        "description": "Balsamic vinegar for salad dressing and cooking.",
+                        "reviews": [
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Larry Langdon 5 out of 5 stars Great tasting balsamic vinegar Reviewed in the United States on December 18, 2020 Size: 17 Fl Oz (Pack of 1) Verified Purchase Revised 5/26/21 - Now this is listed as 8 1/2 oz for $4.99 but what came was a 17 oz bottle - still only $4.99! So it's probably listed and priced wrong. Still Great product!!! I bought this after reading reviews in both whole foods and amazon sections.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        quotes = []
+        for item in body.get("common_pain_points", []):
+            quotes.extend(item.get("evidence_quotes", []))
+
+        joined = "\n".join(quotes)
+        self.assertIn("listed as 8 1/2 oz", joined)
+        self.assertIn("what came was a 17 oz bottle", joined)
+        self.assertNotIn("I bought this after reading reviews", joined)
+        self.assertTrue(all(len(quote) <= 240 for quote in quotes))
+
 if __name__ == "__main__":
     unittest.main()

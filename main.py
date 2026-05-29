@@ -1803,7 +1803,99 @@ def _rw_workspace_theme_markers(payload, rows):
 
 
 
-def _rw_compact_evidence_quote(value: str, max_len: int = 260) -> str:
+def _rw_evidence_sentence_candidates(text: str) -> list[str]:
+    cleaned = " ".join(str(text or "").split())
+    if not cleaned:
+        return []
+
+    # Split on strong sentence endings while preserving useful fragments.
+    normalized = cleaned.replace("!!!", ". ").replace("!!", ". ").replace("!", ". ").replace("?", ". ")
+    parts = re.split(r"(?<=[.])\s+", normalized)
+    candidates = []
+
+    for part in parts:
+        sentence = part.strip(" -:;,.")
+        if not sentence:
+            continue
+        if len(sentence) < 18:
+            continue
+        candidates.append(sentence)
+
+    return candidates or [cleaned]
+
+
+def _rw_evidence_sentence_score(sentence: str) -> int:
+    lower = sentence.lower()
+    score = 0
+
+    strong_terms = [
+        "wrong size",
+        "size is wrong",
+        "stated size",
+        "listed as",
+        "what came was",
+        "half size",
+        "8 1/2 oz",
+        "8.5 oz",
+        "17 oz",
+        "2-pack",
+        "single bottle",
+        "not sold",
+        "priced wrong",
+        "price",
+        "cheaper",
+        "not worth",
+        "wateriest",
+        "flavorless",
+        "terrible",
+        "bad taste",
+        "makes terrible",
+        "store brand is better",
+        "not super complex",
+        "wish",
+        "but",
+        "however",
+        "problem",
+        "concern",
+    ]
+    for term in strong_terms:
+        if term in lower:
+            score += 4
+
+    if 45 <= len(sentence) <= 220:
+        score += 3
+    elif len(sentence) > 220:
+        score += 1
+
+    low_signal_terms = [
+        "i bought this after reading reviews",
+        "i use it with",
+        "i put it on",
+        "i throw in",
+        "amazon's choice",
+        "author of",
+    ]
+    for term in low_signal_terms:
+        if term in lower:
+            score -= 3
+
+    return score
+
+
+def _rw_best_evidence_sentence(text: str) -> str:
+    candidates = _rw_evidence_sentence_candidates(text)
+    if not candidates:
+        return ""
+
+    ranked = sorted(
+        enumerate(candidates),
+        key=lambda pair: (_rw_evidence_sentence_score(pair[1]), -pair[0]),
+        reverse=True,
+    )
+    return ranked[0][1]
+
+
+def _rw_compact_evidence_quote(value: str, max_len: int = 220) -> str:
     text = " ".join(str(value or "").split())
     if not text:
         return ""
@@ -1816,10 +1908,16 @@ def _rw_compact_evidence_quote(value: str, max_len: int = 260) -> str:
     text = re.sub(r"Reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}", " ", text)
     text = re.sub(r"Size:\s*[^.]{1,100}", " ", text)
     text = re.sub(r"\b[1-5](?:\.0)? out of 5 stars\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b\d+\s+people found this\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bone person found this\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+", " ", text).strip(" -:;,.")
 
     if not text:
         return ""
+
+    best_sentence = _rw_best_evidence_sentence(text)
+    if best_sentence:
+        text = best_sentence
 
     if len(text) <= max_len:
         return text
