@@ -48,6 +48,52 @@
     return "web";
   }
 
+  function detectAmazonPageType() {
+    const path = location.pathname.toLowerCase();
+    const title = cleanText(document.title).toLowerCase();
+    const heading = textFrom("h1").toLowerCase();
+    const hasSignInInput = Boolean(document.querySelector("#ap_email, input[name='email'], form[name='signIn']"));
+    const signInRequired =
+      path.includes("/ap/signin") ||
+      hasSignInInput ||
+      heading.includes("sign in") ||
+      title.includes("amazon sign-in");
+
+    if (signInRequired) {
+      return {
+        page_type: "amazon_sign_in",
+        sign_in_required: true
+      };
+    }
+
+    if (path.includes("/product-reviews/")) {
+      return {
+        page_type: "amazon_reviews",
+        sign_in_required: false
+      };
+    }
+
+    if (document.querySelector("#productTitle")) {
+      return {
+        page_type: "amazon_product",
+        sign_in_required: false
+      };
+    }
+
+    return {
+      page_type: "amazon_unknown",
+      sign_in_required: false
+    };
+  }
+
+  function amazonReviewVisibilityStatus(pageInfo, reviews) {
+    if (pageInfo.sign_in_required) return "sign_in_required";
+    if ((reviews || []).length > 0) return "visible_reviews_found";
+    if (pageInfo.page_type === "amazon_product") return "no_visible_reviews_on_product_page";
+    if (pageInfo.page_type === "amazon_reviews") return "no_visible_reviews_on_reviews_page";
+    return "no_visible_reviews";
+  }
+
   function extractPrice() {
     const selectors = [
       "#corePrice_feature_div .a-offscreen",
@@ -125,8 +171,14 @@
 
   function extractAmazonPage() {
     const url = location.href;
+    const pageInfo = detectAmazonPageType();
     const asinMatch = url.match(/\/(?:dp|gp\/product|product-reviews)\/([A-Z0-9]{10})/i);
-    const title = textFrom("#productTitle") || metaContent("og:title") || document.title.replace(/Amazon\.com:?/i, "").trim();
+    const reviews = pageInfo.sign_in_required ? [] : extractAmazonVisibleReviews();
+
+    const title =
+      textFrom("#productTitle") ||
+      metaContent("og:title") ||
+      (pageInfo.sign_in_required ? "Amazon sign-in required" : document.title.replace(/Amazon\.com:?/i, "").trim());
 
     return {
       platform: "amazon",
@@ -134,14 +186,18 @@
       asin: asinMatch ? asinMatch[1] : "",
       title,
       brand: textFrom("#bylineInfo"),
-      price: extractPrice(),
-      rating: extractAmazonRating(),
-      review_count: extractAmazonReviewCount(),
-      bullet_points: extractAmazonBullets(),
-      description: textFrom("#productDescription"),
-      reviews: extractAmazonVisibleReviews(),
+      price: pageInfo.sign_in_required ? "" : extractPrice(),
+      rating: pageInfo.sign_in_required ? "" : extractAmazonRating(),
+      review_count: pageInfo.sign_in_required ? "" : extractAmazonReviewCount(),
+      bullet_points: pageInfo.sign_in_required ? [] : extractAmazonBullets(),
+      description: pageInfo.sign_in_required ? "" : textFrom("#productDescription"),
+      reviews,
       metadata: {
-        extractor: "amazon_visible_dom"
+        extractor: "amazon_visible_dom",
+        page_type: pageInfo.page_type,
+        sign_in_required: pageInfo.sign_in_required,
+        review_visibility_status: amazonReviewVisibilityStatus(pageInfo, reviews),
+        visible_review_count: reviews.length
       }
     };
   }
@@ -304,6 +360,7 @@
 
   window.CrossGrowthReviewCollector = {
     detectPlatform,
+    detectAmazonPageType,
     extractAmazonPage,
     extractTikTokPage,
     extractGenericPage,

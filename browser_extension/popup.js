@@ -262,6 +262,26 @@ function shortProductTitle(product) {
   return title.length > 86 ? `${title.slice(0, 83)}...` : title;
 }
 
+
+function captureDiagnosticMessage(product) {
+  const metadata = product?.metadata || {};
+  const status = metadata.review_visibility_status;
+
+  if (metadata.sign_in_required || status === "sign_in_required") {
+    return "Amazon sign-in required. The extension only collects visible page content.";
+  }
+
+  if (
+    status === "no_visible_reviews_on_product_page" ||
+    status === "no_visible_reviews_on_reviews_page" ||
+    status === "no_visible_reviews"
+  ) {
+    return "Product info captured. No visible reviews found. Scroll to reviews or open a visible review page.";
+  }
+
+  return "";
+}
+
 function productSourceLabel(product) {
   const platform = String(product?.platform || "web").toLowerCase();
   const reviewCount = (product?.reviews || []).length;
@@ -374,7 +394,9 @@ async function saveCurrentProduct() {
   await setSavedProducts(deduped);
   $("previewCard").hidden = false;
   $("preview").textContent = JSON.stringify(product, null, 2);
-  setStatus(`Saved: ${product.title || product.url}. Reviews: ${(product.reviews || []).length}`);
+  const diagnostic = captureDiagnosticMessage(product);
+  const diagnosticSuffix = diagnostic ? ` ${diagnostic}` : "";
+  setStatus(`Saved: ${product.title || product.url}. Reviews: ${(product.reviews || []).length}.${diagnosticSuffix}`);
 }
 
 
@@ -412,8 +434,10 @@ async function collectOpenTabs() {
   $("preview").textContent = JSON.stringify(collected[collected.length - 1], null, 2);
 
   const reviewTotal = collected.reduce((sum, product) => sum + (product.reviews || []).length, 0);
-  const suffix = failures.length ? ` ${failures.length} tab(s) skipped.` : "";
-  setStatus(`Collected ${collected.length} tab(s), ${reviewTotal} visible review(s).${suffix}`);
+  const warningCount = collected.filter((product) => captureDiagnosticMessage(product)).length;
+  const failureSuffix = failures.length ? ` ${failures.length} tab(s) skipped.` : "";
+  const warningSuffix = warningCount ? ` ${warningCount} capture warning(s).` : "";
+  setStatus(`Collected ${collected.length} tab(s), ${reviewTotal} visible review(s).${failureSuffix}${warningSuffix}`);
 }
 
 

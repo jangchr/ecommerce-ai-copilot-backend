@@ -52,6 +52,21 @@ class BrowserExtensionContractTest(unittest.TestCase):
             self.assertIn(marker, source)
 
 
+
+    def test_content_script_has_amazon_diagnostics(self):
+        source = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "detectAmazonPageType",
+            "amazon_sign_in",
+            "sign_in_required",
+            "review_visibility_status",
+            "no_visible_reviews_on_product_page",
+            "no_visible_reviews_on_reviews_page",
+            "visible_review_count",
+        ]:
+            self.assertIn(marker, source)
+
     def test_content_script_has_platform_adapters(self):
         source = (self.root / "content.js").read_text(encoding="utf-8")
 
@@ -221,6 +236,18 @@ class BrowserExtensionContractTest(unittest.TestCase):
             self.assertIn(marker, js)
 
         self.assertIn("button.compact.wide", css)
+
+
+    def test_popup_surfaces_capture_diagnostics(self):
+        source = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "captureDiagnosticMessage",
+            "Amazon sign-in required",
+            "No visible reviews found",
+            "capture warning(s)",
+        ]:
+            self.assertIn(marker, source)
 
 if __name__ == "__main__":
     unittest.main()
