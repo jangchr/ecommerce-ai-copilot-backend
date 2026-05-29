@@ -354,9 +354,9 @@ class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
         angles = body["creative_angles"]
         hooks = body["hooks"]
 
-        self.assertTrue(any("buyer's exact wording" in angle for angle in angles))
+        self.assertTrue(any("Copy-ready angle:" in angle for angle in angles))
         self.assertTrue(all("Turn the repeated complaint around" not in angle for angle in angles))
-        self.assertTrue(any("Listed as one size" in hook or "taste rich enough" in hook for hook in hooks))
+        self.assertTrue(any("POV:" in hook or "Watch this before you buy" in hook or "flavor warning" in hook for hook in hooks))
         self.assertEqual(len(hooks), len(set(hooks)))
         self.assertTrue(all("Use it to support great" not in angle for angle in angles))
         self.assertTrue(all("Use it to support love" not in angle for angle in angles))

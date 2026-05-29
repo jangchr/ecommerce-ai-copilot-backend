@@ -2210,9 +2210,13 @@ def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_poin
         quote = _rw_quote_snippet(_rw_theme_first_quote(theme), 110)
 
         if quote:
-            angles.append(f"Use the buyer's exact wording as the opener: \"{quote}\" Then show how the product addresses the {label}.")
+            angles.append(
+                f"Copy-ready angle: Start with \"{quote}\", then show one clear product moment that resolves the {label}."
+            )
         else:
-            angles.append(f"Frame the ad around the buyer's {label}, then show the product solving it.")
+            angles.append(
+                f"Copy-ready angle: Open on the buyer's {label}, then show the product resolving that exact moment."
+            )
 
     for theme in liked_points:
         label = _rw_human_theme_phrase(theme.label)
@@ -2222,15 +2226,19 @@ def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_poin
             continue
 
         if quote:
-            angles.append(f"Turn positive proof into the payoff: \"{quote}\" Use it to support {label}.")
+            angles.append(
+                f"Positive proof payoff: \"{quote}\" Use it as the final reassurance for {label}."
+            )
         else:
-            angles.append(f"Use positive proof as the payoff: build the ad around {label}.")
+            angles.append(
+                f"Positive proof payoff: Use a satisfied-buyer moment as the final reassurance for {label}."
+            )
 
         if len(angles) >= 6:
             break
 
     if not angles:
-        angles.append("Use the most specific buyer quote as the opening hook, then show the product resolving that exact moment.")
+        angles.append("Copy-ready angle: Use the most specific buyer quote as the opening hook, then show the product resolving that exact moment.")
 
     return angles[:6]
 
@@ -2241,25 +2249,25 @@ def _rw_hook_from_theme(theme) -> str:
     lower = quote.lower()
 
     if raw_label == "price / value concern":
-        return "Is the price/value clear, or is the listing confusing? Here's what buyers noticed."
+        return "The price looks good, but is the size/value actually clear? Watch this before you buy."
 
     if raw_label == "quality consistency concern":
-        return "Is the quality consistent enough for everyday use? Here's what buyers noticed."
+        return "Would you cook with this every day? Check the quality concern buyers mention."
 
     if raw_label == "taste / flavor concern":
-        return "Does this actually taste rich enough? One buyer says otherwise."
+        return "I tested this balsamic so you don't have to - here's the flavor warning buyers mention."
 
     if "listed as" in lower and "what came was" in lower:
-        return "Listed as one size but arrived as another? Check this before you buy."
+        return "POV: you ordered one size, but the bottle that arrived tells a different story."
 
     if "half size" in lower or "wrong size" in lower or "stated size" in lower:
         return "Before you buy, check the size buyers are actually receiving."
 
     if "wateriest" in lower or "flavorless" in lower or "terrible" in lower:
-        return "Does this actually taste rich enough? One buyer says otherwise."
+        return "I tested this balsamic so you don't have to - here's the flavor warning buyers mention."
 
     if "priced wrong" in lower or "price" in lower or "cheaper" in lower:
-        return "Is it a good value, or just priced confusingly? Here's what buyers noticed."
+        return "The price looks good, but is the value actually clear? Watch this before you buy."
 
     return f"Before you buy, check the {label} buyers are calling out."
 
@@ -2285,19 +2293,19 @@ def _rw_positive_hook_from_theme(theme) -> str:
     normalized = raw_label.replace("liked signal:", "").strip().lower()
 
     if normalized == "great":
-        return "Why are buyers calling it great?"
+        return "Buyers keep calling this great - here's the moment that proves why."
 
     if normalized == "love":
-        return "Why do buyers say they love it?"
+        return "People say they love this - here's the everyday use case behind it."
 
     if normalized == "useful":
-        return "Why are buyers finding it useful?"
+        return "Buyers say this is useful - here's the problem it solves fast."
 
     if normalized == "easy":
-        return "Why are buyers finding it easy?"
+        return "Buyers say this feels easy - here's the moment that makes it click."
 
     label = _rw_human_theme_phrase(raw_label)
-    return f"Why are buyers highlighting {label}?"
+    return f"Buyers keep mentioning {label} - here's the proof moment."
 
 def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary], language: str) -> list[str]:
     is_zh = language == "zh-CN"

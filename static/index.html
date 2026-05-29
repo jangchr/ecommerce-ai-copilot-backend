@@ -5752,6 +5752,83 @@
     return indexedHook || hooks[0] || "";
   }
 
+
+
+  function extensionHumanThemeLabel(label) {
+    const raw = String(label || "").trim();
+    const normalized = raw.replace("liked signal:", "").trim();
+
+    const mapping = {
+      "great": "Buyers calling it great",
+      "love": "Buyers saying they love it",
+      "useful": "Buyers finding it useful",
+      "easy": "Buyers finding it easy",
+      "liked signal: great": "Buyers calling it great",
+      "liked signal: love": "Buyers saying they love it",
+      "liked signal: useful": "Buyers finding it useful",
+      "liked signal: easy": "Buyers finding it easy",
+    };
+
+    return mapping[raw] || mapping[normalized] || normalized || "Positive proof";
+  }
+
+  function extensionQuoteHasPainSignal(value) {
+    const lower = String(value || "").toLowerCase();
+    return [
+      "wrong size",
+      "stated size",
+      "listed as",
+      "what came was",
+      "half size",
+      "priced wrong",
+      "wateriest",
+      "flavorless",
+      "terrible",
+      "not super complex",
+      "not sold",
+      "2-pack",
+      "single bottle",
+    ].some((term) => lower.includes(term));
+  }
+
+  function extensionCleanCreativeAngle(value) {
+    return String(value || "").replace(/^Copy-ready angle:\s*/i, "");
+  }
+
+  function extensionPositiveProofHTML(body) {
+    const likedPoints = (body.liked_points || [])
+      .map((item) => ({
+        ...item,
+        firstQuote: (item.evidence_quotes || [])[0] || "",
+      }))
+      .filter((item) => item.firstQuote && !extensionQuoteHasPainSignal(item.firstQuote))
+      .slice(0, 2);
+
+    if (!likedPoints.length) {
+      return "";
+    }
+
+    const rows = likedPoints.map((item) => {
+      const quote = item.firstQuote;
+      const signal = extensionHumanThemeLabel(item.label);
+
+      return `
+        <div style="margin-top:6px;padding:8px 9px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;">
+          <div><strong>Signal:</strong> ${escapeExtensionHTML(signal)}</div>
+          <div style="margin-top:4px;"><strong>Proof:</strong> "${escapeExtensionHTML(quote)}"</div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div style="margin-top:10px;">
+        <strong>Positive proof</strong>
+        <div style="color:#166534;font-size:11px;margin-top:3px;">Use after the pain demo as reassurance.</div>
+        ${rows}
+      </div>
+    `;
+  }
+
   function extensionCreativeBriefHTML(body) {
     const painPoints = (body.common_pain_points || []).slice(0, 3);
     const angles = body.creative_angles || [];
@@ -5763,15 +5840,15 @@
 
     const rows = painPoints.map((item, index) => {
       const quote = (item.evidence_quotes || [])[0] || "";
-      const angle = angles[index] || angles[0] || "";
+      const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
       const hook = extensionCreativeBriefHook(item, hooks, index);
 
       return `
         <div style="margin:8px 0 10px;padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
           <div><strong>Pain:</strong> ${escapeExtensionHTML(item.label || "Buyer signal")}</div>
           ${quote ? `<div style="margin-top:5px;"><strong>Evidence:</strong> "${escapeExtensionHTML(quote)}"</div>` : ""}
-          ${angle ? `<div style="margin-top:5px;"><strong>Angle:</strong> ${escapeExtensionHTML(angle)}</div>` : ""}
-          ${hook ? `<div style="margin-top:5px;"><strong>Hook:</strong> ${escapeExtensionHTML(hook)}</div>` : ""}
+          ${angle ? `<div style="margin-top:5px;"><strong>Copy-ready angle:</strong> ${escapeExtensionHTML(angle)}</div>` : ""}
+          ${hook ? `<div style="margin-top:5px;"><strong>TikTok hook:</strong> ${escapeExtensionHTML(hook)}</div>` : ""}
         </div>
       `;
     }).join("");
@@ -5779,8 +5856,9 @@
     return `
       <div style="margin:12px 0;padding:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;">
         <strong>Creative brief</strong>
-        <div style="color:#9a3412;font-size:11px;margin-top:3px;">Pain -> Evidence -> Angle -> Hook</div>
+        <div style="color:#9a3412;font-size:11px;margin-top:3px;">Pain -> Evidence -> Copy-ready angle -> TikTok hook</div>
         ${rows || `<div style="color:#64748b;margin-top:6px;">No evidence-backed brief generated.</div>`}
+        ${extensionPositiveProofHTML(body)}
       </div>
     `;
   }
