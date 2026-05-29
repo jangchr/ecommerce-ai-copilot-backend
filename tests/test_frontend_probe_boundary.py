@@ -2128,5 +2128,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_renders_evidence_backed_analysis(self):
+        for marker in [
+            "extensionThemeListHTML",
+            "extensionListHTML",
+            "evidence_quotes",
+            "Buyer objections",
+            "Creative angles",
+            "extensionThemeListHTML(\"Top pain points\", body.common_pain_points)",
+            "extensionThemeListHTML(\"Buyer objections\", body.buyer_objections)",
+            "extensionListHTML(\"Creative angles\", body.creative_angles)",
+            "extensionListHTML(\"Hooks\", body.hooks)",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()

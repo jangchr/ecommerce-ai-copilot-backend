@@ -5685,6 +5685,47 @@
     `;
   }
 
+
+  function extensionThemeListHTML(title, themes) {
+    const items = (themes || []).slice(0, 5);
+
+    if (!items.length) {
+      return `<strong>${escapeExtensionHTML(title)}</strong><div style="color:#64748b;margin-top:4px;">No signals found.</div>`;
+    }
+
+    return `
+      <strong>${escapeExtensionHTML(title)}</strong>
+      <ul style="margin:6px 0 12px;padding-left:18px;">
+        ${items.map((item) => `
+          <li style="margin-bottom:8px;">
+            <div><strong>${escapeExtensionHTML(item.label || "Theme")}</strong>${item.evidence_count ? ` <span style="color:#64748b;">(${escapeExtensionHTML(item.evidence_count)})</span>` : ""}</div>
+            ${(item.evidence_quotes || []).slice(0, 2).map((quote) => `
+              <div style="margin-top:4px;padding:6px 8px;background:#f8fafc;border-left:3px solid #cbd5e1;border-radius:8px;color:#334155;">
+                ${escapeExtensionHTML(quote)}
+              </div>
+            `).join("")}
+          </li>
+        `).join("")}
+      </ul>
+    `;
+  }
+
+  function extensionListHTML(title, values) {
+    const items = (values || []).filter(Boolean).slice(0, 6);
+
+    if (!items.length) {
+      return `<strong>${escapeExtensionHTML(title)}</strong><div style="color:#64748b;margin-top:4px;">No items generated.</div>`;
+    }
+
+    return `
+      <strong>${escapeExtensionHTML(title)}</strong>
+      <ul style="margin:6px 0 12px;padding-left:18px;">
+        ${items.map((item) => `<li>${escapeExtensionHTML(item)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+
   async function analyzeExtensionWorkspace() {
     const payload = readExtensionWorkspacePayload();
     const output = document.getElementById("extensionWorkspaceOutput");
@@ -5714,10 +5755,10 @@
         <div><strong>${escapeExtensionHTML(body.total_reviews ?? 0)}</strong><br><span style="color:#64748b;">Reviews</span></div>
         <div><strong>${escapeExtensionHTML(body.high_signal_review_count ?? 0)}</strong><br><span style="color:#64748b;">High-signal</span></div>
       </div>
-      <strong>Top pain points</strong>
-      <ul>${(body.common_pain_points || []).slice(0, 5).map((item) => `<li>${escapeExtensionHTML(item.label || "")}</li>`).join("")}</ul>
-      <strong>Hooks</strong>
-      <ul>${(body.hooks || []).slice(0, 5).map((item) => `<li>${escapeExtensionHTML(item)}</li>`).join("")}</ul>
+      ${extensionThemeListHTML("Top pain points", body.common_pain_points)}
+      ${extensionThemeListHTML("Buyer objections", body.buyer_objections)}
+      ${extensionListHTML("Creative angles", body.creative_angles)}
+      ${extensionListHTML("Hooks", body.hooks)}
     `;
   }
 
