@@ -148,5 +148,61 @@ class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
         self.assertNotIn("leak / mess risk", pain_labels)
         self.assertTrue(all("?" not in label for label in pain_labels | objection_labels))
 
+
+
+class ReviewWorkspaceEvidenceQualityTest(unittest.TestCase):
+    def test_review_workspace_compacts_evidence_and_refines_objections(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "evidence_quality_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/B00QIIMCCW",
+                        "title": "Colavita Balsamic Vinegar - 8.5 oz",
+                        "brand": "Colavita",
+                        "description": "Balsamic vinegar for salad dressing and cooking.",
+                        "reviews": [
+                            {
+                                "rating": "4 out of 5 stars",
+                                "text": "Peter M. Ross, Ph.D. 4 out of 5 stars the stated size is wrong Reviewed in the United States on February 28, 2021 Size: 17 Fl Oz (Pack of 1) Verified Purchase I like the flavor and have used colavita balsamic for many years. I received the regular size bottle, so this is good as long as they do not send the half size.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "T 5 out of 5 stars Not sold by the single bottle Reviewed in Canada on April 2, 2024 Size: 17 Fl Oz (Pack of 1) Verified Purchase When I purchased the balsamic vinegar it only came in a 2-pack so you might want to substitute for something else if you do not use it often.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        objection_labels = {item["label"] for item in body["buyer_objections"]}
+        self.assertIn("quantity / size uncertainty", objection_labels)
+        self.assertNotIn("objection: but", objection_labels)
+        self.assertNotIn("objection: not", objection_labels)
+        self.assertTrue(all(not label.startswith("objection:") for label in objection_labels))
+
+        all_quotes = []
+        for section in ["common_pain_points", "buyer_objections", "liked_points", "use_cases"]:
+            for item in body.get(section, []):
+                all_quotes.extend(item.get("evidence_quotes", []))
+
+        self.assertTrue(all(len(quote) <= 280 for quote in all_quotes))
+        self.assertTrue(all("Reviewed in " not in quote for quote in all_quotes))
+        self.assertTrue(all("Verified Purchase" not in quote for quote in all_quotes))
+
 if __name__ == "__main__":
     unittest.main()

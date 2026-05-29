@@ -1802,6 +1802,147 @@ def _rw_workspace_theme_markers(payload, rows):
     return _REVIEW_WORKSPACE_THEME_MARKERS
 
 
+
+def _rw_compact_evidence_quote(value: str, max_len: int = 260) -> str:
+    text = " ".join(str(value or "").split())
+    if not text:
+        return ""
+
+    for marker in ["Verified Purchase ", "Verified purchase "]:
+        if marker in text:
+            text = text.split(marker, 1)[1].strip()
+            break
+
+    text = re.sub(r"Reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}", " ", text)
+    text = re.sub(r"Size:\s*[^.]{1,100}", " ", text)
+    text = re.sub(r"\b[1-5](?:\.0)? out of 5 stars\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+", " ", text).strip(" -:;,.")
+
+    if not text:
+        return ""
+
+    if len(text) <= max_len:
+        return text
+
+    cut = text[:max_len].rstrip()
+    sentence_end = max(cut.rfind(". "), cut.rfind("! "), cut.rfind("? "))
+    if sentence_end >= 80:
+        return cut[: sentence_end + 1].strip()
+
+    return cut.rstrip(" ,;:") + "..."
+
+
+def _rw_rebuild_theme_summary(theme, *, label: str | None = None, evidence_quotes: list[str] | None = None):
+    data = theme.model_dump() if hasattr(theme, "model_dump") else dict(theme)
+    if label is not None:
+        data["label"] = label
+    if evidence_quotes is not None:
+        data["evidence_quotes"] = evidence_quotes
+        data["evidence_count"] = max(data.get("evidence_count", 0), len(evidence_quotes))
+    return theme.__class__(**data)
+
+
+def _rw_compact_theme_summaries(themes):
+    compacted = []
+
+    for theme in themes or []:
+        quotes = []
+        seen = set()
+
+        for quote in getattr(theme, "evidence_quotes", []) or []:
+            compact = _rw_compact_evidence_quote(quote)
+            key = compact.lower()
+
+            if compact and key not in seen:
+                seen.add(key)
+                quotes.append(compact)
+
+            if len(quotes) >= 2:
+                break
+
+        compacted.append(_rw_rebuild_theme_summary(theme, evidence_quotes=quotes))
+
+    return compacted
+
+
+def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
+    blob = " ".join([label or "", *(quotes or [])]).lower()
+
+    if any(term in blob for term in [
+        "wrong size",
+        "size is wrong",
+        "stated size",
+        "half size",
+        "8 1/2 oz",
+        "8.5 oz",
+        "17 oz",
+        "2-pack",
+        "single bottle",
+        "two-pack",
+        "not sold by the single bottle",
+        "only came in a 2-pack",
+    ]):
+        return "quantity / size uncertainty"
+
+    if any(term in blob for term in [
+        "priced wrong",
+        "price",
+        "expensive",
+        "cheaper",
+        "not worth",
+        "worth",
+    ]):
+        return "price / value uncertainty"
+
+    if any(term in blob for term in [
+        "wish",
+        "would buy again",
+        "if they",
+        "preference",
+        "wanted",
+    ]):
+        return "missing expectation / wish"
+
+    if any(term in blob for term in [
+        "not super",
+        "not the same",
+        "not sold",
+        "doesn't",
+        "didn't",
+        "not ",
+    ]):
+        return "expectation mismatch"
+
+    if any(term in blob for term in ["but", "however", "although", "except", "unless"]):
+        return "tradeoff / hesitation"
+
+    cleaned = label.replace("objection: ", "").strip()
+    if cleaned in {"but", "not", "wish", "wrong", "too", "however", "?"}:
+        return "buyer hesitation"
+
+    return cleaned or "buyer hesitation"
+
+
+def _rw_refine_buyer_objection_summaries(themes):
+    refined = []
+    seen_labels = set()
+
+    for theme in _rw_compact_theme_summaries(themes):
+        quotes = getattr(theme, "evidence_quotes", []) or []
+        label = _rw_objection_label_from_quotes(getattr(theme, "label", ""), quotes)
+
+        if label.startswith("objection:"):
+            label = label.replace("objection:", "").strip() or "buyer hesitation"
+
+        if label in seen_labels:
+            continue
+
+        seen_labels.add(label)
+        refined.append(_rw_rebuild_theme_summary(theme, label=label, evidence_quotes=quotes))
+
+    return refined
+
+
 def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary]) -> list[str]:
     angles = []
     for theme in common_pain_points[:4]:
@@ -1854,6 +1995,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         _REVIEW_WORKSPACE_USE_CASE_MARKERS,
         "use case",
     )
+
+    common_pain_points = _rw_compact_theme_summaries(common_pain_points)
+    buyer_objections = _rw_refine_buyer_objection_summaries(buyer_objections)
+    liked_points = _rw_compact_theme_summaries(liked_points)
+    use_cases = _rw_compact_theme_summaries(use_cases)
 
     return ReviewWorkspaceResponse(
         workspace_id=payload.workspace_id,
