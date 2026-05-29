@@ -1540,17 +1540,81 @@ from schemas.review_workspace import (
 )
 
 _REVIEW_WORKSPACE_THEME_MARKERS = {
-    "leak / mess risk": ["leak", "spill", "mess", "drip", "sink", "?", "?", "?"],
-    "hard to clean": ["clean", "wash", "scrub", "dishwasher", "??", "??", "?"],
-    "size / fit issue": ["small", "big", "fit", "size", "opening", "wide", "narrow", "??", "??", "??"],
-    "durability concern": ["broke", "break", "cheap", "flimsy", "crack", "durable", "?", "?", "??"],
-    "time saving": ["quick", "fast", "easy", "convenient", "save time", "??", "??", "??"],
-    "space constraint": ["small kitchen", "apartment", "storage", "counter", "space", "???", "??", "??"],
+    "leak / mess risk": ["leak", "leaking", "spill", "spilled", "mess", "drip"],
+    "hard to clean": ["hard to clean", "difficult to clean", "scrub", "dishwasher"],
+    "size / fit issue": ["too small", "too big", "doesn't fit", "didn't fit", "opening was bigger", "wide cans", "narrow opening"],
+    "durability concern": ["broke", "break", "broken", "flimsy", "crack", "not durable"],
+    "space constraint": ["small kitchen", "apartment", "storage", "counter space"],
 }
 
+_REVIEW_WORKSPACE_FOOD_THEME_MARKERS = {
+    "taste / flavor concern": [
+        "watery",
+        "flavorless",
+        "terrible vinegar",
+        "bad taste",
+        "tastes bad",
+        "bland",
+        "weak flavor",
+        "too sweet",
+        "too acidic",
+    ],
+    "size / quantity mismatch": [
+        "stated size is wrong",
+        "size is wrong",
+        "wrong size",
+        "half size",
+        "8 1/2 oz",
+        "8.5 oz",
+        "17 oz bottle",
+        "single bottle",
+        "2-pack",
+        "two-pack",
+        "not sold by the single bottle",
+        "only came in a 2-pack",
+    ],
+    "price / value concern": [
+        "priced wrong",
+        "price is wrong",
+        "expensive",
+        "pricey",
+        "not worth",
+        "overpriced",
+    ],
+    "packaging / shipping concern": [
+        "arrived damaged",
+        "broken bottle",
+        "leaked in shipping",
+        "poorly packaged",
+        "packaging problem",
+    ],
+    "quality consistency concern": [
+        "quality changed",
+        "inconsistent",
+        "not the same",
+        "store brand is better",
+        "infinitely better",
+    ],
+}
+
+
 _REVIEW_WORKSPACE_OBJECTION_MARKERS = [
-    "but", "however", "wish", "too", "not", "doesn't", "didn't", "hard", "difficult",
-    "problem", "issue", "concern", "return", "refund", "??", "??", "??", "?", "?", "?", "??", "??",
+    "but",
+    "however",
+    "wish",
+    "too",
+    "not",
+    "doesn't",
+    "didn't",
+    "hard",
+    "difficult",
+    "wrong",
+    "problem",
+    "concern",
+    "unless",
+    "except",
+    "although",
+    "issue",
 ]
 
 _REVIEW_WORKSPACE_LIKE_MARKERS = [
@@ -1690,6 +1754,54 @@ def _rw_product_summary(product) -> ReviewProductSummary:
     )
 
 
+
+def _rw_workspace_text_blob(payload, rows) -> str:
+    parts: list[str] = []
+    for product in getattr(payload, "products", []) or []:
+        for attr in ("title", "brand", "description", "platform"):
+            value = getattr(product, attr, "")
+            if value:
+                parts.append(str(value))
+        for bullet in getattr(product, "bullet_points", []) or []:
+            parts.append(str(bullet))
+
+    for row in rows or []:
+        if isinstance(row, dict):
+            for key in ("text", "title", "product_title"):
+                value = row.get(key)
+                if value:
+                    parts.append(str(value))
+
+    return " ".join(parts).lower()
+
+
+def _rw_workspace_is_food(payload, rows) -> bool:
+    blob = _rw_workspace_text_blob(payload, rows)
+    food_terms = [
+        "vinegar",
+        "balsamic",
+        "olive oil",
+        "sauce",
+        "dressing",
+        "flavor",
+        "flavour",
+        "taste",
+        "tasty",
+        "salad",
+        "recipe",
+        "cooking",
+        "kitchen cookbook",
+        "modena",
+    ]
+    return any(term in blob for term in food_terms)
+
+
+def _rw_workspace_theme_markers(payload, rows):
+    if _rw_workspace_is_food(payload, rows):
+        return _REVIEW_WORKSPACE_FOOD_THEME_MARKERS
+    return _REVIEW_WORKSPACE_THEME_MARKERS
+
+
 def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary]) -> list[str]:
     angles = []
     for theme in common_pain_points[:4]:
@@ -1722,9 +1834,10 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
     high_signal_rows = [row for row in rows if row["score"] >= 4]
 
+    workspace_signal_rows = high_signal_rows or rows
     common_pain_points = _rw_theme_summaries(
-        high_signal_rows or rows,
-        _REVIEW_WORKSPACE_THEME_MARKERS,
+        workspace_signal_rows,
+        _rw_workspace_theme_markers(payload, workspace_signal_rows),
     )
     buyer_objections = _rw_marker_summaries(
         high_signal_rows or rows,

@@ -92,5 +92,61 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertTrue(data["recommended_next_actions"])
 
 
+
+
+class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
+    def test_food_review_workspace_uses_food_relevant_labels(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "food_label_quality_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/B00QIIMCCW",
+                        "title": "Colavita Balsamic Vinegar - 8.5 oz",
+                        "brand": "Colavita",
+                        "description": "Balsamic vinegar for salad dressing and cooking.",
+                        "reviews": [
+                            {
+                                "rating": "1 out of 5 stars",
+                                "text": "This is the wateriest, most flavorless balsamic I have ever encountered. Makes terrible vinaigrette.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "4 out of 5 stars",
+                                "text": "The stated size is wrong. I received the regular size bottle, which is good as long as they do not send the half size.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "I love this stuff. It tastes great and is cheaper than buying it at my local grocery store.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        pain_labels = {item["label"] for item in body["common_pain_points"]}
+        objection_labels = {item["label"] for item in body["buyer_objections"]}
+
+        self.assertIn("taste / flavor concern", pain_labels)
+        self.assertIn("size / quantity mismatch", pain_labels)
+        self.assertNotIn("size / fit issue", pain_labels)
+        self.assertNotIn("hard to clean", pain_labels)
+        self.assertNotIn("leak / mess risk", pain_labels)
+        self.assertTrue(all("?" not in label for label in pain_labels | objection_labels))
+
 if __name__ == "__main__":
     unittest.main()
