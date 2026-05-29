@@ -1762,5 +1762,229 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
 
 
+
+
+# L37-C messy pasted review parser.
+import re
+from schemas.review_paste import ReviewPasteParseRequest, ReviewPasteParseResponse
+from schemas.review_workspace import ReviewWorkspaceProduct, ReviewWorkspaceReview
+
+_REVIEW_PASTE_RATING_RE = re.compile(
+    r"(?P<rating>[1-5](?:\.\d)?)\s*(?:out of\s*5\s*stars|/5|stars?)",
+    re.IGNORECASE,
+)
+
+_REVIEW_PASTE_META_PREFIXES = (
+    "reviewed in ",
+    "verified purchase",
+    "vine customer review",
+    "people found this helpful",
+    "person found this helpful",
+    "helpful",
+    "report",
+    "translate review",
+    "color:",
+    "size:",
+    "style:",
+    "pattern name:",
+    "flavor name:",
+)
+
+
+def _paste_clean_line(line: str) -> str:
+    return " ".join(str(line or "").replace("\u00a0", " ").split())
+
+
+def _paste_is_meta_line(line: str) -> bool:
+    lowered = line.lower().strip()
+    if not lowered:
+        return True
+    if lowered.startswith(_REVIEW_PASTE_META_PREFIXES):
+        return True
+    if "verified purchase" in lowered:
+        return True
+    if "found this helpful" in lowered:
+        return True
+    if lowered in {"read more", "show more", "see more", "customer reviews"}:
+        return True
+    return False
+
+
+def _paste_high_signal_score(review: ReviewWorkspaceReview) -> int:
+    text = _paste_clean_line(review.text)
+    lowered = text.lower()
+    if len(text) < 18:
+        return 0
+
+    score = 1
+    try:
+        rating = float(str(review.rating).split()[0]) if review.rating not in (None, "") else None
+    except (TypeError, ValueError):
+        rating = None
+
+    if rating is not None and rating <= 3:
+        score += 3
+    if rating is not None and rating >= 4:
+        score += 1
+    if review.helpful_count:
+        score += min(3, int(review.helpful_count) // 5 + 1)
+    if any(marker in lowered for marker in ["but", "wish", "too", "not", "hard", "difficult", "problem", "issue", "leak", "broke", "mess"]):
+        score += 3
+    if any(marker in lowered for marker in ["love", "great", "easy", "perfect", "works", "useful", "recommend"]):
+        score += 2
+    if len(text) >= 80:
+        score += 2
+    return score
+
+
+def _parse_helpful_count(line: str) -> int | None:
+    match = re.search(r"(\d+)\s+people\s+found\s+this\s+helpful", line, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    if re.search(r"one\s+person\s+found\s+this\s+helpful", line, re.IGNORECASE):
+        return 1
+    return None
+
+
+def _finalize_pasted_review(
+    reviews: list[ReviewWorkspaceReview],
+    rating,
+    title: str,
+    body_lines: list[str],
+    helpful_count: int | None,
+    source_section: str,
+):
+    body = _paste_clean_line(" ".join(body_lines))
+    title = _paste_clean_line(title)
+
+    if not body and title:
+        body = title
+        title = ""
+
+    if len(body) < 10:
+        return
+
+    reviews.append(
+        ReviewWorkspaceReview(
+            rating=rating,
+            title=title,
+            text=body,
+            helpful_count=helpful_count,
+            source_section=source_section,
+        )
+    )
+
+
+def _parse_messy_reviews(raw_text: str, source_section: str) -> list[ReviewWorkspaceReview]:
+    lines = [_paste_clean_line(line) for line in str(raw_text or "").splitlines()]
+    lines = [line for line in lines if line]
+
+    reviews: list[ReviewWorkspaceReview] = []
+    current_rating = None
+    current_title = ""
+    current_body: list[str] = []
+    current_helpful = None
+    active = False
+
+    for line in lines:
+        helpful = _parse_helpful_count(line)
+        if helpful is not None:
+            current_helpful = helpful
+            continue
+
+        rating_match = _REVIEW_PASTE_RATING_RE.search(line)
+        if rating_match:
+            if active:
+                _finalize_pasted_review(
+                    reviews,
+                    current_rating,
+                    current_title,
+                    current_body,
+                    current_helpful,
+                    source_section,
+                )
+
+            active = True
+            current_rating = rating_match.group("rating")
+            remainder = _paste_clean_line(_REVIEW_PASTE_RATING_RE.sub("", line, count=1))
+            current_title = remainder if len(remainder) <= 90 else ""
+            current_body = [] if current_title else ([remainder] if remainder else [])
+            current_helpful = None
+            continue
+
+        if _paste_is_meta_line(line):
+            continue
+
+        if active:
+            if not current_title and len(line) <= 90 and not current_body:
+                current_title = line
+            else:
+                current_body.append(line)
+        else:
+            # Generic non-Amazon paste fallback: each meaningful paragraph can be a review.
+            if len(line) >= 30:
+                reviews.append(
+                    ReviewWorkspaceReview(
+                        rating=None,
+                        title="",
+                        text=line,
+                        helpful_count=None,
+                        source_section=source_section,
+                    )
+                )
+
+    if active:
+        _finalize_pasted_review(
+            reviews,
+            current_rating,
+            current_title,
+            current_body,
+            current_helpful,
+            source_section,
+        )
+
+    # Deduplicate while preserving order.
+    deduped: list[ReviewWorkspaceReview] = []
+    seen = set()
+    for review in reviews:
+        key = _paste_clean_line(review.text).lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(review)
+
+    return deduped
+
+
+@app.post("/api/v1/parse-review-paste", response_model=ReviewPasteParseResponse)
+async def parse_review_paste(payload: ReviewPasteParseRequest):
+    reviews = _parse_messy_reviews(payload.raw_text, payload.source_section)
+    high_signal_count = sum(1 for review in reviews if _paste_high_signal_score(review) >= 4)
+
+    warnings = []
+    if not _paste_clean_line(payload.raw_text):
+        warnings.append("empty_input")
+    if not reviews:
+        warnings.append("no_reviews_detected")
+    if reviews and high_signal_count == 0:
+        warnings.append("low_signal_reviews")
+
+    workspace_product = ReviewWorkspaceProduct(
+        platform=payload.platform,
+        url=payload.url,
+        asin=payload.asin,
+        title=payload.product_title or payload.asin or payload.url or "Pasted review product",
+        reviews=reviews,
+    )
+
+    return ReviewPasteParseResponse(
+        review_count=len(reviews),
+        high_signal_review_count=high_signal_count,
+        reviews=reviews,
+        workspace_product=workspace_product,
+        data_warnings=warnings,
+    )
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=get_server_port(), reload=True)
