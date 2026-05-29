@@ -100,11 +100,49 @@ async function setSavedProducts(products) {
   await updateStats();
 }
 
+
+function shortProductTitle(product) {
+  const title = String(product?.title || product?.url || "Untitled product").trim();
+  return title.length > 86 ? `${title.slice(0, 83)}...` : title;
+}
+
+function productSourceLabel(product) {
+  const platform = String(product?.platform || "web").toLowerCase();
+  const reviewCount = (product?.reviews || []).length;
+  const reviewLabel = reviewCount === 1 ? "review" : "reviews";
+  return `${platform} ? ${reviewCount} ${reviewLabel}`;
+}
+
+function renderSavedProducts(products) {
+  const target = $("collectedProducts");
+  if (!target) return;
+
+  const items = products || [];
+  if (!items.length) {
+    target.innerHTML = "";
+    return;
+  }
+
+  target.innerHTML = `
+    <div class="collected-header">Collected products</div>
+    <ol>
+      ${items.map((product) => `
+        <li>
+          <div class="collected-title">${escapeHTML(shortProductTitle(product))}</div>
+          <div class="collected-meta">${escapeHTML(productSourceLabel(product))}</div>
+        </li>
+      `).join("")}
+    </ol>
+  `;
+}
+
+
 async function updateStats() {
   const { products, backendUrl } = await getSavedProducts();
   $("backendUrl").value = backendUrl;
   $("savedCount").textContent = String(products.length);
   $("reviewCount").textContent = String(products.reduce((sum, product) => sum + (product.reviews || []).length, 0));
+  renderSavedProducts(products);
 }
 
 async function getActiveTab() {

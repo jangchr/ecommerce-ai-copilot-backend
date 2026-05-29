@@ -136,5 +136,34 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, js)
 
+
+    def test_popup_renders_collected_product_list(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+        css = (self.root / "styles.css").read_text(encoding="utf-8")
+
+        for marker in [
+            "collectedProducts",
+            "collected-products",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "renderSavedProducts",
+            "shortProductTitle",
+            "productSourceLabel",
+            "Collected products",
+            "renderSavedProducts(products)",
+        ]:
+            self.assertIn(marker, js)
+
+        for marker in [
+            ".collected-products",
+            ".collected-header",
+            ".collected-title",
+            ".collected-meta",
+        ]:
+            self.assertIn(marker, css)
+
 if __name__ == "__main__":
     unittest.main()
