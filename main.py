@@ -1528,5 +1528,239 @@ async def debug_source_probe(request: SourceProbeRequest, http_request: Request)
     return response
 
 
+
+
+# L37-A/B multi-product review workspace analysis.
+from collections import Counter
+from schemas.review_workspace import (
+    ReviewProductSummary,
+    ReviewThemeSummary,
+    ReviewWorkspaceRequest,
+    ReviewWorkspaceResponse,
+)
+
+_REVIEW_WORKSPACE_THEME_MARKERS = {
+    "leak / mess risk": ["leak", "spill", "mess", "drip", "sink", "?", "?", "?"],
+    "hard to clean": ["clean", "wash", "scrub", "dishwasher", "??", "??", "?"],
+    "size / fit issue": ["small", "big", "fit", "size", "opening", "wide", "narrow", "??", "??", "??"],
+    "durability concern": ["broke", "break", "cheap", "flimsy", "crack", "durable", "?", "?", "??"],
+    "time saving": ["quick", "fast", "easy", "convenient", "save time", "??", "??", "??"],
+    "space constraint": ["small kitchen", "apartment", "storage", "counter", "space", "???", "??", "??"],
+}
+
+_REVIEW_WORKSPACE_OBJECTION_MARKERS = [
+    "but", "however", "wish", "too", "not", "doesn't", "didn't", "hard", "difficult",
+    "problem", "issue", "concern", "return", "refund", "??", "??", "??", "?", "?", "?", "??", "??",
+]
+
+_REVIEW_WORKSPACE_LIKE_MARKERS = [
+    "love", "great", "easy", "perfect", "works", "useful", "recommend", "helpful",
+    "??", "??", "??", "??", "??",
+]
+
+_REVIEW_WORKSPACE_USE_CASE_MARKERS = [
+    "for", "when", "use it", "daily", "morning", "travel", "kitchen", "work", "kids", "pet",
+    "??", "??", "??", "??", "??", "??", "??", "??",
+]
+
+
+def _rw_text(value) -> str:
+    return " ".join(str(value or "").split())
+
+
+def _rw_rating_value(value) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(str(value).split()[0])
+    except (TypeError, ValueError):
+        return None
+
+
+def _rw_review_score(review) -> int:
+    text = _rw_text(review.text)
+    lowered = text.lower()
+    if len(text) < 18:
+        return 0
+
+    score = 1
+    rating = _rw_rating_value(review.rating)
+    if rating is not None and rating <= 3:
+        score += 3
+    if rating is not None and rating >= 4:
+        score += 1
+    if review.helpful_count:
+        score += min(3, int(review.helpful_count) // 5 + 1)
+    if any(marker in lowered for marker in _REVIEW_WORKSPACE_OBJECTION_MARKERS):
+        score += 3
+    if any(marker in lowered for marker in _REVIEW_WORKSPACE_LIKE_MARKERS):
+        score += 2
+    if len(text) >= 80:
+        score += 2
+    return score
+
+
+def _rw_collect_reviews(payload: ReviewWorkspaceRequest) -> list[dict]:
+    rows = []
+    seen = set()
+    for product in payload.products:
+        for review in product.reviews:
+            text = _rw_text(review.text)
+            if not text:
+                continue
+            key = text.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            score = _rw_review_score(review)
+            rows.append({
+                "product": product,
+                "review": review,
+                "text": text,
+                "score": score,
+                "rating": _rw_rating_value(review.rating),
+            })
+    rows.sort(key=lambda item: item["score"], reverse=True)
+    return rows
+
+
+def _rw_theme_summaries(rows: list[dict], themes: dict[str, list[str]], limit: int = 6) -> list[ReviewThemeSummary]:
+    scored = []
+    for label, markers in themes.items():
+        matched = []
+        for row in rows:
+            lowered = row["text"].lower()
+            if any(marker.lower() in lowered for marker in markers):
+                matched.append(row["text"])
+        if matched:
+            scored.append((label, matched))
+    scored.sort(key=lambda item: len(item[1]), reverse=True)
+    return [
+        ReviewThemeSummary(
+            label=label,
+            evidence_count=len(quotes),
+            evidence_quotes=quotes[:3],
+        )
+        for label, quotes in scored[:limit]
+    ]
+
+
+def _rw_marker_summaries(rows: list[dict], markers: list[str], label_prefix: str, limit: int = 6) -> list[ReviewThemeSummary]:
+    counter = Counter()
+    quotes_by_marker: dict[str, list[str]] = {}
+    for row in rows:
+        lowered = row["text"].lower()
+        for marker in markers:
+            if marker.lower() in lowered:
+                counter[marker] += 1
+                quotes_by_marker.setdefault(marker, []).append(row["text"])
+    return [
+        ReviewThemeSummary(
+            label=f"{label_prefix}: {marker}",
+            evidence_count=count,
+            evidence_quotes=quotes_by_marker.get(marker, [])[:3],
+        )
+        for marker, count in counter.most_common(limit)
+    ]
+
+
+def _rw_product_summary(product) -> ReviewProductSummary:
+    rows = [
+        {"text": _rw_text(review.text), "score": _rw_review_score(review), "review": review}
+        for review in product.reviews
+        if _rw_text(review.text)
+    ]
+    rows.sort(key=lambda item: item["score"], reverse=True)
+    top_rows = rows[:10]
+    pain_points = []
+    liked_points = []
+    for row in top_rows:
+        lowered = row["text"].lower()
+        if any(marker in lowered for marker in _REVIEW_WORKSPACE_OBJECTION_MARKERS):
+            pain_points.append(row["text"])
+        if any(marker in lowered for marker in _REVIEW_WORKSPACE_LIKE_MARKERS):
+            liked_points.append(row["text"])
+    return ReviewProductSummary(
+        title=product.title or product.asin or product.url or "Untitled product",
+        url=product.url,
+        review_count=len(rows),
+        high_signal_review_count=sum(1 for row in rows if row["score"] >= 4),
+        top_pain_points=pain_points[:3],
+        top_liked_points=liked_points[:3],
+    )
+
+
+def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary]) -> list[str]:
+    angles = []
+    for theme in common_pain_points[:4]:
+        angles.append(f"Turn the repeated complaint around: show how the product avoids {theme.label}.")
+    for theme in liked_points[:2]:
+        angles.append(f"Use positive proof as the hook: buyers repeatedly mention {theme.label}.")
+    if not angles:
+        angles.append("Use the most specific review quote as the opening hook, then show the product solving it.")
+    return angles[:6]
+
+
+def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary], language: str) -> list[str]:
+    is_zh = language == "zh-CN"
+    hooks = []
+    for theme in common_pain_points[:4]:
+        if is_zh:
+            hooks.append(f"???????????{theme.label}?")
+        else:
+            hooks.append(f"Still dealing with {theme.label}? Watch this before you buy.")
+    for theme in liked_points[:2]:
+        if is_zh:
+            hooks.append(f"??????????{theme.label}?")
+        else:
+            hooks.append(f"Why are buyers calling out {theme.label}?")
+    return hooks[:6] or (["??????????????????"] if is_zh else ["Before you buy, look at what real buyers complain about most."])
+
+
+@app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
+async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
+    rows = _rw_collect_reviews(payload)
+    high_signal_rows = [row for row in rows if row["score"] >= 4]
+
+    common_pain_points = _rw_theme_summaries(
+        high_signal_rows or rows,
+        _REVIEW_WORKSPACE_THEME_MARKERS,
+    )
+    buyer_objections = _rw_marker_summaries(
+        high_signal_rows or rows,
+        _REVIEW_WORKSPACE_OBJECTION_MARKERS,
+        "objection",
+    )
+    liked_points = _rw_marker_summaries(
+        high_signal_rows or rows,
+        _REVIEW_WORKSPACE_LIKE_MARKERS,
+        "liked signal",
+    )
+    use_cases = _rw_marker_summaries(
+        high_signal_rows or rows,
+        _REVIEW_WORKSPACE_USE_CASE_MARKERS,
+        "use case",
+    )
+
+    return ReviewWorkspaceResponse(
+        workspace_id=payload.workspace_id,
+        product_count=len(payload.products),
+        total_reviews=len(rows),
+        high_signal_review_count=len(high_signal_rows),
+        common_pain_points=common_pain_points,
+        buyer_objections=buyer_objections,
+        liked_points=liked_points,
+        use_cases=use_cases,
+        product_summaries=[_rw_product_summary(product) for product in payload.products],
+        creative_angles=_rw_creative_angles(common_pain_points, liked_points),
+        hooks=_rw_hooks(common_pain_points, liked_points, payload.output_language),
+        recommended_next_actions=[
+            "Collect 30-80 high-signal reviews per product before final creative testing.",
+            "Prioritize low-star and objection-heavy reviews for ad angle discovery.",
+            "Use repeated buyer wording as hook language instead of generic product claims.",
+        ],
+    )
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=get_server_port(), reload=True)
