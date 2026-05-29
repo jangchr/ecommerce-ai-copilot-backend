@@ -1,3 +1,4 @@
+import re
 import json
 import os
 from pathlib import Path
@@ -1535,8 +1536,16 @@ from collections import Counter
 from schemas.review_workspace import (
     ReviewProductSummary,
     ReviewThemeSummary,
+    ReviewWorkspaceProduct,
     ReviewWorkspaceRequest,
     ReviewWorkspaceResponse,
+    ReviewWorkspaceReview,
+)
+from schemas.review_paste import (
+    PastedReviewWorkspaceAnalyzeRequest,
+    PastedReviewWorkspaceAnalyzeResponse,
+    ReviewPasteParseRequest,
+    ReviewPasteParseResponse,
 )
 
 _REVIEW_WORKSPACE_THEME_MARKERS = {
@@ -2125,31 +2134,359 @@ def _rw_refine_buyer_objection_summaries(themes):
     return refined
 
 
+def _rw_theme_first_quote(theme) -> str:
+    quotes = getattr(theme, "evidence_quotes", []) or []
+    if not quotes:
+        return ""
+
+    quote = quotes[0]
+    if "def _rw_compact_evidence_quote" in globals():
+        quote = _rw_compact_evidence_quote(quote)
+
+    return " ".join(str(quote or "").split()).strip()
+
+
+def _rw_quote_snippet(value: str, max_len: int = 120) -> str:
+    text = " ".join(str(value or "").split()).strip()
+    if not text:
+        return ""
+
+    if len(text) <= max_len:
+        return text
+
+    cut = text[:max_len].rstrip()
+    return cut.rstrip(" ,;:") + "..."
+
+
+def _rw_human_theme_phrase(label: str) -> str:
+    raw = str(label or "").strip()
+    normalized = raw.replace("liked signal:", "").strip()
+
+    mapping = {
+        "size / quantity mismatch": "quantity or size mismatch",
+        "taste / flavor concern": "taste or flavor concern",
+        "price / value concern": "price or value concern",
+        "quality consistency concern": "quality consistency concern",
+        "leak / mess risk": "mess or spill concern",
+        "hard to clean": "cleanup concern",
+        "durability concern": "durability concern",
+        "time saving": "time-saving benefit",
+        "great": "buyers calling it great",
+        "love": "buyers saying they love it",
+        "useful": "buyers finding it useful",
+        "easy": "buyers finding it easy",
+        "liked signal: great": "buyers calling it great",
+        "liked signal: love": "buyers saying they love it",
+        "liked signal: useful": "buyers finding it useful",
+        "liked signal: easy": "buyers finding it easy",
+    }
+
+    return mapping.get(raw, mapping.get(normalized, normalized or "buyer signal"))
+
+def _rw_quote_has_pain_signal(value: str) -> bool:
+    lower = str(value or "").lower()
+    pain_terms = [
+        "wrong size",
+        "stated size",
+        "listed as",
+        "what came was",
+        "half size",
+        "priced wrong",
+        "wateriest",
+        "flavorless",
+        "terrible",
+        "not super complex",
+        "not sold",
+        "2-pack",
+        "single bottle",
+    ]
+    return any(term in lower for term in pain_terms)
+
 def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary]) -> list[str]:
-    angles = []
+    angles: list[str] = []
+
     for theme in common_pain_points[:4]:
-        angles.append(f"Turn the repeated complaint around: show how the product avoids {theme.label}.")
-    for theme in liked_points[:2]:
-        angles.append(f"Use positive proof as the hook: buyers repeatedly mention {theme.label}.")
+        label = _rw_human_theme_phrase(theme.label)
+        quote = _rw_quote_snippet(_rw_theme_first_quote(theme), 110)
+
+        if quote:
+            angles.append(f"Use the buyer's exact wording as the opener: \"{quote}\" Then show how the product addresses the {label}.")
+        else:
+            angles.append(f"Frame the ad around the buyer's {label}, then show the product solving it.")
+
+    for theme in liked_points:
+        label = _rw_human_theme_phrase(theme.label)
+        quote = _rw_quote_snippet(_rw_theme_first_quote(theme), 100)
+
+        if quote and _rw_quote_has_pain_signal(quote):
+            continue
+
+        if quote:
+            angles.append(f"Turn positive proof into the payoff: \"{quote}\" Use it to support {label}.")
+        else:
+            angles.append(f"Use positive proof as the payoff: build the ad around {label}.")
+
+        if len(angles) >= 6:
+            break
+
     if not angles:
-        angles.append("Use the most specific review quote as the opening hook, then show the product solving it.")
+        angles.append("Use the most specific buyer quote as the opening hook, then show the product resolving that exact moment.")
+
     return angles[:6]
 
+def _rw_hook_from_theme(theme) -> str:
+    raw_label = str(getattr(theme, "label", "") or "").strip()
+    label = _rw_human_theme_phrase(raw_label)
+    quote = _rw_theme_first_quote(theme)
+    lower = quote.lower()
+
+    if raw_label == "price / value concern":
+        return "Is the price/value clear, or is the listing confusing? Here's what buyers noticed."
+
+    if raw_label == "quality consistency concern":
+        return "Is the quality consistent enough for everyday use? Here's what buyers noticed."
+
+    if raw_label == "taste / flavor concern":
+        return "Does this actually taste rich enough? One buyer says otherwise."
+
+    if "listed as" in lower and "what came was" in lower:
+        return "Listed as one size but arrived as another? Check this before you buy."
+
+    if "half size" in lower or "wrong size" in lower or "stated size" in lower:
+        return "Before you buy, check the size buyers are actually receiving."
+
+    if "wateriest" in lower or "flavorless" in lower or "terrible" in lower:
+        return "Does this actually taste rich enough? One buyer says otherwise."
+
+    if "priced wrong" in lower or "price" in lower or "cheaper" in lower:
+        return "Is it a good value, or just priced confusingly? Here's what buyers noticed."
+
+    return f"Before you buy, check the {label} buyers are calling out."
+
+def _rw_dedupe_text_items(items: list[str], limit: int = 6) -> list[str]:
+    deduped: list[str] = []
+    seen = set()
+
+    for item in items:
+        normalized = " ".join(str(item or "").lower().split())
+        if not normalized or normalized in seen:
+            continue
+
+        seen.add(normalized)
+        deduped.append(item)
+
+        if len(deduped) >= limit:
+            break
+
+    return deduped
+
+def _rw_positive_hook_from_theme(theme) -> str:
+    raw_label = str(getattr(theme, "label", "") or "").strip()
+    normalized = raw_label.replace("liked signal:", "").strip().lower()
+
+    if normalized == "great":
+        return "Why are buyers calling it great?"
+
+    if normalized == "love":
+        return "Why do buyers say they love it?"
+
+    if normalized == "useful":
+        return "Why are buyers finding it useful?"
+
+    if normalized == "easy":
+        return "Why are buyers finding it easy?"
+
+    label = _rw_human_theme_phrase(raw_label)
+    return f"Why are buyers highlighting {label}?"
 
 def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary], language: str) -> list[str]:
     is_zh = language == "zh-CN"
-    hooks = []
+    hooks: list[str] = []
+
     for theme in common_pain_points[:4]:
+        label = _rw_human_theme_phrase(theme.label)
         if is_zh:
-            hooks.append(f"???????????{theme.label}?")
+            hooks.append(f"\u4e70\u4e4b\u524d\u5148\u770b\u6e05\u695a\u8fd9\u4e2a\u95ee\u9898\uff1a{label}")
         else:
-            hooks.append(f"Still dealing with {theme.label}? Watch this before you buy.")
-    for theme in liked_points[:2]:
+            hooks.append(_rw_hook_from_theme(theme))
+
+    for theme in liked_points[:4]:
+        label = _rw_human_theme_phrase(theme.label)
         if is_zh:
-            hooks.append(f"??????????{theme.label}?")
+            hooks.append(f"\u4e3a\u4ec0\u4e48\u4e70\u5bb6\u4f1a\u53cd\u590d\u63d0\u5230\uff1a{label}\uff1f")
         else:
-            hooks.append(f"Why are buyers calling out {theme.label}?")
-    return hooks[:6] or (["??????????????????"] if is_zh else ["Before you buy, look at what real buyers complain about most."])
+            hooks.append(_rw_positive_hook_from_theme(theme))
+
+    if not hooks:
+        hooks.append("Before you buy, look at what real buyers mention most.")
+
+    return _rw_dedupe_text_items(hooks, 6)
+
+def _paste_clean_line(line: str) -> str:
+    return " ".join(str(line or "").replace("\u00a0", " ").split())
+
+
+def _paste_is_meta_line(line: str) -> bool:
+    lowered = line.lower().strip()
+    if not lowered:
+        return True
+    if lowered.startswith(_REVIEW_PASTE_META_PREFIXES):
+        return True
+    if "verified purchase" in lowered:
+        return True
+    if "found this helpful" in lowered:
+        return True
+    if lowered in {"read more", "show more", "see more", "customer reviews"}:
+        return True
+    return False
+
+
+def _paste_high_signal_score(review: ReviewWorkspaceReview) -> int:
+    text = _paste_clean_line(review.text)
+    lowered = text.lower()
+    if len(text) < 18:
+        return 0
+
+    score = 1
+    try:
+        rating = float(str(review.rating).split()[0]) if review.rating not in (None, "") else None
+    except (TypeError, ValueError):
+        rating = None
+
+    if rating is not None and rating <= 3:
+        score += 3
+    if rating is not None and rating >= 4:
+        score += 1
+    if review.helpful_count:
+        score += min(3, int(review.helpful_count) // 5 + 1)
+    if any(marker in lowered for marker in ["but", "wish", "too", "not", "hard", "difficult", "problem", "issue", "leak", "broke", "mess"]):
+        score += 3
+    if any(marker in lowered for marker in ["love", "great", "easy", "perfect", "works", "useful", "recommend"]):
+        score += 2
+    if len(text) >= 80:
+        score += 2
+    return score
+
+
+def _parse_helpful_count(line: str) -> int | None:
+    match = re.search(r"(\d+)\s+people\s+found\s+this\s+helpful", line, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    if re.search(r"one\s+person\s+found\s+this\s+helpful", line, re.IGNORECASE):
+        return 1
+    return None
+
+
+def _finalize_pasted_review(
+    reviews: list[ReviewWorkspaceReview],
+    rating,
+    title: str,
+    body_lines: list[str],
+    helpful_count: int | None,
+    source_section: str,
+):
+    body = _paste_clean_line(" ".join(body_lines))
+    title = _paste_clean_line(title)
+
+    if not body and title:
+        body = title
+        title = ""
+
+    if len(body) < 10:
+        return
+
+    reviews.append(
+        ReviewWorkspaceReview(
+            rating=rating,
+            title=title,
+            text=body,
+            helpful_count=helpful_count,
+            source_section=source_section,
+        )
+    )
+
+
+def _parse_messy_reviews(raw_text: str, source_section: str) -> list[ReviewWorkspaceReview]:
+    lines = [_paste_clean_line(line) for line in str(raw_text or "").splitlines()]
+    lines = [line for line in lines if line]
+
+    reviews: list[ReviewWorkspaceReview] = []
+    current_rating = None
+    current_title = ""
+    current_body: list[str] = []
+    current_helpful = None
+    active = False
+
+    for line in lines:
+        helpful = _parse_helpful_count(line)
+        if helpful is not None:
+            current_helpful = helpful
+            continue
+
+        rating_match = _REVIEW_PASTE_RATING_RE.search(line)
+        if rating_match:
+            if active:
+                _finalize_pasted_review(
+                    reviews,
+                    current_rating,
+                    current_title,
+                    current_body,
+                    current_helpful,
+                    source_section,
+                )
+
+            active = True
+            current_rating = rating_match.group("rating")
+            remainder = _paste_clean_line(_REVIEW_PASTE_RATING_RE.sub("", line, count=1))
+            current_title = remainder if len(remainder) <= 90 else ""
+            current_body = [] if current_title else ([remainder] if remainder else [])
+            current_helpful = None
+            continue
+
+        if _paste_is_meta_line(line):
+            continue
+
+        if active:
+            if not current_title and len(line) <= 90 and not current_body:
+                current_title = line
+            else:
+                current_body.append(line)
+        else:
+            # Generic non-Amazon paste fallback: each meaningful paragraph can be a review.
+            if len(line) >= 30:
+                reviews.append(
+                    ReviewWorkspaceReview(
+                        rating=None,
+                        title="",
+                        text=line,
+                        helpful_count=None,
+                        source_section=source_section,
+                    )
+                )
+
+    if active:
+        _finalize_pasted_review(
+            reviews,
+            current_rating,
+            current_title,
+            current_body,
+            current_helpful,
+            source_section,
+        )
+
+    # Deduplicate while preserving order.
+    deduped: list[ReviewWorkspaceReview] = []
+    seen = set()
+    for review in reviews:
+        key = _paste_clean_line(review.text).lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(review)
+
+    return deduped
+
+
 
 
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
@@ -2395,8 +2732,6 @@ def _parse_messy_reviews(raw_text: str, source_section: str) -> list[ReviewWorks
         deduped.append(review)
 
     return deduped
-
-
 
 
 @app.post("/api/v1/analyze-pasted-review-workspace", response_model=PastedReviewWorkspaceAnalyzeResponse)

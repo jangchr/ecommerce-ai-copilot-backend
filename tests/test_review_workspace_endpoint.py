@@ -310,5 +310,59 @@ class ReviewWorkspaceEvidenceFragmentCleanupTest(unittest.TestCase):
         self.assertTrue(all(not quote.lower().startswith("but great") for quote in objection_quotes))
 
 
+
+
+class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
+    def test_review_workspace_generates_evidence_backed_creative_output(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "creative_output_quality_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/B00QIIMCCW",
+                        "title": "Colavita Balsamic Vinegar - 8.5 oz",
+                        "brand": "Colavita",
+                        "description": "Balsamic vinegar for salad dressing and cooking.",
+                        "reviews": [
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Verified Purchase Now this is listed as 8 1/2 oz for $4.99 but what came was a 17 oz bottle - still only $4.99. So it is probably listed and priced wrong.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "1 out of 5 stars",
+                                "text": "Verified Purchase This is the wateriest, most flavorless balsamic I have ever encountered. Makes terrible vinaigrette.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        angles = body["creative_angles"]
+        hooks = body["hooks"]
+
+        self.assertTrue(any("buyer's exact wording" in angle for angle in angles))
+        self.assertTrue(all("Turn the repeated complaint around" not in angle for angle in angles))
+        self.assertTrue(any("Listed as one size" in hook or "taste rich enough" in hook for hook in hooks))
+        self.assertEqual(len(hooks), len(set(hooks)))
+        self.assertTrue(all("Use it to support great" not in angle for angle in angles))
+        self.assertTrue(all("Use it to support love" not in angle for angle in angles))
+        self.assertTrue(all("?" not in angle and "?" not in angle for angle in angles))
+        self.assertTrue(all("buyers highlighting buyers" not in hook for hook in hooks))
+        self.assertTrue(all("Why are buyers highlighting buyers" not in hook for hook in hooks))
+
 if __name__ == "__main__":
     unittest.main()

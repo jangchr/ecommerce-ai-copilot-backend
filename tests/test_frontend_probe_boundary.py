@@ -2143,5 +2143,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_renders_creative_brief(self):
+        for marker in [
+            "extensionCreativeBriefHTML",
+            "Creative brief",
+            "Pain -> Evidence -> Angle -> Hook",
+            "${extensionCreativeBriefHTML(body)}",
+            "body.creative_angles",
+            "body.hooks",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()
