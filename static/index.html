@@ -5582,6 +5582,79 @@
     return `${products.length} product(s), ${reviewCount} visible review(s) imported from the browser extension.`;
   }
 
+
+  function extensionRatingMixText(metadata) {
+    const distribution = metadata?.rating_distribution || {};
+    const parts = [];
+
+    for (const [key, label] of [
+      ["5_star", "5-star"],
+      ["4_star", "4-star"],
+      ["3_star", "3-star"],
+      ["2_star", "2-star"],
+      ["1_star", "1-star"],
+      ["unknown", "unknown"]
+    ]) {
+      const value = distribution[key] || 0;
+      if (value > 0) {
+        parts.push(`${label} ${value}`);
+      }
+    }
+
+    return parts.length ? parts.join(" / ") : "";
+  }
+
+  function extensionSourceScopeText(metadata) {
+    if (metadata?.source_scope === "visible_page_sample") {
+      return "Visible sample only";
+    }
+    if (metadata?.sign_in_required) {
+      return "Sign-in required";
+    }
+    return "";
+  }
+
+  function extensionProductSampleMetaHTML(product) {
+    const metadata = product?.metadata || {};
+    const rows = [];
+    const sourceScope = extensionSourceScopeText(metadata);
+    const ratingMix = extensionRatingMixText(metadata);
+
+    if (sourceScope) {
+      rows.push(`<div><strong>Scope:</strong> ${escapeExtensionHTML(sourceScope)}</div>`);
+    }
+    if (ratingMix) {
+      rows.push(`<div><strong>Rating mix:</strong> ${escapeExtensionHTML(ratingMix)}</div>`);
+    }
+    if (metadata.sample_warning) {
+      rows.push(`<div style="color:#92400e;"><strong>Warning:</strong> ${escapeExtensionHTML(metadata.sample_warning)}</div>`);
+    }
+
+    if (!rows.length) return "";
+    return `<div style="margin-top:6px;color:#64748b;font-size:11px;line-height:1.45;">${rows.join("")}</div>`;
+  }
+
+  function extensionWorkspaceWarningsHTML(payload) {
+    const warnings = [];
+    for (const product of payload?.products || []) {
+      const warning = product?.metadata?.sample_warning;
+      if (warning && !warnings.includes(warning)) {
+        warnings.push(warning);
+      }
+    }
+
+    if (!warnings.length) return "";
+    return `
+      <div style="margin:10px 0;padding:9px 10px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;color:#92400e;">
+        <strong>Sample note</strong>
+        <ul style="margin:6px 0 0;padding-left:18px;">
+          ${warnings.map((warning) => `<li>${escapeExtensionHTML(warning)}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+
   function renderExtensionWorkspacePayload() {
     const payload = readExtensionWorkspacePayload();
     createExtensionWorkspacePanel();
@@ -5602,6 +5675,7 @@
           <div style="padding:9px 0;border-top:1px solid #e2e8f0;">
             <strong>${escapeExtensionHTML(product.title || product.url || "Untitled product")}</strong>
             <div style="color:#64748b;margin-top:2px;">${escapeExtensionHTML(product.platform || "web")} ? ${escapeExtensionHTML((product.reviews || []).length)} review(s)</div>
+            ${extensionProductSampleMetaHTML(product)}
           </div>
         `).join("")}
       </div>
@@ -5631,6 +5705,7 @@
     }
 
     output.innerHTML = `
+      ${extensionWorkspaceWarningsHTML(payload)}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
         <div><strong>${escapeExtensionHTML(body.product_count ?? 0)}</strong><br><span style="color:#64748b;">Products</span></div>
         <div><strong>${escapeExtensionHTML(body.total_reviews ?? 0)}</strong><br><span style="color:#64748b;">Reviews</span></div>

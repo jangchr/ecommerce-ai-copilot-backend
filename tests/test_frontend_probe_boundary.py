@@ -2098,5 +2098,22 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_displays_sample_metadata(self):
+        for marker in [
+            "extensionRatingMixText",
+            "extensionSourceScopeText",
+            "extensionProductSampleMetaHTML",
+            "extensionWorkspaceWarningsHTML",
+            "${extensionProductSampleMetaHTML(product)}",
+            "${extensionWorkspaceWarningsHTML(payload)}",
+            "Visible sample only",
+            "Rating mix",
+            "sample_warning",
+            "rating_distribution",
+            "source_scope",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()
