@@ -2087,5 +2087,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_receiver_overlay_exists(self):
+        for marker in [
+            "extensionWorkspacePanel",
+            "crossgrowth_extension_workspace",
+            "extension_workspace=1",
+            "crossgrowth-extension-workspace-ready",
+            "/api/v1/analyze-review-workspace",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()

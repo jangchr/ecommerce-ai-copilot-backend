@@ -149,6 +149,59 @@ async function copyTextToClipboard(text) {
   await navigator.clipboard.writeText(text);
 }
 
+
+async function waitForTabLoad(tabId) {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      chrome.tabs.onUpdated.removeListener(listener);
+      resolve();
+    }, 5000);
+
+    function listener(updatedTabId, changeInfo) {
+      if (updatedTabId === tabId && changeInfo.status === "complete") {
+        clearTimeout(timeout);
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }
+    }
+
+    chrome.tabs.onUpdated.addListener(listener);
+  });
+}
+
+async function openInWebWorkspace() {
+  const backendUrl = $("backendUrl").value.trim().replace(/\/$/, "") || DEFAULT_BACKEND;
+  await chrome.storage.local.set({ backendUrl });
+
+  const { products } = await getSavedProducts();
+  if (!products.length) {
+    throw new Error("Save or collect products before opening the web workspace.");
+  }
+
+  const payload = buildWorkspacePayload(products);
+  const payloadJson = JSON.stringify(payload);
+  const targetUrl = `${backendUrl}/?extension_workspace=1`;
+
+  const tab = await chrome.tabs.create({ url: targetUrl, active: true });
+  if (!tab.id) {
+    throw new Error("Could not open web workspace tab.");
+  }
+
+  await waitForTabLoad(tab.id);
+
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    args: [payloadJson],
+    func: (workspacePayload) => {
+      localStorage.setItem("crossgrowth_extension_workspace", workspacePayload);
+      window.dispatchEvent(new CustomEvent("crossgrowth-extension-workspace-ready"));
+    }
+  });
+
+  setStatus("Opened workspace in web app.");
+}
+
+
 async function copyInsights() {
   if (!lastWorkspaceAnalysis) {
     throw new Error("Analyze a workspace before copying insights.");
@@ -436,6 +489,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("analyzeBtn", analyzeWorkspace);
   bind("copyInsightsBtn", copyInsights);
   bind("copyWorkspaceJsonBtn", copyWorkspaceJson);
+  bind("openWorkspaceBtn", openInWebWorkspace);
   bind("clearBtn", clearSavedProducts);
   $("backendUrl").addEventListener("change", async () => {
     await chrome.storage.local.set({ backendUrl: $("backendUrl").value.trim() || DEFAULT_BACKEND });

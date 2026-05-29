@@ -252,3 +252,8 @@ button.compact {
   padding: 8px 10px;
   font-size: 11px;
 }
+
+
+button.compact.wide {
+  grid-column: 1 / -1;
+}

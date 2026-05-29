@@ -5498,5 +5498,164 @@
         syncDebugMode();
         renderRecentGenerations();
     </script>
+
+<script>
+(function () {
+  const STORAGE_KEY = "crossgrowth_extension_workspace";
+
+  function escapeExtensionHTML(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function createExtensionWorkspacePanel() {
+    if (document.getElementById("extensionWorkspacePanel")) return;
+
+    const panel = document.createElement("section");
+    panel.id = "extensionWorkspacePanel";
+    panel.setAttribute("data-upgrade-target", "extension-web-workspace");
+    panel.style.cssText = [
+      "position: fixed",
+      "right: 18px",
+      "bottom: 18px",
+      "z-index: 9999",
+      "width: min(420px, calc(100vw - 36px))",
+      "max-height: 72vh",
+      "overflow: auto",
+      "background: #ffffff",
+      "color: #0f172a",
+      "border: 1px solid #dbe3ef",
+      "border-radius: 18px",
+      "box-shadow: 0 18px 50px rgba(15,23,42,.18)",
+      "padding: 16px",
+      "font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    ].join(";");
+
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+        <div>
+          <div style="font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#15803d;">Extension Workspace</div>
+          <h3 style="margin:4px 0 6px;font-size:18px;">Imported review workspace</h3>
+          <p id="extensionWorkspaceSummary" style="margin:0;color:#64748b;font-size:12px;line-height:1.45;">Waiting for workspace payload...</p>
+        </div>
+        <button id="extensionWorkspaceClose" type="button" style="border:0;background:#e2e8f0;border-radius:999px;padding:6px 9px;font-weight:900;cursor:pointer;">?</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+        <button id="extensionWorkspaceAnalyze" type="button" style="border:0;border-radius:999px;padding:10px;background:#0f172a;color:#fff;font-weight:900;cursor:pointer;">Analyze workspace</button>
+        <button id="extensionWorkspaceCopy" type="button" style="border:0;border-radius:999px;padding:10px;background:#e2e8f0;color:#0f172a;font-weight:900;cursor:pointer;">Copy JSON</button>
+      </div>
+      <div id="extensionWorkspaceOutput" style="margin-top:12px;font-size:12px;line-height:1.45;"></div>
+    `;
+
+    document.body.appendChild(panel);
+
+    document.getElementById("extensionWorkspaceClose").addEventListener("click", () => {
+      panel.remove();
+    });
+
+    document.getElementById("extensionWorkspaceCopy").addEventListener("click", async () => {
+      const raw = localStorage.getItem(STORAGE_KEY) || "";
+      await navigator.clipboard.writeText(raw);
+      document.getElementById("extensionWorkspaceOutput").innerHTML = "<strong>Workspace JSON copied.</strong>";
+    });
+
+    document.getElementById("extensionWorkspaceAnalyze").addEventListener("click", analyzeExtensionWorkspace);
+  }
+
+  function readExtensionWorkspacePayload() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function summarizeExtensionWorkspace(payload) {
+    const products = payload?.products || [];
+    const reviewCount = products.reduce((sum, product) => sum + ((product.reviews || []).length), 0);
+    return `${products.length} product(s), ${reviewCount} visible review(s) imported from the browser extension.`;
+  }
+
+  function renderExtensionWorkspacePayload() {
+    const payload = readExtensionWorkspacePayload();
+    createExtensionWorkspacePanel();
+
+    const summary = document.getElementById("extensionWorkspaceSummary");
+    const output = document.getElementById("extensionWorkspaceOutput");
+
+    if (!payload) {
+      summary.textContent = "No extension workspace payload found yet.";
+      output.innerHTML = "";
+      return;
+    }
+
+    summary.textContent = summarizeExtensionWorkspace(payload);
+    output.innerHTML = `
+      <div style="margin-top:10px;">
+        ${(payload.products || []).map((product) => `
+          <div style="padding:9px 0;border-top:1px solid #e2e8f0;">
+            <strong>${escapeExtensionHTML(product.title || product.url || "Untitled product")}</strong>
+            <div style="color:#64748b;margin-top:2px;">${escapeExtensionHTML(product.platform || "web")} ? ${escapeExtensionHTML((product.reviews || []).length)} review(s)</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  async function analyzeExtensionWorkspace() {
+    const payload = readExtensionWorkspacePayload();
+    const output = document.getElementById("extensionWorkspaceOutput");
+    if (!payload) {
+      output.innerHTML = "<strong>No workspace payload found.</strong>";
+      return;
+    }
+
+    output.innerHTML = "<strong>Analyzing workspace...</strong>";
+
+    const response = await fetch("/api/v1/analyze-review-workspace", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+
+    const body = await response.json();
+    if (!response.ok) {
+      output.innerHTML = `<strong>Analysis failed:</strong> ${escapeExtensionHTML(body.error || "Unknown error")}`;
+      return;
+    }
+
+    output.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+        <div><strong>${escapeExtensionHTML(body.product_count ?? 0)}</strong><br><span style="color:#64748b;">Products</span></div>
+        <div><strong>${escapeExtensionHTML(body.total_reviews ?? 0)}</strong><br><span style="color:#64748b;">Reviews</span></div>
+        <div><strong>${escapeExtensionHTML(body.high_signal_review_count ?? 0)}</strong><br><span style="color:#64748b;">High-signal</span></div>
+      </div>
+      <strong>Top pain points</strong>
+      <ul>${(body.common_pain_points || []).slice(0, 5).map((item) => `<li>${escapeExtensionHTML(item.label || "")}</li>`).join("")}</ul>
+      <strong>Hooks</strong>
+      <ul>${(body.hooks || []).slice(0, 5).map((item) => `<li>${escapeExtensionHTML(item)}</li>`).join("")}</ul>
+    `;
+  }
+
+  function maybeRenderExtensionWorkspace() {
+    const search = window.location.search || "";
+    const hasFlag = search.includes("extension_workspace=1");
+    const hasPayload = Boolean(localStorage.getItem(STORAGE_KEY));
+    if (hasFlag || hasPayload) {
+      renderExtensionWorkspacePayload();
+    }
+  }
+
+  window.addEventListener("crossgrowth-extension-workspace-ready", renderExtensionWorkspacePayload);
+  document.addEventListener("DOMContentLoaded", maybeRenderExtensionWorkspace);
+})();
+</script>
+
 </body>
 </html>

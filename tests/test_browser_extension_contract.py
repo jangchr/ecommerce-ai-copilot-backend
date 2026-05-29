@@ -199,5 +199,28 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, css)
 
+
+    def test_popup_supports_open_in_web_workspace(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+        css = (self.root / "styles.css").read_text(encoding="utf-8")
+
+        for marker in [
+            "openWorkspaceBtn",
+            "Open in Web Workspace",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "openInWebWorkspace",
+            "waitForTabLoad",
+            "crossgrowth_extension_workspace",
+            "chrome.tabs.create",
+            "bind(\"openWorkspaceBtn\", openInWebWorkspace)",
+        ]:
+            self.assertIn(marker, js)
+
+        self.assertIn("button.compact.wide", css)
+
 if __name__ == "__main__":
     unittest.main()
