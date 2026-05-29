@@ -5795,14 +5795,118 @@
     return String(value || "").replace(/^Copy-ready angle:\s*/i, "");
   }
 
-  function extensionPositiveProofHTML(body) {
-    const likedPoints = (body.liked_points || [])
+
+  let extensionCreativeBriefCopyPayload = {
+    all: "",
+    rows: [],
+    positive: "",
+  };
+
+  function extensionPositiveProofItems(body) {
+    return (body.liked_points || [])
       .map((item) => ({
         ...item,
         firstQuote: (item.evidence_quotes || [])[0] || "",
       }))
       .filter((item) => item.firstQuote && !extensionQuoteHasPainSignal(item.firstQuote))
       .slice(0, 2);
+  }
+
+  function extensionCreativeBriefRowMarkdown(item, angle, hook) {
+    const quote = (item.evidence_quotes || [])[0] || "";
+    return [
+      `## Pain: ${item.label || "Buyer signal"}`,
+      quote ? `Evidence: "${quote}"` : "",
+      angle ? `Copy-ready angle: ${angle}` : "",
+      hook ? `TikTok hook: ${hook}` : "",
+    ].filter(Boolean).join("\n");
+  }
+
+  function extensionPositiveProofMarkdown(body) {
+    const items = extensionPositiveProofItems(body);
+
+    if (!items.length) {
+      return "";
+    }
+
+    return [
+      "## Positive proof",
+      "Use after the pain demo as reassurance.",
+      "",
+      ...items.map((item) => {
+        const signal = extensionHumanThemeLabel(item.label);
+        return [
+          `Signal: ${signal}`,
+          `Proof: "${item.firstQuote}"`,
+        ].join("\n");
+      }),
+    ].filter(Boolean).join("\n\n");
+  }
+
+  function extensionCreativeBriefMarkdown(body) {
+    const painPoints = (body.common_pain_points || []).slice(0, 3);
+    const angles = body.creative_angles || [];
+    const hooks = body.hooks || [];
+
+    const rowMarkdown = painPoints.map((item, index) => {
+      const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
+      const hook = extensionCreativeBriefHook(item, hooks, index);
+      return extensionCreativeBriefRowMarkdown(item, angle, hook);
+    });
+
+    const positive = extensionPositiveProofMarkdown(body);
+
+    return [
+      "# Review Workspace Creative Brief",
+      "",
+      "Visible-page sample only. Use this for creative signals, not full review statistics.",
+      "",
+      ...rowMarkdown,
+      positive,
+    ].filter(Boolean).join("\n\n");
+  }
+
+  async function copyExtensionCreativeBrief(kind, index = 0) {
+    let label = "Creative brief";
+    let text = extensionCreativeBriefCopyPayload.all || "";
+
+    if (kind === "row") {
+      label = "Creative brief row";
+      text = extensionCreativeBriefCopyPayload.rows[index] || "";
+    }
+
+    if (kind === "positive") {
+      label = "Positive proof";
+      text = extensionCreativeBriefCopyPayload.positive || "";
+    }
+
+    const statusId = kind === "row"
+      ? `extensionCreativeBriefRowCopyStatus${index}`
+      : (kind === "positive" ? "extensionPositiveProofCopyStatus" : "extensionCreativeBriefCopyStatus");
+
+    document.querySelectorAll("[data-extension-brief-copy-status]").forEach((node) => {
+      node.textContent = "";
+    });
+
+    const status = document.getElementById(statusId) || document.getElementById("extensionCreativeBriefCopyStatus");
+
+    if (!text) {
+      if (status) status.textContent = `${label} is empty.`;
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      if (status) status.textContent = `${label} copied.`;
+    } catch (error) {
+      if (status) status.textContent = `${label} copy unavailable. Select and copy manually.`;
+    }
+  }
+
+  window.copyExtensionCreativeBrief = copyExtensionCreativeBrief;
+
+  function extensionPositiveProofHTML(body) {
+    const likedPoints = extensionPositiveProofItems(body);
 
     if (!likedPoints.length) {
       return "";
@@ -5822,7 +5926,13 @@
 
     return `
       <div style="margin-top:10px;">
-        <strong>Positive proof</strong>
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+          <strong>Positive proof</strong>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+            <button type="button" onclick="copyExtensionCreativeBrief('positive')" style="border:0;border-radius:999px;padding:5px 8px;background:#dcfce7;color:#166534;font-weight:800;cursor:pointer;">Copy positive proof</button>
+            <span id="extensionPositiveProofCopyStatus" data-extension-brief-copy-status="1" style="color:#166534;font-size:10px;font-weight:700;"></span>
+          </div>
+        </div>
         <div style="color:#166534;font-size:11px;margin-top:3px;">Use after the pain demo as reassurance.</div>
         ${rows}
       </div>
@@ -5835,8 +5945,21 @@
     const hooks = body.hooks || [];
 
     if (!painPoints.length && !angles.length && !hooks.length) {
+      extensionCreativeBriefCopyPayload = { all: "", rows: [], positive: "" };
       return "";
     }
+
+    const rowMarkdown = painPoints.map((item, index) => {
+      const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
+      const hook = extensionCreativeBriefHook(item, hooks, index);
+      return extensionCreativeBriefRowMarkdown(item, angle, hook);
+    });
+
+    extensionCreativeBriefCopyPayload = {
+      all: extensionCreativeBriefMarkdown(body),
+      rows: rowMarkdown,
+      positive: extensionPositiveProofMarkdown(body),
+    };
 
     const rows = painPoints.map((item, index) => {
       const quote = (item.evidence_quotes || [])[0] || "";
@@ -5845,7 +5968,13 @@
 
       return `
         <div style="margin:8px 0 10px;padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
-          <div><strong>Pain:</strong> ${escapeExtensionHTML(item.label || "Buyer signal")}</div>
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <div><strong>Pain:</strong> ${escapeExtensionHTML(item.label || "Buyer signal")}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+              <button type="button" onclick="copyExtensionCreativeBrief('row', ${index})" style="border:0;border-radius:999px;padding:5px 8px;background:#e2e8f0;color:#0f172a;font-weight:800;cursor:pointer;">Copy row</button>
+              <span id="extensionCreativeBriefRowCopyStatus${index}" data-extension-brief-copy-status="1" style="color:#475569;font-size:10px;font-weight:700;"></span>
+            </div>
+          </div>
           ${quote ? `<div style="margin-top:5px;"><strong>Evidence:</strong> "${escapeExtensionHTML(quote)}"</div>` : ""}
           ${angle ? `<div style="margin-top:5px;"><strong>Copy-ready angle:</strong> ${escapeExtensionHTML(angle)}</div>` : ""}
           ${hook ? `<div style="margin-top:5px;"><strong>TikTok hook:</strong> ${escapeExtensionHTML(hook)}</div>` : ""}
@@ -5855,14 +5984,17 @@
 
     return `
       <div style="margin:12px 0;padding:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;">
-        <strong>Creative brief</strong>
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+          <strong>Creative brief</strong>
+          <button type="button" onclick="copyExtensionCreativeBrief('all')" style="border:0;border-radius:999px;padding:6px 9px;background:#fed7aa;color:#9a3412;font-weight:900;cursor:pointer;">Copy all brief</button>
+        </div>
         <div style="color:#9a3412;font-size:11px;margin-top:3px;">Pain -> Evidence -> Copy-ready angle -> TikTok hook</div>
+        <div id="extensionCreativeBriefCopyStatus" data-extension-brief-copy-status="1" style="color:#64748b;font-size:11px;margin-top:5px;"></div>
         ${rows || `<div style="color:#64748b;margin-top:6px;">No evidence-backed brief generated.</div>`}
         ${extensionPositiveProofHTML(body)}
       </div>
     `;
   }
-
 
   async function analyzeExtensionWorkspace() {
     const payload = readExtensionWorkspacePayload();
