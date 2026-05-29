@@ -2115,5 +2115,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_explains_visible_sample_boundary(self):
+        for marker in [
+            "extensionWorkspaceBoundaryNote",
+            "Visible-page sample only",
+            "does not bypass login",
+            "CAPTCHA",
+            "hidden review pages",
+            "creative signals",
+            "not full review statistics",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()

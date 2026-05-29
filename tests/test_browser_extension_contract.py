@@ -305,5 +305,26 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, source)
 
+
+    def test_popup_explains_visible_sample_boundary(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        css = (self.root / "styles.css").read_text(encoding="utf-8")
+
+        for marker in [
+            "visibleSampleNotice",
+            "Visible-page sample",
+            "does not bypass login",
+            "CAPTCHA",
+            "creative signals",
+            "not full review statistics",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            ".notice-card",
+            ".notice-title",
+        ]:
+            self.assertIn(marker, css)
+
 if __name__ == "__main__":
     unittest.main()
