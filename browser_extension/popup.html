@@ -9,57 +9,61 @@
   <main class="popup">
     <header>
       <div class="eyebrow">CrossGrowth AI OS</div>
-      <h1>Review Collector</h1>
-      <p>Save visible product signals from the current tab and analyze high-signal buyer language.</p>
+      <h1 data-i18n="title">Review Collector</h1>
+      <p data-i18n="subtitle">Save visible product signals from the current tab and analyze high-signal buyer language.</p>
+      <div class="language-toggle" id="popupLanguageToggle" style="display:flex;gap:6px;margin-top:10px;">
+        <button id="popupLanguageEnglish" type="button" class="secondary compact">English</button>
+        <button id="popupLanguageChinese" type="button" class="secondary compact">&#20013;&#25991;</button>
+      </div>
     </header>
 
     <section class="card notice-card" id="visibleSampleNotice">
-      <div class="notice-title">Visible-page sample</div>
-      <p>Collects visible product signals, reviews, and comments only. It does not bypass login, CAPTCHA, hidden review pages, or platform restrictions.</p>
-      <p>Use this for creative signals, buyer language, pain points, objections, and hooks, not full review statistics.</p>
+      <div class="notice-title" data-i18n="visibleSampleTitle">Visible-page sample</div>
+      <p data-i18n="visibleSampleBody">Collects visible product signals, reviews, and comments only. It does not bypass login, CAPTCHA, hidden review pages, or platform restrictions.</p>
+      <p data-i18n="visibleSampleUse">Use this for creative signals, buyer language, pain points, objections, and hooks, not full review statistics.</p>
     </section>
 
     <section class="card">
-      <label for="backendUrl">Backend URL</label>
+      <label for="backendUrl" data-i18n="backendUrlLabel">Backend URL</label>
       <input id="backendUrl" type="text" value="https://ecommerce-ai-copilot-backend.onrender.com">
-      <div class="helper">Use local backend for development: http://127.0.0.1:8001</div>
+      <div class="helper" data-i18n="backendUrlHelper">Use local backend for development: http://127.0.0.1:8001</div>
     </section>
 
     <section class="actions">
-      <button id="extractBtn" type="button">Save current product</button>
-      <button id="collectTabsBtn" type="button">Collect open tabs</button>
-      <button id="analyzeBtn" type="button">Analyze saved workspace</button>
-      <button id="clearBtn" type="button" class="secondary">Clear saved products</button>
+      <button id="extractBtn" type="button" data-i18n="saveCurrentProduct">Save current product</button>
+      <button id="collectTabsBtn" type="button" data-i18n="collectOpenTabs">Collect open tabs</button>
+      <button id="analyzeBtn" type="button" data-i18n="analyzeSavedWorkspace">Analyze saved workspace</button>
+      <button id="clearBtn" type="button" class="secondary" data-i18n="clearSavedProducts">Clear saved products</button>
     </section>
 
     <section class="card">
       <div class="stat-row">
-        <span>Saved products</span>
+        <span data-i18n="savedProducts">Saved products</span>
         <strong id="savedCount">0</strong>
       </div>
       <div class="stat-row">
-        <span>Visible reviews</span>
+        <span data-i18n="visibleReviews">Visible reviews</span>
         <strong id="reviewCount">0</strong>
       </div>
-      <div id="status" class="status">Ready.</div>
+      <div id="status" class="status" data-i18n="readyStatus">Ready.</div>
       <div id="collectedProducts" class="collected-products"></div>
     </section>
 
     <section class="card" id="previewCard" hidden>
-      <h2>Current capture</h2>
+      <h2 data-i18n="currentCapture">Current capture</h2>
       <pre id="preview"></pre>
     </section>
 
     <section class="card" id="analysisCard" hidden>
-      <h2>Workspace analysis</h2>
+      <h2 data-i18n="workspaceAnalysis">Workspace analysis</h2>
       <div class="analysis-actions">
-        <button id="copyInsightsBtn" type="button" class="secondary compact">Copy insights</button>
-        <button id="copyWorkspaceJsonBtn" type="button" class="secondary compact">Copy workspace JSON</button>
-        <button id="openWorkspaceBtn" type="button" class="secondary compact wide">Open in Web Workspace</button>
+        <button id="copyInsightsBtn" type="button" class="secondary compact" data-i18n="copyInsights">Copy insights</button>
+        <button id="copyWorkspaceJsonBtn" type="button" class="secondary compact" data-i18n="copyWorkspaceJson">Copy workspace JSON</button>
+        <button id="openWorkspaceBtn" type="button" class="secondary compact wide" data-i18n="openWebWorkspace">Open in Web Workspace</button>
       </div>
       <div id="analysisSummary" class="analysis-summary"></div>
       <details class="raw-details">
-        <summary>Raw response</summary>
+        <summary data-i18n="rawResponse">Raw response</summary>
         <pre id="analysisOutput"></pre>
       </details>
     </section>

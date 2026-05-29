@@ -5512,6 +5512,162 @@
       .replaceAll("'", "&#039;");
   }
 
+    const EXTENSION_WORKSPACE_COPY = {
+    "en": {
+      "panelEyebrow": "Extension Workspace",
+      "importedTitle": "Imported review workspace",
+      "waitingPayload": "Waiting for workspace payload...",
+      "summaryImported": "{products} product(s), {reviews} visible review(s) imported from the browser extension.",
+      "boundaryNote": "Visible-page sample only. The browser extension collects content already visible in your tab and does not bypass login, CAPTCHA, hidden review pages, or platform restrictions. Use this for creative signals, not full review statistics.",
+      "close": "Close",
+      "closeAria": "Close extension workspace",
+      "analyzeWorkspace": "Analyze workspace",
+      "copyJson": "Copy JSON",
+      "workspaceJsonCopied": "Workspace JSON copied.",
+      "sampleNote": "Sample note",
+      "noPayload": "No extension workspace payload found yet.",
+      "noPayloadStrong": "No workspace payload found.",
+      "analyzingWorkspace": "Analyzing workspace...",
+      "untitledProduct": "Untitled product",
+      "reviewSingular": "review",
+      "reviewPlural": "reviews",
+      "scope": "Scope",
+      "ratingMix": "Rating mix",
+      "warning": "Warning",
+      "visibleSampleOnly": "Visible sample only",
+      "creativeBrief": "Creative brief",
+      "copyAllBrief": "Copy all brief",
+      "copyRow": "Copy row",
+      "copyPositiveProof": "Copy positive proof",
+      "flowLine": "Pain -> Evidence -> Copy-ready angle -> TikTok hook",
+      "positiveProof": "Positive proof",
+      "positiveProofUse": "Use after the pain demo as reassurance.",
+      "pain": "Pain",
+      "buyerSignal": "Buyer signal",
+      "evidence": "Evidence",
+      "signal": "Signal",
+      "copyReadyAngle": "Copy-ready angle",
+      "tiktokHook": "TikTok hook",
+      "noEvidenceBrief": "No evidence-backed brief generated.",
+      "mdTitle": "Review Workspace Creative Brief",
+      "mdBoundary": "Visible-page sample only. Use this for creative signals, not full review statistics.",
+      "product": "Product",
+      "source": "Source",
+      "reviewsUsed": "Reviews used",
+      "sampleWarning": "Sample warning",
+      "visiblePageSampleSource": "Browser extension visible-page sample",
+      "copyLabelBrief": "Creative brief",
+      "copyLabelRow": "Creative brief row",
+      "copyLabelPositive": "Positive proof",
+      "copyEmpty": "{label} is empty.",
+      "copyCopied": "{label} copied.",
+      "copyUnavailable": "{label} copy unavailable. Select and copy manually."
+    },
+    "zh-CN": {
+      "panelEyebrow": "\u63d2\u4ef6\u5de5\u4f5c\u533a",
+      "importedTitle": "\u5df2\u5bfc\u5165\u8bc4\u8bba\u5de5\u4f5c\u533a",
+      "waitingPayload": "\u6b63\u5728\u7b49\u5f85\u5de5\u4f5c\u533a\u6570\u636e...",
+      "summaryImported": "\u5df2\u4ece\u6d4f\u89c8\u5668\u63d2\u4ef6\u5bfc\u5165 {products} \u4e2a\u5546\u54c1\u3001{reviews} \u6761\u53ef\u89c1\u8bc4\u8bba\u3002",
+      "boundaryNote": "\u4ec5\u91c7\u96c6\u5f53\u524d\u53ef\u89c1\u9875\u9762\u6837\u672c\u3002\u6d4f\u89c8\u5668\u63d2\u4ef6\u53ea\u91c7\u96c6\u5f53\u524d\u6807\u7b7e\u9875\u91cc\u5df2\u7ecf\u53ef\u89c1\u7684\u5185\u5bb9\uff0c\u4e0d\u4f1a\u7ed5\u8fc7\u767b\u5f55\u3001\u9a8c\u8bc1\u7801\u3001\u9690\u85cf\u8bc4\u8bba\u9875\u6216\u5e73\u53f0\u9650\u5236\u3002\u8bf7\u628a\u5b83\u7528\u4e8e\u521b\u610f\u4fe1\u53f7\uff0c\u4e0d\u8981\u5f53\u4f5c\u5b8c\u6574\u8bc4\u8bba\u7edf\u8ba1\u3002",
+      "close": "\u5173\u95ed",
+      "closeAria": "\u5173\u95ed\u63d2\u4ef6\u5de5\u4f5c\u533a",
+      "analyzeWorkspace": "\u5206\u6790\u5de5\u4f5c\u533a",
+      "copyJson": "\u590d\u5236 JSON",
+      "workspaceJsonCopied": "\u5de5\u4f5c\u533a JSON \u5df2\u590d\u5236\u3002",
+      "sampleNote": "\u6837\u672c\u63d0\u793a",
+      "noPayload": "\u8fd8\u6ca1\u6709\u627e\u5230\u63d2\u4ef6\u5de5\u4f5c\u533a\u6570\u636e\u3002",
+      "noPayloadStrong": "\u6ca1\u6709\u627e\u5230\u5de5\u4f5c\u533a\u6570\u636e\u3002",
+      "analyzingWorkspace": "\u6b63\u5728\u5206\u6790\u5de5\u4f5c\u533a...",
+      "untitledProduct": "\u672a\u547d\u540d\u5546\u54c1",
+      "reviewSingular": "\u6761\u8bc4\u8bba",
+      "reviewPlural": "\u6761\u8bc4\u8bba",
+      "scope": "\u8303\u56f4",
+      "ratingMix": "\u8bc4\u5206\u5206\u5e03",
+      "warning": "\u63d0\u793a",
+      "visibleSampleOnly": "\u4ec5\u53ef\u89c1\u9875\u9762\u6837\u672c",
+      "creativeBrief": "\u521b\u610f\u7b80\u62a5",
+      "copyAllBrief": "\u590d\u5236\u5168\u90e8\u7b80\u62a5",
+      "copyRow": "\u590d\u5236\u8fd9\u6761",
+      "copyPositiveProof": "\u590d\u5236\u6b63\u5411\u8bc1\u636e",
+      "flowLine": "\u75db\u70b9 -> \u8bc1\u636e -> \u53ef\u76f4\u63a5\u4f7f\u7528\u7684\u521b\u610f\u89d2\u5ea6 -> \u77ed\u89c6\u9891\u5f00\u5934",
+      "positiveProof": "\u6b63\u5411\u8bc1\u636e",
+      "positiveProofUse": "\u653e\u5728\u75db\u70b9\u5c55\u793a\u540e\uff0c\u7528\u6765\u589e\u5f3a\u4fe1\u4efb\u3002",
+      "pain": "\u75db\u70b9",
+      "buyerSignal": "\u4e70\u5bb6\u4fe1\u53f7",
+      "evidence": "\u8bc1\u636e",
+      "signal": "\u4fe1\u53f7",
+      "copyReadyAngle": "\u53ef\u76f4\u63a5\u4f7f\u7528\u7684\u521b\u610f\u89d2\u5ea6",
+      "tiktokHook": "\u77ed\u89c6\u9891\u5f00\u5934",
+      "noEvidenceBrief": "\u8fd8\u6ca1\u6709\u751f\u6210\u57fa\u4e8e\u8bc1\u636e\u7684\u521b\u610f\u7b80\u62a5\u3002",
+      "mdTitle": "\u8bc4\u8bba\u5de5\u4f5c\u533a\u521b\u610f\u7b80\u62a5",
+      "mdBoundary": "\u4ec5\u53ef\u89c1\u9875\u9762\u6837\u672c\u3002\u8bf7\u7528\u4e8e\u521b\u610f\u4fe1\u53f7\uff0c\u4e0d\u8981\u5f53\u4f5c\u5b8c\u6574\u8bc4\u8bba\u7edf\u8ba1\u3002",
+      "product": "\u5546\u54c1",
+      "source": "\u6765\u6e90",
+      "reviewsUsed": "\u4f7f\u7528\u8bc4\u8bba\u6570",
+      "sampleWarning": "\u6837\u672c\u63d0\u793a",
+      "visiblePageSampleSource": "\u6d4f\u89c8\u5668\u63d2\u4ef6\u53ef\u89c1\u9875\u9762\u6837\u672c",
+      "copyLabelBrief": "\u521b\u610f\u7b80\u62a5",
+      "copyLabelRow": "\u5355\u6761\u521b\u610f\u7b80\u62a5",
+      "copyLabelPositive": "\u6b63\u5411\u8bc1\u636e",
+      "copyEmpty": "{label}\u4e3a\u7a7a\u3002",
+      "copyCopied": "{label}\u5df2\u590d\u5236\u3002",
+      "copyUnavailable": "{label}\u65e0\u6cd5\u81ea\u52a8\u590d\u5236\uff0c\u8bf7\u624b\u52a8\u9009\u4e2d\u590d\u5236\u3002"
+    }
+  };
+
+  function extensionWorkspaceLanguage(source) {
+    const explicit = source?.output_language || readExtensionWorkspacePayload()?.output_language || "";
+    const fallback = typeof currentOutputLanguage === "function" ? currentOutputLanguage() : "en";
+    const language = String(explicit || fallback || "en").toLowerCase();
+    return language.startsWith("zh") ? "zh-CN" : "en";
+  }
+
+  function tExtensionWorkspace(key, source) {
+    const language = extensionWorkspaceLanguage(source);
+    return EXTENSION_WORKSPACE_COPY[language]?.[key] || EXTENSION_WORKSPACE_COPY.en[key] || key;
+  }
+
+  function extensionWorkspaceReviewCount(source) {
+    const payload = readExtensionWorkspacePayload();
+    if (typeof source?.total_reviews === "number") {
+      return source.total_reviews;
+    }
+    return (payload?.products || []).reduce((sum, product) => sum + (product?.reviews || []).length, 0);
+  }
+
+  function extensionWorkspaceProductTitle(source) {
+    const payload = readExtensionWorkspacePayload();
+    const product = (payload?.products || [])[0] || {};
+    const summary = (source?.product_summaries || [])[0] || {};
+    return product.title || summary.title || summary.product_title || product.url || tExtensionWorkspace("untitledProduct", source);
+  }
+
+  function extensionWorkspaceSampleWarningText(source) {
+    const payload = readExtensionWorkspacePayload();
+    const warnings = [];
+    for (const product of payload?.products || []) {
+      const warning = product?.metadata?.sample_warning;
+      if (warning && !warnings.includes(warning)) {
+        warnings.push(warning);
+      }
+    }
+    return warnings[0] || tExtensionWorkspace("mdBoundary", source);
+  }
+
+  function extensionWorkspaceSummaryText(payload) {
+    const productCount = (payload?.products || []).length;
+    const reviewCount = (payload?.products || []).reduce((sum, product) => sum + (product?.reviews || []).length, 0);
+    return tExtensionWorkspace("summaryImported", payload)
+      .replace("{products}", String(productCount))
+      .replace("{reviews}", String(reviewCount));
+  }
+
+  function extensionWorkspaceProductMetaText(product) {
+    const reviewCount = (product?.reviews || []).length;
+    const reviewLabel = reviewCount === 1 ? tExtensionWorkspace("reviewSingular") : tExtensionWorkspace("reviewPlural");
+    return `${product?.platform || "web"} - ${reviewCount} ${reviewLabel}`;
+  }
+
   function createExtensionWorkspacePanel() {
     if (document.getElementById("extensionWorkspacePanel")) return;
 
@@ -5538,18 +5694,18 @@
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
         <div>
-          <div style="font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#15803d;">Extension Workspace</div>
-          <h3 style="margin:4px 0 6px;font-size:18px;">Imported review workspace</h3>
+          <div style="font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#15803d;">${escapeExtensionHTML(tExtensionWorkspace("panelEyebrow"))}</div>
+          <h3 style="margin:4px 0 6px;font-size:18px;">${escapeExtensionHTML(tExtensionWorkspace("importedTitle"))}</h3>
           <p id="extensionWorkspaceSummary" style="margin:0;color:#64748b;font-size:12px;line-height:1.45;">Waiting for workspace payload...</p>
           <div id="extensionWorkspaceBoundaryNote" style="margin-top:8px;padding:8px 9px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;color:#475569;font-size:11px;line-height:1.45;">
             Visible-page sample only. The browser extension collects content already visible in your tab and does not bypass login, CAPTCHA, hidden review pages, or platform restrictions. Use this for creative signals, not full review statistics.
           </div>
         </div>
-        <button id="extensionWorkspaceClose" type="button" aria-label="Close extension workspace" style="border:0;background:#e2e8f0;border-radius:999px;padding:6px 9px;font-weight:900;cursor:pointer;">Close</button>
+        <button id="extensionWorkspaceClose" type="button" aria-label="${escapeExtensionHTML(tExtensionWorkspace("closeAria"))}" style="border:0;background:#e2e8f0;border-radius:999px;padding:6px 9px;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("close"))}</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
-        <button id="extensionWorkspaceAnalyze" type="button" style="border:0;border-radius:999px;padding:10px;background:#0f172a;color:#fff;font-weight:900;cursor:pointer;">Analyze workspace</button>
-        <button id="extensionWorkspaceCopy" type="button" style="border:0;border-radius:999px;padding:10px;background:#e2e8f0;color:#0f172a;font-weight:900;cursor:pointer;">Copy JSON</button>
+        <button id="extensionWorkspaceAnalyze" type="button" style="border:0;border-radius:999px;padding:10px;background:#0f172a;color:#fff;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("analyzeWorkspace"))}</button>
+        <button id="extensionWorkspaceCopy" type="button" style="border:0;border-radius:999px;padding:10px;background:#e2e8f0;color:#0f172a;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("copyJson"))}</button>
       </div>
       <div id="extensionWorkspaceOutput" style="margin-top:12px;font-size:12px;line-height:1.45;"></div>
     `;
@@ -5563,7 +5719,7 @@
     document.getElementById("extensionWorkspaceCopy").addEventListener("click", async () => {
       const raw = localStorage.getItem(STORAGE_KEY) || "";
       await navigator.clipboard.writeText(raw);
-      document.getElementById("extensionWorkspaceOutput").innerHTML = "<strong>Workspace JSON copied.</strong>";
+      document.getElementById("extensionWorkspaceOutput").innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("workspaceJsonCopied"))}</strong>`;
     });
 
     document.getElementById("extensionWorkspaceAnalyze").addEventListener("click", analyzeExtensionWorkspace);
@@ -5609,7 +5765,7 @@
 
   function extensionSourceScopeText(metadata) {
     if (metadata?.source_scope === "visible_page_sample") {
-      return "Visible sample only";
+      return tExtensionWorkspace("visibleSampleOnly");
     }
     if (metadata?.sign_in_required) {
       return "Sign-in required";
@@ -5624,13 +5780,13 @@
     const ratingMix = extensionRatingMixText(metadata);
 
     if (sourceScope) {
-      rows.push(`<div><strong>Scope:</strong> ${escapeExtensionHTML(sourceScope)}</div>`);
+      rows.push(`<div><strong>${escapeExtensionHTML(tExtensionWorkspace("scope"))}:</strong> ${escapeExtensionHTML(sourceScope)}</div>`);
     }
     if (ratingMix) {
-      rows.push(`<div><strong>Rating mix:</strong> ${escapeExtensionHTML(ratingMix)}</div>`);
+      rows.push(`<div><strong>${escapeExtensionHTML(tExtensionWorkspace("ratingMix"))}:</strong> ${escapeExtensionHTML(ratingMix)}</div>`);
     }
     if (metadata.sample_warning) {
-      rows.push(`<div style="color:#92400e;"><strong>Warning:</strong> ${escapeExtensionHTML(metadata.sample_warning)}</div>`);
+      rows.push(`<div style="color:#92400e;"><strong>${escapeExtensionHTML(tExtensionWorkspace("warning"))}:</strong> ${escapeExtensionHTML(metadata.sample_warning)}</div>`);
     }
 
     if (!rows.length) return "";
@@ -5649,7 +5805,7 @@
     if (!warnings.length) return "";
     return `
       <div style="margin:10px 0;padding:9px 10px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;color:#92400e;">
-        <strong>Sample note</strong>
+        <strong>${escapeExtensionHTML(tExtensionWorkspace("sampleNote"))}</strong>
         <ul style="margin:6px 0 0;padding-left:18px;">
           ${warnings.map((warning) => `<li>${escapeExtensionHTML(warning)}</li>`).join("")}
         </ul>
@@ -5666,18 +5822,18 @@
     const output = document.getElementById("extensionWorkspaceOutput");
 
     if (!payload) {
-      summary.textContent = "No extension workspace payload found yet.";
+      summary.textContent = tExtensionWorkspace("noPayload");
       output.innerHTML = "";
       return;
     }
 
-    summary.textContent = summarizeExtensionWorkspace(payload);
+    summary.textContent = extensionWorkspaceSummaryText(payload);
     output.innerHTML = `
       <div style="margin-top:10px;">
         ${(payload.products || []).map((product) => `
           <div style="padding:9px 0;border-top:1px solid #e2e8f0;">
-            <strong>${escapeExtensionHTML(product.title || product.url || "Untitled product")}</strong>
-            <div style="color:#64748b;margin-top:2px;">${escapeExtensionHTML(product.platform || "web")} - ${escapeExtensionHTML((product.reviews || []).length)} review(s)</div>
+            <strong>${escapeExtensionHTML(product.title || product.url || tExtensionWorkspace("untitledProduct", payload))}</strong>
+            <div style="color:#64748b;margin-top:2px;">${escapeExtensionHTML(extensionWorkspaceProductMetaText(product))}</div>
             ${extensionProductSampleMetaHTML(product)}
           </div>
         `).join("")}
@@ -5812,13 +5968,13 @@
       .slice(0, 2);
   }
 
-  function extensionCreativeBriefRowMarkdown(item, angle, hook) {
+  function extensionCreativeBriefRowMarkdown(item, angle, hook, source = null) {
     const quote = (item.evidence_quotes || [])[0] || "";
     return [
-      `## Pain: ${item.label || "Buyer signal"}`,
-      quote ? `Evidence: "${quote}"` : "",
-      angle ? `Copy-ready angle: ${angle}` : "",
-      hook ? `TikTok hook: ${hook}` : "",
+      `## ${tExtensionWorkspace("pain", source)}: ${item.label || tExtensionWorkspace("buyerSignal", source)}`,
+      quote ? `${tExtensionWorkspace("evidence", source)}: "${quote}"` : "",
+      angle ? `${tExtensionWorkspace("copyReadyAngle", source)}: ${angle}` : "",
+      hook ? `${tExtensionWorkspace("tiktokHook", source)}: ${hook}` : "",
     ].filter(Boolean).join("\n");
   }
 
@@ -5830,14 +5986,14 @@
     }
 
     return [
-      "## Positive proof",
-      "Use after the pain demo as reassurance.",
+      `## ${tExtensionWorkspace("positiveProof", body)}`,
+      tExtensionWorkspace("positiveProofUse", body),
       "",
       ...items.map((item) => {
         const signal = extensionHumanThemeLabel(item.label);
         return [
           `Signal: ${signal}`,
-          `Proof: "${item.firstQuote}"`,
+          `${tExtensionWorkspace("evidence", body)}: "${item.firstQuote}"`,
         ].join("\n");
       }),
     ].filter(Boolean).join("\n\n");
@@ -5851,15 +6007,20 @@
     const rowMarkdown = painPoints.map((item, index) => {
       const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
       const hook = extensionCreativeBriefHook(item, hooks, index);
-      return extensionCreativeBriefRowMarkdown(item, angle, hook);
+      return extensionCreativeBriefRowMarkdown(item, angle, hook, body);
     });
 
     const positive = extensionPositiveProofMarkdown(body);
 
     return [
-      "# Review Workspace Creative Brief",
+      `# ${tExtensionWorkspace("mdTitle", body)}`,
       "",
-      "Visible-page sample only. Use this for creative signals, not full review statistics.",
+      `${tExtensionWorkspace("product", body)}: ${extensionWorkspaceProductTitle(body)}`,
+      `${tExtensionWorkspace("source", body)}: ${tExtensionWorkspace("visiblePageSampleSource", body)}`,
+      `${tExtensionWorkspace("reviewsUsed", body)}: ${extensionWorkspaceReviewCount(body)}`,
+      `${tExtensionWorkspace("sampleWarning", body)}: ${extensionWorkspaceSampleWarningText(body)}`,
+      "",
+      tExtensionWorkspace("mdBoundary", body),
       "",
       ...rowMarkdown,
       positive,
@@ -5867,16 +6028,16 @@
   }
 
   async function copyExtensionCreativeBrief(kind, index = 0) {
-    let label = "Creative brief";
+    let label = tExtensionWorkspace("copyLabelBrief");
     let text = extensionCreativeBriefCopyPayload.all || "";
 
     if (kind === "row") {
-      label = "Creative brief row";
+      label = tExtensionWorkspace("copyLabelRow");
       text = extensionCreativeBriefCopyPayload.rows[index] || "";
     }
 
     if (kind === "positive") {
-      label = "Positive proof";
+      label = tExtensionWorkspace("copyLabelPositive");
       text = extensionCreativeBriefCopyPayload.positive || "";
     }
 
@@ -5891,15 +6052,15 @@
     const status = document.getElementById(statusId) || document.getElementById("extensionCreativeBriefCopyStatus");
 
     if (!text) {
-      if (status) status.textContent = `${label} is empty.`;
+      if (status) status.textContent = tExtensionWorkspace("copyEmpty").replace("{label}", label);
       return;
     }
 
     try {
       await navigator.clipboard.writeText(text);
-      if (status) status.textContent = `${label} copied.`;
+      if (status) status.textContent = tExtensionWorkspace("copyCopied").replace("{label}", label);
     } catch (error) {
-      if (status) status.textContent = `${label} copy unavailable. Select and copy manually.`;
+      if (status) status.textContent = tExtensionWorkspace("copyUnavailable").replace("{label}", label);
     }
   }
 
@@ -5918,22 +6079,22 @@
 
       return `
         <div style="margin-top:6px;padding:8px 9px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;">
-          <div><strong>Signal:</strong> ${escapeExtensionHTML(signal)}</div>
-          <div style="margin-top:4px;"><strong>Proof:</strong> "${escapeExtensionHTML(quote)}"</div>
+          <div><strong>${escapeExtensionHTML(tExtensionWorkspace("signal", body))}:</strong> ${escapeExtensionHTML(signal)}</div>
+          <div style="margin-top:4px;"><strong>${escapeExtensionHTML(tExtensionWorkspace("evidence", body))}:</strong> "${escapeExtensionHTML(quote)}"</div>
         </div>
       `;
     }).join("");
 
     return `
       <div style="margin-top:10px;">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-          <strong>Positive proof</strong>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-            <button type="button" onclick="copyExtensionCreativeBrief('positive')" style="border:0;border-radius:999px;padding:5px 8px;background:#dcfce7;color:#166534;font-weight:800;cursor:pointer;">Copy positive proof</button>
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
+          <strong>${escapeExtensionHTML(tExtensionWorkspace("positiveProof", body))}</strong>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:auto;">
+            <button type="button" onclick="copyExtensionCreativeBrief('positive')" style="border:0;border-radius:999px;padding:5px 8px;background:#dcfce7;color:#166534;font-weight:800;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("copyPositiveProof", body))}</button>
             <span id="extensionPositiveProofCopyStatus" data-extension-brief-copy-status="1" style="color:#166534;font-size:10px;font-weight:700;"></span>
           </div>
         </div>
-        <div style="color:#166534;font-size:11px;margin-top:3px;">Use after the pain demo as reassurance.</div>
+        <div style="color:#166534;font-size:11px;margin-top:3px;">${escapeExtensionHTML(tExtensionWorkspace("positiveProofUse", body))}</div>
         ${rows}
       </div>
     `;
@@ -5952,7 +6113,7 @@
     const rowMarkdown = painPoints.map((item, index) => {
       const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
       const hook = extensionCreativeBriefHook(item, hooks, index);
-      return extensionCreativeBriefRowMarkdown(item, angle, hook);
+      return extensionCreativeBriefRowMarkdown(item, angle, hook, body);
     });
 
     extensionCreativeBriefCopyPayload = {
@@ -5968,29 +6129,29 @@
 
       return `
         <div style="margin:8px 0 10px;padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-            <div><strong>Pain:</strong> ${escapeExtensionHTML(item.label || "Buyer signal")}</div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-              <button type="button" onclick="copyExtensionCreativeBrief('row', ${index})" style="border:0;border-radius:999px;padding:5px 8px;background:#e2e8f0;color:#0f172a;font-weight:800;cursor:pointer;">Copy row</button>
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div><strong>${escapeExtensionHTML(tExtensionWorkspace("pain", body))}:</strong> ${escapeExtensionHTML(item.label || tExtensionWorkspace("buyerSignal", body))}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:auto;">
+              <button type="button" onclick="copyExtensionCreativeBrief('row', ${index})" style="border:0;border-radius:999px;padding:5px 8px;background:#e2e8f0;color:#0f172a;font-weight:800;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("copyRow", body))}</button>
               <span id="extensionCreativeBriefRowCopyStatus${index}" data-extension-brief-copy-status="1" style="color:#475569;font-size:10px;font-weight:700;"></span>
             </div>
           </div>
-          ${quote ? `<div style="margin-top:5px;"><strong>Evidence:</strong> "${escapeExtensionHTML(quote)}"</div>` : ""}
-          ${angle ? `<div style="margin-top:5px;"><strong>Copy-ready angle:</strong> ${escapeExtensionHTML(angle)}</div>` : ""}
-          ${hook ? `<div style="margin-top:5px;"><strong>TikTok hook:</strong> ${escapeExtensionHTML(hook)}</div>` : ""}
+          ${quote ? `<div style="margin-top:5px;"><strong>${escapeExtensionHTML(tExtensionWorkspace("evidence", body))}:</strong> "${escapeExtensionHTML(quote)}"</div>` : ""}
+          ${angle ? `<div style="margin-top:5px;"><strong>${escapeExtensionHTML(tExtensionWorkspace("copyReadyAngle", body))}:</strong> ${escapeExtensionHTML(angle)}</div>` : ""}
+          ${hook ? `<div style="margin-top:5px;"><strong>${escapeExtensionHTML(tExtensionWorkspace("tiktokHook", body))}:</strong> ${escapeExtensionHTML(hook)}</div>` : ""}
         </div>
       `;
     }).join("");
 
     return `
       <div style="margin:12px 0;padding:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-          <strong>Creative brief</strong>
-          <button type="button" onclick="copyExtensionCreativeBrief('all')" style="border:0;border-radius:999px;padding:6px 9px;background:#fed7aa;color:#9a3412;font-weight:900;cursor:pointer;">Copy all brief</button>
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
+          <strong>${escapeExtensionHTML(tExtensionWorkspace("creativeBrief", body))}</strong>
+          <button type="button" onclick="copyExtensionCreativeBrief('all')" style="border:0;border-radius:999px;padding:6px 9px;background:#fed7aa;color:#9a3412;font-weight:900;cursor:pointer;margin-left:auto;">${escapeExtensionHTML(tExtensionWorkspace("copyAllBrief", body))}</button>
         </div>
-        <div style="color:#9a3412;font-size:11px;margin-top:3px;">Pain -> Evidence -> Copy-ready angle -> TikTok hook</div>
+        <div style="color:#9a3412;font-size:11px;margin-top:3px;">${escapeExtensionHTML(tExtensionWorkspace("flowLine", body))}</div>
         <div id="extensionCreativeBriefCopyStatus" data-extension-brief-copy-status="1" style="color:#64748b;font-size:11px;margin-top:5px;"></div>
-        ${rows || `<div style="color:#64748b;margin-top:6px;">No evidence-backed brief generated.</div>`}
+        ${rows || `<div style="color:#64748b;margin-top:6px;">${escapeExtensionHTML(tExtensionWorkspace("noEvidenceBrief", body))}</div>`}
         ${extensionPositiveProofHTML(body)}
       </div>
     `;
@@ -6000,11 +6161,11 @@
     const payload = readExtensionWorkspacePayload();
     const output = document.getElementById("extensionWorkspaceOutput");
     if (!payload) {
-      output.innerHTML = "<strong>No workspace payload found.</strong>";
+      output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("noPayloadStrong"))}</strong>`;
       return;
     }
 
-    output.innerHTML = "<strong>Analyzing workspace...</strong>";
+    output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("analyzingWorkspace", payload))}</strong>`;
 
     const response = await fetch("/api/v1/analyze-review-workspace", {
       method: "POST",

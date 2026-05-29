@@ -1,5 +1,220 @@
 const DEFAULT_BACKEND = "https://ecommerce-ai-copilot-backend.onrender.com";
 let lastWorkspaceAnalysis = null;
+let popupLanguage = "en";
+
+const POPUP_COPY = {
+  en: {
+    title: "Review Collector",
+    subtitle: "Save visible product signals from the current tab and analyze high-signal buyer language.",
+    visibleSampleTitle: "Visible-page sample",
+    visibleSampleBody: "Collects visible product signals, reviews, and comments only. It does not bypass login, CAPTCHA, hidden review pages, or platform restrictions.",
+    visibleSampleUse: "Use this for creative signals, buyer language, pain points, objections, and hooks, not full review statistics.",
+    backendUrlLabel: "Backend URL",
+    backendUrlHelper: "Use local backend for development: http://127.0.0.1:8001",
+    saveCurrentProduct: "Save current product",
+    collectOpenTabs: "Collect open tabs",
+    analyzeSavedWorkspace: "Analyze saved workspace",
+    clearSavedProducts: "Clear saved products",
+    savedProducts: "Saved products",
+    visibleReviews: "Visible reviews",
+    readyStatus: "Ready.",
+    currentCapture: "Current capture",
+    workspaceAnalysis: "Workspace analysis",
+    copyInsights: "Copy insights",
+    copyWorkspaceJson: "Copy workspace JSON",
+    openWebWorkspace: "Open in Web Workspace",
+    rawResponse: "Raw response",
+    products: "Products",
+    totalReviews: "Total reviews",
+    highSignal: "High-signal",
+    topPainPoints: "Top pain points",
+    buyerObjections: "Buyer objections",
+    creativeAngles: "Creative angles",
+    hooks: "Hooks",
+    collectedProducts: "Collected products",
+    noSignals: "No signals detected yet.",
+    noRepeatedTheme: "No repeated theme detected yet.",
+    noRepeatedSignals: "- No repeated signals detected yet.",
+    noItems: "- No items generated yet.",
+    noProducts: "- No products collected yet.",
+    theme: "Theme",
+    evidence: "Evidence",
+    reviewSingular: "review",
+    reviewPlural: "reviews",
+    saveBeforeWebWorkspace: "Save or collect products before opening the web workspace.",
+    couldNotOpenWebWorkspace: "Could not open web workspace tab.",
+    openedWebWorkspace: "Opened workspace in web app.",
+    analyzeBeforeCopy: "Analyze a workspace before copying insights.",
+    copiedInsights: "Copied insights to clipboard.",
+    insightsTitle: "CrossGrowth Review Workspace Insights",
+    saveBeforeCopyJson: "Save or collect products before copying workspace JSON.",
+    copiedWorkspaceJson: "Copied workspace JSON to clipboard.",
+    signInRequired: "Amazon sign-in required. The extension only collects visible page content.",
+    noVisibleReviews: "Product info captured. No visible reviews found. Scroll to reviews or open a visible review page.",
+    visibleAmazonSample: "Visible Amazon review sample only; not the full review set.",
+    noActiveTab: "No active tab found.",
+    couldNotExtract: "Could not extract product details from this tab.",
+    collectingCurrentTab: "Collecting current tab...",
+    savedPrefix: "Saved",
+    reviewsLabel: "Reviews",
+    collectingOpenTabs: "Collecting open Amazon/TikTok tabs...",
+    noCollectableTabs: "No Amazon or TikTok tabs found in this window.",
+    couldNotCollectTabs: "Could not collect any tabs.",
+    tabsSkipped: "tab(s) skipped.",
+    captureWarnings: "capture warning(s).",
+    collectedPrefix: "Collected",
+    tabUnit: "tab(s)",
+    visibleReviewUnit: "visible review(s)",
+    saveFirst: "Save at least one product first.",
+    analyzingWorkspace: "Analyzing saved workspace...",
+    workspaceFailed: "Workspace analysis failed.",
+    workspaceReady: "Workspace analysis ready.",
+    cleared: "Cleared saved products.",
+  },
+  "zh-CN": {
+    "title": "\u8bc4\u8bba\u91c7\u96c6\u5668",
+    "subtitle": "\u4fdd\u5b58\u5f53\u524d\u9875\u9762\u53ef\u89c1\u7684\u5546\u54c1\u4fe1\u53f7\uff0c\u5e76\u5206\u6790\u9ad8\u4ef7\u503c\u4e70\u5bb6\u8bed\u8a00\u3002",
+    "visibleSampleTitle": "\u4ec5\u91c7\u96c6\u5f53\u524d\u53ef\u89c1\u9875\u9762\u6837\u672c",
+    "visibleSampleBody": "\u53ea\u91c7\u96c6\u9875\u9762\u4e0a\u5df2\u7ecf\u53ef\u89c1\u7684\u5546\u54c1\u4fe1\u53f7\u3001\u8bc4\u8bba\u548c\u7559\u8a00\u3002\u4e0d\u4f1a\u7ed5\u8fc7\u767b\u5f55\u3001\u9a8c\u8bc1\u7801\u3001\u9690\u85cf\u8bc4\u8bba\u9875\u6216\u5e73\u53f0\u9650\u5236\u3002",
+    "visibleSampleUse": "\u9002\u5408\u63d0\u53d6\u521b\u610f\u4fe1\u53f7\u3001\u4e70\u5bb6\u539f\u8bdd\u3001\u75db\u70b9\u3001\u987e\u8651\u548c hook\uff0c\u4e0d\u9002\u5408\u5f53\u4f5c\u5b8c\u6574\u8bc4\u8bba\u7edf\u8ba1\u3002",
+    "backendUrlLabel": "\u540e\u7aef\u5730\u5740",
+    "backendUrlHelper": "\u672c\u5730\u5f00\u53d1\u4f7f\u7528\uff1ahttp://127.0.0.1:8001",
+    "saveCurrentProduct": "\u4fdd\u5b58\u5f53\u524d\u5546\u54c1",
+    "collectOpenTabs": "\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875",
+    "analyzeSavedWorkspace": "\u5206\u6790\u5df2\u4fdd\u5b58\u5de5\u4f5c\u533a",
+    "clearSavedProducts": "\u6e05\u7a7a\u5df2\u4fdd\u5b58\u5546\u54c1",
+    "savedProducts": "\u5df2\u4fdd\u5b58\u5546\u54c1",
+    "visibleReviews": "\u53ef\u89c1\u8bc4\u8bba",
+    "readyStatus": "\u51c6\u5907\u597d\u4e86\u3002",
+    "currentCapture": "\u5f53\u524d\u91c7\u96c6\u7ed3\u679c",
+    "workspaceAnalysis": "\u5de5\u4f5c\u533a\u5206\u6790",
+    "copyInsights": "\u590d\u5236\u6d1e\u5bdf",
+    "copyWorkspaceJson": "\u590d\u5236\u5de5\u4f5c\u533a JSON",
+    "openWebWorkspace": "\u5728 Web Workspace \u6253\u5f00",
+    "rawResponse": "\u539f\u59cb\u54cd\u5e94",
+    "products": "\u5546\u54c1",
+    "totalReviews": "\u8bc4\u8bba\u603b\u6570",
+    "highSignal": "\u9ad8\u4fe1\u53f7",
+    "topPainPoints": "\u4e3b\u8981\u75db\u70b9",
+    "buyerObjections": "\u8d2d\u4e70\u987e\u8651",
+    "creativeAngles": "\u521b\u610f\u89d2\u5ea6",
+    "hooks": "Hooks",
+    "collectedProducts": "\u5df2\u91c7\u96c6\u5546\u54c1",
+    "noSignals": "\u8fd8\u6ca1\u6709\u68c0\u6d4b\u5230\u4fe1\u53f7\u3002",
+    "noRepeatedTheme": "\u8fd8\u6ca1\u6709\u68c0\u6d4b\u5230\u91cd\u590d\u4e3b\u9898\u3002",
+    "noRepeatedSignals": "- \u8fd8\u6ca1\u6709\u68c0\u6d4b\u5230\u91cd\u590d\u4fe1\u53f7\u3002",
+    "noItems": "- \u8fd8\u6ca1\u6709\u751f\u6210\u5185\u5bb9\u3002",
+    "noProducts": "- \u8fd8\u6ca1\u6709\u91c7\u96c6\u5546\u54c1\u3002",
+    "theme": "\u4e3b\u9898",
+    "evidence": "\u8bc1\u636e",
+    "reviewSingular": "\u6761\u8bc4\u8bba",
+    "reviewPlural": "\u6761\u8bc4\u8bba",
+    "saveBeforeWebWorkspace": "\u8bf7\u5148\u4fdd\u5b58\u6216\u91c7\u96c6\u5546\u54c1\uff0c\u518d\u6253\u5f00 Web Workspace\u3002",
+    "couldNotOpenWebWorkspace": "\u65e0\u6cd5\u6253\u5f00 Web Workspace \u6807\u7b7e\u9875\u3002",
+    "openedWebWorkspace": "\u5df2\u5728 Web \u5e94\u7528\u4e2d\u6253\u5f00\u5de5\u4f5c\u533a\u3002",
+    "analyzeBeforeCopy": "\u8bf7\u5148\u5206\u6790\u5de5\u4f5c\u533a\uff0c\u518d\u590d\u5236\u6d1e\u5bdf\u3002",
+    "copiedInsights": "\u5df2\u590d\u5236\u6d1e\u5bdf\u3002",
+    "insightsTitle": "CrossGrowth \u8bc4\u8bba\u5de5\u4f5c\u533a\u6d1e\u5bdf",
+    "saveBeforeCopyJson": "\u8bf7\u5148\u4fdd\u5b58\u6216\u91c7\u96c6\u5546\u54c1\uff0c\u518d\u590d\u5236\u5de5\u4f5c\u533a JSON\u3002",
+    "copiedWorkspaceJson": "\u5df2\u590d\u5236\u5de5\u4f5c\u533a JSON\u3002",
+    "signInRequired": "Amazon \u9700\u8981\u767b\u5f55\u3002\u63d2\u4ef6\u53ea\u91c7\u96c6\u5f53\u524d\u9875\u9762\u53ef\u89c1\u5185\u5bb9\u3002",
+    "noVisibleReviews": "\u5df2\u91c7\u96c6\u5546\u54c1\u4fe1\u606f\uff0c\u4f46\u672a\u53d1\u73b0\u53ef\u89c1\u8bc4\u8bba\u3002\u8bf7\u6eda\u52a8\u5230\u8bc4\u8bba\u533a\uff0c\u6216\u6253\u5f00\u53ef\u89c1\u8bc4\u8bba\u9875\u3002",
+    "visibleAmazonSample": "\u4ec5\u4e3a Amazon \u53ef\u89c1\u8bc4\u8bba\u6837\u672c\uff0c\u4e0d\u4ee3\u8868\u5b8c\u6574\u8bc4\u8bba\u96c6\u3002",
+    "noActiveTab": "\u6ca1\u6709\u627e\u5230\u5f53\u524d\u6d3b\u52a8\u6807\u7b7e\u9875\u3002",
+    "couldNotExtract": "\u65e0\u6cd5\u4ece\u5f53\u524d\u6807\u7b7e\u9875\u63d0\u53d6\u5546\u54c1\u8be6\u60c5\u3002",
+    "collectingCurrentTab": "\u6b63\u5728\u91c7\u96c6\u5f53\u524d\u6807\u7b7e\u9875...",
+    "savedPrefix": "\u5df2\u4fdd\u5b58",
+    "reviewsLabel": "\u8bc4\u8bba",
+    "collectingOpenTabs": "\u6b63\u5728\u91c7\u96c6\u5df2\u6253\u5f00\u7684 Amazon/TikTok \u6807\u7b7e\u9875...",
+    "noCollectableTabs": "\u5f53\u524d\u7a97\u53e3\u6ca1\u6709\u627e\u5230 Amazon \u6216 TikTok \u6807\u7b7e\u9875\u3002",
+    "couldNotCollectTabs": "\u672a\u80fd\u91c7\u96c6\u4efb\u4f55\u6807\u7b7e\u9875\u3002",
+    "tabsSkipped": "\u4e2a\u6807\u7b7e\u9875\u5df2\u8df3\u8fc7\u3002",
+    "captureWarnings": "\u4e2a\u91c7\u96c6\u63d0\u793a\u3002",
+    "collectedPrefix": "\u5df2\u91c7\u96c6",
+    "tabUnit": "\u4e2a\u6807\u7b7e\u9875",
+    "visibleReviewUnit": "\u6761\u53ef\u89c1\u8bc4\u8bba",
+    "saveFirst": "\u8bf7\u5148\u4fdd\u5b58\u81f3\u5c11\u4e00\u4e2a\u5546\u54c1\u3002",
+    "analyzingWorkspace": "\u6b63\u5728\u5206\u6790\u5df2\u4fdd\u5b58\u5de5\u4f5c\u533a...",
+    "workspaceFailed": "\u5de5\u4f5c\u533a\u5206\u6790\u5931\u8d25\u3002",
+    "workspaceReady": "\u5de5\u4f5c\u533a\u5206\u6790\u5b8c\u6210\u3002",
+    "cleared": "\u5df2\u6e05\u7a7a\u4fdd\u5b58\u7684\u5546\u54c1\u3002"
+  }
+};
+
+function tPopup(key) {
+  return POPUP_COPY[popupLanguage]?.[key] || POPUP_COPY.en[key] || key;
+}
+
+function popupOutputLanguage() {
+  return popupLanguage === "zh-CN" ? "zh-CN" : "en";
+}
+
+
+const POPUP_THEME_LABELS = {
+  en: {
+    "price / value concern": "price / value concern",
+    "taste / flavor concern": "taste / flavor concern",
+    "size / quantity mismatch": "size / quantity mismatch",
+    "size / fit issue": "size / fit issue",
+    "durability concern": "durability concern",
+    "leak / mess risk": "leak / mess risk",
+    "hard to clean": "hard to clean",
+    "space constraint": "space constraint",
+    "quality consistency concern": "quality consistency concern",
+    "quantity / size uncertainty": "quantity / size uncertainty",
+    "tradeoff / hesitation": "tradeoff / hesitation",
+    "expectation mismatch": "expectation mismatch",
+    "liked signal: great": "liked signal: great",
+    "liked signal: love": "liked signal: love"
+  },
+  "zh-CN": {
+    "price / value concern": "\u4ef7\u683c / \u4ef7\u503c\u987e\u8651",
+    "taste / flavor concern": "\u5473\u9053 / \u98ce\u5473\u987e\u8651",
+    "size / quantity mismatch": "\u89c4\u683c / \u6570\u91cf\u4e0d\u4e00\u81f4",
+    "size / fit issue": "\u5c3a\u5bf8 / \u9002\u914d\u95ee\u9898",
+    "durability concern": "\u8010\u7528\u6027\u987e\u8651",
+    "leak / mess risk": "\u6f0f\u6db2 / \u810f\u4e71\u98ce\u9669",
+    "hard to clean": "\u6e05\u6d01\u56f0\u96be",
+    "space constraint": "\u7a7a\u95f4\u9650\u5236",
+    "quality consistency concern": "\u54c1\u8d28\u7a33\u5b9a\u6027\u987e\u8651",
+    "quantity / size uncertainty": "\u6570\u91cf / \u89c4\u683c\u4e0d\u786e\u5b9a",
+    "tradeoff / hesitation": "\u53d6\u820d / \u72b9\u8c6b",
+    "expectation mismatch": "\u9884\u671f\u4e0d\u4e00\u81f4",
+    "liked signal: great": "\u6b63\u5411\u4fe1\u53f7\uff1agreat",
+    "liked signal: love": "\u6b63\u5411\u4fe1\u53f7\uff1alove"
+  }
+};
+
+function popupThemeLabel(label) {
+  const normalized = String(label || "").trim().toLowerCase();
+  if (!normalized) return tPopup("theme");
+  return POPUP_THEME_LABELS[popupLanguage]?.[normalized]
+    || POPUP_THEME_LABELS.en[normalized]
+    || label;
+}
+
+function applyPopupLanguage() {
+  document.documentElement.lang = popupOutputLanguage();
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    const key = node.getAttribute("data-i18n");
+    node.textContent = tPopup(key);
+  });
+  const englishBtn = $("popupLanguageEnglish");
+  const chineseBtn = $("popupLanguageChinese");
+  if (englishBtn) englishBtn.classList.toggle("active", popupLanguage === "en");
+  if (chineseBtn) chineseBtn.classList.toggle("active", popupLanguage === "zh-CN");
+}
+
+async function setPopupLanguage(language) {
+  popupLanguage = language === "zh-CN" ? "zh-CN" : "en";
+  await chrome.storage.local.set({ popupLanguage });
+  applyPopupLanguage();
+  await updateStats();
+  if (lastWorkspaceAnalysis) {
+    renderWorkspaceAnalysis(lastWorkspaceAnalysis);
+  }
+}
+
 
 function $(id) {
   return document.getElementById(id);
@@ -21,7 +236,7 @@ function escapeHTML(value) {
     .replaceAll("'", "&#039;");
 }
 
-function listItems(values, emptyMessage = "No signals detected yet.") {
+function listItems(values, emptyMessage = tPopup("noSignals")) {
   const items = (values || []).filter(Boolean).slice(0, 6);
   if (!items.length) {
     return `<div class="empty">${escapeHTML(emptyMessage)}</div>`;
@@ -29,7 +244,7 @@ function listItems(values, emptyMessage = "No signals detected yet.") {
   return `<ul>${items.map((value) => `<li>${escapeHTML(value)}</li>`).join("")}</ul>`;
 }
 
-function themeItems(themes, emptyMessage = "No repeated theme detected yet.") {
+function themeItems(themes, emptyMessage = tPopup("noRepeatedTheme")) {
   const items = (themes || []).slice(0, 6);
   if (!items.length) {
     return `<div class="empty">${escapeHTML(emptyMessage)}</div>`;
@@ -41,7 +256,7 @@ function themeItems(themes, emptyMessage = "No repeated theme detected yet.") {
       .map((quote) => `<blockquote>${escapeHTML(quote)}</blockquote>`)
       .join("");
     const count = theme.evidence_count ? ` <span class="pill">${escapeHTML(theme.evidence_count)}</span>` : "";
-    return `<li><strong>${escapeHTML(theme.label || "Theme")}</strong>${count}${quotes}</li>`;
+    return `<li><strong>${escapeHTML(popupThemeLabel(theme.label || tPopup("theme")))}</strong>${count}${quotes}</li>`;
   }).join("")}</ul>`;
 }
 
@@ -52,36 +267,36 @@ function renderWorkspaceAnalysis(body) {
   summary.innerHTML = `
     <div class="metric-grid">
       <div class="metric-card">
-        <span>Products</span>
+        <span>${escapeHTML(tPopup("products"))}</span>
         <strong>${escapeHTML(body.product_count ?? 0)}</strong>
       </div>
       <div class="metric-card">
-        <span>Total reviews</span>
+        <span>${escapeHTML(tPopup("totalReviews"))}</span>
         <strong>${escapeHTML(body.total_reviews ?? 0)}</strong>
       </div>
       <div class="metric-card">
-        <span>High-signal</span>
+        <span>${escapeHTML(tPopup("highSignal"))}</span>
         <strong>${escapeHTML(body.high_signal_review_count ?? 0)}</strong>
       </div>
     </div>
 
     <div class="insight-section">
-      <h3>Top pain points</h3>
+      <h3>${escapeHTML(tPopup("topPainPoints"))}</h3>
       ${themeItems(body.common_pain_points)}
     </div>
 
     <div class="insight-section">
-      <h3>Buyer objections</h3>
+      <h3>${escapeHTML(tPopup("buyerObjections"))}</h3>
       ${themeItems(body.buyer_objections)}
     </div>
 
     <div class="insight-section">
-      <h3>Creative angles</h3>
+      <h3>${escapeHTML(tPopup("creativeAngles"))}</h3>
       ${listItems(body.creative_angles)}
     </div>
 
     <div class="insight-section">
-      <h3>Hooks</h3>
+      <h3>${escapeHTML(tPopup("hooks"))}</h3>
       ${listItems(body.hooks)}
     </div>
   `;
@@ -93,15 +308,15 @@ function compactThemeLines(title, themes) {
   const rows = [`${title}:`];
   const items = (themes || []).slice(0, 6);
   if (!items.length) {
-    rows.push("- No repeated signals detected yet.");
+    rows.push(tPopup("noRepeatedSignals"));
     return rows;
   }
 
   for (const theme of items) {
     const count = theme.evidence_count ? ` (${theme.evidence_count})` : "";
-    rows.push(`- ${theme.label || "Theme"}${count}`);
+    rows.push(`- ${popupThemeLabel(theme.label || tPopup("theme"))}${count}`);
     for (const quote of (theme.evidence_quotes || []).slice(0, 2)) {
-      rows.push(`  Evidence: ${quote}`);
+      rows.push(`  ${tPopup("evidence")}: ${quote}`);
     }
   }
   return rows;
@@ -111,7 +326,7 @@ function compactListLines(title, values) {
   const rows = [`${title}:`];
   const items = (values || []).filter(Boolean).slice(0, 8);
   if (!items.length) {
-    rows.push("- No items generated yet.");
+    rows.push(tPopup("noItems"));
     return rows;
   }
   for (const item of items) {
@@ -121,10 +336,10 @@ function compactListLines(title, values) {
 }
 
 function compactProductLines(products) {
-  const rows = ["Collected products:"];
+  const rows = [`${tPopup("collectedProducts")}:`];
   const items = products || [];
   if (!items.length) {
-    rows.push("- No products collected yet.");
+    rows.push(tPopup("noProducts"));
     return rows;
   }
 
@@ -140,7 +355,7 @@ function buildWorkspacePayload(products) {
   return {
     workspace_id: `extension_workspace_${Date.now()}`,
     source: "chrome_extension",
-    output_language: "en",
+    output_language: popupOutputLanguage(),
     products: products || []
   };
 }
@@ -175,7 +390,7 @@ async function openInWebWorkspace() {
 
   const { products } = await getSavedProducts();
   if (!products.length) {
-    throw new Error("Save or collect products before opening the web workspace.");
+    throw new Error(tPopup("saveBeforeWebWorkspace"));
   }
 
   const payload = buildWorkspacePayload(products);
@@ -184,7 +399,7 @@ async function openInWebWorkspace() {
 
   const tab = await chrome.tabs.create({ url: targetUrl, active: true });
   if (!tab.id) {
-    throw new Error("Could not open web workspace tab.");
+    throw new Error(tPopup("couldNotOpenWebWorkspace"));
   }
 
   await waitForTabLoad(tab.id);
@@ -198,56 +413,57 @@ async function openInWebWorkspace() {
     }
   });
 
-  setStatus("Opened workspace in web app.");
+  setStatus(tPopup("openedWebWorkspace"));
 }
 
 
 async function copyInsights() {
   if (!lastWorkspaceAnalysis) {
-    throw new Error("Analyze a workspace before copying insights.");
+    throw new Error(tPopup("analyzeBeforeCopy"));
   }
 
   const { products } = await getSavedProducts();
   const body = lastWorkspaceAnalysis;
 
   const lines = [
-    "CrossGrowth Review Workspace Insights",
+    tPopup("insightsTitle"),
     "",
-    `Products: ${body.product_count ?? 0}`,
-    `Total reviews: ${body.total_reviews ?? 0}`,
-    `High-signal reviews: ${body.high_signal_review_count ?? 0}`,
+    `${tPopup("products")}: ${body.product_count ?? 0}`,
+    `${tPopup("totalReviews")}: ${body.total_reviews ?? 0}`,
+    `${tPopup("highSignal")}: ${body.high_signal_review_count ?? 0}`,
     "",
     ...compactProductLines(products),
     "",
-    ...compactThemeLines("Top pain points", body.common_pain_points),
+    ...compactThemeLines(tPopup("topPainPoints"), body.common_pain_points),
     "",
-    ...compactThemeLines("Buyer objections", body.buyer_objections),
+    ...compactThemeLines(tPopup("buyerObjections"), body.buyer_objections),
     "",
-    ...compactListLines("Creative angles", body.creative_angles),
+    ...compactListLines(tPopup("creativeAngles"), body.creative_angles),
     "",
-    ...compactListLines("Hooks", body.hooks)
+    ...compactListLines(tPopup("hooks"), body.hooks)
   ];
 
   await copyTextToClipboard(lines.join("\n"));
-  setStatus("Copied insights to clipboard.");
+  setStatus(tPopup("copiedInsights"));
 }
 
 async function copyWorkspaceJson() {
   const { products } = await getSavedProducts();
   if (!products.length) {
-    throw new Error("Save or collect products before copying workspace JSON.");
+    throw new Error(tPopup("saveBeforeCopyJson"));
   }
 
   await copyTextToClipboard(JSON.stringify(buildWorkspacePayload(products), null, 2));
-  setStatus("Copied workspace JSON to clipboard.");
+  setStatus(tPopup("copiedWorkspaceJson"));
 }
 
 
 async function getSavedProducts() {
-  const result = await chrome.storage.local.get(["workspaceProducts", "backendUrl"]);
+  const result = await chrome.storage.local.get(["workspaceProducts", "backendUrl", "popupLanguage"]);
   return {
     products: result.workspaceProducts || [],
-    backendUrl: result.backendUrl || DEFAULT_BACKEND
+    backendUrl: result.backendUrl || DEFAULT_BACKEND,
+    popupLanguage: result.popupLanguage || "en"
   };
 }
 
@@ -268,7 +484,7 @@ function captureDiagnosticMessage(product) {
   const status = metadata.review_visibility_status;
 
   if (metadata.sign_in_required || status === "sign_in_required") {
-    return "Amazon sign-in required. The extension only collects visible page content.";
+    return tPopup("signInRequired");
   }
 
   if (
@@ -276,7 +492,7 @@ function captureDiagnosticMessage(product) {
     status === "no_visible_reviews_on_reviews_page" ||
     status === "no_visible_reviews"
   ) {
-    return "Product info captured. No visible reviews found. Scroll to reviews or open a visible review page.";
+    return tPopup("noVisibleReviews");
   }
 
   if (
@@ -284,7 +500,7 @@ function captureDiagnosticMessage(product) {
     metadata.source_scope === "visible_page_sample" &&
     status === "visible_reviews_found"
   ) {
-    return "Visible Amazon review sample only; not the full review set.";
+    return tPopup("visibleAmazonSample");
   }
 
   return "";
@@ -293,7 +509,7 @@ function captureDiagnosticMessage(product) {
 function productSourceLabel(product) {
   const platform = String(product?.platform || "web").toLowerCase();
   const reviewCount = (product?.reviews || []).length;
-  const reviewLabel = reviewCount === 1 ? "review" : "reviews";
+  const reviewLabel = reviewCount === 1 ? tPopup("reviewSingular") : tPopup("reviewPlural");
   return `${platform} - ${reviewCount} ${reviewLabel}`;
 }
 
@@ -308,7 +524,7 @@ function renderSavedProducts(products) {
   }
 
   target.innerHTML = `
-    <div class="collected-header">Collected products</div>
+    <div class="collected-header">${escapeHTML(tPopup("collectedProducts"))}</div>
     <ol>
       ${items.map((product) => `
         <li>
@@ -322,7 +538,9 @@ function renderSavedProducts(products) {
 
 
 async function updateStats() {
-  const { products, backendUrl } = await getSavedProducts();
+  const { products, backendUrl, popupLanguage: savedLanguage } = await getSavedProducts();
+  popupLanguage = savedLanguage === "zh-CN" ? "zh-CN" : "en";
+  applyPopupLanguage();
   $("backendUrl").value = backendUrl;
   $("savedCount").textContent = String(products.length);
   $("reviewCount").textContent = String(products.reduce((sum, product) => sum + (product.reviews || []).length, 0));
@@ -332,7 +550,7 @@ async function updateStats() {
 async function getActiveTab() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tabs.length || !tabs[0].id) {
-    throw new Error("No active tab found.");
+    throw new Error(tPopup("noActiveTab"));
   }
   return tabs[0];
 }
@@ -365,7 +583,7 @@ async function extractProductFromTab(tab) {
 
   const product = results && results[0] ? results[0].result : null;
   if (!product || !product.title) {
-    throw new Error("Could not extract product details from this tab.");
+    throw new Error(tPopup("couldNotExtract"));
   }
   return product;
 }
@@ -392,7 +610,7 @@ async function extractCurrentProduct() {
 }
 
 async function saveCurrentProduct() {
-  setStatus("Collecting current tab...");
+  setStatus(tPopup("collectingCurrentTab"));
   const product = await extractCurrentProduct();
   const { products } = await getSavedProducts();
 
@@ -404,18 +622,18 @@ async function saveCurrentProduct() {
   $("preview").textContent = JSON.stringify(product, null, 2);
   const diagnostic = captureDiagnosticMessage(product);
   const diagnosticSuffix = diagnostic ? ` ${diagnostic}` : "";
-  setStatus(`Saved: ${product.title || product.url}. Reviews: ${(product.reviews || []).length}.${diagnosticSuffix}`);
+  setStatus(`${tPopup("savedPrefix")}: ${product.title || product.url}. ${tPopup("reviewsLabel")}: ${(product.reviews || []).length}.${diagnosticSuffix}`);
 }
 
 
 async function collectOpenTabs() {
-  setStatus("Collecting open Amazon/TikTok tabs...");
+  setStatus(tPopup("collectingOpenTabs"));
 
   const tabs = await chrome.tabs.query({ currentWindow: true });
   const candidates = tabs.filter((tab) => tab.id && isCollectableTabUrl(tab.url));
 
   if (!candidates.length) {
-    throw new Error("No Amazon or TikTok tabs found in this window.");
+    throw new Error(tPopup("noCollectableTabs"));
   }
 
   const collected = [];
@@ -431,7 +649,7 @@ async function collectOpenTabs() {
   }
 
   if (!collected.length) {
-    throw new Error(`Could not collect any tabs. ${failures.slice(0, 2).join(" | ")}`);
+    throw new Error(`${tPopup("couldNotCollectTabs")} ${failures.slice(0, 2).join(" | ")}`);
   }
 
   const { products } = await getSavedProducts();
@@ -443,9 +661,9 @@ async function collectOpenTabs() {
 
   const reviewTotal = collected.reduce((sum, product) => sum + (product.reviews || []).length, 0);
   const warningCount = collected.filter((product) => captureDiagnosticMessage(product)).length;
-  const failureSuffix = failures.length ? ` ${failures.length} tab(s) skipped.` : "";
-  const warningSuffix = warningCount ? ` ${warningCount} capture warning(s).` : "";
-  setStatus(`Collected ${collected.length} tab(s), ${reviewTotal} visible review(s).${failureSuffix}${warningSuffix}`);
+  const failureSuffix = failures.length ? ` ${failures.length} ${tPopup("tabsSkipped")}` : "";
+  const warningSuffix = warningCount ? ` ${warningCount} ${tPopup("captureWarnings")}` : "";
+  setStatus(`${tPopup("collectedPrefix")} ${collected.length} ${tPopup("tabUnit")}, ${reviewTotal} ${tPopup("visibleReviewUnit")}.${failureSuffix}${warningSuffix}`);
 }
 
 
@@ -455,10 +673,10 @@ async function analyzeWorkspace() {
 
   const { products } = await getSavedProducts();
   if (!products.length) {
-    throw new Error("Save at least one product first.");
+    throw new Error(tPopup("saveFirst"));
   }
 
-  setStatus("Analyzing saved workspace...");
+  setStatus(tPopup("analyzingWorkspace"));
 
   const response = await fetch(`${backendUrl}/api/v1/analyze-review-workspace`, {
     method: "POST",
@@ -466,14 +684,14 @@ async function analyzeWorkspace() {
     body: JSON.stringify({
       workspace_id: `extension_workspace_${Date.now()}`,
       source: "chrome_extension",
-      output_language: "en",
+      output_language: popupOutputLanguage(),
       products
     })
   });
 
   const body = await response.json();
   if (!response.ok) {
-    throw new Error(body.error || "Workspace analysis failed.");
+    throw new Error(body.error || tPopup("workspaceFailed"));
   }
 
   lastWorkspaceAnalysis = body;
@@ -489,7 +707,7 @@ async function analyzeWorkspace() {
     hooks: body.hooks
   }, null, 2);
 
-  setStatus("Workspace analysis ready.");
+  setStatus(tPopup("workspaceReady"));
 }
 
 async function clearSavedProducts() {
@@ -502,7 +720,7 @@ async function clearSavedProducts() {
   if (analysisSummary) {
     analysisSummary.innerHTML = "";
   }
-  setStatus("Cleared saved products.");
+  setStatus(tPopup("cleared"));
 }
 
 function bind(id, handler) {
@@ -516,6 +734,10 @@ function bind(id, handler) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  const stored = await chrome.storage.local.get(["popupLanguage"]);
+  popupLanguage = stored.popupLanguage === "zh-CN" ? "zh-CN" : "en";
+  applyPopupLanguage();
+
   bind("extractBtn", saveCurrentProduct);
   bind("collectTabsBtn", collectOpenTabs);
   bind("analyzeBtn", analyzeWorkspace);
@@ -523,6 +745,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("copyWorkspaceJsonBtn", copyWorkspaceJson);
   bind("openWorkspaceBtn", openInWebWorkspace);
   bind("clearBtn", clearSavedProducts);
+  $("popupLanguageEnglish").addEventListener("click", () => setPopupLanguage("en"));
+  $("popupLanguageChinese").addEventListener("click", () => setPopupLanguage("zh-CN"));
   $("backendUrl").addEventListener("change", async () => {
     await chrome.storage.local.set({ backendUrl: $("backendUrl").value.trim() || DEFAULT_BACKEND });
   });

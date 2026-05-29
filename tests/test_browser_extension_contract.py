@@ -223,11 +223,23 @@ class BrowserExtensionContractTest(unittest.TestCase):
         for marker in [
             "openWorkspaceBtn",
             "Open in Web Workspace",
+            "popupLanguageEnglish",
+            "popupLanguageChinese",
+            "data-i18n=\"title\"",
+            "data-i18n=\"visibleSampleTitle\"",
+            "backendUrlLabel",
+            "visibleSampleBody",
+            "saveCurrentProduct",
         ]:
             self.assertIn(marker, html)
 
         for marker in [
             "openInWebWorkspace",
+            "POPUP_COPY",
+            "POPUP_THEME_LABELS",
+            "popupThemeLabel",
+            "\\u4ef7\\u683c / \\u4ef7\\u503c\\u987e\\u8651",
+            "\\u5473\\u9053 / \\u98ce\\u5473\\u987e\\u8651",
             "waitForTabLoad",
             "crossgrowth_extension_workspace",
             "chrome.tabs.create",
