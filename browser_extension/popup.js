@@ -279,6 +279,14 @@ function captureDiagnosticMessage(product) {
     return "Product info captured. No visible reviews found. Scroll to reviews or open a visible review page.";
   }
 
+  if (
+    product?.platform === "amazon" &&
+    metadata.source_scope === "visible_page_sample" &&
+    status === "visible_reviews_found"
+  ) {
+    return "Visible Amazon review sample only; not the full review set.";
+  }
+
   return "";
 }
 

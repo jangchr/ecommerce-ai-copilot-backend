@@ -249,5 +249,61 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, source)
 
+
+    def test_content_script_has_amazon_review_fallback_selectors(self):
+        source = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "amazonReviewCandidateNodes",
+            "[id^='customer_review-']",
+            "#cm-cr-dp-review-list",
+            "#reviewsMedley",
+            "review-text-content",
+            "extractAmazonReviewBody",
+            "extractAmazonReviewTitle",
+            "extractAmazonHelpfulCount",
+        ]:
+            self.assertIn(marker, source)
+
+
+    def test_content_script_filters_amazon_review_quality(self):
+        source = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "cleanAmazonReviewText",
+            "isAmazonNoiseReviewText",
+            "isAmazonAggregateReviewText",
+            "isLikelyTitleOnlyReview",
+            "ratingBucketFromText",
+            "amazonRatingDistribution",
+            "amazonVisibleSampleWarning",
+            "source_scope",
+            "visible_page_sample",
+            "sample_warning",
+            "rating_distribution",
+            "raw_review_candidate_count",
+        ]:
+            self.assertIn(marker, source)
+
+
+    def test_popup_surfaces_visible_sample_warning(self):
+        source = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        self.assertIn("Visible Amazon review sample only; not the full review set.", source)
+
+
+    def test_content_script_filters_low_information_amazon_reviews(self):
+        source = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "isLowInformationAmazonReview",
+            "isContainedDuplicateAmazonReview",
+            "keptReviews",
+            "Amazon Customer",
+            "currentIsWeaker",
+            "currentLooksAggregate",
+        ]:
+            self.assertIn(marker, source)
+
 if __name__ == "__main__":
     unittest.main()
