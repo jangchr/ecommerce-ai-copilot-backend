@@ -55,6 +55,7 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "extractTikTokPage",
             "extractGenericPage",
             "platform=tiktok",
+            "platform=amazon",
             "tiktok_visible_comment",
             "generic_visible_text",
             "metadata",

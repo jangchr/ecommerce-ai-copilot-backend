@@ -43,7 +43,7 @@
   function detectPlatform() {
     const host = location.hostname.toLowerCase();
     const search = location.search.toLowerCase();
-    if (host.includes("amazon.")) return "amazon";
+    if (host.includes("amazon.") || search.includes("platform=amazon")) return "amazon";
     if (host.includes("tiktok.") || search.includes("platform=tiktok")) return "tiktok";
     return "web";
   }
