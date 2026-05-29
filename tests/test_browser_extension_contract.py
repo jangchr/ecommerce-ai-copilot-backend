@@ -299,7 +299,7 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "isLowInformationAmazonReview",
             "isContainedDuplicateAmazonReview",
             "keptReviews",
-            "Amazon Customer",
+            "amazon customer",
             "currentIsWeaker",
             "currentLooksAggregate",
         ]:
