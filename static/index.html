@@ -2273,6 +2273,7 @@
                 <div id="reviewsFirstRunGuide" class="first-run-guide-question-box" style="margin-top:12px;" data-i18n="reviewsFirstRunGuide">
                     If you do not have real reviews yet, use the sample reviews first. Later, paste buyer comments, objections, or complaints.
                 </div>
+                <div id="pastedReviewWorkspaceResult" class="probe-result" hidden data-upgrade-target="pasted-review-workspace-analysis"></div>
                 <div class="description-grid">
                     <div class="description-field">
                         <label for="reviewsProductName" data-i18n="productName">Product name</label>
@@ -4596,6 +4597,19 @@
             return body;
         }
 
+        async function postPastedReviewWorkspaceAnalysis(payload) {
+            const response = await fetch('/api/v1/analyze-pasted-review-workspace', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || 'Pasted review workspace analysis request failed.');
+            }
+            return body;
+        }
+
         async function postAmazonIntake(payload) {
             const response = await fetch('/api/v1/amazon-intake', {
                 method: 'POST',
@@ -5005,6 +5019,7 @@
             latestGeneratedAt = '';
             latestRecentId = '';
             resetSectionTranslations();
+            renderPastedReviewWorkspaceAnalysis(null);
             setCopyButtonsEnabled(false);
             document.getElementById('copyStatus').textContent = '';
             const translationTarget = document.getElementById('res-translation');
@@ -5124,6 +5139,60 @@
             }
         }
 
+
+        function reviewWorkspaceThemeText(items) {
+            return (items || [])
+                .slice(0, 6)
+                .map((item) => {
+                    const label = item.label || '';
+                    const count = item.evidence_count ? ` (${item.evidence_count})` : '';
+                    const quotes = (item.evidence_quotes || [])
+                        .slice(0, 2)
+                        .map((quote) => `  - ${quote}`)
+                        .join(String.fromCharCode(10));
+                    return [`- ${label}${count}`, quotes].filter(Boolean).join(String.fromCharCode(10));
+                })
+                .filter(Boolean)
+                .join(String.fromCharCode(10));
+        }
+
+        function renderPastedReviewWorkspaceAnalysis(payload) {
+            const target = document.getElementById('pastedReviewWorkspaceResult');
+            if (!target) return;
+
+            if (!payload) {
+                target.hidden = true;
+                target.innerHTML = '';
+                return;
+            }
+
+            const parsed = payload.parsed || {};
+            const analysis = payload.analysis || {};
+            const warnings = parsed.data_warnings || [];
+            const product = parsed.workspace_product || {};
+            const hooks = (analysis.hooks || []).slice(0, 6).join(String.fromCharCode(10));
+            const angles = (analysis.creative_angles || []).slice(0, 6).join(String.fromCharCode(10));
+
+            target.hidden = false;
+            target.innerHTML = `
+                <div class="probe-header">
+                    <h4>${escapeHTML(t('pastedReviewWorkspaceTitle') || 'Review Workspace Analysis')}</h4>
+                    <span class="source-badge">${escapeHTML(product.title || '')}</span>
+                </div>
+                <div class="probe-grid">
+                    ${block(t('parsedReviewCountLabel') || 'Parsed reviews', parsed.review_count ?? 0)}
+                    ${block(t('highSignalReviewCountLabel') || 'High-signal reviews', parsed.high_signal_review_count ?? 0)}
+                    ${block(t('workspaceProductCountLabel') || 'Products', analysis.product_count ?? 0)}
+                    ${block(t('workspaceTotalReviewCountLabel') || 'Total reviews', analysis.total_reviews ?? 0)}
+                </div>
+                ${block(t('commonPainPointsLabel') || 'Common pain points', reviewWorkspaceThemeText(analysis.common_pain_points))}
+                ${block(t('buyerObjectionsLabel') || 'Buyer objections', reviewWorkspaceThemeText(analysis.buyer_objections))}
+                ${block(t('workspaceCreativeAnglesLabel') || 'Creative angles', angles)}
+                ${block(t('workspaceHooksLabel') || 'Hooks', hooks)}
+                ${block(t('dataWarningsLabel') || 'Data warnings', warnings.join(String.fromCharCode(10)))}
+            `;
+        }
+
         async function generateFromReviews() {
             const btn = document.getElementById('reviewsGenerateBtn');
             const productName = reviewsInputValue('reviewsProductName');
@@ -5166,11 +5235,45 @@
             syncDebugMode();
 
             try {
+                setReviewsStatus(t('analyzingPastedReviewWorkspace'));
+                const workspaceResponse = await postPastedReviewWorkspaceAnalysis({
+                    workspace_id: `pasted_reviews_${Date.now()}`,
+                    raw_text: pastedReviews,
+                    platform: 'manual',
+                    product_title: productName,
+                    source_section: 'pasted_review',
+                    goal,
+                    output_language: currentOutputLanguage()
+                });
+                renderPastedReviewWorkspaceAnalysis(workspaceResponse);
+                setReviewsStatus(t('pastedReviewWorkspaceReady'));
+
+                const workspaceAnalysis = workspaceResponse.analysis || {};
+                const workspaceLines = [
+                    'Review workspace analysis:',
+                    `Parsed reviews: ${workspaceResponse.parsed?.review_count ?? 0}`,
+                    `High-signal reviews: ${workspaceResponse.parsed?.high_signal_review_count ?? 0}`,
+                    'Common pain points:',
+                    reviewWorkspaceThemeText(workspaceAnalysis.common_pain_points),
+                    'Buyer objections:',
+                    reviewWorkspaceThemeText(workspaceAnalysis.buyer_objections),
+                    'Creative angles:',
+                    (workspaceAnalysis.creative_angles || []).join(String.fromCharCode(10)),
+                    'Hooks:',
+                    (workspaceAnalysis.hooks || []).join(String.fromCharCode(10))
+                ].filter(Boolean).join(String.fromCharCode(10));
+
+                const enrichedPastedReviews = [
+                    pastedReviews,
+                    '',
+                    workspaceLines
+                ].join(String.fromCharCode(10));
+
                 const response = await postPastedReviews({
                     product_name: productName,
                     product_category: productCategory,
                     product_description: productDescription,
-                    pasted_reviews: pastedReviews,
+                    pasted_reviews: enrichedPastedReviews,
                     target_platform: targetPlatform,
                     goal,
                     output_language: currentOutputLanguage()

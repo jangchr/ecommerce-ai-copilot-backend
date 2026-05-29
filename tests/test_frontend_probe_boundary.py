@@ -2074,5 +2074,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("renderHookHighlightCard should not render raw script.hook", script)
 
 
+
+    def test_pasted_review_workspace_analysis_frontend_entry(self):
+        for marker in [
+            "pastedReviewWorkspaceResult",
+            "/api/v1/analyze-pasted-review-workspace",
+            "postPastedReviewWorkspaceAnalysis",
+            "renderPastedReviewWorkspaceAnalysis",
+            "reviewWorkspaceThemeText",
+            "pastedReviewWorkspaceTitle",
+            "workspaceResponse = await postPastedReviewWorkspaceAnalysis",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()
