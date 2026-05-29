@@ -110,7 +110,7 @@ function productSourceLabel(product) {
   const platform = String(product?.platform || "web").toLowerCase();
   const reviewCount = (product?.reviews || []).length;
   const reviewLabel = reviewCount === 1 ? "review" : "reviews";
-  return `${platform} ? ${reviewCount} ${reviewLabel}`;
+  return `${platform} - ${reviewCount} ${reviewLabel}`;
 }
 
 function renderSavedProducts(products) {
