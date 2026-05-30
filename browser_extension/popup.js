@@ -16,6 +16,12 @@ const POPUP_COPY = {
     autoCollectMoreReviews: "Auto collect more reviews",
     smartCollectWorkspace: "Smart collect & open workspace",
     clearThenSmartCollectWorkspace: "Clear then smart collect",
+    clearThenSingleProductCollectWorkspace: "Clear then single-product collect",
+    singleProductCollectStepClear: "Single-product workflow: clearing saved products first...",
+    singleProductCollectStepSaveCurrent: "Single-product workflow: saving the current product only...",
+    singleProductCollectStepCollectCurrent: "Single-product workflow: collecting more reviews for the current ASIN only...",
+    singleProductCollectStepOpenWorkspace: "Single-product workflow: opening Web Workspace...",
+    singleProductCollectDone: "Single-product workflow complete. Web Workspace opened with the current product sample.",
     smartCollectStepClear: "Smart workflow: clearing saved products first...",
     smartCollectStepSaveCurrent: "Smart workflow: saving the current product as the only workspace seed...",
     smartCollectScopedTabs: "Smart workflow: collecting only the current product and workflow-opened tabs...",
@@ -143,6 +149,12 @@ const POPUP_COPY = {
     "autoCollectMoreReviews": "\u81ea\u52a8\u91c7\u96c6\u66f4\u591a\u8bc4\u8bba",
     "smartCollectWorkspace": "\u667a\u80fd\u91c7\u96c6\u5e76\u6253\u5f00\u5de5\u4f5c\u533a",
     "clearThenSmartCollectWorkspace": "\u6e05\u7a7a\u540e\u667a\u80fd\u91c7\u96c6",
+    "clearThenSingleProductCollectWorkspace": "\u6e05\u7a7a\u540e\u5355\u54c1\u91c7\u96c6",
+    "singleProductCollectStepClear": "\u5355\u54c1\u6d41\u7a0b\uff1a\u5148\u6e05\u7a7a\u5df2\u4fdd\u5b58\u5546\u54c1...",
+    "singleProductCollectStepSaveCurrent": "\u5355\u54c1\u6d41\u7a0b\uff1a\u53ea\u4fdd\u5b58\u5f53\u524d\u5546\u54c1...",
+    "singleProductCollectStepCollectCurrent": "\u5355\u54c1\u6d41\u7a0b\uff1a\u53ea\u91c7\u96c6\u5f53\u524d ASIN \u7684\u66f4\u591a\u8bc4\u8bba...",
+    "singleProductCollectStepOpenWorkspace": "\u5355\u54c1\u6d41\u7a0b\uff1a\u6b63\u5728\u6253\u5f00 Web Workspace...",
+    "singleProductCollectDone": "\u5355\u54c1\u91c7\u96c6\u6d41\u7a0b\u5b8c\u6210\uff0c\u5df2\u7528\u5f53\u524d\u5546\u54c1\u6837\u672c\u6253\u5f00 Web Workspace\u3002",
     "smartCollectStepClear": "\u667a\u80fd\u6d41\u7a0b\uff1a\u5148\u6e05\u7a7a\u5df2\u4fdd\u5b58\u5546\u54c1...",
     "smartCollectStepSaveCurrent": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u5c06\u5f53\u524d\u5546\u54c1\u4f5c\u4e3a\u552f\u4e00\u5de5\u4f5c\u533a\u79cd\u5b50...",
     "smartCollectScopedTabs": "\u667a\u80fd\u6d41\u7a0b\uff1a\u53ea\u91c7\u96c6\u5f53\u524d\u5546\u54c1\u548c\u672c\u6d41\u7a0b\u6253\u5f00\u7684\u6807\u7b7e\u9875...",
@@ -2211,6 +2223,22 @@ async function runClearThenSmartReviewCollectionWorkflow() {
   await runSmartReviewCollectionWorkflow();
 }
 
+async function runClearThenSingleProductCollectionWorkflow() {
+  setStatus(tPopup("singleProductCollectStepClear"));
+  await clearSavedProducts();
+
+  setStatus(tPopup("singleProductCollectStepSaveCurrent"));
+  await saveCurrentProduct();
+
+  setStatus(tPopup("singleProductCollectStepCollectCurrent"));
+  await collectCurrentProductMoreReviews();
+
+  setStatus(tPopup("singleProductCollectStepOpenWorkspace"));
+  await openInWebWorkspace();
+
+  setStatus(tPopup("singleProductCollectDone"));
+}
+
 function bind(id, handler) {
   const button = $(id);
   button.addEventListener("click", async () => {
@@ -2239,6 +2267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("autoCollectMoreBtn", collectCurrentProductMoreReviews);
   bind("smartCollectWorkspaceBtn", runSmartReviewCollectionWorkflow);
   bind("clearThenSmartCollectWorkspaceBtn", runClearThenSmartReviewCollectionWorkflow);
+  bind("clearThenSingleProductCollectWorkspaceBtn", runClearThenSingleProductCollectionWorkflow);
   bind("sampleGuidanceCopyBtn", copySampleGuidanceSteps);
   bind("openLowStarReviewTabBtn", () => openTargetedReviewTab("low_star"));
   bind("openVerifiedReviewTabBtn", () => openTargetedReviewTab("verified"));

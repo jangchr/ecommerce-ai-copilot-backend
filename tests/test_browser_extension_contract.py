@@ -653,5 +653,31 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, js)
 
+
+    def test_popup_supports_single_product_collection_workflow(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "clearThenSingleProductCollectWorkspaceBtn",
+            "clearThenSingleProductCollectWorkspace",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "runClearThenSingleProductCollectionWorkflow",
+            "singleProductCollectStepClear",
+            "singleProductCollectStepSaveCurrent",
+            "singleProductCollectStepCollectCurrent",
+            "singleProductCollectStepOpenWorkspace",
+            "singleProductCollectDone",
+            "await clearSavedProducts();",
+            "await saveCurrentProduct();",
+            "await collectCurrentProductMoreReviews();",
+            "await openInWebWorkspace();",
+            "bind(\"clearThenSingleProductCollectWorkspaceBtn\", runClearThenSingleProductCollectionWorkflow)",
+        ]:
+            self.assertIn(marker, js)
+
 if __name__ == "__main__":
     unittest.main()
