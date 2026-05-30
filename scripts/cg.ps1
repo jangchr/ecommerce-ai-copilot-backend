@@ -45,6 +45,11 @@ function Run($label, $scriptBlock) {
   try {
     & $scriptBlock 2>&1 | ForEach-Object {
       $line = $_.ToString()
+
+      if ($line -eq "System.Management.Automation.RemoteException") {
+        return
+      }
+
       Write-Host $line
       if ($Global:CgLastLog) {
         Add-Content -Path $Global:CgLastLog -Value $line
@@ -422,4 +427,4 @@ try {
       CopyFeedbackTail "completed"
     }
   }
-}
+}\n
