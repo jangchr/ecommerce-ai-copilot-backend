@@ -343,30 +343,38 @@
     return counts;
   }
 
+  function uniqueAmazonReviewNodesFromSelectors(selectors) {
+    const unique = [];
+    const seen = new Set();
+
+    for (const selector of selectors) {
+      for (const node of Array.from(document.querySelectorAll(selector))) {
+        if (!node || seen.has(node)) continue;
+        seen.add(node);
+        unique.push(node);
+      }
+    }
+
+    return unique;
+  }
+
   function amazonReviewCandidateNodes() {
-    const selectors = [
+    const strictSelectors = [
       "[data-hook='review']",
-      "[id^='customer_review-']",
+      "[id^='customer_review-']"
+    ];
+
+    const strictNodes = uniqueAmazonReviewNodesFromSelectors(strictSelectors);
+    if (strictNodes.length) {
+      return strictNodes;
+    }
+
+    return uniqueAmazonReviewNodesFromSelectors([
       "#cm-cr-dp-review-list [class*='review']",
       "#reviewsMedley [class*='review']",
       "#customerReviews [class*='review']",
       ".reviews-content [class*='review']"
-    ];
-
-    const nodes = [];
-    for (const selector of selectors) {
-      nodes.push(...Array.from(document.querySelectorAll(selector)));
-    }
-
-    const unique = [];
-    const seen = new Set();
-    for (const node of nodes) {
-      if (!node || seen.has(node)) continue;
-      seen.add(node);
-      unique.push(node);
-    }
-
-    return unique;
+    ]);
   }
 
   function ratingBucketFromText(value) {
@@ -471,6 +479,7 @@
       extraction_debug: {
         candidate_count: reviewNodes.length,
         candidate_selector_counts: amazonReviewCandidateSelectorCounts(),
+        candidate_source_mode: reviewNodes.length && amazonReviewCandidateSelectorCounts().strict_unique_review_nodes ? "strict_review_nodes" : "broad_fallback_nodes",
         kept_count: keptReviews.length,
         returned_count: Math.min(keptReviews.length, 80),
         skipped_counts: skippedCounts,
