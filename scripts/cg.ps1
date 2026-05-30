@@ -427,4 +427,4 @@ try {
       CopyFeedbackTail "completed"
     }
   }
-}\n
+}
