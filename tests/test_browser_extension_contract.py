@@ -285,6 +285,7 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceCard",
             "sampleGuidanceList",
             "sampleGuidanceIntro",
+            "sampleGuidanceStrength",
             "sampleGuidanceCta",
             "sampleGuidanceCopyBtn",
         ]:
@@ -292,8 +293,12 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
         for marker in [
             "SAMPLE_GUIDANCE_REVIEW_THRESHOLD",
+            "sampleGuidancePlan",
             "totalSavedReviewCount",
             "renderSampleGuidance",
+            "sampleGuidanceStrengthVeryLow",
+            "sampleGuidanceStrengthLow",
+            "sampleGuidanceStrengthMedium",
             "renderSampleGuidance(products)",
             "sampleGuidanceTitle",
             "sampleGuidanceLowStar",

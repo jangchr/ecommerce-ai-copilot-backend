@@ -28,6 +28,9 @@ const POPUP_COPY = {
     visibleReviews: "Visible reviews",
     sampleGuidanceTitle: "Sample expansion tips",
     sampleGuidanceIntro: "Current saved sample: {count} visible review(s). For stronger creative signals, open more useful review tabs, then click Collect open tabs.",
+    sampleGuidanceStrengthVeryLow: "Sample is very small. Open at least {tabs} more useful review tab(s) before analysis.",
+    sampleGuidanceStrengthLow: "Sample is still thin. Open {tabs} more useful review tab(s) to improve signal coverage.",
+    sampleGuidanceStrengthMedium: "Sample is usable for creative signals. Open {tabs} more targeted tab(s) if you want stronger evidence.",
     sampleGuidanceLowStar: "Open low-star review pages to capture objections and pain points.",
     sampleGuidanceVerifiedPurchase: "Open verified-purchase review pages to capture more grounded buyer language.",
     sampleGuidanceVariants: "Open variant review pages for other colors, sizes, bundles, or formats.",
@@ -118,6 +121,9 @@ const POPUP_COPY = {
     "visibleReviews": "\u53ef\u89c1\u8bc4\u8bba",
     "sampleGuidanceTitle": "\u6837\u672c\u589e\u5f3a\u5efa\u8bae",
     "sampleGuidanceIntro": "\u5f53\u524d\u5df2\u4fdd\u5b58\u6837\u672c\uff1a{count} \u6761\u53ef\u89c1\u8bc4\u8bba\u3002\u4e3a\u4e86\u83b7\u5f97\u66f4\u5f3a\u7684\u521b\u610f\u4fe1\u53f7\uff0c\u5efa\u8bae\u5148\u6253\u5f00\u66f4\u591a\u6709\u7528\u7684\u8bc4\u8bba\u6807\u7b7e\u9875\uff0c\u7136\u540e\u70b9\u51fb\u201c\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\u201d\u5408\u5e76\u3002",
+    "sampleGuidanceStrengthVeryLow": "\u6837\u672c\u5f88\u5c11\u3002\u5efa\u8bae\u5206\u6790\u524d\u81f3\u5c11\u518d\u6253\u5f00 {tabs} \u4e2a\u6709\u7528\u8bc4\u8bba\u6807\u7b7e\u9875\u3002",
+    "sampleGuidanceStrengthLow": "\u6837\u672c\u4ecd\u7136\u504f\u5c11\u3002\u5efa\u8bae\u518d\u6253\u5f00 {tabs} \u4e2a\u6709\u7528\u8bc4\u8bba\u6807\u7b7e\u9875\uff0c\u63d0\u9ad8\u4fe1\u53f7\u8986\u76d6\u3002",
+    "sampleGuidanceStrengthMedium": "\u6837\u672c\u5df2\u53ef\u7528\u4e8e\u521b\u610f\u4fe1\u53f7\u3002\u5982\u679c\u60f3\u8981\u66f4\u5f3a\u8bc1\u636e\uff0c\u5efa\u8bae\u518d\u6253\u5f00 {tabs} \u4e2a\u5b9a\u5411\u6807\u7b7e\u9875\u3002",
     "sampleGuidanceLowStar": "\u6253\u5f00\u4f4e\u661f\u8bc4\u8bba\u9875\uff0c\u6355\u6349\u8d2d\u4e70\u987e\u8651\u548c\u75db\u70b9\u3002",
     "sampleGuidanceVerifiedPurchase": "\u6253\u5f00\u5df2\u786e\u8ba4\u8d2d\u4e70\u8bc4\u8bba\u9875\uff0c\u83b7\u5f97\u66f4\u624e\u5b9e\u7684\u4e70\u5bb6\u539f\u8bdd\u3002",
     "sampleGuidanceVariants": "\u6253\u5f00\u5176\u4ed6\u989c\u8272\u3001\u5c3a\u7801\u3001\u7ec4\u5408\u6216\u89c4\u683c\u7684\u53d8\u4f53\u8bc4\u8bba\u9875\u3002",
@@ -564,13 +570,26 @@ function totalSavedReviewCount(products) {
   return (products || []).reduce((sum, product) => sum + (product?.reviews || []).length, 0);
 }
 
+function sampleGuidancePlan(reviewCount) {
+  if (reviewCount < 10) {
+    return { strengthKey: "sampleGuidanceStrengthVeryLow", tabs: "5+" };
+  }
+
+  if (reviewCount < 25) {
+    return { strengthKey: "sampleGuidanceStrengthLow", tabs: "3-5" };
+  }
+
+  return { strengthKey: "sampleGuidanceStrengthMedium", tabs: "2-3" };
+}
+
 function renderSampleGuidance(products) {
   const card = $("sampleGuidanceCard");
   const intro = $("sampleGuidanceIntro");
+  const strength = $("sampleGuidanceStrength");
   const list = $("sampleGuidanceList");
   const cta = $("sampleGuidanceCta");
 
-  if (!card || !intro || !list || !cta) return;
+  if (!card || !intro || !strength || !list || !cta) return;
 
   const reviewCount = totalSavedReviewCount(products);
   const shouldShow = Boolean((products || []).length) && reviewCount < SAMPLE_GUIDANCE_REVIEW_THRESHOLD;
@@ -578,12 +597,16 @@ function renderSampleGuidance(products) {
 
   if (!shouldShow) {
     intro.textContent = "";
+    strength.textContent = "";
     list.innerHTML = "";
     cta.textContent = "";
     return;
   }
 
+  const plan = sampleGuidancePlan(reviewCount);
   intro.textContent = tPopup("sampleGuidanceIntro").replace("{count}", String(reviewCount));
+  strength.textContent = tPopup(plan.strengthKey).replace("{tabs}", plan.tabs);
+
   const items = [
     "sampleGuidanceLowStar",
     "sampleGuidanceVerifiedPurchase",
@@ -600,8 +623,10 @@ async function copySampleGuidanceSteps() {
   const { products } = await getSavedProducts();
   const reviewCount = totalSavedReviewCount(products);
 
+  const plan = sampleGuidancePlan(reviewCount);
   const lines = [
     tPopup("sampleGuidanceStepsTitle").replace("{count}", String(reviewCount)),
+    tPopup(plan.strengthKey).replace("{tabs}", plan.tabs),
     "",
     `1. ${tPopup("sampleGuidanceLowStar")}`,
     `2. ${tPopup("sampleGuidanceVerifiedPurchase")}`,
