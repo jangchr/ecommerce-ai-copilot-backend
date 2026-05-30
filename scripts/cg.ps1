@@ -1,4 +1,4 @@
-﻿param(
+param(
   [Parameter(Position = 0)]
   [string]$Command = "help",
 
@@ -23,6 +23,13 @@ function RequireMessage() {
     throw "Commit message is required. Example: .\scripts\cg.ps1 commit-extension `"My commit message`""
   }
 }
+
+function AddExistingPath($path) {
+  if (Test-Path $path) {
+    git add $path
+  }
+}
+
 
 function Gate() {
   Run "Run focused unit tests" {
@@ -109,6 +116,31 @@ function CommitBackend() {
   ShowStatus
 }
 
+function CommitTools() {
+  RequireMessage
+  Gate
+
+  Run "Add tool and automation files" {
+    AddExistingPath "scripts\\cg.ps1"
+    AddExistingPath "scripts\\*.ps1"
+    AddExistingPath ".github\\workflows\\*.yml"
+    AddExistingPath ".github\\workflows\\*.yaml"
+    AddExistingPath "recipes\\*.ps1"
+    AddExistingPath ".recipes\\*.ps1"
+  }
+
+  Run "Commit tool changes" {
+    git commit -m $Message
+  }
+
+  Run "Push branch" {
+    git push -u origin spike/review-collection-p0-recovery
+  }
+
+  ShowStatus
+}
+
+
 function PushOnly() {
   Run "Push branch" {
     git push -u origin spike/review-collection-p0-recovery
@@ -123,6 +155,7 @@ switch ($Command) {
   "commit-extension" { CommitExtension }
   "commit-frontend" { CommitFrontend }
   "commit-backend" { CommitBackend }
+  "commit-tools" { CommitTools }
   "push" { PushOnly }
   "help" {
     Write-Host ""
@@ -134,6 +167,7 @@ switch ($Command) {
     Write-Host "  .\scripts\cg.ps1 commit-extension `"Commit message`""
     Write-Host "  .\scripts\cg.ps1 commit-frontend `"Commit message`""
     Write-Host "  .\scripts\cg.ps1 commit-backend `"Commit message`""
+    Write-Host "  .\scripts\cg.ps1 commit-tools `"Commit message`""
     Write-Host "  .\scripts\cg.ps1 push"
     Write-Host ""
   }
