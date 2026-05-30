@@ -619,9 +619,37 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "smartCollectPackSkipped",
             "collectCurrentProductMoreReviews();",
             "openRelatedReviewPack();",
-            "collectOpenTabs();",
+            "collectSmartWorkflowTabs(workflowTabIds);",
             "openInWebWorkspace();",
             "bind(\"smartCollectWorkspaceBtn\", runSmartReviewCollectionWorkflow)",
+        ]:
+            self.assertIn(marker, js)
+
+
+    def test_popup_supports_scoped_smart_collection_workflow(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "clearThenSmartCollectWorkspaceBtn",
+            "clearThenSmartCollectWorkspace",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "collectTabsFromCandidates",
+            "collectSmartWorkflowTabs",
+            "runClearThenSmartReviewCollectionWorkflow",
+            "smartCollectScopedTabs",
+            "smartCollectStepClear",
+            "smartCollectStepSaveCurrent",
+            "const seedTab = await getActiveTab();",
+            "workflowTabIds.push(...(openedTabIds || []));",
+            "await collectSmartWorkflowTabs(workflowTabIds);",
+            "await clearSavedProducts();",
+            "await saveCurrentProduct();",
+            "return openedTabIds;",
+            "bind(\"clearThenSmartCollectWorkspaceBtn\", runClearThenSmartReviewCollectionWorkflow)",
         ]:
             self.assertIn(marker, js)
 

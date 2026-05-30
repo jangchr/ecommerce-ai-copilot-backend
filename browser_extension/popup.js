@@ -15,6 +15,10 @@ const POPUP_COPY = {
     collectOpenTabs: "Collect open tabs",
     autoCollectMoreReviews: "Auto collect more reviews",
     smartCollectWorkspace: "Smart collect & open workspace",
+    clearThenSmartCollectWorkspace: "Clear then smart collect",
+    smartCollectStepClear: "Smart workflow: clearing saved products first...",
+    smartCollectStepSaveCurrent: "Smart workflow: saving the current product as the only workspace seed...",
+    smartCollectScopedTabs: "Smart workflow: collecting only the current product and workflow-opened tabs...",
     smartCollectStepCollectCurrent: "Smart workflow: collecting more reviews from the current product...",
     smartCollectStepOpenPack: "Smart workflow: opening related review expansion tabs...",
     smartCollectStepWaitTabs: "Smart workflow: waiting for expansion tabs to load...",
@@ -138,6 +142,10 @@ const POPUP_COPY = {
     "collectOpenTabs": "\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875",
     "autoCollectMoreReviews": "\u81ea\u52a8\u91c7\u96c6\u66f4\u591a\u8bc4\u8bba",
     "smartCollectWorkspace": "\u667a\u80fd\u91c7\u96c6\u5e76\u6253\u5f00\u5de5\u4f5c\u533a",
+    "clearThenSmartCollectWorkspace": "\u6e05\u7a7a\u540e\u667a\u80fd\u91c7\u96c6",
+    "smartCollectStepClear": "\u667a\u80fd\u6d41\u7a0b\uff1a\u5148\u6e05\u7a7a\u5df2\u4fdd\u5b58\u5546\u54c1...",
+    "smartCollectStepSaveCurrent": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u5c06\u5f53\u524d\u5546\u54c1\u4f5c\u4e3a\u552f\u4e00\u5de5\u4f5c\u533a\u79cd\u5b50...",
+    "smartCollectScopedTabs": "\u667a\u80fd\u6d41\u7a0b\uff1a\u53ea\u91c7\u96c6\u5f53\u524d\u5546\u54c1\u548c\u672c\u6d41\u7a0b\u6253\u5f00\u7684\u6807\u7b7e\u9875...",
     "smartCollectStepCollectCurrent": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u4ece\u5f53\u524d\u5546\u54c1\u91c7\u96c6\u66f4\u591a\u8bc4\u8bba...",
     "smartCollectStepOpenPack": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u6253\u5f00\u540c\u7c7b\u8bc4\u8bba\u6269\u6837\u6807\u7b7e\u9875...",
     "smartCollectStepWaitTabs": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u7b49\u5f85\u6269\u6837\u9875\u52a0\u8f7d...",
@@ -1478,9 +1486,11 @@ async function openRelatedReviewPack() {
     throw new Error(tPopup("noRelatedReviewLinks"));
   }
 
+  const openedTabIds = [];
   for (const link of links) {
     const tab = await chrome.tabs.create({ url: link.url, active: false });
     await rememberTargetedReviewTab(tab);
+    if (tab.id) openedTabIds.push(tab.id);
   }
 
   setStatus(
@@ -1488,6 +1498,8 @@ async function openRelatedReviewPack() {
       .replace("{count}", String(links.length))
       .replace("{items}", compactReviewExpansionPackItems(links))
   );
+
+  return openedTabIds;
 }
 
 async function openVariantReviewTabs() {
@@ -2008,12 +2020,7 @@ async function tryLoadMoreBeforeCollectingTab(tab) {
   };
 }
 
-async function collectOpenTabs() {
-  setStatus(tPopup("collectingOpenTabsWithLoadMore"));
-
-  const tabs = await chrome.tabs.query({ currentWindow: true });
-  const candidates = tabs.filter((tab) => tab.id && isCollectableTabUrl(tab.url));
-
+async function collectTabsFromCandidates(candidates) {
   if (!candidates.length) {
     throw new Error(tPopup("noCollectableTabs"));
   }
@@ -2072,6 +2079,25 @@ async function collectOpenTabs() {
     .replace("{total}", String(merged.stats.totalReviews));
 
   setStatus(`${status}${failureSuffix}${warningSuffix}${closedTabsSuffix}`);
+  return merged;
+}
+
+async function collectOpenTabs() {
+  setStatus(tPopup("collectingOpenTabsWithLoadMore"));
+
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const candidates = tabs.filter((tab) => tab.id && isCollectableTabUrl(tab.url));
+
+  return collectTabsFromCandidates(candidates);
+}
+
+async function collectSmartWorkflowTabs(tabIds) {
+  const allowedIds = new Set((tabIds || []).filter(Boolean));
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const candidates = tabs.filter((tab) => tab.id && allowedIds.has(tab.id) && isCollectableTabUrl(tab.url));
+
+  setStatus(tPopup("smartCollectScopedTabs"));
+  return collectTabsFromCandidates(candidates);
 }
 
 async function analyzeWorkspace() {
@@ -2148,12 +2174,16 @@ function smartWorkflowDelay(ms) {
 }
 
 async function runSmartReviewCollectionWorkflow() {
+  const seedTab = await getActiveTab();
+  const workflowTabIds = [seedTab.id].filter(Boolean);
+
   setStatus(tPopup("smartCollectStepCollectCurrent"));
   await collectCurrentProductMoreReviews();
 
   try {
     setStatus(tPopup("smartCollectStepOpenPack"));
-    await openRelatedReviewPack();
+    const openedTabIds = await openRelatedReviewPack();
+    workflowTabIds.push(...(openedTabIds || []));
 
     setStatus(tPopup("smartCollectStepWaitTabs"));
     await smartWorkflowDelay(5000);
@@ -2163,12 +2193,22 @@ async function runSmartReviewCollectionWorkflow() {
   }
 
   setStatus(tPopup("smartCollectStepCollectTabs"));
-  await collectOpenTabs();
+  await collectSmartWorkflowTabs(workflowTabIds);
 
   setStatus(tPopup("smartCollectStepOpenWorkspace"));
   await openInWebWorkspace();
 
   setStatus(tPopup("smartCollectDone"));
+}
+
+async function runClearThenSmartReviewCollectionWorkflow() {
+  setStatus(tPopup("smartCollectStepClear"));
+  await clearSavedProducts();
+
+  setStatus(tPopup("smartCollectStepSaveCurrent"));
+  await saveCurrentProduct();
+
+  await runSmartReviewCollectionWorkflow();
 }
 
 function bind(id, handler) {
@@ -2198,6 +2238,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("collectTabsBtn", collectOpenTabs);
   bind("autoCollectMoreBtn", collectCurrentProductMoreReviews);
   bind("smartCollectWorkspaceBtn", runSmartReviewCollectionWorkflow);
+  bind("clearThenSmartCollectWorkspaceBtn", runClearThenSmartReviewCollectionWorkflow);
   bind("sampleGuidanceCopyBtn", copySampleGuidanceSteps);
   bind("openLowStarReviewTabBtn", () => openTargetedReviewTab("low_star"));
   bind("openVerifiedReviewTabBtn", () => openTargetedReviewTab("verified"));
