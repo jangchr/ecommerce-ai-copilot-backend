@@ -6004,7 +6004,7 @@
   function reviewWorkspaceLocalizedThemeLabel(label, source = null) {
     const raw = String(label || '').trim();
     const normalized = raw.toLowerCase();
-    const language = source?.output_language || currentOutputLanguage();
+    const language = extensionWorkspaceLanguage(source);
     const isZh = language === 'zh-CN';
 
     const zhLabels = {

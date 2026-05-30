@@ -2296,5 +2296,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_review_workspace_localized_theme_label_uses_extension_workspace_language(self):
+        for marker in [
+            "function reviewWorkspaceLocalizedThemeLabel",
+            "const language = extensionWorkspaceLanguage(source);",
+            "summer fabric comfort",
+            "sewing / quality control issue",
+            "\\u590f\\u5b63\\u9762\\u6599\\u8212\\u9002\\u5ea6",
+            "\\u7f1d\\u5236 / \\u8d28\\u68c0\\u95ee\\u9898",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()
