@@ -34,6 +34,9 @@ const POPUP_COPY = {
     sampleGuidanceCompetitors: "Open competitor product review pages to compare repeated pain points.",
     sampleGuidanceLoggedIn: "Open logged-in visible review pages if Amazon shows more content after sign-in.",
     sampleGuidanceCta: "After opening those tabs, use Collect open tabs to merge and deduplicate the sample.",
+    copySampleGuidanceSteps: "Copy expansion steps",
+    sampleGuidanceStepsTitle: "Sample expansion checklist ({count} visible reviews saved)",
+    copiedSampleGuidanceSteps: "Sample expansion steps copied.",
     readyStatus: "Ready.",
     currentCapture: "Current capture",
     workspaceAnalysis: "Workspace analysis",
@@ -120,6 +123,9 @@ const POPUP_COPY = {
     "sampleGuidanceCompetitors": "\u6253\u5f00\u7ade\u54c1\u8bc4\u8bba\u9875\uff0c\u5bf9\u6bd4\u91cd\u590d\u51fa\u73b0\u7684\u75db\u70b9\u548c\u5356\u70b9\u7f3a\u53e3\u3002",
     "sampleGuidanceLoggedIn": "\u5982\u679c Amazon \u767b\u5f55\u540e\u663e\u793a\u66f4\u591a\u5185\u5bb9\uff0c\u53ef\u4ee5\u6253\u5f00\u90a3\u4e9b\u5df2\u767b\u5f55\u53ef\u89c1\u8bc4\u8bba\u9875\u3002",
     "sampleGuidanceCta": "\u6253\u5f00\u8fd9\u4e9b\u6807\u7b7e\u9875\u540e\uff0c\u4f7f\u7528\u201c\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\u201d\u6765\u5408\u5e76\u5e76\u53bb\u91cd\u6837\u672c\u3002",
+    "copySampleGuidanceSteps": "\u590d\u5236\u589e\u5f3a\u6b65\u9aa4",
+    "sampleGuidanceStepsTitle": "\u6837\u672c\u589e\u5f3a\u64cd\u4f5c\u6e05\u5355\uff08\u5df2\u4fdd\u5b58 {count} \u6761\u53ef\u89c1\u8bc4\u8bba\uff09",
+    "copiedSampleGuidanceSteps": "\u6837\u672c\u589e\u5f3a\u6b65\u9aa4\u5df2\u590d\u5236\u3002",
     "readyStatus": "\u51c6\u5907\u597d\u4e86\u3002",
     "currentCapture": "\u5f53\u524d\u91c7\u96c6\u7ed3\u679c",
     "workspaceAnalysis": "\u5de5\u4f5c\u533a\u5206\u6790",
@@ -586,6 +592,38 @@ function renderSampleGuidance(products) {
 
   list.innerHTML = items.map((key) => `<li>${escapeHTML(tPopup(key))}</li>`).join("");
   cta.textContent = tPopup("sampleGuidanceCta");
+}
+
+async function copySampleGuidanceSteps() {
+  const { products } = await getSavedProducts();
+  const reviewCount = totalSavedReviewCount(products);
+
+  const lines = [
+    tPopup("sampleGuidanceStepsTitle").replace("{count}", String(reviewCount)),
+    "",
+    `1. ${tPopup("sampleGuidanceLowStar")}`,
+    `2. ${tPopup("sampleGuidanceVerifiedPurchase")}`,
+    `3. ${tPopup("sampleGuidanceVariants")}`,
+    `4. ${tPopup("sampleGuidanceCompetitors")}`,
+    `5. ${tPopup("sampleGuidanceLoggedIn")}`,
+    "",
+    tPopup("sampleGuidanceCta")
+  ];
+
+  await copyTextToClipboard(lines.join("\n"));
+  setStatus(tPopup("copiedSampleGuidanceSteps"));
+
+  const button = $("sampleGuidanceCopyBtn");
+  if (button) {
+    const originalText = tPopup("copySampleGuidanceSteps");
+    button.textContent = tPopup("copiedSampleGuidanceSteps");
+    button.disabled = true;
+
+    setTimeout(() => {
+      button.textContent = originalText;
+      button.disabled = false;
+    }, 1500);
+  }
 }
 
 function renderSavedProducts(products) {
@@ -1413,6 +1451,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("extractBtn", saveCurrentProduct);
   bind("collectTabsBtn", collectOpenTabs);
   bind("autoCollectMoreBtn", collectCurrentProductMoreReviews);
+  bind("sampleGuidanceCopyBtn", copySampleGuidanceSteps);
   bind("analyzeBtn", analyzeWorkspace);
   bind("copyInsightsBtn", copyInsights);
   bind("copyWorkspaceJsonBtn", copyWorkspaceJson);

@@ -286,6 +286,7 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceList",
             "sampleGuidanceIntro",
             "sampleGuidanceCta",
+            "sampleGuidanceCopyBtn",
         ]:
             self.assertIn(marker, html)
 
@@ -301,6 +302,11 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceCompetitors",
             "sampleGuidanceLoggedIn",
             "sampleGuidanceCta",
+            "copySampleGuidanceSteps",
+            "sampleGuidanceStepsTitle",
+            "copiedSampleGuidanceSteps",
+            "async function copySampleGuidanceSteps",
+            "bind(\"sampleGuidanceCopyBtn\", copySampleGuidanceSteps)",
             "Collect open tabs",
         ]:
             self.assertIn(marker, js)
