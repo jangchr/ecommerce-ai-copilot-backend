@@ -297,6 +297,8 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "openVariantReviewTabsBtn",
             "openRelatedReviewPackBtn",
             "copyTargetedReviewLinksBtn",
+            "reviewExpansionActionsCard",
+            "reviewExpansionActions",
         ]:
             self.assertIn(marker, html)
 
@@ -332,6 +334,12 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "chrome.tabs.remove",
             "savedAmazonAsinsFromProducts",
             "uniqueReviewExpansionLinks",
+            "reviewExpansionLinkDedupeKey",
+            "savedAmazonProductsByReviewCount",
+            "targetedReviewLinksForTopProducts",
+            "reviewExpansionLinkSummary",
+            "compactReviewExpansionPackItems",
+            "{items}",
             "relatedVariantReviewLinksForProducts",
             "targetedReviewLinksForExpansionPack",
             "openRelatedReviewPack",
