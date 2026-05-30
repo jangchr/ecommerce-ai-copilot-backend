@@ -42,13 +42,17 @@ const POPUP_COPY = {
     copiedSampleGuidanceSteps: "Sample expansion steps copied.",
     openLowStarReviewTab: "Open low-star page",
     openVerifiedReviewTab: "Open verified page",
+    openVariantReviewTabs: "Open variant pages",
     copyTargetedReviewLinks: "Copy targeted links",
     targetedReviewLinksTitle: "Targeted Amazon review links",
     targetedLowStarReviews: "Low-star reviews",
     targetedVerifiedReviews: "Verified-purchase reviews",
     targetedRecentReviews: "Recent reviews",
     targetedCurrentFormatReviews: "Current-format reviews",
+    targetedVariantReviews: "Variant reviews",
     openedTargetedReviewTab: "Opened targeted review tab: {label}. After it loads, use Collect open tabs.",
+    openedVariantReviewTabs: "Opened {count} variant review tab(s). After they load, use Collect open tabs.",
+    noVariantReviewLinks: "No variant review links found in the saved Amazon sample yet.",
     copiedTargetedReviewLinks: "Targeted review links copied.",
     noSavedAmazonProduct: "No saved Amazon product with ASIN found yet.",
     readyStatus: "Ready.",
@@ -146,13 +150,17 @@ const POPUP_COPY = {
     "copiedSampleGuidanceSteps": "\u6837\u672c\u589e\u5f3a\u6b65\u9aa4\u5df2\u590d\u5236\u3002",
     "openLowStarReviewTab": "\u6253\u5f00\u4f4e\u661f\u8bc4\u8bba\u9875",
     "openVerifiedReviewTab": "\u6253\u5f00\u5df2\u786e\u8ba4\u8d2d\u4e70\u9875",
+    "openVariantReviewTabs": "\u6253\u5f00\u53d8\u4f53\u8bc4\u8bba\u9875",
     "copyTargetedReviewLinks": "\u590d\u5236\u5b9a\u5411\u8bc4\u8bba\u94fe\u63a5",
     "targetedReviewLinksTitle": "\u5b9a\u5411 Amazon \u8bc4\u8bba\u94fe\u63a5",
     "targetedLowStarReviews": "\u4f4e\u661f\u8bc4\u8bba",
     "targetedVerifiedReviews": "\u5df2\u786e\u8ba4\u8d2d\u4e70\u8bc4\u8bba",
     "targetedRecentReviews": "\u6700\u65b0\u8bc4\u8bba",
     "targetedCurrentFormatReviews": "\u5f53\u524d\u89c4\u683c\u8bc4\u8bba",
+    "targetedVariantReviews": "\u53d8\u4f53\u8bc4\u8bba",
     "openedTargetedReviewTab": "\u5df2\u6253\u5f00\u5b9a\u5411\u8bc4\u8bba\u6807\u7b7e\u9875\uff1a{label}\u3002\u9875\u9762\u52a0\u8f7d\u540e\uff0c\u518d\u4f7f\u7528\u201c\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\u201d\u3002",
+    "openedVariantReviewTabs": "\u5df2\u6253\u5f00 {count} \u4e2a\u53d8\u4f53\u8bc4\u8bba\u6807\u7b7e\u9875\u3002\u9875\u9762\u52a0\u8f7d\u540e\uff0c\u518d\u4f7f\u7528\u201c\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\u201d\u3002",
+    "noVariantReviewLinks": "\u5f53\u524d\u5df2\u4fdd\u5b58\u6837\u672c\u91cc\u8fd8\u6ca1\u6709\u53ef\u7528\u7684\u53d8\u4f53\u8bc4\u8bba\u94fe\u63a5\u3002",
     "copiedTargetedReviewLinks": "\u5b9a\u5411\u8bc4\u8bba\u94fe\u63a5\u5df2\u590d\u5236\u3002",
     "noSavedAmazonProduct": "\u8fd8\u6ca1\u6709\u5df2\u4fdd\u5b58\u4e14\u5e26 ASIN \u7684 Amazon \u5546\u54c1\u3002",
     "readyStatus": "\u51c6\u5907\u597d\u4e86\u3002",
@@ -1036,6 +1044,88 @@ function amazonReviewUrlWithParams(product, params = {}) {
   return url.href;
 }
 
+function amazonAsinFromUrl(value) {
+  const match = String(value || "").match(/\/(?:dp|gp\/product|product-reviews)\/([A-Z0-9]{10})/i);
+  return match ? match[1].toUpperCase() : "";
+}
+
+function cleanVariantReviewLabel(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .replace(/a-size-mini a-link-normal a-color-secondary/gi, "")
+    .trim()
+    .slice(0, 120);
+}
+
+function variantReviewLinksForProduct(product, limit = 3) {
+  const currentAsin = amazonAsinFromProduct(product);
+  const candidates = product?.metadata?.pagination_candidates || [];
+  const seen = new Set();
+  const links = [];
+
+  for (const candidate of candidates) {
+    const href = String(candidate?.href || "");
+    if (!href.toLowerCase().includes("amazon.") || !href.toLowerCase().includes("/product-reviews/")) continue;
+
+    const asin = amazonAsinFromUrl(href);
+    if (!asin || asin === currentAsin || seen.has(asin)) continue;
+
+    const text = cleanVariantReviewLabel(candidate?.text || "");
+    const looksLikeVariant =
+      text.includes(":") ||
+      text.toLowerCase().includes("color") ||
+      text.toLowerCase().includes("size") ||
+      text.includes("\u989c\u8272") ||
+      text.includes("\u5c3a\u5bf8");
+
+    if (!looksLikeVariant) continue;
+
+    seen.add(asin);
+
+    try {
+      const url = new URL(href);
+      url.searchParams.set("reviewerType", "all_reviews");
+      url.searchParams.set("pageNumber", "1");
+      links.push({
+        key: `variant_${links.length + 1}`,
+        labelKey: "targetedVariantReviews",
+        detail: text || asin,
+        url: url.href
+      });
+    } catch (error) {
+      // Skip invalid candidate URL.
+    }
+
+    if (links.length >= limit) break;
+  }
+
+  return links;
+}
+
+function targetedReviewLinkLabel(link) {
+  const label = tPopup(link.labelKey);
+  return link.detail ? `${label} - ${link.detail}` : label;
+}
+
+async function openVariantReviewTabs() {
+  const { products } = await getSavedProducts();
+  const product = latestSavedAmazonProduct(products);
+  if (!product) {
+    throw new Error(tPopup("noSavedAmazonProduct"));
+  }
+
+  const links = variantReviewLinksForProduct(product, 3);
+  if (!links.length) {
+    throw new Error(tPopup("noVariantReviewLinks"));
+  }
+
+  for (const link of links) {
+    await chrome.tabs.create({ url: link.url, active: false });
+  }
+
+  setStatus(tPopup("openedVariantReviewTabs").replace("{count}", String(links.length)));
+}
+
 function targetedAmazonReviewLinksForProduct(product) {
   if (!product || !amazonAsinFromProduct(product)) return [];
 
@@ -1088,7 +1178,7 @@ async function openTargetedReviewTab(linkKey) {
   }
 
   await chrome.tabs.create({ url: link.url, active: false });
-  setStatus(tPopup("openedTargetedReviewTab").replace("{label}", tPopup(link.labelKey)));
+  setStatus(tPopup("openedTargetedReviewTab").replace("{label}", targetedReviewLinkLabel(link)));
 }
 
 async function copyTargetedReviewLinks() {
@@ -1098,7 +1188,10 @@ async function copyTargetedReviewLinks() {
     throw new Error(tPopup("noSavedAmazonProduct"));
   }
 
-  const links = targetedAmazonReviewLinksForProduct(product);
+  const links = [
+    ...targetedAmazonReviewLinksForProduct(product),
+    ...variantReviewLinksForProduct(product, 3)
+  ];
   if (!links.length) {
     throw new Error(tPopup("noAmazonAsin"));
   }
@@ -1107,7 +1200,7 @@ async function copyTargetedReviewLinks() {
     tPopup("targetedReviewLinksTitle"),
     product.title || product.url || "",
     "",
-    ...links.map((link) => `${tPopup(link.labelKey)}: ${link.url}`),
+    ...links.map((link) => `${targetedReviewLinkLabel(link)}: ${link.url}`),
     "",
     tPopup("sampleGuidanceCta")
   ];
@@ -1654,6 +1747,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("sampleGuidanceCopyBtn", copySampleGuidanceSteps);
   bind("openLowStarReviewTabBtn", () => openTargetedReviewTab("low_star"));
   bind("openVerifiedReviewTabBtn", () => openTargetedReviewTab("verified"));
+  bind("openVariantReviewTabsBtn", openVariantReviewTabs);
   bind("copyTargetedReviewLinksBtn", copyTargetedReviewLinks);
   bind("analyzeBtn", analyzeWorkspace);
   bind("copyInsightsBtn", copyInsights);

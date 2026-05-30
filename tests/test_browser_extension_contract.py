@@ -293,7 +293,7 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceCta",
             "sampleGuidanceCopyBtn",
             "openLowStarReviewTabBtn",
-            "openVerifiedReviewTabBtn",
+            "openVerifiedReviewTabBtn",\n            "openVariantReviewTabsBtn",
             "copyTargetedReviewLinksBtn",
         ]:
             self.assertIn(marker, html)
@@ -316,7 +316,7 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceCta",
             "copySampleGuidanceSteps",
             "openTargetedReviewTab",
-            "copyTargetedReviewLinks",
+            "copyTargetedReviewLinks",\n            "openVariantReviewTabs",\n            "variantReviewLinksForProduct",\n            "amazonAsinFromUrl",\n            "cleanVariantReviewLabel",\n            "targetedReviewLinkLabel",\n            "targetedVariantReviews",\n            "openedVariantReviewTabs",\n            "noVariantReviewLinks",
             "targetedAmazonReviewLinksForProduct",
             "amazonReviewUrlWithParams",
             "latestSavedAmazonProduct",
