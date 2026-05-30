@@ -408,6 +408,47 @@
     };
   }
 
+  function absoluteAmazonHref(href) {
+    try {
+      return new URL(href, location.href).href;
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function extractAmazonNextReviewPageUrl() {
+    const direct = document.querySelector("li.a-last:not(.a-disabled) a[href], .a-pagination .a-last:not(.a-disabled) a[href]");
+    if (direct) {
+      const href = absoluteAmazonHref(direct.getAttribute("href"));
+      if (href) return href;
+    }
+
+    let currentPage = 1;
+    try {
+      currentPage = Number(new URL(location.href).searchParams.get("pageNumber") || "1") || 1;
+    } catch (error) {
+      currentPage = 1;
+    }
+
+    const links = Array.from(document.querySelectorAll("a[href*='product-reviews'][href*='pageNumber=']"));
+    for (const link of links) {
+      const href = absoluteAmazonHref(link.getAttribute("href"));
+      if (!href) continue;
+
+      try {
+        const candidate = new URL(href);
+        const pageNumber = Number(candidate.searchParams.get("pageNumber") || "0") || 0;
+        if (pageNumber > currentPage) {
+          return candidate.href;
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+
+    return "";
+  }
+
   function extractAmazonPage() {
     const url = location.href;
     const pageInfo = detectAmazonPageType();
@@ -441,7 +482,8 @@
         sample_warning: amazonVisibleSampleWarning(pageInfo, reviews),
         rating_distribution: amazonRatingDistribution(reviews),
         raw_review_candidate_count: reviewPayload.raw_candidate_count || 0,
-        visible_review_count: reviews.length
+        visible_review_count: reviews.length,
+        next_review_page_url: pageInfo.sign_in_required ? "" : extractAmazonNextReviewPageUrl()
       }
     };
   }
