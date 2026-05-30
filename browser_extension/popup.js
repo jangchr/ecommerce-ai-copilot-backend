@@ -63,6 +63,7 @@ const POPUP_COPY = {
     tabsSkipped: "tab(s) skipped.",
     captureWarnings: "capture warning(s).",
     collectedPrefix: "Collected",
+    collectedTabsMerged: "Collected {tabs} tab(s), {added} new visible review(s), {duplicates} duplicate review(s) skipped, {total} saved review(s).",
     tabUnit: "tab(s)",
     visibleReviewUnit: "visible review(s)",
     saveFirst: "Save at least one product first.",
@@ -131,6 +132,7 @@ const POPUP_COPY = {
     "tabsSkipped": "\u4e2a\u6807\u7b7e\u9875\u5df2\u8df3\u8fc7\u3002",
     "captureWarnings": "\u4e2a\u91c7\u96c6\u63d0\u793a\u3002",
     "collectedPrefix": "\u5df2\u91c7\u96c6",
+    "collectedTabsMerged": "\u5df2\u91c7\u96c6 {tabs} \u4e2a\u6807\u7b7e\u9875\uff0c\u65b0\u589e {added} \u6761\u53ef\u89c1\u8bc4\u8bba\uff0c\u8df3\u8fc7 {duplicates} \u6761\u91cd\u590d\u8bc4\u8bba\uff0c\u5f53\u524d\u7d2f\u8ba1 {total} \u6761\u8bc4\u8bba\u3002",
     "tabUnit": "\u4e2a\u6807\u7b7e\u9875",
     "visibleReviewUnit": "\u6761\u53ef\u89c1\u8bc4\u8bba",
     "saveFirst": "\u8bf7\u5148\u4fdd\u5b58\u81f3\u5c11\u4e00\u4e2a\u5546\u54c1\u3002",
@@ -474,10 +476,10 @@ async function setSavedProducts(products) {
 
 
 function shortProductTitle(product) {
-  const title = String(product?.title || product?.url || "Untitled product").trim();
+  const rawTitle = String(product?.title || product?.url || "Untitled product").trim();
+  const title = cleanCollectedProductTitle(rawTitle) || rawTitle || "Untitled product";
   return title.length > 86 ? `${title.slice(0, 83)}...` : title;
 }
-
 
 function captureDiagnosticMessage(product) {
   const metadata = product?.metadata || {};
@@ -588,21 +590,191 @@ async function extractProductFromTab(tab) {
   return product;
 }
 
-function mergeProductsByUrl(existingProducts, newProducts) {
-  const byUrl = new Map();
-  for (const product of existingProducts || []) {
-    if (product && product.url) {
-      byUrl.set(product.url, product);
-    }
-  }
-  for (const product of newProducts || []) {
-    if (product && product.url) {
-      byUrl.set(product.url, product);
-    }
-  }
-  return Array.from(byUrl.values());
+function cleanCollectedProductTitle(value) {
+  return String(value || "")
+    .replace(/^[\s\S]{0,120}(?:Customer reviews?|\u4e70\u5bb6\u8bc4\u8bba)\s*[:?]\s*/i, "")
+    .replace(/^Amazon(?:\.[^:?\s]+)?[:?]\s*/i, "")
+    .replace(/^(?:Customer reviews?|\u4e70\u5bb6\u8bc4\u8bba)\s*[:?]?\s*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
+function cleanCollectedReviewText(value) {
+  return String(value || "")
+    .replace(/<img[^>]*>/gi, " ")
+    .replace(/Translate\s*review\s*to\s*English/gi, " ")
+    .replace(/Thank\s*you\s*for\s*your\s*feedback/gi, " ")
+    .replace(/Sorry,\s*there\s*was\s*an\s*error/gi, " ")
+    .replace(/More\s*Hide/gi, " ")
+    .replace(/Helpful/gi, " ")
+    .replace(/Report/gi, " ")
+    .replace(/More/gi, " ")
+    .replace(/Hide/gi, " ")
+    .replace(/Close/gi, " ")
+    .replace(/One\s+person\s+found\s+this(?:\s+helpful)?/gi, " ")
+    .replace(/\d+\s+people\s+found\s+this(?:\s+helpful)?/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeCollectedProductForMerge(product) {
+  if (!product) return product;
+
+  return {
+    ...product,
+    title: cleanCollectedProductTitle(product.title || product.url || ""),
+    reviews: (product.reviews || [])
+      .map((review) => ({
+        ...review,
+        text: cleanCollectedReviewText(review.text || "")
+      }))
+      .filter((review) => review.text)
+  };
+}
+
+function normalizeReviewIdentityText(value) {
+  return cleanCollectedReviewText(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff]+/g, "")
+    .trim();
+}
+
+function reviewIdentityKey(review) {
+  const text = normalizeReviewIdentityText(review?.text || "");
+  if (!text) return "";
+  const rating = String(review?.rating || "").trim().toLowerCase();
+  return `${rating}|${text.slice(0, 320)}`;
+}
+
+function canonicalProductUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    url.hash = "";
+    url.search = "";
+    return url.href.replace(/\/$/, "");
+  } catch (error) {
+    return String(value || "").split("#")[0].split("?")[0].replace(/\/$/, "");
+  }
+}
+
+function productIdentityKey(product) {
+  const asin = String(product?.asin || product?.metadata?.asin || "").trim().toUpperCase();
+  if (asin) return `asin:${asin}`;
+
+  const url = canonicalProductUrl(product?.url || "");
+  if (url) return `url:${url}`;
+
+  const title = String(product?.title || "").trim().toLowerCase();
+  const platform = String(product?.platform || "web").trim().toLowerCase();
+  return `${platform}:${title}`;
+}
+
+function mergeReviewLists(existingReviews = [], newReviews = []) {
+  const seen = new Set();
+  const merged = [];
+  let added = 0;
+  let duplicates = 0;
+
+  for (const review of existingReviews || []) {
+    const key = reviewIdentityKey(review);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(review);
+  }
+
+  for (const review of newReviews || []) {
+    const key = reviewIdentityKey(review);
+    if (!key) continue;
+
+    if (seen.has(key)) {
+      duplicates += 1;
+      continue;
+    }
+
+    seen.add(key);
+    merged.push(review);
+    added += 1;
+  }
+
+  return { reviews: merged, added, duplicates };
+}
+
+function mergeProductsByUrlWithStats(existingProducts, newProducts) {
+  const byKey = new Map();
+
+  for (const product of existingProducts || []) {
+    if (!product) continue;
+    const normalizedProduct = normalizeCollectedProductForMerge(product);
+    const key = productIdentityKey(normalizedProduct);
+    if (!key) continue;
+    byKey.set(key, {
+      ...normalizedProduct,
+      reviews: mergeReviewLists([], normalizedProduct.reviews || []).reviews
+    });
+  }
+
+  let addedReviews = 0;
+  let duplicateReviews = 0;
+  let addedProducts = 0;
+  let updatedProducts = 0;
+
+  for (const product of newProducts || []) {
+    if (!product) continue;
+    const normalizedProduct = normalizeCollectedProductForMerge(product);
+    const key = productIdentityKey(normalizedProduct);
+    if (!key) continue;
+
+    const incomingReviews = normalizedProduct.reviews || [];
+    const existing = byKey.get(key);
+
+    if (!existing) {
+      const uniqueIncoming = mergeReviewLists([], incomingReviews);
+      byKey.set(key, {
+        ...normalizedProduct,
+        reviews: uniqueIncoming.reviews
+      });
+      addedProducts += 1;
+      addedReviews += uniqueIncoming.added;
+      duplicateReviews += uniqueIncoming.duplicates;
+      continue;
+    }
+
+    const mergedReviews = mergeReviewLists(existing.reviews || [], incomingReviews);
+    byKey.set(key, {
+      ...existing,
+      ...normalizedProduct,
+      url: existing.url || normalizedProduct.url,
+      title: cleanCollectedProductTitle(existing.title || normalizedProduct.title || normalizedProduct.url || ""),
+      asin: existing.asin || normalizedProduct.asin,
+      reviews: mergedReviews.reviews,
+      metadata: {
+        ...(existing.metadata || {}),
+        ...(normalizedProduct.metadata || {}),
+        merged_visible_review_pages: true
+      }
+    });
+
+    updatedProducts += 1;
+    addedReviews += mergedReviews.added;
+    duplicateReviews += mergedReviews.duplicates;
+  }
+
+  const products = Array.from(byKey.values());
+  return {
+    products,
+    stats: {
+      addedReviews,
+      duplicateReviews,
+      addedProducts,
+      updatedProducts,
+      totalReviews: products.reduce((sum, product) => sum + (product.reviews || []).length, 0)
+    }
+  };
+}
+
+function mergeProductsByUrl(existingProducts, newProducts) {
+  return mergeProductsByUrlWithStats(existingProducts, newProducts).products;
+}
 
 async function extractCurrentProduct() {
   const tab = await getActiveTab();
@@ -653,19 +825,28 @@ async function collectOpenTabs() {
   }
 
   const { products } = await getSavedProducts();
-  const merged = mergeProductsByUrl(products, collected);
-  await setSavedProducts(merged);
+  const merged = mergeProductsByUrlWithStats(products, collected);
+  await setSavedProducts(merged.products);
 
   $("previewCard").hidden = false;
-  $("preview").textContent = JSON.stringify(collected[collected.length - 1], null, 2);
+  $("preview").textContent = JSON.stringify({
+    collected_tabs: collected.length,
+    failures,
+    merge_stats: merged.stats,
+    last_product: normalizeCollectedProductForMerge(collected[collected.length - 1])
+  }, null, 2);
 
-  const reviewTotal = collected.reduce((sum, product) => sum + (product.reviews || []).length, 0);
   const warningCount = collected.filter((product) => captureDiagnosticMessage(product)).length;
   const failureSuffix = failures.length ? ` ${failures.length} ${tPopup("tabsSkipped")}` : "";
   const warningSuffix = warningCount ? ` ${warningCount} ${tPopup("captureWarnings")}` : "";
-  setStatus(`${tPopup("collectedPrefix")} ${collected.length} ${tPopup("tabUnit")}, ${reviewTotal} ${tPopup("visibleReviewUnit")}.${failureSuffix}${warningSuffix}`);
-}
+  const status = tPopup("collectedTabsMerged")
+    .replace("{tabs}", String(collected.length))
+    .replace("{added}", String(merged.stats.addedReviews))
+    .replace("{duplicates}", String(merged.stats.duplicateReviews))
+    .replace("{total}", String(merged.stats.totalReviews));
 
+  setStatus(`${status}${failureSuffix}${warningSuffix}`);
+}
 
 async function analyzeWorkspace() {
   const backendUrl = $("backendUrl").value.trim().replace(/\/$/, "") || DEFAULT_BACKEND;
