@@ -49,6 +49,30 @@ class ReviewProductSummary(BaseModel):
     top_liked_points: list[str] = Field(default_factory=list)
 
 
+class ReviewSampleInterpretation(BaseModel):
+    sample_type: str = ""
+    sample_size_note: str = ""
+    suitable_for: list[str] = Field(default_factory=list)
+    not_suitable_for: list[str] = Field(default_factory=list)
+    strongest_signals: list[str] = Field(default_factory=list)
+    recommended_creative_directions: list[str] = Field(default_factory=list)
+    evidence_usage_summary: list[str] = Field(default_factory=list)
+
+
+class ReviewVideoScript(BaseModel):
+    duration_label: str = ""
+    hook: str = ""
+    voiceover: list[str] = Field(default_factory=list)
+    on_screen_text: list[str] = Field(default_factory=list)
+    cta: str = ""
+    evidence_used: list[str] = Field(default_factory=list)
+
+
+class ReviewVideoScriptPack(BaseModel):
+    positioning_note: str = ""
+    scripts: list[ReviewVideoScript] = Field(default_factory=list)
+
+
 class ReviewWorkspaceResponse(BaseModel):
     workspace_id: str
     product_count: int
@@ -62,3 +86,5 @@ class ReviewWorkspaceResponse(BaseModel):
     creative_angles: list[str] = Field(default_factory=list)
     hooks: list[str] = Field(default_factory=list)
     recommended_next_actions: list[str] = Field(default_factory=list)
+    sample_interpretation: ReviewSampleInterpretation = Field(default_factory=ReviewSampleInterpretation)
+    video_script_pack: ReviewVideoScriptPack = Field(default_factory=ReviewVideoScriptPack)

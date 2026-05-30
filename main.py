@@ -1535,7 +1535,10 @@ async def debug_source_probe(request: SourceProbeRequest, http_request: Request)
 from collections import Counter
 from schemas.review_workspace import (
     ReviewProductSummary,
+    ReviewSampleInterpretation,
     ReviewThemeSummary,
+    ReviewVideoScript,
+    ReviewVideoScriptPack,
     ReviewWorkspaceProduct,
     ReviewWorkspaceRequest,
     ReviewWorkspaceResponse,
@@ -2134,17 +2137,95 @@ def _rw_refine_buyer_objection_summaries(themes):
     return refined
 
 
+def _rw_quote_matches_theme(label: str, value: str) -> bool:
+    lower = str(value or "").lower()
+    raw_label = str(label or "").strip().lower()
+    phrase = _rw_human_theme_phrase(label).strip().lower()
+
+    marker_groups = [
+        (
+            ("price / value", "price or value", "price / value concern"),
+            ["price", "value", "worth", "pricy", "pricey", "cheaper", "expensive", "quality", "two-pack", "2-pack", "cost"],
+        ),
+        (
+            ("taste / flavor", "taste or flavor", "quality consistency"),
+            ["taste", "flavor", "flavour", "wateriest", "flavorless", "bland", "rich", "glaze", "vinaigrette", "ingredients"],
+        ),
+        (
+            ("size / quantity", "quantity or size", "quantity / size"),
+            ["size", "quantity", "listed as", "what came was", "oz", "bottle", "two-pack", "2-pack", "half size", "regular size"],
+        ),
+        (
+            ("expectation mismatch", "tradeoff", "hesitation"),
+            ["expected", "expectation", "however", "but", "concerned", "not lid", "spout", "air", "mismatch"],
+        ),
+        (
+            ("liked signal", "great", "love", "useful", "easy", "recommend"),
+            ["great", "love", "useful", "easy", "recommend", "worth", "quality", "cannot beat"],
+        ),
+    ]
+
+    for label_markers, quote_markers in marker_groups:
+        if any(marker in raw_label or marker in phrase for marker in label_markers):
+            return any(marker in lower for marker in quote_markers)
+
+    return False
+
+
+def _rw_theme_needs_matched_quote(label: str) -> bool:
+    raw_label = str(label or "").strip().lower()
+    phrase = _rw_human_theme_phrase(label).strip().lower()
+    markers = [
+        "price / value",
+        "price or value",
+        "taste / flavor",
+        "taste or flavor",
+        "size / quantity",
+        "quantity or size",
+        "quality consistency",
+        "expectation mismatch",
+        "quantity / size",
+    ]
+    return any(marker in raw_label or marker in phrase for marker in markers)
+
+
+def _rw_refine_theme_quotes(themes: list[ReviewThemeSummary]) -> list[ReviewThemeSummary]:
+    refined: list[ReviewThemeSummary] = []
+    for theme in themes:
+        quotes = list(getattr(theme, "evidence_quotes", []) or [])
+        matched = [quote for quote in quotes if _rw_quote_matches_theme(theme.label, quote)]
+        if matched:
+            theme.evidence_quotes = matched[:3]
+            theme.evidence_count = len(matched)
+            refined.append(theme)
+        elif not _rw_theme_needs_matched_quote(theme.label):
+            refined.append(theme)
+    return refined
+
+
 def _rw_theme_first_quote(theme) -> str:
     quotes = getattr(theme, "evidence_quotes", []) or []
     if not quotes:
         return ""
 
-    quote = quotes[0]
-    if "def _rw_compact_evidence_quote" in globals():
-        quote = _rw_compact_evidence_quote(quote)
+    label = str(getattr(theme, "label", "") or "")
+    cleaned_quotes = []
+    for quote in quotes:
+        value = quote
+        if "def _rw_compact_evidence_quote" in globals():
+            value = _rw_compact_evidence_quote(value)
+        value = " ".join(str(value or "").split()).strip()
+        if value:
+            cleaned_quotes.append(value)
 
-    return " ".join(str(quote or "").split()).strip()
+    for quote in cleaned_quotes:
+        if _rw_quote_matches_theme(label, quote):
+            return quote
 
+    if _rw_theme_needs_matched_quote(label):
+        return ""
+
+    return cleaned_quotes[0] if cleaned_quotes else ""
 
 def _rw_quote_snippet(value: str, max_len: int = 120) -> str:
     text = " ".join(str(value or "").split()).strip()
@@ -2202,43 +2283,60 @@ def _rw_quote_has_pain_signal(value: str) -> bool:
     ]
     return any(term in lower for term in pain_terms)
 
-def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary]) -> list[str]:
+def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary], language: str = "en") -> list[str]:
     angles: list[str] = []
+    is_zh = language == "zh-CN"
 
     for theme in common_pain_points[:4]:
-        label = _rw_human_theme_phrase(theme.label)
+        label = _rw_output_theme_label(theme.label, language)
         quote = _rw_quote_snippet(_rw_theme_first_quote(theme), 110)
 
-        if quote:
-            angles.append(
-                f"Copy-ready angle: Start with \"{quote}\", then show one clear product moment that resolves the {label}."
-            )
+        if is_zh:
+            if quote:
+                angles.append(f"\u5148\u7528\u4e70\u5bb6\u539f\u8bdd\u201c{quote}\u201d\u5f00\u573a\uff0c\u518d\u5c55\u793a\u4e00\u4e2a\u6e05\u695a\u7684\u4ea7\u54c1\u753b\u9762\u6765\u56de\u5e94{label}\u3002")
+            else:
+                angles.append(f"\u5148\u6253\u5f00\u4e70\u5bb6\u7684{label}\uff0c\u518d\u5c55\u793a\u4ea7\u54c1\u5982\u4f55\u89e3\u51b3\u8fd9\u4e2a\u5177\u4f53\u987e\u8651\u3002")
         else:
-            angles.append(
-                f"Copy-ready angle: Open on the buyer's {label}, then show the product resolving that exact moment."
-            )
+            if quote:
+                angles.append(
+                    f"Copy-ready angle: Start with \"{quote}\", then show one clear product moment that resolves the {label}."
+                )
+            else:
+                angles.append(
+                    f"Copy-ready angle: Open on the buyer's {label}, then show the product resolving that exact moment."
+                )
 
     for theme in liked_points:
-        label = _rw_human_theme_phrase(theme.label)
+        label = _rw_output_theme_label(theme.label, language)
         quote = _rw_quote_snippet(_rw_theme_first_quote(theme), 100)
 
         if quote and _rw_quote_has_pain_signal(quote):
             continue
 
-        if quote:
-            angles.append(
-                f"Positive proof payoff: \"{quote}\" Use it as the final reassurance for {label}."
-            )
+        if is_zh:
+            if quote:
+                angles.append(f"\u6b63\u5411\u8bc1\u636e\u6536\u5c3e\uff1a\u201c{quote}\u201d \u628a\u5b83\u4f5c\u4e3a{label}\u7684\u4fe1\u4efb\u80cc\u4e66\u3002")
+            else:
+                angles.append(f"\u6b63\u5411\u8bc1\u636e\u6536\u5c3e\uff1a\u7528\u6ee1\u610f\u4e70\u5bb6\u7684\u4f7f\u7528\u77ac\u95f4\u4f5c\u4e3a{label}\u7684\u4fe1\u4efb\u80cc\u4e66\u3002")
         else:
-            angles.append(
-                f"Positive proof payoff: Use a satisfied-buyer moment as the final reassurance for {label}."
-            )
+            if quote:
+                angles.append(
+                    f"Positive proof payoff: \"{quote}\" Use it as the final reassurance for {label}."
+                )
+            else:
+                angles.append(
+                    f"Positive proof payoff: Use a satisfied-buyer moment as the final reassurance for {label}."
+                )
 
         if len(angles) >= 6:
             break
 
     if not angles:
-        angles.append("Copy-ready angle: Use the most specific buyer quote as the opening hook, then show the product resolving that exact moment.")
+        angles.append(
+            "\u7528\u6700\u5177\u4f53\u7684\u4e70\u5bb6\u539f\u8bdd\u4f5c\u4e3a\u5f00\u5934\uff0c\u518d\u5c55\u793a\u4ea7\u54c1\u5982\u4f55\u56de\u5e94\u8fd9\u4e2a\u5177\u4f53\u573a\u666f\u3002"
+            if is_zh
+            else "Copy-ready angle: Use the most specific buyer quote as the opening hook, then show the product resolving that exact moment."
+        )
 
     return angles[:6]
 
@@ -2312,23 +2410,284 @@ def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[R
     hooks: list[str] = []
 
     for theme in common_pain_points[:4]:
-        label = _rw_human_theme_phrase(theme.label)
+        label = _rw_output_theme_label(theme.label, language)
         if is_zh:
             hooks.append(f"\u4e70\u4e4b\u524d\u5148\u770b\u6e05\u695a\u8fd9\u4e2a\u95ee\u9898\uff1a{label}")
         else:
             hooks.append(_rw_hook_from_theme(theme))
 
     for theme in liked_points[:4]:
-        label = _rw_human_theme_phrase(theme.label)
+        label = _rw_output_theme_label(theme.label, language)
         if is_zh:
             hooks.append(f"\u4e3a\u4ec0\u4e48\u4e70\u5bb6\u4f1a\u53cd\u590d\u63d0\u5230\uff1a{label}\uff1f")
         else:
             hooks.append(_rw_positive_hook_from_theme(theme))
 
     if not hooks:
-        hooks.append("Before you buy, look at what real buyers mention most.")
+        hooks.append(
+            "\u5148\u7528\u6700\u5177\u4f53\u7684\u4e70\u5bb6\u539f\u8bdd\u5f00\u573a\uff0c\u518d\u5c55\u793a\u4ea7\u54c1\u5982\u4f55\u56de\u5e94\u8fd9\u4e2a\u573a\u666f\u3002"
+            if is_zh
+            else "Start with the most specific buyer quote, then show the product moment that resolves it."
+        )
 
     return _rw_dedupe_text_items(hooks, 6)
+
+def _rw_output_theme_label(label: str, language: str) -> str:
+    phrase = _rw_human_theme_phrase(label)
+    if language != "zh-CN":
+        return phrase
+
+    normalized = str(label or "").strip().lower()
+    phrase_key = phrase.strip().lower()
+    zh_labels = {
+        "price / value concern": "\u4ef7\u683c / \u4ef7\u503c\u987e\u8651",
+        "price or value concern": "\u4ef7\u683c / \u4ef7\u503c\u987e\u8651",
+        "taste / flavor concern": "\u5473\u9053 / \u98ce\u5473\u987e\u8651",
+        "taste or flavor concern": "\u5473\u9053 / \u98ce\u5473\u987e\u8651",
+        "size / quantity mismatch": "\u89c4\u683c / \u6570\u91cf\u4e0d\u4e00\u81f4",
+        "quantity or size mismatch": "\u89c4\u683c / \u6570\u91cf\u4e0d\u4e00\u81f4",
+        "quality consistency concern": "\u54c1\u8d28\u7a33\u5b9a\u6027\u987e\u8651",
+        "quantity / size uncertainty": "\u6570\u91cf / \u89c4\u683c\u4e0d\u786e\u5b9a",
+        "expectation mismatch": "\u9884\u671f\u4e0d\u4e00\u81f4",
+        "price / value uncertainty": "\u4ef7\u683c / \u4ef7\u503c\u4e0d\u786e\u5b9a",
+        "tradeoff / hesitation": "\u53d6\u820d / \u72b9\u8c6b",
+        "buyers saying they love it": "\u4e70\u5bb6\u8868\u793a\u559c\u6b22",
+        "buyers calling it great": "\u4e70\u5bb6\u8ba4\u4e3a\u4f53\u9a8c\u5f88\u597d",
+        "buyers finding it useful": "\u4e70\u5bb6\u8ba4\u4e3a\u6709\u7528",
+        "buyers finding it easy": "\u4e70\u5bb6\u8ba4\u4e3a\u5bb9\u6613\u4f7f\u7528",
+        "recommend": "\u4e70\u5bb6\u613f\u610f\u63a8\u8350",
+        "perfect": "\u4e70\u5bb6\u8ba4\u4e3a\u8868\u73b0\u5f88\u597d",
+        "great": "\u4e70\u5bb6\u8ba4\u4e3a\u4f53\u9a8c\u5f88\u597d",
+        "love": "\u4e70\u5bb6\u8868\u793a\u559c\u6b22",
+    }
+    return zh_labels.get(normalized) or zh_labels.get(phrase_key) or phrase
+
+def _rw_first_available_theme(*theme_groups: list[ReviewThemeSummary]) -> ReviewThemeSummary | None:
+    for group in theme_groups:
+        if group:
+            return group[0]
+    return None
+
+
+def _rw_signal_lines(
+    themes: list[ReviewThemeSummary],
+    language: str,
+    prefix_en: str,
+    prefix_zh: str,
+    limit: int = 3,
+) -> list[str]:
+    lines: list[str] = []
+    is_zh = language == "zh-CN"
+    for theme in themes[:limit]:
+        label = _rw_output_theme_label(theme.label, language)
+        quote = _rw_quote_snippet(_rw_theme_first_quote(theme), 100)
+        prefix = prefix_zh if is_zh else prefix_en
+        if quote:
+            lines.append(f"{prefix}: {label} - \"{quote}\"")
+        else:
+            lines.append(f"{prefix}: {label}")
+    return lines
+
+
+def _rw_sample_interpretation(
+    payload: ReviewWorkspaceRequest,
+    rows: list[dict],
+    high_signal_rows: list[dict],
+    common_pain_points: list[ReviewThemeSummary],
+    buyer_objections: list[ReviewThemeSummary],
+    liked_points: list[ReviewThemeSummary],
+    use_cases: list[ReviewThemeSummary],
+) -> ReviewSampleInterpretation:
+    language = payload.output_language
+    is_zh = language == "zh-CN"
+    product_count = len(payload.products)
+    review_count = len(rows)
+    high_signal_count = len(high_signal_rows)
+
+    strongest_signals: list[str] = []
+    strongest_signals.extend(_rw_signal_lines(common_pain_points, language, "Pain signal", "\u75db\u70b9\u4fe1\u53f7", 2))
+    strongest_signals.extend(_rw_signal_lines(buyer_objections, language, "Buyer objection", "\u8d2d\u4e70\u987e\u8651", 2))
+    strongest_signals.extend(_rw_signal_lines(liked_points, language, "Positive proof", "\u6b63\u5411\u8bc1\u636e", 2))
+    strongest_signals.extend(_rw_signal_lines(use_cases, language, "Use case", "\u4f7f\u7528\u573a\u666f", 1))
+
+    if not strongest_signals:
+        strongest_signals = [
+            "\u5f53\u524d\u53ef\u89c1\u8bc4\u8bba\u6837\u672c\u8f83\u5c0f\uff0c\u5efa\u8bae\u5148\u7528\u4e8e\u521b\u610f\u65b9\u5411\u53c2\u8003\u3002"
+            if is_zh
+            else "The current visible review sample is small, so use it as creative direction input first."
+        ]
+
+    if is_zh:
+        sample_type = "Amazon \u5f53\u524d\u53ef\u89c1\u9875\u9762\u8bc4\u8bba\u6837\u672c"
+        sample_size_note = (
+            f"\u5f53\u524d\u6837\u672c\u5305\u542b {product_count} \u4e2a\u5546\u54c1\u3001{review_count} \u6761\u53ef\u89c1\u8bc4\u8bba\uff0c"
+            f"\u5176\u4e2d {high_signal_count} \u6761\u88ab\u8bc6\u522b\u4e3a\u9ad8\u4fe1\u53f7\u8bc4\u8bba\u3002"
+            "\u8fd9\u4e2a\u6837\u672c\u9002\u5408\u505a\u521b\u610f\u4fe1\u53f7\uff0c\u4e0d\u9002\u5408\u5f53\u4f5c\u5b8c\u6574\u8bc4\u8bba\u7edf\u8ba1\u3002"
+        )
+        suitable_for = [
+            "\u63d0\u53d6\u4e70\u5bb6\u539f\u8bdd",
+            "\u627e\u77ed\u89c6\u9891 hook",
+            "\u53d1\u73b0\u8d2d\u4e70\u987e\u8651",
+            "\u63d0\u70bc\u6b63\u5411\u8bc1\u636e",
+            "\u751f\u6210\u4f7f\u7528\u573a\u666f\u548c\u811a\u672c\u65b9\u5411",
+        ]
+        not_suitable_for = [
+            "\u63a8\u65ad\u5b8c\u6574\u5dee\u8bc4\u7387",
+            "\u4ee3\u8868\u5168\u90e8\u4e70\u5bb6\u6ee1\u610f\u5ea6",
+            "\u4f5c\u4e3a\u5b8c\u6574\u5e02\u573a\u7814\u7a76\u6837\u672c",
+            "\u5224\u65ad\u5168\u90e8 Amazon \u8bc4\u8bba\u7684\u7edf\u8ba1\u7ed3\u8bba",
+        ]
+        recommended_directions = [
+            "\u5148\u7528\u6700\u5f3a\u75db\u70b9\u4fe1\u53f7\u751f\u6210\u5f00\u5934 hook\u3002",
+            "\u7528\u4e70\u5bb6\u539f\u8bdd\u4f5c\u4e3a\u5c4f\u5e55\u5b57\u5e55\u6216\u53e3\u64ad\u5f00\u573a\u3002",
+            "\u5728\u811a\u672c\u540e\u6bb5\u52a0\u5165\u6b63\u5411\u8bc1\u636e\uff0c\u907f\u514d\u53ea\u653e\u5927\u8d1f\u9762\u4fe1\u53f7\u3002",
+        ]
+        evidence_usage_summary = [
+            f"\u75db\u70b9\u8bc1\u636e\uff1a{sum(item.evidence_count for item in common_pain_points)} \u6761\u4fe1\u53f7",
+            f"\u8d2d\u4e70\u987e\u8651\uff1a{sum(item.evidence_count for item in buyer_objections)} \u6761\u4fe1\u53f7",
+            f"\u6b63\u5411\u8bc1\u636e\uff1a{sum(item.evidence_count for item in liked_points)} \u6761\u4fe1\u53f7",
+            f"\u4f7f\u7528\u573a\u666f\uff1a{sum(item.evidence_count for item in use_cases)} \u6761\u4fe1\u53f7",
+        ]
+    else:
+        sample_type = "Amazon visible-page review sample"
+        sample_size_note = (
+            f"This sample contains {product_count} product(s), {review_count} visible review(s), "
+            f"and {high_signal_count} high-signal review(s). Use it for creative signals, not full review statistics."
+        )
+        suitable_for = [
+            "extracting buyer wording",
+            "finding short-form video hooks",
+            "spotting buyer objections",
+            "finding positive proof",
+            "generating use-case and script directions",
+        ]
+        not_suitable_for = [
+            "estimating the full negative review rate",
+            "representing all buyer satisfaction",
+            "serving as a complete market research sample",
+            "making full Amazon review population claims",
+        ]
+        recommended_directions = [
+            "Use the strongest pain signal as the opening hook.",
+            "Turn buyer wording into on-screen text or voiceover.",
+            "Add positive proof near the payoff so the script does not only amplify negative signals.",
+        ]
+        evidence_usage_summary = [
+            f"Pain evidence: {sum(item.evidence_count for item in common_pain_points)} signal(s)",
+            f"Buyer objections: {sum(item.evidence_count for item in buyer_objections)} signal(s)",
+            f"Positive proof: {sum(item.evidence_count for item in liked_points)} signal(s)",
+            f"Use cases: {sum(item.evidence_count for item in use_cases)} signal(s)",
+        ]
+
+    return ReviewSampleInterpretation(
+        sample_type=sample_type,
+        sample_size_note=sample_size_note,
+        suitable_for=suitable_for,
+        not_suitable_for=not_suitable_for,
+        strongest_signals=_rw_dedupe_text_items(strongest_signals, 6),
+        recommended_creative_directions=recommended_directions,
+        evidence_usage_summary=evidence_usage_summary,
+    )
+
+
+def _rw_video_script_pack(
+    payload: ReviewWorkspaceRequest,
+    common_pain_points: list[ReviewThemeSummary],
+    buyer_objections: list[ReviewThemeSummary],
+    liked_points: list[ReviewThemeSummary],
+    use_cases: list[ReviewThemeSummary],
+    hooks: list[str],
+) -> ReviewVideoScriptPack:
+    language = payload.output_language
+    is_zh = language == "zh-CN"
+    primary = _rw_first_available_theme(common_pain_points, buyer_objections, liked_points, use_cases)
+    positive = _rw_first_available_theme(liked_points, use_cases, common_pain_points)
+    primary_label = _rw_output_theme_label(primary.label, language) if primary else ("\u4e70\u5bb6\u5173\u6ce8\u70b9" if is_zh else "buyer concern")
+    positive_label = _rw_output_theme_label(positive.label, language) if positive else ("\u6b63\u5411\u8bc1\u636e" if is_zh else "positive proof")
+    primary_quote = _rw_quote_snippet(_rw_theme_first_quote(primary), 120) if primary else ""
+    positive_quote = _rw_quote_snippet(_rw_theme_first_quote(positive), 100) if positive else ""
+    hook = hooks[0] if hooks else (
+        f"\u4e70\u4e4b\u524d\u5148\u770b\u8fd9\u4e2a\u4e70\u5bb6\u4fe1\u53f7\uff1a{primary_label}"
+        if is_zh
+        else f"Before you buy, look at this buyer signal: {primary_label}."
+    )
+
+    if is_zh:
+        positioning_note = "\u57fa\u4e8e\u5f53\u524d\u53ef\u89c1\u8bc4\u8bba\u6837\u672c\u751f\u6210\u7684\u7b2c\u4e00\u7248\u77ed\u89c6\u9891\u811a\u672c\uff0c\u9002\u5408\u540e\u7eed\u6269\u5c55\u6210\u5206\u955c\u548c\u5173\u952e\u5e27\u3002"
+        script_15 = ReviewVideoScript(
+            duration_label="15s",
+            hook=hook,
+            voiceover=[
+                f"\u5f00\u5934\u76f4\u63a5\u56de\u5e94\u4e70\u5bb6\u6700\u5728\u610f\u7684\u70b9\uff1a{primary_label}\u3002",
+                f"\u5c55\u793a\u4e00\u4e2a\u80fd\u8bc1\u660e\u4ea7\u54c1\u5982\u4f55\u89e3\u51b3\u8fd9\u4e2a\u987e\u8651\u7684\u753b\u9762\u3002",
+                f"\u7528 {positive_label} \u4f5c\u4e3a\u6536\u5c3e\u80cc\u4e66\u3002",
+            ],
+            on_screen_text=[
+                primary_label,
+                primary_quote or "\u4e70\u5bb6\u539f\u8bdd\u8bc1\u636e",
+                positive_label,
+            ],
+            cta="\u8d2d\u4e70\u524d\u5148\u770b\u5b8c\u8fd9\u4e2a\u53ef\u89c1\u8bc4\u8bba\u4fe1\u53f7\u3002",
+            evidence_used=[quote for quote in [primary_quote, positive_quote] if quote],
+        )
+        script_30 = ReviewVideoScript(
+            duration_label="30s",
+            hook=hook,
+            voiceover=[
+                f"\u524d 3 \u79d2\uff1a\u7528\u4e70\u5bb6\u5173\u6ce8\u7684 {primary_label} \u5f00\u573a\u3002",
+                f"\u4e2d\u6bb5\uff1a\u5f15\u7528\u53ef\u89c1\u8bc4\u8bba\u8bc1\u636e\uff0c\u5c55\u793a\u4e70\u5bb6\u4e3a\u4ec0\u4e48\u4f1a\u6709\u8fd9\u4e2a\u987e\u8651\u3002",
+                "\u4ea7\u54c1\u753b\u9762\uff1a\u62cd\u4e00\u4e2a\u6e05\u695a\u7684\u4f7f\u7528\u77ac\u95f4\uff0c\u4e0d\u8981\u53ea\u505a\u7a7a\u6cdb\u5356\u70b9\u3002",
+                f"\u6536\u5c3e\uff1a\u7528 {positive_label} \u505a\u4fe1\u4efb\u56de\u6536\u3002",
+            ],
+            on_screen_text=[
+                f"\u4e70\u5bb6\u5728\u610f\uff1a{primary_label}",
+                primary_quote or "\u6765\u81ea\u53ef\u89c1\u8bc4\u8bba\u7684\u8bc1\u636e",
+                f"\u56de\u5230\u6b63\u5411\u8bc1\u636e\uff1a{positive_label}",
+            ],
+            cta="\u5982\u679c\u4f60\u4e5f\u5728\u72b9\u8c6b\u8fd9\u4e2a\u70b9\uff0c\u5148\u770b\u8fd9\u4e2a\u6837\u672c\u4fe1\u53f7\u3002",
+            evidence_used=[quote for quote in [primary_quote, positive_quote] if quote],
+        )
+    else:
+        positioning_note = "First-pass short-form scripts generated from the visible review sample. Use them as a bridge toward storyboard and keyframe generation."
+        script_15 = ReviewVideoScript(
+            duration_label="15s",
+            hook=hook,
+            voiceover=[
+                f"Open directly on the buyer concern: {primary_label}.",
+                "Show one clear product moment that answers that concern.",
+                f"Close with the reassurance signal: {positive_label}.",
+            ],
+            on_screen_text=[
+                primary_label,
+                primary_quote or "buyer evidence from visible reviews",
+                positive_label,
+            ],
+            cta="Watch the visible review signal before you buy.",
+            evidence_used=[quote for quote in [primary_quote, positive_quote] if quote],
+        )
+        script_30 = ReviewVideoScript(
+            duration_label="30s",
+            hook=hook,
+            voiceover=[
+                f"First 3 seconds: open with the buyer concern around {primary_label}.",
+                "Middle: cite the visible review evidence and show why buyers notice it.",
+                "Product moment: show one specific usage shot instead of a generic claim.",
+                f"Payoff: bring in {positive_label} so the script ends with reassurance.",
+            ],
+            on_screen_text=[
+                f"Buyer concern: {primary_label}",
+                primary_quote or "Evidence from visible reviews",
+                f"Reassurance: {positive_label}",
+            ],
+            cta="If this is the concern holding you back, check this before you buy.",
+            evidence_used=[quote for quote in [primary_quote, positive_quote] if quote],
+        )
+
+    return ReviewVideoScriptPack(
+        positioning_note=positioning_note,
+        scripts=[script_15, script_30],
+    )
+
 
 def _paste_clean_line(line: str) -> str:
     return " ".join(str(line or "").replace("\u00a0", " ").split())
@@ -2523,10 +2882,29 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         "use case",
     )
 
-    common_pain_points = _rw_compact_theme_summaries(common_pain_points)
+    common_pain_points = _rw_refine_theme_quotes(_rw_compact_theme_summaries(common_pain_points))
     buyer_objections = _rw_refine_buyer_objection_summaries(buyer_objections)
     liked_points = _rw_compact_theme_summaries(liked_points)
     use_cases = _rw_compact_theme_summaries(use_cases)
+
+    hooks = _rw_hooks(common_pain_points, liked_points, payload.output_language)
+    sample_interpretation = _rw_sample_interpretation(
+        payload,
+        rows,
+        high_signal_rows,
+        common_pain_points,
+        buyer_objections,
+        liked_points,
+        use_cases,
+    )
+    video_script_pack = _rw_video_script_pack(
+        payload,
+        common_pain_points,
+        buyer_objections,
+        liked_points,
+        use_cases,
+        hooks,
+    )
 
     return ReviewWorkspaceResponse(
         workspace_id=payload.workspace_id,
@@ -2538,13 +2916,15 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         liked_points=liked_points,
         use_cases=use_cases,
         product_summaries=[_rw_product_summary(product) for product in payload.products],
-        creative_angles=_rw_creative_angles(common_pain_points, liked_points),
-        hooks=_rw_hooks(common_pain_points, liked_points, payload.output_language),
+        creative_angles=_rw_creative_angles(common_pain_points, liked_points, payload.output_language),
+        hooks=hooks,
         recommended_next_actions=[
             "Collect 30-80 high-signal reviews per product before final creative testing.",
             "Prioritize low-star and objection-heavy reviews for ad angle discovery.",
             "Use repeated buyer wording as hook language instead of generic product claims.",
         ],
+        sample_interpretation=sample_interpretation,
+        video_script_pack=video_script_pack,
     )
 
 

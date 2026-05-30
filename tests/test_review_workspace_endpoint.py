@@ -364,5 +364,100 @@ class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
         self.assertTrue(all("buyers highlighting buyers" not in hook for hook in hooks))
         self.assertTrue(all("Why are buyers highlighting buyers" not in hook for hook in hooks))
 
+
+class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
+    def test_review_workspace_returns_sample_interpretation_and_video_script_pack(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "sample_interpretation_script_pack_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/B00QIIMCCW",
+                        "title": "Colavita Balsamic Vinegar - 8.5 oz",
+                        "brand": "Colavita",
+                        "description": "Balsamic vinegar for salad dressing and cooking.",
+                        "reviews": [
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Now this is listed as 8 1/2 oz for $4.99 but what came was a 17 oz bottle - still only $4.99. Great product for salads.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "1 out of 5 stars",
+                                "text": "This is the wateriest, most flavorless balsamic I have ever encountered. Makes terrible vinaigrette.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "I love using it for cooking and salads. This stuff is cheaper than buying it at my local grocery store.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        sample = body["sample_interpretation"]
+        self.assertIn("visible", sample["sample_type"].lower())
+        self.assertTrue(sample["sample_size_note"])
+        self.assertTrue(sample["suitable_for"])
+        self.assertTrue(sample["not_suitable_for"])
+        self.assertTrue(sample["strongest_signals"])
+        self.assertTrue(sample["recommended_creative_directions"])
+        self.assertTrue(sample["evidence_usage_summary"])
+
+        pack = body["video_script_pack"]
+        self.assertTrue(pack["positioning_note"])
+        self.assertEqual({script["duration_label"] for script in pack["scripts"]}, {"15s", "30s"})
+        for script in pack["scripts"]:
+            self.assertTrue(script["hook"])
+            self.assertTrue(script["voiceover"])
+            self.assertTrue(script["on_screen_text"])
+            self.assertTrue(script["cta"])
+
+    def test_review_workspace_sample_interpretation_respects_chinese_output_language(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "sample_interpretation_script_pack_zh_smoke",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "title": "Colavita Balsamic Vinegar",
+                        "reviews": [
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "I love using it for cooking and salads, but the listing size can be confusing.",
+                                "source_section": "amazon_visible_review",
+                            }
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("\u6837\u672c", body["sample_interpretation"]["sample_type"])
+        self.assertIn("\u811a\u672c", body["video_script_pack"]["positioning_note"])
+
 if __name__ == "__main__":
     unittest.main()
