@@ -978,6 +978,114 @@ function chooseNextCollectorUrl(currentUrl, nextFromPage, fallbackNextUrl, visit
   };
 }
 
+function shouldClickAmazonLoadMore(nextChoice) {
+  return nextChoice?.source === "next_review_page_url"
+    && isAmazonLoadMoreCollectorUrl(nextChoice?.selected_url);
+}
+
+async function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function clickAmazonReviewLoadMoreInTab(tabId) {
+  const results = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: () => {
+      function cleanText(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+
+      function currentAmazonAsin() {
+        const match = location.href.match(/\/(?:dp|gp\/product|product-reviews)\/([A-Z0-9]{10})/i);
+        return match ? match[1].toUpperCase() : "";
+      }
+
+      function hrefAsin(value) {
+        const match = String(value || "").match(/\/(?:dp|gp\/product|product-reviews)\/([A-Z0-9]{10})/i);
+        return match ? match[1].toUpperCase() : "";
+      }
+
+      function absoluteHref(value) {
+        try {
+          return new URL(value, location.href).href;
+        } catch (error) {
+          return "";
+        }
+      }
+
+      function visibleReviewCount() {
+        return Array.from(document.querySelectorAll("[data-hook='review'], [id^='customer_review-'], .review"))
+          .filter((node) => cleanText(node.textContent).length > 20)
+          .length;
+      }
+
+      const currentAsin = currentAmazonAsin();
+      const candidates = Array.from(document.querySelectorAll("a[href], button, input[type='button'], input[type='submit']"));
+
+      for (const candidate of candidates) {
+        const href = absoluteHref(candidate.getAttribute("href") || "");
+        const text = cleanText([
+          candidate.textContent || "",
+          candidate.getAttribute("aria-label") || "",
+          candidate.getAttribute("title") || "",
+          candidate.getAttribute("class") || "",
+          candidate.getAttribute("id") || "",
+          href
+        ].filter(Boolean).join(" "));
+
+        const haystack = text.toLowerCase();
+        const candidateAsin = hrefAsin(href);
+
+        const sameAsinReviewHref = href
+          && href.toLowerCase().includes("amazon.")
+          && href.toLowerCase().includes("/product-reviews/")
+          && (!currentAsin || candidateAsin === currentAsin);
+
+        const loadMoreSignal =
+          haystack.includes("cm_cr_arp_d_paging_btm") ||
+          haystack.includes("show more reviews") ||
+          haystack.includes("more reviews") ||
+          haystack.includes("\u591a\u663e\u793a") ||
+          haystack.includes("\u663e\u793a\u66f4\u591a");
+
+        if (!sameAsinReviewHref || !loadMoreSignal) continue;
+
+        const beforeCount = visibleReviewCount();
+        candidate.scrollIntoView({ block: "center", inline: "nearest" });
+        const clickable = candidate.closest("a, button, input") || candidate;
+        clickable.click();
+
+        return {
+          clicked: true,
+          clicked_href: href,
+          clicked_text: text.slice(0, 240),
+          before_url: location.href,
+          before_visible_review_count: beforeCount,
+          mode: "dom_click"
+        };
+      }
+
+      return {
+        clicked: false,
+        clicked_href: "",
+        clicked_text: "",
+        before_url: location.href,
+        before_visible_review_count: visibleReviewCount(),
+        mode: "dom_click"
+      };
+    }
+  });
+
+  return results?.[0]?.result || {
+    clicked: false,
+    clicked_href: "",
+    clicked_text: "",
+    before_url: "",
+    before_visible_review_count: 0,
+    mode: "dom_click"
+  };
+}
+
 async function collectCurrentProductMoreReviews() {
   setStatus(tPopup("collectingMoreReviews"));
 
@@ -997,6 +1105,7 @@ async function collectCurrentProductMoreReviews() {
   const seenReviewPageSignatures = new Set();
   let collectorTab = null;
   let currentUrl = firstUrl;
+  let skipNavigationOnce = false;
 
   try {
     collectorTab = await chrome.tabs.create({ url: currentUrl, active: false });
@@ -1011,9 +1120,10 @@ async function collectCurrentProductMoreReviews() {
       }
       visitedCollectorUrls.add(currentUrl);
 
-      if (pageIndex > 1) {
+      if (pageIndex > 1 && !skipNavigationOnce) {
         await chrome.tabs.update(collectorTab.id, { url: currentUrl });
       }
+      skipNavigationOnce = false;
 
       await waitForTabLoad(collectorTab.id);
 
@@ -1031,7 +1141,7 @@ async function collectCurrentProductMoreReviews() {
       const pageSignature = reviewPageSignatureFromProduct(product);
       const repeatedPageContent = Boolean(pageSignature && seenReviewPageSignatures.has(pageSignature));
 
-      pageSnapshots.push({
+      const pageSnapshot = {
         page_index: pageIndex,
         page_number: currentPageNumber,
         url: currentUrl,
@@ -1042,11 +1152,14 @@ async function collectCurrentProductMoreReviews() {
         selected_next_url: nextChoice.selected_url,
         selected_next_source: nextChoice.source,
         ignored_next_review_page_url: nextChoice.ignored_next_review_page_url,
+        load_more_click: null,
         pagination_candidate_count: (product?.metadata?.pagination_candidates || []).length,
         pagination_candidates: (product?.metadata?.pagination_candidates || []).slice(0, 24),
         repeated_page_content: repeatedPageContent,
         stop_reason: repeatedPageContent ? tPopup("repeatedReviewPageContent") : (stopReason || "")
-      });
+      };
+
+      pageSnapshots.push(pageSnapshot);
 
       if (stopReason) {
         failures.push(stopReason);
@@ -1063,6 +1176,20 @@ async function collectCurrentProductMoreReviews() {
       }
 
       collected.push(product);
+
+      if (shouldClickAmazonLoadMore(nextChoice)) {
+        const clickResult = await clickAmazonReviewLoadMoreInTab(collectorTab.id);
+        pageSnapshot.load_more_click = clickResult;
+
+        if (clickResult.clicked) {
+          await waitForTabLoad(collectorTab.id);
+          await delay(1500);
+
+          currentUrl = clickResult.clicked_href || nextChoice.selected_url;
+          skipNavigationOnce = true;
+          continue;
+        }
+      }
 
       currentUrl = nextChoice.selected_url;
     }
