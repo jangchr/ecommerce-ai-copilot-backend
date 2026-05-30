@@ -361,6 +361,10 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
         for marker in [
             "collectOpenTabs",
+            "tryLoadMoreBeforeCollectingTab",
+            "collectingOpenTabsWithLoadMore",
+            "tab_load_more_results",
+            "isAmazonReviewPageUrl",
             "chrome.tabs.query",
             "isCollectableTabUrl",
             "extractProductFromTab",

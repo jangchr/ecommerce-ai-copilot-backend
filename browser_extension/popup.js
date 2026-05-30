@@ -97,6 +97,7 @@ const POPUP_COPY = {
     savedPrefix: "Saved",
     reviewsLabel: "Reviews",
     collectingOpenTabs: "Collecting open Amazon/TikTok tabs...",
+    collectingOpenTabsWithLoadMore: "Collecting open tabs and trying one load-more click on each review page...",
     noCollectableTabs: "No Amazon or TikTok tabs found in this window.",
     couldNotCollectTabs: "Could not collect any tabs.",
     tabsSkipped: "tab(s) skipped.",
@@ -205,6 +206,7 @@ const POPUP_COPY = {
     "savedPrefix": "\u5df2\u4fdd\u5b58",
     "reviewsLabel": "\u8bc4\u8bba",
     "collectingOpenTabs": "\u6b63\u5728\u91c7\u96c6\u5df2\u6253\u5f00\u7684 Amazon/TikTok \u6807\u7b7e\u9875...",
+    "collectingOpenTabsWithLoadMore": "\u6b63\u5728\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\uff0c\u5e76\u5c1d\u8bd5\u5728\u6bcf\u4e2a\u8bc4\u8bba\u9875\u70b9\u51fb\u4e00\u6b21\u201c\u66f4\u591a\u8bc4\u8bba\u201d...",
     "noCollectableTabs": "\u5f53\u524d\u7a97\u53e3\u6ca1\u6709\u627e\u5230 Amazon \u6216 TikTok \u6807\u7b7e\u9875\u3002",
     "couldNotCollectTabs": "\u672a\u80fd\u91c7\u96c6\u4efb\u4f55\u6807\u7b7e\u9875\u3002",
     "tabsSkipped": "\u4e2a\u6807\u7b7e\u9875\u5df2\u8df3\u8fc7\u3002",
@@ -1599,8 +1601,32 @@ async function collectCurrentProductMoreReviews() {
   setStatus(`${status}${failureSuffix}`);
 }
 
+async function tryLoadMoreBeforeCollectingTab(tab) {
+  if (!tab?.id || !isAmazonReviewPageUrl(tab.url)) {
+    return {
+      attempted: false,
+      clicked: false,
+      reason: "not_amazon_review_page"
+    };
+  }
+
+  const clickResult = await clickAmazonReviewLoadMoreInTab(tab.id);
+  if (clickResult.clicked) {
+    await waitForTabLoad(tab.id);
+    await delay(1800);
+  }
+
+  return {
+    attempted: true,
+    clicked: Boolean(clickResult.clicked),
+    clicked_href: clickResult.clicked_href || "",
+    clicked_text: clickResult.clicked_text || "",
+    before_visible_review_count: clickResult.before_visible_review_count ?? null
+  };
+}
+
 async function collectOpenTabs() {
-  setStatus(tPopup("collectingOpenTabs"));
+  setStatus(tPopup("collectingOpenTabsWithLoadMore"));
 
   const tabs = await chrome.tabs.query({ currentWindow: true });
   const candidates = tabs.filter((tab) => tab.id && isCollectableTabUrl(tab.url));
@@ -1611,9 +1637,17 @@ async function collectOpenTabs() {
 
   const collected = [];
   const failures = [];
+  const tabLoadMoreResults = [];
 
   for (const tab of candidates) {
     try {
+      const loadMoreResult = await tryLoadMoreBeforeCollectingTab(tab);
+      tabLoadMoreResults.push({
+        tab_title: tab.title || "",
+        tab_url: tab.url || "",
+        ...loadMoreResult
+      });
+
       const product = await extractProductFromTab(tab);
       collected.push(product);
     } catch (error) {
@@ -1632,6 +1666,7 @@ async function collectOpenTabs() {
   $("previewCard").hidden = false;
   $("preview").textContent = JSON.stringify({
     collected_tabs: collected.length,
+    tab_load_more_results: tabLoadMoreResults,
     failures,
     merge_stats: merged.stats,
     last_product: normalizeCollectedProductForMerge(collected[collected.length - 1])
