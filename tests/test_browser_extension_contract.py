@@ -292,6 +292,9 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceStrength",
             "sampleGuidanceCta",
             "sampleGuidanceCopyBtn",
+            "openLowStarReviewTabBtn",
+            "openVerifiedReviewTabBtn",
+            "copyTargetedReviewLinksBtn",
         ]:
             self.assertIn(marker, html)
 
@@ -312,6 +315,18 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceLoggedIn",
             "sampleGuidanceCta",
             "copySampleGuidanceSteps",
+            "openTargetedReviewTab",
+            "copyTargetedReviewLinks",
+            "targetedAmazonReviewLinksForProduct",
+            "amazonReviewUrlWithParams",
+            "latestSavedAmazonProduct",
+            "filterByStar",
+            "critical",
+            "avp_only_reviews",
+            "sortBy",
+            "formatType",
+            "openedTargetedReviewTab",
+            "copiedTargetedReviewLinks",
             "sampleGuidanceStepsTitle",
             "copiedSampleGuidanceSteps",
             "actionInProgress",
