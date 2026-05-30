@@ -2238,5 +2238,48 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_pasted_review_workspace_source_breakdown_frontend(self):
+        for marker in [
+            "reviewWorkspaceSourceBreakdownText",
+            "reviewWorkspaceAsinContributionText",
+            "reviewWorkspaceSourceGroupsText",
+            "reviewWorkspaceSourceGuidanceText",
+            "analysis.source_breakdown",
+            "source_breakdown",
+            "main_product_reviews",
+            "variant_reviews",
+            "low_star_reviews",
+            "verified_purchase_reviews",
+            "recent_reviews",
+            "asin_review_counts",
+            "sourceBreakdownTitle",
+            "sourceBreakdownGuidance",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_extension_workspace_refreshes_after_injected_payload(self):
+        for marker in [
+            "crossgrowth-extension-workspace-ready",
+            "__crossgrowthExtensionWorkspaceReadyListenerInstalled",
+            "renderExtensionWorkspacePayload();",
+            "reviewWorkspaceSourceBreakdownText(body.source_breakdown || {}, payload.output_language)",
+            "reviewWorkspaceSourceGuidanceText(body.source_breakdown || {})",
+            "sourceBreakdownTitle",
+            "sourceBreakdownGuidance",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_extension_workspace_source_breakdown_uses_payload_language(self):
+        for marker in [
+            "reviewWorkspaceSourceLabel(key, language = currentOutputLanguage())",
+            "payload.output_language",
+            "Unique analyzed reviews",
+            "reviewWorkspaceSourceBreakdownText(body.source_breakdown || {}, payload.output_language)",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()

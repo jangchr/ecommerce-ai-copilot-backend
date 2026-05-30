@@ -5156,6 +5156,91 @@
                 .join(String.fromCharCode(10));
         }
 
+
+        function reviewWorkspaceSourceLabel(key, language = currentOutputLanguage()) {
+            const isZh = language === 'zh-CN';
+            const labels = {
+                sourceBreakdownTitle: isZh ? '\u8bc4\u8bba\u6765\u6e90\u5206\u5e03' : 'Review source breakdown',
+                sourceBreakdownGuidance: isZh ? '\u6765\u6e90\u89e3\u8bfb\u5efa\u8bae' : 'Source interpretation guidance',
+                totalReviews: isZh ? '\u53bb\u91cd\u5206\u6790\u8bc4\u8bba' : 'Unique analyzed reviews',
+                mainProductReviews: isZh ? '\u4e3b\u5546\u54c1\u8bc4\u8bba' : 'Main product reviews',
+                variantReviews: isZh ? '\u53d8\u4f53\u8bc4\u8bba' : 'Variant reviews',
+                lowStarReviews: isZh ? '\u4f4e\u661f\u8bc4\u8bba' : 'Low-star reviews',
+                verifiedPurchaseReviews: isZh ? '\u5df2\u786e\u8ba4\u8d2d\u4e70\u8bc4\u8bba' : 'Verified-purchase reviews',
+                recentReviews: isZh ? '\u6700\u65b0\u8bc4\u8bba' : 'Recent reviews',
+                unknownReviews: isZh ? '\u672a\u5206\u7c7b\u8bc4\u8bba' : 'Unclassified reviews',
+                asinContribution: isZh ? 'ASIN \u8d21\u732e' : 'ASIN contribution',
+                sourceGroups: isZh ? '\u6765\u6e90\u5206\u7ec4' : 'Source groups',
+                evidenceQuotes: isZh ? '\u8bc1\u636e\u539f\u8bdd' : 'Evidence quotes'
+            };
+            return labels[key] || key;
+        }
+
+        function reviewWorkspaceAsinContributionText(sourceBreakdown) {
+            const counts = sourceBreakdown?.asin_review_counts || {};
+            return Object.entries(counts)
+                .sort((left, right) => Number(right[1] || 0) - Number(left[1] || 0))
+                .slice(0, 8)
+                .map(([asin, count]) => `- ${asin}: ${count}`)
+                .join(String.fromCharCode(10));
+        }
+
+        function reviewWorkspaceSourceGroupsText(sourceBreakdown, language = currentOutputLanguage()) {
+            return (sourceBreakdown?.source_groups || [])
+                .slice(0, 6)
+                .map((group) => {
+                    const header = `- ${group.label || group.source_type || ''}: ${group.review_count ?? 0}`;
+                    const asins = (group.top_asins || [])
+                        .slice(0, 3)
+                        .map((item) => `  ASIN ${item}`)
+                        .join(String.fromCharCode(10));
+                    const quotes = (group.evidence_quotes || [])
+                        .slice(0, 2)
+                        .map((quote) => `  ${reviewWorkspaceSourceLabel('evidenceQuotes', language)}: ${quote}`)
+                        .join(String.fromCharCode(10));
+                    return [header, asins, quotes].filter(Boolean).join(String.fromCharCode(10));
+                })
+                .filter(Boolean)
+                .join(String.fromCharCode(10));
+        }
+
+        function reviewWorkspaceSourceBreakdownText(sourceBreakdown, language = currentOutputLanguage()) {
+            if (!sourceBreakdown || !sourceBreakdown.total_reviews) return '';
+
+            const lines = [
+                `${reviewWorkspaceSourceLabel('totalReviews', language)}: ${sourceBreakdown.total_reviews ?? 0}`,
+                `${reviewWorkspaceSourceLabel('mainProductReviews', language)}: ${sourceBreakdown.main_product_reviews ?? 0}`,
+                `${reviewWorkspaceSourceLabel('variantReviews', language)}: ${sourceBreakdown.variant_reviews ?? 0}`,
+                `${reviewWorkspaceSourceLabel('lowStarReviews', language)}: ${sourceBreakdown.low_star_reviews ?? 0}`,
+                `${reviewWorkspaceSourceLabel('verifiedPurchaseReviews', language)}: ${sourceBreakdown.verified_purchase_reviews ?? 0}`,
+                `${reviewWorkspaceSourceLabel('recentReviews', language)}: ${sourceBreakdown.recent_reviews ?? 0}`,
+                `${reviewWorkspaceSourceLabel('unknownReviews', language)}: ${sourceBreakdown.unknown_reviews ?? 0}`,
+            ];
+
+            const asinText = reviewWorkspaceAsinContributionText(sourceBreakdown);
+            if (asinText) {
+                lines.push('');
+                lines.push(`${reviewWorkspaceSourceLabel('asinContribution', language)}:`);
+                lines.push(asinText);
+            }
+
+            const sourceGroupText = reviewWorkspaceSourceGroupsText(sourceBreakdown, language);
+            if (sourceGroupText) {
+                lines.push('');
+                lines.push(`${reviewWorkspaceSourceLabel('sourceGroups', language)}:`);
+                lines.push(sourceGroupText);
+            }
+
+            return lines.join(String.fromCharCode(10));
+        }
+
+        function reviewWorkspaceSourceGuidanceText(sourceBreakdown) {
+            return (sourceBreakdown?.guidance || [])
+                .slice(0, 4)
+                .map((item) => `- ${item}`)
+                .join(String.fromCharCode(10));
+        }
+
         function renderPastedReviewWorkspaceAnalysis(payload) {
             const target = document.getElementById('pastedReviewWorkspaceResult');
             if (!target) return;
@@ -5170,6 +5255,9 @@
             const analysis = payload.analysis || {};
             const warnings = parsed.data_warnings || [];
             const product = parsed.workspace_product || {};
+            const sourceBreakdown = analysis.source_breakdown || {};
+            const sourceBreakdownText = reviewWorkspaceSourceBreakdownText(sourceBreakdown);
+            const sourceGuidanceText = reviewWorkspaceSourceGuidanceText(sourceBreakdown);
             const hooks = (analysis.hooks || []).slice(0, 6).join(String.fromCharCode(10));
             const angles = (analysis.creative_angles || []).slice(0, 6).join(String.fromCharCode(10));
 
@@ -5185,6 +5273,8 @@
                     ${block(t('workspaceProductCountLabel') || 'Products', analysis.product_count ?? 0)}
                     ${block(t('workspaceTotalReviewCountLabel') || 'Total reviews', analysis.total_reviews ?? 0)}
                 </div>
+                ${block(reviewWorkspaceSourceLabel('sourceBreakdownTitle'), sourceBreakdownText)}
+                ${block(reviewWorkspaceSourceLabel('sourceBreakdownGuidance'), sourceGuidanceText)}
                 ${block(t('commonPainPointsLabel') || 'Common pain points', reviewWorkspaceThemeText(analysis.common_pain_points))}
                 ${block(t('buyerObjectionsLabel') || 'Buyer objections', reviewWorkspaceThemeText(analysis.buyer_objections))}
                 ${block(t('workspaceCreativeAnglesLabel') || 'Creative angles', angles)}
@@ -6468,6 +6558,8 @@
         <div><strong>${escapeExtensionHTML(body.total_reviews ?? 0)}</strong><br><span style="color:#64748b;">${escapeExtensionHTML(tExtensionWorkspace("reviewsMetric", body))}</span></div>
         <div><strong>${escapeExtensionHTML(body.high_signal_review_count ?? 0)}</strong><br><span style="color:#64748b;">${escapeExtensionHTML(tExtensionWorkspace("highSignalMetric", body))}</span></div>
       </div>
+      ${block(reviewWorkspaceSourceLabel('sourceBreakdownTitle', payload.output_language), reviewWorkspaceSourceBreakdownText(body.source_breakdown || {}, payload.output_language))}
+      ${block(reviewWorkspaceSourceLabel('sourceBreakdownGuidance', payload.output_language), reviewWorkspaceSourceGuidanceText(body.source_breakdown || {}))}
       ${extensionSampleInterpretationHTML(body)}
       ${extensionVideoScriptPackHTML(body)}
       ${extensionCreativeBriefHTML(body)}
@@ -6486,6 +6578,14 @@
       renderExtensionWorkspacePayload();
     }
   }
+
+  if (!window.__crossgrowthExtensionWorkspaceReadyListenerInstalled) {
+    window.__crossgrowthExtensionWorkspaceReadyListenerInstalled = true;
+    window.addEventListener("crossgrowth-extension-workspace-ready", () => {
+      renderExtensionWorkspacePayload();
+    });
+  }
+
 
   window.addEventListener("crossgrowth-extension-workspace-ready", renderExtensionWorkspacePayload);
   document.addEventListener("DOMContentLoaded", maybeRenderExtensionWorkspace);

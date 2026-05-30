@@ -459,6 +459,55 @@ class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
         self.assertIn("\u6837\u672c", body["sample_interpretation"]["sample_type"])
         self.assertIn("\u811a\u672c", body["video_script_pack"]["positioning_note"])
 
+
+    def test_review_workspace_detects_apparel_japanese_signals(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        payload = {
+            "workspace_id": "apparel-japanese-signals",
+            "source": "browser_extension",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "asin": "B0APPAREL01",
+                    "url": "https://www.amazon.co.jp/-/zh/product-reviews/B0APPAREL01",
+                    "title": "Summer shirt",
+                    "reviews": [
+                        {
+                            "rating": "3.0",
+                            "title": "size and sewing concern",
+                            "text": "\u30b5\u30a4\u30ba\u304c\u5c0f\u3055\u3044\u3002\u7e2b\u88fd\u306e\u54c1\u8cea\u306b\u3082\u554f\u984c\u304c\u3042\u308a\u3001\u30dc\u30bf\u30f3\u7a74\u304c\u307b\u3064\u308c\u3066\u3044\u307e\u3057\u305f\u3002",
+                            "source_section": "amazon_visible_review",
+                        },
+                        {
+                            "rating": "4.0",
+                            "title": "fabric comfort",
+                            "text": "\u7d20\u6750\u306e\u808c\u89e6\u308a\u304c\u67d4\u3089\u304b\u304f\u3001\u590f\u3067\u3082\u6dbc\u3057\u304f\u7740\u3089\u308c\u307e\u3059\u3002",
+                            "source_section": "amazon_visible_review",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        client = TestClient(app)
+        response = client.post("/api/v1/analyze-review-workspace", json=payload)
+        self.assertEqual(response.status_code, 200)
+
+        body = response.json()
+        labels = " ".join(item["label"] for item in body["common_pain_points"])
+        self.assertTrue(
+            "sewing or QC concern" in labels
+            or "sewing / quality control issue" in labels
+            or "size / fit issue" in labels
+            or "summer fabric comfort" in labels,
+            labels,
+        )
+        self.assertTrue(body["common_pain_points"])
+
+
 if __name__ == "__main__":
     unittest.main()
 
