@@ -171,6 +171,50 @@ class BrowserExtensionContractTest(unittest.TestCase):
             self.assertIn(marker, css)
 
 
+
+    def test_popup_supports_background_review_page_collector(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+        content = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "autoCollectMoreBtn",
+            "autoCollectMoreReviews",
+        ]:
+            self.assertIn(marker, html + js)
+
+        for marker in [
+            "collectCurrentProductMoreReviews",
+            "amazonAsinFromProduct",
+            "amazonReviewPageUrlFor",
+            "isAmazonReviewPageUrl",
+            "amazonReviewCollectorStartUrl",
+            "collector_pages",
+            "visitedCollectorUrls",
+            "seenReviewPageSignatures",
+            "reviewPageSignatureFromProduct",
+            "repeatedReviewPageContent",
+            "repeated_page_content",
+            "nextSequentialAmazonReviewUrl",
+            "amazonReviewPageNumberFromUrl",
+            "fallback_next_url",
+            "page_number",
+            "backgroundCollectorDone",
+            "chrome.tabs.create",
+            "chrome.tabs.update",
+            "chrome.tabs.remove",
+            "bind(\"autoCollectMoreBtn\", collectCurrentProductMoreReviews)",
+        ]:
+            self.assertIn(marker, js)
+
+        for marker in [
+            "extractAmazonNextReviewPageUrl",
+            "next_review_page_url",
+            "pageNumber",
+            "li.a-last",
+        ]:
+            self.assertIn(marker, content)
+
     def test_popup_supports_collect_open_tabs(self):
         html = (self.root / "popup.html").read_text(encoding="utf-8")
         js = (self.root / "popup.js").read_text(encoding="utf-8")

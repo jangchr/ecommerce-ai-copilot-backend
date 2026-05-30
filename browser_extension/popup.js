@@ -13,6 +13,13 @@ const POPUP_COPY = {
     backendUrlHelper: "Use local backend for development: http://127.0.0.1:8001",
     saveCurrentProduct: "Save current product",
     collectOpenTabs: "Collect open tabs",
+    autoCollectMoreReviews: "Auto collect more reviews",
+    collectingMoreReviews: "Auto collecting visible review pages...",
+    backgroundCollectorDone: "Auto collected {pages} page(s), {added} new visible review(s), {duplicates} duplicate review(s) skipped, {total} saved review(s).",
+    backgroundCollectorStopped: "Auto collector stopped: {reason}",
+    repeatedReviewPageContent: "Later review pages repeated the same visible content, so collection stopped early.",
+    noAmazonAsin: "Could not find an Amazon ASIN on the current page.",
+    couldNotCreateCollectorTab: "Could not create background collector tab.",
     analyzeSavedWorkspace: "Analyze saved workspace",
     clearSavedProducts: "Clear saved products",
     savedProducts: "Saved products",
@@ -82,6 +89,13 @@ const POPUP_COPY = {
     "backendUrlHelper": "\u672c\u5730\u5f00\u53d1\u4f7f\u7528\uff1ahttp://127.0.0.1:8001",
     "saveCurrentProduct": "\u4fdd\u5b58\u5f53\u524d\u5546\u54c1",
     "collectOpenTabs": "\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875",
+    "autoCollectMoreReviews": "\u81ea\u52a8\u91c7\u96c6\u66f4\u591a\u8bc4\u8bba",
+    "collectingMoreReviews": "\u6b63\u5728\u81ea\u52a8\u91c7\u96c6\u53ef\u89c1\u8bc4\u8bba\u9875...",
+    "backgroundCollectorDone": "\u5df2\u81ea\u52a8\u91c7\u96c6 {pages} \u9875\uff0c\u65b0\u589e {added} \u6761\u53ef\u89c1\u8bc4\u8bba\uff0c\u8df3\u8fc7 {duplicates} \u6761\u91cd\u590d\u8bc4\u8bba\uff0c\u5f53\u524d\u7d2f\u8ba1 {total} \u6761\u8bc4\u8bba\u3002",
+    "backgroundCollectorStopped": "\u81ea\u52a8\u91c7\u96c6\u5df2\u505c\u6b62\uff1a{reason}",
+    "repeatedReviewPageContent": "\u540e\u7eed\u8bc4\u8bba\u9875\u8fd4\u56de\u4e86\u76f8\u540c\u7684\u53ef\u89c1\u5185\u5bb9\uff0c\u5df2\u63d0\u524d\u505c\u6b62\u91c7\u96c6\u3002",
+    "noAmazonAsin": "\u65e0\u6cd5\u5728\u5f53\u524d\u9875\u9762\u627e\u5230 Amazon ASIN\u3002",
+    "couldNotCreateCollectorTab": "\u65e0\u6cd5\u521b\u5efa\u540e\u53f0\u91c7\u96c6\u6807\u7b7e\u9875\u3002",
     "analyzeSavedWorkspace": "\u5206\u6790\u5df2\u4fdd\u5b58\u5de5\u4f5c\u533a",
     "clearSavedProducts": "\u6e05\u7a7a\u5df2\u4fdd\u5b58\u5546\u54c1",
     "savedProducts": "\u5df2\u4fdd\u5b58\u5546\u54c1",
@@ -798,6 +812,220 @@ async function saveCurrentProduct() {
 }
 
 
+function amazonAsinFromProduct(product) {
+  const explicit = String(product?.asin || product?.metadata?.asin || "").trim().toUpperCase();
+  if (explicit) return explicit;
+
+  const url = String(product?.url || "");
+  const match = url.match(/\/(?:dp|gp\/product|product-reviews)\/([A-Z0-9]{10})/i);
+  return match ? match[1].toUpperCase() : "";
+}
+
+function isAmazonReviewPageUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return url.hostname.toLowerCase().includes("amazon.") && url.pathname.toLowerCase().includes("/product-reviews/");
+  } catch (error) {
+    return false;
+  }
+}
+
+function amazonReviewCollectorStartUrl(product, activeTabUrl) {
+  if (isAmazonReviewPageUrl(activeTabUrl)) {
+    return String(activeTabUrl || "");
+  }
+
+  return amazonReviewPageUrlFor(product, 1, activeTabUrl);
+}
+
+function amazonReviewPageUrlFor(product, pageNumber = 1, sourceUrl = "") {
+  const asin = amazonAsinFromProduct(product);
+  if (!asin) return "";
+
+  const rawUrl = String(product?.url || sourceUrl || "");
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch (error) {
+    return "";
+  }
+
+  const languagePrefix = parsed.pathname.includes("/-/zh/") ? "/-/zh" : "";
+  const reviewUrl = new URL(`${parsed.origin}${languagePrefix}/product-reviews/${asin}`);
+  reviewUrl.searchParams.set("reviewerType", "all_reviews");
+  reviewUrl.searchParams.set("pageNumber", String(pageNumber));
+  return reviewUrl.href;
+}
+
+function amazonReviewPageNumberFromUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    const pageNumber = Number(url.searchParams.get("pageNumber") || "0") || 0;
+    return pageNumber > 0 ? pageNumber : 1;
+  } catch (error) {
+    return 1;
+  }
+}
+
+function nextSequentialAmazonReviewUrl(product, currentUrl, nextPageNumber) {
+  try {
+    const url = new URL(String(currentUrl || ""));
+    if (url.hostname.toLowerCase().includes("amazon.") && url.pathname.toLowerCase().includes("/product-reviews/")) {
+      url.searchParams.set("pageNumber", String(nextPageNumber));
+      url.searchParams.delete("nextPageToken");
+      return url.href;
+    }
+  } catch (error) {
+    // Fall back to product-based review URL below.
+  }
+
+  return amazonReviewPageUrlFor(product, nextPageNumber, currentUrl);
+}
+
+function reviewPageSignatureFromProduct(product) {
+  const keys = (product?.reviews || [])
+    .map((review) => reviewIdentityKey(review))
+    .filter(Boolean)
+    .sort();
+
+  return keys.join("||");
+}
+
+function backgroundCollectorStopReason(product) {
+  const metadata = product?.metadata || {};
+  if (metadata.sign_in_required || metadata.review_visibility_status === "sign_in_required") {
+    return tPopup("signInRequired");
+  }
+
+  if (!(product?.reviews || []).length) {
+    return tPopup("noVisibleReviews");
+  }
+
+  return "";
+}
+
+async function collectCurrentProductMoreReviews() {
+  setStatus(tPopup("collectingMoreReviews"));
+
+  const activeTab = await getActiveTab();
+  const seedProduct = await extractProductFromTab(activeTab);
+  const firstUrl = amazonReviewCollectorStartUrl(seedProduct, activeTab.url);
+
+  if (!firstUrl) {
+    throw new Error(tPopup("noAmazonAsin"));
+  }
+
+  const maxPages = 3;
+  const collected = [];
+  const failures = [];
+  const pageSnapshots = [];
+  const visitedCollectorUrls = new Set();
+  const seenReviewPageSignatures = new Set();
+  let collectorTab = null;
+  let currentUrl = firstUrl;
+
+  try {
+    collectorTab = await chrome.tabs.create({ url: currentUrl, active: false });
+    if (!collectorTab.id) {
+      throw new Error(tPopup("couldNotCreateCollectorTab"));
+    }
+
+    for (let pageIndex = 1; pageIndex <= maxPages && currentUrl; pageIndex += 1) {
+      if (visitedCollectorUrls.has(currentUrl)) {
+        failures.push(`Repeated collector URL: ${currentUrl}`);
+        break;
+      }
+      visitedCollectorUrls.add(currentUrl);
+
+      if (pageIndex > 1) {
+        await chrome.tabs.update(collectorTab.id, { url: currentUrl });
+      }
+
+      await waitForTabLoad(collectorTab.id);
+
+      const product = await extractProductFromTab({
+        id: collectorTab.id,
+        url: currentUrl,
+        title: `Amazon review page ${pageIndex}`
+      });
+
+      const stopReason = backgroundCollectorStopReason(product);
+      const nextFromPage = String(product?.metadata?.next_review_page_url || "").trim();
+      const currentPageNumber = amazonReviewPageNumberFromUrl(currentUrl);
+      const fallbackNextUrl = nextSequentialAmazonReviewUrl(seedProduct, currentUrl, currentPageNumber + 1);
+      const pageSignature = reviewPageSignatureFromProduct(product);
+      const repeatedPageContent = Boolean(pageSignature && seenReviewPageSignatures.has(pageSignature));
+
+      pageSnapshots.push({
+        page_index: pageIndex,
+        page_number: currentPageNumber,
+        url: currentUrl,
+        review_count: (product?.reviews || []).length,
+        review_visibility_status: product?.metadata?.review_visibility_status || "",
+        next_review_page_url: nextFromPage,
+        fallback_next_url: fallbackNextUrl,
+        repeated_page_content: repeatedPageContent,
+        stop_reason: repeatedPageContent ? tPopup("repeatedReviewPageContent") : (stopReason || "")
+      });
+
+      if (stopReason) {
+        failures.push(stopReason);
+        break;
+      }
+
+      if (repeatedPageContent) {
+        failures.push(tPopup("repeatedReviewPageContent"));
+        break;
+      }
+
+      if (pageSignature) {
+        seenReviewPageSignatures.add(pageSignature);
+      }
+
+      collected.push(product);
+
+      currentUrl = nextFromPage || fallbackNextUrl;
+    }
+  } finally {
+    if (collectorTab?.id) {
+      try {
+        await chrome.tabs.remove(collectorTab.id);
+      } catch (error) {
+        // Ignore tab cleanup failures during spike collection.
+      }
+    }
+  }
+
+  if (!collected.length) {
+    const reason = failures[0] || tPopup("couldNotCollectTabs");
+    throw new Error(tPopup("backgroundCollectorStopped").replace("{reason}", reason));
+  }
+
+  const { products } = await getSavedProducts();
+  const merged = mergeProductsByUrlWithStats(products, collected);
+  await setSavedProducts(merged.products);
+
+  $("previewCard").hidden = false;
+  $("preview").textContent = JSON.stringify({
+    background_review_pages: collected.length,
+    collector_pages: pageSnapshots,
+    failures,
+    merge_stats: merged.stats,
+    last_product: normalizeCollectedProductForMerge(collected[collected.length - 1])
+  }, null, 2);
+
+  const status = tPopup("backgroundCollectorDone")
+    .replace("{pages}", String(collected.length))
+    .replace("{added}", String(merged.stats.addedReviews))
+    .replace("{duplicates}", String(merged.stats.duplicateReviews))
+    .replace("{total}", String(merged.stats.totalReviews));
+
+  const failureSuffix = failures.length
+    ? ` ${tPopup("backgroundCollectorStopped").replace("{reason}", failures[0])}`
+    : "";
+  setStatus(`${status}${failureSuffix}`);
+}
+
 async function collectOpenTabs() {
   setStatus(tPopup("collectingOpenTabs"));
 
@@ -921,6 +1149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   bind("extractBtn", saveCurrentProduct);
   bind("collectTabsBtn", collectOpenTabs);
+  bind("autoCollectMoreBtn", collectCurrentProductMoreReviews);
   bind("analyzeBtn", analyzeWorkspace);
   bind("copyInsightsBtn", copyInsights);
   bind("copyWorkspaceJsonBtn", copyWorkspaceJson);
