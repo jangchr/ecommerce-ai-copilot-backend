@@ -1279,6 +1279,7 @@ async function collectCurrentProductMoreReviews() {
         url: currentUrl,
         review_count: (product?.reviews || []).length,
         review_visibility_status: product?.metadata?.review_visibility_status || "",
+        review_extraction_debug: product?.metadata?.review_extraction_debug || null,
         next_review_page_url: nextFromPage,
         fallback_next_url: fallbackNextUrl,
         selected_next_url: nextChoice.selected_url,

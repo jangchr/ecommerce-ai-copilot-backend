@@ -318,6 +318,31 @@
     return helpfulCountFromText(helpfulText);
   }
 
+  function amazonReviewCandidateSelectorCounts() {
+    const selectors = {
+      data_hook_review: "[data-hook='review']",
+      customer_review_id: "[id^='customer_review-']",
+      cm_cr_dp_review_list_review_class: "#cm-cr-dp-review-list [class*='review']",
+      reviews_medley_review_class: "#reviewsMedley [class*='review']",
+      customer_reviews_review_class: "#customerReviews [class*='review']",
+      reviews_content_review_class: ".reviews-content [class*='review']"
+    };
+
+    const counts = {};
+    for (const [key, selector] of Object.entries(selectors)) {
+      counts[key] = document.querySelectorAll(selector).length;
+    }
+
+    const strictNodes = new Set([
+      ...Array.from(document.querySelectorAll("[data-hook='review']")),
+      ...Array.from(document.querySelectorAll("[id^='customer_review-']"))
+    ]);
+
+    counts.strict_unique_review_nodes = strictNodes.size;
+
+    return counts;
+  }
+
   function amazonReviewCandidateNodes() {
     const selectors = [
       "[data-hook='review']",
@@ -445,6 +470,7 @@
       raw_candidate_count: reviewNodes.length,
       extraction_debug: {
         candidate_count: reviewNodes.length,
+        candidate_selector_counts: amazonReviewCandidateSelectorCounts(),
         kept_count: keptReviews.length,
         returned_count: Math.min(keptReviews.length, 80),
         skipped_counts: skippedCounts,
