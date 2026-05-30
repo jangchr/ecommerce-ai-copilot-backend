@@ -1014,6 +1014,73 @@ function nextSequentialAmazonReviewUrl(product, currentUrl, nextPageNumber) {
   return amazonReviewPageUrlFor(product, nextPageNumber, currentUrl);
 }
 
+const NAVIGATE_CLICK_REUSE_MIN_NEW_REVIEWS = 3;
+
+function reviewIdentityKeySetFromProduct(product) {
+  return new Set((product?.reviews || [])
+    .map((review) => reviewIdentityKey(review))
+    .filter(Boolean));
+}
+
+function uniqueReviewDeltaCount(beforeKeys, afterKeys) {
+  let count = 0;
+  for (const key of afterKeys || []) {
+    if (!beforeKeys.has(key)) count += 1;
+  }
+  return count;
+}
+
+function amazonLoadMoreClickContextKey(currentUrl, clickHref) {
+  try {
+    const current = new URL(String(currentUrl || ""));
+    const click = new URL(String(clickHref || currentUrl || ""));
+    const currentPage = current.searchParams.get("pageNumber") || "";
+    const currentToken = current.searchParams.get("nextPageToken") || "";
+    const clickPage = click.searchParams.get("pageNumber") || "";
+    const clickToken = click.searchParams.get("nextPageToken") || "";
+
+    return [
+      current.origin,
+      current.pathname,
+      `currentPage=${currentPage}`,
+      `currentToken=${currentToken}`,
+      click.origin,
+      click.pathname,
+      `clickPage=${clickPage}`,
+      `clickToken=${clickToken}`
+    ].join("|");
+  } catch (error) {
+    return `${currentUrl || ""}|${clickHref || ""}`;
+  }
+}
+
+function reusableAmazonLoadMoreChoice(currentUrl, nextFromPage, nextChoice, visitedLoadMoreClickContexts) {
+  const candidates = [];
+
+  if (nextFromPage && isAmazonLoadMoreCollectorUrl(nextFromPage)) {
+    candidates.push({
+      source: "current_page_load_more",
+      selected_url: nextFromPage
+    });
+  }
+
+  if (shouldClickAmazonLoadMore(nextChoice)) {
+    candidates.push(nextChoice);
+  }
+
+  for (const candidate of candidates) {
+    const contextKey = amazonLoadMoreClickContextKey(currentUrl, candidate.selected_url);
+    if (visitedLoadMoreClickContexts.has(contextKey)) continue;
+
+    return {
+      ...candidate,
+      context_key: contextKey
+    };
+  }
+
+  return null;
+}
+
 function reviewPageSignatureFromProduct(product) {
   const keys = (product?.reviews || [])
     .map((review) => reviewIdentityKey(review))
@@ -1218,6 +1285,97 @@ async function clickAmazonReviewLoadMoreInTab(tabId) {
   };
 }
 
+async function extractCollectorProductSnapshot(tabId, currentUrl, pageIndex) {
+  await waitForTabLoad(tabId);
+
+  return extractProductFromTab({
+    id: tabId,
+    url: currentUrl,
+    title: `Amazon review page ${pageIndex}`
+  });
+}
+
+async function attemptNavigateClickReuse({
+  collectorTabId,
+  currentUrl,
+  pageIndex,
+  product,
+  clickChoice,
+  pageSnapshot,
+  visitedLoadMoreClickContexts
+}) {
+  if (!clickChoice) {
+    return {
+      shouldContinue: false,
+      nextUrl: "",
+      step: null
+    };
+  }
+
+  const beforeKeys = reviewIdentityKeySetFromProduct(product);
+  const step = {
+    page_index: pageIndex,
+    source: clickChoice.source || "",
+    context_key: clickChoice.context_key || "",
+    selected_next_url: clickChoice.selected_url || "",
+    clicked: false,
+    clicked_href: "",
+    clicked_text: "",
+    before_unique_reviews: beforeKeys.size,
+    after_unique_reviews: beforeKeys.size,
+    added_unique_reviews: 0,
+    stop_reason: ""
+  };
+
+  pageSnapshot.navigation_click_steps = pageSnapshot.navigation_click_steps || [];
+  pageSnapshot.navigation_click_steps.push(step);
+
+  if (clickChoice.context_key) {
+    visitedLoadMoreClickContexts.add(clickChoice.context_key);
+  }
+
+  const clickResult = await clickAmazonReviewLoadMoreInTab(collectorTabId);
+  pageSnapshot.load_more_click = clickResult;
+  step.clicked = Boolean(clickResult.clicked);
+  step.clicked_href = clickResult.clicked_href || "";
+  step.clicked_text = clickResult.clicked_text || "";
+
+  if (!clickResult.clicked) {
+    step.stop_reason = "no_click_target";
+    return {
+      shouldContinue: false,
+      nextUrl: "",
+      step
+    };
+  }
+
+  await waitForTabLoad(collectorTabId);
+  await delay(2000);
+
+  const clickedUrl = clickResult.clicked_href || clickChoice.selected_url || currentUrl;
+  const afterProduct = await extractCollectorProductSnapshot(collectorTabId, clickedUrl, `${pageIndex}.reuse`);
+  const afterKeys = reviewIdentityKeySetFromProduct(afterProduct);
+  const addedUniqueReviews = uniqueReviewDeltaCount(beforeKeys, afterKeys);
+
+  step.after_unique_reviews = afterKeys.size;
+  step.added_unique_reviews = addedUniqueReviews;
+
+  if (addedUniqueReviews < NAVIGATE_CLICK_REUSE_MIN_NEW_REVIEWS) {
+    step.stop_reason = "insufficient_new_reviews";
+    return {
+      shouldContinue: false,
+      nextUrl: clickedUrl,
+      step
+    };
+  }
+
+  return {
+    shouldContinue: true,
+    nextUrl: clickedUrl,
+    step
+  };
+}
+
 async function collectCurrentProductMoreReviews() {
   setStatus(tPopup("collectingMoreReviews"));
 
@@ -1234,6 +1392,7 @@ async function collectCurrentProductMoreReviews() {
   const failures = [];
   const pageSnapshots = [];
   const visitedCollectorUrls = new Set();
+  const visitedLoadMoreClickContexts = new Set();
   const seenReviewPageSignatures = new Set();
   let collectorTab = null;
   let currentUrl = firstUrl;
@@ -1285,6 +1444,7 @@ async function collectCurrentProductMoreReviews() {
         selected_next_source: nextChoice.source,
         ignored_next_review_page_url: nextChoice.ignored_next_review_page_url,
         load_more_click: null,
+        navigation_click_steps: [],
         pagination_candidate_count: (product?.metadata?.pagination_candidates || []).length,
         pagination_candidates: (product?.metadata?.pagination_candidates || []).slice(0, 24),
         repeated_page_content: repeatedPageContent,
@@ -1309,18 +1469,27 @@ async function collectCurrentProductMoreReviews() {
 
       collected.push(product);
 
-      if (shouldClickAmazonLoadMore(nextChoice)) {
-        const clickResult = await clickAmazonReviewLoadMoreInTab(collectorTab.id);
-        pageSnapshot.load_more_click = clickResult;
+      const clickChoice = reusableAmazonLoadMoreChoice(
+        currentUrl,
+        nextFromPage,
+        nextChoice,
+        visitedLoadMoreClickContexts
+      );
 
-        if (clickResult.clicked) {
-          await waitForTabLoad(collectorTab.id);
-          await delay(1500);
+      const clickReuseResult = await attemptNavigateClickReuse({
+        collectorTabId: collectorTab.id,
+        currentUrl,
+        pageIndex,
+        product,
+        clickChoice,
+        pageSnapshot,
+        visitedLoadMoreClickContexts
+      });
 
-          currentUrl = clickResult.clicked_href || nextChoice.selected_url;
-          skipNavigationOnce = true;
-          continue;
-        }
+      if (clickReuseResult.shouldContinue) {
+        currentUrl = clickReuseResult.nextUrl || clickChoice.selected_url || nextChoice.selected_url;
+        skipNavigationOnce = true;
+        continue;
       }
 
       currentUrl = nextChoice.selected_url;
