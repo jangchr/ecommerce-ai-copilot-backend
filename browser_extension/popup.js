@@ -695,6 +695,81 @@ async function copySampleGuidanceSteps() {
   }
 }
 
+function isUsefulAmazonVariantLabel(value) {
+  const label = cleanVariantReviewLabel(value);
+  const lower = label.toLowerCase();
+
+  if (!label) return false;
+
+  const noisyFragments = [
+    "nav-assistant",
+    "nav-global",
+    "\u4e3b\u8981\u5185\u5bb9",
+    "\u914d\u9001\u81f3",
+    "\u518d\u6b21\u8d2d\u4e70",
+    "\u5c06\u6240\u6709\u8bc4\u8bba",
+    "\u5c06\u8bc4\u8bba\u7ffb\u8bd1",
+    "\u5df2\u786e\u8ba4\u8d2d\u4e70",
+    "\u6e05\u9664\u7b5b\u9009",
+    "\u661f",
+    "reviews-filter-bar",
+    "audible"
+  ];
+
+  if (noisyFragments.some((fragment) => lower.includes(fragment.toLowerCase()))) {
+    return false;
+  }
+
+  return (
+    label.includes(":") ||
+    lower.includes("color") ||
+    lower.includes("size") ||
+    label.includes("\u989c\u8272") ||
+    label.includes("\u5c3a\u5bf8")
+  );
+}
+
+function amazonVariantLabelFromProduct(product) {
+  const asin = amazonAsinFromProduct(product);
+  if (!asin) return "";
+
+  const candidates = product?.metadata?.pagination_candidates || [];
+
+  for (const candidate of candidates) {
+    const href = String(candidate?.href || "");
+    const candidateAsin = amazonAsinFromUrl(href);
+    if (!candidateAsin || candidateAsin !== asin) continue;
+
+    const label = cleanVariantReviewLabel(candidate?.text || "");
+    if (isUsefulAmazonVariantLabel(label)) return label;
+  }
+
+  return "";
+}
+
+function collectedProductDisplayMeta(product, index, products) {
+  const platformLabel = productSourceLabel(product);
+  const asin = amazonAsinFromProduct(product);
+  const reviewCount = (product?.reviews || []).length;
+  const variantLabel = amazonVariantLabelFromProduct(product);
+  const asinCount = (products || [])
+    .filter((item) => amazonAsinFromProduct(item) === asin)
+    .length;
+
+  const pieces = [];
+  if (asin) pieces.push(`ASIN: ${asin}`);
+  if (variantLabel) {
+    pieces.push(variantLabel);
+  } else if (asin && asinCount > 1) {
+    pieces.push(`Variant ${index + 1}`);
+  } else if (asin) {
+    pieces.push("Primary sample");
+  }
+  pieces.push(platformLabel);
+
+  return pieces.join(" ? ");
+}
+
 function renderSavedProducts(products) {
   const target = $("collectedProducts");
   if (!target) return;
@@ -708,10 +783,10 @@ function renderSavedProducts(products) {
   target.innerHTML = `
     <div class="collected-header">${escapeHTML(tPopup("collectedProducts"))}</div>
     <ol>
-      ${items.map((product) => `
+      ${items.map((product, index) => `
         <li>
           <div class="collected-title">${escapeHTML(shortProductTitle(product))}</div>
-          <div class="collected-meta">${escapeHTML(productSourceLabel(product))}</div>
+          <div class="collected-meta">${escapeHTML(collectedProductDisplayMeta(product, index, items))}</div>
         </li>
       `).join("")}
     </ol>

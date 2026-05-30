@@ -406,6 +406,15 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
         for marker in [
             "renderSavedProducts",
+            "collectedProductDisplayMeta",
+            "amazonVariantLabelFromProduct",
+            "isUsefulAmazonVariantLabel",
+            "nav-assistant",
+            "amazonAsinFromUrl",
+            "ASIN:",
+            "Primary sample",
+            "Variant",
+            "cleanVariantReviewLabel",
             "shortProductTitle",
             "productSourceLabel",
             "Collected products",
