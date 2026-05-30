@@ -73,6 +73,19 @@ function AddExistingPath($path) {
   }
 }
 
+function CommitStagedChanges() {
+  git diff --cached --quiet
+  if ($global:LASTEXITCODE -eq 0) {
+    Write-Host "No staged changes to commit. Working tree may already be clean."
+    $global:LASTEXITCODE = 0
+    return
+  }
+
+  & git commit -m $Message
+}
+
+
+
 
 function Gate() {
   Run "Run focused unit tests" {
@@ -111,7 +124,7 @@ function CommitExtension() {
   }
 
   Run "Commit extension changes" {
-    git commit -m $Message
+    CommitStagedChanges
   }
 
   Run "Push branch" {
@@ -130,7 +143,7 @@ function CommitFrontend() {
   }
 
   Run "Commit frontend changes" {
-    git commit -m $Message
+    CommitStagedChanges
   }
 
   Run "Push branch" {
@@ -149,7 +162,7 @@ function CommitBackend() {
   }
 
   Run "Commit backend changes" {
-    git commit -m $Message
+    CommitStagedChanges
   }
 
   Run "Push branch" {
@@ -174,7 +187,7 @@ function CommitTools() {
   }
 
   Run "Commit tool changes" {
-    git commit -m $Message
+    CommitStagedChanges
   }
 
   Run "Push branch" {
