@@ -14,6 +14,14 @@ const POPUP_COPY = {
     saveCurrentProduct: "Save current product",
     collectOpenTabs: "Collect open tabs",
     autoCollectMoreReviews: "Auto collect more reviews",
+    smartCollectWorkspace: "Smart collect & open workspace",
+    smartCollectStepCollectCurrent: "Smart workflow: collecting more reviews from the current product...",
+    smartCollectStepOpenPack: "Smart workflow: opening related review expansion tabs...",
+    smartCollectStepWaitTabs: "Smart workflow: waiting for expansion tabs to load...",
+    smartCollectStepCollectTabs: "Smart workflow: collecting open review tabs...",
+    smartCollectStepOpenWorkspace: "Smart workflow: opening Web Workspace...",
+    smartCollectDone: "Smart workflow complete. Web Workspace opened with the latest saved reviews.",
+    smartCollectPackSkipped: "Smart workflow: related pack skipped: {reason}",
     autoCollectMaxPagesLabel: "Max pages",
     collectingMoreReviews: "Auto collecting visible review pages...",
     backgroundCollectorDone: "Auto collected {pages} page(s), {added} new visible review(s), {duplicates} duplicate review(s) skipped, {total} saved review(s).",
@@ -129,6 +137,14 @@ const POPUP_COPY = {
     "saveCurrentProduct": "\u4fdd\u5b58\u5f53\u524d\u5546\u54c1",
     "collectOpenTabs": "\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875",
     "autoCollectMoreReviews": "\u81ea\u52a8\u91c7\u96c6\u66f4\u591a\u8bc4\u8bba",
+    "smartCollectWorkspace": "\u667a\u80fd\u91c7\u96c6\u5e76\u6253\u5f00\u5de5\u4f5c\u533a",
+    "smartCollectStepCollectCurrent": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u4ece\u5f53\u524d\u5546\u54c1\u91c7\u96c6\u66f4\u591a\u8bc4\u8bba...",
+    "smartCollectStepOpenPack": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u6253\u5f00\u540c\u7c7b\u8bc4\u8bba\u6269\u6837\u6807\u7b7e\u9875...",
+    "smartCollectStepWaitTabs": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u7b49\u5f85\u6269\u6837\u9875\u52a0\u8f7d...",
+    "smartCollectStepCollectTabs": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u91c7\u96c6\u5df2\u6253\u5f00\u8bc4\u8bba\u6807\u7b7e\u9875...",
+    "smartCollectStepOpenWorkspace": "\u667a\u80fd\u6d41\u7a0b\uff1a\u6b63\u5728\u6253\u5f00 Web Workspace...",
+    "smartCollectDone": "\u667a\u80fd\u91c7\u96c6\u6d41\u7a0b\u5b8c\u6210\uff0c\u5df2\u7528\u6700\u65b0\u8bc4\u8bba\u6253\u5f00 Web Workspace\u3002",
+    "smartCollectPackSkipped": "\u667a\u80fd\u6d41\u7a0b\uff1a\u540c\u7c7b\u6269\u6837\u5305\u5df2\u8df3\u8fc7\uff1a{reason}",
     "autoCollectMaxPagesLabel": "\u6700\u5927\u9875\u6570",
     "collectingMoreReviews": "\u6b63\u5728\u81ea\u52a8\u91c7\u96c6\u53ef\u89c1\u8bc4\u8bba\u9875...",
     "backgroundCollectorDone": "\u5df2\u81ea\u52a8\u91c7\u96c6 {pages} \u9875\uff0c\u65b0\u589e {added} \u6761\u53ef\u89c1\u8bc4\u8bba\uff0c\u8df3\u8fc7 {duplicates} \u6761\u91cd\u590d\u8bc4\u8bba\uff0c\u5f53\u524d\u7d2f\u8ba1 {total} \u6761\u8bc4\u8bba\u3002",
@@ -2127,6 +2143,34 @@ function setButtonBusy(button, isBusy) {
   }
 }
 
+function smartWorkflowDelay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runSmartReviewCollectionWorkflow() {
+  setStatus(tPopup("smartCollectStepCollectCurrent"));
+  await collectCurrentProductMoreReviews();
+
+  try {
+    setStatus(tPopup("smartCollectStepOpenPack"));
+    await openRelatedReviewPack();
+
+    setStatus(tPopup("smartCollectStepWaitTabs"));
+    await smartWorkflowDelay(5000);
+  } catch (error) {
+    setStatus(tPopup("smartCollectPackSkipped").replace("{reason}", error.message || String(error)));
+    await smartWorkflowDelay(1200);
+  }
+
+  setStatus(tPopup("smartCollectStepCollectTabs"));
+  await collectOpenTabs();
+
+  setStatus(tPopup("smartCollectStepOpenWorkspace"));
+  await openInWebWorkspace();
+
+  setStatus(tPopup("smartCollectDone"));
+}
+
 function bind(id, handler) {
   const button = $(id);
   button.addEventListener("click", async () => {
@@ -2153,6 +2197,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("extractBtn", saveCurrentProduct);
   bind("collectTabsBtn", collectOpenTabs);
   bind("autoCollectMoreBtn", collectCurrentProductMoreReviews);
+  bind("smartCollectWorkspaceBtn", runSmartReviewCollectionWorkflow);
   bind("sampleGuidanceCopyBtn", copySampleGuidanceSteps);
   bind("openLowStarReviewTabBtn", () => openTargetedReviewTab("low_star"));
   bind("openVerifiedReviewTabBtn", () => openTargetedReviewTab("verified"));

@@ -6000,6 +6000,33 @@
   }
 
 
+
+  function reviewWorkspaceLocalizedThemeLabel(label, source = null) {
+    const raw = String(label || '').trim();
+    const normalized = raw.toLowerCase();
+    const language = source?.output_language || currentOutputLanguage();
+    const isZh = language === 'zh-CN';
+
+    const zhLabels = {
+      'summer fabric comfort': '\u590f\u5b63\u9762\u6599\u8212\u9002\u5ea6',
+      'sewing / quality control issue': '\u7f1d\u5236 / \u8d28\u68c0\u95ee\u9898',
+      'sewing or qc concern': '\u7f1d\u5236 / \u8d28\u68c0\u95ee\u9898',
+      'size / fit issue': '\u5c3a\u7801 / \u7248\u578b\u504f\u5c0f',
+      'color expectation mismatch': '\u989c\u8272 / \u8272\u5dee\u9884\u671f'
+    };
+
+    const enLabels = {
+      'summer fabric comfort': 'Summer fabric comfort',
+      'sewing / quality control issue': 'Sewing / QC issue',
+      'sewing or qc concern': 'Sewing / QC issue',
+      'size / fit issue': 'Size / fit issue',
+      'color expectation mismatch': 'Color expectation mismatch'
+    };
+
+    const mapped = isZh ? zhLabels[normalized] : enLabels[normalized];
+    return mapped || extensionHumanThemeLabel(raw, source);
+  }
+
   function extensionThemeListHTML(title, themes, source = null) {
     const items = (themes || []).slice(0, 5);
 
@@ -6012,7 +6039,7 @@
       <ul style="margin:6px 0 12px;padding-left:18px;">
         ${items.map((item) => `
           <li style="margin-bottom:8px;">
-            <div><strong>${escapeExtensionHTML(extensionHumanThemeLabel(item.label || "Theme", source))}</strong>${item.evidence_count ? ` <span style="color:#64748b;">(${escapeExtensionHTML(item.evidence_count)})</span>` : ""}</div>
+            <div><strong>${escapeExtensionHTML(reviewWorkspaceLocalizedThemeLabel(item.label || "Theme", source))}</strong>${item.evidence_count ? ` <span style="color:#64748b;">(${escapeExtensionHTML(item.evidence_count)})</span>` : ""}</div>
             ${(item.evidence_quotes || []).slice(0, 2).map((quote) => `
               <div style="margin-top:4px;padding:6px 8px;background:#f8fafc;border-left:3px solid #cbd5e1;border-radius:8px;color:#334155;">
                 ${escapeExtensionHTML(quote)}
@@ -6065,7 +6092,7 @@
         return "\u6807\u6ce8\u7684\u89c4\u683c\u548c\u6536\u5230\u7684\u4e00\u6837\u5417\uff1f\u8d2d\u4e70\u524d\u5148\u770b\u6e05\u695a\u3002";
       }
 
-      return `\u4e70\u4e4b\u524d\u5148\u770b\u8fd9\u4e2a\u4e70\u5bb6\u4fe1\u53f7\uff1a${extensionHumanThemeLabel(label, source)}`;
+      return `\u4e70\u4e4b\u524d\u5148\u770b\u8fd9\u4e2a\u4e70\u5bb6\u4fe1\u53f7\uff1a${reviewWorkspaceLocalizedThemeLabel(label, source)}`;
     }
 
     if (label.includes("price / value")) {
@@ -6184,7 +6211,7 @@
   function extensionCreativeBriefRowMarkdown(item, angle, hook, source = null) {
     const quote = (item.evidence_quotes || [])[0] || "";
     return [
-      `## ${tExtensionWorkspace("pain", source)}: ${extensionHumanThemeLabel(item.label || tExtensionWorkspace("buyerSignal", source), source)}`,
+      `## ${tExtensionWorkspace("pain", source)}: ${reviewWorkspaceLocalizedThemeLabel(item.label || tExtensionWorkspace("buyerSignal", source), source)}`,
       quote ? `${tExtensionWorkspace("evidence", source)}: "${quote}"` : "",
       angle ? `${tExtensionWorkspace("copyReadyAngle", source)}: ${angle}` : "",
       hook ? `${tExtensionWorkspace("tiktokHook", source)}: ${hook}` : "",
@@ -6203,7 +6230,7 @@
       tExtensionWorkspace("positiveProofUse", body),
       "",
       ...items.map((item) => {
-        const signal = extensionHumanThemeLabel(item.label, body);
+        const signal = reviewWorkspaceLocalizedThemeLabel(item.label, body);
         return [
           `${tExtensionWorkspace("signal", body)}: ${signal}`,
           `${tExtensionWorkspace("evidence", body)}: "${item.firstQuote}"`,
@@ -6447,7 +6474,7 @@
 
     const rows = likedPoints.map((item) => {
       const quote = item.firstQuote;
-      const signal = extensionHumanThemeLabel(item.label, body);
+      const signal = reviewWorkspaceLocalizedThemeLabel(item.label, body);
 
       return `
         <div style="margin-top:6px;padding:8px 9px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;">
@@ -6502,7 +6529,7 @@
       return `
         <div style="margin:8px 0 10px;padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
           <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
-            <div><strong>${escapeExtensionHTML(tExtensionWorkspace("pain", body))}:</strong> ${escapeExtensionHTML(extensionHumanThemeLabel(item.label || tExtensionWorkspace("buyerSignal", body), body))}</div>
+            <div><strong>${escapeExtensionHTML(tExtensionWorkspace("pain", body))}:</strong> ${escapeExtensionHTML(reviewWorkspaceLocalizedThemeLabel(item.label || tExtensionWorkspace("buyerSignal", body), body))}</div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:auto;">
               <button type="button" onclick="copyExtensionCreativeBrief('row', ${index})" style="border:0;border-radius:999px;padding:5px 8px;background:#e2e8f0;color:#0f172a;font-weight:800;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("copyRow", body))}</button>
               <span id="extensionCreativeBriefRowCopyStatus${index}" data-extension-brief-copy-status="1" style="color:#475569;font-size:10px;font-weight:700;"></span>

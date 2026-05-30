@@ -596,5 +596,34 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, css)
 
+
+    def test_popup_supports_smart_collection_workflow(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "smartCollectWorkspaceBtn",
+            "smartCollectWorkspace",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "runSmartReviewCollectionWorkflow",
+            "smartWorkflowDelay",
+            "smartCollectStepCollectCurrent",
+            "smartCollectStepOpenPack",
+            "smartCollectStepWaitTabs",
+            "smartCollectStepCollectTabs",
+            "smartCollectStepOpenWorkspace",
+            "smartCollectDone",
+            "smartCollectPackSkipped",
+            "collectCurrentProductMoreReviews();",
+            "openRelatedReviewPack();",
+            "collectOpenTabs();",
+            "openInWebWorkspace();",
+            "bind(\"smartCollectWorkspaceBtn\", runSmartReviewCollectionWorkflow)",
+        ]:
+            self.assertIn(marker, js)
+
 if __name__ == "__main__":
     unittest.main()

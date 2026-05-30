@@ -2281,5 +2281,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_review_workspace_localizes_apparel_theme_labels_frontend(self):
+        for marker in [
+            "reviewWorkspaceLocalizedThemeLabel",
+            "summer fabric comfort",
+            "sewing / quality control issue",
+            "size / fit issue",
+            "color expectation mismatch",
+            "\\u590f\\u5b63\\u9762\\u6599\\u8212\\u9002\\u5ea6",
+            "\\u7f1d\\u5236 / \\u8d28\\u68c0\\u95ee\\u9898",
+            "\\u5c3a\\u7801 / \\u7248\\u578b\\u504f\\u5c0f",
+            "\\u989c\\u8272 / \\u8272\\u5dee\\u9884\\u671f",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()
