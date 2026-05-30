@@ -17,6 +17,7 @@ const POPUP_COPY = {
     collectingMoreReviews: "Auto collecting visible review pages...",
     backgroundCollectorDone: "Auto collected {pages} page(s), {added} new visible review(s), {duplicates} duplicate review(s) skipped, {total} saved review(s).",
     backgroundCollectorStopped: "Auto collector stopped: {reason}",
+    repeatedReviewPageContent: "Later review pages repeated the same visible content, so collection stopped early.",
     noAmazonAsin: "Could not find an Amazon ASIN on the current page.",
     couldNotCreateCollectorTab: "Could not create background collector tab.",
     analyzeSavedWorkspace: "Analyze saved workspace",
@@ -92,6 +93,7 @@ const POPUP_COPY = {
     "collectingMoreReviews": "\u6b63\u5728\u81ea\u52a8\u91c7\u96c6\u53ef\u89c1\u8bc4\u8bba\u9875...",
     "backgroundCollectorDone": "\u5df2\u81ea\u52a8\u91c7\u96c6 {pages} \u9875\uff0c\u65b0\u589e {added} \u6761\u53ef\u89c1\u8bc4\u8bba\uff0c\u8df3\u8fc7 {duplicates} \u6761\u91cd\u590d\u8bc4\u8bba\uff0c\u5f53\u524d\u7d2f\u8ba1 {total} \u6761\u8bc4\u8bba\u3002",
     "backgroundCollectorStopped": "\u81ea\u52a8\u91c7\u96c6\u5df2\u505c\u6b62\uff1a{reason}",
+    "repeatedReviewPageContent": "\u540e\u7eed\u8bc4\u8bba\u9875\u8fd4\u56de\u4e86\u76f8\u540c\u7684\u53ef\u89c1\u5185\u5bb9\uff0c\u5df2\u63d0\u524d\u505c\u6b62\u91c7\u96c6\u3002",
     "noAmazonAsin": "\u65e0\u6cd5\u5728\u5f53\u524d\u9875\u9762\u627e\u5230 Amazon ASIN\u3002",
     "couldNotCreateCollectorTab": "\u65e0\u6cd5\u521b\u5efa\u540e\u53f0\u91c7\u96c6\u6807\u7b7e\u9875\u3002",
     "analyzeSavedWorkspace": "\u5206\u6790\u5df2\u4fdd\u5b58\u5de5\u4f5c\u533a",
@@ -880,6 +882,15 @@ function nextSequentialAmazonReviewUrl(product, currentUrl, nextPageNumber) {
   return amazonReviewPageUrlFor(product, nextPageNumber, currentUrl);
 }
 
+function reviewPageSignatureFromProduct(product) {
+  const keys = (product?.reviews || [])
+    .map((review) => reviewIdentityKey(review))
+    .filter(Boolean)
+    .sort();
+
+  return keys.join("||");
+}
+
 function backgroundCollectorStopReason(product) {
   const metadata = product?.metadata || {};
   if (metadata.sign_in_required || metadata.review_visibility_status === "sign_in_required") {
@@ -909,6 +920,7 @@ async function collectCurrentProductMoreReviews() {
   const failures = [];
   const pageSnapshots = [];
   const visitedCollectorUrls = new Set();
+  const seenReviewPageSignatures = new Set();
   let collectorTab = null;
   let currentUrl = firstUrl;
 
@@ -941,6 +953,8 @@ async function collectCurrentProductMoreReviews() {
       const nextFromPage = String(product?.metadata?.next_review_page_url || "").trim();
       const currentPageNumber = amazonReviewPageNumberFromUrl(currentUrl);
       const fallbackNextUrl = nextSequentialAmazonReviewUrl(seedProduct, currentUrl, currentPageNumber + 1);
+      const pageSignature = reviewPageSignatureFromProduct(product);
+      const repeatedPageContent = Boolean(pageSignature && seenReviewPageSignatures.has(pageSignature));
 
       pageSnapshots.push({
         page_index: pageIndex,
@@ -950,12 +964,22 @@ async function collectCurrentProductMoreReviews() {
         review_visibility_status: product?.metadata?.review_visibility_status || "",
         next_review_page_url: nextFromPage,
         fallback_next_url: fallbackNextUrl,
-        stop_reason: stopReason || ""
+        repeated_page_content: repeatedPageContent,
+        stop_reason: repeatedPageContent ? tPopup("repeatedReviewPageContent") : (stopReason || "")
       });
 
       if (stopReason) {
         failures.push(stopReason);
         break;
+      }
+
+      if (repeatedPageContent) {
+        failures.push(tPopup("repeatedReviewPageContent"));
+        break;
+      }
+
+      if (pageSignature) {
+        seenReviewPageSignatures.add(pageSignature);
       }
 
       collected.push(product);

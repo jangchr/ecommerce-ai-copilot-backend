@@ -12,15 +12,16 @@ This spike validated that the browser extension can auto-collect visible Amazon 
 
 Manual smoke confirmed:
 
-- Started from an already-open Amazon JP review page.
-- Preserved the active review page URL as the starting point.
-- Collected pageNumber 6, then pageNumber 7, then pageNumber 8.
-- Used one background tab instead of opening many tabs.
-- Merged collected reviews into the saved review workspace.
-- Deduplicated repeated reviews across pages.
-- Automatically closed the background collector tab after collection.
+- The collector can start from an already-open Amazon review page.
+- The collector can preserve the active review page URL as the starting point.
+- The collector can move from pageNumber 6 to pageNumber 7 and pageNumber 8 on Amazon JP.
+- The collector can reuse one background tab instead of opening many tabs.
+- The collector can merge collected reviews into the saved review workspace.
+- The collector can deduplicate repeated reviews across pages.
+- The collector automatically closes the background collector tab after collection.
+- The collector detects repeated visible review page content and stops early.
 
-## Smoke result
+## Smoke result 1: Amazon JP review page
 
 Observed collector pages:
 
@@ -34,11 +35,28 @@ Merge result:
 - 9 duplicate reviews skipped
 - 17 total saved reviews
 
+## Smoke result 2: Amazon US repeated page content
+
+Observed collector pages:
+
+- Page 1: 16 visible reviews
+- Page 2: repeated visible content detected
+
+Merge result:
+
+- 16 new visible reviews
+- 0 duplicate reviews merged after early stop
+- 16 total saved reviews
+
+The collector correctly stopped early instead of pretending to collect three useful pages.
+
 ## Current limitation
 
-`next_review_page_url` was empty on the tested Amazon JP pages, so the collector used the fallback pageNumber increment strategy.
+`next_review_page_url` was empty on tested Amazon JP and Amazon US pages, so the collector used the fallback pageNumber increment strategy.
 
-That fallback worked for this test case.
+The fallback worked on Amazon JP for page 6 -> page 7 -> page 8.
+
+On one Amazon US product, pageNumber 2 returned the same visible content as page 1. The collector now detects this and stops early.
 
 ## Boundary
 
@@ -61,6 +79,6 @@ This spike is viable.
 Recommended next step:
 
 1. Keep this branch as a successful experiment.
-2. Run one more smoke on a different Amazon product or review page.
-3. If stable, merge the background collector into `main`.
-4. Later, add a small UI control for max pages, such as 3 / 5 / 10 pages.
+2. Merge into `main` after final tests pass.
+3. Keep default max pages conservative.
+4. Later add a small UI control for max pages, such as 3 / 5 / 10 pages.
