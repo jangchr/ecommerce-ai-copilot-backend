@@ -2323,5 +2323,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_auto_analysis_runs_after_payload_render(self):
+        for marker in [
+            "function renderExtensionWorkspacePayload",
+            "maybeAutoAnalyzeExtensionWorkspace(payload);",
+            "function maybeAutoAnalyzeExtensionWorkspace",
+            "auto_analyze",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()
