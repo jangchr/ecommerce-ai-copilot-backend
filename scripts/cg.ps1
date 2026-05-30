@@ -185,6 +185,28 @@ function CommitTools() {
 }
 
 
+function CopyFeedbackTail($reason = "completed") {
+  if (!(Test-Path $Global:CgLastLog)) {
+    return
+  }
+
+  $tail = Get-Content $Global:CgLastLog -Tail 180
+
+  try {
+    $tail | Set-Clipboard
+    Write-Host ""
+    if ($reason -eq "failed") {
+      Write-Host "Feedback copied to clipboard after failure. Paste it into ChatGPT." -ForegroundColor Yellow
+    } else {
+      Write-Host "Feedback copied to clipboard. Paste it into ChatGPT." -ForegroundColor Green
+    }
+  } catch {
+    Write-Host ""
+    Write-Host "Could not copy feedback to clipboard. Run .\\scripts\\cg.ps1 feedback or copy .cg/last.log manually." -ForegroundColor Yellow
+  }
+}
+
+
 function Feedback() {
   if (!(Test-Path $Global:CgLastLog)) {
     throw "No feedback log found. Run .\scripts\cg.ps1 gate first."
@@ -215,31 +237,56 @@ function PushOnly() {
   ShowStatus
 }
 
-switch ($Command) {
-  "gate" { Gate }
-  "status" { ShowStatus }
-  "commit-extension" { CommitExtension }
-  "commit-frontend" { CommitFrontend }
-  "commit-backend" { CommitBackend }
-  "commit-tools" { CommitTools }
-  "push" { PushOnly }
-  "feedback" { Feedback }
-  "help" {
-    Write-Host ""
-    Write-Host "CrossGrowth local runner"
-    Write-Host ""
-    Write-Host "Usage:"
-    Write-Host "  .\scripts\cg.ps1 gate"
-    Write-Host "  .\scripts\cg.ps1 status"
-    Write-Host "  .\scripts\cg.ps1 commit-extension `"Commit message`""
-    Write-Host "  .\scripts\cg.ps1 commit-frontend `"Commit message`""
-    Write-Host "  .\scripts\cg.ps1 commit-backend `"Commit message`""
-    Write-Host "  .\scripts\cg.ps1 commit-tools `"Commit message`""
-    Write-Host "  .\scripts\cg.ps1 push"
-    Write-Host "  .\scripts\cg.ps1 feedback"
-    Write-Host ""
+$cgCommandFailed = $false
+
+try {
+  switch ($Command) {
+    "gate" { Gate }
+    "status" { ShowStatus }
+    "commit-extension" { CommitExtension }
+    "commit-frontend" { CommitFrontend }
+    "commit-backend" { CommitBackend }
+    "commit-tools" { CommitTools }
+    "push" { PushOnly }
+    "feedback" { Feedback }
+    "help" {
+      Write-Host ""
+      Write-Host "CrossGrowth local runner"
+      Write-Host ""
+      Write-Host "Usage:"
+      Write-Host "  .\scripts\cg.ps1 gate"
+      Write-Host "  .\scripts\cg.ps1 status"
+      Write-Host "  .\scripts\cg.ps1 commit-extension `"Commit message`""
+      Write-Host "  .\scripts\cg.ps1 commit-frontend `"Commit message`""
+      Write-Host "  .\scripts\cg.ps1 commit-backend `"Commit message`""
+      Write-Host "  .\scripts\cg.ps1 commit-tools `"Commit message`""
+      Write-Host "  .\scripts\cg.ps1 push"
+      Write-Host "  .\scripts\cg.ps1 feedback"
+      Write-Host ""
+    }
+    default {
+      throw "Unknown command: $Command. Run .\scripts\cg.ps1 help"
+    }
   }
-  default {
-    throw "Unknown command: $Command. Run .\scripts\cg.ps1 help"
+} catch {
+  $cgCommandFailed = $true
+  $message = $_.Exception.Message
+
+  Write-Host ""
+  Write-Host "cg command failed: $message" -ForegroundColor Red
+
+  if ($Global:CgLastLog) {
+    Add-Content -Path $Global:CgLastLog -Value ""
+    Add-Content -Path $Global:CgLastLog -Value "cg command failed: $message"
+  }
+
+  throw
+} finally {
+  if ($Command -ne "feedback") {
+    if ($cgCommandFailed) {
+      CopyFeedbackTail "failed"
+    } else {
+      CopyFeedbackTail "completed"
+    }
   }
 }
