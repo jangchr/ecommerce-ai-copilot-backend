@@ -383,8 +383,27 @@
   function extractAmazonVisibleReviews() {
     const reviewNodes = amazonReviewCandidateNodes();
     const keptReviews = [];
+    const skippedCounts = {};
+    const skippedSamples = [];
 
-    for (const node of reviewNodes) {
+    function recordSkippedReview(reason, review, index) {
+      skippedCounts[reason] = (skippedCounts[reason] || 0) + 1;
+
+      if (skippedSamples.length >= 16) return;
+
+      const cleanedText = cleanAmazonReviewText(review?.text || "");
+      skippedSamples.push({
+        index,
+        reason,
+        rating: review?.rating || "",
+        title: cleanText(review?.title || "").slice(0, 140),
+        text_length: cleanedText.length,
+        text_preview: cleanedText.slice(0, 220),
+        helpful_count: review?.helpful_count ?? null
+      });
+    }
+
+    for (const [index, node] of reviewNodes.entries()) {
       const review = {
         rating: extractAmazonReviewRating(node),
         title: extractAmazonReviewTitle(node),
@@ -393,18 +412,45 @@
         source_section: "amazon_visible_review"
       };
 
-      if (isAmazonNoiseReviewText(review.text)) continue;
-      if (isAmazonAggregateReviewText(review.text)) continue;
-      if (isLikelyTitleOnlyReview(review)) continue;
-      if (isLowInformationAmazonReview(review)) continue;
-      if (isContainedDuplicateAmazonReview(review, keptReviews)) continue;
+      if (isAmazonNoiseReviewText(review.text)) {
+        recordSkippedReview("noise_text", review, index);
+        continue;
+      }
+
+      if (isAmazonAggregateReviewText(review.text)) {
+        recordSkippedReview("aggregate_text", review, index);
+        continue;
+      }
+
+      if (isLikelyTitleOnlyReview(review)) {
+        recordSkippedReview("title_only", review, index);
+        continue;
+      }
+
+      if (isLowInformationAmazonReview(review)) {
+        recordSkippedReview("low_information", review, index);
+        continue;
+      }
+
+      if (isContainedDuplicateAmazonReview(review, keptReviews)) {
+        recordSkippedReview("contained_duplicate", review, index);
+        continue;
+      }
 
       keptReviews.push(review);
     }
 
     return {
       reviews: keptReviews.slice(0, 80),
-      raw_candidate_count: reviewNodes.length
+      raw_candidate_count: reviewNodes.length,
+      extraction_debug: {
+        candidate_count: reviewNodes.length,
+        kept_count: keptReviews.length,
+        returned_count: Math.min(keptReviews.length, 80),
+        skipped_counts: skippedCounts,
+        skipped_samples: skippedSamples,
+        truncated_to_limit: keptReviews.length > 80
+      }
     };
   }
 
@@ -660,6 +706,7 @@
         rating_distribution: amazonRatingDistribution(reviews),
         raw_review_candidate_count: reviewPayload.raw_candidate_count || 0,
         visible_review_count: reviews.length,
+        review_extraction_debug: reviewPayload.extraction_debug || null,
         next_review_page_url: pageInfo.sign_in_required ? "" : extractAmazonNextReviewPageUrl(),
         pagination_candidates: pageInfo.sign_in_required ? [] : extractAmazonPaginationCandidates()
       }

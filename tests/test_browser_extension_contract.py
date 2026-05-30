@@ -488,6 +488,16 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sample_warning",
             "rating_distribution",
             "raw_review_candidate_count",
+            "review_extraction_debug",
+            "extraction_debug",
+            "skipped_counts",
+            "skipped_samples",
+            "noise_text",
+            "aggregate_text",
+            "title_only",
+            "low_information",
+            "contained_duplicate",
+            "truncated_to_limit",
         ]:
             self.assertIn(marker, source)
 
