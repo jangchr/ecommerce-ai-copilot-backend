@@ -1,0 +1,143 @@
+﻿param(
+  [Parameter(Position = 0)]
+  [string]$Command = "help",
+
+  [Parameter(Position = 1)]
+  [string]$Message = ""
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$RepoRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $RepoRoot
+
+function Run($label, $scriptBlock) {
+  Write-Host ""
+  Write-Host "==> $label" -ForegroundColor Cyan
+  & $scriptBlock
+}
+
+function RequireMessage() {
+  if ([string]::IsNullOrWhiteSpace($Message)) {
+    throw "Commit message is required. Example: .\scripts\cg.ps1 commit-extension `"My commit message`""
+  }
+}
+
+function Gate() {
+  Run "Run focused unit tests" {
+    .\l8\Scripts\python.exe -m unittest tests.test_browser_extension_contract tests.test_frontend_probe_boundary tests.test_review_workspace_endpoint
+  }
+
+  Run "Check whitespace / diff errors" {
+    git diff --check
+  }
+
+  Run "Show git status" {
+    git status -sb
+  }
+}
+
+function ShowStatus() {
+  Run "Git status" {
+    git status -sb
+  }
+
+  Run "Diff stat" {
+    git diff --stat
+  }
+
+  Run "Recent commits" {
+    git log -8 --oneline
+  }
+}
+
+function CommitExtension() {
+  RequireMessage
+  Gate
+
+  Run "Add extension files" {
+    git add browser_extension/popup.html browser_extension/popup.js tests/test_browser_extension_contract.py
+  }
+
+  Run "Commit extension changes" {
+    git commit -m $Message
+  }
+
+  Run "Push branch" {
+    git push -u origin spike/review-collection-p0-recovery
+  }
+
+  ShowStatus
+}
+
+function CommitFrontend() {
+  RequireMessage
+  Gate
+
+  Run "Add frontend files" {
+    git add static/index.html tests/test_frontend_probe_boundary.py
+  }
+
+  Run "Commit frontend changes" {
+    git commit -m $Message
+  }
+
+  Run "Push branch" {
+    git push -u origin spike/review-collection-p0-recovery
+  }
+
+  ShowStatus
+}
+
+function CommitBackend() {
+  RequireMessage
+  Gate
+
+  Run "Add backend files" {
+    git add main.py schemas/review_workspace.py tests/test_review_workspace_endpoint.py
+  }
+
+  Run "Commit backend changes" {
+    git commit -m $Message
+  }
+
+  Run "Push branch" {
+    git push -u origin spike/review-collection-p0-recovery
+  }
+
+  ShowStatus
+}
+
+function PushOnly() {
+  Run "Push branch" {
+    git push -u origin spike/review-collection-p0-recovery
+  }
+
+  ShowStatus
+}
+
+switch ($Command) {
+  "gate" { Gate }
+  "status" { ShowStatus }
+  "commit-extension" { CommitExtension }
+  "commit-frontend" { CommitFrontend }
+  "commit-backend" { CommitBackend }
+  "push" { PushOnly }
+  "help" {
+    Write-Host ""
+    Write-Host "CrossGrowth local runner"
+    Write-Host ""
+    Write-Host "Usage:"
+    Write-Host "  .\scripts\cg.ps1 gate"
+    Write-Host "  .\scripts\cg.ps1 status"
+    Write-Host "  .\scripts\cg.ps1 commit-extension `"Commit message`""
+    Write-Host "  .\scripts\cg.ps1 commit-frontend `"Commit message`""
+    Write-Host "  .\scripts\cg.ps1 commit-backend `"Commit message`""
+    Write-Host "  .\scripts\cg.ps1 push"
+    Write-Host ""
+  }
+  default {
+    throw "Unknown command: $Command. Run .\scripts\cg.ps1 help"
+  }
+}
