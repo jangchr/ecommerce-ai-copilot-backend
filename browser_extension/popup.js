@@ -1014,11 +1014,25 @@ function nextSequentialAmazonReviewUrl(product, currentUrl, nextPageNumber) {
   return amazonReviewPageUrlFor(product, nextPageNumber, currentUrl);
 }
 
-function reviewPageSignatureFromProduct(product) {
-  const keys = (product?.reviews || [])
+const DOM_CLICK_LOAD_MORE_MAX_ROUNDS = 3;
+const DOM_CLICK_LOAD_MORE_MIN_NEW_REVIEWS = 3;
+
+function reviewIdentityKeySetFromProduct(product) {
+  return new Set((product?.reviews || [])
     .map((review) => reviewIdentityKey(review))
-    .filter(Boolean)
-    .sort();
+    .filter(Boolean));
+}
+
+function uniqueReviewDeltaCount(beforeKeys, afterKeys) {
+  let count = 0;
+  for (const key of afterKeys || []) {
+    if (!beforeKeys.has(key)) count += 1;
+  }
+  return count;
+}
+
+function reviewPageSignatureFromProduct(product) {
+  const keys = Array.from(reviewIdentityKeySetFromProduct(product)).sort();
 
   return keys.join("||");
 }
@@ -1164,14 +1178,23 @@ async function clickAmazonReviewLoadMoreInTab(tabId) {
           && href.toLowerCase().includes("/product-reviews/")
           && (!currentAsin || candidateAsin === currentAsin);
 
-        const loadMoreSignal =
-          haystack.includes("cm_cr_arp_d_paging_btm") ||
+        const skipNavigationSignal =
+          href.includes("#skippedLink") ||
+          haystack.includes("nav-assist-skip-to-main-content") ||
+          haystack.includes("skip to main content") ||
+          haystack.includes("\u4e3b\u8981\u5185\u5bb9");
+
+        const labelLoadMoreSignal =
           haystack.includes("show more reviews") ||
           haystack.includes("more reviews") ||
           haystack.includes("\u591a\u663e\u793a") ||
           haystack.includes("\u663e\u793a\u66f4\u591a");
 
-        if (!sameAsinReviewHref || !loadMoreSignal) continue;
+        const loadMoreSignal =
+          labelLoadMoreSignal &&
+          haystack.includes("cm_cr_arp_d_paging_btm");
+
+        if (!sameAsinReviewHref || skipNavigationSignal || !loadMoreSignal) continue;
 
         const beforeCount = visibleReviewCount();
         candidate.scrollIntoView({ block: "center", inline: "nearest" });
@@ -1207,6 +1230,16 @@ async function clickAmazonReviewLoadMoreInTab(tabId) {
     before_visible_review_count: 0,
     mode: "dom_click"
   };
+}
+
+async function extractCollectorProductSnapshot(tabId, currentUrl, pageIndex) {
+  await waitForTabLoad(tabId);
+
+  return extractProductFromTab({
+    id: tabId,
+    url: currentUrl,
+    title: `Amazon review page ${pageIndex}`
+  });
 }
 
 async function collectCurrentProductMoreReviews() {
@@ -1301,14 +1334,68 @@ async function collectCurrentProductMoreReviews() {
       collected.push(product);
 
       if (shouldClickAmazonLoadMore(nextChoice)) {
-        const clickResult = await clickAmazonReviewLoadMoreInTab(collectorTab.id);
-        pageSnapshot.load_more_click = clickResult;
+        pageSnapshot.dom_click_rounds = [];
 
-        if (clickResult.clicked) {
+        let latestProduct = product;
+        let latestSignature = pageSignature;
+        let latestUrl = currentUrl;
+        let clickedAtLeastOnce = false;
+
+        for (let clickRound = 1; clickRound <= DOM_CLICK_LOAD_MORE_MAX_ROUNDS; clickRound += 1) {
+          const beforeKeys = reviewIdentityKeySetFromProduct(latestProduct);
+          const beforeCount = beforeKeys.size;
+          const clickResult = await clickAmazonReviewLoadMoreInTab(collectorTab.id);
+
+          const roundSnapshot = {
+            round: clickRound,
+            clicked: Boolean(clickResult.clicked),
+            clicked_href: clickResult.clicked_href || "",
+            clicked_text: clickResult.clicked_text || "",
+            mode: clickResult.mode || "",
+            before_unique_reviews: beforeCount,
+            after_unique_reviews: beforeCount,
+            added_unique_reviews: 0,
+            stop_reason: ""
+          };
+
+          pageSnapshot.dom_click_rounds.push(roundSnapshot);
+          pageSnapshot.load_more_click = clickResult;
+
+          if (!clickResult.clicked) {
+            roundSnapshot.stop_reason = "no_click_target";
+            break;
+          }
+
+          clickedAtLeastOnce = true;
           await waitForTabLoad(collectorTab.id);
-          await delay(1500);
+          await delay(2000);
 
-          currentUrl = clickResult.clicked_href || nextChoice.selected_url;
+          const clickedUrl = clickResult.clicked_href || nextChoice.selected_url || latestUrl;
+          const afterProduct = await extractCollectorProductSnapshot(collectorTab.id, clickedUrl, `${pageIndex}.${clickRound}`);
+          const afterKeys = reviewIdentityKeySetFromProduct(afterProduct);
+          const addedUniqueReviews = uniqueReviewDeltaCount(beforeKeys, afterKeys);
+
+          roundSnapshot.after_unique_reviews = afterKeys.size;
+          roundSnapshot.added_unique_reviews = addedUniqueReviews;
+
+          if (addedUniqueReviews < DOM_CLICK_LOAD_MORE_MIN_NEW_REVIEWS) {
+            roundSnapshot.stop_reason = "insufficient_new_reviews";
+            break;
+          }
+
+          const afterSignature = reviewPageSignatureFromProduct(afterProduct);
+          if (afterSignature && afterSignature === latestSignature) {
+            roundSnapshot.stop_reason = "repeated_dom_signature";
+            break;
+          }
+
+          latestProduct = afterProduct;
+          latestSignature = afterSignature;
+          latestUrl = clickedUrl;
+        }
+
+        if (clickedAtLeastOnce) {
+          currentUrl = pageSnapshot.load_more_click?.clicked_href || nextChoice.selected_url;
           skipNavigationOnce = true;
           continue;
         }
