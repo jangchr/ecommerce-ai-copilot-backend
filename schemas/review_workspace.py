@@ -49,6 +49,30 @@ class ReviewProductSummary(BaseModel):
     top_liked_points: list[str] = Field(default_factory=list)
 
 
+
+class ReviewSourceGroupSummary(BaseModel):
+    source_type: str = ""
+    label: str = ""
+    review_count: int = 0
+    high_signal_review_count: int = 0
+    asin_count: int = 0
+    top_asins: list[str] = Field(default_factory=list)
+    evidence_quotes: list[str] = Field(default_factory=list)
+
+
+class ReviewSourceBreakdown(BaseModel):
+    total_reviews: int = 0
+    main_product_reviews: int = 0
+    variant_reviews: int = 0
+    low_star_reviews: int = 0
+    verified_purchase_reviews: int = 0
+    recent_reviews: int = 0
+    unknown_reviews: int = 0
+    asin_review_counts: dict[str, int] = Field(default_factory=dict)
+    source_groups: list[ReviewSourceGroupSummary] = Field(default_factory=list)
+    guidance: list[str] = Field(default_factory=list)
+
+
 class ReviewSampleInterpretation(BaseModel):
     sample_type: str = ""
     sample_size_note: str = ""
@@ -83,6 +107,7 @@ class ReviewWorkspaceResponse(BaseModel):
     liked_points: list[ReviewThemeSummary] = Field(default_factory=list)
     use_cases: list[ReviewThemeSummary] = Field(default_factory=list)
     product_summaries: list[ReviewProductSummary] = Field(default_factory=list)
+    source_breakdown: ReviewSourceBreakdown = Field(default_factory=ReviewSourceBreakdown)
     creative_angles: list[str] = Field(default_factory=list)
     hooks: list[str] = Field(default_factory=list)
     recommended_next_actions: list[str] = Field(default_factory=list)

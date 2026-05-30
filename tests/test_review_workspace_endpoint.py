@@ -461,3 +461,55 @@ class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_analyze_review_workspace_returns_source_breakdown(self):
+        payload = {
+            "workspace_id": "source-breakdown-test",
+            "source": "browser_extension",
+            "output_language": "zh-CN",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "asin": "MAINASIN01",
+                    "url": "https://www.amazon.co.jp/-/zh/product-reviews/MAINASIN01?reviewerType=all_reviews&pageNumber=1",
+                    "title": "Main shirt",
+                    "reviews": [
+                        {
+                            "rating": "5.0",
+                            "title": "Light and cool",
+                            "text": "Light fabric and very comfortable for summer daily wear.",
+                            "source_section": "amazon_visible_review",
+                        }
+                    ],
+                },
+                {
+                    "platform": "amazon",
+                    "asin": "VARIANT001",
+                    "url": "https://www.amazon.co.jp/-/zh/product-reviews/VARIANT001?reviewerType=avp_only_reviews&pageNumber=1&filterByStar=critical&sortBy=recent",
+                    "title": "Variant shirt",
+                    "reviews": [
+                        {
+                            "rating": "2.0",
+                            "title": "Size concern",
+                            "text": "The size was too small and the buyer had to return it.",
+                            "source_section": "amazon_visible_review",
+                        }
+                    ],
+                },
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+        self.assertEqual(response.status_code, 200)
+
+        breakdown = response.json()["source_breakdown"]
+        self.assertEqual(breakdown["total_reviews"], 2)
+        self.assertEqual(breakdown["main_product_reviews"], 1)
+        self.assertEqual(breakdown["variant_reviews"], 1)
+        self.assertEqual(breakdown["low_star_reviews"], 1)
+        self.assertEqual(breakdown["verified_purchase_reviews"], 1)
+        self.assertEqual(breakdown["recent_reviews"], 1)
+        self.assertIn("MAINASIN01", breakdown["asin_review_counts"])
+        self.assertTrue(breakdown["source_groups"])
+        self.assertTrue(breakdown["guidance"])
