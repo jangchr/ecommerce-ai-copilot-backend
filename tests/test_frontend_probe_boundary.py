@@ -2333,5 +2333,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_auto_analysis_shows_status_before_fetch(self):
+        for marker in [
+            "extensionWorkspaceOutput",
+            "tExtensionWorkspace(\"analyzingWorkspace\", payload)",
+            "window.setTimeout(() =>",
+            "analyzeExtensionWorkspace();",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()

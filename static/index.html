@@ -6580,6 +6580,11 @@
       // Keep auto analysis best-effort if sessionStorage is unavailable.
     }
 
+    const output = document.getElementById("extensionWorkspaceOutput");
+    if (output) {
+      output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("analyzingWorkspace", payload))}</strong>`;
+    }
+
     window.setTimeout(() => {
       analyzeExtensionWorkspace();
     }, 250);
