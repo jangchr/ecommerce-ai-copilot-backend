@@ -194,6 +194,33 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, js)
 
+
+    def test_content_script_exposes_amazon_pagination_candidates(self):
+        source = (self.root / "content.js").read_text(encoding="utf-8")
+        popup = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "extractAmazonPaginationCandidates",
+            "amazonCurrentReviewAsin",
+            "amazonCandidateReviewAsin",
+            "isAmazonSafeReviewPaginationCandidate",
+            "amazonCandidateNextSignal",
+            "amazonCandidateLoadMoreSignal",
+            "cm_cr_arp_d_paging_btm",
+            "show more reviews",
+            "filterByStar",
+            "formatType",
+            "amazonPaginationNodeText",
+            "pagination_candidates",
+            "pagination_candidate_count",
+            "slice(0, 24)",
+            "aria_label",
+            "class_name",
+            "nextpagetoken",
+            "cm_cr_getr",
+        ]:
+            self.assertIn(marker, source + popup)
+
     def test_popup_supports_background_review_page_collector(self):
         html = (self.root / "popup.html").read_text(encoding="utf-8")
         js = (self.root / "popup.js").read_text(encoding="utf-8")
@@ -213,6 +240,14 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "amazonReviewCollectorStartUrl",
             "collector_pages",
             "visitedCollectorUrls",
+            "sameCollectorUrl",
+            "chooseNextCollectorUrl",
+            "isAmazonLoadMoreCollectorUrl",
+            "load_more_terminal",
+            "selected_next_url",
+            "selected_next_source",
+            "ignored_next_review_page_url",
+            "repeatedCollectorUrl",
             "seenReviewPageSignatures",
             "reviewPageSignatureFromProduct",
             "repeatedReviewPageContent",

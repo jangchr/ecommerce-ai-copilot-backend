@@ -416,12 +416,171 @@
     }
   }
 
-  function extractAmazonNextReviewPageUrl() {
-    const direct = document.querySelector("li.a-last:not(.a-disabled) a[href], .a-pagination .a-last:not(.a-disabled) a[href]");
-    if (direct) {
-      const href = absoluteAmazonHref(direct.getAttribute("href"));
-      if (href) return href;
+  function amazonPaginationNodeText(node) {
+    return cleanText([
+      node.textContent || "",
+      node.getAttribute("aria-label") || "",
+      node.getAttribute("title") || "",
+      node.getAttribute("class") || "",
+      node.getAttribute("id") || "",
+      node.getAttribute("rel") || ""
+    ].filter(Boolean).join(" "));
+  }
+
+  function extractAmazonPaginationCandidates() {
+    const anchors = Array.from(document.querySelectorAll("a[href]"));
+    const candidates = [];
+    const seen = new Set();
+
+    for (const anchor of anchors) {
+      const href = absoluteAmazonHref(anchor.getAttribute("href"));
+      if (!href) continue;
+
+      const text = amazonPaginationNodeText(anchor);
+      const ariaLabel = cleanText(anchor.getAttribute("aria-label") || "");
+      const title = cleanText(anchor.getAttribute("title") || "");
+      const className = cleanText(anchor.getAttribute("class") || "");
+      const id = cleanText(anchor.getAttribute("id") || "");
+      const rel = cleanText(anchor.getAttribute("rel") || "");
+      const paginationParent = anchor.closest("li.a-last, .a-last, .a-pagination li");
+      const parentClassName = cleanText(paginationParent?.getAttribute("class") || "");
+      const haystack = `${href} ${text} ${ariaLabel} ${title} ${className} ${id} ${rel} ${parentClassName}`.toLowerCase();
+
+      const looksLikePagination =
+        haystack.includes("product-reviews") ||
+        haystack.includes("pagenumber=") ||
+        haystack.includes("nextpagetoken") ||
+        haystack.includes("cm_cr_getr") ||
+        haystack.includes("a-last") ||
+        haystack.includes("next") ||
+        /[\u6b21\u4e0b]\s*[\u3078\u306e\u4e00]?/.test(haystack);
+
+      if (!looksLikePagination) continue;
+
+      const key = `${href}|${text}|${ariaLabel}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      candidates.push({
+        text,
+        href,
+        aria_label: ariaLabel,
+        title,
+        class_name: className,
+        parent_class_name: parentClassName,
+        id,
+        rel
+      });
     }
+
+    return candidates.slice(0, 30);
+  }
+  function amazonCurrentReviewAsin() {
+    const match = location.href.match(/\/(?:dp|gp\/product|product-reviews)\/([A-Z0-9]{10})/i);
+    return match ? match[1].toUpperCase() : "";
+  }
+
+  function amazonCandidateReviewAsin(value) {
+    const match = String(value || "").match(/\/(?:dp|gp\/product|product-reviews)\/([A-Z0-9]{10})/i);
+    return match ? match[1].toUpperCase() : "";
+  }
+
+  function isAmazonSafeReviewPaginationCandidate(candidate) {
+    if (!candidate?.href) return false;
+
+    let url;
+    try {
+      url = new URL(candidate.href);
+    } catch (error) {
+      return false;
+    }
+
+    const hostname = url.hostname.toLowerCase();
+    const pathname = url.pathname.toLowerCase();
+    if (!hostname.includes("amazon.")) return false;
+    if (!pathname.includes("/product-reviews/")) return false;
+
+    const currentAsin = amazonCurrentReviewAsin();
+    const candidateAsin = amazonCandidateReviewAsin(candidate.href);
+    if (currentAsin && candidateAsin !== currentAsin) return false;
+
+    const haystack = [
+      candidate.href || "",
+      candidate.text || "",
+      candidate.aria_label || "",
+      candidate.title || "",
+      candidate.class_name || "",
+      candidate.parent_class_name || "",
+      candidate.id || "",
+      candidate.rel || ""
+    ].join(" ").toLowerCase();
+
+    if (url.hash && ["#skippedlink", "#customerreviews", "#reviews-filter-bar"].includes(url.hash.toLowerCase())) {
+      return false;
+    }
+
+    if (url.searchParams.has("filterByStar")) return false;
+    if (url.searchParams.get("formatType") === "current_format") return false;
+    if (url.searchParams.get("reviewerType") === "avp_only_reviews") return false;
+
+    if (haystack.includes("histogram-row-container")) return false;
+    if (haystack.includes("nav-")) return false;
+    if (haystack.includes("buyagain")) return false;
+    if (haystack.includes("audible")) return false;
+    if (haystack.includes("customer-preferences")) return false;
+    if (haystack.includes("verified purchase")) return false;
+    if (haystack.includes("\u5df2\u786e\u8ba4\u8d2d\u4e70")) return false;
+
+    return true;
+  }
+
+  function amazonCandidateNextSignal(candidate) {
+    const haystack = [
+      candidate.text || "",
+      candidate.aria_label || "",
+      candidate.title || "",
+      candidate.class_name || "",
+      candidate.parent_class_name || "",
+      candidate.id || "",
+      candidate.rel || ""
+    ].join(" ").toLowerCase();
+
+    return (
+      candidate.rel === "next" ||
+      haystack.includes("a-last") ||
+      /\bnext\b/.test(haystack) ||
+      haystack.includes("next page") ||
+      haystack.includes("\u6b21\u3078") ||
+      haystack.includes("\u6b21\u306e\u30da\u30fc\u30b8") ||
+      haystack.includes("\u4e0b\u4e00\u9875") ||
+      haystack.includes("\u663e\u793a\u66f4\u591a") ||
+      haystack.includes("\u591a\u663e\u793a")
+    );
+  }
+
+  function amazonCandidateLoadMoreSignal(candidate) {
+    const haystack = [
+      candidate.href || "",
+      candidate.text || "",
+      candidate.aria_label || "",
+      candidate.title || "",
+      candidate.class_name || "",
+      candidate.parent_class_name || "",
+      candidate.id || "",
+      candidate.rel || ""
+    ].join(" ").toLowerCase();
+
+    return (
+      haystack.includes("cm_cr_arp_d_paging_btm") ||
+      haystack.includes("show more reviews") ||
+      haystack.includes("more reviews") ||
+      haystack.includes("\u591a\u663e\u793a") ||
+      haystack.includes("\u663e\u793a\u66f4\u591a")
+    );
+  }
+  function extractAmazonNextReviewPageUrl() {
+    const candidates = extractAmazonPaginationCandidates();
+    const safeCandidates = candidates.filter(isAmazonSafeReviewPaginationCandidate);
 
     let currentPage = 1;
     try {
@@ -430,24 +589,42 @@
       currentPage = 1;
     }
 
-    const links = Array.from(document.querySelectorAll("a[href*='product-reviews'][href*='pageNumber=']"));
-    for (const link of links) {
-      const href = absoluteAmazonHref(link.getAttribute("href"));
-      if (!href) continue;
+    const explicitNext = safeCandidates.find((candidate) => {
+      if (!amazonCandidateNextSignal(candidate) && !amazonCandidateLoadMoreSignal(candidate)) return false;
 
       try {
-        const candidate = new URL(href);
-        const pageNumber = Number(candidate.searchParams.get("pageNumber") || "0") || 0;
+        const url = new URL(candidate.href);
+        const pageNumber = Number(url.searchParams.get("pageNumber") || "0") || 0;
+        const hasForwardPageNumber = pageNumber > currentPage;
+        const hasNextToken = url.searchParams.has("nextPageToken");
+        const hasLoadMoreRef = amazonCandidateLoadMoreSignal(candidate);
+        return hasForwardPageNumber || hasNextToken || hasLoadMoreRef;
+      } catch (error) {
+        return false;
+      }
+    });
+
+    if (explicitNext?.href) {
+      return explicitNext.href;
+    }
+
+    const numberedCandidates = [];
+    for (const candidate of safeCandidates) {
+      try {
+        const url = new URL(candidate.href);
+        const pageNumber = Number(url.searchParams.get("pageNumber") || "0") || 0;
         if (pageNumber > currentPage) {
-          return candidate.href;
+          numberedCandidates.push({ pageNumber, href: url.href });
         }
       } catch (error) {
         continue;
       }
     }
 
-    return "";
+    numberedCandidates.sort((left, right) => left.pageNumber - right.pageNumber);
+    return numberedCandidates[0]?.href || "";
   }
+
 
   function extractAmazonPage() {
     const url = location.href;
@@ -483,7 +660,8 @@
         rating_distribution: amazonRatingDistribution(reviews),
         raw_review_candidate_count: reviewPayload.raw_candidate_count || 0,
         visible_review_count: reviews.length,
-        next_review_page_url: pageInfo.sign_in_required ? "" : extractAmazonNextReviewPageUrl()
+        next_review_page_url: pageInfo.sign_in_required ? "" : extractAmazonNextReviewPageUrl(),
+        pagination_candidates: pageInfo.sign_in_required ? [] : extractAmazonPaginationCandidates()
       }
     };
   }
