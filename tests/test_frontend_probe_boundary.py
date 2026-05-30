@@ -2308,5 +2308,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_extension_workspace_auto_analyzes_injected_payload_once(self):
+        for marker in [
+            "extensionWorkspaceAutoAnalyzeKey",
+            "maybeAutoAnalyzeExtensionWorkspace",
+            "payload.auto_analyze",
+            "crossgrowth_extension_workspace_auto_analyzed",
+            "window.sessionStorage.getItem(key)",
+            "window.sessionStorage.setItem(key, \"1\")",
+            "window.setTimeout(() =>",
+            "analyzeExtensionWorkspace();",
+            "maybeAutoAnalyzeExtensionWorkspace(readExtensionWorkspacePayload());",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()

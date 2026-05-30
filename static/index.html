@@ -6556,7 +6556,35 @@
     `;
   }
 
-  async function analyzeExtensionWorkspace() {
+    function extensionWorkspaceAutoAnalyzeKey(payload) {
+    const products = payload?.products || [];
+    const reviewCount = products.reduce((total, product) => total + ((product?.reviews || []).length), 0);
+    return [
+      "crossgrowth_extension_workspace_auto_analyzed",
+      payload?.workspace_id || "",
+      String(products.length),
+      String(reviewCount),
+    ].join(":");
+  }
+
+  function maybeAutoAnalyzeExtensionWorkspace(payload = readExtensionWorkspacePayload()) {
+    if (!payload || !payload.auto_analyze) return;
+
+    const key = extensionWorkspaceAutoAnalyzeKey(payload);
+    try {
+      if (window.sessionStorage.getItem(key)) return;
+      window.sessionStorage.setItem(key, "1");
+    } catch (error) {
+      // Keep auto analysis best-effort if sessionStorage is unavailable.
+    }
+
+    window.setTimeout(() => {
+      analyzeExtensionWorkspace();
+    }, 250);
+  }
+
+
+async function analyzeExtensionWorkspace() {
     const payload = readExtensionWorkspacePayload();
     const output = document.getElementById("extensionWorkspaceOutput");
     if (!payload) {
@@ -6603,6 +6631,7 @@
     const hasPayload = Boolean(localStorage.getItem(STORAGE_KEY));
     if (hasFlag || hasPayload) {
       renderExtensionWorkspacePayload();
+      maybeAutoAnalyzeExtensionWorkspace(readExtensionWorkspacePayload());
     }
   }
 
@@ -6610,6 +6639,7 @@
     window.__crossgrowthExtensionWorkspaceReadyListenerInstalled = true;
     window.addEventListener("crossgrowth-extension-workspace-ready", () => {
       renderExtensionWorkspacePayload();
+      maybeAutoAnalyzeExtensionWorkspace(readExtensionWorkspacePayload());
     });
   }
 
