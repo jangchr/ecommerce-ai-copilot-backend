@@ -277,6 +277,34 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, content)
 
+    def test_popup_surfaces_sample_expansion_guidance(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "sampleGuidanceCard",
+            "sampleGuidanceList",
+            "sampleGuidanceIntro",
+            "sampleGuidanceCta",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "SAMPLE_GUIDANCE_REVIEW_THRESHOLD",
+            "totalSavedReviewCount",
+            "renderSampleGuidance",
+            "renderSampleGuidance(products)",
+            "sampleGuidanceTitle",
+            "sampleGuidanceLowStar",
+            "sampleGuidanceVerifiedPurchase",
+            "sampleGuidanceVariants",
+            "sampleGuidanceCompetitors",
+            "sampleGuidanceLoggedIn",
+            "sampleGuidanceCta",
+            "Collect open tabs",
+        ]:
+            self.assertIn(marker, js)
+
     def test_popup_supports_collect_open_tabs(self):
         html = (self.root / "popup.html").read_text(encoding="utf-8")
         js = (self.root / "popup.js").read_text(encoding="utf-8")
