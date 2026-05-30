@@ -156,16 +156,24 @@
       .replace(/[^a-z0-9]+/g, " ")
       .trim();
   }
-
   function cleanAmazonReviewText(value) {
     return cleanText(value)
-      .replace(/^<img\/>/i, "")
-      .replace(/\bHelpful\b/gi, " ")
-      .replace(/\bReport\b/gi, " ")
+      .replace(/^<img[^>]*>\s*/i, "")
+      .replace(/<img[^>]*>/gi, " ")
+      .replace(/\bHelpful\b/g, " ")
+      .replace(/\bReport\b/g, " ")
       .replace(/\bTranslate review to English\b/gi, " ")
+      .replace(/\bThank you for your feedback\b/gi, " ")
+      .replace(/\bSorry, there was an error\b/gi, " ")
+      .replace(/\bMore\b/g, " ")
+      .replace(/\bHide\b/g, " ")
+      .replace(/\bClose\b/g, " ")
+      .replace(/\bOne person found this(?: helpful)?\b/gi, " ")
+      .replace(/\b\d+\s+people\s+found\s+this(?: helpful)?\b/gi, " ")
       .replace(/\s+/g, " ")
       .trim();
   }
+
 
   function isAmazonNoiseReviewText(value) {
     const text = cleanAmazonReviewText(value);

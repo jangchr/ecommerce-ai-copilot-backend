@@ -15,7 +15,9 @@
     "https://*.tiktok.com/*",
     "https://ecommerce-ai-copilot-backend.onrender.com/*",
     "http://127.0.0.1:*/*",
-    "http://localhost:*/*"
+    "http://localhost:*/*",
+    "https://www.amazon.co.jp/*",
+    "https://*.amazon.co.jp/*"
   ],
   "action": {
     "default_title": "CrossGrowth Review Collector",

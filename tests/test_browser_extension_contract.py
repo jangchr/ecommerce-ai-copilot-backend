@@ -23,6 +23,13 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
 
 
+
+    def test_manifest_allows_amazon_jp_pages(self):
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+
+        self.assertIn("https://www.amazon.co.jp/*", manifest["host_permissions"])
+        self.assertIn("https://*.amazon.co.jp/*", manifest["host_permissions"])
+
     def test_manifest_allows_tab_collection(self):
         manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
 
@@ -82,6 +89,39 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "metadata",
             "creator",
             "hashtags",
+        ]:
+            self.assertIn(marker, source)
+
+
+
+    def test_popup_cleans_collected_review_tabs_before_merge(self):
+        source = (self.root / "popup.js").read_text(encoding="utf-8")
+        content = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "cleanCollectedProductTitle",
+            "cleanCollectedReviewText",
+            "normalizeCollectedProductForMerge",
+            "Customer reviews",
+            "\\u4e70\\u5bb6\\u8bc4\\u8bba",
+            "Thank you for your feedback",
+            "Sorry, there was an error",
+            "One person found this",
+        ]:
+            self.assertIn(marker, source + content)
+
+    def test_popup_merges_open_tabs_by_product_identity(self):
+        source = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "productIdentityKey",
+            "reviewIdentityKey",
+            "mergeReviewLists",
+            "mergeProductsByUrlWithStats",
+            "merged_visible_review_pages",
+            "collectedTabsMerged",
+            "duplicateReviews",
+            "totalReviews",
         ]:
             self.assertIn(marker, source)
 
