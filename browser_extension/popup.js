@@ -1164,14 +1164,23 @@ async function clickAmazonReviewLoadMoreInTab(tabId) {
           && href.toLowerCase().includes("/product-reviews/")
           && (!currentAsin || candidateAsin === currentAsin);
 
-        const loadMoreSignal =
-          haystack.includes("cm_cr_arp_d_paging_btm") ||
+        const skipNavigationSignal =
+          href.includes("#skippedLink") ||
+          haystack.includes("nav-assist-skip-to-main-content") ||
+          haystack.includes("skip to main content") ||
+          haystack.includes("\u4e3b\u8981\u5185\u5bb9");
+
+        const labelLoadMoreSignal =
           haystack.includes("show more reviews") ||
           haystack.includes("more reviews") ||
           haystack.includes("\u591a\u663e\u793a") ||
           haystack.includes("\u663e\u793a\u66f4\u591a");
 
-        if (!sameAsinReviewHref || !loadMoreSignal) continue;
+        const loadMoreSignal =
+          labelLoadMoreSignal &&
+          haystack.includes("cm_cr_arp_d_paging_btm");
+
+        if (!sameAsinReviewHref || skipNavigationSignal || !loadMoreSignal) continue;
 
         const beforeCount = visibleReviewCount();
         candidate.scrollIntoView({ block: "center", inline: "nearest" });
