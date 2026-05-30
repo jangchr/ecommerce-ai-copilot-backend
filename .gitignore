@@ -38,3 +38,4 @@ runs/*.json
 # OS
 .DS_Store
 Thumbs.db
+.cg/
