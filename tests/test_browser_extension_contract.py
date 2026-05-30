@@ -679,5 +679,16 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, js)
 
+
+    def test_extension_workspace_payload_requests_auto_analysis(self):
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "buildWorkspacePayload",
+            "auto_analyze: true",
+            "source: \"chrome_extension\"",
+        ]:
+            self.assertIn(marker, js)
+
 if __name__ == "__main__":
     unittest.main()

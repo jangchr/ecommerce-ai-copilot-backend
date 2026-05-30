@@ -485,6 +485,7 @@ function buildWorkspacePayload(products) {
   return {
     workspace_id: `extension_workspace_${Date.now()}`,
     source: "chrome_extension",
+    auto_analyze: true,
     output_language: popupOutputLanguage(),
     products: products || []
   };
