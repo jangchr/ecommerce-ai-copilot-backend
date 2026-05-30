@@ -172,6 +172,28 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
 
 
+
+    def test_popup_supports_background_collector_page_limit_control(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "autoCollectMaxPages",
+            "autoCollectMaxPagesLabel",
+            "<option value=\"3\">3</option>",
+            "<option value=\"5\">5</option>",
+            "<option value=\"10\">10</option>",
+        ]:
+            self.assertIn(marker, html + js)
+
+        for marker in [
+            "readAutoCollectMaxPages",
+            "const maxPages = readAutoCollectMaxPages()",
+            "autoCollectMaxPages: result.autoCollectMaxPages",
+            "chrome.storage.local.set({ autoCollectMaxPages: readAutoCollectMaxPages() })",
+        ]:
+            self.assertIn(marker, js)
+
     def test_popup_supports_background_review_page_collector(self):
         html = (self.root / "popup.html").read_text(encoding="utf-8")
         js = (self.root / "popup.js").read_text(encoding="utf-8")

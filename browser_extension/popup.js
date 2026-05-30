@@ -14,6 +14,7 @@ const POPUP_COPY = {
     saveCurrentProduct: "Save current product",
     collectOpenTabs: "Collect open tabs",
     autoCollectMoreReviews: "Auto collect more reviews",
+    autoCollectMaxPagesLabel: "Max pages",
     collectingMoreReviews: "Auto collecting visible review pages...",
     backgroundCollectorDone: "Auto collected {pages} page(s), {added} new visible review(s), {duplicates} duplicate review(s) skipped, {total} saved review(s).",
     backgroundCollectorStopped: "Auto collector stopped: {reason}",
@@ -90,6 +91,7 @@ const POPUP_COPY = {
     "saveCurrentProduct": "\u4fdd\u5b58\u5f53\u524d\u5546\u54c1",
     "collectOpenTabs": "\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875",
     "autoCollectMoreReviews": "\u81ea\u52a8\u91c7\u96c6\u66f4\u591a\u8bc4\u8bba",
+    "autoCollectMaxPagesLabel": "\u6700\u5927\u9875\u6570",
     "collectingMoreReviews": "\u6b63\u5728\u81ea\u52a8\u91c7\u96c6\u53ef\u89c1\u8bc4\u8bba\u9875...",
     "backgroundCollectorDone": "\u5df2\u81ea\u52a8\u91c7\u96c6 {pages} \u9875\uff0c\u65b0\u589e {added} \u6761\u53ef\u89c1\u8bc4\u8bba\uff0c\u8df3\u8fc7 {duplicates} \u6761\u91cd\u590d\u8bc4\u8bba\uff0c\u5f53\u524d\u7d2f\u8ba1 {total} \u6761\u8bc4\u8bba\u3002",
     "backgroundCollectorStopped": "\u81ea\u52a8\u91c7\u96c6\u5df2\u505c\u6b62\uff1a{reason}",
@@ -475,11 +477,12 @@ async function copyWorkspaceJson() {
 
 
 async function getSavedProducts() {
-  const result = await chrome.storage.local.get(["workspaceProducts", "backendUrl", "popupLanguage"]);
+  const result = await chrome.storage.local.get(["workspaceProducts", "backendUrl", "popupLanguage", "autoCollectMaxPages"]);
   return {
     products: result.workspaceProducts || [],
     backendUrl: result.backendUrl || DEFAULT_BACKEND,
-    popupLanguage: result.popupLanguage || "en"
+    popupLanguage: result.popupLanguage || "en",
+    autoCollectMaxPages: result.autoCollectMaxPages || "3"
   };
 }
 
@@ -554,10 +557,14 @@ function renderSavedProducts(products) {
 
 
 async function updateStats() {
-  const { products, backendUrl, popupLanguage: savedLanguage } = await getSavedProducts();
+  const { products, backendUrl, popupLanguage: savedLanguage, autoCollectMaxPages } = await getSavedProducts();
   popupLanguage = savedLanguage === "zh-CN" ? "zh-CN" : "en";
   applyPopupLanguage();
   $("backendUrl").value = backendUrl;
+  const maxPagesSelect = $("autoCollectMaxPages");
+  if (maxPagesSelect) {
+    maxPagesSelect.value = String(autoCollectMaxPages || "3");
+  }
   $("savedCount").textContent = String(products.length);
   $("reviewCount").textContent = String(products.reduce((sum, product) => sum + (product.reviews || []).length, 0));
   renderSavedProducts(products);
@@ -904,6 +911,11 @@ function backgroundCollectorStopReason(product) {
   return "";
 }
 
+function readAutoCollectMaxPages() {
+  const rawValue = Number($("autoCollectMaxPages")?.value || 3);
+  return [3, 5, 10].includes(rawValue) ? rawValue : 3;
+}
+
 async function collectCurrentProductMoreReviews() {
   setStatus(tPopup("collectingMoreReviews"));
 
@@ -915,7 +927,7 @@ async function collectCurrentProductMoreReviews() {
     throw new Error(tPopup("noAmazonAsin"));
   }
 
-  const maxPages = 3;
+  const maxPages = readAutoCollectMaxPages();
   const collected = [];
   const failures = [];
   const pageSnapshots = [];
@@ -1160,5 +1172,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("backendUrl").addEventListener("change", async () => {
     await chrome.storage.local.set({ backendUrl: $("backendUrl").value.trim() || DEFAULT_BACKEND });
   });
+  const maxPagesSelect = $("autoCollectMaxPages");
+  if (maxPagesSelect) {
+    maxPagesSelect.addEventListener("change", async () => {
+      await chrome.storage.local.set({ autoCollectMaxPages: readAutoCollectMaxPages() });
+    });
+  }
   await updateStats();
 });
