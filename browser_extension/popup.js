@@ -38,6 +38,7 @@ const POPUP_COPY = {
     sampleGuidanceStepsTitle: "Sample expansion checklist ({count} visible reviews saved)",
     copiedSampleGuidanceSteps: "Sample expansion steps copied.",
     readyStatus: "Ready.",
+    actionInProgress: "Working...",
     currentCapture: "Current capture",
     workspaceAnalysis: "Workspace analysis",
     copyInsights: "Copy insights",
@@ -127,6 +128,7 @@ const POPUP_COPY = {
     "sampleGuidanceStepsTitle": "\u6837\u672c\u589e\u5f3a\u64cd\u4f5c\u6e05\u5355\uff08\u5df2\u4fdd\u5b58 {count} \u6761\u53ef\u89c1\u8bc4\u8bba\uff09",
     "copiedSampleGuidanceSteps": "\u6837\u672c\u589e\u5f3a\u6b65\u9aa4\u5df2\u590d\u5236\u3002",
     "readyStatus": "\u51c6\u5907\u597d\u4e86\u3002",
+    "actionInProgress": "\u6b63\u5728\u5904\u7406...",
     "currentCapture": "\u5f53\u524d\u91c7\u96c6\u7ed3\u679c",
     "workspaceAnalysis": "\u5de5\u4f5c\u533a\u5206\u6790",
     "copyInsights": "\u590d\u5236\u6d1e\u5bdf",
@@ -616,12 +618,14 @@ async function copySampleGuidanceSteps() {
   const button = $("sampleGuidanceCopyBtn");
   if (button) {
     const originalText = tPopup("copySampleGuidanceSteps");
+    button.dataset.restoreHandledByAction = "true";
     button.textContent = tPopup("copiedSampleGuidanceSteps");
-    button.disabled = true;
+    setButtonBusy(button, true);
 
     setTimeout(() => {
       button.textContent = originalText;
-      button.disabled = false;
+      delete button.dataset.restoreHandledByAction;
+      setButtonBusy(button, false);
     }, 1500);
   }
 }
@@ -1433,12 +1437,33 @@ async function clearSavedProducts() {
   setStatus(tPopup("cleared"));
 }
 
+function setButtonBusy(button, isBusy) {
+  if (!button) return;
+
+  button.disabled = Boolean(isBusy);
+  if (isBusy) {
+    button.setAttribute("aria-busy", "true");
+    button.classList.add("is-busy");
+  } else {
+    button.removeAttribute("aria-busy");
+    button.classList.remove("is-busy");
+  }
+}
+
 function bind(id, handler) {
-  $(id).addEventListener("click", async () => {
+  const button = $(id);
+  button.addEventListener("click", async () => {
+    setButtonBusy(button, true);
+    setStatus(tPopup("actionInProgress"));
+
     try {
       await handler();
     } catch (error) {
       setStatus(error.message || String(error), true);
+    } finally {
+      if (button.dataset.restoreHandledByAction !== "true") {
+        setButtonBusy(button, false);
+      }
     }
   });
 }
