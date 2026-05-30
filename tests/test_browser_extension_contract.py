@@ -293,7 +293,8 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceCta",
             "sampleGuidanceCopyBtn",
             "openLowStarReviewTabBtn",
-            "openVerifiedReviewTabBtn",\n            "openVariantReviewTabsBtn",
+            "openVerifiedReviewTabBtn",
+            "openVariantReviewTabsBtn",
             "copyTargetedReviewLinksBtn",
         ]:
             self.assertIn(marker, html)
