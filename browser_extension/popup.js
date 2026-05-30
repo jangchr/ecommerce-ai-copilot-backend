@@ -43,6 +43,7 @@ const POPUP_COPY = {
     openLowStarReviewTab: "Open low-star page",
     openVerifiedReviewTab: "Open verified page",
     openVariantReviewTabs: "Open variant pages",
+    openRelatedReviewPack: "Open related pack",
     copyTargetedReviewLinks: "Copy targeted links",
     targetedReviewLinksTitle: "Targeted Amazon review links",
     targetedLowStarReviews: "Low-star reviews",
@@ -52,7 +53,10 @@ const POPUP_COPY = {
     targetedVariantReviews: "Variant reviews",
     openedTargetedReviewTab: "Opened targeted review tab: {label}. After it loads, use Collect open tabs.",
     openedVariantReviewTabs: "Opened {count} variant review tab(s). After they load, use Collect open tabs.",
+    openedRelatedReviewPackTabs: "Opened {count} related review tab(s). After they load, use Collect open tabs.",
+    closedTargetedReviewTabs: "Closed {count} extension-opened review tab(s).",
     noVariantReviewLinks: "No variant review links found in the saved Amazon sample yet.",
+    noRelatedReviewLinks: "No related review expansion links found yet.",
     copiedTargetedReviewLinks: "Targeted review links copied.",
     noSavedAmazonProduct: "No saved Amazon product with ASIN found yet.",
     readyStatus: "Ready.",
@@ -152,6 +156,7 @@ const POPUP_COPY = {
     "openLowStarReviewTab": "\u6253\u5f00\u4f4e\u661f\u8bc4\u8bba\u9875",
     "openVerifiedReviewTab": "\u6253\u5f00\u5df2\u786e\u8ba4\u8d2d\u4e70\u9875",
     "openVariantReviewTabs": "\u6253\u5f00\u53d8\u4f53\u8bc4\u8bba\u9875",
+    "openRelatedReviewPack": "\u6253\u5f00\u540c\u7c7b\u6269\u6837\u5305",
     "copyTargetedReviewLinks": "\u590d\u5236\u5b9a\u5411\u8bc4\u8bba\u94fe\u63a5",
     "targetedReviewLinksTitle": "\u5b9a\u5411 Amazon \u8bc4\u8bba\u94fe\u63a5",
     "targetedLowStarReviews": "\u4f4e\u661f\u8bc4\u8bba",
@@ -161,7 +166,10 @@ const POPUP_COPY = {
     "targetedVariantReviews": "\u53d8\u4f53\u8bc4\u8bba",
     "openedTargetedReviewTab": "\u5df2\u6253\u5f00\u5b9a\u5411\u8bc4\u8bba\u6807\u7b7e\u9875\uff1a{label}\u3002\u9875\u9762\u52a0\u8f7d\u540e\uff0c\u518d\u4f7f\u7528\u201c\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\u201d\u3002",
     "openedVariantReviewTabs": "\u5df2\u6253\u5f00 {count} \u4e2a\u53d8\u4f53\u8bc4\u8bba\u6807\u7b7e\u9875\u3002\u9875\u9762\u52a0\u8f7d\u540e\uff0c\u518d\u4f7f\u7528\u201c\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\u201d\u3002",
+    "openedRelatedReviewPackTabs": "\u5df2\u6253\u5f00 {count} \u4e2a\u540c\u7c7b\u8bc4\u8bba\u6269\u6837\u6807\u7b7e\u9875\u3002\u9875\u9762\u52a0\u8f7d\u540e\uff0c\u518d\u4f7f\u7528\u201c\u91c7\u96c6\u5df2\u6253\u5f00\u6807\u7b7e\u9875\u201d\u3002",
+    "closedTargetedReviewTabs": "\u5df2\u5173\u95ed {count} \u4e2a\u7531\u63d2\u4ef6\u6253\u5f00\u7684\u8bc4\u8bba\u6807\u7b7e\u9875\u3002",
     "noVariantReviewLinks": "\u5f53\u524d\u5df2\u4fdd\u5b58\u6837\u672c\u91cc\u8fd8\u6ca1\u6709\u53ef\u7528\u7684\u53d8\u4f53\u8bc4\u8bba\u94fe\u63a5\u3002",
+    "noRelatedReviewLinks": "\u5f53\u524d\u8fd8\u6ca1\u6709\u627e\u5230\u53ef\u7528\u7684\u540c\u7c7b\u8bc4\u8bba\u6269\u6837\u94fe\u63a5\u3002",
     "copiedTargetedReviewLinks": "\u5b9a\u5411\u8bc4\u8bba\u94fe\u63a5\u5df2\u590d\u5236\u3002",
     "noSavedAmazonProduct": "\u8fd8\u6ca1\u6709\u5df2\u4fdd\u5b58\u4e14\u5e26 ASIN \u7684 Amazon \u5546\u54c1\u3002",
     "readyStatus": "\u51c6\u5907\u597d\u4e86\u3002",
@@ -1021,6 +1029,58 @@ function amazonReviewPageUrlFor(product, pageNumber = 1, sourceUrl = "") {
   return reviewUrl.href;
 }
 
+const TARGETED_REVIEW_TAB_IDS_KEY = "targetedReviewTabIds";
+
+async function trackedTargetedReviewTabIds() {
+  const stored = await chrome.storage.local.get([TARGETED_REVIEW_TAB_IDS_KEY]);
+  return new Set((stored[TARGETED_REVIEW_TAB_IDS_KEY] || [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0));
+}
+
+async function rememberTargetedReviewTab(tab) {
+  if (!tab?.id) return;
+
+  const tracked = await trackedTargetedReviewTabIds();
+  tracked.add(tab.id);
+
+  await chrome.storage.local.set({
+    [TARGETED_REVIEW_TAB_IDS_KEY]: Array.from(tracked).slice(-50)
+  });
+}
+
+async function forgetTargetedReviewTabIds(tabIds) {
+  const removeIds = new Set((tabIds || []).map((value) => Number(value)));
+  if (!removeIds.size) return;
+
+  const tracked = await trackedTargetedReviewTabIds();
+  for (const id of removeIds) {
+    tracked.delete(id);
+  }
+
+  await chrome.storage.local.set({
+    [TARGETED_REVIEW_TAB_IDS_KEY]: Array.from(tracked)
+  });
+}
+
+async function closeTrackedTargetedReviewTabs(tabIds) {
+  const tracked = await trackedTargetedReviewTabIds();
+  const closableIds = (tabIds || [])
+    .map((value) => Number(value))
+    .filter((id) => tracked.has(id));
+
+  if (!closableIds.length) return 0;
+
+  const results = await Promise.allSettled(
+    closableIds.map((id) => chrome.tabs.remove(id))
+  );
+
+  const closedIds = closableIds.filter((id, index) => results[index]?.status === "fulfilled");
+  await forgetTargetedReviewTabIds(closedIds);
+
+  return closedIds.length;
+}
+
 function latestSavedAmazonProduct(products) {
   const items = Array.isArray(products) ? products.slice().reverse() : [];
   return items.find((product) => {
@@ -1109,6 +1169,90 @@ function targetedReviewLinkLabel(link) {
   return link.detail ? `${label} - ${link.detail}` : label;
 }
 
+function savedAmazonAsinsFromProducts(products) {
+  const asins = new Set();
+  for (const product of products || []) {
+    const asin = amazonAsinFromProduct(product);
+    if (asin) asins.add(asin);
+  }
+  return asins;
+}
+
+function uniqueReviewExpansionLinks(links, limit = 6) {
+  const seenUrls = new Set();
+  const seenAsins = new Set();
+  const result = [];
+
+  for (const link of links || []) {
+    const url = String(link?.url || "");
+    if (!url || seenUrls.has(url)) continue;
+
+    const asin = amazonAsinFromUrl(url);
+    if (asin && seenAsins.has(asin)) continue;
+
+    seenUrls.add(url);
+    if (asin) seenAsins.add(asin);
+    result.push(link);
+
+    if (result.length >= limit) break;
+  }
+
+  return result;
+}
+
+function relatedVariantReviewLinksForProducts(products, limit = 6) {
+  const savedAsins = savedAmazonAsinsFromProducts(products);
+  const seenAsins = new Set(savedAsins);
+  const result = [];
+  const sourceProducts = Array.isArray(products) ? products.slice().reverse() : [];
+
+  for (const product of sourceProducts) {
+    const links = variantReviewLinksForProduct(product, 12);
+
+    for (const link of links) {
+      const asin = amazonAsinFromUrl(link.url);
+      if (!asin || seenAsins.has(asin)) continue;
+
+      seenAsins.add(asin);
+      result.push(link);
+
+      if (result.length >= limit) return result;
+    }
+  }
+
+  return result;
+}
+
+function targetedReviewLinksForExpansionPack(product) {
+  const priorityKeys = new Set(["low_star", "verified", "recent"]);
+  return targetedAmazonReviewLinksForProduct(product)
+    .filter((link) => priorityKeys.has(link.key));
+}
+
+async function openRelatedReviewPack() {
+  const { products } = await getSavedProducts();
+  const product = latestSavedAmazonProduct(products);
+  if (!product) {
+    throw new Error(tPopup("noSavedAmazonProduct"));
+  }
+
+  const links = uniqueReviewExpansionLinks([
+    ...relatedVariantReviewLinksForProducts(products, 6),
+    ...targetedReviewLinksForExpansionPack(product)
+  ], 6);
+
+  if (!links.length) {
+    throw new Error(tPopup("noRelatedReviewLinks"));
+  }
+
+  for (const link of links) {
+    const tab = await chrome.tabs.create({ url: link.url, active: false });
+    await rememberTargetedReviewTab(tab);
+  }
+
+  setStatus(tPopup("openedRelatedReviewPackTabs").replace("{count}", String(links.length)));
+}
+
 async function openVariantReviewTabs() {
   const { products } = await getSavedProducts();
   const product = latestSavedAmazonProduct(products);
@@ -1122,7 +1266,8 @@ async function openVariantReviewTabs() {
   }
 
   for (const link of links) {
-    await chrome.tabs.create({ url: link.url, active: false });
+    const tab = await chrome.tabs.create({ url: link.url, active: false });
+    await rememberTargetedReviewTab(tab);
   }
 
   setStatus(tPopup("openedVariantReviewTabs").replace("{count}", String(links.length)));
@@ -1179,7 +1324,8 @@ async function openTargetedReviewTab(linkKey) {
     throw new Error(tPopup("noAmazonAsin"));
   }
 
-  await chrome.tabs.create({ url: link.url, active: false });
+  const tab = await chrome.tabs.create({ url: link.url, active: false });
+  await rememberTargetedReviewTab(tab);
   setStatus(tPopup("openedTargetedReviewTab").replace("{label}", targetedReviewLinkLabel(link)));
 }
 
@@ -1637,6 +1783,7 @@ async function collectOpenTabs() {
 
   const collected = [];
   const failures = [];
+  const collectedTabIds = [];
   const tabLoadMoreResults = [];
 
   for (const tab of candidates) {
@@ -1650,6 +1797,7 @@ async function collectOpenTabs() {
 
       const product = await extractProductFromTab(tab);
       collected.push(product);
+      if (tab.id) collectedTabIds.push(tab.id);
     } catch (error) {
       failures.push(`${tab.title || tab.url || "Unknown tab"}: ${error.message || error}`);
     }
@@ -1662,10 +1810,12 @@ async function collectOpenTabs() {
   const { products } = await getSavedProducts();
   const merged = mergeProductsByUrlWithStats(products, collected);
   await setSavedProducts(merged.products);
+  const closedTargetedTabCount = await closeTrackedTargetedReviewTabs(collectedTabIds);
 
   $("previewCard").hidden = false;
   $("preview").textContent = JSON.stringify({
     collected_tabs: collected.length,
+    closed_targeted_tabs: closedTargetedTabCount,
     tab_load_more_results: tabLoadMoreResults,
     failures,
     merge_stats: merged.stats,
@@ -1675,13 +1825,16 @@ async function collectOpenTabs() {
   const warningCount = collected.filter((product) => captureDiagnosticMessage(product)).length;
   const failureSuffix = failures.length ? ` ${failures.length} ${tPopup("tabsSkipped")}` : "";
   const warningSuffix = warningCount ? ` ${warningCount} ${tPopup("captureWarnings")}` : "";
+  const closedTabsSuffix = closedTargetedTabCount
+    ? ` ${tPopup("closedTargetedReviewTabs").replace("{count}", String(closedTargetedTabCount))}`
+    : "";
   const status = tPopup("collectedTabsMerged")
     .replace("{tabs}", String(collected.length))
     .replace("{added}", String(merged.stats.addedReviews))
     .replace("{duplicates}", String(merged.stats.duplicateReviews))
     .replace("{total}", String(merged.stats.totalReviews));
 
-  setStatus(`${status}${failureSuffix}${warningSuffix}`);
+  setStatus(`${status}${failureSuffix}${warningSuffix}${closedTabsSuffix}`);
 }
 
 async function analyzeWorkspace() {
@@ -1783,6 +1936,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind("openLowStarReviewTabBtn", () => openTargetedReviewTab("low_star"));
   bind("openVerifiedReviewTabBtn", () => openTargetedReviewTab("verified"));
   bind("openVariantReviewTabsBtn", openVariantReviewTabs);
+  bind("openRelatedReviewPackBtn", openRelatedReviewPack);
   bind("copyTargetedReviewLinksBtn", copyTargetedReviewLinks);
   bind("analyzeBtn", analyzeWorkspace);
   bind("copyInsightsBtn", copyInsights);
