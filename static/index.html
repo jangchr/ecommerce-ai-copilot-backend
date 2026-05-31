@@ -5405,6 +5405,10 @@
                 setReviewsStatus(t('pastedReviewWorkspaceReady'));
 
                 const workspaceAnalysis = workspaceResponse.analysis || {};
+                workspaceAnalysis.creative_angles = (workspaceAnalysis.creative_angles || [])
+                    .map((value) => String(value || "")
+                        .replace(/^Copy-ready angle:\s*/i, "")
+                        .replace(/^\u521b\u610f\u65b9\u5411[\uff1a:]\s*/, ""));
                 const workspaceLines = [
                     'Review workspace analysis:',
                     `Parsed reviews: ${workspaceResponse.parsed?.review_count ?? 0}`,
