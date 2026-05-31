@@ -6341,16 +6341,10 @@
   }
 
   function extensionCleanCreativeAngle(value) {
-    return String(value || "").replace(/^Copy-ready angle:\s*/i, "");
+    return String(value || "")
+      .replace(/^Copy-ready angle:\s*/i, "")
+      .replace(/^\u521b\u610f\u65b9\u5411[\uff1a:]\s*/, "");
   }
-
-
-  let extensionCreativeBriefCopyPayload = {
-    all: "",
-    rows: [],
-    positive: "",
-  };
-
   function extensionPositiveProofItems(body) {
     return (body.liked_points || [])
       .map((item) => ({
