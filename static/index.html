@@ -3922,6 +3922,9 @@
             });
             document.getElementById('languageEnglishBtn').classList.toggle('active', outputLanguage === 'en');
             document.getElementById('languageChineseBtn').classList.toggle('active', outputLanguage === 'zh-CN');
+            if (typeof window.refreshExtensionWorkspacePanelChrome === 'function') {
+                window.refreshExtensionWorkspacePanelChrome();
+            }
         }
 
 
@@ -6179,6 +6182,7 @@
       "noPayload": "No extension workspace payload found yet.",
       "noPayloadStrong": "No workspace payload found.",
       "analyzingWorkspace": "Analyzing workspace...",
+      "analysisComplete": "Analysis complete.",
       "analysisFailed": "Analysis failed:",
       "unknownError": "Unknown error",
       "productsMetric": "Products",
@@ -6275,6 +6279,7 @@
       "noPayload": "\u8fd8\u6ca1\u6709\u627e\u5230\u63d2\u4ef6\u5de5\u4f5c\u533a\u6570\u636e\u3002",
       "noPayloadStrong": "\u6ca1\u6709\u627e\u5230\u5de5\u4f5c\u533a\u6570\u636e\u3002",
       "analyzingWorkspace": "\u6b63\u5728\u5206\u6790\u5de5\u4f5c\u533a...",
+      "analysisComplete": "\u5206\u6790\u5b8c\u6210\u3002",
       "analysisFailed": "\u5206\u6790\u5931\u8d25\uff1a",
       "unknownError": "\u672a\u77e5\u9519\u8bef",
       "productsMetric": "\u5546\u54c1",
@@ -6370,6 +6375,10 @@
     return EXTENSION_WORKSPACE_COPY[language]?.[key] || EXTENSION_WORKSPACE_COPY.en[key] || key;
   }
 
+  function extensionWorkspacePageLanguageSource() {
+    return { output_language: typeof currentOutputLanguage === "function" ? currentOutputLanguage() : "en" };
+  }
+
   function extensionWorkspaceReviewCount(source) {
     const payload = readExtensionWorkspacePayload();
     if (typeof source?.total_reviews === "number") {
@@ -6452,7 +6461,11 @@
     const amazonButton = document.getElementById("amazonImportedWorkspaceGenerateBtn");
 
     if (!payload) {
-      setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("noPayloadStrong", payload));
+      const message = tExtensionWorkspace("noPayloadStrong", extensionWorkspacePageLanguageSource());
+      setExtensionWorkspaceBridgeStatus(message);
+      const output = document.getElementById("extensionWorkspaceOutput");
+      if (output) output.innerHTML = `<strong>${escapeExtensionHTML(message)}</strong>`;
+      updateExtensionWorkspaceActionState(null);
       return;
     }
 
@@ -6465,6 +6478,7 @@
       const message = tExtensionWorkspace("sendToReviewWorkflowNoReviews", payload);
       setExtensionWorkspaceBridgeStatus(message);
       setReviewsStatus(message, "error");
+      updateExtensionWorkspaceActionState(payload);
       scrollToPastedReviewsMode();
       return;
     }
@@ -6544,7 +6558,10 @@
   }
 
 
-  function refreshExtensionWorkspacePanelChrome(source = readExtensionWorkspacePayload()) {
+  function refreshExtensionWorkspacePanelChrome(source = extensionWorkspacePageLanguageSource()) {
+    const labelSource = extensionWorkspacePageLanguageSource();
+    const payload = readExtensionWorkspacePayload();
+    const localizedPayload = payload ? Object.assign({}, payload, labelSource) : null;
     const textTargets = [
       ["extensionWorkspacePanelEyebrow", "panelEyebrow"],
       ["extensionWorkspacePanelTitle", "importedTitle"],
@@ -6559,19 +6576,22 @@
     for (const [id, key] of textTargets) {
       const node = document.getElementById(id);
       if (node) {
-        node.textContent = tExtensionWorkspace(key, source);
+        node.textContent = tExtensionWorkspace(key, labelSource);
       }
     }
 
     const close = document.getElementById("extensionWorkspaceClose");
     if (close) {
-      close.setAttribute("aria-label", tExtensionWorkspace("closeAria", source));
+      close.setAttribute("aria-label", tExtensionWorkspace("closeAria", labelSource));
     }
 
     const summary = document.getElementById("extensionWorkspaceSummary");
-    if (summary && !source) {
-      summary.textContent = tExtensionWorkspace("waitingPayload", source);
+    if (summary && payload) {
+      summary.textContent = extensionWorkspaceSummaryText(localizedPayload);
+    } else if (summary) {
+      summary.textContent = tExtensionWorkspace("waitingPayload", labelSource);
     }
+    updateExtensionWorkspaceActionState(payload);
   }
 
 
@@ -6664,11 +6684,23 @@
     });
   }
 
+  function updateExtensionWorkspaceActionState(payload = readExtensionWorkspacePayload()) {
+    const hasPayload = Boolean(payload);
+    const hasReviews = hasExtensionWorkspaceVisibleReviews(payload);
+    const analyzeButton = document.getElementById("extensionWorkspaceAnalyze");
+    const sendButton = document.getElementById("extensionWorkspaceSendToReviews");
+    const amazonButton = document.getElementById("amazonImportedWorkspaceGenerateBtn");
+    if (analyzeButton) analyzeButton.disabled = !hasPayload;
+    if (sendButton) sendButton.disabled = !hasReviews;
+    if (amazonButton) amazonButton.disabled = !hasReviews;
+  }
+
   function refreshAmazonImportPathStatus() {
     const payload = readExtensionWorkspacePayload();
     const statusPanel = document.getElementById("amazonImportedWorkspaceStatus");
     if (!statusPanel) return;
     statusPanel.hidden = !hasExtensionWorkspaceVisibleReviews(payload);
+    updateExtensionWorkspaceActionState(payload);
     if (!statusPanel.hidden) {
       setExtensionWorkspaceBridgeStatus("");
     }
@@ -6764,8 +6796,11 @@
     refreshExtensionWorkspacePanelChrome(payload);
 
     if (!payload) {
-      summary.textContent = tExtensionWorkspace("noPayload");
-      output.innerHTML = "";
+      const labelSource = extensionWorkspacePageLanguageSource();
+      summary.textContent = tExtensionWorkspace("noPayload", labelSource);
+      output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("noPayloadStrong", labelSource))}</strong>`;
+      setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("noPayloadStrong", labelSource));
+      updateExtensionWorkspaceActionState(null);
       return;
     }
 
@@ -7404,8 +7439,6 @@
     };
     const [bg, border, color] = colors[kind] || colors.analyzing;
 
-    body.creative_angles = (body.creative_angles || []).map(extensionCleanCreativeAngle);
-
     return `
       <div id="extensionWorkspaceAutoAnalyzeStatus" data-extension-auto-analysis-status="${escapeExtensionHTML(kind)}" style="margin:10px 0;padding:9px 10px;background:${bg};border:1px solid ${border};border-radius:12px;color:${color};font-weight:800;">
         ${escapeExtensionHTML(message)}
@@ -7452,11 +7485,15 @@ async function analyzeExtensionWorkspace() {
     const payload = readExtensionWorkspacePayload();
     const output = document.getElementById("extensionWorkspaceOutput");
     if (!payload) {
-      output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("noPayloadStrong"))}</strong>`;
+      const message = tExtensionWorkspace("noPayloadStrong", extensionWorkspacePageLanguageSource());
+      if (output) output.innerHTML = `<strong>${escapeExtensionHTML(message)}</strong>`;
+      setExtensionWorkspaceBridgeStatus(message);
+      updateExtensionWorkspaceActionState(null);
       return;
     }
 
-    output.innerHTML = extensionWorkspaceStatusHTML("analyzing", payload);
+    if (output) output.innerHTML = extensionWorkspaceStatusHTML("analyzing", payload);
+    setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("analyzingWorkspace", payload));
 
     const response = await fetch("/api/v1/analyze-review-workspace", {
       method: "POST",
@@ -7466,16 +7503,20 @@ async function analyzeExtensionWorkspace() {
 
     const body = await response.json();
     if (!response.ok) {
-      output.innerHTML = extensionWorkspaceStatusHTML(
-        "failed",
-        payload,
-        body.error || tExtensionWorkspace("unknownError", payload)
-      );
+      const message = body.error || tExtensionWorkspace("unknownError", payload);
+      if (output) {
+        output.innerHTML = extensionWorkspaceStatusHTML(
+          "failed",
+          payload,
+          message
+        );
+      }
+      setExtensionWorkspaceBridgeStatus(message);
       return;
     }
     body.output_language = body.output_language || payload.output_language || extensionWorkspaceLanguage(payload);
 
-    output.innerHTML = `
+    if (output) output.innerHTML = `
       ${extensionWorkspaceStatusHTML("complete", body)}
       ${extensionWorkspaceWarningsHTML(payload)}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
@@ -7493,6 +7534,7 @@ async function analyzeExtensionWorkspace() {
       ${extensionListHTML(tExtensionWorkspace("creativeAnglesSection", body), body.creative_angles)}
       ${extensionListHTML(tExtensionWorkspace("hooksSection", body), body.hooks)}
     `;
+    setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("analysisComplete", body));
   }
 
   function maybeRenderExtensionWorkspace() {
@@ -7515,6 +7557,7 @@ async function analyzeExtensionWorkspace() {
 
   window.sendExtensionWorkspaceToReviewWorkflow = sendExtensionWorkspaceToReviewWorkflow;
   window.refreshAmazonImportPathStatus = refreshAmazonImportPathStatus;
+  window.refreshExtensionWorkspacePanelChrome = refreshExtensionWorkspacePanelChrome;
 
   window.addEventListener("crossgrowth-extension-workspace-ready", renderExtensionWorkspacePayload);
   document.addEventListener("DOMContentLoaded", maybeRenderExtensionWorkspace);

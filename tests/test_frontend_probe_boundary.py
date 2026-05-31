@@ -80,7 +80,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
     def test_extension_workspace_panel_chrome_refreshes_after_payload_language(self):
         for marker in [
-            "function refreshExtensionWorkspacePanelChrome(source = readExtensionWorkspacePayload())",
+            "function refreshExtensionWorkspacePanelChrome(source = extensionWorkspacePageLanguageSource())",
+            "function extensionWorkspacePageLanguageSource()",
             "extensionWorkspacePanelEyebrow",
             "extensionWorkspacePanelTitle",
             "extensionWorkspaceBoundaryNote",
@@ -88,11 +89,22 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "extensionWorkspaceSendToReviews",
             "extensionWorkspaceBridgeHint",
             "extensionWorkspaceCopy",
+            "window.refreshExtensionWorkspacePanelChrome = refreshExtensionWorkspacePanelChrome;",
+            "window.refreshExtensionWorkspacePanelChrome();",
             "refreshExtensionWorkspacePanelChrome(payload);",
             "tExtensionWorkspace(\"boundaryNote\")",
             "tExtensionWorkspace(\"waitingPayload\")",
         ]:
             self.assertIn(marker, self.source)
+
+        refresh_start = self.source.find("function refreshExtensionWorkspacePanelChrome")
+        refresh_end = self.source.find("function createExtensionWorkspacePanel", refresh_start)
+        self.assertNotEqual(refresh_start, -1)
+        self.assertNotEqual(refresh_end, -1)
+        refresh_body = self.source[refresh_start:refresh_end]
+        self.assertIn("extensionWorkspacePageLanguageSource()", refresh_body)
+        self.assertIn("Object.assign({}, payload, labelSource)", refresh_body)
+        self.assertIn("updateExtensionWorkspaceActionState(payload)", refresh_body)
 
 
     def test_extension_workspace_auto_analysis_status_states_are_visible(self):
@@ -108,7 +120,12 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("\\u5206\\u6790\\u5931\\u8d25\\uff0c\\u8bf7\\u91cd\\u8bd5", self.source)
         self.assertIn('extensionWorkspaceStatusHTML("analyzing", payload)', self.source)
         self.assertIn('extensionWorkspaceStatusHTML("complete", body)', self.source)
-        self.assertIn('extensionWorkspaceStatusHTML(\n        "failed",', self.source)
+        self.assertIn('"failed",\n          payload,', self.source)
+        status_start = self.source.find("function extensionWorkspaceStatusHTML")
+        status_end = self.source.find("function extensionWorkspaceAutoAnalyzeKey", status_start)
+        self.assertNotEqual(status_start, -1)
+        self.assertNotEqual(status_end, -1)
+        self.assertNotIn("body.creative_angles", self.source[status_start:status_end])
 
 
     def test_product_mode_guidance_and_copy_controls_are_present(self):
@@ -2174,6 +2191,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "function extensionWorkspaceProductDescriptionText(payload)",
             "function fillPastedReviewsFromExtensionWorkspace(payload)",
             "async function sendExtensionWorkspaceToReviewWorkflow()",
+            "function setExtensionWorkspaceBridgeStatus(message)",
+            "function updateExtensionWorkspaceActionState(payload = readExtensionWorkspacePayload())",
             "document.getElementById(\"reviewsProductName\")",
             "document.getElementById(\"reviewsProductCategory\")",
             "document.getElementById(\"reviewsProductDescription\")",
@@ -2190,6 +2209,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotEqual(bridge_end, -1)
         bridge_body = self.source[bridge_start:bridge_end]
         self.assertIn("setLanguageMode(language);", bridge_body)
+        self.assertIn("setExtensionWorkspaceBridgeStatus(message)", bridge_body)
+        self.assertIn("setExtensionWorkspaceBridgeStatus(tExtensionWorkspace(\"sendToReviewWorkflowWorking\", payload))", bridge_body)
+        self.assertIn("updateExtensionWorkspaceActionState(null)", bridge_body)
+        self.assertIn("updateExtensionWorkspaceActionState(payload)", bridge_body)
         self.assertIn("fillPastedReviewsFromExtensionWorkspace(payload)", bridge_body)
         self.assertIn("generateFromReviews()", bridge_body)
         self.assertNotIn("fetch(", bridge_body)
@@ -2197,6 +2220,32 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("/api/v1/analyze-review-workspace", bridge_body)
         self.assertNotIn("debug-source-probe", bridge_body)
         self.assertNotIn("amazonShadowMode.checked = true", bridge_body)
+
+    def test_extension_workspace_empty_state_actions_are_clear(self):
+        for marker in [
+            "No workspace payload found.",
+            "analysisComplete",
+            "extensionWorkspaceAnalyze",
+            "extensionWorkspaceSendToReviews",
+            "analyzeButton.disabled = !hasPayload",
+            "sendButton.disabled = !hasReviews",
+            "amazonButton.disabled = !hasReviews",
+            "setExtensionWorkspaceBridgeStatus(message)",
+            "output.innerHTML = `<strong>${escapeExtensionHTML(message)}</strong>`;",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, self.source)
+
+        analyze_start = self.source.find("async function analyzeExtensionWorkspace()")
+        analyze_end = self.source.find("function maybeRenderExtensionWorkspace", analyze_start)
+        self.assertNotEqual(analyze_start, -1)
+        self.assertNotEqual(analyze_end, -1)
+        analyze_body = self.source[analyze_start:analyze_end]
+        self.assertIn("if (!payload)", analyze_body)
+        self.assertIn("setExtensionWorkspaceBridgeStatus(message)", analyze_body)
+        self.assertIn("updateExtensionWorkspaceActionState(null)", analyze_body)
+        self.assertIn("setExtensionWorkspaceBridgeStatus(tExtensionWorkspace(\"analyzingWorkspace\", payload))", analyze_body)
+        self.assertIn("setExtensionWorkspaceBridgeStatus(tExtensionWorkspace(\"analysisComplete\", body))", analyze_body)
 
     def test_amazon_product_path_guides_extension_visible_review_import(self):
         for marker in [
@@ -2550,7 +2599,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn('data-extension-auto-analysis-status', self.source)
         self.assertIn('maybeAutoAnalyzeExtensionWorkspace(payload)', self.source)
         self.assertIn('analyzeExtensionWorkspace();', self.source)
-        self.assertNotIn('tExtensionWorkspace("analyzingWorkspace", payload)', self.source)
+        self.assertIn('tExtensionWorkspace("analyzingWorkspace", payload)', self.source)
 
     def test_extension_workspace_localizes_new_positive_signal_labels(self):
         expected_mappings = {
