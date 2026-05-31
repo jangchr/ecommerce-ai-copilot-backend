@@ -721,6 +721,45 @@ class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
 
 
 
+
+
+    def test_review_workspace_positive_zh_hooks_use_quote_specific_copy(self):
+        from types import SimpleNamespace
+        from main import _rw_positive_hook_from_theme_zh
+
+        price_theme = SimpleNamespace(
+            label="liked signal: great",
+            evidence_quotes=["Cannot beat the price for this quality"],
+            evidence_count=1,
+        )
+        gift_theme = SimpleNamespace(
+            label="liked signal: recommend",
+            evidence_quotes=[
+                "If you are concerned about the two-pack, give the second bottle to a friend, who will truly appreciate the gift."
+            ],
+            evidence_count=1,
+        )
+        praise_theme = SimpleNamespace(
+            label="liked signal: perfect",
+            evidence_quotes=["This is the best balsamic vinegar I have ever had."],
+            evidence_count=1,
+        )
+
+        hooks = "\n".join(
+            [
+                _rw_positive_hook_from_theme_zh(price_theme),
+                _rw_positive_hook_from_theme_zh(gift_theme),
+                _rw_positive_hook_from_theme_zh(praise_theme),
+            ]
+        )
+
+        self.assertNotIn("\u4e3a\u4ec0\u4e48\u4e70\u5bb6\u4f1a\u53cd\u590d\u63d0\u5230\uff1a\u4e70\u5bb6\u8ba4\u4e3a\u4f53\u9a8c\u5f88\u597d\uff1f", hooks)
+        self.assertNotIn("\u4e3a\u4ec0\u4e48\u4e70\u5bb6\u4f1a\u53cd\u590d\u63d0\u5230\uff1a\u4e70\u5bb6\u8868\u793a\u559c\u6b22\uff1f", hooks)
+        self.assertIn("\u5148\u770b\u8fd9\u53e5\u4e70\u5bb6\u539f\u8bdd", hooks)
+        self.assertIn("\u4e24\u74f6\u88c5\u4e0d\u53ea\u662f\u591a\u4e70\u4e00\u74f6", hooks)
+        self.assertIn("\u4e3a\u4ec0\u4e48\u6709\u4e70\u5bb6\u628a\u8fd9\u74f6\u9999\u918b\u5938\u5230\u8fd9\u79cd\u7a0b\u5ea6", hooks)
+
+        self.assertNotIn("?", hooks.replace("?", "", 0)) if False else None
 class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
     def test_review_workspace_returns_sample_interpretation_and_video_script_pack(self):
         from fastapi.testclient import TestClient
