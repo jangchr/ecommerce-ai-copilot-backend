@@ -63,6 +63,8 @@ class ReviewSourceGroupSummary(BaseModel):
 
 class ReviewSourceBreakdown(BaseModel):
     total_reviews: int = 0
+    raw_review_count: int = 0
+    duplicate_review_count: int = 0
     main_product_reviews: int = 0
     variant_reviews: int = 0
     low_star_reviews: int = 0

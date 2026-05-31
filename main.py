@@ -1706,6 +1706,14 @@ def _rw_collect_reviews(payload: ReviewWorkspaceRequest) -> list[dict]:
     return rows
 
 
+def _rw_raw_review_count(payload: ReviewWorkspaceRequest) -> int:
+    return sum(len(getattr(product, "reviews", []) or []) for product in payload.products or [])
+
+
+def _rw_duplicate_review_count(payload: ReviewWorkspaceRequest, rows: list[dict]) -> int:
+    return max(0, _rw_raw_review_count(payload) - len(rows))
+
+
 
 def _rw_primary_asin(payload: ReviewWorkspaceRequest) -> str:
     for product in payload.products or []:
@@ -1987,6 +1995,9 @@ def _rw_source_group_summary(source_type: str, rows: list[dict], language: str) 
 def _rw_source_breakdown(payload: ReviewWorkspaceRequest, rows: list[dict]) -> ReviewSourceBreakdown:
     language = payload.output_language
     primary_asin = _rw_primary_asin(payload)
+    raw_review_count = _rw_raw_review_count(payload)
+    unique_review_count = len(rows)
+    duplicate_review_count = max(0, raw_review_count - unique_review_count)
     rows_by_source: dict[str, list[dict]] = {
         "main_product": [],
         "variant": [],
@@ -2026,7 +2037,9 @@ def _rw_source_breakdown(payload: ReviewWorkspaceRequest, rows: list[dict]) -> R
         ]
 
     return ReviewSourceBreakdown(
-        total_reviews=len(rows),
+        total_reviews=unique_review_count,
+        raw_review_count=raw_review_count,
+        duplicate_review_count=duplicate_review_count,
         main_product_reviews=len(rows_by_source.get("main_product", [])),
         variant_reviews=len(rows_by_source.get("variant", [])),
         low_star_reviews=len(rows_by_source.get("low_star", [])),
@@ -3016,6 +3029,8 @@ def _rw_sample_interpretation(
     is_zh = language == "zh-CN"
     product_count = len(payload.products)
     review_count = len(rows)
+    raw_review_count = _rw_raw_review_count(payload)
+    duplicate_review_count = max(0, raw_review_count - review_count)
     high_signal_count = len(high_signal_rows)
 
     strongest_signals: list[str] = []
@@ -3034,7 +3049,8 @@ def _rw_sample_interpretation(
     if is_zh:
         sample_type = "Amazon \u5f53\u524d\u53ef\u89c1\u9875\u9762\u8bc4\u8bba\u6837\u672c"
         sample_size_note = (
-            f"\u5f53\u524d\u6837\u672c\u5305\u542b {product_count} \u4e2a\u5546\u54c1\u3001{review_count} \u6761\u53ef\u89c1\u8bc4\u8bba\uff0c"
+            f"\u5f53\u524d\u6837\u672c\u5305\u542b {product_count} \u4e2a\u5546\u54c1\u3001{raw_review_count} \u6761\u53ef\u89c1\u8bc4\u8bba\uff1b"
+            f"\u53bb\u91cd\u540e {review_count} \u6761\u8fdb\u5165\u5206\u6790\uff0c{duplicate_review_count} \u6761\u4e3a\u91cd\u590d\u8bc4\u8bba\u3002"
             f"\u5176\u4e2d {high_signal_count} \u6761\u88ab\u8bc6\u522b\u4e3a\u9ad8\u4fe1\u53f7\u8bc4\u8bba\u3002"
             "\u8fd9\u4e2a\u6837\u672c\u9002\u5408\u505a\u521b\u610f\u4fe1\u53f7\uff0c\u4e0d\u9002\u5408\u5f53\u4f5c\u5b8c\u6574\u8bc4\u8bba\u7edf\u8ba1\u3002"
         )
@@ -3065,8 +3081,9 @@ def _rw_sample_interpretation(
     else:
         sample_type = "Amazon visible-page review sample"
         sample_size_note = (
-            f"This sample contains {product_count} product(s), {review_count} visible review(s), "
-            f"and {high_signal_count} high-signal review(s). Use it for creative signals, not full review statistics."
+            f"This sample contains {product_count} product(s) and {raw_review_count} visible review(s); "
+            f"after dedupe, {review_count} review(s) entered analysis and {duplicate_review_count} duplicate review(s) were excluded. "
+            f"{high_signal_count} review(s) were identified as high-signal. Use it for creative signals, not full review statistics."
         )
         suitable_for = [
             "extracting buyer wording",

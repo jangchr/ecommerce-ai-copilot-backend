@@ -91,6 +91,58 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertEqual(data["high_signal_review_count"], 0)
         self.assertTrue(data["recommended_next_actions"])
 
+    def test_analyze_review_workspace_reports_raw_unique_and_duplicate_counts(self):
+        duplicate_text = "The lid cracked during shipping and leaked vinegar all over the box."
+        payload = {
+            "workspace_id": "raw-unique-counts",
+            "source": "unit_test",
+            "output_language": "zh-CN",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "asin": "RAW001",
+                    "title": "Balsamic Vinegar Main",
+                    "reviews": [
+                        {
+                            "rating": 1,
+                            "text": duplicate_text,
+                            "source_section": "amazon_visible_review",
+                        },
+                        {
+                            "rating": 4,
+                            "text": "The flavor is rich and works well for salad dressing.",
+                            "source_section": "amazon_visible_review",
+                        },
+                    ],
+                },
+                {
+                    "platform": "amazon",
+                    "asin": "RAW002",
+                    "title": "Balsamic Vinegar Variant",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "text": duplicate_text,
+                            "source_section": "amazon_visible_review",
+                        }
+                    ],
+                },
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total_reviews"], 2)
+        self.assertEqual(data["source_breakdown"]["total_reviews"], 2)
+        self.assertEqual(data["source_breakdown"]["raw_review_count"], 3)
+        self.assertEqual(data["source_breakdown"]["duplicate_review_count"], 1)
+        note = data["sample_interpretation"]["sample_size_note"]
+        self.assertIn("3 \u6761\u53ef\u89c1\u8bc4\u8bba", note)
+        self.assertIn("\u53bb\u91cd\u540e 2 \u6761\u8fdb\u5165\u5206\u6790", note)
+        self.assertIn("1 \u6761\u4e3a\u91cd\u590d\u8bc4\u8bba", note)
+
 
 
 
