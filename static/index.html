@@ -2599,6 +2599,9 @@
             const script = data.assets?.tiktok_script || {};
             const storyboard = data.assets?.storyboard || {};
             const evaluation = data.evaluation || {};
+            const evidenceDisplay = splitEvidenceForDisplay(evidence);
+            const cleanHook = cleanHookLine(script);
+            const cleanCta = cleanCtaLine(script);
             const score = Math.max(0, Math.min(100, Number((evaluation.confidence_score * 100).toFixed(0)) || 0));
             return {
                 evidence: [
@@ -2606,8 +2609,10 @@
                     `Source Type: ${evidence.source_type || 'unknown source'}`,
                     `Review confidence: ${formatMetric(evidence.review_confidence)}`,
                     `Trend confidence: ${formatMetric(evidence.trend_confidence)}`,
-                    'Evidence quotes:',
-                    ...((evidence.evidence_quotes || []).slice(0, 5).map((quote) => `- ${quote}`)),
+                    'Customer review snippets:',
+                    ...(evidenceDisplay.reviewQuotes.slice(0, 5).map((quote) => `- ${quote}`)),
+                    evidenceDisplay.contextLines.length ? 'Product description / supplemental context:' : '',
+                    ...(evidenceDisplay.contextLines.slice(0, 5).map((line) => `- ${line}`)),
                     'Customer pain points:',
                     ...((data.insights?.pain_points || []).map((pain) => `- ${pain}`)),
                 ].filter(Boolean).join('\n').trim(),
@@ -2617,14 +2622,14 @@
                     `Trust Barriers: ${(data.audience?.trust_barriers || []).join('; ')}`,
                     `Core Hook Strategy: ${data.strategy?.core_hook_strategy || ''}`,
                     `Emotional Trigger: ${data.strategy?.emotional_trigger || ''}`,
-                    `CTA Logic: ${script.cta || ''}`,
+                    `CTA Logic: ${cleanCta || ''}`,
                 ].filter(Boolean).join('\n').trim(),
                 hook: [
                     'Hook',
-                    cleanHookLine(script),
+                    cleanHook,
                     '',
                     'CTA',
-                    cleanCtaLine(script),
+                    cleanCta,
                 ].join('\n').trim(),
                 storyboard: [
                     'Storyboard',
@@ -2643,12 +2648,40 @@
 
         function quoteList(quotes) {
             const items = (quotes || []).slice(0, 5);
-            if (!items.length) return briefText('No evidence quotes returned yet.');
+            if (!items.length) return briefText(t('noCustomerReviewSnippets'));
             return `
                 <div class="quote-list">
                     ${items.map((quote) => `<div class="quote-item">${escapeHTML(quote)}</div>`).join('')}
                 </div>
             `;
+        }
+
+        function splitEvidenceForDisplay(evidence) {
+            const reviewQuotes = [];
+            const contextLines = [];
+            const sourceType = String(evidence?.source_type || '');
+            const isDescriptionSource = sourceType === 'user_provided_description';
+            const contextPrefixes = [
+                /^bullet\s*:/i,
+                /^amazon fallback note\s*:/i,
+                /^amazon url\s*:/i,
+                /^product description\s*:/i,
+                /^product context\s*:/i,
+                /^system supplemental/i
+            ];
+
+            (evidence?.evidence_quotes || []).forEach((item) => {
+                const text = String(item || '').trim();
+                if (!text) return;
+                const isContext = isDescriptionSource || contextPrefixes.some((pattern) => pattern.test(text));
+                if (isContext) {
+                    contextLines.push(text);
+                } else {
+                    reviewQuotes.push(text);
+                }
+            });
+
+            return { reviewQuotes, contextLines };
         }
 
         function renderStoryboardBrief(storyboard) {
@@ -2741,6 +2774,22 @@
             if (currentOutputLanguage() === 'zh-CN') {
                 return [
                     `这次创意基于 ${sourceLabel} 生成。`,
+                    hook ? `主 Hook：${hook}` : '',
+                    audience ? `目标受众：${audience}` : '',
+                    `风险等级：${riskLevel}`
+                ].filter(Boolean).join(' ');
+            }
+
+            return [
+                `This brief is generated from ${sourceLabel}.`,
+                hook ? `Main hook: "${hook}"` : '',
+                audience ? `Audience: ${audience}` : '',
+                `Risk level: ${riskLevel}`
+            ].filter(Boolean).join(' ');
+
+            if (currentOutputLanguage() === 'zh-CN') {
+                return [
+                    `这次创意基于 ${sourceLabel} 生成。`,
                     hook ? `主 Hook 是：「${hook}」` : '',
                     audience ? `目标受众：${audience}` : '',
                     `风险等级：${riskLevel}`
@@ -2777,6 +2826,12 @@
             const raw = String(text || '').trim();
             if (!raw) return '';
 
+            const localizedNarrationMatch = raw.match(/(?:Narration|旁白)[:：]\s*([^\n]+)/i);
+            if (localizedNarrationMatch) return localizedNarrationMatch[1].trim();
+
+            const localizedTextMatch = raw.match(/(?:Text|文字)[:：]\s*([^\n]+)/i);
+            if (localizedTextMatch) return localizedTextMatch[1].trim();
+
             const narrationMatch = raw.match(/(?:Narration|旁白)[:：]\s*([^\n]+)/i);
             if (narrationMatch) return narrationMatch[1].trim();
 
@@ -2806,6 +2861,28 @@
             const lines = [];
             const hook = cleanHookLine(script);
             const cta = cleanCtaLine(script);
+
+            const safeLines = [];
+            if (hook) {
+                safeLines.push(isZh ? 'Hook：' : 'Hook:');
+                safeLines.push(hook);
+                safeLines.push('');
+            }
+            scenes.forEach((scene, index) => {
+                const visual = scene.visual_description || scene.visual || '';
+                const narration = scene.narration || '';
+                if (!visual && !narration) return;
+
+                safeLines.push(isZh ? `场景 ${index + 1}：` : `Scene ${index + 1}:`);
+                if (visual) safeLines.push(isZh ? `画面：${visual}` : `Visual: ${visual}`);
+                if (narration) safeLines.push(isZh ? `旁白：${narration}` : `Narration: ${narration}`);
+                safeLines.push('');
+            });
+            if (cta) {
+                safeLines.push(isZh ? 'CTA：' : 'CTA:');
+                safeLines.push(cta);
+            }
+            return safeLines.join('\n').trim();
 
             if (hook) {
                 lines.push(isZh ? 'Hook：' : 'Hook:');
@@ -3573,6 +3650,206 @@
 
 
         };
+
+        function t(key) {
+            return LANGUAGE_COPY[outputLanguage]?.[key] || LANGUAGE_COPY.en[key] || key;
+        }
+
+        Object.assign(LANGUAGE_COPY.en, {
+            requestFailed: 'Backend is unavailable or the request failed.',
+            noCustomerReviewSnippets: 'No customer review snippets returned yet.',
+            customerReviewSnippets: 'Customer review snippets',
+            productContextBlock: 'Product description / supplemental context',
+            probeStatus: 'Probe Status',
+            runningStatus: 'Running',
+            unavailableStatus: 'Unavailable',
+            errorLabel: 'Error',
+            sourceConfidenceProbe: 'Source Confidence',
+            latencyMs: 'Latency Ms',
+            evidencePreview: 'Evidence Preview',
+            providerCount: 'Provider Count',
+            successCount: 'Success Count',
+            disabledCount: 'Disabled Count',
+            unavailableCount: 'Unavailable Count',
+            errorCount: 'Error Count',
+            totalLatencyMs: 'Total Latency Ms',
+            fallbackRequired: 'Fallback Required',
+            amazonProductTitle: 'Amazon Product Title',
+            amazonRating: 'Amazon Rating',
+            amazonReviewCount: 'Amazon Review Count',
+            amazonPrice: 'Amazon Price',
+            amazonCategoryHint: 'Amazon Category Hint',
+            amazonBulletPoints: 'Amazon Bullet Points',
+            amazonDataWarnings: 'Amazon Data Warnings',
+            amazonAdapterError: 'Amazon Adapter Error',
+            amazonShadowSummary: 'Amazon Shadow Summary',
+            shadowProviderStatus: 'Shadow Provider Status',
+            shadowSourceConfidence: 'Shadow Source Confidence',
+            shadowProductTitle: 'Shadow Product Title',
+            shadowRating: 'Shadow Rating',
+            shadowReviewCount: 'Shadow Review Count',
+            shadowEvidencePreviewCount: 'Shadow Evidence Preview Count',
+            shadowBulletPointsCount: 'Shadow Bullet Points Count',
+            shadowCategoryHint: 'Shadow Category Hint',
+            shadowLatencyMs: 'Shadow Latency Ms',
+            shadowErrorType: 'Shadow Error Type',
+            shadowRetryCount: 'Shadow Retry Count',
+            shadowMemoryWriteAllowed: 'Shadow Memory Write Allowed',
+            shadowUsedForGeneration: 'Shadow Used For Generation',
+            shadowEvidencePreview: 'Shadow Evidence Preview',
+            shadowDataWarnings: 'Shadow Data Warnings',
+            shadowError: 'Shadow Error',
+            productCategoryLabel: 'Product Category',
+            revisionCount: 'Revision Count',
+            regenerateNode: 'Regenerate Node',
+            rawDebugState: 'Raw Debug State'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            heroTitle: '把电商产品变成 TikTok 创意策略、Hook 和分镜脚本。',
+            heroSubtitle: '公开 Demo 支持 10 个稳定本地示例品类。建议先试 balsamic_vinegar。',
+            inlineResultPanelTitle: '你的生成结果',
+            inlineResultEmptyState: '生成后，Hook、分镜和复制操作会出现在当前工作区。',
+            recentEmptyState: '还没有最近生成记录。',
+            recentView: '查看',
+            recentCopyMarkdown: '复制 Markdown',
+            recentDelete: '删除',
+            clearRecentGenerations: '清空最近生成记录',
+            languageLabel: '语言：',
+            runWorkflow: '用示例产品生成',
+            inputGuide: 'Product Mode 稳定支持 10 个本地 grounded slug。选择一个后运行 workflow，生成 TikTok Hook、创意策略和分镜。',
+            productDescriptionMode: '产品描述模式',
+            pastedReviewsMode: '粘贴评论模式',
+            productName: '产品名称',
+            productCategory: '产品类目',
+            productDescription: '产品描述',
+            customerPainPoints: '用户痛点',
+            pastedReviews: '粘贴评论',
+            targetPlatform: '目标平台',
+            goal: '生成目标',
+            productDescriptionHelper: '写清楚产品是什么、给谁用、解决什么问题。',
+            customerPainPointsHelper: '粘贴用户抱怨、评论片段、购买顾虑，或者目标用户最在意的问题。',
+            goodInputsInclude: '好的输入应该包含',
+            goodInputProduct: '产品是什么',
+            goodInputAudience: '给谁用',
+            goodInputProblem: '解决什么问题',
+            goodInputComplaints: '用户抱怨什么',
+            goodInputDifference: '产品有什么不同',
+            useSampleProduct: '使用示例产品',
+            generateFromDescription: '根据产品描述生成',
+            useSampleReviews: '使用示例评论',
+            generateFromReviews: '根据评论生成',
+            exampleGallery: '示例库',
+            tryThisProduct: '试试这个产品',
+            feedback: '反馈',
+            giveFeedback: '提交反馈',
+            joinWaitlist: '加入 waitlist',
+            recentGenerations: '最近生成记录',
+            copyActions: '复制 / 下载 / 翻译',
+            copyHook: '复制 Hook',
+            copyStoryboard: '复制分镜',
+            copyFullMarkdown: '复制完整 Markdown',
+            downloadMarkdown: '下载 Markdown',
+            downloadJson: '下载 JSON',
+            translateChineseButton: '翻译成中文',
+            copyChineseTranslationButton: '复制中文翻译',
+            evidenceSnapshot: '证据摘要',
+            targetAudienceStrategy: '目标受众与创意策略',
+            targetAudience: '目标受众',
+            creativeStrategy: '创意策略',
+            hook: '开场 Hook',
+            cta: 'CTA',
+            storyboard: '分镜脚本',
+            evaluation: '评估',
+            feedbackLabel: '改进建议',
+            evidenceQuotes: '用户评论片段',
+            evidenceQuoteNote: '仅展示来自用户评论或粘贴反馈的短证据；产品描述和系统补充会单独标注。',
+            noCustomerReviewSnippets: '暂无用户评论片段。',
+            customerReviewSnippets: '用户评论片段',
+            productContextBlock: '产品描述 / 补充信息',
+            customerPainPointBlock: '用户痛点',
+            trustBarriers: '信任阻碍',
+            coreHookStrategy: '核心 Hook 策略',
+            emotionalTrigger: '情绪触发点',
+            ctaLogic: 'CTA 逻辑',
+            retentionConfidence: '留存信心',
+            riskLevel: '风险等级',
+            approved: '已通过',
+            grounded: '有证据支撑',
+            groundedCtr: 'Grounded CTR',
+            evidenceAlignment: '证据一致性',
+            seeDebugMode: '见 Debug Mode',
+            qualityRationale: '质量判断',
+            sourceLabel: '来源',
+            evidenceSourceTitle: '证据来源',
+            evidenceSourceBody: '这里说明结果基于示例产品、产品描述还是粘贴评论生成。',
+            sourceTypeLabel: '来源类型',
+            sourceConfidenceLabel: '来源置信度',
+            reviewCountLabel: '评论数量',
+            dataWarningsLabel: '数据提醒',
+            sourcePastedReviews: '粘贴的用户评论',
+            sourceProductDescription: '产品描述',
+            sourceStableDemo: '稳定示例产品',
+            sourceLocalDataset: '本地评论数据',
+            sourceMock: 'mock 趋势补充',
+            sourceUnknown: '未知来源',
+            sceneLabel: '场景',
+            sceneGoal: '场景目标',
+            visualLabel: '画面',
+            narrationLabel: '旁白',
+            evidenceQuoteLabel: '证据原话',
+            linkedPainPointLabel: '关联痛点',
+            running: '运行中...',
+            requestFailed: '后端未启动或请求失败。',
+            missingName: '请输入产品名称。',
+            missingDescription: '请输入产品描述。',
+            missingPainPoints: '请补充用户痛点或评论片段。',
+            inputTooShort: '请补充更多细节后再生成。',
+            probeStatus: '探针状态',
+            runningStatus: '运行中',
+            unavailableStatus: '不可用',
+            errorLabel: '错误',
+            sourceConfidenceProbe: '来源置信度',
+            latencyMs: '延迟毫秒',
+            evidencePreview: '证据预览',
+            providerCount: 'Provider 数量',
+            successCount: '成功数量',
+            disabledCount: '禁用数量',
+            unavailableCount: '不可用数量',
+            errorCount: '错误数量',
+            totalLatencyMs: '总延迟毫秒',
+            fallbackRequired: '需要 fallback',
+            amazonProductTitle: 'Amazon 商品标题',
+            amazonRating: 'Amazon 评分',
+            amazonReviewCount: 'Amazon 评论数',
+            amazonPrice: 'Amazon 价格',
+            amazonCategoryHint: 'Amazon 类目提示',
+            amazonBulletPoints: 'Amazon 卖点',
+            amazonDataWarnings: 'Amazon 数据提醒',
+            amazonAdapterError: 'Amazon adapter 错误',
+            amazonShadowSummary: 'Amazon Shadow 摘要',
+            shadowProviderStatus: 'Shadow provider 状态',
+            shadowSourceConfidence: 'Shadow 来源置信度',
+            shadowProductTitle: 'Shadow 商品标题',
+            shadowRating: 'Shadow 评分',
+            shadowReviewCount: 'Shadow 评论数',
+            shadowEvidencePreviewCount: 'Shadow 证据预览数',
+            shadowBulletPointsCount: 'Shadow 卖点数',
+            shadowCategoryHint: 'Shadow 类目提示',
+            shadowLatencyMs: 'Shadow 延迟毫秒',
+            shadowErrorType: 'Shadow 错误类型',
+            shadowRetryCount: 'Shadow retry 次数',
+            shadowMemoryWriteAllowed: 'Shadow 允许写 memory',
+            shadowUsedForGeneration: 'Shadow 是否用于生成',
+            shadowEvidencePreview: 'Shadow 证据预览',
+            shadowDataWarnings: 'Shadow 数据提醒',
+            shadowError: 'Shadow 错误',
+            debugModeLabel: 'Debug Mode',
+            productCategoryLabel: '产品类目',
+            revisionCount: '修订次数',
+            regenerateNode: '重新生成节点',
+            rawDebugState: '原始 Debug 状态'
+        });
 
         function t(key) {
             return LANGUAGE_COPY[outputLanguage]?.[key] || LANGUAGE_COPY.en[key] || key;
@@ -5095,7 +5372,7 @@
             const target = document.getElementById('res-source-probe');
             btn.disabled = true;
             target.style.opacity = '1';
-            target.innerHTML = block('Probe Status', 'Running');
+            target.innerHTML = block(t('probeStatus'), t('runningStatus'));
 
             try {
                 const probe = await postCopilot('debug-source-probe', {
@@ -5107,8 +5384,8 @@
                 renderSourceProbe(probe);
             } catch (error) {
                 target.innerHTML =
-                    block('Probe Status', 'Unavailable') +
-                    block('Error', error.message || 'Probe request failed.');
+                    block(t('probeStatus'), t('unavailableStatus')) +
+                    block(t('errorLabel'), error.message || 'Probe request failed.');
             } finally {
                 btn.disabled = false;
             }
@@ -5124,24 +5401,24 @@
                         <span class="probe-status ${escapeHTML(result.status || '')}">${escapeHTML(result.status || '')}</span>
                     </div>
                     <div class="probe-grid">
-                        ${block('Source Confidence', result.source_confidence ?? 0)}
-                        ${block('Latency Ms', Number(result.latency_ms || 0).toFixed(2))}
+                        ${block(t('sourceConfidenceProbe'), result.source_confidence ?? 0)}
+                        ${block(t('latencyMs'), Number(result.latency_ms || 0).toFixed(2))}
                     </div>
-                    ${block('Error', result.error || '')}
-                    ${block('Evidence Preview', (result.evidence_preview || []).join('\n'))}
+                    ${block(t('errorLabel'), result.error || '')}
+                    ${block(t('evidencePreview'), (result.evidence_preview || []).join('\n'))}
                     ${renderAmazonProbeMetadata(result)}
                 </div>
             `).join('');
 
             target.style.opacity = '1';
             target.innerHTML =
-                block('Provider Count', telemetry.provider_count ?? 0) +
-                block('Success Count', telemetry.success_count ?? 0) +
-                block('Disabled Count', telemetry.disabled_count ?? 0) +
-                block('Unavailable Count', telemetry.unavailable_count ?? 0) +
-                block('Error Count', telemetry.error_count ?? 0) +
-                block('Total Latency Ms', Number(telemetry.total_latency_ms || 0).toFixed(2)) +
-                block('Fallback Required', telemetry.fallback_required ? 'true' : 'false') +
+                block(t('providerCount'), telemetry.provider_count ?? 0) +
+                block(t('successCount'), telemetry.success_count ?? 0) +
+                block(t('disabledCount'), telemetry.disabled_count ?? 0) +
+                block(t('unavailableCount'), telemetry.unavailable_count ?? 0) +
+                block(t('errorCount'), telemetry.error_count ?? 0) +
+                block(t('totalLatencyMs'), Number(telemetry.total_latency_ms || 0).toFixed(2)) +
+                block(t('fallbackRequired'), telemetry.fallback_required ? 'true' : 'false') +
                 results;
         }
 
@@ -5150,16 +5427,16 @@
             const metadata = result.metadata || {};
             const warnings = metadata.data_warnings || [];
             return `
-                ${block('Amazon Product Title', metadata.product_title || '')}
+                ${block(t('amazonProductTitle'), metadata.product_title || '')}
                 <div class="probe-grid">
-                    ${block('Amazon Rating', metadata.rating || '')}
-                    ${block('Amazon Review Count', metadata.review_count || '')}
-                    ${block('Amazon Price', metadata.price || '')}
-                    ${block('Amazon Category Hint', metadata.category_hint || metadata.product_category_hint || '')}
+                    ${block(t('amazonRating'), metadata.rating || '')}
+                    ${block(t('amazonReviewCount'), metadata.review_count || '')}
+                    ${block(t('amazonPrice'), metadata.price || '')}
+                    ${block(t('amazonCategoryHint'), metadata.category_hint || metadata.product_category_hint || '')}
                 </div>
-                ${block('Amazon Bullet Points', (metadata.bullet_points || []).join('\n'))}
-                ${block('Amazon Data Warnings', warnings.join('\n'))}
-                ${block('Amazon Adapter Error', metadata.error || result.error || '')}
+                ${block(t('amazonBulletPoints'), (metadata.bullet_points || []).join('\n'))}
+                ${block(t('amazonDataWarnings'), warnings.join('\n'))}
+                ${block(t('amazonAdapterError'), metadata.error || result.error || '')}
             `;
         }
 
@@ -5223,7 +5500,7 @@
                     clearDebugPanel();
                 }
             } catch(e) {
-                alert("后端未启动或请求失败");
+                alert(t('requestFailed'));
             } finally {
                 btn.disabled = false;
                 btn.innerText = t('runWorkflow');
@@ -5668,6 +5945,9 @@
             const evalData = data.evaluation || {};
             const score = Math.max(0, Math.min(100, Number((evalData.confidence_score * 100).toFixed(0)) || 0));
             const riskCls = evalData.risk_level === 'high' ? 'risk-high' : (evalData.risk_level === 'medium' ? 'risk-medium' : '');
+            const evidenceDisplay = splitEvidenceForDisplay(evidence);
+            const cleanHook = cleanHookLine(script);
+            const cleanCta = cleanCtaLine(script);
 
             sectionTextCache = buildSectionText(data);
             const resultSummaryCard = renderResultSummaryCard(data, evidence, evalData, score);
@@ -5686,7 +5966,8 @@
                     ${metricPill(t('evidenceAlignment'), t('seeDebugMode'))}
                 </div>
                 ${block(t('evidenceQuotes'), t('evidenceQuoteNote'))}
-                ${quoteList(evidence.evidence_quotes)}
+                ${quoteList(evidenceDisplay.reviewQuotes)}
+                ${evidenceDisplay.contextLines.length ? block(t('productContextBlock'), evidenceDisplay.contextLines.join('\n')) : ''}
                 ${block(t('customerPainPointBlock'), (data.insights.pain_points || []).join('\n'))}
             `;
 
@@ -5697,7 +5978,7 @@
                 ${block(t('trustBarriers'), (data.audience.trust_barriers || []).join('\n'))}
                 ${block(t('coreHookStrategy'), data.strategy.core_hook_strategy || '')}
                 ${block(t('emotionalTrigger'), data.strategy.emotional_trigger || '')}
-                ${block(t('ctaLogic'), data.assets?.tiktok_script?.cta || '')}
+                ${block(t('ctaLogic'), cleanCta || '')}
             `;
 
             document.getElementById('res-assets').style.opacity = '1';
@@ -5706,8 +5987,8 @@
                     ${renderSectionHeader(t('hook'), 'hook')}
                     ${hookHighlightCard}
                 ${quickUsePackCard}
-                    ${block(t('hook'), script.hook || '')}
-                    ${block(t('cta'), script.cta || '')}
+                    ${block(t('hook'), cleanHook || '')}
+                    ${block(t('cta'), cleanCta || '')}
                 </div>
                 <div class="section-block">
                     ${renderSectionHeader(t('storyboard'), 'storyboard')}
@@ -5748,25 +6029,25 @@
             const errorType = metadata.error_type || '';
 
             return `
-                <div class="json-key">Amazon Shadow Summary</div>
+                <div class="json-key">${escapeHTML(t('amazonShadowSummary'))}</div>
                 <div class="probe-grid">
-                    ${block('Shadow Provider Status', amazon.status || '')}
-                    ${block('Shadow Source Confidence', amazon.source_confidence ?? 0)}
-                    ${block('Shadow Product Title', metadata.product_title || '')}
-                    ${block('Shadow Rating', metadata.rating || '')}
-                    ${block('Shadow Review Count', metadata.review_count || '')}
-                    ${block('Shadow Evidence Preview Count', evidencePreview.length)}
-                    ${block('Shadow Bullet Points Count', bulletPoints.length)}
-                    ${block('Shadow Category Hint', metadata.category_hint || metadata.product_category_hint || '')}
-                    ${block('Shadow Latency Ms', Number(amazon.latency_ms || 0).toFixed(2))}
-                    ${block('Shadow Error Type', errorType)}
-                    ${block('Shadow Retry Count', metadata.retry_count ?? 0)}
-                    ${block('Shadow Memory Write Allowed', shadow.memory_write_allowed ? 'true' : 'false')}
-                    ${block('Shadow Used For Generation', shadow.used_for_generation ? 'true' : 'false')}
+                    ${block(t('shadowProviderStatus'), amazon.status || '')}
+                    ${block(t('shadowSourceConfidence'), amazon.source_confidence ?? 0)}
+                    ${block(t('shadowProductTitle'), metadata.product_title || '')}
+                    ${block(t('shadowRating'), metadata.rating || '')}
+                    ${block(t('shadowReviewCount'), metadata.review_count || '')}
+                    ${block(t('shadowEvidencePreviewCount'), evidencePreview.length)}
+                    ${block(t('shadowBulletPointsCount'), bulletPoints.length)}
+                    ${block(t('shadowCategoryHint'), metadata.category_hint || metadata.product_category_hint || '')}
+                    ${block(t('shadowLatencyMs'), Number(amazon.latency_ms || 0).toFixed(2))}
+                    ${block(t('shadowErrorType'), errorType)}
+                    ${block(t('shadowRetryCount'), metadata.retry_count ?? 0)}
+                    ${block(t('shadowMemoryWriteAllowed'), shadow.memory_write_allowed ? 'true' : 'false')}
+                    ${block(t('shadowUsedForGeneration'), shadow.used_for_generation ? 'true' : 'false')}
                 </div>
-                ${block('Shadow Evidence Preview', evidencePreview.join('\n'))}
-                ${block('Shadow Data Warnings', warnings.join('\n'))}
-                ${block('Shadow Error', amazon.error || metadata.error || '')}
+                ${block(t('shadowEvidencePreview'), evidencePreview.join('\n'))}
+                ${block(t('shadowDataWarnings'), warnings.join('\n'))}
+                ${block(t('shadowError'), amazon.error || metadata.error || '')}
             `;
         }
 
@@ -5776,7 +6057,7 @@
             if (!debugData) {
                 document.getElementById('res-analytics').innerHTML = `
                     <div class="feedback-box">${escapeHTML(feedback || '')}</div>
-                    ${block('Debug Mode', modeStatus)}
+                    ${block(t('debugModeLabel'), modeStatus)}
                 `;
                 return;
             }
@@ -5797,13 +6078,13 @@
             };
             document.getElementById('res-analytics').innerHTML = `
                 <div class="feedback-box">${escapeHTML(feedback || '')}</div>
-                ${block('Debug Mode', modeStatus)}
-                ${block('Product Category', debugData.product_category || '')}
-                ${block('Grounded CTR', metrics.grounded_ctr ?? 0)}
-                ${block('Revision Count', debugData.revision_count ?? 0)}
-                ${block('Regenerate Node', debugData.regenerate_node || '')}
+                ${block(t('debugModeLabel'), modeStatus)}
+                ${block(t('productCategoryLabel'), debugData.product_category || '')}
+                ${block(t('groundedCtr'), metrics.grounded_ctr ?? 0)}
+                ${block(t('revisionCount'), debugData.revision_count ?? 0)}
+                ${block(t('regenerateNode'), debugData.regenerate_node || '')}
                 ${renderAmazonShadowSummary(debugData.shadow_sources)}
-                <div class="json-key">Raw Debug State</div>
+                <div class="json-key">${escapeHTML(t('rawDebugState'))}</div>
                 <pre class="debug">${escapeHTML(JSON.stringify(trace, null, 2))}</pre>
             `;
         }

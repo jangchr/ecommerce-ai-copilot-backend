@@ -421,12 +421,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
     def test_evidence_source_label_is_frontend_only(self):
         self.assertIn("function renderEvidenceSourceCard(evidence)", self.source)
+        self.assertIn("function splitEvidenceForDisplay(evidence)", self.source)
         self.assertIn("evidenceSourceCard", self.source)
         self.assertIn("evidenceSourceTitle", self.source)
         self.assertIn("sourceTypeLabel", self.source)
         self.assertIn("sourceConfidenceLabel", self.source)
         self.assertIn("reviewCountLabel", self.source)
         self.assertIn("dataWarningsLabel", self.source)
+        self.assertIn("customerReviewSnippets", self.source)
+        self.assertIn("productContextBlock", self.source)
+        self.assertIn("No customer review snippets returned yet.", self.source)
 
         start = self.source.find("function renderEvidenceSourceCard(evidence)")
         end = self.source.find("function resultCreativeSummary", start)
@@ -439,6 +443,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("data_warnings", body)
         self.assertIn("review_count", body)
         self.assertIn("review_confidence", body)
+        split_start = self.source.find("function splitEvidenceForDisplay(evidence)")
+        split_end = self.source.find("function renderStoryboardBrief", split_start)
+        self.assertNotEqual(split_start, -1)
+        self.assertNotEqual(split_end, -1)
+        split_body = self.source[split_start:split_end]
+        self.assertIn("user_provided_description", split_body)
+        self.assertIn("reviewQuotes", split_body)
+        self.assertIn("contextLines", split_body)
 
         self.assertNotIn("fetch(", body)
         self.assertNotIn("postPastedReviews", body)
@@ -454,6 +466,23 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", body)
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
+
+    def test_result_display_uses_clean_hook_cta_and_localized_debug_labels(self):
+        self.assertIn("function cleanHookLine(script)", self.source)
+        self.assertIn("function cleanCtaLine(script)", self.source)
+        self.assertIn("function stripStructuredScriptPrefix(text)", self.source)
+        self.assertIn("const cleanHook = cleanHookLine(script);", self.source)
+        self.assertIn("const cleanCta = cleanCtaLine(script);", self.source)
+        self.assertIn("${block(t('hook'), cleanHook || '')}", self.source)
+        self.assertIn("${block(t('cta'), cleanCta || '')}", self.source)
+        self.assertIn("${block(t('ctaLogic'), cleanCta || '')}", self.source)
+        self.assertIn("requestFailed", self.source)
+        self.assertIn("probeStatus", self.source)
+        self.assertIn("amazonShadowSummary", self.source)
+        self.assertIn("rawDebugState", self.source)
+        self.assertIn("主 Hook", self.source)
+        self.assertIn("画面：${visual}", self.source)
+        self.assertIn("旁白：${narration}", self.source)
 
     def test_storyboard_scene_readability_is_frontend_only(self):
         self.assertIn("function renderStoryboardBrief(storyboard)", self.source)
