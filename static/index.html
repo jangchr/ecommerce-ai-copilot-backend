@@ -5727,6 +5727,8 @@
       "positiveProof": "Positive proof",
       "positiveProofUse": "Use after the pain demo as reassurance.",
       "pain": "Pain",
+      "buyerConcern": "Buyer concern",
+      "positiveSignal": "Positive signal",
       "buyerSignal": "Buyer signal",
       "evidence": "Evidence",
       "signal": "Signal",
@@ -5811,6 +5813,8 @@
       "positiveProof": "\u6b63\u5411\u8bc1\u636e",
       "positiveProofUse": "\u653e\u5728\u75db\u70b9\u5c55\u793a\u540e\uff0c\u7528\u6765\u589e\u5f3a\u4fe1\u4efb\u3002",
       "pain": "\u75db\u70b9",
+      "buyerConcern": "\u8d2d\u4e70\u987e\u8651",
+      "positiveSignal": "\u6b63\u5411\u4fe1\u53f7",
       "buyerSignal": "\u4e70\u5bb6\u4fe1\u53f7",
       "evidence": "\u8bc1\u636e",
       "signal": "\u4fe1\u53f7",
@@ -6303,10 +6307,43 @@
       .slice(0, 2);
   }
 
+  function extensionCreativeBriefSignalItems(body) {
+    const painPoints = (body.common_pain_points || []).slice(0, 3).map((item) => ({
+      ...item,
+      briefKind: "pain",
+    }));
+
+    if (painPoints.length) return painPoints;
+
+    const objections = (body.buyer_objections || []).slice(0, 3).map((item) => ({
+      ...item,
+      briefKind: "buyer_objection",
+    }));
+
+    if (objections.length) return objections;
+
+    return (body.liked_points || []).slice(0, 3).map((item) => ({
+      ...item,
+      briefKind: "positive_proof",
+    }));
+  }
+
+  function extensionCreativeBriefSignalLabel(item, source = null) {
+    if (item?.briefKind === "buyer_objection") {
+      return tExtensionWorkspace("buyerConcern", source);
+    }
+
+    if (item?.briefKind === "positive_proof") {
+      return tExtensionWorkspace("positiveSignal", source);
+    }
+
+    return tExtensionWorkspace("pain", source);
+  }
+
   function extensionCreativeBriefRowMarkdown(item, angle, hook, source = null) {
     const quote = (item.evidence_quotes || [])[0] || "";
     return [
-      `## ${tExtensionWorkspace("pain", source)}: ${reviewWorkspaceLocalizedThemeLabel(item.label || tExtensionWorkspace("buyerSignal", source), source)}`,
+      `## ${extensionCreativeBriefSignalLabel(item, source)}: ${reviewWorkspaceLocalizedThemeLabel(item.label || tExtensionWorkspace("buyerSignal", source), source)}`,
       quote ? `${tExtensionWorkspace("evidence", source)}: "${quote}"` : "",
       angle ? `${tExtensionWorkspace("copyReadyAngle", source)}: ${angle}` : "",
       hook ? `${tExtensionWorkspace("tiktokHook", source)}: ${hook}` : "",
@@ -6467,11 +6504,11 @@
 
 
   function extensionCreativeBriefMarkdown(body) {
-    const painPoints = (body.common_pain_points || []).slice(0, 3);
+    const briefItems = extensionCreativeBriefSignalItems(body);
     const angles = body.creative_angles || [];
     const hooks = body.hooks || [];
 
-    const rowMarkdown = painPoints.map((item, index) => {
+    const rowMarkdown = briefItems.map((item, index) => {
       const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
       const hook = extensionCreativeBriefHook(item, hooks, index, body);
       return extensionCreativeBriefRowMarkdown(item, angle, hook, body);
@@ -6595,16 +6632,16 @@
   }
 
   function extensionCreativeBriefHTML(body) {
-    const painPoints = (body.common_pain_points || []).slice(0, 3);
+    const briefItems = extensionCreativeBriefSignalItems(body);
     const angles = body.creative_angles || [];
     const hooks = body.hooks || [];
 
-    if (!painPoints.length && !angles.length && !hooks.length) {
+    if (!briefItems.length && !angles.length && !hooks.length) {
       extensionCreativeBriefCopyPayload = { all: "", rows: [], positive: "" };
       return "";
     }
 
-    const rowMarkdown = painPoints.map((item, index) => {
+    const rowMarkdown = briefItems.map((item, index) => {
       const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
       const hook = extensionCreativeBriefHook(item, hooks, index, body);
       return extensionCreativeBriefRowMarkdown(item, angle, hook, body);
@@ -6616,15 +6653,16 @@
       positive: extensionPositiveProofMarkdown(body),
     };
 
-    const rows = painPoints.map((item, index) => {
+    const rows = briefItems.map((item, index) => {
       const quote = (item.evidence_quotes || [])[0] || "";
       const angle = extensionCleanCreativeAngle(angles[index] || angles[0] || "");
       const hook = extensionCreativeBriefHook(item, hooks, index, body);
+      const signalLabel = extensionCreativeBriefSignalLabel(item, body);
 
       return `
         <div style="margin:8px 0 10px;padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
           <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
-            <div><strong>${escapeExtensionHTML(tExtensionWorkspace("pain", body))}:</strong> ${escapeExtensionHTML(reviewWorkspaceLocalizedThemeLabel(item.label || tExtensionWorkspace("buyerSignal", body), body))}</div>
+            <div><strong>${escapeExtensionHTML(signalLabel)}:</strong> ${escapeExtensionHTML(reviewWorkspaceLocalizedThemeLabel(item.label || tExtensionWorkspace("buyerSignal", body), body))}</div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:auto;">
               <button type="button" onclick="copyExtensionCreativeBrief('row', ${index})" style="border:0;border-radius:999px;padding:5px 8px;background:#e2e8f0;color:#0f172a;font-weight:800;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("copyRow", body))}</button>
               <span id="extensionCreativeBriefRowCopyStatus${index}" data-extension-brief-copy-status="1" style="color:#475569;font-size:10px;font-weight:700;"></span>

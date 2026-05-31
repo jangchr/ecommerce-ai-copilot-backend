@@ -2241,6 +2241,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "extensionCreativeBriefMarkdown",
             "extensionCreativeBriefRowMarkdown",
             "extensionPositiveProofMarkdown",
+            "extensionCreativeBriefSignalItems",
+            "extensionCreativeBriefSignalLabel",
+            "body.buyer_objections",
             "copyExtensionCreativeBrief",
             "extensionCreativeBriefCopyPayload",
             "extensionCreativeBriefCopyStatus",
@@ -2268,6 +2271,26 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "${extensionCreativeBriefHTML(body)}",
             "body.creative_angles",
             "body.hooks",
+            "buyerConcern",
+            "\\u8d2d\\u4e70\\u987e\\u8651",
+            "positiveSignal",
+        ]:
+            self.assertIn(marker, self.source)
+
+    def test_extension_creative_brief_falls_back_to_buyer_objections(self):
+        for marker in [
+            "const briefItems = extensionCreativeBriefSignalItems(body)",
+            "const objections = (body.buyer_objections || []).slice(0, 3)",
+            "if (objections.length) return objections",
+            "briefKind: \"buyer_objection\"",
+            "extensionCreativeBriefSignalLabel(item, body)",
+            "tExtensionWorkspace(\"buyerConcern\", source)",
+            "extensionCreativeBriefRowMarkdown(item, angle, hook, body)",
+            "extensionCreativeBriefHook(item, hooks, index, body)",
+            "escapeExtensionHTML(quote)",
+            "extensionCleanCreativeAngle(angles[index] || angles[0] || \"\")",
+            "buyerConcern",
+            "\\u8d2d\\u4e70\\u987e\\u8651",
         ]:
             self.assertIn(marker, self.source)
 
