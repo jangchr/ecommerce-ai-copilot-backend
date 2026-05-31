@@ -1700,6 +1700,7 @@ def _rw_collect_reviews(payload: ReviewWorkspaceRequest) -> list[dict]:
                 "text": text,
                 "score": score,
                 "rating": _rw_rating_value(review.rating),
+                "metadata": _rw_extract_review_metadata(review),
             })
     rows.sort(key=lambda item: item["score"], reverse=True)
     return rows
@@ -1755,6 +1756,187 @@ def _rw_review_source_tags(row: dict, primary_asin: str) -> list[str]:
     return tags or ["unknown"]
 
 
+def _rw_first_metadata_match(text: str, patterns: list[str]) -> str:
+    for pattern in patterns:
+        try:
+            match = re.search(pattern, text, flags=re.IGNORECASE)
+        except re.error:
+            continue
+
+        if not match:
+            continue
+
+        value = ""
+        if match.groups():
+            value = match.group(1) or ""
+        else:
+            value = match.group(0) or ""
+
+        value = " ".join(value.split()).strip(" -:;,??")
+        if value:
+            return value[:120]
+
+    return ""
+
+
+def _rw_metadata_between(text: str, start_markers: list[str], end_markers: list[str]) -> str:
+    if not text:
+        return ""
+
+    best_start = -1
+    best_marker = ""
+
+    for marker in start_markers:
+        index = text.find(marker)
+        if index >= 0 and (best_start < 0 or index < best_start):
+            best_start = index
+            best_marker = marker
+
+    if best_start < 0:
+        return ""
+
+    start = best_start + len(best_marker)
+    end = len(text)
+
+    for marker in end_markers:
+        index = text.find(marker, start)
+        if index >= 0:
+            end = min(end, index)
+
+    value = " ".join(text[start:end].split()).strip(" -:;,??")
+    return value[:120]
+
+def _rw_extract_review_metadata(review) -> dict:
+    raw_text = _rw_text(getattr(review, "text", ""))
+    source_section = _rw_text(getattr(review, "source_section", ""))
+    blob = f"{raw_text} {source_section}"
+
+    zh_color = chr(0x989c) + chr(0x8272) + ":"
+    zh_size = chr(0x5c3a) + chr(0x5bf8) + ":"
+    zh_verified = "".join(chr(code) for code in [0x5df2, 0x786e, 0x8ba4, 0x8d2d, 0x4e70])
+    zh_useful = "".join(chr(code) for code in [0x4f4d, 0x4f7f, 0x7528, 0x8005, 0x8ba4, 0x4e3a, 0x6b64, 0x8bc4, 0x8bba, 0x6709, 0x7528])
+    zh_year = chr(0x5e74)
+    zh_month = chr(0x6708)
+    zh_day = chr(0x65e5)
+
+    jp_color = "".join(chr(code) for code in [0x30ab, 0x30e9, 0x30fc]) + ":"
+    jp_size = "".join(chr(code) for code in [0x30b5, 0x30a4, 0x30ba]) + ":"
+    jp_verified = "".join(chr(code) for code in [0x78ba, 0x8a8d, 0x6e08, 0x307f, 0x8cfc, 0x5165])
+
+    rating = _rw_rating_value(getattr(review, "rating", None))
+
+    review_date = _rw_first_metadata_match(
+        blob,
+        [
+            r"Reviewed in .*? on ([A-Za-z]+\s+\d{1,2},\s+\d{4})",
+            r"(\d{4}" + zh_year + r"\d{1,2}" + zh_month + r"\d{1,2}" + zh_day + r")",
+        ],
+    )
+
+    color = _rw_first_metadata_match(
+        blob,
+        [
+            r"Color:\s*(.+?)(?=\s+Size:|\s+Verified Purchase|\s+Reviewed in|$)",
+        ],
+    )
+    if not color:
+        color = _rw_metadata_between(
+            blob,
+            [zh_color, jp_color],
+            [zh_size, jp_size, zh_verified, jp_verified, "Verified Purchase"],
+        )
+
+    size = _rw_first_metadata_match(
+        blob,
+        [
+            r"Size:\s*(.+?)(?=\s+Verified Purchase|\s+Reviewed in|$)",
+        ],
+    )
+    if not size:
+        size = _rw_metadata_between(
+            blob,
+            [zh_size, jp_size],
+            [zh_verified, jp_verified, "Verified Purchase"],
+        )
+
+    helpful_count = getattr(review, "helpful_count", None)
+    try:
+        helpful_count = int(helpful_count) if helpful_count is not None else None
+    except (TypeError, ValueError):
+        helpful_count = None
+
+    if helpful_count is None:
+        helpful_match = re.search(r"(\d+)\s+people found this helpful", blob, flags=re.IGNORECASE)
+        if helpful_match:
+            helpful_count = int(helpful_match.group(1))
+        elif re.search(r"one person found this helpful", blob, flags=re.IGNORECASE):
+            helpful_count = 1
+
+    if helpful_count is None:
+        helpful_match = re.search(r"(\d+)\s*" + re.escape(zh_useful), blob)
+        if helpful_match:
+            helpful_count = int(helpful_match.group(1))
+
+    verified_purchase = any(
+        marker in blob
+        for marker in [
+            "Verified Purchase",
+            "Verified purchase",
+            zh_verified,
+            jp_verified,
+            "reviewertype=avp_only_reviews",
+        ]
+    )
+
+    return {
+        "rating": rating,
+        "review_date": review_date,
+        "verified_purchase": verified_purchase,
+        "color": color,
+        "size": size,
+        "helpful_count": helpful_count,
+    }
+
+def _rw_metadata_counter_values(rows: list[dict], key: str, limit: int = 5) -> list[str]:
+    counter = Counter()
+    for row in rows:
+        value = (row.get("metadata") or {}).get(key)
+        if value:
+            counter[str(value)] += 1
+    return [f"{value}: {count}" for value, count in counter.most_common(limit)]
+
+
+def _rw_source_metadata_summary(rows: list[dict]) -> dict:
+    summary = {
+        "verified_purchase_count": 0,
+        "review_date_count": 0,
+        "helpful_vote_review_count": 0,
+    }
+
+    for row in rows:
+        metadata = row.get("metadata") or {}
+        if metadata.get("verified_purchase"):
+            summary["verified_purchase_count"] += 1
+        if metadata.get("review_date"):
+            summary["review_date_count"] += 1
+        if metadata.get("helpful_count"):
+            summary["helpful_vote_review_count"] += 1
+
+    colors = _rw_metadata_counter_values(rows, "color")
+    sizes = _rw_metadata_counter_values(rows, "size")
+    dates = _rw_metadata_counter_values(rows, "review_date")
+
+    if colors:
+        summary["top_colors"] = colors
+    if sizes:
+        summary["top_sizes"] = sizes
+    if dates:
+        summary["top_review_dates"] = dates
+
+    return summary
+
+
+
 def _rw_source_label(source_type: str, language: str) -> str:
     if language == "zh-CN":
         return {
@@ -1798,6 +1980,7 @@ def _rw_source_group_summary(source_type: str, rows: list[dict], language: str) 
         asin_count=len([asin for asin in asin_counts if asin != "unknown"]),
         top_asins=[f"{asin}: {count}" for asin, count in asin_counts.most_common(5)],
         evidence_quotes=quotes,
+        metadata_summary=_rw_source_metadata_summary(rows),
     )
 
 

@@ -481,6 +481,58 @@ class ReviewWorkspaceEvidenceFragmentCleanupTest(unittest.TestCase):
 
 
 
+
+    def test_review_workspace_source_groups_include_structured_metadata_summary(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "metadata_summary_smoke",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "B0META01",
+                        "url": "https://www.amazon.co.jp/-/zh/product-reviews/B0META01",
+                        "title": "Summer shirt",
+                        "reviews": [
+                            {
+                                "rating": "3.0",
+                                "text": "A\u30ab\u30b9\u30bf\u30de\u30fc 3 \u661f\uff08\u6700\u9ad8 5 \u661f\uff09 \u808c\u89e6\u308a 2025\u5e7411\u670813\u65e5\u5728\u65e5\u672c\u53d1\u5e03\u8bc4\u8bba \u989c\u8272: #06:\u6d45\u7070\u8272\u5c3a\u5bf8: M \u5df2\u786e\u8ba4\u8d2d\u4e70 \u3042\u307e\u308a\u671f\u5f85\u3057\u306a\u3044\u3067\u304f\u3060\u3055\u3044\u3002 4 \u4f4d\u4f7f\u7528\u8005\u8ba4\u4e3a\u6b64\u8bc4\u8bba\u6709\u7528",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Reviewer 5 out of 5 stars Great value Reviewed in the United States on May 1, 2025 Size: 8.45 Fl Oz Verified Purchase Cannot beat the price for this quality 2 people found this helpful",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        groups = body.get("source_breakdown", {}).get("source_groups", [])
+        self.assertTrue(groups)
+
+        metadata_summaries = [group.get("metadata_summary", {}) for group in groups]
+        joined = str(metadata_summaries)
+
+        self.assertTrue(any(summary.get("verified_purchase_count", 0) >= 1 for summary in metadata_summaries))
+        self.assertIn("#06:\u6d45\u7070\u8272", joined)
+        self.assertIn("M", joined)
+        self.assertIn("2025\u5e7411\u670813\u65e5", joined)
+        self.assertIn("May 1, 2025", joined)
+        self.assertTrue(any(summary.get("helpful_vote_review_count", 0) >= 1 for summary in metadata_summaries))
+
+
+
 class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
     def test_review_workspace_generates_evidence_backed_creative_output(self):
         from fastapi.testclient import TestClient

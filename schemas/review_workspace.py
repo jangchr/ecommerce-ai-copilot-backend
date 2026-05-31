@@ -58,6 +58,7 @@ class ReviewSourceGroupSummary(BaseModel):
     asin_count: int = 0
     top_asins: list[str] = Field(default_factory=list)
     evidence_quotes: list[str] = Field(default_factory=list)
+    metadata_summary: dict[str, object] = Field(default_factory=dict)
 
 
 class ReviewSourceBreakdown(BaseModel):
