@@ -77,6 +77,22 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("postCopilot(", body)
 
 
+
+    def test_extension_workspace_panel_chrome_refreshes_after_payload_language(self):
+        for marker in [
+            "function refreshExtensionWorkspacePanelChrome(source = readExtensionWorkspacePayload())",
+            "extensionWorkspacePanelEyebrow",
+            "extensionWorkspacePanelTitle",
+            "extensionWorkspaceBoundaryNote",
+            "extensionWorkspaceAnalyze",
+            "extensionWorkspaceCopy",
+            "refreshExtensionWorkspacePanelChrome(payload);",
+            "tExtensionWorkspace(\"boundaryNote\")",
+            "tExtensionWorkspace(\"waitingPayload\")",
+        ]:
+            self.assertIn(marker, self.source)
+
+
     def test_extension_workspace_auto_analysis_status_states_are_visible(self):
         self.assertIn("function extensionWorkspaceStatusMessage(kind, source = null)", self.source)
         self.assertIn("function extensionWorkspaceStatusHTML(kind, source = null, detail =", self.source)

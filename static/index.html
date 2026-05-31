@@ -5880,6 +5880,36 @@
     return `${product?.platform || "web"} - ${reviewCount} ${reviewLabel}`;
   }
 
+
+  function refreshExtensionWorkspacePanelChrome(source = readExtensionWorkspacePayload()) {
+    const textTargets = [
+      ["extensionWorkspacePanelEyebrow", "panelEyebrow"],
+      ["extensionWorkspacePanelTitle", "importedTitle"],
+      ["extensionWorkspaceBoundaryNote", "boundaryNote"],
+      ["extensionWorkspaceClose", "close"],
+      ["extensionWorkspaceAnalyze", "analyzeWorkspace"],
+      ["extensionWorkspaceCopy", "copyJson"],
+    ];
+
+    for (const [id, key] of textTargets) {
+      const node = document.getElementById(id);
+      if (node) {
+        node.textContent = tExtensionWorkspace(key, source);
+      }
+    }
+
+    const close = document.getElementById("extensionWorkspaceClose");
+    if (close) {
+      close.setAttribute("aria-label", tExtensionWorkspace("closeAria", source));
+    }
+
+    const summary = document.getElementById("extensionWorkspaceSummary");
+    if (summary && !source) {
+      summary.textContent = tExtensionWorkspace("waitingPayload", source);
+    }
+  }
+
+
   function createExtensionWorkspacePanel() {
     if (document.getElementById("extensionWorkspacePanel")) return;
 
@@ -5906,11 +5936,11 @@
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
         <div>
-          <div style="font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#15803d;">${escapeExtensionHTML(tExtensionWorkspace("panelEyebrow"))}</div>
-          <h3 style="margin:4px 0 6px;font-size:18px;">${escapeExtensionHTML(tExtensionWorkspace("importedTitle"))}</h3>
-          <p id="extensionWorkspaceSummary" style="margin:0;color:#64748b;font-size:12px;line-height:1.45;">Waiting for workspace payload...</p>
+          <div id="extensionWorkspacePanelEyebrow" style="font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#15803d;">${escapeExtensionHTML(tExtensionWorkspace("panelEyebrow"))}</div>
+          <h3 id="extensionWorkspacePanelTitle" style="margin:4px 0 6px;font-size:18px;">${escapeExtensionHTML(tExtensionWorkspace("importedTitle"))}</h3>
+          <p id="extensionWorkspaceSummary" style="margin:0;color:#64748b;font-size:12px;line-height:1.45;">${escapeExtensionHTML(tExtensionWorkspace("waitingPayload"))}</p>
           <div id="extensionWorkspaceBoundaryNote" style="margin-top:8px;padding:8px 9px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;color:#475569;font-size:11px;line-height:1.45;">
-            Visible-page sample only. The browser extension collects content already visible in your tab and does not bypass login, CAPTCHA, hidden review pages, or platform restrictions. Use this for creative signals, not full review statistics.
+            ${escapeExtensionHTML(tExtensionWorkspace("boundaryNote"))}
           </div>
         </div>
         <button id="extensionWorkspaceClose" type="button" aria-label="${escapeExtensionHTML(tExtensionWorkspace("closeAria"))}" style="border:0;background:#e2e8f0;border-radius:999px;padding:6px 9px;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("close"))}</button>
@@ -6032,6 +6062,8 @@
 
     const summary = document.getElementById("extensionWorkspaceSummary");
     const output = document.getElementById("extensionWorkspaceOutput");
+
+    refreshExtensionWorkspacePanelChrome(payload);
 
     if (!payload) {
       summary.textContent = tExtensionWorkspace("noPayload");
