@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6558,6 +6558,38 @@
     `;
   }
 
+
+  function extensionWorkspaceStatusMessage(kind, source = null) {
+    const language = extensionWorkspaceLanguage(source);
+    const isZh = language === "zh-CN";
+    const messages = {
+      analyzing: isZh ? "\u6b63\u5728\u81ea\u52a8\u5206\u6790\u5de5\u4f5c\u533a..." : "Auto-analyzing workspace...",
+      complete: isZh ? "\u5206\u6790\u5b8c\u6210" : "Analysis complete",
+      failed: isZh ? "\u5206\u6790\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5" : "Analysis failed. Please retry",
+    };
+    return messages[kind] || "";
+  }
+
+  function extensionWorkspaceStatusHTML(kind, source = null, detail = "") {
+    const message = extensionWorkspaceStatusMessage(kind, source);
+    if (!message && !detail) return "";
+
+    const colors = {
+      analyzing: ["#eff6ff", "#bfdbfe", "#1d4ed8"],
+      complete: ["#ecfdf5", "#bbf7d0", "#047857"],
+      failed: ["#fef2f2", "#fecaca", "#b91c1c"],
+    };
+    const [bg, border, color] = colors[kind] || colors.analyzing;
+
+    return `
+      <div id="extensionWorkspaceAutoAnalyzeStatus" data-extension-auto-analysis-status="${escapeExtensionHTML(kind)}" style="margin:10px 0;padding:9px 10px;background:${bg};border:1px solid ${border};border-radius:12px;color:${color};font-weight:800;">
+        ${escapeExtensionHTML(message)}
+        ${detail ? `<div style="margin-top:4px;font-size:11px;font-weight:600;">${escapeExtensionHTML(detail)}</div>` : ""}
+      </div>
+    `;
+  }
+
+
     function extensionWorkspaceAutoAnalyzeKey(payload) {
     const products = payload?.products || [];
     const reviewCount = products.reduce((total, product) => total + ((product?.reviews || []).length), 0);
@@ -6582,7 +6614,7 @@
 
     const output = document.getElementById("extensionWorkspaceOutput");
     if (output) {
-      output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("analyzingWorkspace", payload))}</strong>`;
+      output.innerHTML = extensionWorkspaceStatusHTML("analyzing", payload);
     }
 
     window.setTimeout(() => {
@@ -6599,7 +6631,7 @@ async function analyzeExtensionWorkspace() {
       return;
     }
 
-    output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("analyzingWorkspace", payload))}</strong>`;
+    output.innerHTML = extensionWorkspaceStatusHTML("analyzing", payload);
 
     const response = await fetch("/api/v1/analyze-review-workspace", {
       method: "POST",
@@ -6609,11 +6641,16 @@ async function analyzeExtensionWorkspace() {
 
     const body = await response.json();
     if (!response.ok) {
-      output.innerHTML = `<strong>${escapeExtensionHTML(tExtensionWorkspace("analysisFailed", payload))}</strong> ${escapeExtensionHTML(body.error || tExtensionWorkspace("unknownError", payload))}`;
+      output.innerHTML = extensionWorkspaceStatusHTML(
+        "failed",
+        payload,
+        body.error || tExtensionWorkspace("unknownError", payload)
+      );
       return;
     }
 
     output.innerHTML = `
+      ${extensionWorkspaceStatusHTML("complete", body)}
       ${extensionWorkspaceWarningsHTML(payload)}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
         <div><strong>${escapeExtensionHTML(body.product_count ?? 0)}</strong><br><span style="color:#64748b;">${escapeExtensionHTML(tExtensionWorkspace("productsMetric", body))}</span></div>

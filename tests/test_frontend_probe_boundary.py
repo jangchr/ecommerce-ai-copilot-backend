@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import re
 import unittest
 
@@ -75,6 +75,23 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
                 self.assertNotIn("shadow_sources", body)
                 self.assertNotIn("memory_observability", body)
                 self.assertNotIn("postCopilot(", body)
+
+
+    def test_extension_workspace_auto_analysis_status_states_are_visible(self):
+        self.assertIn("function extensionWorkspaceStatusMessage(kind, source = null)", self.source)
+        self.assertIn("function extensionWorkspaceStatusHTML(kind, source = null, detail =", self.source)
+        self.assertIn("extensionWorkspaceAutoAnalyzeStatus", self.source)
+        self.assertIn("data-extension-auto-analysis-status", self.source)
+        self.assertIn("Auto-analyzing workspace...", self.source)
+        self.assertIn("Analysis complete", self.source)
+        self.assertIn("Analysis failed. Please retry", self.source)
+        self.assertIn("\\u6b63\\u5728\\u81ea\\u52a8\\u5206\\u6790\\u5de5\\u4f5c\\u533a...", self.source)
+        self.assertIn("\\u5206\\u6790\\u5b8c\\u6210", self.source)
+        self.assertIn("\\u5206\\u6790\\u5931\\u8d25\\uff0c\\u8bf7\\u91cd\\u8bd5", self.source)
+        self.assertIn('extensionWorkspaceStatusHTML("analyzing", payload)', self.source)
+        self.assertIn('extensionWorkspaceStatusHTML("complete", body)', self.source)
+        self.assertIn('extensionWorkspaceStatusHTML(\n        "failed",', self.source)
+
 
     def test_product_mode_guidance_and_copy_controls_are_present(self):
         self.assertIn(
@@ -2335,13 +2352,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
 
     def test_extension_workspace_auto_analysis_shows_status_before_fetch(self):
-        for marker in [
-            "extensionWorkspaceOutput",
-            "tExtensionWorkspace(\"analyzingWorkspace\", payload)",
-            "window.setTimeout(() =>",
-            "analyzeExtensionWorkspace();",
-        ]:
-            self.assertIn(marker, self.source)
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertIn('function extensionWorkspaceStatusHTML(kind, source = null, detail = "")', self.source)
+        self.assertIn('extensionWorkspaceStatusHTML("analyzing", payload)', self.source)
+        self.assertIn('data-extension-auto-analysis-status', self.source)
+        self.assertIn('maybeAutoAnalyzeExtensionWorkspace(payload)', self.source)
+        self.assertIn('analyzeExtensionWorkspace();', self.source)
+        self.assertNotIn('tExtensionWorkspace("analyzingWorkspace", payload)', self.source)
