@@ -2088,6 +2088,38 @@ def _rw_best_evidence_sentence(text: str) -> str:
 def _rw_clean_evidence_fragment(value: str) -> str:
     text = " ".join(str(value or "").split()).strip(" -:;,.")
 
+    # Prefer the actual review body after Amazon purchase markers.
+    for marker in [
+        "Verified Purchase",
+        "Verified purchase",
+        "\u5df2\u786e\u8ba4\u8d2d\u4e70",
+        "\u78ba\u8a8d\u6e08\u307f\u8cfc\u5165",
+    ]:
+        if marker in text:
+            text = text.split(marker, 1)[1].strip()
+            break
+
+    # Remove English Amazon review chrome.
+    text = re.sub(r"Reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b[1-5](?:\.0)?\s+out of 5 stars\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"Size:\s*[^.?!?]{1,120}", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"Color:\s*[^.?!?]{1,120}", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b\d+\s+people found this helpful\b.*$", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bone person found this helpful\b.*$", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bHelpful\s+Report\b.*$", " ", text, flags=re.IGNORECASE)
+
+    # Remove Japanese / Chinese Amazon review chrome.
+    text = re.sub(r"\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5[^\s]{0,12}\u53d1\u5e03\u8bc4\u8bba", " ", text)
+    text = re.sub(r"\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5[^\s]{0,18}\u30ec\u30d3\u30e5\u30fc", " ", text)
+    text = re.sub(r"[1-5](?:\.0)?\s*(?:\u661f|\u9897\u661f)(?:\uff08\u6700\u9ad8\s*5\s*\u661f\uff09|\uff0c\u6700\u591a\s*5\s*\u9897\u661f)?", " ", text)
+    text = re.sub(r"\u989c\u8272:\s*[^\s?.!?]{1,80}", " ", text)
+    text = re.sub(r"\u5c3a\u5bf8:\s*[^\s?.!?]{1,80}", " ", text)
+    text = re.sub(r"\d+\s*\u4f4d\u4f7f\u7528\u8005\u8ba4\u4e3a\u6b64\u8bc4\u8bba\u6709\u7528.*$", " ", text)
+    text = re.sub(r"\u6709\u7528\s+\u4e3e\u62a5.*$", " ", text)
+    text = re.sub(r"\u5c06\u8bc4\u8bba\u7ffb\u8bd1\u6210\u4e2d\u6587.*$", " ", text)
+
+    text = re.sub(r"\s+", " ", text).strip(" -:;,.")
+
     # Remove broken leading punctuation left by metadata cleanup.
     text = re.sub(r"^[)\]\s]+", "", text).strip()
 
