@@ -349,18 +349,97 @@ function CommitTools() {
 }
 
 
+
+function FormatCgFeedbackLine($line) {
+  $value = [string]$line
+  if ($value.Length -le 360) {
+    return $value
+  }
+
+  return ($value.Substring(0, 360) + " ... [truncated]")
+}
+
+function GetCgFocusedFailureFeedback() {
+  if (!(Test-Path $Global:CgLastLog)) {
+    return @()
+  }
+
+  $lines = @(Get-Content $Global:CgLastLog)
+  if ($lines.Count -eq 0) {
+    return @()
+  }
+
+  $failureIndexes = @()
+  for ($i = 0; $i -lt $lines.Count; $i++) {
+    $line = [string]$lines[$i]
+    if (
+      $line -match "^(FAIL|ERROR): " -or
+      $line -match "AssertionError|SyntaxError|Traceback \(most recent call last\):|\[FAIL\]"
+    ) {
+      $failureIndexes += $i
+    }
+  }
+
+  if ($failureIndexes.Count -eq 0) {
+    return @()
+  }
+
+  $first = $failureIndexes[0]
+  $start = [Math]::Max(0, $first - 8)
+  $end = [Math]::Min($lines.Count - 1, $first + 45)
+
+  $focused = @()
+  $focused += "CrossGrowth cg runner"
+  $focused += "Focused failure summary"
+  $focused += ""
+
+  for ($i = $start; $i -le $end; $i++) {
+    $focused += (FormatCgFeedbackLine $lines[$i])
+  }
+
+  $summary = @(
+    $lines |
+      Select-Object -Last 80 |
+      Where-Object {
+        $_ -match "^CG RESULT:" -or
+        $_ -match "^Failed step:" -or
+        $_ -match "^Recommended next command:" -or
+        $_ -match "^cg command failed:"
+      }
+  )
+
+  if ($summary.Count -gt 0) {
+    $focused += ""
+    $focused += "Runner summary:"
+    foreach ($line in $summary) {
+      $focused += (FormatCgFeedbackLine $line)
+    }
+  }
+
+  return $focused
+}
+
+
+
 function CopyFeedbackTail($reason = "completed") {
   if (!(Test-Path $Global:CgLastLog)) {
     return
   }
 
-  $tail = Get-Content $Global:CgLastLog -Tail 180
+  if ($reason -eq "failed") {
+    $tail = @(GetCgFocusedFailureFeedback)
+    if ($tail.Count -eq 0) {
+      $tail = @(Get-Content $Global:CgLastLog -Tail 180)
+    }
+  } else {
+    $tail = @(Get-Content $Global:CgLastLog -Tail 180)
+  }
 
   try {
     $tail | Set-Clipboard
     Write-Host ""
     if ($reason -eq "failed") {
-      Write-Host "Feedback copied to clipboard after failure. Paste it into ChatGPT." -ForegroundColor Yellow
+      Write-Host "Focused failure feedback copied to clipboard. Paste it into ChatGPT." -ForegroundColor Yellow
     } else {
       Write-Host "Feedback copied to clipboard. Paste it into ChatGPT." -ForegroundColor Green
     }
@@ -376,7 +455,17 @@ function Feedback() {
     throw "No feedback log found. Run .\scripts\cg.ps1 gate first."
   }
 
-  $tail = Get-Content $Global:CgLastLog -Tail 160
+  $all = @(Get-Content $Global:CgLastLog)
+  $hasFailure = @($all | Where-Object { $_ -eq "CG RESULT: FAIL" }).Count -gt 0
+
+  if ($hasFailure) {
+    $tail = @(GetCgFocusedFailureFeedback)
+    if ($tail.Count -eq 0) {
+      $tail = @(Get-Content $Global:CgLastLog -Tail 160)
+    }
+  } else {
+    $tail = @(Get-Content $Global:CgLastLog -Tail 160)
+  }
 
   Write-Host ""
   Write-Host "==> Recent cg feedback (.cg/last.log)" -ForegroundColor Cyan
@@ -391,7 +480,6 @@ function Feedback() {
     Write-Host "Could not copy feedback to clipboard. Please copy the output above." -ForegroundColor Yellow
   }
 }
-
 
 function MergeMain() {
   $Spike = "spike/review-collection-p0-recovery"
