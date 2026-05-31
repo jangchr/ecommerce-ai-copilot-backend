@@ -533,6 +533,82 @@ function Feedback() {
   }
 }
 
+
+
+function InspectWorkspaceCopy() {
+  $targets = @(
+    "static/index.html",
+    "browser_extension/popup.js",
+    "browser_extension/content.js",
+    "main.py"
+  )
+
+  $keywords = @(
+    "extensionWorkspace",
+    "crossgrowth_extension_workspace",
+    "best_effort_expand",
+    "sample_warning",
+    "sampleInterpretation",
+    "creative_angles",
+    "creativeBrief",
+    "extensionCleanCreativeAngle",
+    "evidence_usage_summary"
+  )
+
+  $linesOut = @()
+  $linesOut += "CrossGrowth inspect: workspace copy"
+  $linesOut += "Started: $(Get-Date -Format o)"
+  $linesOut += ""
+
+  foreach ($target in $targets) {
+    if (!(Test-Path $target)) {
+      continue
+    }
+
+    $lines = @(Get-Content $target)
+    $linesOut += "===== $target ====="
+
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+      $line = [string]$lines[$i]
+      $matched = $false
+
+      foreach ($keyword in $keywords) {
+        if ($line.ToLowerInvariant().Contains($keyword.ToLowerInvariant())) {
+          $matched = $true
+          break
+        }
+      }
+
+      if ($matched) {
+        $start = [Math]::Max(0, $i - 10)
+        $end = [Math]::Min($lines.Count - 1, $i + 24)
+        $linesOut += ""
+        $linesOut += "--- ${target}:$($i + 1) ---"
+        for ($n = $start; $n -le $end; $n++) {
+          $linesOut += "$($n + 1): $($lines[$n])"
+        }
+      }
+    }
+
+    $linesOut += ""
+  }
+
+  $inspectPath = Join-Path $CgLogDir "inspect-workspace-copy.log"
+  Set-Content -Path $inspectPath -Encoding UTF8 -Value $linesOut
+
+  Write-Host ""
+  Write-Host "==> Workspace inspect saved" -ForegroundColor Cyan
+  Write-Host $inspectPath
+
+  $copiedBy = CopyCgLinesToClipboard $linesOut
+  Write-Host ""
+  if ($copiedBy) {
+    Write-Host "Workspace inspect copied to clipboard via $copiedBy. Paste it into ChatGPT." -ForegroundColor Green
+  } else {
+    Write-Host "Could not copy workspace inspect. Copy .cg/inspect-workspace-copy.log manually." -ForegroundColor Yellow
+  }
+}
+
 function MergeMain() {
   $Spike = "spike/review-collection-p0-recovery"
   $Main = "main"
@@ -600,6 +676,7 @@ try {
     "push" { PushOnly }
   "merge-main" { MergeMain }
     "feedback" { Feedback }
+    "inspect-workspace-copy" { InspectWorkspaceCopy }
     "help" {
       Write-Host ""
       Write-Host "CrossGrowth local runner"
@@ -615,6 +692,7 @@ try {
       Write-Host "  .\scripts\cg.ps1 push"
     Write-Host "  .\scripts\cg.ps1 merge-main"
       Write-Host "  .\scripts\cg.ps1 feedback"
+      Write-Host "  .\scripts\cg.ps1 inspect-workspace-copy"
       Write-Host ""
     }
     default {
