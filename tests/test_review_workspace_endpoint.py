@@ -586,6 +586,75 @@ class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
         self.assertTrue(all("Why are buyers highlighting buyers" not in hook for hook in hooks))
 
 
+
+    def test_review_workspace_does_not_turn_positive_two_pack_reassurance_into_pain(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "positive_two_pack_reassurance_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "B0TWOPACK01",
+                        "title": "Due Vittorie Oro Gold Balsamic Vinegar",
+                        "description": "Barrel aged balsamic vinegar for salads, gifts, cooking, and dressing.",
+                        "reviews": [
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Verified Purchase If you are concerned about the two-pack, give the second bottle to a friend, who will truly appreciate the gift, and your thoughtfulness.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Verified Purchase Cannot beat the price for this quality.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Verified Purchase Yes it is pricy but personally I think it is worth it.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        pain_and_objection_labels = " ".join(
+            item.get("label", "").lower()
+            for section in ["common_pain_points", "buyer_objections"]
+            for item in body.get(section, [])
+        )
+        pain_and_objection_quotes = "\n".join(
+            quote.lower()
+            for section in ["common_pain_points", "buyer_objections"]
+            for item in body.get(section, [])
+            for quote in item.get("evidence_quotes", [])
+        )
+
+        self.assertNotIn("price / value concern", pain_and_objection_labels)
+        self.assertNotIn("price / value uncertainty", pain_and_objection_labels)
+        self.assertNotIn("size / quantity mismatch", pain_and_objection_labels)
+        self.assertNotIn("quantity / size uncertainty", pain_and_objection_labels)
+        self.assertNotIn("give the second bottle", pain_and_objection_quotes)
+        self.assertNotIn("cannot beat the price", pain_and_objection_quotes)
+
+        # Keep the positive value proof somewhere in the response, but do not require
+        # the tiny smoke-test payload to always produce a liked_points theme.
+        all_response_text = str(body).lower()
+        self.assertIn("cannot beat the price", all_response_text)
+
+
+
 class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
     def test_review_workspace_returns_sample_interpretation_and_video_script_pack(self):
         from fastapi.testclient import TestClient

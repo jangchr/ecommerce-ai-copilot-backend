@@ -2464,10 +2464,77 @@ def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
     return cleaned or "buyer hesitation"
 
 
+
+def _rw_quote_is_positive_reassurance_quote(quote: str) -> bool:
+    lower = str(quote or "").lower().strip()
+    if not lower:
+        return False
+
+    negative_markers = [
+        "wrong size",
+        "size is wrong",
+        "stated size",
+        "listed as",
+        "what came was",
+        "half size",
+        "not sold by the single bottle",
+        "only came in",
+        "only came as",
+        "received the regular size",
+        "priced wrong",
+        "not worth",
+        "wateriest",
+        "flavorless",
+        "terrible",
+        "bad taste",
+        "broken",
+        "missing",
+        "leak",
+        "leaked",
+        "doesn't",
+        "didn't",
+    ]
+    if any(marker in lower for marker in negative_markers):
+        return False
+
+    two_pack_reassurance = (
+        any(marker in lower for marker in ["two-pack", "2-pack", "second bottle"])
+        and any(marker in lower for marker in [
+            "give the second bottle",
+            "give one to",
+            "friend",
+            "gift",
+            "appreciate",
+            "thoughtfulness",
+        ])
+    )
+
+    value_reassurance = any(marker in lower for marker in [
+        "cannot beat the price",
+        "can't beat the price",
+        "great value",
+        "worth it",
+        "worth every",
+        "for this quality",
+        "excellent quality",
+        "high quality",
+        "best balsamic",
+    ])
+
+    if ("pricy" in lower or "pricey" in lower) and "worth it" in lower:
+        value_reassurance = True
+
+    return two_pack_reassurance or value_reassurance
+
+
 def _rw_quote_is_low_value_objection(quote: str) -> bool:
     lower = str(quote or "").lower().strip()
 
     if len(lower) < 18:
+        return True
+
+    # Positive reassurance / gifting / value proof should not be treated as a buyer objection.
+    if _rw_quote_is_positive_reassurance_quote(quote):
         return True
 
     # Positive proof / usage praise should not be treated as a buyer objection.
@@ -2531,6 +2598,18 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
     lower = str(value or "").lower()
     raw_label = str(label or "").strip().lower()
     phrase = _rw_human_theme_phrase(label).strip().lower()
+
+    if _rw_quote_is_positive_reassurance_quote(value) and any(marker in raw_label or marker in phrase for marker in [
+        "price / value",
+        "price or value",
+        "size / quantity",
+        "quantity or size",
+        "quantity / size",
+        "expectation mismatch",
+        "tradeoff",
+        "hesitation",
+    ]):
+        return False
 
     marker_groups = [
         (
@@ -2659,6 +2738,9 @@ def _rw_human_theme_phrase(label: str) -> str:
 
 def _rw_quote_has_pain_signal(value: str) -> bool:
     lower = str(value or "").lower()
+    if _rw_quote_is_positive_reassurance_quote(value):
+        return False
+
     pain_terms = [
         "wrong size",
         "stated size",
