@@ -362,17 +362,38 @@ def _validate_description_request(request: ProductDescriptionRequest, request_id
     return None
 
 
+def _is_pasted_review_label_line(line: str) -> bool:
+    normalized = " ".join(str(line or "").strip().split()).lower()
+    label_prefixes = (
+        "\u75db\u70b9:",
+        "\u75db\u70b9\uff1a",
+        "\u6b63\u5411:",
+        "\u6b63\u5411\uff1a",
+        "\u4f7f\u7528\u573a\u666f:",
+        "\u4f7f\u7528\u573a\u666f\uff1a",
+        "pain point:",
+        "pain points:",
+        "positive:",
+        "pros:",
+        "use case:",
+        "use cases:",
+        "usage scenario:",
+        "usage scenarios:",
+    )
+    return normalized.startswith(label_prefixes)
+
+
 def _split_pasted_review_quotes(text: str, limit: int = 6) -> list[str]:
     cleaned_lines = []
     for raw_line in (text or "").replace("\r", "\n").split("\n"):
         line = raw_line.strip().lstrip("-*•0123456789. )(").strip()
-        if line:
+        if line and not _is_pasted_review_label_line(line):
             cleaned_lines.append(line)
 
     if not cleaned_lines:
         normalized = " ".join((text or "").split())
         pieces = [piece.strip() for piece in normalized.replace("!", ".").replace("?", ".").split(".")]
-        cleaned_lines = [piece for piece in pieces if piece]
+        cleaned_lines = [piece for piece in pieces if piece and not _is_pasted_review_label_line(piece)]
 
     quotes = []
     for line in cleaned_lines:
