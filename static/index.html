@@ -5162,7 +5162,9 @@
             const labels = {
                 sourceBreakdownTitle: isZh ? '\u8bc4\u8bba\u6765\u6e90\u5206\u5e03' : 'Review source breakdown',
                 sourceBreakdownGuidance: isZh ? '\u6765\u6e90\u89e3\u8bfb\u5efa\u8bae' : 'Source interpretation guidance',
+                rawReviewCount: isZh ? '\u539f\u59cb\u53ef\u89c1\u8bc4\u8bba' : 'Raw visible reviews',
                 totalReviews: isZh ? '\u53bb\u91cd\u5206\u6790\u8bc4\u8bba' : 'Unique analyzed reviews',
+                duplicateReviewCount: isZh ? '\u91cd\u590d\u8bc4\u8bba' : 'Duplicate reviews',
                 mainProductReviews: isZh ? '\u4e3b\u5546\u54c1\u8bc4\u8bba' : 'Main product reviews',
                 variantReviews: isZh ? '\u53d8\u4f53\u8bc4\u8bba' : 'Variant reviews',
                 lowStarReviews: isZh ? '\u4f4e\u661f\u8bc4\u8bba' : 'Low-star reviews',
@@ -5261,8 +5263,13 @@
         function reviewWorkspaceSourceBreakdownText(sourceBreakdown, language = currentOutputLanguage()) {
             if (!sourceBreakdown || !sourceBreakdown.total_reviews) return '';
 
+            const uniqueReviewCount = sourceBreakdown.total_reviews ?? 0;
+            const raw_review_count = sourceBreakdown.raw_review_count ?? uniqueReviewCount;
+            const duplicate_review_count = sourceBreakdown.duplicate_review_count ?? Math.max(0, raw_review_count - uniqueReviewCount);
             const lines = [
-                `${reviewWorkspaceSourceLabel('totalReviews', language)}: ${sourceBreakdown.total_reviews ?? 0}`,
+                `${reviewWorkspaceSourceLabel('rawReviewCount', language)}: ${raw_review_count}`,
+                `${reviewWorkspaceSourceLabel('totalReviews', language)}: ${uniqueReviewCount}`,
+                `${reviewWorkspaceSourceLabel('duplicateReviewCount', language)}: ${duplicate_review_count}`,
                 `${reviewWorkspaceSourceLabel('mainProductReviews', language)}: ${sourceBreakdown.main_product_reviews ?? 0}`,
                 `${reviewWorkspaceSourceLabel('variantReviews', language)}: ${sourceBreakdown.variant_reviews ?? 0}`,
                 `${reviewWorkspaceSourceLabel('lowStarReviews', language)}: ${sourceBreakdown.low_star_reviews ?? 0}`,
