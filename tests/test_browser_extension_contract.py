@@ -402,6 +402,18 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
 
 
+
+    def test_popup_separates_compact_amazon_variant_labels(self):
+        source = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "Flavor Name|Size|Color|Style|Package Quantity",
+            ".replace(/^\\s*\\|\\s*/, \"\")",
+            ".replace(/\\s*\\|\\s*/g, \" | \")",
+            "cleanVariantReviewLabel",
+        ]:
+            self.assertIn(marker, source)
+
     def test_popup_cleans_amazon_learn_more_noise_from_collected_product_meta(self):
         source = (self.root / "popup.js").read_text(encoding="utf-8")
 

@@ -1310,6 +1310,9 @@ function cleanVariantReviewLabel(value) {
     .replace(/\ba-link-normal\b/gi, " ")
     .replace(/\ba-color-secondary\b/gi, " ")
     .replace(/\brufus-zuma-learn-more-link\b/gi, " ")
+    .replace(/\s*(Flavor Name|Size|Color|Style|Package Quantity)\s*:/gi, " | $1: ")
+    .replace(/^\s*\|\s*/, "")
+    .replace(/\s*\|\s*/g, " | ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 120);
