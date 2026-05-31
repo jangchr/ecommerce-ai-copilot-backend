@@ -754,7 +754,11 @@ function isUsefulAmazonVariantLabel(value) {
     "\u6e05\u9664\u7b5b\u9009",
     "\u661f",
     "reviews-filter-bar",
-    "audible"
+    "audible",
+    "learn more",
+    "a-size-small",
+    "a-link-normal",
+    "rufus-zuma-learn-more-link"
   ];
 
   if (noisyFragments.some((fragment) => lower.includes(fragment.toLowerCase()))) {
@@ -965,6 +969,10 @@ function cleanCollectedProductTitle(value) {
     .replace(/^[\s\S]{0,120}(?:Customer reviews?|\u4e70\u5bb6\u8bc4\u8bba)\s*[:?]\s*/i, "")
     .replace(/^Amazon(?:\.[^:?\s]+)?[:?]\s*/i, "")
     .replace(/^(?:Customer reviews?|\u4e70\u5bb6\u8bc4\u8bba)\s*[:?]?\s*/i, "")
+    .replace(/\bLearn more\b/gi, " ")
+    .replace(/\ba-size-(?:mini|small|base)\b/gi, " ")
+    .replace(/\ba-link-normal\b/gi, " ")
+    .replace(/\brufus-zuma-learn-more-link\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -1297,8 +1305,12 @@ function amazonAsinFromUrl(value) {
 
 function cleanVariantReviewLabel(value) {
   return String(value || "")
+    .replace(/\bLearn more\b/gi, " ")
+    .replace(/\ba-size-(?:mini|small|base)\b/gi, " ")
+    .replace(/\ba-link-normal\b/gi, " ")
+    .replace(/\ba-color-secondary\b/gi, " ")
+    .replace(/\brufus-zuma-learn-more-link\b/gi, " ")
     .replace(/\s+/g, " ")
-    .replace(/a-size-mini a-link-normal a-color-secondary/gi, "")
     .trim()
     .slice(0, 120);
 }

@@ -401,6 +401,24 @@ class BrowserExtensionContractTest(unittest.TestCase):
             self.assertIn(marker, js)
 
 
+
+    def test_popup_cleans_amazon_learn_more_noise_from_collected_product_meta(self):
+        source = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "\\bLearn more\\b",
+            "\\ba-size-(?:mini|small|base)\\b",
+            "\\ba-link-normal\\b",
+            "\\brufus-zuma-learn-more-link\\b",
+            "\"learn more\"",
+            "\"a-size-small\"",
+            "\"rufus-zuma-learn-more-link\"",
+            "cleanVariantReviewLabel",
+            "cleanCollectedProductTitle",
+        ]:
+            self.assertIn(marker, source)
+
+
     def test_popup_renders_collected_product_list(self):
         html = (self.root / "popup.html").read_text(encoding="utf-8")
         js = (self.root / "popup.js").read_text(encoding="utf-8")
