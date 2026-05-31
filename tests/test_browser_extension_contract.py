@@ -392,12 +392,15 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
     def test_popup_keeps_manual_expansion_available_when_login_blocks_auto_collect(self):
         js = (self.root / "popup.js").read_text(encoding="utf-8")
+        content = (self.root / "content.js").read_text(encoding="utf-8")
 
         for marker in [
             "Auto collection stopped: Amazon sign-in required. You can still manually open expansion links visible on the current page.",
+            "Auto collection stopped: Amazon sign-in required. Current visible sample is preserved; you can still manually open visible expansion links.",
             "\\u81ea\\u52a8\\u91c7\\u96c6\\u5df2\\u505c\\u6b62",
             "backgroundCollectorStopReason(product)",
             "return tPopup(\"signInRequired\")",
+            "bestEffortExpandLoginBlocked",
             "openTargetedReviewTab(\"low_star\")",
             "openTargetedReviewTab(\"verified\")",
             "copyReviewExpansionLinks(",
@@ -405,10 +408,24 @@ class BrowserExtensionContractTest(unittest.TestCase):
         ]:
             self.assertIn(marker, js)
 
+        for marker in [
+            "bestEffortExpandCurrentPage",
+            "if (pageInfo.sign_in_required)",
+            "reason: \"sign_in_required\"",
+            "pagination_candidates: extractAmazonPaginationCandidates()",
+        ]:
+            self.assertIn(marker, content)
+
     def test_popup_filters_and_classifies_visible_expansion_links(self):
         js = (self.root / "popup.js").read_text(encoding="utf-8")
 
         for marker in [
+            "reviewExpansionLinksByCategory",
+            "current_product_review_links",
+            "variant_review_links",
+            "similar_product_review_links",
+            "low_star_review_links",
+            "verified_purchase_review_links",
             "isInvalidAmazonExpansionHref",
             "lower.startsWith(\"javascript:\")",
             "lower.startsWith(\"#\")",
@@ -426,11 +443,53 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "reviewerType",
             "avp_only_reviews",
             "relatedReviewLinksForProduct",
+            "targetedSimilarReviews",
             "related",
             "recommended",
             "similar",
             "excludeCurrentAsin",
             "noUsableReviewExpansionLinks",
+        ]:
+            self.assertIn(marker, js)
+
+    def test_popup_runs_best_effort_expand_before_visible_page_collection(self):
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+        content = (self.root / "content.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "runBestEffortExpandInTab",
+            "bestEffortExpandStatusText",
+            "extractProductFromTab(tab, { bestEffortExpand: true })",
+            "product.metadata = {",
+            "best_effort_expand",
+            "best_effort_expand_clicked_count",
+            "bestEffortExpandNoMore",
+            "added_review_count",
+            "no more visible reviews found",
+        ]:
+            self.assertIn(marker, js)
+
+        for marker in [
+            "see more reviews",
+            "show more",
+            "read more",
+            "\\u67e5\\u770b\\u66f4\\u591a\\u8bc4\\u8bba",
+            "\\u5c55\\u5f00\\u8bc4\\u8bba",
+            "clicked_count",
+            "added_review_count",
+            "no_more_visible_reviews",
+        ]:
+            self.assertIn(marker, content)
+
+    def test_popup_workspace_payload_preserves_popup_language(self):
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "output_language: popupOutputLanguage()",
+            "extension_workspace=1&output_language=",
+            "encodeURIComponent(popupOutputLanguage())",
+            "buildWorkspacePayload(products)",
+            "localStorage.setItem(\"crossgrowth_extension_workspace\", workspacePayload)",
         ]:
             self.assertIn(marker, js)
 

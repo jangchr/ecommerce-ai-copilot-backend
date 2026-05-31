@@ -5839,7 +5839,13 @@
   };
 
   function extensionWorkspaceLanguage(source) {
-    const explicit = source?.output_language || readExtensionWorkspacePayload()?.output_language || "";
+    let urlLanguage = "";
+    try {
+      urlLanguage = new URLSearchParams(window.location.search || "").get("output_language") || "";
+    } catch (error) {
+      urlLanguage = "";
+    }
+    const explicit = source?.output_language || readExtensionWorkspacePayload()?.output_language || urlLanguage || "";
     const fallback = typeof currentOutputLanguage === "function" ? currentOutputLanguage() : "en";
     const language = String(explicit || fallback || "en").toLowerCase();
     return language.startsWith("zh") ? "zh-CN" : "en";
@@ -6779,6 +6785,7 @@ async function analyzeExtensionWorkspace() {
       );
       return;
     }
+    body.output_language = body.output_language || payload.output_language || extensionWorkspaceLanguage(payload);
 
     output.innerHTML = `
       ${extensionWorkspaceStatusHTML("complete", body)}

@@ -2344,6 +2344,17 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+    def test_extension_workspace_inherits_payload_or_url_language(self):
+        for marker in [
+            "new URLSearchParams(window.location.search || \"\").get(\"output_language\")",
+            "source?.output_language || readExtensionWorkspacePayload()?.output_language || urlLanguage",
+            "body.output_language = body.output_language || payload.output_language || extensionWorkspaceLanguage(payload)",
+            "reviewWorkspaceSourceBreakdownText(body.source_breakdown || {}, payload.output_language)",
+            "tExtensionWorkspace(\"topPainPoints\", body)",
+            "tExtensionWorkspace(\"buyerObjectionsSection\", body)",
+        ]:
+            self.assertIn(marker, self.source)
+
 
     def test_review_workspace_localizes_apparel_theme_labels_frontend(self):
         for marker in [
