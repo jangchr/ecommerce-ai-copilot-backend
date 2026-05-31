@@ -2122,6 +2122,11 @@ def _rw_clean_evidence_fragment(value: str) -> str:
 
     # Remove broken leading punctuation left by metadata cleanup.
     text = re.sub(r"^[)\]\s]+", "", text).strip()
+    # Drop fragments that start mid-word after browser text extraction,
+    # for example: "r to the glaze but the taste..."
+    if re.match(r"^[b-z]\s+(?:to|of|for|with|and|but)\s+", text):
+        return ""
+
 
     # Drop low-value revision prefix while keeping the actual claim.
     text = re.sub(r"^Revised\s+\d{1,2}/\d{1,2}/\d{2,4}\s*-\s*", "", text, flags=re.IGNORECASE)

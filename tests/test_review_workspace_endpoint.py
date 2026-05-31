@@ -377,6 +377,57 @@ class ReviewWorkspaceEvidenceFragmentCleanupTest(unittest.TestCase):
 
 
 
+
+    def test_review_workspace_drops_mid_word_extraction_fragments(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "mid_word_fragment_cleanup_smoke",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "B0FRAGMENT01",
+                        "title": "Balsamic Vinegar",
+                        "description": "Balsamic vinegar, glaze, dressing, cooking.",
+                        "reviews": [
+                            {
+                                "rating": "4 out of 5 stars",
+                                "text": "r to the glaze but the taste is a nice combination of both with a better quality taste of ingredients",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Cannot beat the price for this quality",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        quotes = []
+        for group in body.get("source_breakdown", {}).get("source_groups", []):
+            quotes.extend(group.get("evidence_quotes", []))
+        for section in ["common_pain_points", "buyer_objections", "liked_points", "use_cases"]:
+            for item in body.get(section, []):
+                quotes.extend(item.get("evidence_quotes", []))
+
+        joined = "\n".join(quotes)
+        self.assertNotIn("r to the glaze", joined)
+        self.assertIn("Cannot beat the price for this quality", joined)
+
+
+
 class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
     def test_review_workspace_generates_evidence_backed_creative_output(self):
         from fastapi.testclient import TestClient
