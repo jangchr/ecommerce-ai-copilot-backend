@@ -419,6 +419,12 @@ def _validate_pasted_reviews_request(request: PastedReviewsRequest, request_id: 
             "pasted_reviews_too_short",
             request_id,
         )
+    if not _split_pasted_review_quotes(pasted_reviews, limit=1):
+        return _description_error(
+            "Pasted Reviews Mode needs at least one concrete review line, not only category labels.",
+            "pasted_reviews_no_concrete_reviews",
+            request_id,
+        )
     if len(product_name) + len(_clean_description_text(request.product_description or "")) + len(pasted_reviews) > DESCRIPTION_MAX_CHARS:
         return _description_error(
             "Input is too long for Pasted Reviews Mode. Please shorten the pasted reviews.",
@@ -606,7 +612,7 @@ def _pasted_reviews_response_data(
     product_name = _clean_description_text(request.product_name)
     category = _clean_description_text(request.product_category or "user_pasted_reviews_product")
     description_quote = _safe_evidence_quote(request.product_description or "")
-    primary_quote = evidence_quotes[0] if evidence_quotes else _safe_evidence_quote(request.pasted_reviews)
+    primary_quote = evidence_quotes[0] if evidence_quotes else ""
     scenes = generated.get("storyboard_scenes") or []
     if not isinstance(scenes, list):
         scenes = []
