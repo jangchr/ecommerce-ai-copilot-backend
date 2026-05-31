@@ -2127,6 +2127,20 @@ def _rw_clean_evidence_fragment(value: str) -> str:
     if re.match(r"^[b-z]\s+(?:to|of|for|with|and|but)\s+", text):
         return ""
 
+    # Drop Amazon report-modal / community-guideline chrome accidentally captured as review text.
+    report_modal_markers = [
+        "submit a",
+        "common reasons customers reviews",
+        "harassment, profanity",
+        "spam, advertisement, promotions",
+        "given in exchange for cash",
+        "community guidelines",
+        "when we get your",
+    ]
+    lower_text = text.lower()
+    if any(marker in lower_text for marker in report_modal_markers):
+        return ""
+
 
     # Drop low-value revision prefix while keeping the actual claim.
     text = re.sub(r"^Revised\s+\d{1,2}/\d{1,2}/\d{2,4}\s*-\s*", "", text, flags=re.IGNORECASE)

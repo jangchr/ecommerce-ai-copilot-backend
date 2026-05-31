@@ -428,6 +428,59 @@ class ReviewWorkspaceEvidenceFragmentCleanupTest(unittest.TestCase):
 
 
 
+
+    def test_review_workspace_drops_amazon_report_modal_chrome(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "report_modal_cleanup_smoke",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "B0REPORT01",
+                        "title": "Balsamic Vinegar",
+                        "description": "Balsamic vinegar, glaze, dressing, cooking.",
+                        "reviews": [
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "Submit a A few common reasons customers reviews:Harassment, profanitySpam, advertisement, promotionsGiven in exchange for cash, discountsWhen we get your , we'll check if the review meets our Community guidelines",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Cannot beat the price for this quality",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        quotes = []
+        for group in body.get("source_breakdown", {}).get("source_groups", []):
+            quotes.extend(group.get("evidence_quotes", []))
+        for section in ["common_pain_points", "buyer_objections", "liked_points", "use_cases"]:
+            for item in body.get(section, []):
+                quotes.extend(item.get("evidence_quotes", []))
+
+        joined = "\n".join(quotes).lower()
+        self.assertNotIn("common reasons customers reviews", joined)
+        self.assertNotIn("harassment, profanity", joined)
+        self.assertNotIn("community guidelines", joined)
+        self.assertIn("cannot beat the price for this quality", joined)
+
+
+
 class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
     def test_review_workspace_generates_evidence_backed_creative_output(self):
         from fastapi.testclient import TestClient
