@@ -65,7 +65,7 @@ function Run($label, $scriptBlock) {
   $elapsed = [Math]::Round(((Get-Date) - $startedAt).TotalSeconds, 1)
 
   if ($exitCode -ne 0) {
-    $failedLine = "? Failed: $label (${elapsed}s, exit code $exitCode)"
+    $failedLine = "[FAIL] $label (${elapsed}s, exit code $exitCode)"
     Write-Host $failedLine -ForegroundColor Red
     if ($Global:CgLastLog) {
       Add-Content -Path $Global:CgLastLog -Value $failedLine
@@ -73,7 +73,7 @@ function Run($label, $scriptBlock) {
     throw "Step failed: $label (exit code $exitCode)"
   }
 
-  $doneLine = "? Done: $label (${elapsed}s)"
+  $doneLine = "[DONE] $label (${elapsed}s)"
   Write-Host $doneLine -ForegroundColor Green
   if ($Global:CgLastLog) {
     Add-Content -Path $Global:CgLastLog -Value $doneLine
