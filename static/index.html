@@ -5746,6 +5746,9 @@
       "copyLabelBrief": "Creative brief",
       "copyLabelRow": "Creative brief row",
       "copyLabelPositive": "Positive proof",
+      "expandClicked": "Expansion attempt: clicked {clicked} time(s), added {added} visible review(s).",
+      "expandNoMore": "Expansion attempt: no more visible expandable reviews found.",
+      "expandLoginBlocked": "Expansion attempt: Amazon sign-in blocked auto expansion. Current visible sample was preserved; use manual expansion links when available.",
       "copyEmpty": "{label} is empty.",
       "copyCopied": "{label} copied.",
       "copyUnavailable": "{label} copy unavailable. Select and copy manually."
@@ -5832,6 +5835,9 @@
       "copyLabelBrief": "\u521b\u610f\u7b80\u62a5",
       "copyLabelRow": "\u5355\u6761\u521b\u610f\u7b80\u62a5",
       "copyLabelPositive": "\u6b63\u5411\u8bc1\u636e",
+      "expandClicked": "\u5c55\u5f00\u5c1d\u8bd5\uff1a\u5df2\u70b9\u51fb {clicked} \u6b21\uff0c\u65b0\u589e {added} \u6761\u53ef\u89c1\u8bc4\u8bba\u3002",
+      "expandNoMore": "\u5c55\u5f00\u5c1d\u8bd5\uff1a\u672a\u53d1\u73b0\u66f4\u591a\u53ef\u5c55\u5f00\u8bc4\u8bba\u3002",
+      "expandLoginBlocked": "\u5c55\u5f00\u5c1d\u8bd5\uff1aAmazon \u767b\u5f55\u5899\u963b\u6b62\u81ea\u52a8\u6269\u6837\uff0c\u5df2\u4fdd\u7559\u5f53\u524d\u53ef\u89c1\u6837\u672c\uff1b\u5982\u679c\u6709\u53ef\u7528\u6269\u6837\u94fe\u63a5\uff0c\u53ef\u624b\u52a8\u6253\u5f00\u3002",
       "copyEmpty": "{label}\u4e3a\u7a7a\u3002",
       "copyCopied": "{label}\u5df2\u590d\u5236\u3002",
       "copyUnavailable": "{label}\u65e0\u6cd5\u81ea\u52a8\u590d\u5236\uff0c\u8bf7\u624b\u52a8\u9009\u4e2d\u590d\u5236\u3002"
@@ -5895,6 +5901,29 @@
     const reviewCount = (product?.reviews || []).length;
     const reviewLabel = reviewCount === 1 ? tExtensionWorkspace("reviewSingular") : tExtensionWorkspace("reviewPlural");
     return `${product?.platform || "web"} - ${reviewCount} ${reviewLabel}`;
+  }
+
+  function extensionWorkspaceExpandFeedbackText(product, source = null) {
+    const result = product?.metadata?.best_effort_expand;
+    if (!result?.attempted) return "";
+    if (result.sign_in_required || result.reason === "sign_in_required") {
+      return tExtensionWorkspace("expandLoginBlocked", source);
+    }
+    if (result.clicked_count) {
+      return tExtensionWorkspace("expandClicked", source)
+        .replace("{clicked}", String(result.clicked_count || 0))
+        .replace("{added}", String(result.added_review_count || 0));
+    }
+    if (result.reason === "no_more_visible_reviews" || result.reason === "no_result") {
+      return tExtensionWorkspace("expandNoMore", source);
+    }
+    return "";
+  }
+
+  function extensionWorkspaceExpandFeedbackHTML(product, source = null) {
+    const feedback = extensionWorkspaceExpandFeedbackText(product, source);
+    if (!feedback) return "";
+    return `<div style="color:#0f766e;margin-top:4px;">${escapeExtensionHTML(feedback)}</div>`;
   }
 
 
@@ -6095,6 +6124,7 @@
           <div style="padding:9px 0;border-top:1px solid #e2e8f0;">
             <strong>${escapeExtensionHTML(product.title || product.url || tExtensionWorkspace("untitledProduct", payload))}</strong>
             <div style="color:#64748b;margin-top:2px;">${escapeExtensionHTML(extensionWorkspaceProductMetaText(product))}</div>
+            ${extensionWorkspaceExpandFeedbackHTML(product, payload)}
             ${extensionProductSampleMetaHTML(product)}
           </div>
         `).join("")}
