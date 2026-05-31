@@ -3201,11 +3201,16 @@ def _rw_sample_interpretation(
             "\u7528\u4e70\u5bb6\u539f\u8bdd\u4f5c\u4e3a\u5c4f\u5e55\u5b57\u5e55\u6216\u53e3\u64ad\u5f00\u573a\u3002",
             "\u5728\u811a\u672c\u540e\u6bb5\u52a0\u5165\u6b63\u5411\u8bc1\u636e\uff0c\u907f\u514d\u53ea\u653e\u5927\u8d1f\u9762\u4fe1\u53f7\u3002",
         ]
+        use_case_count = _rw_unique_quote_count(use_cases)
         evidence_usage_summary = [
             f"\u75db\u70b9\u8bc1\u636e\uff1a{sum(item.evidence_count for item in common_pain_points)} \u6761\u4fe1\u53f7",
             f"\u8d2d\u4e70\u987e\u8651\uff1a{sum(item.evidence_count for item in buyer_objections)} \u6761\u4fe1\u53f7",
             f"\u6b63\u5411\u8bc1\u636e\u8bc4\u8bba\uff1a{_rw_unique_quote_count(liked_points)} \u6761\u8bc4\u8bba",
-            f"\u4f7f\u7528\u573a\u666f\u8bc4\u8bba\uff1a{_rw_unique_quote_count(use_cases)} \u6761\u8bc4\u8bba",
+            (
+                f"\u4f7f\u7528\u573a\u666f\u8bc4\u8bba\uff1a{use_case_count} \u6761\u8bc4\u8bba"
+                if use_case_count
+                else "\u4f7f\u7528\u573a\u666f\u8bc4\u8bba\uff1a\u5f53\u524d\u6837\u672c\u672a\u8bc6\u522b\u5230\u660e\u786e\u4f7f\u7528\u573a\u666f\u8bc4\u8bba"
+            ),
         ]
     else:
         sample_type = "Amazon visible-page review sample"
@@ -3232,11 +3237,16 @@ def _rw_sample_interpretation(
             "Turn buyer wording into on-screen text or voiceover.",
             "Add positive proof near the payoff so the script does not only amplify negative signals.",
         ]
+        use_case_count = _rw_unique_quote_count(use_cases)
         evidence_usage_summary = [
             f"Pain evidence: {sum(item.evidence_count for item in common_pain_points)} signal(s)",
             f"Buyer objections: {sum(item.evidence_count for item in buyer_objections)} signal(s)",
             f"Positive proof reviews: {_rw_unique_quote_count(liked_points)} review(s)",
-            f"Use case reviews: {_rw_unique_quote_count(use_cases)} review(s)",
+            (
+                f"Use case reviews: {use_case_count} review(s)"
+                if use_case_count
+                else "Use case reviews: no explicit use-case reviews were identified in this visible sample."
+            ),
         ]
 
     return ReviewSampleInterpretation(
