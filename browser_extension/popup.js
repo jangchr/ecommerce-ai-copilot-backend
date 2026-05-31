@@ -909,12 +909,16 @@ function renderSavedProducts(products) {
   target.innerHTML = `
     <div class="collected-header">${escapeHTML(tPopup("collectedProducts"))}</div>
     <ol>
-      ${items.map((product, index) => `
+      ${items.map((product, index) => {
+        const expandStatus = bestEffortExpandStatusText(product?.metadata?.best_effort_expand);
+        return `
         <li>
           <div class="collected-title">${escapeHTML(shortProductTitle(product))}</div>
           <div class="collected-meta">${escapeHTML(collectedProductDisplayMeta(product, index, items))}</div>
+          ${expandStatus ? `<div class="collected-meta">${escapeHTML(expandStatus)}</div>` : ""}
         </li>
-      `).join("")}
+      `;
+      }).join("")}
     </ol>
   `;
 }
@@ -996,7 +1000,7 @@ function bestEffortExpandStatusText(result) {
       .replace("{clicked}", String(result.clicked_count || 0))
       .replace("{added}", String(result.added_review_count || 0));
   }
-  if (result.reason === "no_more_visible_reviews") {
+  if (result.reason === "no_more_visible_reviews" || result.reason === "no_result") {
     return tPopup("bestEffortExpandNoMore");
   }
   return "";
