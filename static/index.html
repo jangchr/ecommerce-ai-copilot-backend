@@ -6760,6 +6760,8 @@
     };
     const [bg, border, color] = colors[kind] || colors.analyzing;
 
+    body.creative_angles = (body.creative_angles || []).map(extensionCleanCreativeAngle);
+
     return `
       <div id="extensionWorkspaceAutoAnalyzeStatus" data-extension-auto-analysis-status="${escapeExtensionHTML(kind)}" style="margin:10px 0;padding:9px 10px;background:${bg};border:1px solid ${border};border-radius:12px;color:${color};font-weight:800;">
         ${escapeExtensionHTML(message)}
