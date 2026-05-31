@@ -2984,6 +2984,7 @@
                 generatingReviews: 'Generating from pasted reviews...',
                 reviewsGenerated: 'Pasted Reviews Mode result generated.',
                 reviewsFailed: 'Pasted Reviews Mode failed. Please try again.',
+                pastedReviewsNoConcreteReviews: 'Paste at least one concrete review line, not only category labels.',
                 missingReviews: 'Please paste customer reviews or buyer feedback.',
                 reviewCountEmpty: 'Review count: 0. Paste at least 3 specific review snippets for stronger output.',
                 painPointPreviewEmpty: 'Pain point preview: specific complaints will appear here.',
@@ -3294,6 +3295,7 @@
                 generatingReviews: '正在根据粘贴评论生成...',
                 reviewsGenerated: '粘贴评论模式结果已生成。',
                 reviewsFailed: '粘贴评论模式生成失败，请重试。',
+                pastedReviewsNoConcreteReviews: '请至少粘贴一条具体用户原话，不要只粘贴痛点/正向/使用场景这类分类标签。',
                 missingReviews: '请粘贴用户评论或买家反馈。',
                 reviewCountEmpty: '评论条数：0。建议至少粘贴 3 条具体评论，生成效果会更好。',
                 painPointPreviewEmpty: '痛点预览：具体抱怨会显示在这里。',
@@ -3838,6 +3840,19 @@
             target.textContent = message || '';
             target.classList.remove('error', 'success');
             if (state) target.classList.add(state);
+        }
+
+        function localizedApiErrorMessage(body, fallbackKey = 'reviewsFailed') {
+            const errorType = String(body?.error_type || '');
+            const errorMap = {
+                pasted_reviews_no_concrete_reviews: 'pastedReviewsNoConcreteReviews',
+                pasted_reviews_too_short: 'inputTooShort',
+                missing_pasted_reviews: 'missingReviews',
+                missing_product_name: 'missingName',
+                input_too_long: 'inputTooLong'
+            };
+            const key = errorMap[errorType] || fallbackKey;
+            return t(key);
         }
 
         function reviewLineCount(value) {
@@ -4592,7 +4607,7 @@
             });
             const body = await response.json().catch(() => ({}));
             if (!response.ok) {
-                throw new Error(body.error || 'Pasted Reviews Mode request failed.');
+                throw new Error(localizedApiErrorMessage(body, 'reviewsFailed'));
             }
             return body;
         }
