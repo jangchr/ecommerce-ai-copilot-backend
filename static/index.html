@@ -2564,8 +2564,8 @@
                 <div class="section-header">
                     <div class="section-header-title">${escapeHTML(title)}</div>
                     <div class="section-actions">
-                        <button class="btn-secondary" id="translate-section-${escapeHTML(key)}" onclick="translateSection('${escapeHTML(key)}')">Translate this section</button>
-                        <button class="btn-secondary" id="copy-section-${escapeHTML(key)}" onclick="copySectionTranslation('${escapeHTML(key)}')" disabled>Copy section translation</button>
+                        <button class="btn-secondary" id="translate-section-${escapeHTML(key)}" onclick="translateSection('${escapeHTML(key)}')">${escapeHTML(t('translateSectionButton'))}</button>
+                        <button class="btn-secondary" id="copy-section-${escapeHTML(key)}" onclick="copySectionTranslation('${escapeHTML(key)}')" disabled>${escapeHTML(t('copySectionTranslationButton'))}</button>
                     </div>
                 </div>
                 <div class="section-translation" id="section-translation-${escapeHTML(key)}"></div>
@@ -2843,6 +2843,15 @@
                 recentView: 'View',
                 recentCopyMarkdown: 'Copy Markdown',
                 recentDelete: 'Delete',
+                translateSectionButton: 'Translate this section',
+                copySectionTranslationButton: 'Copy section translation',
+                sectionTranslationTitle: 'Chinese Translation',
+                sectionTranslationLoading: 'Translating this section...',
+                sectionTranslationEmpty: 'No section text available for translation.',
+                sectionTranslationReturnedEmpty: 'Translation returned empty result. Please try again.',
+                sectionTranslationFailed: 'Translation failed. Please try again.',
+                sectionTranslationCopyLabel: 'Section translation',
+                translateSectionFirst: 'Translate this section first.',
                 clearRecentGenerations: 'Clear Recent Generations',
                 feedbackBody: 'Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.',
                 waitlistTitle: 'Join the waitlist',
@@ -3154,6 +3163,15 @@
                 recentView: '查看',
                 recentCopyMarkdown: '复制 Markdown',
                 recentDelete: '删除',
+                translateSectionButton: '\u7ffb\u8bd1\u8fd9\u4e00\u90e8\u5206',
+                copySectionTranslationButton: '\u590d\u5236\u5206\u533a\u7ffb\u8bd1',
+                sectionTranslationTitle: '\u4e2d\u6587\u7ffb\u8bd1',
+                sectionTranslationLoading: '\u6b63\u5728\u7ffb\u8bd1\u8fd9\u4e00\u90e8\u5206...',
+                sectionTranslationEmpty: '\u8fd9\u4e00\u90e8\u5206\u6682\u65e0\u53ef\u7ffb\u8bd1\u5185\u5bb9\u3002',
+                sectionTranslationReturnedEmpty: '\u7ffb\u8bd1\u7ed3\u679c\u4e3a\u7a7a\uff0c\u8bf7\u91cd\u8bd5\u3002',
+                sectionTranslationFailed: '\u7ffb\u8bd1\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002',
+                sectionTranslationCopyLabel: '\u5206\u533a\u7ffb\u8bd1',
+                translateSectionFirst: '\u8bf7\u5148\u7ffb\u8bd1\u8fd9\u4e00\u90e8\u5206\u3002',
                 clearRecentGenerations: '清空最近生成记录',
                 feedbackBody: '告诉我们这个创意 brief 是否有用、是否清楚、能不能改成真实 TikTok 广告。',
                 waitlistTitle: '加入试用名单',
@@ -4298,7 +4316,7 @@
                 if (text) {
                     sectionTranslations[key] = { loading: false, text, error: '' };
                     const target = document.getElementById(`section-translation-${key}`);
-                    if (target) target.innerHTML = block('Chinese Translation', text);
+                    if (target) target.innerHTML = block(t('sectionTranslationTitle'), text);
                     const copyBtn = document.getElementById(`copy-section-${key}`);
                     if (copyBtn) copyBtn.disabled = false;
                 }
@@ -4323,7 +4341,7 @@
             document.getElementById('copyChineseBtn').disabled = !latestChineseTranslation;
             const translationTarget = document.getElementById('res-translation');
             translationTarget.style.opacity = latestChineseTranslation ? '1' : '0.5';
-            translationTarget.innerHTML = latestChineseTranslation ? block('Chinese Translation', latestChineseTranslation) : '';
+            translationTarget.innerHTML = latestChineseTranslation ? block(t('sectionTranslationTitle'), latestChineseTranslation) : '';
             restoreSectionTranslations(record.section_translations || {});
             document.getElementById('copyStatus').textContent = 'Recent generation restored.';
         }
@@ -4489,7 +4507,7 @@
         }
 
         function copyChineseTranslation() {
-            copyText('Chinese Translation', latestChineseTranslation);
+            copyText(t('sectionTranslationTitle'), latestChineseTranslation);
         }
 
         async function translateSection(sectionKey) {
@@ -4498,7 +4516,7 @@
             const copyBtn = document.getElementById(`copy-section-${sectionKey}`);
             const cached = sectionTranslations[sectionKey]?.text || '';
             if (cached) {
-                target.innerHTML = block('Chinese Translation', cached);
+                target.innerHTML = block(t('sectionTranslationTitle'), cached);
                 copyBtn.disabled = false;
                 return;
             }
@@ -4506,14 +4524,14 @@
             const text = (sectionTextCache[sectionKey] || '').trim();
             if (!text) {
                 console.warn(`No section text available for translation: ${sectionKey}`);
-                target.innerHTML = block('Chinese Translation', 'No section text available for translation.');
+                target.innerHTML = block(t('sectionTranslationTitle'), t('sectionTranslationEmpty'));
                 return;
             }
 
             translateBtn.disabled = true;
             copyBtn.disabled = true;
             sectionTranslations[sectionKey] = { loading: true, text: '', error: '' };
-            target.innerHTML = block('Chinese Translation', 'Translating this section...');
+            target.innerHTML = block(t('sectionTranslationTitle'), t('sectionTranslationLoading'));
 
             try {
                 const response = await postCopilot('translate-output', {
@@ -4523,16 +4541,16 @@
                 const translated = response.translated_text || '';
                 sectionTranslations[sectionKey] = { loading: false, text: translated, error: '' };
                 if (!translated) {
-                    target.innerHTML = block('Chinese Translation', 'Translation returned empty result. Please try again.');
+                    target.innerHTML = block(t('sectionTranslationTitle'), t('sectionTranslationReturnedEmpty'));
                     copyBtn.disabled = true;
                     return;
                 }
-                target.innerHTML = block('Chinese Translation', translated);
+                target.innerHTML = block(t('sectionTranslationTitle'), translated);
                 copyBtn.disabled = false;
                 saveCurrentGenerationToRecent();
             } catch (error) {
-                sectionTranslations[sectionKey] = { loading: false, text: '', error: error.message || 'Translation failed.' };
-                target.innerHTML = block('Chinese Translation', 'Translation failed. Please try again.');
+                sectionTranslations[sectionKey] = { loading: false, text: '', error: error.message || t('sectionTranslationFailed') };
+                target.innerHTML = block(t('sectionTranslationTitle'), t('sectionTranslationFailed'));
             } finally {
                 translateBtn.disabled = false;
             }
@@ -4541,10 +4559,10 @@
         function copySectionTranslation(sectionKey) {
             const text = sectionTranslations[sectionKey]?.text || '';
             if (!text) {
-                copyText('Section translation', 'Translate this section first.');
+                copyText(t('sectionTranslationCopyLabel'), t('translateSectionFirst'));
                 return;
             }
-            copyText('Section translation', text);
+            copyText(t('sectionTranslationCopyLabel'), text);
         }
 
         function syncDebugMode() {
