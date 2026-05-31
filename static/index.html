@@ -3903,13 +3903,39 @@
             return t(key);
         }
 
+        function isPastedReviewLabelLine(line) {
+            const normalized = String(line || '').trim().replace(/\s+/g, ' ').toLowerCase();
+            const labelPrefixes = [
+                '\u75db\u70b9:',
+                '\u75db\u70b9\uff1a',
+                '\u6b63\u5411:',
+                '\u6b63\u5411\uff1a',
+                '\u4f7f\u7528\u573a\u666f:',
+                '\u4f7f\u7528\u573a\u666f\uff1a',
+                'pain point:',
+                'pain points:',
+                'positive:',
+                'pros:',
+                'use case:',
+                'use cases:',
+                'usage scenario:',
+                'usage scenarios:'
+            ];
+            return labelPrefixes.some((prefix) => normalized.startsWith(prefix));
+        }
+
+        function cleanPastedReviewLine(line) {
+            return String(line || '').replace(/^[-*\u2022\d.\s]+/, '').trim();
+        }
+
         function reviewLineCount(value) {
             return (value || '')
                 .split('\n')
-                .map(line => line.replace(/^[-*•\d.\s]+/, '').trim())
-                .filter(line => line.length >= 8)
+                .map(cleanPastedReviewLine)
+                .filter(line => line.length >= 8 && !isPastedReviewLabelLine(line))
                 .length;
         }
+
 
         function updateReviewCountPreview() {
             const target = document.getElementById('reviewCountPreview');
@@ -3942,17 +3968,18 @@
                 'hate', 'too ', 'hard', 'difficult', 'annoying', 'clogged', 'skip',
                 'wish', 'problem', 'issue', 'frustrating', 'loud', 'harsh', 'bulky',
                 'expensive', 'messy', 'slow', 'cleaning', 'misses', 'scares', 'strain',
-                'cheap', 'flickers', '讨厌', '太', '难', '麻烦', '吵', '问题', '希望',
-                '不方便', '清洗', '费时', '顾虑'
+                'cheap', 'flickers', '\u8ba8\u538c', '\u592a', '\u96be', '\u9ebb\u70e6', '\u5435', '\u95ee\u9898', '\u5e0c\u671b',
+                '\u4e0d\u65b9\u4fbf', '\u6e05\u6d17', '\u8d39\u65f6', '\u987e\u8651'
             ];
 
             return (value || '')
                 .split('\n')
-                .map(line => line.replace(/^[-*•\d.\s]+/, '').trim())
-                .filter(line => line.length >= 8)
+                .map(cleanPastedReviewLine)
+                .filter(line => line.length >= 8 && !isPastedReviewLabelLine(line))
                 .filter(line => markers.some(marker => line.toLowerCase().includes(marker.toLowerCase())))
                 .slice(0, 3);
         }
+
 
         function updatePainPointPreview() {
             const target = document.getElementById('reviewPainPointPreview');
