@@ -37,6 +37,7 @@ function Run($label, $scriptBlock) {
     Add-Content -Path $Global:CgLastLog -Value "==> $label"
   }
 
+  $startedAt = Get-Date
   $previousErrorActionPreference = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
   $global:LASTEXITCODE = 0
@@ -61,8 +62,21 @@ function Run($label, $scriptBlock) {
     $ErrorActionPreference = $previousErrorActionPreference
   }
 
+  $elapsed = [Math]::Round(((Get-Date) - $startedAt).TotalSeconds, 1)
+
   if ($exitCode -ne 0) {
+    $failedLine = "? Failed: $label (${elapsed}s, exit code $exitCode)"
+    Write-Host $failedLine -ForegroundColor Red
+    if ($Global:CgLastLog) {
+      Add-Content -Path $Global:CgLastLog -Value $failedLine
+    }
     throw "Step failed: $label (exit code $exitCode)"
+  }
+
+  $doneLine = "? Done: $label (${elapsed}s)"
+  Write-Host $doneLine -ForegroundColor Green
+  if ($Global:CgLastLog) {
+    Add-Content -Path $Global:CgLastLog -Value $doneLine
   }
 }
 
@@ -71,6 +85,20 @@ function RequireMessage() {
     throw "Commit message is required. Example: .\scripts\cg.ps1 commit-extension `"My commit message`""
   }
 }
+
+function GetCurrentBranchName() {
+  return (git branch --show-current).Trim()
+}
+
+function PushCurrentBranch() {
+  $branch = GetCurrentBranchName
+  if ([string]::IsNullOrWhiteSpace($branch)) {
+    throw "Could not determine current git branch."
+  }
+
+  git push -u origin $branch
+}
+
 
 function AddExistingPath($path) {
   if (Test-Path $path) {
@@ -251,7 +279,7 @@ function CommitExtension() {
   }
 
   Run "Push branch" {
-    git push -u origin spike/review-collection-p0-recovery
+    PushCurrentBranch
   }
 
   ShowStatus
@@ -270,7 +298,7 @@ function CommitFrontend() {
   }
 
   Run "Push branch" {
-    git push -u origin spike/review-collection-p0-recovery
+    PushCurrentBranch
   }
 
   ShowStatus
@@ -289,7 +317,7 @@ function CommitBackend() {
   }
 
   Run "Push branch" {
-    git push -u origin spike/review-collection-p0-recovery
+    PushCurrentBranch
   }
 
   ShowStatus
@@ -314,7 +342,7 @@ function CommitTools() {
   }
 
   Run "Push branch" {
-    git push -u origin spike/review-collection-p0-recovery
+    PushCurrentBranch
   }
 
   ShowStatus
@@ -365,9 +393,54 @@ function Feedback() {
 }
 
 
+function MergeMain() {
+  $Spike = "spike/review-collection-p0-recovery"
+  $Main = "main"
+
+  $dirty = git status --porcelain
+  if ($dirty) {
+    throw "Working tree is not clean. Run .\\scripts\\cg.ps1 status first."
+  }
+
+  Run "Fetch origin" {
+    git fetch origin
+  }
+
+  Run "Checkout spike branch" {
+    git checkout $Spike
+  }
+
+  Run "Pull latest spike branch" {
+    git pull --ff-only origin $Spike
+  }
+
+  Gate
+
+  Run "Checkout main branch" {
+    git checkout $Main
+  }
+
+  Run "Pull latest main branch" {
+    git pull --ff-only origin $Main
+  }
+
+  Run "Merge spike into main" {
+    git merge --no-ff $Spike -m "Merge review collection recovery spike"
+  }
+
+  Gate
+
+  Run "Push merged main" {
+    git push origin $Main
+  }
+
+  ShowStatus
+}
+
+
 function PushOnly() {
   Run "Push branch" {
-    git push -u origin spike/review-collection-p0-recovery
+    PushCurrentBranch
   }
 
   ShowStatus
@@ -384,6 +457,7 @@ try {
     "commit-backend" { CommitBackend }
     "commit-tools" { CommitTools }
     "push" { PushOnly }
+  "merge-main" { MergeMain }
     "feedback" { Feedback }
     "help" {
       Write-Host ""
@@ -397,6 +471,7 @@ try {
       Write-Host "  .\scripts\cg.ps1 commit-backend `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 commit-tools `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 push"
+    Write-Host "  .\scripts\cg.ps1 merge-main"
       Write-Host "  .\scripts\cg.ps1 feedback"
       Write-Host ""
     }
