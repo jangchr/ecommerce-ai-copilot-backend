@@ -2519,6 +2519,13 @@ def _rw_quote_is_positive_reassurance_quote(quote: str) -> bool:
         "excellent quality",
         "high quality",
         "best balsamic",
+        "elixir of the gods",
+        "exceptional",
+        "delicious",
+        "amazing",
+        "favorite",
+        "love this",
+        "i love",
     ])
 
     if ("pricy" in lower or "pricey" in lower) and "worth it" in lower:
@@ -2608,6 +2615,7 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
         "expectation mismatch",
         "tradeoff",
         "hesitation",
+        "quality consistency",
     ]):
         return False
 

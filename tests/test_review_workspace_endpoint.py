@@ -655,6 +655,72 @@ class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
 
 
 
+
+    def test_review_workspace_does_not_turn_exceptional_positive_praise_into_objection(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "positive_praise_not_objection_smoke",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "B0PRAISE01",
+                        "title": "Due Vittorie Oro Gold Balsamic Vinegar",
+                        "description": "Barrel aged balsamic vinegar for salads and gifts.",
+                        "reviews": [
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Verified Purchase Exceptional - the Due Vittorie Oro balsamic is an Elixir of the Gods.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Verified Purchase Cannot beat the price for this quality.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Verified Purchase This is the best balsamic vinegar I have ever had.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        objection_text = "\n".join(
+            quote.lower()
+            for item in body.get("buyer_objections", [])
+            for quote in item.get("evidence_quotes", [])
+        )
+        objection_labels = " ".join(
+            item.get("label", "").lower()
+            for item in body.get("buyer_objections", [])
+        )
+
+        self.assertNotIn("elixir of the gods", objection_text)
+        self.assertNotIn("cannot beat the price", objection_text)
+        self.assertNotIn("tradeoff", objection_labels)
+        self.assertNotIn("hesitation", objection_labels)
+        self.assertNotIn("??", objection_labels)
+        self.assertNotIn("??", objection_labels)
+
+        response_text = str(body).lower()
+        self.assertIn("elixir of the gods", response_text)
+        self.assertIn("cannot beat the price", response_text)
+
+
+
 class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
     def test_review_workspace_returns_sample_interpretation_and_video_script_pack(self):
         from fastapi.testclient import TestClient
