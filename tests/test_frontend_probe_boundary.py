@@ -2238,5 +2238,110 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+
+    def test_pasted_review_workspace_source_breakdown_frontend(self):
+        for marker in [
+            "reviewWorkspaceSourceBreakdownText",
+            "reviewWorkspaceAsinContributionText",
+            "reviewWorkspaceSourceGroupsText",
+            "reviewWorkspaceSourceGuidanceText",
+            "analysis.source_breakdown",
+            "source_breakdown",
+            "main_product_reviews",
+            "variant_reviews",
+            "low_star_reviews",
+            "verified_purchase_reviews",
+            "recent_reviews",
+            "asin_review_counts",
+            "sourceBreakdownTitle",
+            "sourceBreakdownGuidance",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_extension_workspace_refreshes_after_injected_payload(self):
+        for marker in [
+            "crossgrowth-extension-workspace-ready",
+            "__crossgrowthExtensionWorkspaceReadyListenerInstalled",
+            "renderExtensionWorkspacePayload();",
+            "reviewWorkspaceSourceBreakdownText(body.source_breakdown || {}, payload.output_language)",
+            "reviewWorkspaceSourceGuidanceText(body.source_breakdown || {})",
+            "sourceBreakdownTitle",
+            "sourceBreakdownGuidance",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_extension_workspace_source_breakdown_uses_payload_language(self):
+        for marker in [
+            "reviewWorkspaceSourceLabel(key, language = currentOutputLanguage())",
+            "payload.output_language",
+            "Unique analyzed reviews",
+            "reviewWorkspaceSourceBreakdownText(body.source_breakdown || {}, payload.output_language)",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_review_workspace_localizes_apparel_theme_labels_frontend(self):
+        for marker in [
+            "reviewWorkspaceLocalizedThemeLabel",
+            "summer fabric comfort",
+            "sewing / quality control issue",
+            "size / fit issue",
+            "color expectation mismatch",
+            "\\u590f\\u5b63\\u9762\\u6599\\u8212\\u9002\\u5ea6",
+            "\\u7f1d\\u5236 / \\u8d28\\u68c0\\u95ee\\u9898",
+            "\\u5c3a\\u7801 / \\u7248\\u578b\\u504f\\u5c0f",
+            "\\u989c\\u8272 / \\u8272\\u5dee\\u9884\\u671f",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_review_workspace_localized_theme_label_uses_extension_workspace_language(self):
+        for marker in [
+            "function reviewWorkspaceLocalizedThemeLabel",
+            "const language = extensionWorkspaceLanguage(source);",
+            "summer fabric comfort",
+            "sewing / quality control issue",
+            "\\u590f\\u5b63\\u9762\\u6599\\u8212\\u9002\\u5ea6",
+            "\\u7f1d\\u5236 / \\u8d28\\u68c0\\u95ee\\u9898",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_extension_workspace_auto_analyzes_injected_payload_once(self):
+        for marker in [
+            "extensionWorkspaceAutoAnalyzeKey",
+            "maybeAutoAnalyzeExtensionWorkspace",
+            "payload.auto_analyze",
+            "crossgrowth_extension_workspace_auto_analyzed",
+            "window.sessionStorage.getItem(key)",
+            "window.sessionStorage.setItem(key, \"1\")",
+            "window.setTimeout(() =>",
+            "analyzeExtensionWorkspace();",
+            "maybeAutoAnalyzeExtensionWorkspace(readExtensionWorkspacePayload());",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_extension_workspace_auto_analysis_runs_after_payload_render(self):
+        for marker in [
+            "function renderExtensionWorkspacePayload",
+            "maybeAutoAnalyzeExtensionWorkspace(payload);",
+            "function maybeAutoAnalyzeExtensionWorkspace",
+            "auto_analyze",
+        ]:
+            self.assertIn(marker, self.source)
+
+
+    def test_extension_workspace_auto_analysis_shows_status_before_fetch(self):
+        for marker in [
+            "extensionWorkspaceOutput",
+            "tExtensionWorkspace(\"analyzingWorkspace\", payload)",
+            "window.setTimeout(() =>",
+            "analyzeExtensionWorkspace();",
+        ]:
+            self.assertIn(marker, self.source)
+
 if __name__ == "__main__":
     unittest.main()

@@ -33,6 +33,9 @@
       <button id="extractBtn" type="button" data-i18n="saveCurrentProduct">Save current product</button>
       <button id="collectTabsBtn" type="button" data-i18n="collectOpenTabs">Collect open tabs</button>
       <button id="autoCollectMoreBtn" type="button" class="secondary" data-i18n="autoCollectMoreReviews">Auto collect more reviews</button>
+      <button id="smartCollectWorkspaceBtn" type="button" class="secondary" data-i18n="smartCollectWorkspace">Smart collect & open workspace</button>
+      <button id="clearThenSmartCollectWorkspaceBtn" type="button" class="secondary" data-i18n="clearThenSmartCollectWorkspace">Clear then smart collect</button>
+      <button id="clearThenSingleProductCollectWorkspaceBtn" type="button" class="secondary" data-i18n="clearThenSingleProductCollectWorkspace">Clear then single-product collect</button>
       <label class="compact-field" for="autoCollectMaxPages">
         <span data-i18n="autoCollectMaxPagesLabel">Max pages</span>
         <select id="autoCollectMaxPages" aria-label="Max review pages">
@@ -64,7 +67,20 @@
       <p id="sampleGuidanceStrength" class="helper"></p>
       <ul id="sampleGuidanceList"></ul>
       <p id="sampleGuidanceCta" class="helper"></p>
+      <div class="analysis-actions">
+        <button id="openLowStarReviewTabBtn" type="button" class="secondary compact" data-i18n="openLowStarReviewTab">Open low-star page</button>
+        <button id="openVerifiedReviewTabBtn" type="button" class="secondary compact" data-i18n="openVerifiedReviewTab">Open verified page</button>
+        <button id="openVariantReviewTabsBtn" type="button" class="secondary compact" data-i18n="openVariantReviewTabs">Open variant pages</button>
+        <button id="openRelatedReviewPackBtn" type="button" class="secondary compact" data-i18n="openRelatedReviewPack">Open related pack</button>
+        <button id="copyTargetedReviewLinksBtn" type="button" class="secondary compact" data-i18n="copyTargetedReviewLinks">Copy targeted links</button>
+      </div>
       <button id="sampleGuidanceCopyBtn" type="button" class="secondary compact" data-i18n="copySampleGuidanceSteps">Copy expansion steps</button>
+    </section>
+
+    <section class="card" id="reviewExpansionActionsCard">
+      <h2 data-i18n="reviewExpansionActions">Review expansion</h2>
+      <p class="helper" data-i18n="reviewExpansionActionsHint">Use these after saving an Amazon product to open more review samples.</p>
+      <div id="reviewExpansionActions" class="analysis-actions"></div>
     </section>
 
     <section class="card" id="previewCard" hidden>

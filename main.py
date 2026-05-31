@@ -1535,6 +1535,8 @@ async def debug_source_probe(request: SourceProbeRequest, http_request: Request)
 from collections import Counter
 from schemas.review_workspace import (
     ReviewProductSummary,
+    ReviewSourceBreakdown,
+    ReviewSourceGroupSummary,
     ReviewSampleInterpretation,
     ReviewThemeSummary,
     ReviewVideoScript,
@@ -1554,7 +1556,10 @@ from schemas.review_paste import (
 _REVIEW_WORKSPACE_THEME_MARKERS = {
     "leak / mess risk": ["leak", "leaking", "spill", "spilled", "mess", "drip"],
     "hard to clean": ["hard to clean", "difficult to clean", "scrub", "dishwasher"],
-    "size / fit issue": ["too small", "too big", "doesn't fit", "didn't fit", "opening was bigger", "wide cans", "narrow opening"],
+    "size / fit issue": ["too small", "too big", "doesn't fit", "didn't fit", "opening was bigger", "wide cans", "narrow opening", "\u30b5\u30a4\u30ba\u304c\u5c0f\u3055\u3044", "1\u30b5\u30a4\u30ba\u5927\u304d\u3044", "2\u30b5\u30a4\u30ba\u5927\u304d\u3044", "\u5c0f\u3076\u308a"],
+    "color expectation mismatch": ["color", "colour", "shade", "darker", "\u8272\u5473", "\u5199\u771f\u3088\u308a", "\u6697\u3081", "\u8272\u306e\u9055\u3044", "\u989c\u8272", "\u8272\u5dee"],
+    "sewing / quality control issue": ["sewing", "stitch", "button hole", "thread", "quality control", "\u7e2b\u88fd", "\u307b\u3064\u308c", "\u30dc\u30bf\u30f3\u7a74", "\u691c\u54c1", "\u54c1\u8cea", "\u9752\u3044\u30da\u30f3"],
+    "summer fabric comfort": ["fabric", "soft", "comfortable", "breathable", "\u7d20\u6750", "\u808c\u89e6\u308a", "\u67d4\u3089\u304b", "\u6dbc\u3057", "\u901a\u6c17", "\u900f\u6c14", "\u8f7b\u4fbf"],
     "durability concern": ["broke", "break", "broken", "flimsy", "crack", "not durable"],
     "space constraint": ["small kitchen", "apartment", "storage", "counter space"],
 }
@@ -1698,6 +1703,157 @@ def _rw_collect_reviews(payload: ReviewWorkspaceRequest) -> list[dict]:
             })
     rows.sort(key=lambda item: item["score"], reverse=True)
     return rows
+
+
+
+def _rw_primary_asin(payload: ReviewWorkspaceRequest) -> str:
+    for product in payload.products or []:
+        asin = _rw_text(getattr(product, "asin", ""))
+        if asin:
+            return asin
+    return ""
+
+
+def _rw_review_url_blob(row: dict) -> str:
+    product = row.get("product")
+    review = row.get("review")
+    values = [
+        getattr(product, "url", ""),
+        getattr(product, "asin", ""),
+        getattr(review, "source_section", ""),
+        row.get("text", ""),
+    ]
+    return " ".join(str(value or "") for value in values).lower()
+
+
+def _rw_review_source_tags(row: dict, primary_asin: str) -> list[str]:
+    product = row.get("product")
+    asin = _rw_text(getattr(product, "asin", ""))
+    blob = _rw_review_url_blob(row)
+    tags: list[str] = []
+
+    is_variant = bool(asin and primary_asin and asin != primary_asin)
+    if is_variant:
+        tags.append("variant")
+    elif asin or primary_asin:
+        tags.append("main_product")
+
+    if any(marker in blob for marker in [
+        "filterbystar=critical",
+        "filterbystar=one_star",
+        "filterbystar=two_star",
+        "filterbystar=three_star",
+    ]):
+        tags.append("low_star")
+
+    if "reviewertype=avp_only_reviews" in blob or "verified purchase" in blob or "\u5df2\u786e\u8ba4\u8d2d\u4e70" in blob:
+        tags.append("verified_purchase")
+
+    if "sortby=recent" in blob:
+        tags.append("recent")
+
+    return tags or ["unknown"]
+
+
+def _rw_source_label(source_type: str, language: str) -> str:
+    if language == "zh-CN":
+        return {
+            "main_product": "\u4e3b\u5546\u54c1\u8bc4\u8bba",
+            "variant": "\u53d8\u4f53\u8bc4\u8bba",
+            "low_star": "\u4f4e\u661f\u8bc4\u8bba",
+            "verified_purchase": "\u5df2\u786e\u8ba4\u8d2d\u4e70\u8bc4\u8bba",
+            "recent": "\u6700\u65b0\u8bc4\u8bba",
+            "unknown": "\u672a\u5206\u7c7b\u8bc4\u8bba",
+        }.get(source_type, source_type)
+
+    return {
+        "main_product": "Main product reviews",
+        "variant": "Variant reviews",
+        "low_star": "Low-star reviews",
+        "verified_purchase": "Verified-purchase reviews",
+        "recent": "Recent reviews",
+        "unknown": "Unclassified reviews",
+    }.get(source_type, source_type)
+
+
+def _rw_source_group_summary(source_type: str, rows: list[dict], language: str) -> ReviewSourceGroupSummary:
+    asin_counts = Counter(_rw_text(getattr(row.get("product"), "asin", "")) or "unknown" for row in rows)
+    quotes: list[str] = []
+    seen = set()
+
+    for row in sorted(rows, key=lambda item: item.get("score", 0), reverse=True):
+        quote = _rw_compact_evidence_quote(row.get("text", ""))
+        key = quote.lower()
+        if quote and key not in seen:
+            seen.add(key)
+            quotes.append(quote)
+        if len(quotes) >= 3:
+            break
+
+    return ReviewSourceGroupSummary(
+        source_type=source_type,
+        label=_rw_source_label(source_type, language),
+        review_count=len(rows),
+        high_signal_review_count=sum(1 for row in rows if row.get("score", 0) >= 4),
+        asin_count=len([asin for asin in asin_counts if asin != "unknown"]),
+        top_asins=[f"{asin}: {count}" for asin, count in asin_counts.most_common(5)],
+        evidence_quotes=quotes,
+    )
+
+
+def _rw_source_breakdown(payload: ReviewWorkspaceRequest, rows: list[dict]) -> ReviewSourceBreakdown:
+    language = payload.output_language
+    primary_asin = _rw_primary_asin(payload)
+    rows_by_source: dict[str, list[dict]] = {
+        "main_product": [],
+        "variant": [],
+        "low_star": [],
+        "verified_purchase": [],
+        "recent": [],
+        "unknown": [],
+    }
+    asin_counts = Counter()
+
+    for row in rows:
+        product = row.get("product")
+        asin = _rw_text(getattr(product, "asin", "")) or "unknown"
+        asin_counts[asin] += 1
+
+        tags = _rw_review_source_tags(row, primary_asin)
+        for tag in tags:
+            rows_by_source.setdefault(tag, []).append(row)
+
+    source_groups = [
+        _rw_source_group_summary(source_type, source_rows, language)
+        for source_type, source_rows in rows_by_source.items()
+        if source_rows
+    ]
+
+    if language == "zh-CN":
+        guidance = [
+            "\u4e3b\u5546\u54c1\u4fe1\u53f7\u548c\u53d8\u4f53\u4fe1\u53f7\u9700\u8981\u5206\u5f00\u89e3\u8bfb\uff0c\u4e0d\u8981\u628a\u5355\u4e2a\u5c3a\u7801\u6216\u989c\u8272\u95ee\u9898\u76f4\u63a5\u6cdb\u5316\u4e3a\u6574\u4e2a\u5546\u54c1\u95ee\u9898\u3002",
+            "\u4f4e\u661f\u548c\u5df2\u786e\u8ba4\u8d2d\u4e70\u8bc4\u8bba\u66f4\u9002\u5408\u7528\u6765\u627e\u8d2d\u4e70\u987e\u8651\u548c\u53cd\u5bf9\u610f\u89c1\u3002",
+            "\u6700\u65b0\u8bc4\u8bba\u66f4\u9002\u5408\u7528\u6765\u89c2\u5bdf\u8fd1\u671f\u8d28\u91cf\u6216\u5c65\u7ea6\u53d8\u5316\u3002",
+        ]
+    else:
+        guidance = [
+            "Read main-product and variant signals separately; do not generalize one size/color issue to the entire product.",
+            "Use low-star and verified-purchase reviews to identify objections and buyer hesitation.",
+            "Use recent reviews to watch for newer quality, fulfillment, or expectation shifts.",
+        ]
+
+    return ReviewSourceBreakdown(
+        total_reviews=len(rows),
+        main_product_reviews=len(rows_by_source.get("main_product", [])),
+        variant_reviews=len(rows_by_source.get("variant", [])),
+        low_star_reviews=len(rows_by_source.get("low_star", [])),
+        verified_purchase_reviews=len(rows_by_source.get("verified_purchase", [])),
+        recent_reviews=len(rows_by_source.get("recent", [])),
+        unknown_reviews=len(rows_by_source.get("unknown", [])),
+        asin_review_counts=dict(asin_counts),
+        source_groups=source_groups,
+        guidance=guidance,
+    )
 
 
 def _rw_theme_summaries(rows: list[dict], themes: dict[str, list[str]], limit: int = 6) -> list[ReviewThemeSummary]:
@@ -2248,6 +2404,9 @@ def _rw_human_theme_phrase(label: str) -> str:
         "taste / flavor concern": "taste or flavor concern",
         "price / value concern": "price or value concern",
         "quality consistency concern": "quality consistency concern",
+        "color expectation mismatch": "color expectation mismatch",
+        "sewing / quality control issue": "sewing or QC concern",
+        "summer fabric comfort": "summer fabric comfort",
         "leak / mess risk": "mess or spill concern",
         "hard to clean": "cleanup concern",
         "durability concern": "durability concern",
@@ -2447,6 +2606,9 @@ def _rw_output_theme_label(label: str, language: str) -> str:
         "size / quantity mismatch": "\u89c4\u683c / \u6570\u91cf\u4e0d\u4e00\u81f4",
         "quantity or size mismatch": "\u89c4\u683c / \u6570\u91cf\u4e0d\u4e00\u81f4",
         "quality consistency concern": "\u54c1\u8d28\u7a33\u5b9a\u6027\u987e\u8651",
+        "color expectation mismatch": "\u989c\u8272 / \u8272\u5dee\u9884\u671f",
+        "sewing / quality control issue": "\u7f1d\u5236 / \u8d28\u68c0\u95ee\u9898",
+        "summer fabric comfort": "\u590f\u5b63\u9762\u6599\u8212\u9002\u5ea6",
         "quantity / size uncertainty": "\u6570\u91cf / \u89c4\u683c\u4e0d\u786e\u5b9a",
         "expectation mismatch": "\u9884\u671f\u4e0d\u4e00\u81f4",
         "price / value uncertainty": "\u4ef7\u683c / \u4ef7\u503c\u4e0d\u786e\u5b9a",
@@ -2860,6 +3022,7 @@ def _parse_messy_reviews(raw_text: str, source_section: str) -> list[ReviewWorks
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
     high_signal_rows = [row for row in rows if row["score"] >= 4]
+    source_breakdown = _rw_source_breakdown(payload, rows)
 
     workspace_signal_rows = high_signal_rows or rows
     common_pain_points = _rw_theme_summaries(
@@ -2911,6 +3074,7 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         product_count=len(payload.products),
         total_reviews=len(rows),
         high_signal_review_count=len(high_signal_rows),
+        source_breakdown=source_breakdown,
         common_pain_points=common_pain_points,
         buyer_objections=buyer_objections,
         liked_points=liked_points,

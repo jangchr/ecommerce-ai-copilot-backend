@@ -292,6 +292,13 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceStrength",
             "sampleGuidanceCta",
             "sampleGuidanceCopyBtn",
+            "openLowStarReviewTabBtn",
+            "openVerifiedReviewTabBtn",
+            "openVariantReviewTabsBtn",
+            "openRelatedReviewPackBtn",
+            "copyTargetedReviewLinksBtn",
+            "reviewExpansionActionsCard",
+            "reviewExpansionActions",
         ]:
             self.assertIn(marker, html)
 
@@ -312,6 +319,50 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "sampleGuidanceLoggedIn",
             "sampleGuidanceCta",
             "copySampleGuidanceSteps",
+            "openTargetedReviewTab",
+            "copyTargetedReviewLinks",
+            "openVariantReviewTabs",
+            "openRelatedReviewPack",
+            "TARGETED_REVIEW_TAB_IDS_KEY",
+            "trackedTargetedReviewTabIds",
+            "rememberTargetedReviewTab",
+            "forgetTargetedReviewTabIds",
+            "closeTrackedTargetedReviewTabs",
+            "closedTargetedReviewTabs",
+            "closed_targeted_tabs",
+            "collectedTabIds",
+            "chrome.tabs.remove",
+            "savedAmazonAsinsFromProducts",
+            "uniqueReviewExpansionLinks",
+            "reviewExpansionLinkDedupeKey",
+            "savedAmazonProductsByReviewCount",
+            "targetedReviewLinksForTopProducts",
+            "reviewExpansionLinkSummary",
+            "compactReviewExpansionPackItems",
+            "{items}",
+            "relatedVariantReviewLinksForProducts",
+            "targetedReviewLinksForExpansionPack",
+            "openRelatedReviewPack",
+            "openRelatedReviewPackBtn",
+            "openedRelatedReviewPackTabs",
+            "noRelatedReviewLinks",
+            "variantReviewLinksForProduct",
+            "amazonAsinFromUrl",
+            "cleanVariantReviewLabel",
+            "targetedReviewLinkLabel",
+            "targetedVariantReviews",
+            "openedVariantReviewTabs",
+            "noVariantReviewLinks",
+            "targetedAmazonReviewLinksForProduct",
+            "amazonReviewUrlWithParams",
+            "latestSavedAmazonProduct",
+            "filterByStar",
+            "critical",
+            "avp_only_reviews",
+            "sortBy",
+            "formatType",
+            "openedTargetedReviewTab",
+            "copiedTargetedReviewLinks",
             "sampleGuidanceStepsTitle",
             "copiedSampleGuidanceSteps",
             "actionInProgress",
@@ -337,6 +388,10 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
         for marker in [
             "collectOpenTabs",
+            "tryLoadMoreBeforeCollectingTab",
+            "collectingOpenTabsWithLoadMore",
+            "tab_load_more_results",
+            "isAmazonReviewPageUrl",
             "chrome.tabs.query",
             "isCollectableTabUrl",
             "extractProductFromTab",
@@ -359,6 +414,15 @@ class BrowserExtensionContractTest(unittest.TestCase):
 
         for marker in [
             "renderSavedProducts",
+            "collectedProductDisplayMeta",
+            "amazonVariantLabelFromProduct",
+            "isUsefulAmazonVariantLabel",
+            "nav-assistant",
+            "amazonAsinFromUrl",
+            "ASIN:",
+            "Primary sample",
+            "Variant",
+            "cleanVariantReviewLabel",
             "shortProductTitle",
             "productSourceLabel",
             "Collected products",
@@ -531,6 +595,100 @@ class BrowserExtensionContractTest(unittest.TestCase):
             ".notice-title",
         ]:
             self.assertIn(marker, css)
+
+
+    def test_popup_supports_smart_collection_workflow(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "smartCollectWorkspaceBtn",
+            "smartCollectWorkspace",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "runSmartReviewCollectionWorkflow",
+            "smartWorkflowDelay",
+            "smartCollectStepCollectCurrent",
+            "smartCollectStepOpenPack",
+            "smartCollectStepWaitTabs",
+            "smartCollectStepCollectTabs",
+            "smartCollectStepOpenWorkspace",
+            "smartCollectDone",
+            "smartCollectPackSkipped",
+            "collectCurrentProductMoreReviews();",
+            "openRelatedReviewPack();",
+            "collectSmartWorkflowTabs(workflowTabIds);",
+            "openInWebWorkspace();",
+            "bind(\"smartCollectWorkspaceBtn\", runSmartReviewCollectionWorkflow)",
+        ]:
+            self.assertIn(marker, js)
+
+
+    def test_popup_supports_scoped_smart_collection_workflow(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "clearThenSmartCollectWorkspaceBtn",
+            "clearThenSmartCollectWorkspace",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "collectTabsFromCandidates",
+            "collectSmartWorkflowTabs",
+            "runClearThenSmartReviewCollectionWorkflow",
+            "smartCollectScopedTabs",
+            "smartCollectStepClear",
+            "smartCollectStepSaveCurrent",
+            "const seedTab = await getActiveTab();",
+            "workflowTabIds.push(...(openedTabIds || []));",
+            "await collectSmartWorkflowTabs(workflowTabIds);",
+            "await clearSavedProducts();",
+            "await saveCurrentProduct();",
+            "return openedTabIds;",
+            "bind(\"clearThenSmartCollectWorkspaceBtn\", runClearThenSmartReviewCollectionWorkflow)",
+        ]:
+            self.assertIn(marker, js)
+
+
+    def test_popup_supports_single_product_collection_workflow(self):
+        html = (self.root / "popup.html").read_text(encoding="utf-8")
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "clearThenSingleProductCollectWorkspaceBtn",
+            "clearThenSingleProductCollectWorkspace",
+        ]:
+            self.assertIn(marker, html)
+
+        for marker in [
+            "runClearThenSingleProductCollectionWorkflow",
+            "singleProductCollectStepClear",
+            "singleProductCollectStepSaveCurrent",
+            "singleProductCollectStepCollectCurrent",
+            "singleProductCollectStepOpenWorkspace",
+            "singleProductCollectDone",
+            "await clearSavedProducts();",
+            "await saveCurrentProduct();",
+            "await collectCurrentProductMoreReviews();",
+            "await openInWebWorkspace();",
+            "bind(\"clearThenSingleProductCollectWorkspaceBtn\", runClearThenSingleProductCollectionWorkflow)",
+        ]:
+            self.assertIn(marker, js)
+
+
+    def test_extension_workspace_payload_requests_auto_analysis(self):
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "buildWorkspacePayload",
+            "auto_analyze: true",
+            "source: \"chrome_extension\"",
+        ]:
+            self.assertIn(marker, js)
 
 if __name__ == "__main__":
     unittest.main()
