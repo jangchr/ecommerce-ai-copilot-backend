@@ -2559,6 +2559,28 @@
             return value ? t('yesLabel') : t('noLabel');
         }
 
+        function riskLevelText(value) {
+            const level = String(value || 'low').toLowerCase();
+            const map = {
+                low: 'riskLow',
+                medium: 'riskMedium',
+                high: 'riskHigh'
+            };
+            return t(map[level] || 'riskLow');
+        }
+
+        function localizeQualityRationale(text) {
+            const raw = String(text || '');
+            if (currentOutputLanguage() !== 'zh-CN') return raw;
+            return raw
+                .replace(/Dopamine score:/g, `${t('dopamineScore')}:`)
+                .replace(/Evidence alignment:/g, `${t('evidenceAlignment')}:`)
+                .replace(/Creative CTR:/g, `${t('creativeCtr')}:`)
+                .replace(/Grounded CTR:/g, `${t('groundedCtr')}:`)
+                .replace(/Source confidence:/g, `${t('sourceConfidenceMetric')}:`)
+                .replace(/Failure type:/g, `${t('failureType')}:`);
+        }
+
         function renderSectionHeader(title, key) {
             return `
                 <div class="section-header">
@@ -2599,10 +2621,10 @@
                 ].filter(Boolean).join('\n').trim(),
                 hook: [
                     'Hook',
-                    script.hook || '',
+                    cleanHookLine(script),
                     '',
                     'CTA',
-                    script.cta || '',
+                    cleanCtaLine(script),
                 ].join('\n').trim(),
                 storyboard: [
                     'Storyboard',
@@ -2611,10 +2633,10 @@
                 evaluation: [
                     'Evaluation',
                     `Retention Confidence: ${score}%`,
-                    `Risk Level: ${evaluation.risk_level || 'low'}`,
+                    `Risk Level: ${riskLevelText(evaluation.risk_level || 'low')}`,
                     `Approved: ${boolText(evaluation.is_approved)}`,
                     `Grounded: ${boolText(evaluation.is_grounded)}`,
-                    `Quality Rationale: ${evaluation.reasoning || ''}`,
+                    `Quality Rationale: ${localizeQualityRationale(evaluation.reasoning || '')}`,
                 ].filter(Boolean).join('\n').trim(),
             };
         }
@@ -2682,8 +2704,12 @@
             if (source === 'user_pasted_reviews') return t('sourcePastedReviews');
             if (source === 'user_provided_description') return t('sourceProductDescription');
             if (source === 'stable_slug_demo') return t('sourceStableDemo');
+            if (source.includes('local_dataset') && source.includes('mock')) return `${t('sourceLocalDataset')} + ${t('sourceMock')}`;
+            if (source.includes('local_dataset')) return t('sourceLocalDataset');
+            if (source.includes('mock')) return t('sourceMock');
             return source || t('sourceUnknown');
         }
+
 
         function renderEvidenceSourceCard(evidence) {
             const sourceType = evidence?.source_type || '';
@@ -2709,8 +2735,8 @@
         function resultCreativeSummary(data, sourceLabel) {
             const script = data.assets?.tiktok_script || {};
             const audience = data.audience?.primary || '';
-            const riskLevel = data.evaluation?.risk_level || 'low';
-            const hook = script.hook || '';
+            const riskLevel = riskLevelText(data.evaluation?.risk_level || 'low');
+            const hook = cleanHookLine(script);
 
             if (currentOutputLanguage() === 'zh-CN') {
                 return [
@@ -2739,7 +2765,7 @@
                     <div class="result-summary-meta">
                         ${metricPill(t('sourceLabel'), sourceLabel)}
                         ${metricPill(t('retentionConfidence'), `${score}%`)}
-                        ${metricPill(t('riskLevel'), evalData.risk_level || 'low')}
+                        ${metricPill(t('riskLevel'), riskLevelText(evalData.risk_level || 'low'))}
                     </div>
                 </div>
             `;
@@ -3120,6 +3146,15 @@
                 approved: 'Approved',
                 grounded: 'Grounded',
                 groundedCtr: 'Grounded CTR',
+                dopamineScore: 'Dopamine score',
+                creativeCtr: 'Creative CTR',
+                sourceConfidenceMetric: 'Source confidence',
+                failureType: 'Failure type',
+                riskLow: 'low',
+                riskMedium: 'medium',
+                riskHigh: 'high',
+                sourceLocalDataset: 'local dataset',
+                sourceMock: 'mock supplement',
                 qualityRationale: 'Quality Rationale',
                 sampleFilled: 'Sample product filled. Click Generate from description when ready.',
                 generatingDescription: 'Generating from your product description...',
@@ -3466,7 +3501,16 @@
                 riskLevel: '风险等级',
                 approved: '通过',
                 grounded: '有证据支撑',
-                groundedCtr: 'Grounded CTR',
+                groundedCtr: '\u8bc1\u636e\u7ea6\u675f\u70b9\u51fb\u7387',
+                dopamineScore: '\u591a\u5df4\u80fa\u5206\u6570',
+                creativeCtr: '\u521b\u610f\u70b9\u51fb\u7387',
+                sourceConfidenceMetric: '\u6765\u6e90\u7f6e\u4fe1\u5ea6',
+                failureType: '\u5931\u8d25\u7c7b\u578b',
+                riskLow: '\u4f4e',
+                riskMedium: '\u4e2d',
+                riskHigh: '\u9ad8',
+                sourceLocalDataset: '\u672c\u5730\u793a\u4f8b\u6570\u636e',
+                sourceMock: '\u6a21\u62df\u8865\u5145',
                 qualityRationale: '质量判断',
                 sampleFilled: '示例产品已填充。确认后点击根据产品描述生成。',
                 generatingDescription: '正在根据产品描述生成...',
@@ -5635,7 +5679,7 @@
                 ${resultSummaryCard}
                 ${renderEvidenceSourceCard(evidence)}
                 ${renderSectionHeader(t('evidenceSnapshot'), 'evidence')}
-                <span class="source-badge">${escapeHTML(evidence.source_type || t('sourceUnknown'))}</span>
+                <span class="source-badge">${escapeHTML(resultSourceLabel(evidence.source_type || ''))}</span>
                 <div class="metric-strip">
                     ${metricPill(t('reviewConfidence'), formatMetric(evidence.review_confidence))}
                     ${metricPill(t('trendConfidence'), formatMetric(evidence.trend_confidence))}
@@ -5680,14 +5724,14 @@
                         <span style="color:var(--accent-green);">${score}%</span>
                     </div>
                     <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
-                    ${block(t('riskLevel'), evalData.risk_level || 'low')}
+                    ${block(t('riskLevel'), riskLevelText(evalData.risk_level || 'low'))}
                     <div class="metric-strip">
                         ${metricPill(t('approved'), boolText(evalData.is_approved))}
                         ${metricPill(t('grounded'), boolText(evalData.is_grounded))}
                         ${metricPill(t('groundedCtr'), t('seeDebugMode'))}
                         ${metricPill(t('evidenceAlignment'), t('seeDebugMode'))}
                     </div>
-                    ${block(t('qualityRationale'), evalData.reasoning || '')}
+                    ${block(t('qualityRationale'), localizeQualityRationale(evalData.reasoning || ''))}
                 </div>
             `;
         }
