@@ -625,6 +625,146 @@
     return numberedCandidates[0]?.href || "";
   }
 
+  function isVisibleElement(node) {
+    if (!node || typeof node.getBoundingClientRect !== "function") return false;
+    const rect = node.getBoundingClientRect();
+    const style = window.getComputedStyle(node);
+    return rect.width > 0
+      && rect.height > 0
+      && style.visibility !== "hidden"
+      && style.display !== "none"
+      && style.pointerEvents !== "none";
+  }
+
+  function bestEffortExpandCandidateSignal(node, href, currentAsin) {
+    const text = cleanText([
+      node.textContent || "",
+      node.getAttribute("aria-label") || "",
+      node.getAttribute("title") || "",
+      node.getAttribute("class") || "",
+      node.getAttribute("id") || "",
+      href || ""
+    ].filter(Boolean).join(" "));
+    const haystack = text.toLowerCase();
+    const candidateAsin = amazonCandidateReviewAsin(href);
+    const sameAsinReviewHref = href
+      && href.toLowerCase().includes("amazon.")
+      && href.toLowerCase().includes("/product-reviews/")
+      && (!currentAsin || candidateAsin === currentAsin);
+    const currentIsReviewPage = location.pathname.toLowerCase().includes("/product-reviews/");
+    const navigationReviewLink = sameAsinReviewHref && !currentIsReviewPage;
+
+    const safeExpansionLabel =
+      haystack.includes("see more reviews") ||
+      haystack.includes("show more reviews") ||
+      haystack.includes("read more") ||
+      haystack.includes("show more") ||
+      haystack.includes("more reviews") ||
+      haystack.includes("cm_cr_arp_d_paging_btm") ||
+      haystack.includes("\u67e5\u770b\u66f4\u591a\u8bc4\u8bba") ||
+      haystack.includes("\u5c55\u5f00\u8bc4\u8bba") ||
+      haystack.includes("\u663e\u793a\u66f4\u591a") ||
+      haystack.includes("\u66f4\u591a\u8bc4\u8bba");
+
+    const unsafe =
+      haystack.includes("captcha") ||
+      haystack.includes("sign in") ||
+      haystack.includes("signin") ||
+      haystack.includes("nav-assist-skip-to-main-content") ||
+      haystack.includes("skip to main content") ||
+      haystack.includes("a-carousel") ||
+      haystack.includes("carousel") ||
+      haystack.includes("next slide") ||
+      haystack.includes("previous slide") ||
+      href.toLowerCase().startsWith("javascript:") ||
+      href === "#" ||
+      href.toLowerCase().includes("javascript:void");
+
+    return {
+      clickable: !unsafe && safeExpansionLabel && !navigationReviewLink,
+      text,
+      same_asin_review_href: Boolean(sameAsinReviewHref)
+    };
+  }
+
+  async function bestEffortExpandCurrentPage() {
+    const pageInfo = detectAmazonPageType();
+    if (detectPlatform() !== "amazon") {
+      return {
+        attempted: false,
+        clicked_count: 0,
+        added_review_count: 0,
+        sign_in_required: false,
+        reason: "not_amazon"
+      };
+    }
+
+    if (pageInfo.sign_in_required) {
+      return {
+        attempted: true,
+        clicked_count: 0,
+        added_review_count: 0,
+        sign_in_required: true,
+        reason: "sign_in_required"
+      };
+    }
+
+    const beforeCount = extractAmazonVisibleReviews().reviews.length;
+    const currentAsin = amazonCurrentReviewAsin();
+    const nodes = Array.from(document.querySelectorAll("a[href], button, [role='button'], input[type='button'], input[type='submit']"));
+    const clicked = [];
+    const seen = new Set();
+
+    for (const node of nodes) {
+      if (clicked.length >= 3) break;
+      if (!isVisibleElement(node)) continue;
+
+      const href = absoluteAmazonHref(node.getAttribute("href") || "");
+      const signal = bestEffortExpandCandidateSignal(node, href, currentAsin);
+      if (!signal.clickable) continue;
+
+      const key = `${href}|${signal.text}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      try {
+        node.scrollIntoView({ block: "center", inline: "nearest" });
+        const clickable = node.closest("a, button, [role='button'], input") || node;
+        clickable.click();
+        clicked.push({
+          href,
+          text: signal.text.slice(0, 180),
+          same_asin_review_href: signal.same_asin_review_href
+        });
+
+        if (signal.same_asin_review_href) break;
+      } catch (error) {
+        // Ignore blocked DOM click candidates and continue with the next visible option.
+      }
+    }
+
+    if (clicked.length) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
+
+    const afterInfo = detectAmazonPageType();
+    const afterReviews = afterInfo.sign_in_required ? [] : extractAmazonVisibleReviews().reviews;
+    return {
+      attempted: true,
+      clicked_count: clicked.length,
+      clicked,
+      before_review_count: beforeCount,
+      after_review_count: afterReviews.length,
+      added_review_count: Math.max(0, afterReviews.length - beforeCount),
+      sign_in_required: afterInfo.sign_in_required,
+      reason: afterInfo.sign_in_required
+        ? "sign_in_required"
+        : clicked.length
+          ? "clicked_visible_expand_entry"
+          : "no_more_visible_reviews"
+    };
+  }
+
 
   function extractAmazonPage() {
     const url = location.href;
@@ -661,7 +801,7 @@
         raw_review_candidate_count: reviewPayload.raw_candidate_count || 0,
         visible_review_count: reviews.length,
         next_review_page_url: pageInfo.sign_in_required ? "" : extractAmazonNextReviewPageUrl(),
-        pagination_candidates: pageInfo.sign_in_required ? [] : extractAmazonPaginationCandidates()
+        pagination_candidates: extractAmazonPaginationCandidates()
       }
     };
   }
@@ -828,6 +968,7 @@
     extractAmazonPage,
     extractTikTokPage,
     extractGenericPage,
-    extractCurrentPage
+    extractCurrentPage,
+    bestEffortExpandCurrentPage
   };
 })();
