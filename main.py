@@ -2929,9 +2929,8 @@ def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[R
             hooks.append(_rw_hook_from_theme(theme))
 
     for theme in liked_points[:4]:
-        label = _rw_output_theme_label(theme.label, language)
         if is_zh:
-            hooks.append(f"\u4e3a\u4ec0\u4e48\u4e70\u5bb6\u4f1a\u53cd\u590d\u63d0\u5230\uff1a{label}\uff1f")
+            hooks.append(_rw_positive_hook_from_theme_zh(theme))
         else:
             hooks.append(_rw_positive_hook_from_theme(theme))
 
