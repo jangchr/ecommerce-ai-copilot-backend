@@ -454,6 +454,27 @@ function GetCgFocusedFailureFeedback() {
 
 
 
+function CopyCgLinesToClipboard($lines) {
+  $text = ($lines -join [Environment]::NewLine)
+
+  try {
+    Set-Clipboard -Value $text -ErrorAction Stop
+    return "Set-Clipboard"
+  } catch {
+    try {
+      $text | & "$env:SystemRoot\System32\clip.exe"
+      if ($LASTEXITCODE -eq 0) {
+        return "clip.exe"
+      }
+    } catch {
+      return ""
+    }
+  }
+
+  return ""
+}
+
+
 function CopyFeedbackTail($reason = "completed") {
   if (!(Test-Path $Global:CgLastLog)) {
     return
@@ -468,16 +489,15 @@ function CopyFeedbackTail($reason = "completed") {
     $tail = @(Get-Content $Global:CgLastLog -Tail 180)
   }
 
-  try {
-    $tail | Set-Clipboard
-    Write-Host ""
+  $copiedBy = CopyCgLinesToClipboard $tail
+  Write-Host ""
+  if ($copiedBy) {
     if ($reason -eq "failed") {
-      Write-Host "Focused failure feedback copied to clipboard. Paste it into ChatGPT." -ForegroundColor Yellow
+      Write-Host "Focused failure feedback copied to clipboard via $copiedBy. Paste it into ChatGPT." -ForegroundColor Yellow
     } else {
-      Write-Host "Feedback copied to clipboard. Paste it into ChatGPT." -ForegroundColor Green
+      Write-Host "Feedback copied to clipboard via $copiedBy. Paste it into ChatGPT." -ForegroundColor Green
     }
-  } catch {
-    Write-Host ""
+  } else {
     Write-Host "Could not copy feedback to clipboard. Run .\\scripts\\cg.ps1 feedback or copy .cg/last.log manually." -ForegroundColor Yellow
   }
 }
@@ -504,12 +524,11 @@ function Feedback() {
   Write-Host "==> Recent cg feedback (.cg/last.log)" -ForegroundColor Cyan
   $tail
 
-  try {
-    $tail | Set-Clipboard
-    Write-Host ""
-    Write-Host "Feedback copied to clipboard. Paste it into ChatGPT." -ForegroundColor Green
-  } catch {
-    Write-Host ""
+  $copiedBy = CopyCgLinesToClipboard $tail
+  Write-Host ""
+  if ($copiedBy) {
+    Write-Host "Feedback copied to clipboard via $copiedBy. Paste it into ChatGPT." -ForegroundColor Green
+  } else {
     Write-Host "Could not copy feedback to clipboard. Please copy the output above." -ForegroundColor Yellow
   }
 }
