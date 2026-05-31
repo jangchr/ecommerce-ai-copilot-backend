@@ -85,6 +85,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "extensionWorkspacePanelTitle",
             "extensionWorkspaceBoundaryNote",
             "extensionWorkspaceAnalyze",
+            "extensionWorkspaceSendToReviews",
+            "extensionWorkspaceBridgeHint",
             "extensionWorkspaceCopy",
             "refreshExtensionWorkspacePanelChrome(payload);",
             "tExtensionWorkspace(\"boundaryNote\")",
@@ -2195,6 +2197,52 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("/api/v1/analyze-review-workspace", bridge_body)
         self.assertNotIn("debug-source-probe", bridge_body)
         self.assertNotIn("amazonShadowMode.checked = true", bridge_body)
+
+    def test_amazon_product_path_guides_extension_visible_review_import(self):
+        for marker in [
+            "amazonImportPathGuide",
+            "amazonImportedWorkspaceStatus",
+            "amazonImportedWorkspaceGenerateBtn",
+            "amazonImportedWorkspaceStatusText",
+            "amazonImportPathTitle",
+            "amazonImportPathBody",
+            "amazonImportStepOne",
+            "amazonImportStepTwo",
+            "amazonImportStepThree",
+            "amazonImportFallbackNote",
+            "amazonImportedWorkspaceReady",
+            "Start from a product link or visible page reviews",
+            "reviews already visible on the current page",
+            "Visible reviews imported by the extension are available. You can generate creative from them.",
+            "function hasExtensionWorkspaceVisibleReviews(payload)",
+            "function refreshAmazonImportPathStatus()",
+            "window.sendExtensionWorkspaceToReviewWorkflow = sendExtensionWorkspaceToReviewWorkflow;",
+            "window.refreshAmazonImportPathStatus = refreshAmazonImportPathStatus;",
+            "onclick=\"sendExtensionWorkspaceToReviewWorkflow()\"",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, self.source)
+
+        status_start = self.source.find("function refreshAmazonImportPathStatus()")
+        status_end = self.source.find("function summarizeExtensionWorkspace", status_start)
+        self.assertNotEqual(status_start, -1)
+        self.assertNotEqual(status_end, -1)
+        status_body = self.source[status_start:status_end]
+        self.assertIn("readExtensionWorkspacePayload()", status_body)
+        self.assertIn("hasExtensionWorkspaceVisibleReviews(payload)", status_body)
+        self.assertIn("statusPanel.hidden", status_body)
+        self.assertNotIn("fetch(", status_body)
+        self.assertNotIn("/api/v1/", status_body)
+
+        guide_start = self.source.find('id="amazonImportPathGuide"')
+        guide_end = self.source.find('id="amazonImportedWorkspaceStatus"', guide_start)
+        self.assertNotEqual(guide_start, -1)
+        self.assertNotEqual(guide_end, -1)
+        guide_body = self.source[guide_start:guide_end]
+        self.assertIn("current page", guide_body)
+        self.assertIn("product page or review page", guide_body.lower())
+        self.assertNotIn("hidden reviews", guide_body.lower())
+        self.assertNotIn("full review", guide_body.lower())
 
 
     def test_extension_workspace_displays_sample_metadata(self):

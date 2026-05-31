@@ -2196,6 +2196,23 @@
                 <div id="amazonIntakePanel" class="good-inputs" data-amazon-intake-panel data-upgrade-target="amazon-path-card" style="margin-top:12px;">
                     <div class="good-inputs-title" data-i18n="amazonIntakeTitle">Paste an Amazon.com product link</div>
                     <div class="field-helper" data-i18n="amazonIntakeHelper">Fetch product signals first, then use them to fill the product description form.</div>
+                    <div id="amazonImportPathGuide" style="margin-top:12px;padding:12px;border:1px solid #dbe4f0;border-radius:12px;background:#f8fafc;">
+                        <div style="font-weight:800;margin-bottom:6px;" data-i18n="amazonImportPathTitle">Start from a product link or visible page reviews</div>
+                        <div class="field-helper" data-i18n="amazonImportPathBody">Paste an Amazon product link, or open the product/review page and use the browser extension to import reviews already visible on the current page.</div>
+                        <ol style="margin:10px 0 0 18px;color:#475569;font-size:12px;line-height:1.5;">
+                            <li data-i18n="amazonImportStepOne">Open the product page or review page.</li>
+                            <li data-i18n="amazonImportStepTwo">Use the browser extension to import reviews already visible on the current page.</li>
+                            <li data-i18n="amazonImportStepThree">Come back to CrossGrowth and generate TikTok hooks, creative summary, and storyboard.</li>
+                        </ol>
+                        <div class="field-helper" style="margin-top:8px;" data-i18n="amazonImportFallbackNote">If import is not available, use Customer Feedback and paste user reviews manually.</div>
+                    </div>
+                    <div id="amazonImportedWorkspaceStatus" style="margin-top:12px;padding:12px;border:1px solid #bbf7d0;border-radius:12px;background:#f0fdf4;" hidden>
+                        <div style="font-weight:800;color:#166534;" data-i18n="amazonImportedWorkspaceReady">Visible reviews imported by the extension are available. You can generate creative from them.</div>
+                        <div class="description-actions" style="margin-top:10px;">
+                            <button class="btn-primary" id="amazonImportedWorkspaceGenerateBtn" type="button" onclick="sendExtensionWorkspaceToReviewWorkflow()" data-i18n="sendToReviewWorkflow">Generate script from visible reviews</button>
+                            <span class="description-status" id="amazonImportedWorkspaceStatusText"></span>
+                        </div>
+                    </div>
                     <div class="description-grid" style="margin-top:12px;">
                         <div class="description-field wide">
                             <label for="amazonIntakeUrl" data-i18n="amazonIntakeUrlLabel">Amazon.com product URL</label>
@@ -3038,6 +3055,13 @@
                 amazonIntakeTitle: 'Paste an Amazon.com product link',
 
                 amazonIntakeHelper: 'Fetch product signals first, then use them to fill the product description form.',
+                amazonImportPathTitle: 'Start from a product link or visible page reviews',
+                amazonImportPathBody: 'Paste an Amazon product link, or open the product/review page and use the browser extension to import reviews already visible on the current page.',
+                amazonImportStepOne: 'Open the product page or review page.',
+                amazonImportStepTwo: 'Use the browser extension to import reviews already visible on the current page.',
+                amazonImportStepThree: 'Come back to CrossGrowth and generate TikTok hooks, creative summary, and storyboard.',
+                amazonImportFallbackNote: 'If import is not available, use Customer Feedback and paste user reviews manually.',
+                amazonImportedWorkspaceReady: 'Visible reviews imported by the extension are available. You can generate creative from them.',
 
                 amazonIntakeUrlLabel: 'Amazon.com product URL',
 
@@ -3394,6 +3418,13 @@
                 amazonIntakeTitle: '\u7c98\u8d34 Amazon.com \u5546\u54c1\u94fe\u63a5',
 
                 amazonIntakeHelper: '\u5148\u6293\u53d6\u5546\u54c1\u4fe1\u53f7\uff0c\u518d\u5c06\u7ed3\u679c\u586b\u5165\u4ea7\u54c1\u63cf\u8ff0\u8868\u5355\u3002',
+                amazonImportPathTitle: '\u4ece\u5546\u54c1\u94fe\u63a5\u6216\u5f53\u524d\u9875\u9762\u53ef\u89c1\u8bc4\u8bba\u5f00\u59cb',
+                amazonImportPathBody: '\u7c98\u8d34 Amazon \u5546\u54c1\u94fe\u63a5\uff0c\u6216\u8005\u6253\u5f00\u5546\u54c1/\u8bc4\u8bba\u9875\u540e\uff0c\u7528\u6d4f\u89c8\u5668\u63d2\u4ef6\u5bfc\u5165\u5f53\u524d\u9875\u9762\u5df2\u7ecf\u53ef\u89c1\u7684\u8bc4\u8bba\u3002',
+                amazonImportStepOne: '\u6253\u5f00\u5546\u54c1\u9875\u6216\u8bc4\u8bba\u9875\u3002',
+                amazonImportStepTwo: '\u7528\u6d4f\u89c8\u5668\u63d2\u4ef6\u5bfc\u5165\u5f53\u524d\u9875\u9762\u5df2\u7ecf\u53ef\u89c1\u7684\u8bc4\u8bba\u3002',
+                amazonImportStepThree: '\u56de\u5230 CrossGrowth\uff0c\u751f\u6210 TikTok Hook\u3001\u521b\u610f\u6458\u8981\u548c\u5206\u955c\u3002',
+                amazonImportFallbackNote: '\u5982\u679c\u65e0\u6cd5\u81ea\u52a8\u5bfc\u5165\u8bc4\u8bba\uff0c\u53ef\u4ee5\u4f7f\u7528\u201c\u7528\u6237\u8bc4\u8bba/\u53cd\u9988\u201d\u624b\u52a8\u7c98\u8d34\u3002',
+                amazonImportedWorkspaceReady: '\u5df2\u68c0\u6d4b\u5230\u63d2\u4ef6\u5bfc\u5165\u7684\u53ef\u89c1\u8bc4\u8bba\uff0c\u53ef\u4ee5\u76f4\u63a5\u7528\u8fd9\u4e9b\u8bc4\u8bba\u751f\u6210\u521b\u610f\u3002',
 
                 amazonIntakeUrlLabel: 'Amazon.com \u5546\u54c1\u94fe\u63a5',
 
@@ -3657,6 +3688,14 @@
 
         Object.assign(LANGUAGE_COPY.en, {
             requestFailed: 'Backend is unavailable or the request failed.',
+            sendToReviewWorkflow: 'Generate script from visible reviews',
+            amazonImportPathTitle: 'Start from a product link or visible page reviews',
+            amazonImportPathBody: 'Paste an Amazon product link, or open the product/review page and use the browser extension to import reviews already visible on the current page.',
+            amazonImportStepOne: 'Open the product page or review page.',
+            amazonImportStepTwo: 'Use the browser extension to import reviews already visible on the current page.',
+            amazonImportStepThree: 'Come back to CrossGrowth and generate TikTok hooks, creative summary, and storyboard.',
+            amazonImportFallbackNote: 'If import is not available, use Customer Feedback and paste user reviews manually.',
+            amazonImportedWorkspaceReady: 'Visible reviews imported by the extension are available. You can generate creative from them.',
             noCustomerReviewSnippets: 'No customer review snippets returned yet.',
             customerReviewSnippets: 'Customer review snippets',
             productContextBlock: 'Product description / supplemental context',
@@ -3801,6 +3840,14 @@
             linkedPainPointLabel: '关联痛点',
             running: '运行中...',
             requestFailed: '后端未启动或请求失败。',
+            sendToReviewWorkflow: '用这些可见评论生成创意',
+            amazonImportPathTitle: '从商品链接或当前页面可见评论开始',
+            amazonImportPathBody: '粘贴 Amazon 商品链接，或者打开商品/评论页后，用浏览器插件导入当前页面已经可见的评论。',
+            amazonImportStepOne: '打开商品页或评论页。',
+            amazonImportStepTwo: '用浏览器插件导入当前页面已经可见的评论。',
+            amazonImportStepThree: '回到 CrossGrowth，生成 TikTok Hook、创意摘要和分镜。',
+            amazonImportFallbackNote: '如果无法自动导入评论，可以使用“用户评论/反馈”手动粘贴。',
+            amazonImportedWorkspaceReady: '已检测到插件导入的可见评论，可以直接用这些评论生成创意。',
             missingName: '请输入产品名称。',
             missingDescription: '请输入产品描述。',
             missingPainPoints: '请补充用户痛点或评论片段。',
@@ -6401,11 +6448,11 @@
 
   async function sendExtensionWorkspaceToReviewWorkflow() {
     const payload = readExtensionWorkspacePayload();
-    const status = document.getElementById("extensionWorkspaceBridgeStatus");
     const button = document.getElementById("extensionWorkspaceSendToReviews");
+    const amazonButton = document.getElementById("amazonImportedWorkspaceGenerateBtn");
 
     if (!payload) {
-      if (status) status.textContent = tExtensionWorkspace("noPayloadStrong", payload);
+      setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("noPayloadStrong", payload));
       return;
     }
 
@@ -6416,28 +6463,28 @@
 
     if (!fillPastedReviewsFromExtensionWorkspace(payload)) {
       const message = tExtensionWorkspace("sendToReviewWorkflowNoReviews", payload);
-      if (status) status.textContent = message;
+      setExtensionWorkspaceBridgeStatus(message);
       setReviewsStatus(message, "error");
       scrollToPastedReviewsMode();
       return;
     }
 
     if (button) button.disabled = true;
-    if (status) status.textContent = tExtensionWorkspace("sendToReviewWorkflowWorking", payload);
+    if (amazonButton) amazonButton.disabled = true;
+    setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("sendToReviewWorkflowWorking", payload));
     setReviewsStatus(tExtensionWorkspace("sendToReviewWorkflowWorking", payload));
     scrollToPastedReviewsMode();
 
     try {
       const ok = await generateFromReviews();
-      if (status) {
-        status.textContent = ok
-          ? tExtensionWorkspace("sendToReviewWorkflowReady", payload)
-          : tExtensionWorkspace("sendToReviewWorkflowFailed", payload);
-      }
+      setExtensionWorkspaceBridgeStatus(ok
+        ? tExtensionWorkspace("sendToReviewWorkflowReady", payload)
+        : tExtensionWorkspace("sendToReviewWorkflowFailed", payload));
     } catch (error) {
-      if (status) status.textContent = error.message || tExtensionWorkspace("sendToReviewWorkflowFailed", payload);
+      setExtensionWorkspaceBridgeStatus(error.message || tExtensionWorkspace("sendToReviewWorkflowFailed", payload));
     } finally {
       if (button) button.disabled = false;
+      if (amazonButton) amazonButton.disabled = false;
     }
   }
 
@@ -6505,6 +6552,7 @@
       ["extensionWorkspaceClose", "close"],
       ["extensionWorkspaceAnalyze", "analyzeWorkspace"],
       ["extensionWorkspaceSendToReviews", "sendToReviewWorkflow"],
+      ["extensionWorkspaceBridgeHint", "sendToReviewWorkflowHint"],
       ["extensionWorkspaceCopy", "copyJson"],
     ];
 
@@ -6586,6 +6634,7 @@
 
     document.getElementById("extensionWorkspaceAnalyze").addEventListener("click", analyzeExtensionWorkspace);
     document.getElementById("extensionWorkspaceSendToReviews").addEventListener("click", sendExtensionWorkspaceToReviewWorkflow);
+    refreshAmazonImportPathStatus();
   }
 
   function readExtensionWorkspacePayload() {
@@ -6595,6 +6644,33 @@
       return JSON.parse(raw);
     } catch (error) {
       return null;
+    }
+  }
+
+  function hasExtensionWorkspaceVisibleReviews(payload) {
+    return extensionWorkspaceVisibleReviewLines(payload).length > 0;
+  }
+
+  function extensionWorkspaceBridgeStatusTargets() {
+    return [
+      document.getElementById("extensionWorkspaceBridgeStatus"),
+      document.getElementById("amazonImportedWorkspaceStatusText")
+    ].filter(Boolean);
+  }
+
+  function setExtensionWorkspaceBridgeStatus(message) {
+    extensionWorkspaceBridgeStatusTargets().forEach((target) => {
+      target.textContent = message || "";
+    });
+  }
+
+  function refreshAmazonImportPathStatus() {
+    const payload = readExtensionWorkspacePayload();
+    const statusPanel = document.getElementById("amazonImportedWorkspaceStatus");
+    if (!statusPanel) return;
+    statusPanel.hidden = !hasExtensionWorkspaceVisibleReviews(payload);
+    if (!statusPanel.hidden) {
+      setExtensionWorkspaceBridgeStatus("");
     }
   }
 
@@ -6680,6 +6756,7 @@
   function renderExtensionWorkspacePayload() {
     const payload = readExtensionWorkspacePayload();
     createExtensionWorkspacePanel();
+    refreshAmazonImportPathStatus();
 
     const summary = document.getElementById("extensionWorkspaceSummary");
     const output = document.getElementById("extensionWorkspaceOutput");
@@ -7436,9 +7513,12 @@ async function analyzeExtensionWorkspace() {
     });
   }
 
+  window.sendExtensionWorkspaceToReviewWorkflow = sendExtensionWorkspaceToReviewWorkflow;
+  window.refreshAmazonImportPathStatus = refreshAmazonImportPathStatus;
 
   window.addEventListener("crossgrowth-extension-workspace-ready", renderExtensionWorkspacePayload);
   document.addEventListener("DOMContentLoaded", maybeRenderExtensionWorkspace);
+  document.addEventListener("DOMContentLoaded", refreshAmazonImportPathStatus);
 })();
 </script>
 
