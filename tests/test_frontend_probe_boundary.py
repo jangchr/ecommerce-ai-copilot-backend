@@ -2438,3 +2438,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn('maybeAutoAnalyzeExtensionWorkspace(payload)', self.source)
         self.assertIn('analyzeExtensionWorkspace();', self.source)
         self.assertNotIn('tExtensionWorkspace("analyzingWorkspace", payload)', self.source)
+
+    def test_extension_workspace_localizes_new_positive_signal_labels(self):
+        expected_mappings = {
+            "repeat purchase intent": "\\u6301\\u7eed\\u590d\\u8d2d / \\u613f\\u610f\\u7ee7\\u7eed\\u8d2d\\u4e70",
+            "best root beer praise": "\\u6700\\u4f73\\u53e3\\u5473\\u8bc4\\u4ef7",
+            "root beer flavor comparison": "\\u98ce\\u5473\\u5bf9\\u6bd4 / \\u53e3\\u611f\\u5dee\\u5f02",
+            "regional availability context": "\\u5730\\u533a\\u53ef\\u83b7\\u5f97\\u6027 / \\u672c\\u5730\\u4e70\\u4e0d\\u5230",
+        }
+
+        for key, escaped_label in expected_mappings.items():
+            self.assertIn(f"'{key}': '{escaped_label}',", self.source)

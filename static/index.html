@@ -6113,19 +6113,29 @@
     const isZh = language === 'zh-CN';
 
     const zhLabels = {
+      'repeat purchase intent': '\u6301\u7eed\u590d\u8d2d / \u613f\u610f\u7ee7\u7eed\u8d2d\u4e70',
+      'best root beer praise': '\u6700\u4f73\u53e3\u5473\u8bc4\u4ef7',
+      'root beer flavor comparison': '\u98ce\u5473\u5bf9\u6bd4 / \u53e3\u611f\u5dee\u5f02',
+      'regional availability context': '\u5730\u533a\u53ef\u83b7\u5f97\u6027 / \u672c\u5730\u4e70\u4e0d\u5230',
       'summer fabric comfort': '\u590f\u5b63\u9762\u6599\u8212\u9002\u5ea6',
       'sewing / quality control issue': '\u7f1d\u5236 / \u8d28\u68c0\u95ee\u9898',
       'sewing or qc concern': '\u7f1d\u5236 / \u8d28\u68c0\u95ee\u9898',
       'size / fit issue': '\u5c3a\u7801 / \u7248\u578b\u504f\u5c0f',
       'color expectation mismatch': '\u989c\u8272 / \u8272\u5dee\u9884\u671f'
+
     };
 
     const enLabels = {
+      'repeat purchase intent': 'Repeat purchase intent',
+      'best root beer praise': 'Best root beer praise',
+      'root beer flavor comparison': 'Root beer flavor comparison',
+      'regional availability context': 'Regional availability context',
       'summer fabric comfort': 'Summer fabric comfort',
       'sewing / quality control issue': 'Sewing / QC issue',
       'sewing or qc concern': 'Sewing / QC issue',
       'size / fit issue': 'Size / fit issue',
       'color expectation mismatch': 'Color expectation mismatch'
+
     };
 
     const mapped = isZh ? zhLabels[normalized] : enLabels[normalized];
