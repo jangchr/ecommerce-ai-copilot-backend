@@ -2453,8 +2453,8 @@
                     <button class="btn-secondary" id="copyMarkdownBtn" onclick="copyFullMarkdown()" disabled data-i18n="copyFullMarkdown">Copy Full Markdown</button>
                     <button class="btn-secondary" id="downloadMarkdownBtn" onclick="downloadMarkdown()" disabled data-i18n="downloadMarkdown">Download Markdown</button>
                     <button class="btn-secondary" id="downloadJsonBtn" onclick="downloadJson()" disabled data-i18n="downloadJson">Download JSON</button>
-                    <button class="btn-secondary" id="translateChineseBtn" onclick="translateToChinese()" disabled>Translate to Chinese</button>
-                    <button class="btn-secondary" id="copyChineseBtn" onclick="copyChineseTranslation()" disabled>Copy Chinese Translation</button>
+                    <button class="btn-secondary" id="translateChineseBtn" onclick="translateToChinese()" disabled data-i18n="translateChineseButton">Translate to Chinese</button>
+                    <button class="btn-secondary" id="copyChineseBtn" onclick="copyChineseTranslation()" disabled data-i18n="copyChineseTranslationButton">Copy Chinese Translation</button>
                 </div>
                 <div class="copy-status" id="copyStatus"></div>
                 <div id="res-translation" style="opacity: 0.5;"></div>
@@ -2852,6 +2852,21 @@
                 sectionTranslationFailed: 'Translation failed. Please try again.',
                 sectionTranslationCopyLabel: 'Section translation',
                 translateSectionFirst: 'Translate this section first.',
+                translateChineseButton: 'Translate to Chinese',
+                copyChineseTranslationButton: 'Copy Chinese Translation',
+                runWorkflowBeforeTranslating: 'Run the workflow before translating.',
+                fullTranslationLoading: 'Translating...',
+                fullTranslationReturnedEmpty: 'Translation returned empty.',
+                fullTranslationUnavailable: 'Translation unavailable. Original English result is unchanged.',
+                pastedReviewWorkspaceTitle: 'Review Workspace Analysis',
+                parsedReviewCountLabel: 'Parsed reviews',
+                highSignalReviewCountLabel: 'High-signal reviews',
+                workspaceProductCountLabel: 'Products',
+                workspaceTotalReviewCountLabel: 'Total reviews',
+                commonPainPointsLabel: 'Common pain points',
+                buyerObjectionsLabel: 'Buyer objections',
+                workspaceCreativeAnglesLabel: 'Creative angles',
+                workspaceHooksLabel: 'Hooks',
                 clearRecentGenerations: 'Clear Recent Generations',
                 feedbackBody: 'Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.',
                 waitlistTitle: 'Join the waitlist',
@@ -3172,6 +3187,21 @@
                 sectionTranslationFailed: '\u7ffb\u8bd1\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002',
                 sectionTranslationCopyLabel: '\u5206\u533a\u7ffb\u8bd1',
                 translateSectionFirst: '\u8bf7\u5148\u7ffb\u8bd1\u8fd9\u4e00\u90e8\u5206\u3002',
+                translateChineseButton: '\u7ffb\u8bd1\u6210\u4e2d\u6587',
+                copyChineseTranslationButton: '\u590d\u5236\u4e2d\u6587\u7ffb\u8bd1',
+                runWorkflowBeforeTranslating: '\u8bf7\u5148\u751f\u6210\u7ed3\u679c\uff0c\u518d\u8fdb\u884c\u7ffb\u8bd1\u3002',
+                fullTranslationLoading: '\u6b63\u5728\u7ffb\u8bd1...',
+                fullTranslationReturnedEmpty: '\u7ffb\u8bd1\u7ed3\u679c\u4e3a\u7a7a\u3002',
+                fullTranslationUnavailable: '\u7ffb\u8bd1\u6682\u65f6\u4e0d\u53ef\u7528\uff0c\u539f\u59cb\u7ed3\u679c\u4fdd\u6301\u4e0d\u53d8\u3002',
+                pastedReviewWorkspaceTitle: '\u8bc4\u8bba\u5de5\u4f5c\u533a\u5206\u6790',
+                parsedReviewCountLabel: '\u89e3\u6790\u8bc4\u8bba',
+                highSignalReviewCountLabel: '\u9ad8\u4fe1\u53f7\u8bc4\u8bba',
+                workspaceProductCountLabel: '\u5546\u54c1',
+                workspaceTotalReviewCountLabel: '\u8bc4\u8bba\u603b\u6570',
+                commonPainPointsLabel: '\u5e38\u89c1\u75db\u70b9',
+                buyerObjectionsLabel: '\u8d2d\u4e70\u987e\u8651',
+                workspaceCreativeAnglesLabel: '\u521b\u610f\u89d2\u5ea6',
+                workspaceHooksLabel: '\u77ed\u89c6\u9891\u5f00\u5934',
                 clearRecentGenerations: '清空最近生成记录',
                 feedbackBody: '告诉我们这个创意 brief 是否有用、是否清楚、能不能改成真实 TikTok 广告。',
                 waitlistTitle: '加入试用名单',
@@ -4469,7 +4499,7 @@
             const btn = document.getElementById('translateChineseBtn');
             const text = productMarkdown(latestProductData);
             if (!text) {
-                target.innerHTML = block('Chinese Translation', 'Run the workflow before translating.');
+                target.innerHTML = block(t('sectionTranslationTitle'), t('runWorkflowBeforeTranslating'));
                 return;
             }
 
@@ -4477,7 +4507,7 @@
             latestChineseTranslation = '';
             document.getElementById('copyChineseBtn').disabled = true;
             target.style.opacity = '1';
-            target.innerHTML = block('Chinese Translation', 'Translating...');
+            target.innerHTML = block(t('sectionTranslationTitle'), t('fullTranslationLoading'));
 
             try {
                 const response = await postCopilot('translate-output', {
@@ -4485,11 +4515,11 @@
                     target_language: 'zh-CN'
                 });
                 latestChineseTranslation = response.translated_text || '';
-                target.innerHTML = block('Chinese Translation', latestChineseTranslation || 'Translation returned empty.');
+                target.innerHTML = block(t('sectionTranslationTitle'), latestChineseTranslation || t('fullTranslationReturnedEmpty'));
                 document.getElementById('copyChineseBtn').disabled = !latestChineseTranslation;
                 saveCurrentGenerationToRecent();
             } catch (error) {
-                target.innerHTML = block('Chinese Translation', 'Translation unavailable. Original English result is unchanged.');
+                target.innerHTML = block(t('sectionTranslationTitle'), t('fullTranslationUnavailable'));
             } finally {
                 btn.disabled = false;
             }
