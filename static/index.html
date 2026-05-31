@@ -5796,15 +5796,15 @@
 
             if (!productName) {
                 setReviewsStatus(t('missingName'), 'error');
-                return;
+                return false;
             }
             if (!pastedReviews) {
                 setReviewsStatus(t('missingReviews'), 'error');
-                return;
+                return false;
             }
             if (pastedReviews.length < 24) {
                 setReviewsStatus(t('inputTooShort'), 'error');
-                return;
+                return false;
             }
 
             btn.disabled = true;
@@ -5824,6 +5824,7 @@
             document.getElementById('debugMode').checked = false;
             document.getElementById('amazonShadowMode').checked = false;
             syncDebugMode();
+            let completed = false;
 
             try {
                 setReviewsStatus(t('analyzingPastedReviewWorkspace'));
@@ -5875,11 +5876,13 @@
                 });
                 saveCurrentGenerationToRecent();
                 setReviewsStatus(t('reviewsGenerated'), 'success');
+                completed = true;
             } catch (error) {
                 setReviewsStatus(error.message || t('reviewsFailed'), 'error');
             } finally {
                 btn.disabled = false;
             }
+            return completed;
         }
 
 
@@ -6117,6 +6120,12 @@
       "close": "Close",
       "closeAria": "Close extension workspace",
       "analyzeWorkspace": "Analyze workspace",
+      "sendToReviewWorkflow": "Generate script from visible reviews",
+      "sendToReviewWorkflowHint": "Uses the imported visible reviews in the existing customer feedback workflow.",
+      "sendToReviewWorkflowWorking": "Sending visible reviews to the review workflow...",
+      "sendToReviewWorkflowNoReviews": "No usable visible reviews found. Open a visible review page or use manual pasted reviews.",
+      "sendToReviewWorkflowReady": "Visible reviews sent to the review workflow.",
+      "sendToReviewWorkflowFailed": "Could not generate from imported reviews. Check the review text and try again.",
       "copyJson": "Copy JSON",
       "workspaceJsonCopied": "Workspace JSON copied.",
       "sampleNote": "Sample note",
@@ -6207,6 +6216,12 @@
       "close": "\u5173\u95ed",
       "closeAria": "\u5173\u95ed\u63d2\u4ef6\u5de5\u4f5c\u533a",
       "analyzeWorkspace": "\u5206\u6790\u5de5\u4f5c\u533a",
+      "sendToReviewWorkflow": "\u7528\u8fd9\u4e9b\u53ef\u89c1\u8bc4\u8bba\u751f\u6210\u521b\u610f",
+      "sendToReviewWorkflowHint": "\u5c06\u63d2\u4ef6\u5bfc\u5165\u7684\u53ef\u89c1\u8bc4\u8bba\u9001\u5165\u73b0\u6709\u7528\u6237\u8bc4\u8bba\u5de5\u4f5c\u6d41\u3002",
+      "sendToReviewWorkflowWorking": "\u6b63\u5728\u628a\u53ef\u89c1\u8bc4\u8bba\u9001\u5165\u8bc4\u8bba\u5de5\u4f5c\u6d41...",
+      "sendToReviewWorkflowNoReviews": "\u672a\u627e\u5230\u53ef\u7528\u7684\u53ef\u89c1\u8bc4\u8bba\u3002\u8bf7\u6253\u5f00\u53ef\u89c1\u8bc4\u8bba\u9875\uff0c\u6216\u6539\u7528\u624b\u52a8\u7c98\u8d34\u8bc4\u8bba\u3002",
+      "sendToReviewWorkflowReady": "\u5df2\u5c06\u53ef\u89c1\u8bc4\u8bba\u9001\u5165\u8bc4\u8bba\u5de5\u4f5c\u6d41\u3002",
+      "sendToReviewWorkflowFailed": "\u65e0\u6cd5\u6839\u636e\u5bfc\u5165\u8bc4\u8bba\u751f\u6210\u3002\u8bf7\u68c0\u67e5\u8bc4\u8bba\u6587\u672c\u540e\u91cd\u8bd5\u3002",
       "copyJson": "\u590d\u5236 JSON",
       "workspaceJsonCopied": "\u5de5\u4f5c\u533a JSON \u5df2\u590d\u5236\u3002",
       "sampleNote": "\u6837\u672c\u63d0\u793a",
@@ -6323,6 +6338,109 @@
     return product.title || summary.title || summary.product_title || product.url || tExtensionWorkspace("untitledProduct", source);
   }
 
+  function extensionWorkspaceVisibleReviewLines(payload) {
+    const lines = [];
+    for (const product of payload?.products || []) {
+      for (const review of product?.reviews || []) {
+        const text = String(review?.text || "").trim();
+        if (!text) continue;
+        const title = String(review?.title || "").trim();
+        const rating = review?.rating ? `[${review.rating}] ` : "";
+        lines.push(`${rating}${title ? `${title}: ` : ""}${text}`.trim());
+      }
+    }
+    return lines;
+  }
+
+  function extensionWorkspaceProductDescriptionText(payload) {
+    const product = (payload?.products || [])[0] || {};
+    const lines = [
+      product.title ? `Product title: ${product.title}` : "",
+      product.url ? `Product URL: ${product.url}` : "",
+      product.asin ? `ASIN: ${product.asin}` : "",
+      product.brand ? `Brand: ${product.brand}` : "",
+      product.price ? `Price: ${product.price}` : "",
+      product.rating ? `Rating: ${product.rating}` : "",
+      product.review_count ? `Review count: ${product.review_count}` : "",
+      product.description ? `Product description: ${product.description}` : "",
+      ...((product.bullet_points || []).map((item) => `Bullet: ${item}`))
+    ];
+    return lines.filter(Boolean).join(String.fromCharCode(10));
+  }
+
+  function fillPastedReviewsFromExtensionWorkspace(payload) {
+    const products = payload?.products || [];
+    const product = products[0] || {};
+    const reviewLines = extensionWorkspaceVisibleReviewLines(payload);
+
+    if (!reviewLines.length) {
+      return false;
+    }
+
+    const productName = document.getElementById("reviewsProductName");
+    const productCategory = document.getElementById("reviewsProductCategory");
+    const productDescription = document.getElementById("reviewsProductDescription");
+    const pastedReviews = document.getElementById("reviewsPastedReviews");
+
+    if (productName) {
+      productName.value = product.title || product.url || tExtensionWorkspace("untitledProduct", payload);
+    }
+    if (productCategory) {
+      productCategory.value = product.brand || product.platform || product.asin || "imported_product";
+    }
+    if (productDescription) {
+      productDescription.value = extensionWorkspaceProductDescriptionText(payload);
+    }
+    if (pastedReviews) {
+      pastedReviews.value = reviewLines.join(String.fromCharCode(10));
+    }
+
+    updateReviewInputPreviews();
+    return true;
+  }
+
+  async function sendExtensionWorkspaceToReviewWorkflow() {
+    const payload = readExtensionWorkspacePayload();
+    const status = document.getElementById("extensionWorkspaceBridgeStatus");
+    const button = document.getElementById("extensionWorkspaceSendToReviews");
+
+    if (!payload) {
+      if (status) status.textContent = tExtensionWorkspace("noPayloadStrong", payload);
+      return;
+    }
+
+    const language = extensionWorkspaceLanguage(payload);
+    if (typeof setLanguageMode === "function") {
+      setLanguageMode(language);
+    }
+
+    if (!fillPastedReviewsFromExtensionWorkspace(payload)) {
+      const message = tExtensionWorkspace("sendToReviewWorkflowNoReviews", payload);
+      if (status) status.textContent = message;
+      setReviewsStatus(message, "error");
+      scrollToPastedReviewsMode();
+      return;
+    }
+
+    if (button) button.disabled = true;
+    if (status) status.textContent = tExtensionWorkspace("sendToReviewWorkflowWorking", payload);
+    setReviewsStatus(tExtensionWorkspace("sendToReviewWorkflowWorking", payload));
+    scrollToPastedReviewsMode();
+
+    try {
+      const ok = await generateFromReviews();
+      if (status) {
+        status.textContent = ok
+          ? tExtensionWorkspace("sendToReviewWorkflowReady", payload)
+          : tExtensionWorkspace("sendToReviewWorkflowFailed", payload);
+      }
+    } catch (error) {
+      if (status) status.textContent = error.message || tExtensionWorkspace("sendToReviewWorkflowFailed", payload);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
   function extensionWorkspaceSampleWarningText(source) {
     const payload = readExtensionWorkspacePayload();
     const warnings = [];
@@ -6386,6 +6504,7 @@
       ["extensionWorkspaceBoundaryNote", "boundaryNote"],
       ["extensionWorkspaceClose", "close"],
       ["extensionWorkspaceAnalyze", "analyzeWorkspace"],
+      ["extensionWorkspaceSendToReviews", "sendToReviewWorkflow"],
       ["extensionWorkspaceCopy", "copyJson"],
     ];
 
@@ -6443,10 +6562,13 @@
         </div>
         <button id="extensionWorkspaceClose" type="button" aria-label="${escapeExtensionHTML(tExtensionWorkspace("closeAria"))}" style="border:0;background:#e2e8f0;border-radius:999px;padding:6px 9px;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("close"))}</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px;">
         <button id="extensionWorkspaceAnalyze" type="button" style="border:0;border-radius:999px;padding:10px;background:#0f172a;color:#fff;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("analyzeWorkspace"))}</button>
+        <button id="extensionWorkspaceSendToReviews" type="button" style="border:0;border-radius:999px;padding:10px;background:#16a34a;color:#fff;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("sendToReviewWorkflow"))}</button>
         <button id="extensionWorkspaceCopy" type="button" style="border:0;border-radius:999px;padding:10px;background:#e2e8f0;color:#0f172a;font-weight:900;cursor:pointer;">${escapeExtensionHTML(tExtensionWorkspace("copyJson"))}</button>
       </div>
+      <div id="extensionWorkspaceBridgeHint" style="margin-top:8px;color:#64748b;font-size:11px;line-height:1.45;">${escapeExtensionHTML(tExtensionWorkspace("sendToReviewWorkflowHint"))}</div>
+      <div id="extensionWorkspaceBridgeStatus" style="margin-top:8px;color:#475569;font-size:11px;font-weight:800;"></div>
       <div id="extensionWorkspaceOutput" style="margin-top:12px;font-size:12px;line-height:1.45;"></div>
     `;
 
@@ -6463,6 +6585,7 @@
     });
 
     document.getElementById("extensionWorkspaceAnalyze").addEventListener("click", analyzeExtensionWorkspace);
+    document.getElementById("extensionWorkspaceSendToReviews").addEventListener("click", sendExtensionWorkspaceToReviewWorkflow);
   }
 
   function readExtensionWorkspacePayload() {

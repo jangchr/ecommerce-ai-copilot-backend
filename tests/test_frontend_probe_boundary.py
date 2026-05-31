@@ -2160,6 +2160,42 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         ]:
             self.assertIn(marker, self.source)
 
+    def test_extension_workspace_can_send_visible_reviews_to_review_workflow(self):
+        for marker in [
+            "extensionWorkspaceSendToReviews",
+            "sendToReviewWorkflow",
+            "sendToReviewWorkflowNoReviews",
+            "sendToReviewWorkflowWorking",
+            "sendToReviewWorkflowReady",
+            "sendToReviewWorkflowFailed",
+            "function extensionWorkspaceVisibleReviewLines(payload)",
+            "function extensionWorkspaceProductDescriptionText(payload)",
+            "function fillPastedReviewsFromExtensionWorkspace(payload)",
+            "async function sendExtensionWorkspaceToReviewWorkflow()",
+            "document.getElementById(\"reviewsProductName\")",
+            "document.getElementById(\"reviewsProductCategory\")",
+            "document.getElementById(\"reviewsProductDescription\")",
+            "document.getElementById(\"reviewsPastedReviews\")",
+            "updateReviewInputPreviews();",
+            "scrollToPastedReviewsMode();",
+            "const ok = await generateFromReviews();",
+        ]:
+            self.assertIn(marker, self.source)
+
+        bridge_start = self.source.find("async function sendExtensionWorkspaceToReviewWorkflow()")
+        bridge_end = self.source.find("function extensionWorkspaceSampleWarningText", bridge_start)
+        self.assertNotEqual(bridge_start, -1)
+        self.assertNotEqual(bridge_end, -1)
+        bridge_body = self.source[bridge_start:bridge_end]
+        self.assertIn("setLanguageMode(language);", bridge_body)
+        self.assertIn("fillPastedReviewsFromExtensionWorkspace(payload)", bridge_body)
+        self.assertIn("generateFromReviews()", bridge_body)
+        self.assertNotIn("fetch(", bridge_body)
+        self.assertNotIn("/api/v1/generate-from-reviews", bridge_body)
+        self.assertNotIn("/api/v1/analyze-review-workspace", bridge_body)
+        self.assertNotIn("debug-source-probe", bridge_body)
+        self.assertNotIn("amazonShadowMode.checked = true", bridge_body)
+
 
     def test_extension_workspace_displays_sample_metadata(self):
         for marker in [
