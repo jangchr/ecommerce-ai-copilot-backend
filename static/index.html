@@ -5320,7 +5320,12 @@
             const sourceBreakdownText = reviewWorkspaceSourceBreakdownText(sourceBreakdown);
             const sourceGuidanceText = reviewWorkspaceSourceGuidanceText(sourceBreakdown);
             const hooks = (analysis.hooks || []).slice(0, 6).join(String.fromCharCode(10));
-            const angles = (analysis.creative_angles || []).slice(0, 6).join(String.fromCharCode(10));
+            const angles = (analysis.creative_angles || [])
+                .slice(0, 6)
+                .map((value) => String(value || "")
+                    .replace(/^Copy-ready angle:\s*/i, "")
+                    .replace(/^\u521b\u610f\u65b9\u5411[\uff1a:]\s*/, ""))
+                .join(String.fromCharCode(10));
 
             target.hidden = false;
             target.innerHTML = `
