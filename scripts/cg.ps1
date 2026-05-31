@@ -156,6 +156,13 @@ function TestAllFilesInBucket($files, $bucket) {
         $file -eq "static/index.html" -or
         $file -eq "tests/test_frontend_probe_boundary.py"
       )
+    } elseif ($bucket -eq "ui") {
+      $match = (
+        $file -like "browser_extension/*" -or
+        $file -eq "static/index.html" -or
+        $file -eq "tests/test_browser_extension_contract.py" -or
+        $file -eq "tests/test_frontend_probe_boundary.py"
+      )
     } elseif ($bucket -eq "backend") {
       $match = (
         $file -eq "main.py" -or
@@ -187,7 +194,7 @@ function GetChangeBucket($files) {
     return "clean"
   }
 
-  foreach ($bucket in @("extension", "frontend", "backend", "tools")) {
+  foreach ($bucket in @("extension", "frontend", "ui", "backend", "tools")) {
     if (TestAllFilesInBucket $files $bucket) {
       return $bucket
     }
@@ -200,6 +207,7 @@ function GetRecommendedCommand($bucket) {
   switch ($bucket) {
     "extension" { return '.\scripts\cg.ps1 commit-extension "Commit message"' }
     "frontend" { return '.\scripts\cg.ps1 commit-frontend "Commit message"' }
+    "ui" { return '.\scripts\cg.ps1 commit-ui "Commit message"' }
     "backend" { return '.\scripts\cg.ps1 commit-backend "Commit message"' }
     "tools" { return '.\scripts\cg.ps1 commit-tools "Commit message"' }
     "clean" { return "No commit needed. Working tree clean." }
@@ -294,6 +302,31 @@ function CommitFrontend() {
   }
 
   Run "Commit frontend changes" {
+    CommitStagedChanges
+  }
+
+  Run "Push branch" {
+    PushCurrentBranch
+  }
+
+  ShowStatus
+}
+
+
+function CommitUi() {
+  RequireMessage
+  Gate
+
+  Run "Add UI and extension files" {
+    AddExistingPath "browser_extension\popup.html"
+    AddExistingPath "browser_extension\popup.js"
+    AddExistingPath "browser_extension\styles.css"
+    AddExistingPath "static\index.html"
+    AddExistingPath "tests\test_browser_extension_contract.py"
+    AddExistingPath "tests\test_frontend_probe_boundary.py"
+  }
+
+  Run "Commit UI changes" {
     CommitStagedChanges
   }
 
@@ -542,6 +575,7 @@ try {
     "status" { ShowStatus }
     "commit-extension" { CommitExtension }
     "commit-frontend" { CommitFrontend }
+    "commit-ui" { CommitUi }
     "commit-backend" { CommitBackend }
     "commit-tools" { CommitTools }
     "push" { PushOnly }
@@ -556,6 +590,7 @@ try {
       Write-Host "  .\scripts\cg.ps1 status"
       Write-Host "  .\scripts\cg.ps1 commit-extension `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 commit-frontend `"Commit message`""
+      Write-Host "  .\scripts\cg.ps1 commit-ui `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 commit-backend `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 commit-tools `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 push"
