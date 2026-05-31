@@ -5743,6 +5743,7 @@
       "reviewsUsed": "Reviews used",
       "sampleWarning": "Sample warning",
       "visiblePageSampleSource": "Browser extension visible-page sample",
+      "visibleAmazonSampleWarning": "Visible Amazon review sample only. Sorting may reflect Amazon's current page state, not the full review set.",
       "copyLabelBrief": "Creative brief",
       "copyLabelRow": "Creative brief row",
       "copyLabelPositive": "Positive proof",
@@ -5832,6 +5833,7 @@
       "reviewsUsed": "\u4f7f\u7528\u8bc4\u8bba\u6570",
       "sampleWarning": "\u6837\u672c\u63d0\u793a",
       "visiblePageSampleSource": "\u6d4f\u89c8\u5668\u63d2\u4ef6\u53ef\u89c1\u9875\u9762\u6837\u672c",
+      "visibleAmazonSampleWarning": "\u4ec5\u4e3a Amazon \u5f53\u524d\u53ef\u89c1\u8bc4\u8bba\u6837\u672c\uff1b\u6392\u5e8f\u53ef\u80fd\u53ea\u53cd\u6620 Amazon \u5f53\u524d\u9875\u9762\u72b6\u6001\uff0c\u4e0d\u4ee3\u8868\u5b8c\u6574\u8bc4\u8bba\u96c6\u3002",
       "copyLabelBrief": "\u521b\u610f\u7b80\u62a5",
       "copyLabelRow": "\u5355\u6761\u521b\u610f\u7b80\u62a5",
       "copyLabelPositive": "\u6b63\u5411\u8bc1\u636e",
@@ -5886,7 +5888,13 @@
         warnings.push(warning);
       }
     }
-    return warnings[0] || tExtensionWorkspace("mdBoundary", source);
+
+    const firstWarning = String(warnings[0] || "").trim();
+    if (firstWarning.toLowerCase().includes("visible amazon review sample only")) {
+      return tExtensionWorkspace("visibleAmazonSampleWarning", source);
+    }
+
+    return firstWarning || tExtensionWorkspace("mdBoundary", source);
   }
 
   function extensionWorkspaceSummaryText(payload) {
