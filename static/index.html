@@ -2408,16 +2408,16 @@
         </section>
 
         <section class="agent-track" id="agentTrack">
-            <div class="agent-badge" id="n-planner">Planner</div>
-            <div class="agent-badge" id="n-retrieval">Retrieval</div>
-            <div class="agent-badge" id="n-evidence_builder">Evidence Builder</div>
-            <div class="agent-badge" id="n-parallel_analysis">Parallel Analysis</div>
-            <div class="agent-badge" id="n-cognitive_synthesis">Cognitive Synthesis</div>
-            <div class="agent-badge" id="n-strategy">Strategy</div>
-            <div class="agent-badge" id="n-storyboard">分镜</div>
-            <div class="agent-badge" id="n-governance">Governance</div>
-            <div class="agent-badge" id="n-reflection">Reflection</div>
-            <div class="agent-badge" id="n-analytics">Analytics</div>
+            <div class="agent-badge" id="n-planner" data-i18n="agentPlannerLabel">Planner</div>
+            <div class="agent-badge" id="n-retrieval" data-i18n="agentRetrievalLabel">Retrieval</div>
+            <div class="agent-badge" id="n-evidence_builder" data-i18n="agentEvidenceBuilderLabel">Evidence Builder</div>
+            <div class="agent-badge" id="n-parallel_analysis" data-i18n="agentParallelAnalysisLabel">Parallel Analysis</div>
+            <div class="agent-badge" id="n-cognitive_synthesis" data-i18n="agentCognitiveSynthesisLabel">Cognitive Synthesis</div>
+            <div class="agent-badge" id="n-strategy" data-i18n="agentStrategyLabel">Strategy</div>
+            <div class="agent-badge" id="n-storyboard" data-i18n="agentStoryboardLabel">Storyboard</div>
+            <div class="agent-badge" id="n-governance" data-i18n="agentGovernanceLabel">Governance</div>
+            <div class="agent-badge" id="n-reflection" data-i18n="agentReflectionLabel">Reflection</div>
+            <div class="agent-badge" id="n-analytics" data-i18n="agentAnalyticsLabel">Analytics</div>
         </section>
 
         <section class="page-section" id="productResultSection">
@@ -2556,7 +2556,7 @@
         }
 
         function boolText(value) {
-            return value ? 'Yes' : 'No';
+            return value ? t('yesLabel') : t('noLabel');
         }
 
         function renderSectionHeader(title, key) {
@@ -2867,6 +2867,18 @@
                 buyerObjectionsLabel: 'Buyer objections',
                 workspaceCreativeAnglesLabel: 'Creative angles',
                 workspaceHooksLabel: 'Hooks',
+                agentPlannerLabel: 'Planner',
+                agentRetrievalLabel: 'Retrieval',
+                agentEvidenceBuilderLabel: 'Evidence Builder',
+                agentParallelAnalysisLabel: 'Parallel Analysis',
+                agentCognitiveSynthesisLabel: 'Cognitive Synthesis',
+                agentStrategyLabel: 'Strategy',
+                agentStoryboardLabel: 'Storyboard',
+                agentGovernanceLabel: 'Governance',
+                agentReflectionLabel: 'Reflection',
+                agentAnalyticsLabel: 'Analytics',
+                yesLabel: 'Yes',
+                noLabel: 'No',
                 clearRecentGenerations: 'Clear Recent Generations',
                 feedbackBody: 'Tell us whether this creative brief is useful, clear and ready to adapt for a real TikTok ad.',
                 waitlistTitle: 'Join the waitlist',
@@ -3202,6 +3214,18 @@
                 buyerObjectionsLabel: '\u8d2d\u4e70\u987e\u8651',
                 workspaceCreativeAnglesLabel: '\u521b\u610f\u89d2\u5ea6',
                 workspaceHooksLabel: '\u77ed\u89c6\u9891\u5f00\u5934',
+                agentPlannerLabel: '\u89c4\u5212',
+                agentRetrievalLabel: '\u68c0\u7d22',
+                agentEvidenceBuilderLabel: '\u8bc1\u636e\u6784\u5efa',
+                agentParallelAnalysisLabel: '\u5e76\u884c\u5206\u6790',
+                agentCognitiveSynthesisLabel: '\u7efc\u5408\u5224\u65ad',
+                agentStrategyLabel: '\u7b56\u7565',
+                agentStoryboardLabel: '\u5206\u955c',
+                agentGovernanceLabel: '\u89c4\u5219\u68c0\u67e5',
+                agentReflectionLabel: '\u81ea\u6211\u68c0\u67e5',
+                agentAnalyticsLabel: '\u6570\u636e\u5206\u6790',
+                yesLabel: '\u662f',
+                noLabel: '\u5426',
                 clearRecentGenerations: '清空最近生成记录',
                 feedbackBody: '告诉我们这个创意 brief 是否有用、是否清楚、能不能改成真实 TikTok 广告。',
                 waitlistTitle: '加入试用名单',
