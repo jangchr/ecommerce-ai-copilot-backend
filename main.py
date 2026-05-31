@@ -2922,6 +2922,8 @@ def _rw_positive_hook_from_theme_zh(theme) -> str:
         if "love" in lower_quote or "favorite" in lower_quote or "delicious" in lower_quote or "amazing" in lower_quote:
             return f"\u4e70\u5bb6\u4e3a\u4ec0\u4e48\u4f1a\u559c\u6b22\u5b83\uff1f\u5148\u7528\u8fd9\u53e5\u539f\u8bdd\u5f00\u573a\uff1a\u201c{quote}\u201d"
 
+        return f"\u8fd9\u6761\u6b63\u5411\u8bc1\u636e\u53ef\u4ee5\u76f4\u63a5\u53d8\u6210\u5e7f\u544a\u5f00\u5934\uff1a\u201c{quote}\u201d"
+
     if "\u559c\u6b22" in label:
         return "\u4e70\u5bb6\u4e3a\u4ec0\u4e48\u4f1a\u559c\u6b22\u5b83\uff1f\u5148\u7528\u4e00\u6761\u5177\u4f53\u8bc4\u8bba\u5f00\u573a\u3002"
 
@@ -2929,6 +2931,21 @@ def _rw_positive_hook_from_theme_zh(theme) -> str:
         return "\u4e3a\u4ec0\u4e48\u4e70\u5bb6\u613f\u610f\u63a8\u8350\u5b83\uff1f\u5148\u770b\u8bc4\u8bba\u91cc\u7684\u4f7f\u7528\u573a\u666f\u3002"
 
     return f"\u8fd9\u6761\u6b63\u5411\u8bc1\u636e\u80fd\u600e\u4e48\u53d8\u6210\u5e7f\u544a\u5f00\u5934\uff1f\u5148\u770b\u4e00\u6761\u5177\u4f53\u4e70\u5bb6\u539f\u8bdd\uff1a{label}"
+
+def _rw_unique_themes_by_first_quote(themes: list[ReviewThemeSummary]) -> list[ReviewThemeSummary]:
+    unique: list[ReviewThemeSummary] = []
+    seen_quotes = set()
+
+    for theme in themes or []:
+        quote = _rw_theme_first_quote(theme)
+        key = " ".join(quote.lower().split()) if quote else f"label:{getattr(theme, 'label', '')}"
+        if not key or key in seen_quotes:
+            continue
+
+        seen_quotes.add(key)
+        unique.append(theme)
+
+    return unique
 
 def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary], language: str) -> list[str]:
     is_zh = language == "zh-CN"
@@ -2941,7 +2958,7 @@ def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[R
         else:
             hooks.append(_rw_hook_from_theme(theme))
 
-    for theme in liked_points[:4]:
+    for theme in _rw_unique_themes_by_first_quote(liked_points)[:4]:
         if is_zh:
             hooks.append(_rw_positive_hook_from_theme_zh(theme))
         else:
@@ -2994,6 +3011,16 @@ def _rw_first_available_theme(*theme_groups: list[ReviewThemeSummary]) -> Review
         if group:
             return group[0]
     return None
+
+
+def _rw_workspace_product_hint(payload: ReviewWorkspaceRequest, language: str) -> str:
+    for product in payload.products or []:
+        for attr in ("title", "brand", "description"):
+            value = _rw_text(getattr(product, attr, ""))
+            if value:
+                return _rw_quote_snippet(value, 60)
+
+    return "\u8fd9\u4e2a\u5546\u54c1" if language == "zh-CN" else "the product"
 
 
 def _rw_signal_lines(
@@ -3137,6 +3164,7 @@ def _rw_video_script_pack(
     positive_label = _rw_output_theme_label(positive.label, language) if positive else ("\u6b63\u5411\u8bc1\u636e" if is_zh else "positive proof")
     primary_quote = _rw_quote_snippet(_rw_theme_first_quote(primary), 120) if primary else ""
     positive_quote = _rw_quote_snippet(_rw_theme_first_quote(positive), 100) if positive else ""
+    product_hint = _rw_workspace_product_hint(payload, language)
     hook = hooks[0] if hooks else (
         f"\u4e70\u4e4b\u524d\u5148\u770b\u8fd9\u4e2a\u4e70\u5bb6\u4fe1\u53f7\uff1a{primary_label}"
         if is_zh
@@ -3149,9 +3177,9 @@ def _rw_video_script_pack(
             duration_label="15s",
             hook=hook,
             voiceover=[
-                f"\u5f00\u5934\u76f4\u63a5\u56de\u5e94\u4e70\u5bb6\u6700\u5728\u610f\u7684\u70b9\uff1a{primary_label}\u3002",
-                f"\u5c55\u793a\u4e00\u4e2a\u80fd\u8bc1\u660e\u4ea7\u54c1\u5982\u4f55\u89e3\u51b3\u8fd9\u4e2a\u987e\u8651\u7684\u753b\u9762\u3002",
-                f"\u7528 {positive_label} \u4f5c\u4e3a\u6536\u5c3e\u80cc\u4e66\u3002",
+                f"\u5148\u628a{primary_label}\u6446\u51fa\u6765\uff1a{primary_quote if primary_quote else f'{product_hint}\u7684\u4e70\u5bb6\u6b63\u5728\u72b9\u8c6b\u8fd9\u4e2a\u70b9'}\u3002",
+                f"\u753b\u9762\u5207\u5230{product_hint}\u7684\u9009\u62e9\u573a\u666f\uff0c\u628a\u8fd9\u4e2a\u987e\u8651\u548c\u771f\u5b9e\u4f7f\u7528\u77ac\u95f4\u653e\u5728\u4e00\u8d77\u3002",
+                f"\u6536\u5c3e\u7528\u6b63\u5411\u539f\u8bdd\u56de\u6536\uff1a{positive_quote if positive_quote else positive_label}\u3002",
             ],
             on_screen_text=[
                 primary_label,
@@ -3165,10 +3193,10 @@ def _rw_video_script_pack(
             duration_label="30s",
             hook=hook,
             voiceover=[
-                f"\u524d 3 \u79d2\uff1a\u7528\u4e70\u5bb6\u5173\u6ce8\u7684 {primary_label} \u5f00\u573a\u3002",
-                f"\u4e2d\u6bb5\uff1a\u5f15\u7528\u53ef\u89c1\u8bc4\u8bba\u8bc1\u636e\uff0c\u5c55\u793a\u4e70\u5bb6\u4e3a\u4ec0\u4e48\u4f1a\u6709\u8fd9\u4e2a\u987e\u8651\u3002",
-                "\u4ea7\u54c1\u753b\u9762\uff1a\u62cd\u4e00\u4e2a\u6e05\u695a\u7684\u4f7f\u7528\u77ac\u95f4\uff0c\u4e0d\u8981\u53ea\u505a\u7a7a\u6cdb\u5356\u70b9\u3002",
-                f"\u6536\u5c3e\uff1a\u7528 {positive_label} \u505a\u4fe1\u4efb\u56de\u6536\u3002",
+                f"\u524d 3 \u79d2\uff1a\u7528{primary_label}\u5f00\u573a\uff0c\u76f4\u63a5\u5ff5\u51fa\u8bc4\u8bba\u4fe1\u53f7\uff1a{primary_quote if primary_quote else primary_label}\u3002",
+                f"\u4e2d\u6bb5\uff1a\u8ba9\u753b\u9762\u56de\u5230{product_hint}\u7684\u5177\u4f53\u573a\u666f\uff0c\u5bf9\u6bd4\u4e70\u5bb6\u4e3a\u4ec0\u4e48\u4f1a\u6709\u8fd9\u4e2a\u987e\u8651\u3002",
+                f"\u8bc1\u636e\u8f6c\u6298\uff1a\u628a\u6b63\u5411\u8bc4\u8bba\u63a5\u4e0a\u6765\uff0c\u4f8b\u5982\uff1a{positive_quote if positive_quote else positive_label}\u3002",
+                f"\u6536\u5c3e\uff1a\u628a {positive_label} \u53d8\u6210\u4fe1\u4efb\u56de\u6536\uff0c\u63d0\u9192\u89c2\u4f17\u8fd9\u4ecd\u7136\u662f\u53ef\u89c1\u8bc4\u8bba\u6837\u672c\u3002",
             ],
             on_screen_text=[
                 f"\u4e70\u5bb6\u5728\u610f\uff1a{primary_label}",
@@ -3184,9 +3212,9 @@ def _rw_video_script_pack(
             duration_label="15s",
             hook=hook,
             voiceover=[
-                f"Open directly on the buyer concern: {primary_label}.",
-                "Show one clear product moment that answers that concern.",
-                f"Close with the reassurance signal: {positive_label}.",
+                f"Open on {primary_label}: {primary_quote if primary_quote else f'buyers are weighing this before choosing {product_hint}'}.",
+                f"Cut to {product_hint} in a real selection or usage moment so the concern feels concrete.",
+                f"Close with the buyer's positive proof: {positive_quote if positive_quote else positive_label}.",
             ],
             on_screen_text=[
                 primary_label,
@@ -3200,10 +3228,10 @@ def _rw_video_script_pack(
             duration_label="30s",
             hook=hook,
             voiceover=[
-                f"First 3 seconds: open with the buyer concern around {primary_label}.",
-                "Middle: cite the visible review evidence and show why buyers notice it.",
-                "Product moment: show one specific usage shot instead of a generic claim.",
-                f"Payoff: bring in {positive_label} so the script ends with reassurance.",
+                f"First 3 seconds: frame the {primary_label} with the actual review signal: {primary_quote if primary_quote else primary_label}.",
+                f"Middle: show {product_hint} in the buying or usage context that makes this concern matter.",
+                f"Proof turn: quote the positive comparison or reassurance: {positive_quote if positive_quote else positive_label}.",
+                f"Payoff: make {positive_label} the trust close, not a generic product claim.",
             ],
             on_screen_text=[
                 f"Buyer concern: {primary_label}",

@@ -812,6 +812,33 @@ class ReviewWorkspaceCreativeOutputQualityTest(unittest.TestCase):
         self.assertIn("\u4e24\u74f6\u88c5\u4e0d\u53ea\u662f\u591a\u4e70\u4e00\u74f6", hooks)
         self.assertIn("\u4e3a\u4ec0\u4e48\u6709\u4e70\u5bb6\u628a\u8fd9\u74f6\u9999\u918b\u5938\u5230\u8fd9\u79cd\u7a0b\u5ea6", hooks)
 
+    def test_review_workspace_positive_zh_hook_fallback_uses_evidence_quote_and_dedupes_same_quote(self):
+        from types import SimpleNamespace
+        from main import _rw_hooks, _rw_positive_hook_from_theme_zh
+
+        quote = "Not as sharp as Barq's, but smoother, greater flavor than A&W."
+        great_theme = SimpleNamespace(
+            label="liked signal: great",
+            evidence_quotes=[quote],
+            evidence_count=1,
+        )
+        love_theme = SimpleNamespace(
+            label="liked signal: love",
+            evidence_quotes=[quote],
+            evidence_count=1,
+        )
+
+        hook = _rw_positive_hook_from_theme_zh(great_theme)
+        hooks = _rw_hooks([], [great_theme, love_theme], "zh-CN")
+
+        self.assertIn(quote, hook)
+        self.assertNotEqual(
+            hook,
+            "\u8fd9\u6761\u6b63\u5411\u8bc1\u636e\u80fd\u600e\u4e48\u53d8\u6210\u5e7f\u544a\u5f00\u5934\uff1f\u5148\u770b\u4e00\u6761\u5177\u4f53\u4e70\u5bb6\u539f\u8bdd\uff1a\u4e70\u5bb6\u8ba4\u4e3a\u4f53\u9a8c\u5f88\u597d",
+        )
+        self.assertEqual(len(hooks), 1)
+        self.assertIn(quote, hooks[0])
+
 class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
     def test_review_workspace_returns_sample_interpretation_and_video_script_pack(self):
         from fastapi.testclient import TestClient
@@ -873,6 +900,51 @@ class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
             self.assertTrue(script["voiceover"])
             self.assertTrue(script["on_screen_text"])
             self.assertTrue(script["cta"])
+
+    def test_review_workspace_video_script_pack_uses_root_beer_quotes_instead_of_templates(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "root_beer_script_quality",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/ROOTBEER01",
+                        "title": "Craft Root Beer Variety Pack",
+                        "brand": "Craft Soda",
+                        "description": "Premium root beer for chilled pours and taste comparisons.",
+                        "reviews": [
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "It tastes good, however it is too expensive for root beer and not worth the high price.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Not as sharp as Barq's, but smoother, greater flavor than A&W.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        pack_text = str(body["video_script_pack"])
+
+        self.assertIn("too expensive for root beer", pack_text)
+        self.assertIn("Not as sharp as Barq's", pack_text)
+        self.assertIn("Craft Root Beer", pack_text)
+        self.assertNotIn("\u5c55\u793a\u4e00\u4e2a\u80fd\u8bc1\u660e\u4ea7\u54c1\u5982\u4f55\u89e3\u51b3\u8fd9\u4e2a\u987e\u8651\u7684\u753b\u9762", pack_text)
+        self.assertNotIn("\u4ea7\u54c1\u753b\u9762\uff1a\u62cd\u4e00\u4e2a\u6e05\u695a\u7684\u4f7f\u7528\u77ac\u95f4", pack_text)
 
     def test_review_workspace_sample_interpretation_respects_chinese_output_language(self):
         from fastapi.testclient import TestClient
