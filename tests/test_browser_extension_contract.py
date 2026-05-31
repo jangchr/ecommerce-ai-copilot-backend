@@ -354,13 +354,27 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "openedVariantReviewTabs",
             "noVariantReviewLinks",
             "targetedAmazonReviewLinksForProduct",
+            "lowStarReviewLinksForProduct",
+            "verifiedPurchaseReviewLinksForProduct",
+            "relatedReviewLinksForProduct",
+            "isUsableAmazonReviewExpansionCandidate",
+            "isInvalidAmazonExpansionHref",
+            "javascript:void",
+            "a-carousel-goto",
             "amazonReviewUrlWithParams",
             "latestSavedAmazonProduct",
             "filterByStar",
+            "one_star",
+            "two_star",
+            "three_star",
             "critical",
             "avp_only_reviews",
             "sortBy",
             "formatType",
+            "copyReviewExpansionLinks",
+            "openReviewExpansionLinksOrCopy",
+            "copiedManualExpansionLinks",
+            "copiedAvailableReviewLinks",
             "openedTargetedReviewTab",
             "copiedTargetedReviewLinks",
             "sampleGuidanceStepsTitle",
@@ -373,6 +387,50 @@ class BrowserExtensionContractTest(unittest.TestCase):
             "async function copySampleGuidanceSteps",
             "bind(\"sampleGuidanceCopyBtn\", copySampleGuidanceSteps)",
             "Collect open tabs",
+        ]:
+            self.assertIn(marker, js)
+
+    def test_popup_keeps_manual_expansion_available_when_login_blocks_auto_collect(self):
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "Auto collection stopped: Amazon sign-in required. You can still manually open expansion links visible on the current page.",
+            "\\u81ea\\u52a8\\u91c7\\u96c6\\u5df2\\u505c\\u6b62",
+            "backgroundCollectorStopReason(product)",
+            "return tPopup(\"signInRequired\")",
+            "openTargetedReviewTab(\"low_star\")",
+            "openTargetedReviewTab(\"verified\")",
+            "copyReviewExpansionLinks(",
+            "openReviewExpansionLinksOrCopy(",
+        ]:
+            self.assertIn(marker, js)
+
+    def test_popup_filters_and_classifies_visible_expansion_links(self):
+        js = (self.root / "popup.js").read_text(encoding="utf-8")
+
+        for marker in [
+            "isInvalidAmazonExpansionHref",
+            "lower.startsWith(\"javascript:\")",
+            "lower.startsWith(\"#\")",
+            "a-carousel-goto",
+            "next slide",
+            "previous slide",
+            "isUsableAmazonReviewExpansionCandidate",
+            "lowStarReviewLinksForProduct",
+            "filterByStar",
+            "one_star",
+            "two_star",
+            "three_star",
+            "histogram",
+            "verifiedPurchaseReviewLinksForProduct",
+            "reviewerType",
+            "avp_only_reviews",
+            "relatedReviewLinksForProduct",
+            "related",
+            "recommended",
+            "similar",
+            "excludeCurrentAsin",
+            "noUsableReviewExpansionLinks",
         ]:
             self.assertIn(marker, js)
 
