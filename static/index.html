@@ -5423,11 +5423,7 @@
                     (workspaceAnalysis.hooks || []).join(String.fromCharCode(10))
                 ].filter(Boolean).join(String.fromCharCode(10));
 
-                const enrichedPastedReviews = [
-                    pastedReviews,
-                    '',
-                    workspaceLines
-                ].join(String.fromCharCode(10));
+                const enrichedPastedReviews = pastedReviews;
 
                 const response = await postPastedReviews({
                     product_name: productName,
