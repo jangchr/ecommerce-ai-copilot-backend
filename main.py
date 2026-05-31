@@ -1636,6 +1636,8 @@ _REVIEW_WORKSPACE_OBJECTION_MARKERS = [
 
 _REVIEW_WORKSPACE_LIKE_MARKERS = [
     "love", "great", "easy", "perfect", "works", "useful", "recommend", "helpful",
+    "will continue to purchase", "best rootbeer", "best root beer", "order it frequently",
+    "great flavor", "greater flavor", "smoother",
     "??", "??", "??", "??", "??",
 ]
 
@@ -2547,10 +2549,48 @@ def _rw_quote_is_positive_reassurance_quote(quote: str) -> bool:
     return two_pack_reassurance or value_reassurance
 
 
+def _rw_quote_is_strong_positive_signal(quote: str) -> bool:
+    lower = str(quote or "").lower().strip()
+    if not lower:
+        return False
+
+    positive_terms = [
+        "love it",
+        "will continue to purchase",
+        "continue to purchase",
+        "best rootbeer",
+        "best root beer",
+        "order it frequently",
+        "great flavor",
+        "greater flavor",
+        "smoother",
+        "smother greater flavor",
+        "not as sharp as barq",
+    ]
+    return any(term in lower for term in positive_terms)
+
+
 def _rw_quote_is_low_value_objection(quote: str) -> bool:
     lower = str(quote or "").lower().strip()
 
     if len(lower) < 18:
+        return True
+
+    # Strong positive proof can contain words like "but" or "not" in comparisons,
+    # but should not become a buyer objection unless there is a clearer complaint.
+    if _rw_quote_is_strong_positive_signal(quote) and not any(term in lower for term in [
+        "too expensive",
+        "not worth",
+        "overpriced",
+        "wrong",
+        "hard to",
+        "difficult",
+        "problem",
+        "issue",
+        "broken",
+        "leaked",
+        "missing",
+    ]):
         return True
 
     # Positive reassurance / gifting / value proof should not be treated as a buyer objection.
@@ -2576,6 +2616,25 @@ def _rw_quote_is_low_value_objection(quote: str) -> bool:
     return False
 
 
+def _rw_label_is_low_quality_objection(label: str, quote: str) -> bool:
+    cleaned = str(label or "").replace("objection:", "").strip().lower()
+    cleaned = cleaned.rstrip(".:;!?")
+    if cleaned not in {"hard", "good", "great", "love", "best"}:
+        return False
+
+    lower = str(quote or "").lower()
+    negative_context = [
+        "hard to",
+        "too hard",
+        "not good",
+        "not great",
+        "not love",
+        "not the best",
+        "difficult",
+    ]
+    return not any(term in lower for term in negative_context)
+
+
 def _rw_refine_buyer_objection_summaries(themes):
     grouped: dict[str, list[str]] = {}
     exemplar_theme_by_label = {}
@@ -2594,6 +2653,9 @@ def _rw_refine_buyer_objection_summaries(themes):
 
             if refined_label in {"but", "not", "wish", "wrong", "too", "however", "?"}:
                 refined_label = "buyer hesitation"
+
+            if _rw_label_is_low_quality_objection(refined_label, quote):
+                continue
 
             grouped.setdefault(refined_label, [])
             if quote not in grouped[refined_label]:
@@ -2802,7 +2864,7 @@ def _rw_creative_angles(common_pain_points: list[ReviewThemeSummary], liked_poin
                     f"Copy-ready angle: Open on the buyer's {label}, then show the product resolving that exact moment."
                 )
 
-    for theme in liked_points:
+    for theme in _rw_unique_themes_by_first_quote(liked_points):
         label = _rw_output_theme_label(theme.label, language)
         quote = _rw_quote_snippet(_rw_theme_first_quote(theme), 100)
 
@@ -2947,6 +3009,26 @@ def _rw_unique_themes_by_first_quote(themes: list[ReviewThemeSummary]) -> list[R
 
     return unique
 
+
+def _rw_unique_theme_evidence_across_themes(themes: list[ReviewThemeSummary]) -> list[ReviewThemeSummary]:
+    unique: list[ReviewThemeSummary] = []
+    seen_quotes = set()
+
+    for theme in themes or []:
+        quotes: list[str] = []
+        for quote in getattr(theme, "evidence_quotes", []) or []:
+            key = " ".join(str(quote or "").lower().split())
+            if not key or key in seen_quotes:
+                continue
+
+            seen_quotes.add(key)
+            quotes.append(quote)
+
+        if quotes:
+            unique.append(_rw_rebuild_theme_summary(theme, evidence_quotes=quotes))
+
+    return unique
+
 def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[ReviewThemeSummary], language: str) -> list[str]:
     is_zh = language == "zh-CN"
     hooks: list[str] = []
@@ -3018,9 +3100,29 @@ def _rw_workspace_product_hint(payload: ReviewWorkspaceRequest, language: str) -
         for attr in ("title", "brand", "description"):
             value = _rw_text(getattr(product, attr, ""))
             if value:
-                return _rw_quote_snippet(value, 60)
+                return _rw_clean_workspace_product_phrase(value, language)
 
     return "\u8fd9\u4e2a\u5546\u54c1" if language == "zh-CN" else "the product"
+
+
+def _rw_clean_workspace_product_phrase(value: str, language: str) -> str:
+    text = _rw_text(value).replace("...", "").strip(" -_,;:")
+    if not text:
+        return "\u8fd9\u4e2a\u5546\u54c1" if language == "zh-CN" else "the product"
+
+    root_beer_match = re.search(r"\b(?:[A-Za-z0-9'&.-]+\s+){0,4}root\s*beer\b", text, re.IGNORECASE)
+    if root_beer_match:
+        return _rw_text(root_beer_match.group(0))
+
+    first_phrase = re.split(r"[,|:;(\[]", text, maxsplit=1)[0].strip(" -_,;:")
+    if not first_phrase:
+        first_phrase = text
+
+    words = first_phrase.split()
+    if len(first_phrase) > 52 and len(words) > 6:
+        first_phrase = " ".join(words[:6])
+
+    return first_phrase or ("\u8fd9\u4e2a\u5546\u54c1" if language == "zh-CN" else "the product")
 
 
 def _rw_signal_lines(
@@ -3435,6 +3537,7 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         high_signal_rows or rows,
         _REVIEW_WORKSPACE_LIKE_MARKERS,
         "liked signal",
+        limit=12,
     )
     use_cases = _rw_marker_summaries(
         high_signal_rows or rows,
@@ -3444,7 +3547,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
 
     common_pain_points = _rw_refine_theme_quotes(_rw_compact_theme_summaries(common_pain_points))
     buyer_objections = _rw_refine_buyer_objection_summaries(buyer_objections)
-    liked_points = _rw_compact_theme_summaries(liked_points)
+    liked_points = _rw_unique_themes_by_first_quote(
+        _rw_unique_theme_evidence_across_themes(_rw_compact_theme_summaries(liked_points))
+    )
     use_cases = _rw_compact_theme_summaries(use_cases)
 
     hooks = _rw_hooks(common_pain_points, liked_points, payload.output_language)

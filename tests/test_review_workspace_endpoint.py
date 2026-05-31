@@ -946,6 +946,92 @@ class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
         self.assertNotIn("\u5c55\u793a\u4e00\u4e2a\u80fd\u8bc1\u660e\u4ea7\u54c1\u5982\u4f55\u89e3\u51b3\u8fd9\u4e2a\u987e\u8651\u7684\u753b\u9762", pack_text)
         self.assertNotIn("\u4ea7\u54c1\u753b\u9762\uff1a\u62cd\u4e00\u4e2a\u6e05\u695a\u7684\u4f7f\u7528\u77ac\u95f4", pack_text)
 
+    def test_review_workspace_keeps_root_beer_positive_quotes_out_of_objections_and_dedupes(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        positive_quote = "Love it and will continue to purchase. Great flavor."
+        best_quote = "This is the best Rootbeer I have ever had and order it frequently."
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "root_beer_positive_signal_quality",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/ROOTBEER02",
+                        "title": "1919 Draft Root Beer 16oz Can, Real Sugar, Real Vanilla, Cla...",
+                        "brand": "1919",
+                        "description": "Classic root beer for chilled pours and taste comparisons.",
+                        "reviews": [
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "It tastes good, however it is too expensive for root beer and not worth the high price.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": positive_quote,
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": best_quote,
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Not as sharp as Barq's, but smoother, greater flavor than A&W.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        objection_text = "\n".join(
+            quote.lower()
+            for item in body.get("buyer_objections", [])
+            for quote in item.get("evidence_quotes", [])
+        )
+        objection_labels = [
+            item.get("label", "").strip().lower()
+            for item in body.get("buyer_objections", [])
+        ]
+
+        self.assertNotIn("love it and will continue to purchase", objection_text)
+        self.assertNotIn("best rootbeer", objection_text)
+        self.assertNotIn("order it frequently", objection_text)
+        self.assertNotIn("not as sharp as barq", objection_text)
+        self.assertNotIn("hard", objection_labels)
+
+        liked_quotes = [
+            quote
+            for item in body.get("liked_points", [])
+            for quote in item.get("evidence_quotes", [])
+        ]
+        self.assertEqual(len(liked_quotes), len(set(liked_quotes)))
+        self.assertTrue(any("Love it and will continue to purchase" in quote for quote in liked_quotes))
+        self.assertTrue(any(best_quote.rstrip(".") in quote for quote in liked_quotes))
+
+        creative_angles = body.get("creative_angles", [])
+        hooks = body.get("hooks", [])
+        self.assertLessEqual(sum(positive_quote in item for item in creative_angles), 1)
+        self.assertLessEqual(sum(positive_quote in item for item in hooks), 1)
+
+        pack_text = str(body["video_script_pack"])
+        self.assertIn("1919 Draft Root Beer", pack_text)
+        self.assertNotIn("Cla...", pack_text)
+        self.assertNotIn("Real Vanilla, Cla", pack_text)
+
     def test_review_workspace_sample_interpretation_respects_chinese_output_language(self):
         from fastapi.testclient import TestClient
         from main import app
