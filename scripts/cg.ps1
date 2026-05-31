@@ -715,7 +715,7 @@ try {
 
   throw
 } finally {
-  if ($Command -ne "feedback") {
+  if ($Command -notin @("feedback", "inspect-workspace-copy")) {
     if ($cgCommandFailed) {
       CopyFeedbackTail "failed"
     } else {
