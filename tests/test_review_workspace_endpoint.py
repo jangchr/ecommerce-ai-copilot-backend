@@ -1032,6 +1032,98 @@ class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
         self.assertNotIn("Cla...", pack_text)
         self.assertNotIn("Real Vanilla, Cla", pack_text)
 
+
+    def test_review_workspace_polishes_root_beer_labels_counts_angles_and_scripts(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "root_beer_output_polish",
+                "source": "unit_test",
+                "output_language": "zh-CN",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "B0DYLDYHXW",
+                        "url": "https://www.amazon.com/dp/B0DYLDYHXW",
+                        "title": "1919 Draft Root Beer 16oz Can, Real Sugar, Real Vanilla, Cla...",
+                        "brand": "1919",
+                        "description": "Premium root beer for chilled pours and taste comparisons.",
+                        "reviews": [
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "Good root beer, just not worth the high price over something like IBC, which is half the price.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Love it and will continue to purchase.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "This is the best Rootbeer I have ever had and order it frequently.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "If you know you know..not as sharpe as Barqs, but smother, greater flavor than A&W.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Best root beer and unfortunately not available on the West coast.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+
+        liked_items = body.get("liked_points", [])
+        liked_text = str(liked_items)
+        self.assertIn("repeat purchase intent", liked_text)
+        self.assertIn("best root beer praise", liked_text)
+        self.assertIn("root beer flavor comparison", liked_text)
+        self.assertNotIn("use case: for", str(body))
+        self.assertNotIn("best root beer'", liked_text)
+
+        repeat_items = [
+            item for item in liked_items
+            if "Love it and will continue to purchase" in " ".join(item.get("evidence_quotes", []))
+        ]
+        self.assertTrue(repeat_items)
+        self.assertTrue(any("repeat purchase intent" in item.get("label", "") for item in repeat_items))
+
+        use_case_text = str(body.get("use_cases", []))
+        self.assertNotIn("Love it and will continue to purchase", use_case_text)
+        self.assertIn("West coast", use_case_text)
+
+        sample_usage = "\n".join(body["sample_interpretation"]["evidence_usage_summary"])
+        self.assertIn("\u6b63\u5411\u8bc1\u636e\u8bc4\u8bba", sample_usage)
+        self.assertNotIn("\u6b63\u5411\u8bc1\u636e\uff1a26 \u6761\u4fe1\u53f7", sample_usage)
+
+        angles = body.get("creative_angles", [])
+        self.assertLessEqual(len(angles), 3)
+        self.assertTrue(any("\u98ce\u5473\u5bf9\u6bd4" in angle or "\u4ef7\u683c" in angle for angle in angles), angles)
+
+        pack_text = str(body["video_script_pack"])
+        self.assertIn("\u7b2c\u4e00\u955c", pack_text)
+        self.assertIn("\u7b2c\u4e8c\u955c", pack_text)
+        self.assertIn("\u7b2c\u4e09\u955c", pack_text)
+        self.assertIn("Good root beer, just not worth the high price", pack_text)
+        self.assertTrue("Barqs" in pack_text or "A&W" in pack_text)
+        self.assertIn("1919 Draft Root Beer", pack_text)
+        self.assertNotIn("Cla...", pack_text)
+
+
     def test_review_workspace_sample_interpretation_respects_chinese_output_language(self):
         from fastapi.testclient import TestClient
         from main import app
