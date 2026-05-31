@@ -2326,6 +2326,29 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             self.assertIn(marker, self.source)
 
 
+
+    def test_review_workspace_source_groups_render_structured_metadata_summary(self):
+        for marker in [
+            "function reviewWorkspaceMetadataSummaryText(metadata, language = currentOutputLanguage())",
+            "function reviewWorkspaceMetadataListText(values)",
+            "group.metadata_summary || {}",
+            "verified_purchase_count",
+            "review_date_count",
+            "helpful_vote_review_count",
+            "top_colors",
+            "top_sizes",
+            "top_review_dates",
+            "verifiedPurchaseCount",
+            "reviewDateCount",
+            "helpfulVoteReviewCount",
+            "topColors",
+            "topSizes",
+            "topReviewDates",
+            "metadataSummary",
+        ]:
+            self.assertIn(marker, self.source)
+
+
     def test_extension_workspace_auto_analyzes_injected_payload_once(self):
         for marker in [
             "extensionWorkspaceAutoAnalyzeKey",

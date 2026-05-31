@@ -5171,7 +5171,14 @@
                 unknownReviews: isZh ? '\u672a\u5206\u7c7b\u8bc4\u8bba' : 'Unclassified reviews',
                 asinContribution: isZh ? 'ASIN \u8d21\u732e' : 'ASIN contribution',
                 sourceGroups: isZh ? '\u6765\u6e90\u5206\u7ec4' : 'Source groups',
-                evidenceQuotes: isZh ? '\u8bc1\u636e\u539f\u8bdd' : 'Evidence quotes'
+                evidenceQuotes: isZh ? '\u8bc1\u636e\u539f\u8bdd' : 'Evidence quotes',
+                metadataSummary: isZh ? '\u7ed3\u6784\u5316\u8bc4\u8bba\u5143\u6570\u636e' : 'Structured review metadata',
+                verifiedPurchaseCount: isZh ? '\u5df2\u786e\u8ba4\u8d2d\u4e70' : 'Verified purchase',
+                reviewDateCount: isZh ? '\u6709\u8bc4\u8bba\u65e5\u671f' : 'Review dates found',
+                helpfulVoteReviewCount: isZh ? '\u6709 helpful vote \u7684\u8bc4\u8bba' : 'Reviews with helpful votes',
+                topColors: isZh ? '\u9ad8\u9891\u989c\u8272' : 'Top colors',
+                topSizes: isZh ? '\u9ad8\u9891\u5c3a\u5bf8' : 'Top sizes',
+                topReviewDates: isZh ? '\u9ad8\u9891\u8bc4\u8bba\u65e5\u671f' : 'Top review dates'
             };
             return labels[key] || key;
         }
@@ -5184,6 +5191,52 @@
                 .map(([asin, count]) => `- ${asin}: ${count}`)
                 .join(String.fromCharCode(10));
         }
+
+
+        function reviewWorkspaceMetadataListText(values) {
+            return (values || [])
+                .filter(Boolean)
+                .slice(0, 5)
+                .map((value) => String(value))
+                .join(", ");
+        }
+
+        function reviewWorkspaceMetadataSummaryText(metadata, language = currentOutputLanguage()) {
+            if (!metadata || !Object.keys(metadata).length) return "";
+
+            const lines = [];
+
+            if (metadata.verified_purchase_count) {
+                lines.push(`  ${reviewWorkspaceSourceLabel('verifiedPurchaseCount', language)}: ${metadata.verified_purchase_count}`);
+            }
+            if (metadata.review_date_count) {
+                lines.push(`  ${reviewWorkspaceSourceLabel('reviewDateCount', language)}: ${metadata.review_date_count}`);
+            }
+            if (metadata.helpful_vote_review_count) {
+                lines.push(`  ${reviewWorkspaceSourceLabel('helpfulVoteReviewCount', language)}: ${metadata.helpful_vote_review_count}`);
+            }
+
+            const colors = reviewWorkspaceMetadataListText(metadata.top_colors);
+            const sizes = reviewWorkspaceMetadataListText(metadata.top_sizes);
+            const dates = reviewWorkspaceMetadataListText(metadata.top_review_dates);
+
+            if (colors) {
+                lines.push(`  ${reviewWorkspaceSourceLabel('topColors', language)}: ${colors}`);
+            }
+            if (sizes) {
+                lines.push(`  ${reviewWorkspaceSourceLabel('topSizes', language)}: ${sizes}`);
+            }
+            if (dates) {
+                lines.push(`  ${reviewWorkspaceSourceLabel('topReviewDates', language)}: ${dates}`);
+            }
+
+            if (!lines.length) return "";
+            return [
+                `  ${reviewWorkspaceSourceLabel('metadataSummary', language)}:`,
+                ...lines
+            ].join(String.fromCharCode(10));
+        }
+
 
         function reviewWorkspaceSourceGroupsText(sourceBreakdown, language = currentOutputLanguage()) {
             return (sourceBreakdown?.source_groups || [])
@@ -5198,7 +5251,8 @@
                         .slice(0, 2)
                         .map((quote) => `  ${reviewWorkspaceSourceLabel('evidenceQuotes', language)}: ${quote}`)
                         .join(String.fromCharCode(10));
-                    return [header, asins, quotes].filter(Boolean).join(String.fromCharCode(10));
+                    const metadata = reviewWorkspaceMetadataSummaryText(group.metadata_summary || {}, language);
+                    return [header, asins, metadata, quotes].filter(Boolean).join(String.fromCharCode(10));
                 })
                 .filter(Boolean)
                 .join(String.fromCharCode(10));
