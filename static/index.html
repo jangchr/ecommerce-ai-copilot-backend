@@ -3170,6 +3170,7 @@
 
         let latestDebugCategory = '';
         let latestProductData = null;
+        let latestVideoGenerationJob = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
         let latestChineseTranslation = '';
@@ -3417,6 +3418,33 @@
                 videoJobSelectedExportLabel: 'Selected export',
                 videoJobPromptLabel: 'Selected prompt',
                 videoJobManualExportNote: 'Copy this prompt into your selected video tool.',
+                refreshJobStatus: 'Refresh job status',
+                copySelectedPrompt: 'Copy selected prompt',
+                copyJobId: 'Copy job ID',
+                videoJobRefreshFailed: 'Could not refresh video job.',
+                videoJobStatusRefreshed: 'Video job status refreshed.',
+                videoJobPromptCopied: 'Selected prompt copied.',
+                videoJobIdCopied: 'Job ID copied.',
+                recordExternalVideoResult: 'Record external video result',
+                saveVideoResult: 'Save video result',
+                saveVideoResultWorking: 'Saving video result...',
+                videoResultSaved: 'Video result saved.',
+                videoResultSaveFailed: 'Could not save video result.',
+                recentVideoJobs: 'Recent video jobs',
+                refreshVideoJobs: 'Refresh video jobs',
+                refreshVideoJobsWorking: 'Refreshing video jobs...',
+                videoJobsRefreshFailed: 'Could not refresh video jobs.',
+                videoJobsRefreshed: 'Video jobs refreshed.',
+                noVideoJobsYet: 'No video jobs yet.',
+                loadJob: 'Load job',
+                resultUrl: 'Result URL',
+                previewUrl: 'Preview URL',
+                downloadUrl: 'Download URL',
+                providerJobId: 'Provider job ID',
+                notes: 'Notes',
+                updatedAt: 'Updated at',
+                createdAt: 'Created at',
+                warnings: 'Warnings',
                 agentTraceTitle: 'Multi-agent Trace',
                 agentTraceSubtitle: 'Lightweight trace scaffold, not real multi-agent execution yet.',
                 agentTraceExecutionMode: 'Execution mode',
@@ -3629,6 +3657,33 @@
                 videoJobSelectedExportLabel: '\u5df2\u9009\u5bfc\u51fa\u683c\u5f0f',
                 videoJobPromptLabel: '\u5df2\u9009\u63d0\u793a\u8bcd',
                 videoJobManualExportNote: '\u628a\u8fd9\u6bb5\u63d0\u793a\u8bcd\u590d\u5236\u5230\u4f60\u9009\u62e9\u7684\u89c6\u9891\u5de5\u5177\u91cc\u3002',
+                refreshJobStatus: '\u5237\u65b0\u4efb\u52a1\u72b6\u6001',
+                copySelectedPrompt: '\u590d\u5236\u5df2\u9009\u63d0\u793a\u8bcd',
+                copyJobId: '\u590d\u5236\u4efb\u52a1 ID',
+                videoJobRefreshFailed: '\u65e0\u6cd5\u5237\u65b0\u89c6\u9891\u4efb\u52a1\u3002',
+                videoJobStatusRefreshed: '\u89c6\u9891\u4efb\u52a1\u72b6\u6001\u5df2\u5237\u65b0\u3002',
+                videoJobPromptCopied: '\u5df2\u9009\u63d0\u793a\u8bcd\u5df2\u590d\u5236\u3002',
+                videoJobIdCopied: '\u4efb\u52a1 ID \u5df2\u590d\u5236\u3002',
+                recordExternalVideoResult: '\u8bb0\u5f55\u5916\u90e8\u89c6\u9891\u7ed3\u679c',
+                saveVideoResult: '\u4fdd\u5b58\u89c6\u9891\u7ed3\u679c',
+                saveVideoResultWorking: '\u6b63\u5728\u4fdd\u5b58\u89c6\u9891\u7ed3\u679c...',
+                videoResultSaved: '\u89c6\u9891\u7ed3\u679c\u5df2\u4fdd\u5b58\u3002',
+                videoResultSaveFailed: '\u65e0\u6cd5\u4fdd\u5b58\u89c6\u9891\u7ed3\u679c\u3002',
+                recentVideoJobs: '\u6700\u8fd1\u89c6\u9891\u4efb\u52a1',
+                refreshVideoJobs: '\u5237\u65b0\u89c6\u9891\u4efb\u52a1',
+                refreshVideoJobsWorking: '\u6b63\u5728\u5237\u65b0\u89c6\u9891\u4efb\u52a1...',
+                videoJobsRefreshFailed: '\u65e0\u6cd5\u5237\u65b0\u89c6\u9891\u4efb\u52a1\u3002',
+                videoJobsRefreshed: '\u89c6\u9891\u4efb\u52a1\u5df2\u5237\u65b0\u3002',
+                noVideoJobsYet: '\u8fd8\u6ca1\u6709\u89c6\u9891\u4efb\u52a1\u3002',
+                loadJob: '\u52a0\u8f7d\u4efb\u52a1',
+                resultUrl: '\u7ed3\u679c URL',
+                previewUrl: '\u9884\u89c8 URL',
+                downloadUrl: '\u4e0b\u8f7d URL',
+                providerJobId: '\u63d0\u4f9b\u65b9\u4efb\u52a1 ID',
+                notes: '\u5907\u6ce8',
+                updatedAt: '\u66f4\u65b0\u65f6\u95f4',
+                createdAt: '\u521b\u5efa\u65f6\u95f4',
+                warnings: '\u63d0\u793a',
                 agentTraceTitle: '\u591a Agent Trace',
                 agentTraceSubtitle: '\u8fd9\u662f\u8f7b\u91cf\u7ea7\u591a Agent \u8f68\u8ff9\u811a\u624b\u67b6\uff0c\u8fd8\u4e0d\u662f\u771f\u5b9e\u591a\u6a21\u578b Agent \u5e76\u884c\u6267\u884c\u3002',
                 agentTraceExecutionMode: '\u6267\u884c\u6a21\u5f0f',
@@ -5709,6 +5764,33 @@
             return body;
         }
 
+        async function videoGenerationJsonResponse(response, fallbackKey) {
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || t(fallbackKey));
+            }
+            return body;
+        }
+
+        async function getVideoGenerationJob(jobId) {
+            const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}`);
+            return videoGenerationJsonResponse(response, 'videoJobRefreshFailed');
+        }
+
+        async function listVideoGenerationJobs(limit = 10) {
+            const response = await fetch(`/api/v1/video-generation/jobs?limit=${encodeURIComponent(limit)}`);
+            return videoGenerationJsonResponse(response, 'videoJobsRefreshFailed');
+        }
+
+        async function postVideoGenerationJobResult(jobId, payload) {
+            const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/result`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            return videoGenerationJsonResponse(response, 'videoResultSaveFailed');
+        }
+
         async function postPastedReviewWorkspaceAnalysis(payload) {
             const response = await fetch('/api/v1/analyze-pasted-review-workspace', {
                 method: 'POST',
@@ -6872,6 +6954,7 @@
                     </div>
                     <div class="quick-use-copy-status" id="videoJobStatus"></div>
                     <div id="videoJobResult"></div>
+                    ${renderRecentVideoJobsPanel()}
                 </div>
             `;
         }
@@ -6879,17 +6962,209 @@
         function renderVideoJobResult(job) {
             if (!job) return '';
             const providerPayload = job.provider_payload || {};
+            const result = job.result || {};
             const prompt = providerPayload.prompt || '';
+            const warnings = Array.isArray(job.warnings) ? job.warnings.filter(Boolean).join('\n') : '';
             return `
-                <div class="probe-grid">
+                <div class="probe-grid" id="videoJobCurrentPanel">
                     ${block(t('videoJobIdLabel'), job.job_id || '')}
                     ${block(t('videoJobStatusLabel'), job.status || '')}
                     ${block(t('videoJobProviderResultLabel'), job.provider || '')}
+                    ${block(t('videoJobProviderLabel'), providerPayload.provider_label || '')}
                     ${block(t('videoJobSelectedExportLabel'), providerPayload.selected_export_key || '')}
+                    ${block(t('createdAt'), job.created_at || '')}
+                    ${block(t('updatedAt'), job.updated_at || '')}
+                    ${result.result_url ? block(t('resultUrl'), result.result_url) : ''}
+                    ${result.preview_url ? block(t('previewUrl'), result.preview_url) : ''}
+                    ${result.download_url ? block(t('downloadUrl'), result.download_url) : ''}
+                    ${result.provider_job_id ? block(t('providerJobId'), result.provider_job_id) : ''}
+                    ${warnings ? block(t('warnings'), warnings) : ''}
                 </div>
                 ${block(t('videoJobPromptLabel'), prompt)}
                 <div class="feedback-box">${escapeHTML(t('videoJobManualExportNote'))}</div>
+                <div class="quick-use-pack-actions">
+                    <button class="btn-secondary" type="button" id="videoJobRefreshBtn" onclick="refreshCurrentVideoJobStatus()">${escapeHTML(t('refreshJobStatus'))}</button>
+                    <button class="btn-secondary" type="button" id="videoJobCopyPromptBtn" onclick="copyCurrentVideoJobPrompt()">${escapeHTML(t('copySelectedPrompt'))}</button>
+                    <button class="btn-secondary" type="button" id="videoJobCopyIdBtn" onclick="copyCurrentVideoJobId()">${escapeHTML(t('copyJobId'))}</button>
+                </div>
+                ${renderVideoJobResultForm(job)}
             `;
+        }
+
+        function renderVideoJobResultForm(job) {
+            if (!job || !job.job_id) return '';
+            const result = job.result || {};
+            return `
+                <div class="section-block" id="videoJobExternalResultPanel">
+                    <div class="json-key">${escapeHTML(t('recordExternalVideoResult'))}</div>
+                    <div class="input-grid">
+                        <input id="videoResultUrlInput" placeholder="${escapeHTML(t('resultUrl'))}" value="${escapeHTML(result.result_url || '')}" />
+                        <input id="videoPreviewUrlInput" placeholder="${escapeHTML(t('previewUrl'))}" value="${escapeHTML(result.preview_url || '')}" />
+                        <input id="videoDownloadUrlInput" placeholder="${escapeHTML(t('downloadUrl'))}" value="${escapeHTML(result.download_url || '')}" />
+                        <input id="videoProviderJobIdInput" placeholder="${escapeHTML(t('providerJobId'))}" value="${escapeHTML(result.provider_job_id || '')}" />
+                    </div>
+                    <textarea id="videoResultNotesInput" rows="3" placeholder="${escapeHTML(t('notes'))}">${escapeHTML(result.notes || '')}</textarea>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" id="videoJobSaveResultBtn" type="button" onclick="saveCurrentVideoJobResult()">${escapeHTML(t('saveVideoResult'))}</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRecentVideoJobsPanel() {
+            return `
+                <div class="section-block" id="recentVideoJobsPanel">
+                    <div class="json-key">${escapeHTML(t('recentVideoJobs'))}</div>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" id="refreshVideoJobsBtn" type="button" onclick="refreshRecentVideoJobs()">${escapeHTML(t('refreshVideoJobs'))}</button>
+                    </div>
+                    <div class="quick-use-copy-status" id="recentVideoJobsStatus"></div>
+                    <div id="recentVideoJobsList" class="recent-list">
+                        <div class="recent-empty">${escapeHTML(t('noVideoJobsYet'))}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRecentVideoJobRows(jobs) {
+            if (!Array.isArray(jobs) || !jobs.length) {
+                return `<div class="recent-empty">${escapeHTML(t('noVideoJobsYet'))}</div>`;
+            }
+            return jobs.map((job) => `
+                <div class="recent-card video-job-recent-card">
+                    <div class="recent-card-main">
+                        <strong>${escapeHTML(job.job_id || '')}</strong>
+                        <span>${escapeHTML(job.status || '')}</span>
+                        <span>${escapeHTML(job.provider || '')}</span>
+                        <span>${escapeHTML(job.selected_export_key || '')}</span>
+                        ${job.source_hook ? `<span>${escapeHTML(job.source_hook)}</span>` : ''}
+                        ${job.result_url ? `<span>${escapeHTML(t('resultUrl'))}: ${escapeHTML(job.result_url)}</span>` : ''}
+                        ${job.updated_at ? `<span>${escapeHTML(t('updatedAt'))}: ${escapeHTML(job.updated_at)}</span>` : ''}
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="loadVideoGenerationJob('${escapeHTML(job.job_id || '')}')">${escapeHTML(t('loadJob'))}</button>
+                </div>
+            `).join('');
+        }
+
+        function setCurrentVideoJob(job) {
+            latestVideoGenerationJob = job || null;
+            const result = document.getElementById('videoJobResult');
+            if (result) result.innerHTML = renderVideoJobResult(latestVideoGenerationJob);
+        }
+
+        function currentVideoJobStatusTarget() {
+            return document.getElementById('videoJobStatus') || document.getElementById('copyStatus');
+        }
+
+        async function copyVideoJobText(text, successKey) {
+            const status = currentVideoJobStatusTarget();
+            if (!text) {
+                showCopyFeedbackToast(t('videoPromptCopyFailed'), status);
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopyFeedbackToast(t(successKey), status);
+            } catch (error) {
+                showCopyFeedbackToast(t('videoPromptCopyFailed'), status);
+            }
+        }
+
+        async function refreshCurrentVideoJobStatus() {
+            const status = currentVideoJobStatusTarget();
+            const btn = document.getElementById('videoJobRefreshBtn');
+            const jobId = latestVideoGenerationJob?.job_id;
+            if (!jobId) {
+                if (status) status.textContent = t('videoJobRefreshFailed');
+                return;
+            }
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('refreshJobStatus');
+            try {
+                const response = await getVideoGenerationJob(jobId);
+                setCurrentVideoJob(response.job || {});
+                if (status) status.textContent = t('videoJobStatusRefreshed');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('videoJobRefreshFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function copyCurrentVideoJobPrompt() {
+            const prompt = latestVideoGenerationJob?.provider_payload?.prompt || '';
+            copyVideoJobText(prompt, 'videoJobPromptCopied');
+        }
+
+        function copyCurrentVideoJobId() {
+            const jobId = latestVideoGenerationJob?.job_id || '';
+            copyVideoJobText(jobId, 'videoJobIdCopied');
+        }
+
+        async function saveCurrentVideoJobResult() {
+            const status = currentVideoJobStatusTarget();
+            const btn = document.getElementById('videoJobSaveResultBtn');
+            const jobId = latestVideoGenerationJob?.job_id;
+            if (!jobId) {
+                if (status) status.textContent = t('videoResultSaveFailed');
+                return;
+            }
+            const resultUrl = (document.getElementById('videoResultUrlInput')?.value || '').trim();
+            const previewUrl = (document.getElementById('videoPreviewUrlInput')?.value || '').trim();
+            const downloadUrl = (document.getElementById('videoDownloadUrlInput')?.value || '').trim();
+            const providerJobId = (document.getElementById('videoProviderJobIdInput')?.value || '').trim();
+            const notes = (document.getElementById('videoResultNotesInput')?.value || '').trim();
+            const payload = {
+                status: (resultUrl || previewUrl) ? 'external_result_ready' : 'manual_export_completed',
+                result_url: resultUrl,
+                preview_url: previewUrl,
+                download_url: downloadUrl,
+                provider_job_id: providerJobId,
+                notes
+            };
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('saveVideoResultWorking');
+            try {
+                const response = await postVideoGenerationJobResult(jobId, payload);
+                setCurrentVideoJob(response.job || {});
+                if (status) status.textContent = t('videoResultSaved');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('videoResultSaveFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function refreshRecentVideoJobs() {
+            const status = document.getElementById('recentVideoJobsStatus');
+            const list = document.getElementById('recentVideoJobsList');
+            const btn = document.getElementById('refreshVideoJobsBtn');
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('refreshVideoJobsWorking');
+            try {
+                const response = await listVideoGenerationJobs(10);
+                if (list) list.innerHTML = renderRecentVideoJobRows(response.jobs || []);
+                if (status) status.textContent = t('videoJobsRefreshed');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('videoJobsRefreshFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function loadVideoGenerationJob(jobId) {
+            const status = document.getElementById('recentVideoJobsStatus') || currentVideoJobStatusTarget();
+            if (!jobId) {
+                if (status) status.textContent = t('videoJobRefreshFailed');
+                return;
+            }
+            try {
+                const response = await getVideoGenerationJob(jobId);
+                setCurrentVideoJob(response.job || {});
+                if (status) status.textContent = t('videoJobStatusRefreshed');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('videoJobRefreshFailed');
+            }
         }
 
         async function createVideoJobFromLatestGeneration() {
@@ -6913,8 +7188,9 @@
                     provider,
                     output_language: currentOutputLanguage()
                 });
+                latestVideoGenerationJob = response.job || {};
                 if (status) status.textContent = t('videoJobCreated');
-                if (result) result.innerHTML = renderVideoJobResult(response.job || {});
+                if (result) result.innerHTML = renderVideoJobResult(latestVideoGenerationJob);
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoJobFailed');
             } finally {

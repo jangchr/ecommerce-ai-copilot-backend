@@ -15,14 +15,88 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("function renderVideoJobControls(data)", self.source)
         self.assertIn("async function createVideoJobFromLatestGeneration()", self.source)
         self.assertIn("async function postVideoJobFromGeneration(payload)", self.source)
+        self.assertIn("async function getVideoGenerationJob(jobId)", self.source)
+        self.assertIn("async function listVideoGenerationJobs(limit = 10)", self.source)
+        self.assertIn("async function postVideoGenerationJobResult(jobId, payload)", self.source)
+        self.assertIn("async function videoGenerationJsonResponse(response, fallbackKey)", self.source)
         self.assertIn("/api/v1/video-generation/jobs/from-generation", self.source)
+        self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}", self.source)
+        self.assertIn("/api/v1/video-generation/jobs?limit=${encodeURIComponent(limit)}", self.source)
+        self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/result", self.source)
         self.assertIn("generation_data: latestProductData", self.source)
         self.assertIn("videoJobProviderSelect", self.source)
         self.assertIn("videoJobCreateBtn", self.source)
         self.assertIn("renderVideoJobResult", self.source)
+        self.assertIn("renderVideoJobResultForm", self.source)
+        self.assertIn("renderRecentVideoJobsPanel", self.source)
+        self.assertIn("renderRecentVideoJobRows", self.source)
+        self.assertIn("refreshCurrentVideoJobStatus", self.source)
+        self.assertIn("copyCurrentVideoJobPrompt", self.source)
+        self.assertIn("copyCurrentVideoJobId", self.source)
+        self.assertIn("saveCurrentVideoJobResult", self.source)
+        self.assertIn("refreshRecentVideoJobs", self.source)
+        self.assertIn("loadVideoGenerationJob", self.source)
         self.assertIn("videoJobCreateTitle", self.source)
         self.assertIn("videoJobCreated", self.source)
         self.assertIn("videoJobFailed", self.source)
+        for marker in [
+            "videoJobCurrentPanel",
+            "videoJobExternalResultPanel",
+            "recentVideoJobsPanel",
+            "videoJobRefreshBtn",
+            "videoJobCopyPromptBtn",
+            "videoJobCopyIdBtn",
+            "videoJobSaveResultBtn",
+            "refreshVideoJobsBtn",
+            "recentVideoJobsList",
+            "provider_payload",
+            "selected_export_key",
+            "provider_label",
+            "result_url",
+            "preview_url",
+            "download_url",
+            "provider_job_id",
+            "warnings",
+        ]:
+            with self.subTest(video_job_marker=marker):
+                self.assertIn(marker, self.source)
+
+        for copy_key in [
+            "refreshJobStatus",
+            "copySelectedPrompt",
+            "copyJobId",
+            "recordExternalVideoResult",
+            "saveVideoResult",
+            "videoResultSaved",
+            "videoResultSaveFailed",
+            "recentVideoJobs",
+            "refreshVideoJobs",
+            "noVideoJobsYet",
+            "loadJob",
+            "resultUrl",
+            "previewUrl",
+            "downloadUrl",
+            "providerJobId",
+            "notes",
+            "updatedAt",
+            "createdAt",
+            "warnings",
+        ]:
+            with self.subTest(video_job_copy_key=copy_key):
+                self.assertIn(copy_key, self.source)
+
+        self.assertIn("refreshJobStatus: 'Refresh job status'", self.source)
+        self.assertIn("refreshJobStatus: '\\u5237\\u65b0\\u4efb\\u52a1\\u72b6\\u6001'", self.source)
+        self.assertIn("copySelectedPrompt: 'Copy selected prompt'", self.source)
+        self.assertIn("copySelectedPrompt: '\\u590d\\u5236\\u5df2\\u9009\\u63d0\\u793a\\u8bcd'", self.source)
+        self.assertIn("recordExternalVideoResult: 'Record external video result'", self.source)
+        self.assertIn("recordExternalVideoResult: '\\u8bb0\\u5f55\\u5916\\u90e8\\u89c6\\u9891\\u7ed3\\u679c'", self.source)
+        self.assertIn("recentVideoJobs: 'Recent video jobs'", self.source)
+        self.assertIn("recentVideoJobs: '\\u6700\\u8fd1\\u89c6\\u9891\\u4efb\\u52a1'", self.source)
+        self.assertIn("copyVideoJobText(prompt, 'videoJobPromptCopied')", self.source)
+        self.assertIn("copyVideoJobText(jobId, 'videoJobIdCopied')", self.source)
+        self.assertIn("status: (resultUrl || previewUrl) ? 'external_result_ready' : 'manual_export_completed'", self.source)
+        self.assertNotIn("????", self.source)
 
     def test_agent_trace_panel_is_rendered_from_product_data(self):
         self.assertIn("function renderAgentTracePanel(agentTrace)", self.source)
