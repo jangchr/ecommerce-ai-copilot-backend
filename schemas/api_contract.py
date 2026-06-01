@@ -153,6 +153,15 @@ class VideoGenerationProvidersResponse(BaseModel):
     request_id: Optional[str] = None
 
 
+class VideoGenerationJobResultRequest(BaseModel):
+    status: str = "manual_export_completed"
+    result_url: str = ""
+    preview_url: str = ""
+    download_url: str = ""
+    provider_job_id: str = ""
+    notes: str = ""
+
+
 class AmazonIntakeRequest(BaseModel):
     url: str
     product_category: str = "amazon_product"

@@ -138,6 +138,83 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(len(job["provider_payload"]["scenes"]), 2)
         self.assertEqual(job["result"]["result_url"], "")
 
+    def test_update_video_generation_job_result_records_external_result(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+                "output_language": "en",
+            },
+        ).json()
+
+        job_id = created["job"]["job_id"]
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/result",
+            json={
+                "status": "external_result_ready",
+                "result_url": "https://example.com/video.mp4",
+                "preview_url": "https://example.com/preview.jpg",
+                "download_url": "https://example.com/download.mp4",
+                "provider_job_id": "runway_job_123",
+                "notes": "Generated externally from copied prompt.",
+            },
+            headers={"X-Request-ID": "video-job-result-1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["request_id"], "video-job-result-1")
+
+        job = payload["job"]
+        self.assertEqual(job["job_id"], job_id)
+        self.assertEqual(job["status"], "external_result_ready")
+        self.assertEqual(job["result"]["result_url"], "https://example.com/video.mp4")
+        self.assertEqual(job["result"]["preview_url"], "https://example.com/preview.jpg")
+        self.assertEqual(job["result"]["download_url"], "https://example.com/download.mp4")
+        self.assertEqual(job["result"]["provider_job_id"], "runway_job_123")
+        self.assertTrue(job["history"])
+        self.assertEqual(job["history"][-1]["event"], "result_update")
+
+    def test_update_video_generation_job_result_falls_back_to_manual_completed_status(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "manual_export",
+            },
+        ).json()
+
+        job_id = created["job"]["job_id"]
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/result",
+            json={
+                "status": "not_supported",
+                "notes": "Copied into a manual editor.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        job = response.json()["job"]
+        self.assertEqual(job["status"], "manual_export_completed")
+        self.assertEqual(job["result"]["notes"], "Copied into a manual editor.")
+
+    def test_update_video_generation_job_result_returns_404_for_missing_job(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs/video_job_missing/result",
+            json={
+                "status": "external_result_ready",
+                "result_url": "https://example.com/video.mp4",
+            },
+            headers={"X-Request-ID": "video-job-result-missing-1"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["request_id"], "video-job-result-missing-1")
+
     def test_get_video_generation_job_returns_created_job(self):
         created = self.client.post(
             "/api/v1/video-generation/jobs",

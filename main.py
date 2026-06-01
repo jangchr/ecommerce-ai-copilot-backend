@@ -32,6 +32,7 @@ from schemas.api_contract import (
     VideoGenerationJobResponse,
     VideoGenerationJobStatusResponse,
     VideoGenerationProvidersResponse,
+    VideoGenerationJobResultRequest,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -152,6 +153,11 @@ VIDEO_PROVIDER_ALIASES = {
     "runway_style_prompt": "runway",
     "pika": "pika",
     "pika_style_prompt": "pika",
+}
+VIDEO_GENERATION_RESULT_STATUSES = {
+    "manual_export_completed",
+    "external_result_ready",
+    "failed",
 }
 
 app.add_middleware(
@@ -1669,11 +1675,56 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
             "result_url": "",
             "preview_url": "",
             "download_url": "",
+            "provider_job_id": "",
+            "notes": "",
             "message": "Manual export scaffold created. No external video API has been called.",
         },
         "warnings": warnings,
+        "history": [
+            {
+                "event": "created",
+                "status": "ready_for_manual_export",
+                "updated_at": now,
+                "provider": provider,
+            }
+        ],
     }
     VIDEO_GENERATION_JOBS[job_id] = job
+    return job
+
+
+def _update_video_generation_job_result(job: dict, request: VideoGenerationJobResultRequest) -> dict:
+    requested_status = _clean_description_text(request.status or "manual_export_completed")
+    if requested_status not in VIDEO_GENERATION_RESULT_STATUSES:
+        requested_status = "manual_export_completed"
+
+    result = dict(job.get("result") or {})
+    result.update(
+        {
+            "result_url": _clean_description_text(request.result_url),
+            "preview_url": _clean_description_text(request.preview_url),
+            "download_url": _clean_description_text(request.download_url),
+            "provider_job_id": _clean_description_text(request.provider_job_id),
+            "notes": _clean_description_text(request.notes),
+            "message": "External/manual video result recorded." if requested_status != "failed" else "External/manual video generation failed.",
+        }
+    )
+
+    job["status"] = requested_status
+    job["updated_at"] = _utc_now_iso()
+    job["result"] = result
+
+    history = list(job.get("history") or [])
+    history.append(
+        {
+            "event": "result_update",
+            "status": requested_status,
+            "updated_at": job["updated_at"],
+            "provider_job_id": result.get("provider_job_id", ""),
+            "has_result_url": bool(result.get("result_url")),
+        }
+    )
+    job["history"] = history
     return job
 
 
@@ -1721,6 +1772,45 @@ async def create_video_generation_job(request: VideoGenerationJobRequest, http_r
         job_id=job["job_id"],
         provider=job["provider"],
     )
+    return {
+        "status": "success",
+        "job": job,
+        "request_id": request_id,
+    }
+
+
+@app.post("/api/v1/video-generation/jobs/{job_id}/result", response_model=VideoGenerationJobStatusResponse)
+async def update_video_generation_job_result(
+    job_id: str,
+    request: VideoGenerationJobResultRequest,
+    http_request: Request,
+):
+    request_id = http_request.state.request_id
+    job = VIDEO_GENERATION_JOBS.get(job_id)
+
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation job not found",
+                "request_id": request_id,
+            },
+        )
+
+    job = _update_video_generation_job_result(job, request)
+    VIDEO_GENERATION_JOBS[job_id] = job
+
+    emit_event(
+        "video_generation_job_result_updated",
+        request_id,
+        endpoint="/api/v1/video-generation/jobs/{job_id}/result",
+        status="success",
+        job_id=job_id,
+        job_status=job["status"],
+        provider=job.get("provider", ""),
+    )
+
     return {
         "status": "success",
         "job": job,
