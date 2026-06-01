@@ -256,6 +256,81 @@ class ReviewWorkspaceEvidenceQualityTest(unittest.TestCase):
         self.assertTrue(all("Reviewed in " not in quote for quote in all_quotes))
         self.assertTrue(all("Verified Purchase" not in quote for quote in all_quotes))
 
+    def test_balsamic_value_and_spout_signals_are_not_misclassified(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "balsamic_value_spout_smoke",
+                "source": "unit_test",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "url": "https://www.amazon.com/dp/B00QIIMCCW",
+                        "title": "Colavita Balsamic Vinegar - 17 oz",
+                        "brand": "Colavita",
+                        "reviews": [
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Amy Worth the price and Cannot beat the price for this quality.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "retired303 Quality item. Value priced and excellent flavor.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "4 out of 5 stars",
+                                "text": "analogkid Yes it's pricy but personally I think it's worth it.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "Amazon Customer However, there is not lid to go over the spout, so air is ever present and oxidation is a concern.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        objection_labels = {item["label"] for item in body["buyer_objections"]}
+        objection_text = "\n".join(
+            quote
+            for item in body["buyer_objections"]
+            for quote in item.get("evidence_quotes", [])
+        )
+        positive_text = "\n".join(
+            quote
+            for item in body["liked_points"]
+            for quote in item.get("evidence_quotes", [])
+        )
+        all_quote_text = "\n".join(
+            quote
+            for section in ["common_pain_points", "buyer_objections", "liked_points", "use_cases"]
+            for item in body.get(section, [])
+            for quote in item.get("evidence_quotes", [])
+        )
+
+        self.assertIn("packaging / spout concern", objection_labels)
+        self.assertNotIn("size / quantity mismatch", objection_labels)
+        self.assertNotIn("quantity / size uncertainty", objection_labels)
+        self.assertNotIn("Cannot beat the price", objection_text)
+        self.assertNotIn("Value priced", objection_text)
+        self.assertIn("pricy", objection_text)
+        self.assertIn("Cannot beat the price", positive_text)
+        self.assertIn("Value priced", positive_text)
+        for reviewer_name in ["Amy", "retired303", "analogkid", "Amazon Customer"]:
+            self.assertNotIn(reviewer_name, all_quote_text)
+
 
 
 class ReviewWorkspaceEvidenceSentenceTest(unittest.TestCase):

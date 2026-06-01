@@ -226,6 +226,68 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertIn("buyer objection", scene_goals)
         self.assertNotIn("review pain point", scene_goals.lower())
 
+    def test_balsamic_value_signals_spout_concern_and_reviewer_names_are_cleaned(self):
+        balsamic_reviews = (
+            "Amy Worth the price and Cannot beat the price for this quality.\n"
+            "retired303 Quality item. Value priced and excellent flavor.\n"
+            "analogkid Yes it's pricy but personally I think it's worth it.\n"
+            "Amazon Customer However, there is not lid to go over the spout, so air is ever present and oxidation is a concern.\n"
+        )
+        generated = {
+            **GENERATED_REVIEWS_BRIEF,
+            "storyboard_scenes": [
+                {
+                    "visual_description": "Show balsamic being poured cleanly.",
+                    "narration": "Lead with the value signal.",
+                    "evidence_quote_used": "Worth the price and Cannot beat the price for this quality.",
+                },
+                {
+                    "visual_description": "Show the open spout.",
+                    "narration": "Call out the packaging concern.",
+                    "evidence_quote_used": "However, there is not lid to go over the spout, so air is ever present and oxidation is a concern.",
+                },
+            ],
+        }
+
+        with patch(
+            "main.generate_pasted_reviews_brief",
+            new=AsyncMock(return_value=generated),
+        ) as generate:
+            response = self.client.post(
+                "/api/v1/generate-from-reviews",
+                json={
+                    **VALID_REVIEWS_REQUEST,
+                    "product_name": "Balsamic Vinegar",
+                    "product_category": "balsamic_vinegar",
+                    "pasted_reviews": balsamic_reviews,
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        evidence_quotes = generate.await_args.args[1]
+        evidence_text = "\n".join(evidence_quotes)
+        data = payload["data"]
+        positive_text = "\n".join(data["insights"].get("positive_signals", []))
+        trust_text = "\n".join(data["audience"].get("trust_barriers", []))
+        pain_text = "\n".join(data["insights"].get("pain_points", []))
+
+        for reviewer_name in ["Amy", "retired303", "analogkid", "Amazon Customer"]:
+            self.assertNotIn(reviewer_name, evidence_text)
+
+        self.assertIn("Worth the price", positive_text)
+        self.assertIn("Cannot beat the price", positive_text)
+        self.assertIn("Value priced", positive_text)
+        self.assertIn("pricy", positive_text)
+
+        self.assertNotIn("Cannot beat the price", trust_text)
+        self.assertNotIn("Value priced", trust_text)
+        self.assertNotIn("Cannot beat the price", pain_text)
+        self.assertNotIn("Value priced", pain_text)
+        self.assertIn("pricy", trust_text)
+        self.assertIn("spout", trust_text)
+        self.assertIn("oxidation", trust_text)
+
     def test_long_repeated_amazon_reviews_compact_before_generation(self):
         dirty_reviews = "\n".join(
             [

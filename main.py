@@ -317,6 +317,39 @@ def _clean_description_text(value: str) -> str:
     return (value or "").strip()
 
 
+def _strip_amazon_reviewer_prefix(text: str) -> str:
+    cleaned = " ".join(str(text or "").split()).strip()
+    if not cleaned:
+        return ""
+
+    title_starters = (
+        "worth", "cannot", "can't", "value", "quality", "great", "good", "love",
+        "best", "this", "these", "the", "it", "not", "however", "yes",
+        "excellent", "delicious", "tastes", "taste", "no", "price", "flavor",
+        "flavour", "bottle", "arrived",
+    )
+    first_token = re.match(r"^(?:By\s+)?([A-Za-z][A-Za-z0-9_-]{1,24})\b", cleaned, flags=re.IGNORECASE)
+    if first_token and first_token.group(1).lower() in title_starters:
+        return cleaned
+
+    starter_pattern = "|".join(re.escape(item) for item in title_starters)
+    name_pattern = r"(?:Amazon Customer|[A-Za-z][A-Za-z0-9_-]{1,24})"
+
+    cleaned = re.sub(
+        rf"^(?:By\s+)?{name_pattern}\s*[:\-]\s+(?=(?:{starter_pattern})\b)",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(
+        rf"^(?:By\s+)?{name_pattern}\s+(?=(?:{starter_pattern})\b)",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    return cleaned.strip()
+
+
 def _description_error(error: str, error_type: str, request_id: str, status_code: int = 400):
     return JSONResponse(
         status_code=status_code,
@@ -410,6 +443,7 @@ def _clean_pasted_review_quote_text(value: str) -> str:
     text = re.sub(r"\b(?:One|Two|\d+)\s+people?\s+found\s+this\s+helpful\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b(?:Helpful|Report|Submit a review|Community guidelines?)\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+", " ", text).strip(" -:;,.[]")
+    text = _strip_amazon_reviewer_prefix(text)
     if not re.search(r"[A-Za-z\u4e00-\u9fff]", text):
         return ""
     return text
@@ -495,8 +529,21 @@ def _pasted_review_signal_kind(quote: str) -> str:
     if not lowered:
         return "neutral"
 
+    positive_value_markers = (
+        "worth the price", "worth it", "cannot beat the price", "can't beat the price",
+        "value priced", "great value", "good value",
+    )
+    explicit_price_objection_markers = (
+        "too expensive", "high price", "not worth", "overpriced", "pricey", "pricy",
+        "cost too much", "priced wrong", "price is wrong",
+        "\u4ef7\u683c\u8d35", "\u592a\u8d35", "\u4e0d\u503c",
+    )
+    packaging_objection_markers = (
+        "no lid", "not lid", "without a lid", "lid to go over the spout", "spout",
+        "air is ever present", "oxidation", "cap leaked", "leaky cap", "bottle cap",
+    )
     objection_markers = (
-        "expensive", "price", "high price", "not worth", "too much", "overpriced",
+        "too much",
         "\u4ef7\u683c\u8d35", "\u592a\u8d35", "\u4e0d\u503c", "\u6027\u4ef7\u6bd4",
     )
     availability_markers = (
@@ -518,14 +565,20 @@ def _pasted_review_signal_kind(quote: str) -> str:
         "\u6700\u597d", "\u559c\u6b22", "\u5f88\u559c\u6b22", "\u8d85\u68d2", "\u53e3\u611f", "\u987a\u6ed1", "\u5473\u9053", "\u597d\u8bc4", "\u63a8\u8350",
     )
 
+    has_positive_value = any(marker in lowered for marker in positive_value_markers)
+    has_price_objection = any(marker in lowered for marker in explicit_price_objection_markers)
+    has_packaging_objection = any(marker in lowered for marker in packaging_objection_markers)
+
     if any(marker in lowered for marker in availability_markers):
         return "availability"
-    if any(marker in lowered for marker in objection_markers):
+    if has_packaging_objection or has_price_objection or any(marker in lowered for marker in objection_markers):
         return "objection"
     if any(marker in lowered for marker in pain_markers):
         return "pain"
     if any(marker in lowered for marker in repeat_markers):
         return "repeat_purchase"
+    if has_positive_value:
+        return "positive"
     if any(marker in lowered for marker in positive_markers):
         return "positive"
     return "neutral"
@@ -541,10 +594,21 @@ def _pasted_review_signal_groups(evidence_quotes: list[str]) -> dict[str, list[s
         "neutral": [],
     }
     for quote in evidence_quotes:
+        lowered = _clean_description_text(quote).lower()
         kind = _pasted_review_signal_kind(quote)
         target = groups.get(kind, groups["neutral"])
         if quote and quote not in target:
             target.append(quote)
+        if quote and any(marker in lowered for marker in [
+            "worth the price",
+            "worth it",
+            "cannot beat the price",
+            "can't beat the price",
+            "value priced",
+            "great value",
+            "good value",
+        ]) and quote not in groups["positive"]:
+            groups["positive"].append(quote)
     return groups
 
 
@@ -1748,10 +1812,11 @@ _REVIEW_WORKSPACE_FOOD_THEME_MARKERS = {
         "8.5 oz",
         "17 oz bottle",
         "single bottle",
-        "2-pack",
-        "two-pack",
         "not sold by the single bottle",
         "only came in a 2-pack",
+        "missing bottle",
+        "pack count",
+        "quantity mismatch",
     ],
     "price / value concern": [
         "priced wrong",
@@ -1767,6 +1832,12 @@ _REVIEW_WORKSPACE_FOOD_THEME_MARKERS = {
         "leaked in shipping",
         "poorly packaged",
         "packaging problem",
+        "no lid",
+        "not lid",
+        "spout",
+        "air is ever present",
+        "oxidation",
+        "cap leaked",
     ],
     "quality consistency concern": [
         "quality changed",
@@ -1800,7 +1871,8 @@ _REVIEW_WORKSPACE_OBJECTION_MARKERS = [
 _REVIEW_WORKSPACE_LIKE_MARKERS = [
     "love", "great", "easy", "perfect", "works", "useful", "recommend", "helpful",
     "will continue to purchase", "best rootbeer", "best root beer", "order it frequently",
-    "great flavor", "greater flavor", "smoother",
+    "great flavor", "greater flavor", "smoother", "worth the price",
+    "cannot beat the price", "can't beat the price", "value priced", "worth it",
     "??", "??", "??", "??", "??",
 ]
 
@@ -2480,6 +2552,7 @@ def _rw_clean_evidence_fragment(value: str) -> str:
     text = re.sub(r"\u5c06\u8bc4\u8bba\u7ffb\u8bd1\u6210\u4e2d\u6587.*$", " ", text)
 
     text = re.sub(r"\s+", " ", text).strip(" -:;,.")
+    text = _strip_amazon_reviewer_prefix(text)
 
     # Remove broken leading punctuation left by metadata cleanup.
     text = re.sub(r"^[)\]\s]+", "", text).strip()
@@ -2588,6 +2661,19 @@ def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
     blob = " ".join([label or "", *(quotes or [])]).lower()
 
     if any(term in blob for term in [
+        "no lid",
+        "not lid",
+        "without a lid",
+        "lid to go over the spout",
+        "spout",
+        "air is ever present",
+        "oxidation",
+        "cap leaked",
+        "bottle cap",
+    ]):
+        return "packaging / spout concern"
+
+    if any(term in blob for term in [
         "wrong size",
         "size is wrong",
         "stated size",
@@ -2595,11 +2681,12 @@ def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
         "8 1/2 oz",
         "8.5 oz",
         "17 oz",
-        "2-pack",
         "single bottle",
-        "two-pack",
         "not sold by the single bottle",
         "only came in a 2-pack",
+        "missing bottle",
+        "pack count",
+        "quantity mismatch",
     ]):
         return "quantity / size uncertainty"
 
@@ -2609,7 +2696,6 @@ def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
         "expensive",
         "cheaper",
         "not worth",
-        "worth",
     ]):
         return "price / value uncertainty"
 
@@ -2690,6 +2776,8 @@ def _rw_quote_is_positive_reassurance_quote(quote: str) -> bool:
     value_reassurance = any(marker in lower for marker in [
         "cannot beat the price",
         "can't beat the price",
+        "worth the price",
+        "value priced",
         "great value",
         "worth it",
         "worth every",
@@ -2729,6 +2817,10 @@ def _rw_quote_is_strong_positive_signal(quote: str) -> bool:
         "smoother",
         "smother greater flavor",
         "not as sharp as barq",
+        "worth the price",
+        "cannot beat the price",
+        "can't beat the price",
+        "value priced",
     ]
     return any(term in lower for term in positive_terms)
 
@@ -2757,7 +2849,9 @@ def _rw_quote_is_low_value_objection(quote: str) -> bool:
         return True
 
     # Positive reassurance / gifting / value proof should not be treated as a buyer objection.
-    if _rw_quote_is_positive_reassurance_quote(quote):
+    if _rw_quote_is_positive_reassurance_quote(quote) and not (
+        ("pricy" in lower or "pricey" in lower or "expensive" in lower) and "worth it" in lower
+    ):
         return True
 
     # Positive proof / usage praise should not be treated as a buyer objection.
@@ -2844,7 +2938,11 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
     raw_label = str(label or "").strip().lower()
     phrase = _rw_human_theme_phrase(label).strip().lower()
 
-    if _rw_quote_is_positive_reassurance_quote(value) and any(marker in raw_label or marker in phrase for marker in [
+    price_value_tradeoff = (
+        ("pricy" in lower or "pricey" in lower or "expensive" in lower)
+        and "worth it" in lower
+    )
+    if _rw_quote_is_positive_reassurance_quote(value) and not price_value_tradeoff and any(marker in raw_label or marker in phrase for marker in [
         "price / value",
         "price or value",
         "size / quantity",
@@ -2860,7 +2958,7 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
     marker_groups = [
         (
             ("price / value", "price or value", "price / value concern"),
-            ["price", "value", "worth", "pricy", "pricey", "cheaper", "expensive", "quality", "two-pack", "2-pack", "cost"],
+            ["priced wrong", "price is wrong", "too expensive", "not worth", "overpriced", "pricy", "pricey", "cheaper", "expensive", "cost"],
         ),
         (
             ("taste / flavor", "taste or flavor", "quality consistency"),
@@ -2868,15 +2966,19 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
         ),
         (
             ("size / quantity", "quantity or size", "quantity / size"),
-            ["size", "quantity", "listed as", "what came was", "oz", "bottle", "two-pack", "2-pack", "half size", "regular size"],
+            ["wrong size", "size is wrong", "stated size", "quantity", "listed as", "what came was", "oz", "missing bottle", "pack count", "quantity mismatch", "half size", "regular size"],
+        ),
+        (
+            ("packaging / spout", "packaging / shipping", "spout concern"),
+            ["no lid", "not lid", "without a lid", "spout", "air is ever present", "oxidation", "cap leaked", "bottle cap"],
         ),
         (
             ("expectation mismatch", "tradeoff", "hesitation"),
-            ["expected", "expectation", "however", "but", "concerned", "not lid", "spout", "air", "mismatch"],
+            ["expected", "expectation", "however", "but", "concerned", "mismatch"],
         ),
         (
             ("liked signal", "great", "love", "useful", "easy", "recommend"),
-            ["great", "love", "useful", "easy", "recommend", "worth", "quality", "cannot beat"],
+            ["great", "love", "useful", "easy", "recommend", "worth", "quality", "cannot beat", "value priced"],
         ),
     ]
 
@@ -2898,6 +3000,9 @@ def _rw_theme_needs_matched_quote(label: str) -> bool:
         "size / quantity",
         "quantity or size",
         "quality consistency",
+        "packaging / spout",
+        "packaging / shipping",
+        "spout concern",
         "expectation mismatch",
         "quantity / size",
     ]
@@ -2962,6 +3067,8 @@ def _rw_human_theme_phrase(label: str) -> str:
         "size / quantity mismatch": "quantity or size mismatch",
         "taste / flavor concern": "taste or flavor concern",
         "price / value concern": "price or value concern",
+        "packaging / spout concern": "packaging or spout concern",
+        "packaging / shipping concern": "packaging or shipping concern",
         "quality consistency concern": "quality consistency concern",
         "color expectation mismatch": "color expectation mismatch",
         "sewing / quality control issue": "sewing or QC concern",
@@ -3529,6 +3636,15 @@ def _rw_positive_theme_label_from_quote(quote: str, fallback_label: str = "") ->
     if "great flavor" in lower or "smooth" in lower:
         return "flavor praise"
 
+    if (
+        "worth the price" in lower
+        or "cannot beat the price" in lower
+        or "can't beat the price" in lower
+        or "value priced" in lower
+        or "worth it" in lower
+    ):
+        return "positive value signal"
+
     if "love" in lower or fallback == "love":
         return "buyers saying they love it"
 
@@ -3562,7 +3678,7 @@ def _rw_refine_liked_point_summaries(themes: list[ReviewThemeSummary]) -> list[R
             ReviewThemeSummary(
                 label=label,
                 evidence_count=len(quotes),
-                evidence_quotes=quotes[:2],
+                evidence_quotes=quotes[:3],
             )
         )
 
@@ -3678,6 +3794,8 @@ def _rw_human_theme_phrase(label: str) -> str:
         "size / quantity mismatch": "quantity or size mismatch",
         "taste / flavor concern": "taste or flavor concern",
         "price / value concern": "price or value concern",
+        "packaging / spout concern": "packaging or spout concern",
+        "packaging / shipping concern": "packaging or shipping concern",
         "quality consistency concern": "quality consistency concern",
         "color expectation mismatch": "color expectation mismatch",
         "sewing / quality control issue": "sewing or QC concern",
@@ -3690,6 +3808,7 @@ def _rw_human_theme_phrase(label: str) -> str:
         "best root beer praise": "best root beer praise",
         "root beer flavor comparison": "root beer flavor comparison",
         "flavor praise": "flavor praise",
+        "positive value signal": "positive value signal",
         "regional availability context": "regional availability context",
         "gift use case": "gift use case",
         "daily use context": "daily use context",
@@ -3719,6 +3838,10 @@ def _rw_output_theme_label(label: str, language: str) -> str:
     zh_labels = {
         "price / value concern": "\u4ef7\u683c / \u4ef7\u503c\u987e\u8651",
         "price or value concern": "\u4ef7\u683c / \u4ef7\u503c\u987e\u8651",
+        "packaging / spout concern": "\u5305\u88c5 / \u74f6\u5634\u987e\u8651",
+        "packaging or spout concern": "\u5305\u88c5 / \u74f6\u5634\u987e\u8651",
+        "packaging / shipping concern": "\u5305\u88c5 / \u8fd0\u8f93\u987e\u8651",
+        "packaging or shipping concern": "\u5305\u88c5 / \u8fd0\u8f93\u987e\u8651",
         "taste / flavor concern": "\u5473\u9053 / \u98ce\u5473\u987e\u8651",
         "taste or flavor concern": "\u5473\u9053 / \u98ce\u5473\u987e\u8651",
         "size / quantity mismatch": "\u89c4\u683c / \u6570\u91cf\u4e0d\u4e00\u81f4",
@@ -3739,6 +3862,7 @@ def _rw_output_theme_label(label: str, language: str) -> str:
         "best root beer praise": "\u6700\u4f73\u53e3\u5473\u8bc4\u4ef7",
         "root beer flavor comparison": "\u98ce\u5473\u5bf9\u6bd4 / \u66f4\u987a\u6ed1\u53e3\u5473",
         "flavor praise": "\u98ce\u5473\u597d\u8bc4",
+        "positive value signal": "\u6b63\u5411\u4ef7\u503c\u4fe1\u53f7",
         "regional availability context": "\u5730\u533a\u7a00\u7f3a / \u5f53\u5730\u4e70\u4e0d\u5230",
         "gift use case": "\u9001\u793c\u573a\u666f",
         "daily use context": "\u65e5\u5e38\u996e\u7528\u573a\u666f",

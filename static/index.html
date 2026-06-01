@@ -2309,7 +2309,7 @@
                         <div class="field-helper" data-i18n="pastedReviewsHelper">Paste customer reviews, complaints, objections, or buyer feedback.</div>
                         <textarea id="reviewsPastedReviews" oninput="updateReviewInputPreviews()" placeholder="- I hate cleaning my big blender every morning.&#10;- It is too loud for my apartment." data-i18n-placeholder="reviewsPastedReviewsPlaceholder"></textarea>
                         <div id="reviewCountPreview" class="field-helper" data-i18n="reviewCountEmpty">Review count: 0. Paste at least 3 specific review snippets for stronger output.</div>
-                        <div id="reviewPainPointPreview" class="field-helper" data-i18n="painPointPreviewEmpty">Pain point preview: specific complaints will appear here.</div>
+                        <div id="reviewPainPointPreview" class="field-helper" data-i18n="painPointPreviewEmpty">Review signal preview: concrete concerns will appear here.</div>
                         <div id="reviewPasteGuide" style="margin-top:10px; padding:12px; border:1px solid #dbe4f0; border-radius:10px; background:#f8fafc;">
                             <strong data-i18n="reviewGuideTitle">What to paste</strong>
                             <p style="margin:6px 0 10px 0;" data-i18n="reviewGuideBody">Paste real customer language: complaints, objections, review snippets, or things buyers wish were easier.</p>
@@ -3194,8 +3194,8 @@
                 pastedReviewsNoConcreteReviews: 'Paste at least one concrete review line, not only category labels.',
                 missingReviews: 'Please paste customer reviews or buyer feedback.',
                 reviewCountEmpty: 'Review count: 0. Paste at least 3 specific review snippets for stronger output.',
-                painPointPreviewEmpty: 'Pain point preview: specific complaints will appear here.',
-                painPointPreviewTitle: 'Potential pain points',
+                painPointPreviewEmpty: 'Review signal preview: concrete concerns will appear here.',
+                painPointPreviewTitle: 'Potential review concerns',
                 reviewGuideTitle: 'What to paste',
                 reviewGuideBody: 'Paste real customer language: complaints, objections, review snippets, or things buyers wish were easier.',
                 goodReviewExampleTitle: 'Good example',
@@ -3560,8 +3560,8 @@
                 pastedReviewsNoConcreteReviews: '请至少粘贴一条具体用户原话，不要只粘贴痛点/正向/使用场景这类分类标签。',
                 missingReviews: '请粘贴用户评论或买家反馈。',
                 reviewCountEmpty: '评论条数：0。建议至少粘贴 3 条具体评论，生成效果会更好。',
-                painPointPreviewEmpty: '痛点预览：具体抱怨会显示在这里。',
-                painPointPreviewTitle: '可能的痛点',
+                painPointPreviewEmpty: '评论信号预览：具体顾虑会显示在这里。',
+                painPointPreviewTitle: '可能的评论顾虑',
                 reviewGuideTitle: '应该粘贴什么？',
                 reviewGuideBody: '粘贴真实用户原话：抱怨、购买顾虑、评论片段，或者买家希望哪里更方便。',
                 goodReviewExampleTitle: '好例子',
@@ -4375,6 +4375,19 @@
             return String(line || '').toLowerCase().replace(/\s+/g, ' ').trim();
         }
 
+        function stripAmazonReviewerPrefix(line) {
+            let text = String(line || '').replace(/\s+/g, ' ').trim();
+            if (!text) return '';
+            const titleStarter = "(?:worth|cannot|can't|value|quality|great|good|love|best|this|these|the|it|not|however|yes|excellent|delicious|tastes|taste|no|price|flavor|flavour|bottle|arrived)";
+            const reviewerName = '(?:Amazon Customer|[A-Za-z][A-Za-z0-9_-]{1,24})';
+            const starterWords = ['worth', 'cannot', "can't", 'value', 'quality', 'great', 'good', 'love', 'best', 'this', 'these', 'the', 'it', 'not', 'however', 'yes', 'excellent', 'delicious', 'tastes', 'taste', 'no', 'price', 'flavor', 'flavour', 'bottle', 'arrived'];
+            const firstToken = text.match(/^(?:By\s+)?([A-Za-z][A-Za-z0-9_-]{1,24})\b/i);
+            if (firstToken && starterWords.includes(firstToken[1].toLowerCase())) return text;
+            const prefixedTitle = new RegExp(`^(?:By\\s+)?${reviewerName}\\s*[:\\-]\\s+(?=${titleStarter}\\b)`, 'i');
+            const plainPrefix = new RegExp(`^(?:By\\s+)?${reviewerName}\\s+(?=${titleStarter}\\b)`, 'i');
+            return text.replace(prefixedTitle, '').replace(plainPrefix, '').trim();
+        }
+
         function isAmazonReviewChromeLine(line) {
             const text = normalizeReviewLineKey(line);
             if (!text) return true;
@@ -4406,6 +4419,7 @@
                 .replace(/\s+/g, ' ')
                 .replace(/^[\s\-:;,.。[\\\]]+|[\s\-:;,.。[\\\]]+$/g, '')
                 .trim();
+            text = stripAmazonReviewerPrefix(text);
             if (!/[A-Za-z\u4e00-\u9fff]/.test(text)) return '';
             if (isAmazonReviewChromeLine(text)) return '';
             return text;
@@ -4463,18 +4477,34 @@
         }
 
         function reviewPainPointCandidates(value) {
-            const markers = [
-                'hate', 'too ', 'hard', 'difficult', 'annoying', 'clogged', 'skip',
-                'wish', 'problem', 'issue', 'frustrating', 'loud', 'harsh', 'bulky',
-                'expensive', 'messy', 'slow', 'cleaning', 'misses', 'scares', 'strain',
-                'cheap', 'flickers', '\u8ba8\u538c', '\u592a', '\u96be', '\u9ebb\u70e6', '\u5435', '\u95ee\u9898', '\u5e0c\u671b',
-                '\u4e0d\u65b9\u4fbf', '\u6e05\u6d17', '\u8d39\u65f6', '\u987e\u8651'
+            const positiveValueMarkers = [
+                'worth the price', 'cannot beat the price', "can't beat the price",
+                'value priced', 'great value', 'good value'
+            ];
+            const explicitConcernMarkers = [
+                'too expensive', 'high price', 'not worth', 'overpriced', 'pricey', 'pricy',
+                'priced wrong', 'price is wrong', 'cost too much', 'no lid', 'without a lid',
+                'lid to go over the spout', 'spout', 'air is ever present', 'oxidation',
+                'cap leaked', 'leaky cap', 'broken', 'cracked', 'leaked', 'leak',
+                'wrong size', 'size is wrong', 'missing bottle', 'quantity mismatch',
+                'not available', 'unavailable', 'west coast', 'hard to find',
+                'hard to clean', 'too loud', "doesn't work", 'stopped working',
+                'flavorless', 'wateriest', 'terrible', 'disappointed',
+                '\u4ef7\u683c\u8d35', '\u592a\u8d35', '\u4e0d\u503c', '\u4e70\u4e0d\u5230',
+                '\u4e0d\u597d\u4e70', '\u7f3a\u8d27', '\u6f0f', '\u7834', '\u88c2',
+                '\u96be\u6e05\u6d17', '\u592a\u5435', '\u5931\u671b', '\u987e\u8651'
             ];
 
             return cleanedPastedReviewLines(value)
-                .filter(line => markers.some(marker => line.toLowerCase().includes(marker.toLowerCase())))
+                .filter(line => {
+                    const lower = line.toLowerCase();
+                    const hasPositiveValue = positiveValueMarkers.some(marker => lower.includes(marker));
+                    const hasExplicitConcern = explicitConcernMarkers.some(marker => lower.includes(marker));
+                    const hasPriceTradeoff = /(pricy|pricey|too expensive|not worth|overpriced|high price|priced wrong|cost too much)/i.test(lower);
+                    return hasExplicitConcern && !(hasPositiveValue && !hasPriceTradeoff);
+                })
                 .slice(0, 3)
-                .map(line => truncateReviewLine(line, 220));
+                .map(line => truncateReviewLine(line, 200));
         }
 
 
