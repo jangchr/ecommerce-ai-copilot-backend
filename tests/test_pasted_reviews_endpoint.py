@@ -134,7 +134,16 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertEqual(payload["status"], "success")
         self.assertEqual(payload["output_language"], "en")
         self.assertEqual(payload["request_id"], "reviews-success-1")
-        for field in ["insights", "audience", "strategy", "assets", "evaluation", "feedback", "llm_evidence_packet"]:
+        for field in [
+            "insights",
+            "audience",
+            "strategy",
+            "assets",
+            "evaluation",
+            "feedback",
+            "llm_evidence_packet",
+            "video_generation_packet",
+        ]:
             with self.subTest(field=field):
                 self.assertIn(field, payload["data"])
 
@@ -158,6 +167,21 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertIn("user_pasted_reviews_unverified", evidence["data_warnings"])
         self.assertIn("user_pasted_reviews_no_external_fetch", evidence["data_warnings"])
         self.assertEqual(payload["data"]["assets"]["storyboard"]["source"], "user_pasted_reviews")
+        video_packet = payload["data"]["video_generation_packet"]
+        self.assertEqual(video_packet["packet_version"], "video_generation_v1")
+        self.assertEqual(video_packet["intended_use"], "video_prompt_export")
+        self.assertEqual(video_packet["video"]["platform"], "TikTok")
+        self.assertEqual(video_packet["video"]["aspect_ratio"], "9:16")
+        self.assertEqual(len(video_packet["scenes"]), 4)
+        self.assertTrue(video_packet["full_video_prompt"])
+        self.assertTrue(video_packet["export_formats"]["generic_video_prompt"])
+        for scene in video_packet["scenes"]:
+            with self.subTest(video_scene=scene["scene_id"]):
+                self.assertIn("visual_prompt", scene)
+                self.assertIn("narration", scene)
+                self.assertIn("overlay_text", scene)
+                self.assertIn("duration_seconds", scene)
+                self.assertIn("evidence_quote", scene)
         self.assertNotIn("telemetry_summary", payload)
         self.assertNotIn("shadow_sources", payload)
         self.assertNotIn("memory_observability", payload)

@@ -73,6 +73,7 @@ class GenerateCopilotData(BaseModel):
     evaluation: ProductEvaluation
     feedback: str = ""
     llm_evidence_packet: Dict[str, Any] = Field(default_factory=dict)
+    video_generation_packet: Dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateCopilotResponse(BaseModel):

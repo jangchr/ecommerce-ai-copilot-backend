@@ -527,6 +527,140 @@ def _safe_evidence_quote(text: str, limit: int = 220) -> str:
     return cleaned[:limit]
 
 
+def _video_packet_text(value, limit: int = 260) -> str:
+    return _safe_evidence_quote(str(value or ""), limit=limit)
+
+
+def _video_overlay_text(scene: dict, script: dict) -> str:
+    source = (
+        scene.get("on_screen_text")
+        or scene.get("overlay_text")
+        or scene.get("narration")
+        or script.get("hook")
+        or script.get("cta")
+        or ""
+    )
+    text = _video_packet_text(source, limit=90)
+    for separator in [". ", "! ", "? ", "\n"]:
+        if separator in text:
+            text = text.split(separator, 1)[0]
+            break
+    return text[:72].strip()
+
+
+def _build_video_generation_packet(
+    product_name: str,
+    category: str,
+    assets: dict,
+    insights: dict,
+    evaluation: dict,
+    output_language: str = "en",
+) -> dict:
+    assets = assets if isinstance(assets, dict) else {}
+    insights = insights if isinstance(insights, dict) else {}
+    evaluation = evaluation if isinstance(evaluation, dict) else {}
+    script = assets.get("tiktok_script") if isinstance(assets.get("tiktok_script"), dict) else {}
+    storyboard = assets.get("storyboard") if isinstance(assets.get("storyboard"), dict) else {}
+    evidence = insights.get("evidence") if isinstance(insights.get("evidence"), dict) else {}
+    source_type = evidence.get("source_type") or storyboard.get("source") or ""
+    risk_level = evaluation.get("risk_level") or ""
+    raw_scenes = storyboard.get("scenes") if isinstance(storyboard.get("scenes"), list) else []
+    normalized_scenes = []
+
+    for index, scene in enumerate(raw_scenes[:4]):
+        if not isinstance(scene, dict):
+            continue
+        visual_prompt = _video_packet_text(
+            scene.get("visual_description") or scene.get("visual") or scene.get("scene_goal") or "",
+            limit=320,
+        )
+        narration = _video_packet_text(scene.get("narration") or "", limit=260)
+        evidence_quote = _video_packet_text(
+            scene.get("evidence_quote_used") or scene.get("evidence_quote") or scene.get("linked_painpoint") or "",
+            limit=240,
+        )
+        risk_notes = []
+        if not evidence_quote:
+            risk_notes.append("Missing scene-level evidence quote; keep claim conservative.")
+        if not visual_prompt or len(visual_prompt) < 24:
+            risk_notes.append("Visual prompt is generic; expand with product-specific visible action before video rendering.")
+        normalized_scenes.append(
+            {
+                "scene_id": scene.get("scene_id") or index + 1,
+                "duration_seconds": 5,
+                "visual_prompt": visual_prompt or f"Show {product_name} in a simple product-use moment.",
+                "narration": narration,
+                "overlay_text": _video_overlay_text(scene, script),
+                "evidence_quote": evidence_quote,
+                "risk_notes": risk_notes,
+            }
+        )
+
+    if not normalized_scenes:
+        normalized_scenes.append(
+            {
+                "scene_id": 1,
+                "duration_seconds": 5,
+                "visual_prompt": f"Show {product_name} in a vertical product demo.",
+                "narration": _video_packet_text(script.get("hook") or script.get("cta") or "", limit=260),
+                "overlay_text": _video_packet_text(script.get("hook") or product_name, limit=72),
+                "evidence_quote": "",
+                "risk_notes": ["No storyboard scenes were available; treat this as a draft placeholder."],
+            }
+        )
+
+    scene_lines = [
+        (
+            f"Scene {scene['scene_id']} ({scene['duration_seconds']}s): "
+            f"{scene['visual_prompt']} Narration: {scene['narration']} "
+            f"Overlay: {scene['overlay_text']} Evidence: {scene['evidence_quote']}"
+        )
+        for scene in normalized_scenes
+    ]
+    full_video_prompt = (
+        f"Create a 20-second vertical TikTok video for {product_name} "
+        f"({category or 'product'}). Use only the supplied creative brief and evidence. "
+        + " ".join(scene_lines)
+    )
+    capcut_shot_list = "\n".join(
+        f"{scene['scene_id']}. {scene['duration_seconds']}s | {scene['visual_prompt']} | VO: {scene['narration']} | Text: {scene['overlay_text']}"
+        for scene in normalized_scenes
+    )
+
+    return {
+        "packet_version": "video_generation_v1",
+        "intended_use": "video_prompt_export",
+        "source": {
+            "storyboard_source": storyboard.get("source") or source_type,
+            "evidence_source_type": source_type,
+            "risk_level": risk_level,
+            "output_language": output_language,
+        },
+        "video": {
+            "platform": "TikTok",
+            "recommended_duration_seconds": 20,
+            "aspect_ratio": "9:16",
+            "style_notes": [
+                "Vertical short-form product demo.",
+                "Keep claims tied to supplied evidence quotes.",
+                "Use natural product-use visuals before adding stylized effects.",
+            ],
+        },
+        "scenes": normalized_scenes,
+        "full_video_prompt": full_video_prompt,
+        "export_formats": {
+            "generic_video_prompt": full_video_prompt,
+            "capcut_shot_list": capcut_shot_list,
+            "runway_style_prompt": f"Vertical product ad for {product_name}. " + " ".join(
+                scene["visual_prompt"] for scene in normalized_scenes
+            ),
+            "pika_style_prompt": f"TikTok-style product video for {product_name}: " + " ".join(
+                scene["overlay_text"] for scene in normalized_scenes if scene["overlay_text"]
+            ),
+        },
+    }
+
+
 def _pasted_review_signal_kind(quote: str) -> str:
     lowered = _clean_description_text(quote).lower()
     if not lowered:
@@ -787,7 +921,7 @@ def _description_response_data(request: ProductDescriptionRequest, generated: di
 
     hook = generated.get("hook") or f"Stop ignoring this product pain point: {pain_quote}"
     cta = generated.get("cta") or f"Try {product_name} if this pain point sounds familiar."
-    return {
+    data = {
         "insights": {
             "pain_points": [pain_quote],
             "user_complaint_cluster": [pain_quote],
@@ -841,6 +975,15 @@ def _description_response_data(request: ProductDescriptionRequest, generated: di
             "Generated from user-provided product description. Validate claims before using in paid creative.",
         ),
     }
+    data["video_generation_packet"] = _build_video_generation_packet(
+        product_name,
+        category,
+        data["assets"],
+        data["insights"],
+        data["evaluation"],
+        getattr(request, "output_language", "en"),
+    )
+    return data
 
 
 def _pasted_reviews_llm_evidence_packet(
@@ -979,7 +1122,7 @@ def _pasted_reviews_response_data(
         neutral_signals,
     )
 
-    return {
+    data = {
         "insights": {
             "pain_points": pain_points,
             "buyer_objections": buyer_objections,
@@ -1043,6 +1186,15 @@ def _pasted_reviews_response_data(
         ),
         "llm_evidence_packet": llm_evidence_packet,
     }
+    data["video_generation_packet"] = _build_video_generation_packet(
+        product_name,
+        category,
+        data["assets"],
+        data["insights"],
+        data["evaluation"],
+        getattr(request, "output_language", "en"),
+    )
+    return data
 
 
 @app.get("/healthz")
@@ -1503,6 +1655,14 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         },
         "output_language": output_language,
     }
+    response["data"]["video_generation_packet"] = _build_video_generation_packet(
+        storyboard_data.get("product_name") or env_state.get("product_title") or request.url,
+        storyboard_data.get("product_category") or env_state.get("product_category") or "",
+        response["data"]["assets"],
+        response["data"]["insights"],
+        response["data"]["evaluation"],
+        output_language,
+    )
     try:
         response["data"] = await translate_product_visible_data(
             response["data"],
