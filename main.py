@@ -1827,6 +1827,8 @@ _REVIEW_WORKSPACE_THEME_MARKERS = {
     "leak / mess risk": ["leak", "leaking", "spill", "spilled", "mess", "drip"],
     "hard to clean": ["hard to clean", "difficult to clean", "scrub", "dishwasher"],
     "size / fit issue": ["too small", "too big", "doesn't fit", "didn't fit", "opening was bigger", "wide cans", "narrow opening", "\u30b5\u30a4\u30ba\u304c\u5c0f\u3055\u3044", "1\u30b5\u30a4\u30ba\u5927\u304d\u3044", "2\u30b5\u30a4\u30ba\u5927\u304d\u3044", "\u5c0f\u3076\u308a"],
+    "grip / slipping concern": ["move a lot", "moves a lot", "stick to the floor", "sliding", "slides", "slip around", "slips", "does not stay", "doesn\'t stay", "stay in place"],
+    "thickness / robot vacuum tradeoff": ["robot vacuum", "gets trapped", "get trapped", "too thick", "thick nature", "does not fit under", "doesn\'t fit under", "fit under doors", "under some doors"],
     "color expectation mismatch": ["color", "colour", "shade", "darker", "\u8272\u5473", "\u5199\u771f\u3088\u308a", "\u6697\u3081", "\u8272\u306e\u9055\u3044", "\u989c\u8272", "\u8272\u5dee"],
     "sewing / quality control issue": ["sewing", "stitch", "button hole", "thread", "quality control", "\u7e2b\u88fd", "\u307b\u3064\u308c", "\u30dc\u30bf\u30f3\u7a74", "\u691c\u54c1", "\u54c1\u8cea", "\u9752\u3044\u30da\u30f3"],
     "summer fabric comfort": ["fabric", "soft", "comfortable", "breathable", "\u7d20\u6750", "\u808c\u89e6\u308a", "\u67d4\u3089\u304b", "\u6dbc\u3057", "\u901a\u6c17", "\u900f\u6c14", "\u8f7b\u4fbf"],
@@ -2510,6 +2512,13 @@ def _rw_evidence_sentence_score(sentence: str) -> int:
         "price",
         "cheaper",
         "not worth",
+        "not really worth",
+        "price is ridiculous",
+        "move a lot",
+        "moves a lot",
+        "stick to the floor",
+        "robot vacuum",
+        "gets trapped",
         "wateriest",
         "flavorless",
         "terrible",
@@ -2714,6 +2723,42 @@ def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
     blob = " ".join([label or "", *(quotes or [])]).lower()
 
     if any(term in blob for term in [
+        "move a lot",
+        "moves a lot",
+        "stick to the floor",
+        "sliding",
+        "slides",
+        "slip around",
+        "slips",
+        "does not stay",
+        "doesn't stay",
+        "stay in place",
+    ]):
+        return "grip / slipping concern"
+
+    if any(term in blob for term in [
+        "robot vacuum",
+        "gets trapped",
+        "get trapped",
+        "too thick",
+        "thick nature",
+        "does not fit under",
+        "doesn't fit under",
+        "fit under doors",
+        "under some doors",
+    ]):
+        return "thickness / robot vacuum tradeoff"
+
+    if any(term in blob for term in [
+        "not really worth",
+        "price is ridiculous",
+        "too expensive",
+        "overpriced",
+        "not worth",
+    ]):
+        return "price / value concern"
+
+    if any(term in blob for term in [
         "no lid",
         "not lid",
         "without a lid",
@@ -2799,6 +2844,13 @@ def _rw_quote_is_positive_reassurance_quote(quote: str) -> bool:
         "received the regular size",
         "priced wrong",
         "not worth",
+        "not really worth",
+        "price is ridiculous",
+        "move a lot",
+        "moves a lot",
+        "stick to the floor",
+        "robot vacuum",
+        "gets trapped",
         "wateriest",
         "flavorless",
         "terrible",
@@ -3071,7 +3123,64 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
     ]):
         return False
 
+    explicit_negative_terms = [
+        "not worth",
+        "not really worth",
+        "price is ridiculous",
+        "too expensive",
+        "overpriced",
+        "move a lot",
+        "moves a lot",
+        "stick to the floor",
+        "robot vacuum",
+        "gets trapped",
+    ]
+    if any(term in lower for term in explicit_negative_terms) and any(term in raw_label or term in phrase for term in [
+        "liked signal",
+        "buyers calling it",
+        "buyers saying they love",
+        "positive",
+        "great",
+        "love",
+        "perfect",
+        "recommend",
+    ]):
+        return False
+
+    rug_concern_terms = [
+        "move a lot",
+        "moves a lot",
+        "stick to the floor",
+        "sliding",
+        "slides",
+        "slip around",
+        "slips",
+        "robot vacuum",
+        "gets trapped",
+        "too thick",
+        "thick nature",
+        "does not fit under",
+        "doesn't fit under",
+    ]
+    if any(term in lower for term in rug_concern_terms) and any(term in raw_label or term in phrase for term in [
+        "summer fabric comfort",
+        "color expectation mismatch",
+    ]):
+        return False
+
     marker_groups = [
+        (
+            ("grip / slipping", "slipping concern"),
+            ["move a lot", "moves a lot", "stick to the floor", "sliding", "slides", "slip around", "slips", "does not stay", "doesn't stay"],
+        ),
+        (
+            ("thickness / robot vacuum", "robot vacuum tradeoff", "clearance tradeoff"),
+            ["robot vacuum", "gets trapped", "get trapped", "too thick", "thick nature", "does not fit under", "doesn't fit under", "fit under doors", "under some doors"],
+        ),
+        (
+            ("summer fabric comfort",),
+            ["fabric", "breathable", "summer", "hot weather", "??", "???", "??", "??", "??", "??"],
+        ),
         (
             ("price / value", "price or value", "price / value concern"),
             ["priced wrong", "price is wrong", "too expensive", "not worth", "overpriced", "pricy", "pricey", "cheaper", "expensive", "cost"],
@@ -3119,6 +3228,11 @@ def _rw_theme_needs_matched_quote(label: str) -> bool:
         "packaging / spout",
         "packaging / shipping",
         "spout concern",
+        "grip / slipping",
+        "slipping concern",
+        "thickness / robot vacuum",
+        "robot vacuum tradeoff",
+        "summer fabric comfort",
         "expectation mismatch",
         "quantity / size",
     ]
@@ -3189,6 +3303,8 @@ def _rw_human_theme_phrase(label: str) -> str:
         "color expectation mismatch": "color expectation mismatch",
         "sewing / quality control issue": "sewing or QC concern",
         "summer fabric comfort": "summer fabric comfort",
+        "grip / slipping concern": "grip or slipping concern",
+        "thickness / robot vacuum tradeoff": "thickness or robot-vacuum tradeoff",
         "leak / mess risk": "mess or spill concern",
         "hard to clean": "cleanup concern",
         "durability concern": "durability concern",
@@ -3217,6 +3333,14 @@ def _rw_quote_has_pain_signal(value: str) -> bool:
         "what came was",
         "half size",
         "priced wrong",
+        "not worth",
+        "not really worth",
+        "price is ridiculous",
+        "move a lot",
+        "moves a lot",
+        "stick to the floor",
+        "robot vacuum",
+        "gets trapped",
         "wateriest",
         "flavorless",
         "terrible",
@@ -3949,6 +4073,8 @@ def _rw_human_theme_phrase(label: str) -> str:
         "color expectation mismatch": "color expectation mismatch",
         "sewing / quality control issue": "sewing or QC concern",
         "summer fabric comfort": "summer fabric comfort",
+        "grip / slipping concern": "grip or slipping concern",
+        "thickness / robot vacuum tradeoff": "thickness or robot-vacuum tradeoff",
         "leak / mess risk": "mess or spill concern",
         "hard to clean": "cleanup concern",
         "durability concern": "durability concern",
