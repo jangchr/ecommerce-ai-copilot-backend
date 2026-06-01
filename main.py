@@ -584,6 +584,46 @@ def _pasted_review_signal_kind(quote: str) -> str:
     return "neutral"
 
 
+def _pasted_review_is_price_value_positive_only(quote: str) -> bool:
+    lowered = _clean_description_text(quote).lower()
+    positive_value_markers = (
+        "worth the price",
+        "cannot beat the price",
+        "can't beat the price",
+        "value priced",
+        "great value",
+        "good value",
+        "worth every",
+        "for this quality",
+    )
+    explicit_price_objection_markers = (
+        "too expensive",
+        "high price",
+        "not worth",
+        "overpriced",
+        "pricey",
+        "pricy",
+        "cost too much",
+        "priced wrong",
+        "price is wrong",
+        "\u4ef7\u683c\u8d35",
+        "\u592a\u8d35",
+        "\u4e0d\u503c",
+    )
+    has_positive_value = any(marker in lowered for marker in positive_value_markers)
+    has_explicit_price_objection = any(marker in lowered for marker in explicit_price_objection_markers)
+    return has_positive_value and not has_explicit_price_objection
+
+
+def _pasted_review_is_real_buyer_objection(quote: str) -> bool:
+    kind = _pasted_review_signal_kind(quote)
+    if kind not in {"objection", "availability"}:
+        return False
+    if _pasted_review_is_price_value_positive_only(quote):
+        return False
+    return True
+
+
 def _pasted_review_signal_groups(evidence_quotes: list[str]) -> dict[str, list[str]]:
     groups = {
         "pain": [],
@@ -804,7 +844,7 @@ def _pasted_reviews_response_data(
     primary_quote = evidence_quotes[0] if evidence_quotes else ""
     signal_groups = _pasted_review_signal_groups(evidence_quotes)
     pain_points = signal_groups["pain"][:4]
-    buyer_objections = (signal_groups["objection"] + signal_groups["availability"])[:4]
+    buyer_objections = [quote for quote in (signal_groups["objection"] + signal_groups["availability"]) if _pasted_review_is_real_buyer_objection(quote)][:4]
     positive_signals = (signal_groups["positive"] + signal_groups["repeat_purchase"])[:4]
     neutral_signals = signal_groups["neutral"][:4]
     scenes = generated.get("storyboard_scenes") or []
@@ -2294,9 +2334,20 @@ def _rw_theme_summaries(rows: list[dict], themes: dict[str, list[str]], limit: i
     for label, markers in themes.items():
         matched = []
         for row in rows:
-            lowered = row["text"].lower()
-            if any(marker.lower() in lowered for marker in markers):
-                matched.append(row["text"])
+            raw_text = row["text"]
+            lowered = raw_text.lower()
+            compact_quote = _rw_compact_evidence_quote(raw_text) if "_rw_compact_evidence_quote" in globals() else raw_text
+            compact_lower = compact_quote.lower()
+            if not any(marker.lower() in lowered or marker.lower() in compact_lower for marker in markers):
+                continue
+            needs_matched_quote = (
+                "_rw_theme_needs_matched_quote" in globals()
+                and _rw_theme_needs_matched_quote(label)
+            )
+            if needs_matched_quote and "_rw_quote_matches_theme" in globals() and not _rw_quote_matches_theme(label, compact_quote):
+                continue
+            if compact_quote:
+                matched.append(compact_quote)
         if matched:
             scored.append((label, matched))
     scored.sort(key=lambda item: len(item[1]), reverse=True)
@@ -2955,6 +3006,71 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
     ]):
         return False
 
+    packaging_terms = [
+        "no lid",
+        "not lid",
+        "without a lid",
+        "lid to go over the spout",
+        "spout",
+        "air is ever present",
+        "oxidation",
+        "cap leaked",
+        "bottle cap",
+    ]
+    size_label_terms = [
+        "size / quantity",
+        "quantity or size",
+        "quantity / size",
+        "size or quantity",
+    ]
+    packaging_label_terms = [
+        "packaging / spout",
+        "packaging or spout",
+        "spout concern",
+        "packaging / shipping",
+    ]
+
+    has_packaging_signal = any(term in lower for term in packaging_terms)
+    is_size_label = any(term in raw_label or term in phrase for term in size_label_terms)
+    is_packaging_label = any(term in raw_label or term in phrase for term in packaging_label_terms)
+
+    if has_packaging_signal and is_size_label:
+        return False
+    if has_packaging_signal and is_packaging_label:
+        return True
+
+    positive_value_only_terms = [
+        "worth the price",
+        "cannot beat the price",
+        "can't beat the price",
+        "value priced",
+        "great value",
+        "good value",
+        "for this quality",
+    ]
+    explicit_price_concern_terms = [
+        "too expensive",
+        "not worth",
+        "overpriced",
+        "pricey",
+        "pricy",
+        "priced wrong",
+        "price is wrong",
+    ]
+    has_positive_value_only = any(term in lower for term in positive_value_only_terms)
+    has_explicit_price_concern = any(term in lower for term in explicit_price_concern_terms)
+    if has_positive_value_only and not has_explicit_price_concern and any(term in raw_label or term in phrase for term in [
+        "price / value",
+        "price or value",
+        "expectation mismatch",
+        "tradeoff",
+        "hesitation",
+        "size / quantity",
+        "quantity or size",
+        "quantity / size",
+    ]):
+        return False
+
     marker_groups = [
         (
             ("price / value", "price or value", "price / value concern"),
@@ -3122,6 +3238,9 @@ def _rw_hook_from_theme(theme) -> str:
 
     if raw_label == "quality consistency concern":
         return "Would you cook with this every day? Check the quality concern buyers mention."
+
+    if raw_label == "packaging / spout concern":
+        return "Before you buy, check the bottle spout concern buyers mention."
 
     if raw_label == "taste / flavor concern":
         return "I tested this balsamic so you don't have to - here's the flavor warning buyers mention."

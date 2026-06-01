@@ -4378,14 +4378,21 @@
         function stripAmazonReviewerPrefix(line) {
             let text = String(line || '').replace(/\s+/g, ' ').trim();
             if (!text) return '';
-            const titleStarter = "(?:worth|cannot|can't|value|quality|great|good|love|best|this|these|the|it|not|however|yes|excellent|delicious|tastes|taste|no|price|flavor|flavour|bottle|arrived)";
-            const reviewerName = '(?:Amazon Customer|[A-Za-z][A-Za-z0-9_-]{1,24})';
+            const titleStarter = "(?:worth|cannot|can't|value|quality|great|good|love|best|this|these|the|it|not|however|yes|excellent|delicious|tasty|tastes|taste|tang|lovely|exceptional|ottimo|wundervoll|no|price|flavor|flavour|bottle|arrived)";
+            const reviewerName = '(?:Amazon Customer|Kindle Customer|[A-Za-z][A-Za-z0-9_-]{1,24})';
             const starterWords = ['worth', 'cannot', "can't", 'value', 'quality', 'great', 'good', 'love', 'best', 'this', 'these', 'the', 'it', 'not', 'however', 'yes', 'excellent', 'delicious', 'tastes', 'taste', 'no', 'price', 'flavor', 'flavour', 'bottle', 'arrived'];
             const firstToken = text.match(/^(?:By\s+)?([A-Za-z][A-Za-z0-9_-]{1,24})\b/i);
             if (firstToken && starterWords.includes(firstToken[1].toLowerCase())) return text;
             const prefixedTitle = new RegExp(`^(?:By\\s+)?${reviewerName}\\s*[:\\-]\\s+(?=${titleStarter}\\b)`, 'i');
             const plainPrefix = new RegExp(`^(?:By\\s+)?${reviewerName}\\s+(?=${titleStarter}\\b)`, 'i');
-            return text.replace(prefixedTitle, '').replace(plainPrefix, '').trim();
+            const multiNamePrefix = new RegExp(`^(?:[A-Z][A-Za-z.'-]{0,24}\\s+[A-Z][A-Za-z.'-]{0,24}(?:\\s+[A-Z][A-Za-z.'-]{0,24})?)\\s+(?=${titleStarter}\\b)`, 'i');
+            const customerNamePrefix = new RegExp(`^[A-Z][A-Za-z.'-]{1,30},?\\s+An\\s+Amazon\\s+Customer\\s+(?=${titleStarter}\\b)`, 'i');
+            return text
+                .replace(customerNamePrefix, '')
+                .replace(multiNamePrefix, '')
+                .replace(prefixedTitle, '')
+                .replace(plainPrefix, '')
+                .trim();
         }
 
         function isAmazonReviewChromeLine(line) {
@@ -4396,8 +4403,14 @@
                 'helpful',
                 'report',
                 'submit a review',
+                'submit a a few common reasons',
+                'a few common reasons customers reviews',
+                'harassment, profanity',
+                'spam, advertisement',
+                'given in exchange for cash',
+                'when we get your',
                 'community guideline'
-            ].some((marker) => text === marker || text.startsWith(`${marker} `))
+            ].some((marker) => text === marker || text.startsWith(`${marker} `) || text.includes(marker))
                 || /^[1-5](?:\.0)?\s+out of\s+5\s+stars$/.test(text)
                 || /^reviewed in .* on [a-z]+ \d{1,2}, \d{4}$/.test(text)
                 || /^(flavor name|size|color|style|pattern name|package quantity)\s*:/.test(text);
@@ -4422,6 +4435,7 @@
             text = stripAmazonReviewerPrefix(text);
             if (!/[A-Za-z\u4e00-\u9fff]/.test(text)) return '';
             if (isAmazonReviewChromeLine(text)) return '';
+            if (/(submit a|common reasons customers reviews|harassment, profanity|spam, advertisement|given in exchange for cash|when we get your)/i.test(text)) return '';
             return text;
         }
 
