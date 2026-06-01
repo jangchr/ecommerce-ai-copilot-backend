@@ -303,6 +303,53 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(payload["request_id"], "video-job-from-generation-provider-invalid-1")
         self.assertIn("unsupported", payload["error"])
 
+    def test_list_video_generation_jobs_returns_recent_summaries(self):
+        first = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "capcut",
+                "output_language": "en",
+            },
+        ).json()["job"]
+
+        second = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "pika",
+                "output_language": "en",
+            },
+        ).json()["job"]
+
+        response = self.client.get(
+            "/api/v1/video-generation/jobs?limit=10",
+            headers={"X-Request-ID": "video-job-list-1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["request_id"], "video-job-list-1")
+        self.assertGreaterEqual(payload["job_count"], 2)
+
+        jobs = payload["jobs"]
+        job_ids = {job["job_id"] for job in jobs}
+        self.assertIn(first["job_id"], job_ids)
+        self.assertIn(second["job_id"], job_ids)
+
+        selected = next(job for job in jobs if job["job_id"] == second["job_id"])
+        self.assertEqual(selected["provider"], "pika")
+        self.assertEqual(selected["selected_export_key"], "pika_style_prompt")
+        self.assertFalse(selected["has_result_url"])
+
+    def test_list_video_generation_jobs_clamps_limit(self):
+        response = self.client.get("/api/v1/video-generation/jobs?limit=999")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["limit"], 50)
+
     def test_get_video_generation_job_returns_created_job(self):
         created = self.client.post(
             "/api/v1/video-generation/jobs",

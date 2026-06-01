@@ -32,6 +32,7 @@ from schemas.api_contract import (
     VideoGenerationFromGenerationRequest,
     VideoGenerationJobResponse,
     VideoGenerationJobStatusResponse,
+    VideoGenerationJobListResponse,
     VideoGenerationProvidersResponse,
     VideoGenerationJobResultRequest,
 )
@@ -1729,6 +1730,28 @@ def _update_video_generation_job_result(job: dict, request: VideoGenerationJobRe
     return job
 
 
+def _summarize_video_generation_job(job: dict) -> dict:
+    provider_payload = job.get("provider_payload") or {}
+    result = job.get("result") or {}
+    source_generation = job.get("source_generation") or {}
+    return {
+        "job_id": job.get("job_id", ""),
+        "status": job.get("status", ""),
+        "provider": job.get("provider", ""),
+        "provider_label": provider_payload.get("provider_label", ""),
+        "selected_export_key": provider_payload.get("selected_export_key", ""),
+        "created_at": job.get("created_at", ""),
+        "updated_at": job.get("updated_at", ""),
+        "output_language": job.get("output_language", ""),
+        "has_result_url": bool(result.get("result_url")),
+        "result_url": result.get("result_url", ""),
+        "preview_url": result.get("preview_url", ""),
+        "source_hook": source_generation.get("hook", ""),
+        "source_risk_level": source_generation.get("risk_level", ""),
+        "warning_count": len(job.get("warnings") or []),
+    }
+
+
 @app.get("/api/v1/video-generation/providers", response_model=VideoGenerationProvidersResponse)
 async def list_video_generation_providers(http_request: Request):
     return {
@@ -1777,6 +1800,24 @@ def _video_generation_source_summary(generation_data: dict) -> dict:
         "risk_level": evaluation.get("risk_level", ""),
         "is_grounded": bool(evaluation.get("is_grounded", False)),
         "agent_trace_version": agent_trace.get("trace_version", ""),
+    }
+
+
+@app.get("/api/v1/video-generation/jobs", response_model=VideoGenerationJobListResponse)
+async def list_video_generation_jobs(http_request: Request, limit: int = 20):
+    safe_limit = max(1, min(int(limit or 20), 50))
+    jobs = sorted(
+        VIDEO_GENERATION_JOBS.values(),
+        key=lambda item: item.get("created_at", ""),
+        reverse=True,
+    )
+    summarized = [_summarize_video_generation_job(job) for job in jobs[:safe_limit]]
+    return {
+        "status": "success",
+        "jobs": summarized,
+        "job_count": len(summarized),
+        "limit": safe_limit,
+        "request_id": http_request.state.request_id,
     }
 
 

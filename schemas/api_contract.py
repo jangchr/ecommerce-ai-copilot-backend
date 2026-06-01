@@ -153,6 +153,14 @@ class VideoGenerationJobStatusResponse(BaseModel):
     request_id: Optional[str] = None
 
 
+class VideoGenerationJobListResponse(BaseModel):
+    status: str
+    jobs: List[Dict[str, Any]] = Field(default_factory=list)
+    job_count: int = 0
+    limit: int = 20
+    request_id: Optional[str] = None
+
+
 class VideoGenerationProvidersResponse(BaseModel):
     status: str
     providers: List[Dict[str, Any]] = Field(default_factory=list)
