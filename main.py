@@ -609,22 +609,50 @@ def _build_video_generation_packet(
             }
         )
 
+    risk_boundary = (
+        "Keep every claim tied to supplied evidence. "
+        "If a scene is missing an evidence quote, show product use visually but avoid unsupported factual claims."
+    )
     scene_lines = [
         (
-            f"Scene {scene['scene_id']} ({scene['duration_seconds']}s): "
-            f"{scene['visual_prompt']} Narration: {scene['narration']} "
-            f"Overlay: {scene['overlay_text']} Evidence: {scene['evidence_quote']}"
+            f"Scene {scene['scene_id']} ({scene['duration_seconds']}s) - "
+            f"Shot direction: {scene['visual_prompt']} "
+            f"Narration: {scene['narration'] or 'No narration supplied.'} "
+            f"Overlay text: {scene['overlay_text'] or 'None.'} "
+            f"Evidence anchor: {scene['evidence_quote'] or 'Missing; keep claim conservative.'}"
         )
         for scene in normalized_scenes
     ]
-    full_video_prompt = (
-        f"Create a 20-second vertical TikTok video for {product_name} "
-        f"({category or 'product'}). Use only the supplied creative brief and evidence. "
-        + " ".join(scene_lines)
+    generic_video_prompt = (
+        f"Create a 20-second 9:16 TikTok product video for {product_name} "
+        f"({category or 'product'}). Use only this supplied creative brief and evidence. "
+        f"{risk_boundary}\n"
+        + "\n".join(scene_lines)
     )
     capcut_shot_list = "\n".join(
-        f"{scene['scene_id']}. {scene['duration_seconds']}s | {scene['visual_prompt']} | VO: {scene['narration']} | Text: {scene['overlay_text']}"
+        (
+            f"Scene {scene['scene_id']} - {scene['duration_seconds']}s\n"
+            f"Shot direction: {scene['visual_prompt']}\n"
+            f"Overlay text: {scene['overlay_text'] or 'None'}\n"
+            f"Narration: {scene['narration'] or 'No narration supplied'}\n"
+            f"Evidence anchor: {scene['evidence_quote'] or 'Missing; keep claim conservative'}"
+        )
         for scene in normalized_scenes
+    )
+    runway_style_prompt = (
+        f"9:16 vertical product ad for {product_name}. "
+        "Use product-focused motion, clean ecommerce lighting, close-up product handling, "
+        "and natural short-form pacing. "
+        f"{risk_boundary} Visual sequence: "
+        + " | ".join(scene["visual_prompt"] for scene in normalized_scenes)
+    )
+    pika_style_prompt = (
+        f"TikTok-style product demo for {product_name}. Quick cuts, clear hand-held product action, "
+        "simple overlays, and evidence-safe narration. Sequence: "
+        + " -> ".join(
+            f"{scene['visual_prompt']} [overlay: {scene['overlay_text'] or 'none'}]"
+            for scene in normalized_scenes
+        )
     )
 
     return {
@@ -647,16 +675,12 @@ def _build_video_generation_packet(
             ],
         },
         "scenes": normalized_scenes,
-        "full_video_prompt": full_video_prompt,
+        "full_video_prompt": generic_video_prompt,
         "export_formats": {
-            "generic_video_prompt": full_video_prompt,
+            "generic_video_prompt": generic_video_prompt,
             "capcut_shot_list": capcut_shot_list,
-            "runway_style_prompt": f"Vertical product ad for {product_name}. " + " ".join(
-                scene["visual_prompt"] for scene in normalized_scenes
-            ),
-            "pika_style_prompt": f"TikTok-style product video for {product_name}: " + " ".join(
-                scene["overlay_text"] for scene in normalized_scenes if scene["overlay_text"]
-            ),
+            "runway_style_prompt": runway_style_prompt,
+            "pika_style_prompt": pika_style_prompt,
         },
     }
 

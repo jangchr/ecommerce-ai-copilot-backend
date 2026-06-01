@@ -174,7 +174,21 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertEqual(video_packet["video"]["aspect_ratio"], "9:16")
         self.assertEqual(len(video_packet["scenes"]), 4)
         self.assertTrue(video_packet["full_video_prompt"])
-        self.assertTrue(video_packet["export_formats"]["generic_video_prompt"])
+        export_formats = video_packet["export_formats"]
+        for export_key in [
+            "generic_video_prompt",
+            "capcut_shot_list",
+            "runway_style_prompt",
+            "pika_style_prompt",
+        ]:
+            with self.subTest(export_key=export_key):
+                self.assertIn(export_key, export_formats)
+                self.assertTrue(export_formats[export_key])
+        self.assertIn("Scene 1 - 5s", export_formats["capcut_shot_list"])
+        self.assertIn("Shot direction:", export_formats["capcut_shot_list"])
+        self.assertIn("A sink full of blender parts", export_formats["generic_video_prompt"])
+        self.assertIn("A sink full of blender parts", export_formats["runway_style_prompt"])
+        self.assertIn("evidence-safe narration", export_formats["pika_style_prompt"])
         for scene in video_packet["scenes"]:
             with self.subTest(video_scene=scene["scene_id"]):
                 self.assertIn("visual_prompt", scene)

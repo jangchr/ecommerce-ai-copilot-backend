@@ -2932,7 +2932,7 @@
                             <div class="storyboard-scene-label">${escapeHTML(exportLabels[key])}</div>
                             <div class="storyboard-scene-value">${escapeHTML(String(exportFormats[key]).slice(0, 180))}</div>
                         </div>
-                        <button class="btn-secondary" type="button" onclick="copyVideoExportPrompt('${key}')">${escapeHTML(t('copyExportPrompt'))}</button>
+                        <button class="btn-secondary" type="button" data-video-export-key="${escapeHTML(key)}" onclick="copyVideoExportPrompt('${key}')">${escapeHTML(t('copyExportPrompt'))}: ${escapeHTML(exportLabels[key])}</button>
                     </div>
                 `)
                 .join('');
@@ -2956,7 +2956,7 @@
                         ${scenes.map((scene, index) => `
                             <div class="video-draft-scene">
                                 <div class="video-draft-scene-header">
-                                    <div class="video-draft-scene-title">${escapeHTML(t('sceneLabel'))} ${escapeHTML(scene.scene_id || index + 1)} · ${escapeHTML(scene.duration_seconds || '')}s</div>
+                                    <div class="video-draft-scene-title">${escapeHTML(t('sceneLabel'))} ${escapeHTML(scene.scene_id || index + 1)} - ${escapeHTML(scene.duration_seconds || '')}s</div>
                                     <button class="btn-secondary" type="button" onclick="copyVideoScenePrompt(${index})">${escapeHTML(t('copyScenePrompt'))}</button>
                                 </div>
                                 <div class="storyboard-scene-fields">

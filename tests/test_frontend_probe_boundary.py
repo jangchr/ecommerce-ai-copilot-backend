@@ -554,6 +554,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("function copyVideoScenePrompt(index)", self.source)
         self.assertIn("function copyVideoExportPrompt(formatKey)", self.source)
         self.assertIn("copyVideoDraftText", self.source)
+        self.assertIn("data-video-export-key", self.source)
+        self.assertIn("exportFormats[key]", self.source)
+        self.assertIn("export_formats?.generic_video_prompt", self.source)
+        self.assertIn("generic_video_prompt: t('genericVideoPrompt')", self.source)
+        self.assertIn("capcut_shot_list: t('capcutShotList')", self.source)
+        self.assertIn("runway_style_prompt: t('runwayStylePrompt')", self.source)
+        self.assertIn("pika_style_prompt: t('pikaStylePrompt')", self.source)
+        self.assertIn("${escapeHTML(t('copyExportPrompt'))}: ${escapeHTML(exportLabels[key])}", self.source)
 
         for key in [
             "videoDraftTitle",
@@ -584,6 +592,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("copyFullVideoPrompt: '复制完整视频提示词'", self.source)
         self.assertIn("copyScenePrompt: 'Copy scene prompt'", self.source)
         self.assertIn("copyScenePrompt: '复制镜头提示词'", self.source)
+        self.assertIn("copyExportPrompt: 'Copy export prompt'", self.source)
+        self.assertIn("copyExportPrompt: '复制导出提示词'", self.source)
         self.assertIn("videoPromptCopied: 'Video prompt copied.'", self.source)
         self.assertIn("videoPromptCopied: '视频提示词已复制。'", self.source)
         self.assertIn("scenePromptCopied: 'Scene prompt copied.'", self.source)
