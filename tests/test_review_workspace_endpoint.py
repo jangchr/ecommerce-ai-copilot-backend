@@ -76,6 +76,26 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertTrue(data["creative_angles"])
         self.assertTrue(data["hooks"])
         self.assertEqual(len(data["product_summaries"]), 2)
+        packet = data["llm_evidence_packet"]
+        self.assertEqual(packet["packet_version"], "review_workspace_v1")
+        self.assertEqual(packet["intended_model_use"], "creative_brief_generation")
+        for section in ["product", "review_stats", "evidence", "generation_constraints"]:
+            with self.subTest(packet_section=section):
+                self.assertIn(section, packet)
+        self.assertEqual(packet["product"]["title"], "Silicone Can Strainer A")
+        self.assertEqual(packet["product"]["asin"], "AAA")
+        self.assertEqual(packet["product"]["source_type"], "review_workspace")
+        self.assertEqual(packet["product"]["product_count"], 2)
+        self.assertEqual(packet["review_stats"]["total_reviews"], 3)
+        self.assertEqual(packet["review_stats"]["unique_analyzed_reviews"], 3)
+        self.assertEqual(packet["review_stats"]["high_signal_reviews"], data["high_signal_review_count"])
+        self.assertTrue(packet["evidence"]["buyer_objections"])
+        self.assertTrue(packet["evidence"]["positive_signals"])
+        self.assertTrue(packet["evidence"]["quotes"])
+        self.assertTrue(packet["evidence"]["source_groups"])
+        constraints = "\n".join(packet["generation_constraints"])
+        self.assertIn("Do not generalize one variant/color/size issue", constraints)
+        self.assertIn("Keep main product / variant / competitor source boundaries visible", constraints)
 
     def test_analyze_review_workspace_handles_empty_workspace(self):
         response = self.client.post(

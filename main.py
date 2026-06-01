@@ -2415,6 +2415,147 @@ def _rw_source_breakdown(payload: ReviewWorkspaceRequest, rows: list[dict]) -> R
     )
 
 
+def _rw_packet_theme_items(themes: list[ReviewThemeSummary], limit: int = 6) -> list[dict]:
+    items: list[dict] = []
+    for theme in (themes or [])[:limit]:
+        items.append(
+            {
+                "label": getattr(theme, "label", ""),
+                "evidence_count": getattr(theme, "evidence_count", 0),
+                "evidence_quotes": list(getattr(theme, "evidence_quotes", []) or [])[:3],
+            }
+        )
+    return items
+
+
+def _rw_packet_source_groups(source_breakdown: ReviewSourceBreakdown, limit: int = 6) -> list[dict]:
+    groups: list[dict] = []
+    for group in list(getattr(source_breakdown, "source_groups", []) or [])[:limit]:
+        groups.append(
+            {
+                "source_type": getattr(group, "source_type", ""),
+                "label": getattr(group, "label", ""),
+                "review_count": getattr(group, "review_count", 0),
+                "high_signal_review_count": getattr(group, "high_signal_review_count", 0),
+                "asin_count": getattr(group, "asin_count", 0),
+                "top_asins": list(getattr(group, "top_asins", []) or [])[:5],
+                "evidence_quotes": list(getattr(group, "evidence_quotes", []) or [])[:3],
+                "metadata_summary": dict(getattr(group, "metadata_summary", {}) or {}),
+            }
+        )
+    return groups
+
+
+def _rw_packet_quotes(
+    common_pain_points: list[ReviewThemeSummary],
+    buyer_objections: list[ReviewThemeSummary],
+    liked_points: list[ReviewThemeSummary],
+    use_cases: list[ReviewThemeSummary],
+    source_breakdown: ReviewSourceBreakdown,
+    limit: int = 12,
+) -> list[str]:
+    quotes: list[str] = []
+    seen = set()
+
+    def add(value: str):
+        quote = _rw_quote_snippet(value, 240)
+        key = " ".join(quote.lower().split())
+        if not quote or key in seen:
+            return
+        seen.add(key)
+        quotes.append(quote)
+
+    for themes in [buyer_objections, common_pain_points, liked_points, use_cases]:
+        for theme in themes or []:
+            for quote in getattr(theme, "evidence_quotes", []) or []:
+                add(quote)
+                if len(quotes) >= limit:
+                    return quotes
+
+    for group in getattr(source_breakdown, "source_groups", []) or []:
+        for quote in getattr(group, "evidence_quotes", []) or []:
+            add(quote)
+            if len(quotes) >= limit:
+                return quotes
+
+    return quotes
+
+
+def _review_workspace_llm_evidence_packet(
+    payload: ReviewWorkspaceRequest,
+    rows: list[dict],
+    high_signal_rows: list[dict],
+    source_breakdown: ReviewSourceBreakdown,
+    common_pain_points: list[ReviewThemeSummary],
+    buyer_objections: list[ReviewThemeSummary],
+    liked_points: list[ReviewThemeSummary],
+    use_cases: list[ReviewThemeSummary],
+) -> dict:
+    primary_product = next((product for product in payload.products if _rw_text(getattr(product, "title", ""))), None)
+    if primary_product is None:
+        primary_product = payload.products[0] if payload.products else None
+
+    raw_review_count = getattr(source_breakdown, "raw_review_count", 0)
+    duplicate_review_count = getattr(source_breakdown, "duplicate_review_count", 0)
+    warnings = [
+        "review_workspace_visible_sample_only",
+        "review_workspace_no_external_fetch",
+    ]
+    if duplicate_review_count:
+        warnings.append("duplicate_reviews_removed")
+    if getattr(source_breakdown, "variant_reviews", 0):
+        warnings.append("variant_reviews_present")
+    if getattr(source_breakdown, "low_star_reviews", 0):
+        warnings.append("low_star_reviews_present")
+    if getattr(source_breakdown, "verified_purchase_reviews", 0):
+        warnings.append("verified_purchase_reviews_present")
+
+    source_groups = _rw_packet_source_groups(source_breakdown)
+    return {
+        "packet_version": "review_workspace_v1",
+        "intended_model_use": "creative_brief_generation",
+        "product": {
+            "title": _rw_text(getattr(primary_product, "title", "")) if primary_product else "",
+            "asin": _rw_text(getattr(primary_product, "asin", "")) if primary_product else "",
+            "source_type": "review_workspace",
+            "product_count": len(payload.products),
+        },
+        "review_stats": {
+            "total_reviews": len(rows),
+            "parsed_reviews": len(rows),
+            "unique_analyzed_reviews": len(rows),
+            "raw_review_count": raw_review_count,
+            "duplicate_review_count": duplicate_review_count,
+            "high_signal_reviews": len(high_signal_rows),
+            "verified_purchase_reviews": getattr(source_breakdown, "verified_purchase_reviews", 0),
+            "low_star_reviews": getattr(source_breakdown, "low_star_reviews", 0),
+            "warnings": warnings,
+            "data_warnings": warnings,
+        },
+        "evidence": {
+            "pain_points": _rw_packet_theme_items(common_pain_points),
+            "buyer_objections": _rw_packet_theme_items(buyer_objections),
+            "positive_signals": _rw_packet_theme_items(liked_points),
+            "use_cases": _rw_packet_theme_items(use_cases),
+            "quotes": _rw_packet_quotes(
+                common_pain_points,
+                buyer_objections,
+                liked_points,
+                use_cases,
+                source_breakdown,
+            ),
+            "source_groups": source_groups,
+        },
+        "generation_constraints": [
+            "Use only supplied review evidence and product fields.",
+            "Do not claim full-market statistics.",
+            "Do not generalize one variant/color/size issue to the whole product unless multiple reviews support it.",
+            "Keep main product / variant / competitor source boundaries visible.",
+            "Do not turn buyer objections into positive claims unless evidence explicitly resolves the concern.",
+        ],
+    }
+
+
 def _rw_theme_summaries(rows: list[dict], themes: dict[str, list[str]], limit: int = 6) -> list[ReviewThemeSummary]:
     scored = []
     for label, markers in themes.items():
@@ -4453,6 +4594,16 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         use_cases,
         hooks,
     )
+    llm_evidence_packet = _review_workspace_llm_evidence_packet(
+        payload,
+        rows,
+        high_signal_rows,
+        source_breakdown,
+        common_pain_points,
+        buyer_objections,
+        liked_points,
+        use_cases,
+    )
 
     return ReviewWorkspaceResponse(
         workspace_id=payload.workspace_id,
@@ -4474,6 +4625,7 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         ],
         sample_interpretation=sample_interpretation,
         video_script_pack=video_script_pack,
+        llm_evidence_packet=llm_evidence_packet,
     )
 
 

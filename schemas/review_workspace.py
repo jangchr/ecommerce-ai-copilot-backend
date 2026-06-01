@@ -116,3 +116,4 @@ class ReviewWorkspaceResponse(BaseModel):
     recommended_next_actions: list[str] = Field(default_factory=list)
     sample_interpretation: ReviewSampleInterpretation = Field(default_factory=ReviewSampleInterpretation)
     video_script_pack: ReviewVideoScriptPack = Field(default_factory=ReviewVideoScriptPack)
+    llm_evidence_packet: dict[str, object] = Field(default_factory=dict)
