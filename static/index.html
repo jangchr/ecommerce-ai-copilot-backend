@@ -6268,6 +6268,62 @@
         }
 
 
+        function extensionPayloadReviewCount(payload) {
+            return (payload?.products || []).reduce((total, product) => {
+                return total + ((product?.reviews || []).length || 0);
+            }, 0);
+        }
+
+        function extensionPayloadMatchesProduct(payload, productName) {
+            const name = String(productName || '').trim().toLowerCase();
+            if (!payload || !name) return false;
+            return (payload.products || []).some((product) => {
+                const title = String(product?.title || product?.name || product?.product_title || '').trim().toLowerCase();
+                return title && (title === name || title.includes(name) || name.includes(title.slice(0, 60)));
+            });
+        }
+
+        function pastedWorkspacePayloadFromExtensionAnalysis(payload, body) {
+            const product = (payload?.products || [])[0] || {};
+            const productTitle = body?.product_summaries?.[0]?.title || product.title || product.name || product.product_title || '';
+            return {
+                parsed: {
+                    review_count: body?.total_reviews ?? extensionPayloadReviewCount(payload),
+                    high_signal_review_count: body?.high_signal_review_count ?? 0,
+                    data_warnings: body?.data_warnings || [],
+                    workspace_product: { title: productTitle }
+                },
+                analysis: {
+                    product_count: body?.product_count ?? ((payload?.products || []).length || 0),
+                    total_reviews: body?.total_reviews ?? extensionPayloadReviewCount(payload),
+                    source_breakdown: body?.source_breakdown || {},
+                    common_pain_points: body?.common_pain_points || [],
+                    buyer_objections: body?.buyer_objections || [],
+                    liked_points: body?.liked_points || [],
+                    use_cases: body?.use_cases || [],
+                    creative_angles: body?.creative_angles || [],
+                    hooks: body?.hooks || []
+                }
+            };
+        }
+
+        async function extensionWorkspaceDisplayAnalysisForProduct(productName, fallbackReviewCount = 0) {
+            if (typeof readExtensionWorkspacePayload !== 'function') return null;
+            const payload = readExtensionWorkspacePayload();
+            const extensionCount = extensionPayloadReviewCount(payload);
+            if (!payload || extensionCount <= Math.max(1, Number(fallbackReviewCount || 0))) return null;
+            if (!extensionPayloadMatchesProduct(payload, productName)) return null;
+
+            const response = await fetch("/api/v1/analyze-review-workspace", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok || !body || !body.total_reviews) return null;
+            return pastedWorkspacePayloadFromExtensionAnalysis(payload, body);
+        }
+
         function renderPastedReviewWorkspaceAnalysis(payload) {
             const target = document.getElementById('pastedReviewWorkspaceResult');
             if (!target) return;
@@ -6368,7 +6424,19 @@
                     goal,
                     output_language: currentOutputLanguage()
                 });
-                renderPastedReviewWorkspaceAnalysis(workspaceResponse);
+                let workspaceDisplayResponse = workspaceResponse;
+                try {
+                    const extensionDisplayResponse = await extensionWorkspaceDisplayAnalysisForProduct(
+                        productName,
+                        workspaceResponse?.parsed?.review_count || 0
+                    );
+                    if (extensionDisplayResponse) {
+                        workspaceDisplayResponse = extensionDisplayResponse;
+                    }
+                } catch (error) {
+                    workspaceDisplayResponse = workspaceResponse;
+                }
+                renderPastedReviewWorkspaceAnalysis(workspaceDisplayResponse);
                 setReviewsStatus(t('pastedReviewWorkspaceReady'));
 
                 const workspaceAnalysis = workspaceResponse.analysis || {};
