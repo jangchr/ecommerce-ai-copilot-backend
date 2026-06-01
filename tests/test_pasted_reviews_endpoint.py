@@ -143,6 +143,7 @@ class PastedReviewsEndpointTest(unittest.TestCase):
             "feedback",
             "llm_evidence_packet",
             "video_generation_packet",
+            "agent_trace",
         ]:
             with self.subTest(field=field):
                 self.assertIn(field, payload["data"])
@@ -196,6 +197,31 @@ class PastedReviewsEndpointTest(unittest.TestCase):
                 self.assertIn("overlay_text", scene)
                 self.assertIn("duration_seconds", scene)
                 self.assertIn("evidence_quote", scene)
+        trace = payload["data"]["agent_trace"]
+        self.assertEqual(trace["trace_version"], "agent_trace_v1")
+        self.assertEqual(trace["execution_mode"], "single_workflow_scaffold")
+        self.assertFalse(trace["is_real_multi_agent_execution"])
+        for agent_name in [
+            "evidence_agent",
+            "strategy_agent",
+            "storyboard_agent",
+            "video_prompt_agent",
+            "risk_agent",
+        ]:
+            with self.subTest(agent_name=agent_name):
+                self.assertIn(agent_name, trace["agents"])
+                self.assertEqual(trace["agents"][agent_name]["agent_name"], agent_name)
+                self.assertEqual(trace["agents"][agent_name]["status"], "complete")
+        evidence_agent = trace["agents"]["evidence_agent"]
+        self.assertEqual(evidence_agent["key_outputs"]["packet_version"], "pasted_reviews_v1")
+        self.assertEqual(evidence_agent["key_outputs"]["source_type"], "user_pasted_reviews")
+        self.assertIn("Hard to clean", "\n".join(evidence_agent["key_outputs"]["pain_points"]))
+        video_agent = trace["agents"]["video_prompt_agent"]
+        self.assertEqual(video_agent["key_outputs"]["packet_version"], "video_generation_v1")
+        self.assertIn("generic_video_prompt", video_agent["key_outputs"]["export_format_keys"])
+        risk_agent = trace["agents"]["risk_agent"]
+        self.assertEqual(risk_agent["key_outputs"]["risk_level"], "medium")
+        self.assertTrue(risk_agent["key_outputs"]["is_grounded"])
         self.assertNotIn("telemetry_summary", payload)
         self.assertNotIn("shadow_sources", payload)
         self.assertNotIn("memory_observability", payload)
@@ -388,6 +414,10 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertEqual(payload["status"], "success")
         self.assertEqual(payload["data"]["llm_evidence_packet"]["packet_version"], "review_workspace_v1")
         self.assertEqual(payload["data"]["llm_evidence_packet"]["product"]["source_type"], "review_workspace")
+        trace = payload["data"]["agent_trace"]
+        self.assertEqual(trace["agents"]["evidence_agent"]["key_outputs"]["packet_version"], "review_workspace_v1")
+        self.assertEqual(trace["agents"]["evidence_agent"]["key_outputs"]["source_type"], "review_workspace")
+        self.assertEqual(trace["agents"]["video_prompt_agent"]["key_outputs"]["packet_version"], "video_generation_v1")
 
     def test_root_beer_amazon_reviews_are_cleaned_and_classified(self):
         root_beer_reviews = (

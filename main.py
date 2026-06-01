@@ -281,6 +281,10 @@ def _preserve_product_identifiers(translated: dict, original: dict) -> dict:
             "product_name",
             "product_category",
             "risk_level",
+            "agent_name",
+            "packet_version",
+            "execution_mode",
+            "status",
         }:
             translated[key] = value
         elif isinstance(value, dict) and isinstance(translated.get(key), dict):
@@ -685,6 +689,175 @@ def _build_video_generation_packet(
     }
 
 
+def _agent_trace_text(value, limit: int = 220) -> str:
+    return _safe_evidence_quote(str(value or ""), limit=limit)
+
+
+def _agent_trace_items(value, limit: int = 4) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    items: list[str] = []
+    for item in value:
+        if isinstance(item, dict):
+            text = (
+                item.get("label")
+                or item.get("theme")
+                or item.get("summary")
+                or item.get("quote")
+                or item.get("text")
+                or ""
+            )
+        else:
+            text = item
+        cleaned = _agent_trace_text(text)
+        if cleaned and cleaned not in items:
+            items.append(cleaned)
+        if len(items) >= limit:
+            break
+    return items
+
+
+def _agent_trace_count(value) -> int:
+    return len(value) if isinstance(value, list) else 0
+
+
+def _build_agent_trace(data: dict, output_language: str = "en") -> dict:
+    if not isinstance(data, dict):
+        return {}
+
+    insights = data.get("insights") if isinstance(data.get("insights"), dict) else {}
+    audience = data.get("audience") if isinstance(data.get("audience"), dict) else {}
+    strategy = data.get("strategy") if isinstance(data.get("strategy"), dict) else {}
+    assets = data.get("assets") if isinstance(data.get("assets"), dict) else {}
+    evaluation = data.get("evaluation") if isinstance(data.get("evaluation"), dict) else {}
+    evidence = insights.get("evidence") if isinstance(insights.get("evidence"), dict) else {}
+    script = assets.get("tiktok_script") if isinstance(assets.get("tiktok_script"), dict) else {}
+    storyboard = assets.get("storyboard") if isinstance(assets.get("storyboard"), dict) else {}
+    scenes = storyboard.get("scenes") if isinstance(storyboard.get("scenes"), list) else []
+    llm_packet = data.get("llm_evidence_packet") if isinstance(data.get("llm_evidence_packet"), dict) else {}
+    video_packet = data.get("video_generation_packet") if isinstance(data.get("video_generation_packet"), dict) else {}
+    packet_evidence = llm_packet.get("evidence") if isinstance(llm_packet.get("evidence"), dict) else {}
+    packet_stats = llm_packet.get("review_stats") if isinstance(llm_packet.get("review_stats"), dict) else {}
+    packet_product = llm_packet.get("product") if isinstance(llm_packet.get("product"), dict) else {}
+    constraints = llm_packet.get("generation_constraints") if isinstance(llm_packet.get("generation_constraints"), list) else []
+    warnings = (
+        _agent_trace_items(packet_stats.get("warnings"), limit=4)
+        + _agent_trace_items(evidence.get("data_warnings"), limit=4)
+        + _agent_trace_items(constraints, limit=3)
+    )
+    source_type = (
+        packet_product.get("source_type")
+        or evidence.get("source_type")
+        or storyboard.get("source")
+        or "unknown"
+    )
+    review_count = (
+        packet_stats.get("total_reviews")
+        or packet_stats.get("review_count")
+        or evidence.get("review_count")
+        or 0
+    )
+    quote_count = _agent_trace_count(packet_evidence.get("quotes")) or _agent_trace_count(evidence.get("evidence_quotes"))
+    video_formats = []
+    if isinstance(video_packet.get("export_formats"), dict):
+        video_formats = sorted(key for key, value in video_packet["export_formats"].items() if value)
+
+    agents = {
+        "evidence_agent": {
+            "agent_name": "evidence_agent",
+            "role": "Extract buyer evidence and source boundaries",
+            "input_summary": f"packet={llm_packet.get('packet_version') or 'none'}; source_type={source_type}; reviews={review_count}",
+            "output_summary": f"{quote_count} evidence quotes prepared with source boundary {source_type}.",
+            "key_outputs": {
+                "packet_version": llm_packet.get("packet_version", ""),
+                "source_type": source_type,
+                "review_count": review_count,
+                "pain_points": _agent_trace_items(insights.get("pain_points") or packet_evidence.get("pain_points"), limit=4),
+                "buyer_objections": _agent_trace_items(insights.get("buyer_objections") or packet_evidence.get("buyer_objections"), limit=4),
+                "positive_signals": _agent_trace_items(insights.get("positive_signals") or packet_evidence.get("positive_signals"), limit=4),
+                "evidence_quote_count": quote_count,
+            },
+            "warnings": warnings[:8],
+            "status": "complete",
+        },
+        "strategy_agent": {
+            "agent_name": "strategy_agent",
+            "role": "Choose target audience and creative angle",
+            "input_summary": "Uses top evidence signals, buyer objections, and positive proof from the evidence packet.",
+            "output_summary": _agent_trace_text(strategy.get("core_hook_strategy") or script.get("hook"), limit=260),
+            "key_outputs": {
+                "audience_primary": _agent_trace_text(audience.get("primary")),
+                "core_hook_strategy": _agent_trace_text(strategy.get("core_hook_strategy"), limit=260),
+                "emotional_trigger": _agent_trace_text(strategy.get("emotional_trigger"), limit=260),
+            },
+            "warnings": [],
+            "status": "complete",
+        },
+        "storyboard_agent": {
+            "agent_name": "storyboard_agent",
+            "role": "Turn strategy into short-form storyboard",
+            "input_summary": _agent_trace_text(strategy.get("core_hook_strategy") or script.get("hook"), limit=220),
+            "output_summary": f"{len(scenes)} storyboard scenes with hook and CTA.",
+            "key_outputs": {
+                "hook": _agent_trace_text(script.get("hook"), limit=260),
+                "cta": _agent_trace_text(script.get("cta"), limit=260),
+                "scene_count": len(scenes),
+            },
+            "warnings": [],
+            "status": "complete",
+        },
+        "video_prompt_agent": {
+            "agent_name": "video_prompt_agent",
+            "role": "Convert storyboard into video prompts and export formats",
+            "input_summary": f"storyboard_scene_count={len(scenes)}",
+            "output_summary": f"video_packet={video_packet.get('packet_version') or 'none'}; scenes={_agent_trace_count(video_packet.get('scenes'))}",
+            "key_outputs": {
+                "packet_version": video_packet.get("packet_version", ""),
+                "scene_count": _agent_trace_count(video_packet.get("scenes")),
+                "export_format_keys": video_formats,
+            },
+            "warnings": _agent_trace_items(
+                [
+                    note
+                    for scene in (video_packet.get("scenes") if isinstance(video_packet.get("scenes"), list) else [])
+                    for note in (scene.get("risk_notes") if isinstance(scene, dict) and isinstance(scene.get("risk_notes"), list) else [])
+                ],
+                limit=4,
+            ),
+            "status": "complete",
+        },
+        "risk_agent": {
+            "agent_name": "risk_agent",
+            "role": "Check grounding and claim risk",
+            "input_summary": _agent_trace_text(evaluation.get("reasoning"), limit=260),
+            "output_summary": f"risk_level={evaluation.get('risk_level') or 'unknown'}; grounded={bool(evaluation.get('is_grounded'))}",
+            "key_outputs": {
+                "risk_level": evaluation.get("risk_level", ""),
+                "is_grounded": bool(evaluation.get("is_grounded")),
+                "is_approved": bool(evaluation.get("is_approved")),
+                "confidence_score": evaluation.get("confidence_score", 0.0),
+            },
+            "warnings": _agent_trace_items(constraints, limit=4),
+            "status": "complete",
+        },
+    }
+
+    return {
+        "trace_version": "agent_trace_v1",
+        "execution_mode": "single_workflow_scaffold",
+        "is_real_multi_agent_execution": False,
+        "output_language": output_language or "en",
+        "agents": agents,
+        "agent_order": [
+            "evidence_agent",
+            "strategy_agent",
+            "storyboard_agent",
+            "video_prompt_agent",
+            "risk_agent",
+        ],
+    }
+
+
 def _pasted_review_signal_kind(quote: str) -> str:
     lowered = _clean_description_text(quote).lower()
     if not lowered:
@@ -1007,6 +1180,7 @@ def _description_response_data(request: ProductDescriptionRequest, generated: di
         data["evaluation"],
         getattr(request, "output_language", "en"),
     )
+    data["agent_trace"] = _build_agent_trace(data, getattr(request, "output_language", "en"))
     return data
 
 
@@ -1218,6 +1392,7 @@ def _pasted_reviews_response_data(
         data["evaluation"],
         getattr(request, "output_language", "en"),
     )
+    data["agent_trace"] = _build_agent_trace(data, getattr(request, "output_language", "en"))
     return data
 
 
@@ -1687,6 +1862,7 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         response["data"]["evaluation"],
         output_language,
     )
+    response["data"]["agent_trace"] = _build_agent_trace(response["data"], output_language)
     try:
         response["data"] = await translate_product_visible_data(
             response["data"],
