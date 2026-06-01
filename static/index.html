@@ -2586,6 +2586,32 @@
             return t(map[level] || 'riskLow');
         }
 
+        function generationLanguageDisplayName(language, uiLanguage = currentOutputLanguage()) {
+            const isZhUi = uiLanguage === 'zh-CN';
+            return language === 'zh-CN'
+                ? (isZhUi ? '\u4e2d\u6587' : 'Chinese')
+                : (isZhUi ? '\u82f1\u6587' : 'English');
+        }
+
+        function renderGenerationLanguageNotice(data) {
+            const generatedLanguage = data?._generatedOutputLanguage || currentOutputLanguage();
+            const uiLanguage = currentOutputLanguage();
+            if (generatedLanguage === uiLanguage) return '';
+
+            const isZhUi = uiLanguage === 'zh-CN';
+            const generatedName = generationLanguageDisplayName(generatedLanguage, uiLanguage);
+            const message = isZhUi
+                ? `\u5f53\u524d\u754c\u9762\u8bed\u8a00\u5df2\u5207\u6362\uff0c\u4f46\u8fd9\u6b21\u7ed3\u679c\u5185\u5bb9\u662f\u7528${generatedName}\u751f\u6210\u7684\u3002\u5207\u6362\u8bed\u8a00\u53ea\u4f1a\u6539\u53d8\u754c\u9762\u6587\u6848\uff1b\u5982\u9700\u6539\u53d8\u7ed3\u679c\u5185\u5bb9\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002`
+                : `The interface language changed, but this result was generated in ${generatedName}. Switching language only changes UI labels; regenerate to change the generated content.`;
+
+            return `
+                <div class="good-inputs" style="margin-bottom:12px;border-color:#fde68a;background:#fffbeb;">
+                    <div class="field-helper" style="color:#92400e;font-weight:800;">${escapeHTML(message)}</div>
+                </div>
+            `;
+        }
+
+
         function localizeQualityRationale(text) {
             const raw = String(text || '');
             if (currentOutputLanguage() !== 'zh-CN') return raw;
@@ -6190,6 +6216,9 @@
 
         function renderProductDashboard(data, options = {}) {
             showInlineResultPanel();
+            if (data && !data._generatedOutputLanguage) {
+                data._generatedOutputLanguage = options.outputLanguage || currentOutputLanguage();
+            }
             latestProductData = data;
             latestInputSlug = options.inputSlug ?? (document.getElementById('urlInput').value || '').trim();
             latestGeneratedAt = options.generatedAt ?? new Date().toISOString();
@@ -6207,12 +6236,14 @@
             const cleanCta = cleanCtaLine(script);
 
             sectionTextCache = buildSectionText(data);
+            const generationLanguageNotice = renderGenerationLanguageNotice(data);
             const resultSummaryCard = renderResultSummaryCard(data, evidence, evalData, score);
             const hookHighlightCard = renderHookHighlightCard(script);
             const quickUsePackCard = renderQuickUsePack(script, storyboard, data);
 
             document.getElementById('res-insights').style.opacity = '1';
             document.getElementById('res-insights').innerHTML = `
+                ${generationLanguageNotice}
                 ${resultSummaryCard}
                 ${renderEvidenceSourceCard(evidence)}
                 ${renderSectionHeader(t('evidenceSnapshot'), 'evidence')}
