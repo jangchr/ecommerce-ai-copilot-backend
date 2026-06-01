@@ -24,6 +24,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("storyboard_agent", self.source)
         self.assertIn("video_prompt_agent", self.source)
         self.assertIn("risk_agent", self.source)
+        self.assertIn("order.join(\' -> \')", self.source)
 
     def test_product_frontend_does_not_read_embedded_debug_state(self):
         self.assertNotIn("data.debug", self.source)
