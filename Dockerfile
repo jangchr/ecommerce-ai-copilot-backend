@@ -20,6 +20,7 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
 COPY main.py .env.example ./
 COPY core ./core
 COPY schemas ./schemas
+COPY video_generation ./video_generation
 COPY source_adapters ./source_adapters
 COPY scripts ./scripts
 COPY tests ./tests
