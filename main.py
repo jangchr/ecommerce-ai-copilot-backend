@@ -3224,6 +3224,14 @@ def _rw_quote_has_pain_signal(value: str) -> bool:
         "not sold",
         "2-pack",
         "single bottle",
+        "no lid",
+        "not lid",
+        "without a lid",
+        "lid to go over the spout",
+        "air is ever present",
+        "oxidation",
+        "cap leaked",
+        "bottle cap",
     ]
     return any(term in lower for term in pain_terms)
 
@@ -3279,6 +3287,10 @@ def _rw_dedupe_text_items(items: list[str], limit: int = 6) -> list[str]:
 def _rw_positive_hook_from_theme(theme) -> str:
     raw_label = str(getattr(theme, "label", "") or "").strip()
     normalized = raw_label.replace("liked signal:", "").strip().lower()
+    quote = _rw_theme_first_quote(theme)
+
+    if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
+        return f"Start with the buyer concern: \"{_rw_quote_snippet(quote, 90)}\""
 
     if normalized == "great":
         return "Buyers keep calling this great - here's the moment that proves why."
@@ -3292,9 +3304,6 @@ def _rw_positive_hook_from_theme(theme) -> str:
     if normalized == "easy":
         return "Buyers say this feels easy - here's the moment that makes it click."
 
-    quote = _rw_theme_first_quote(theme)
-    if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
-        return f"Start with the buyer concern: \"{_rw_quote_snippet(quote, 90)}\""
     label = _rw_human_theme_phrase(raw_label)
     if label.lower().startswith("buyers "):
         return f"Use this positive review proof: \"{_rw_quote_snippet(quote, 90)}\""
