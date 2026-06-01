@@ -135,6 +135,12 @@ class VideoGenerationJobRequest(BaseModel):
     output_language: str = "en"
 
 
+class VideoGenerationFromGenerationRequest(BaseModel):
+    generation_data: Dict[str, Any] = Field(default_factory=dict)
+    provider: str = "manual_export"
+    output_language: str = "en"
+
+
 class VideoGenerationJobResponse(BaseModel):
     status: str
     job: Dict[str, Any] = Field(default_factory=dict)

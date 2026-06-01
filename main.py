@@ -29,6 +29,7 @@ from schemas.api_contract import (
     TranslationRequest,
     TranslationResponse,
     VideoGenerationJobRequest,
+    VideoGenerationFromGenerationRequest,
     VideoGenerationJobResponse,
     VideoGenerationJobStatusResponse,
     VideoGenerationProvidersResponse,
@@ -1737,6 +1738,48 @@ async def list_video_generation_providers(http_request: Request):
     }
 
 
+def _video_generation_packet_from_generation_data(generation_data: dict) -> dict:
+    if not isinstance(generation_data, dict):
+        return {}
+    packet = generation_data.get("video_generation_packet") or {}
+    if not isinstance(packet, dict):
+        return {}
+    return packet
+
+
+def _video_generation_source_summary(generation_data: dict) -> dict:
+    if not isinstance(generation_data, dict):
+        return {}
+
+    assets = generation_data.get("assets") or {}
+    script = assets.get("tiktok_script") if isinstance(assets, dict) else {}
+    storyboard = assets.get("storyboard") if isinstance(assets, dict) else {}
+    evaluation = generation_data.get("evaluation") or {}
+    agent_trace = generation_data.get("agent_trace") or {}
+
+    if not isinstance(script, dict):
+        script = {}
+    if not isinstance(storyboard, dict):
+        storyboard = {}
+    if not isinstance(evaluation, dict):
+        evaluation = {}
+    if not isinstance(agent_trace, dict):
+        agent_trace = {}
+
+    scenes = storyboard.get("scenes") or []
+    if not isinstance(scenes, list):
+        scenes = []
+
+    return {
+        "hook": script.get("hook", ""),
+        "cta": script.get("cta", ""),
+        "storyboard_scene_count": len(scenes),
+        "risk_level": evaluation.get("risk_level", ""),
+        "is_grounded": bool(evaluation.get("is_grounded", False)),
+        "agent_trace_version": agent_trace.get("trace_version", ""),
+    }
+
+
 @app.post("/api/v1/video-generation/jobs", response_model=VideoGenerationJobResponse)
 async def create_video_generation_job(request: VideoGenerationJobRequest, http_request: Request):
     request_id = http_request.state.request_id
@@ -1809,6 +1852,62 @@ async def update_video_generation_job_result(
         job_id=job_id,
         job_status=job["status"],
         provider=job.get("provider", ""),
+    )
+
+    return {
+        "status": "success",
+        "job": job,
+        "request_id": request_id,
+    }
+
+
+@app.post("/api/v1/video-generation/jobs/from-generation", response_model=VideoGenerationJobResponse)
+async def create_video_generation_job_from_generation(
+    request: VideoGenerationFromGenerationRequest,
+    http_request: Request,
+):
+    request_id = http_request.state.request_id
+    generation_data = request.generation_data or {}
+    packet = _video_generation_packet_from_generation_data(generation_data)
+
+    if packet.get("packet_version") != "video_generation_v1":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": "generation_data.video_generation_packet with packet_version=video_generation_v1 is required.",
+                "request_id": request_id,
+            },
+        )
+
+    if not _normalize_video_provider(request.provider or "manual_export"):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": "unsupported video generation provider",
+                "supported_providers": list(SUPPORTED_VIDEO_PROVIDERS.keys()),
+                "request_id": request_id,
+            },
+        )
+
+    job_request = VideoGenerationJobRequest(
+        video_generation_packet=packet,
+        provider=request.provider,
+        output_language=request.output_language,
+    )
+    job = _create_video_generation_job(job_request)
+    job["source_generation"] = _video_generation_source_summary(generation_data)
+    job["updated_at"] = _utc_now_iso()
+    VIDEO_GENERATION_JOBS[job["job_id"]] = job
+
+    emit_event(
+        "video_generation_job_created_from_generation",
+        request_id,
+        endpoint="/api/v1/video-generation/jobs/from-generation",
+        status="success",
+        job_id=job["job_id"],
+        provider=job["provider"],
     )
 
     return {

@@ -215,6 +215,94 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(payload["status"], "error")
         self.assertEqual(payload["request_id"], "video-job-result-missing-1")
 
+    def test_create_video_generation_job_from_generation_data(self):
+        generation_data = {
+            "assets": {
+                "tiktok_script": {
+                    "hook": "Tired of loud blenders?",
+                    "cta": "Try this compact option.",
+                },
+                "storyboard": {
+                    "scenes": [
+                        {"narration": "Scene one"},
+                        {"narration": "Scene two"},
+                    ]
+                },
+            },
+            "evaluation": {
+                "risk_level": "medium",
+                "is_grounded": True,
+            },
+            "agent_trace": {
+                "trace_version": "agent_trace_v1",
+            },
+            "video_generation_packet": VIDEO_PACKET,
+        }
+
+        response = self.client.post(
+            "/api/v1/video-generation/jobs/from-generation",
+            json={
+                "generation_data": generation_data,
+                "provider": "pika",
+                "output_language": "en",
+            },
+            headers={"X-Request-ID": "video-job-from-generation-1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["request_id"], "video-job-from-generation-1")
+
+        job = payload["job"]
+        self.assertEqual(job["provider"], "pika")
+        self.assertEqual(job["provider_payload"]["selected_export_key"], "pika_style_prompt")
+        self.assertEqual(job["source_generation"]["hook"], "Tired of loud blenders?")
+        self.assertEqual(job["source_generation"]["storyboard_scene_count"], 2)
+        self.assertEqual(job["source_generation"]["risk_level"], "medium")
+        self.assertTrue(job["source_generation"]["is_grounded"])
+        self.assertEqual(job["source_generation"]["agent_trace_version"], "agent_trace_v1")
+
+    def test_create_video_generation_job_from_generation_rejects_missing_video_packet(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs/from-generation",
+            json={
+                "generation_data": {
+                    "assets": {
+                        "tiktok_script": {
+                            "hook": "Missing packet"
+                        }
+                    }
+                },
+                "provider": "manual_export",
+            },
+            headers={"X-Request-ID": "video-job-from-generation-invalid-1"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["request_id"], "video-job-from-generation-invalid-1")
+        self.assertIn("generation_data.video_generation_packet", payload["error"])
+
+    def test_create_video_generation_job_from_generation_rejects_unsupported_provider(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs/from-generation",
+            json={
+                "generation_data": {
+                    "video_generation_packet": VIDEO_PACKET
+                },
+                "provider": "unknown_provider",
+            },
+            headers={"X-Request-ID": "video-job-from-generation-provider-invalid-1"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["request_id"], "video-job-from-generation-provider-invalid-1")
+        self.assertIn("unsupported", payload["error"])
+
     def test_get_video_generation_job_returns_created_job(self):
         created = self.client.post(
             "/api/v1/video-generation/jobs",
