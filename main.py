@@ -28,6 +28,9 @@ from schemas.api_contract import (
     ProductDescriptionResponse,
     TranslationRequest,
     TranslationResponse,
+    VideoGenerationJobRequest,
+    VideoGenerationJobResponse,
+    VideoGenerationJobStatusResponse,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -99,6 +102,7 @@ PASTED_REVIEWS_MIN_CHARS = 24
 PASTED_REVIEWS_COMPACT_QUOTE_LIMIT = 12
 PASTED_REVIEWS_RAW_MAX_CHARS = 50000
 SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
+VIDEO_GENERATION_JOBS: dict[str, dict] = {}
 
 app.add_middleware(
     CORSMiddleware,
@@ -1524,6 +1528,130 @@ def _dedupe_amazon_insight_lines(values: list[str], limit: int) -> list[str]:
         if len(result) >= limit:
             break
     return result
+
+
+def _utc_now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _video_job_export_formats(packet: dict) -> dict:
+    formats = packet.get("export_formats") if isinstance(packet, dict) else {}
+    if not isinstance(formats, dict):
+        formats = {}
+    return {
+        "generic_video_prompt": formats.get("generic_video_prompt") or packet.get("full_video_prompt") or "",
+        "capcut_shot_list": formats.get("capcut_shot_list") or "",
+        "runway_style_prompt": formats.get("runway_style_prompt") or "",
+        "pika_style_prompt": formats.get("pika_style_prompt") or "",
+    }
+
+
+def _video_generation_provider_payload(packet: dict, provider: str) -> dict:
+    export_formats = _video_job_export_formats(packet)
+    scenes = packet.get("scenes") if isinstance(packet, dict) else []
+    if not isinstance(scenes, list):
+        scenes = []
+
+    provider_name = _clean_description_text(provider or "manual_export") or "manual_export"
+    return {
+        "provider": provider_name,
+        "handoff_type": "manual_export",
+        "prompt": export_formats.get("generic_video_prompt", ""),
+        "export_formats": export_formats,
+        "scenes": scenes[:4],
+        "instructions": [
+            "Copy one of the export prompts into the selected video tool.",
+            "Use the scene list as a shot-by-shot guide.",
+            "This scaffold does not call an external video API yet.",
+        ],
+    }
+
+
+def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
+    packet = dict(request.video_generation_packet or {})
+    provider = _clean_description_text(request.provider or "manual_export") or "manual_export"
+    now = _utc_now_iso()
+    job_id = f"video_job_{uuid4().hex[:12]}"
+    provider_payload = _video_generation_provider_payload(packet, provider)
+
+    warnings = []
+    if not provider_payload["prompt"]:
+        warnings.append("missing_generic_video_prompt")
+    if not provider_payload["scenes"]:
+        warnings.append("missing_video_scenes")
+
+    job = {
+        "job_id": job_id,
+        "status": "ready_for_manual_export",
+        "provider": provider,
+        "created_at": now,
+        "updated_at": now,
+        "output_language": request.output_language,
+        "video_generation_packet": packet,
+        "provider_payload": provider_payload,
+        "result": {
+            "result_url": "",
+            "preview_url": "",
+            "download_url": "",
+            "message": "Manual export scaffold created. No external video API has been called.",
+        },
+        "warnings": warnings,
+    }
+    VIDEO_GENERATION_JOBS[job_id] = job
+    return job
+
+
+@app.post("/api/v1/video-generation/jobs", response_model=VideoGenerationJobResponse)
+async def create_video_generation_job(request: VideoGenerationJobRequest, http_request: Request):
+    request_id = http_request.state.request_id
+    packet = request.video_generation_packet or {}
+
+    if packet.get("packet_version") != "video_generation_v1":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": "video_generation_packet with packet_version=video_generation_v1 is required.",
+                "request_id": request_id,
+            },
+        )
+
+    job = _create_video_generation_job(request)
+    emit_event(
+        "video_generation_job_created",
+        request_id,
+        endpoint="/api/v1/video-generation/jobs",
+        status="success",
+        job_id=job["job_id"],
+        provider=job["provider"],
+    )
+    return {
+        "status": "success",
+        "job": job,
+        "request_id": request_id,
+    }
+
+
+@app.get("/api/v1/video-generation/jobs/{job_id}", response_model=VideoGenerationJobStatusResponse)
+async def get_video_generation_job(job_id: str, http_request: Request):
+    request_id = http_request.state.request_id
+    job = VIDEO_GENERATION_JOBS.get(job_id)
+
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation job not found",
+                "request_id": request_id,
+            },
+        )
+
+    return {
+        "status": "success",
+        "job": job,
+        "request_id": request_id,
+    }
 
 
 @app.post("/api/v1/amazon-intake", response_model=AmazonIntakeResponse)

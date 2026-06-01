@@ -129,6 +129,24 @@ class PastedReviewsResponse(BaseModel):
     output_language: str = "en"
 
 
+class VideoGenerationJobRequest(BaseModel):
+    video_generation_packet: Dict[str, Any] = Field(default_factory=dict)
+    provider: str = "manual_export"
+    output_language: str = "en"
+
+
+class VideoGenerationJobResponse(BaseModel):
+    status: str
+    job: Dict[str, Any] = Field(default_factory=dict)
+    request_id: Optional[str] = None
+
+
+class VideoGenerationJobStatusResponse(BaseModel):
+    status: str
+    job: Dict[str, Any] = Field(default_factory=dict)
+    request_id: Optional[str] = None
+
+
 class AmazonIntakeRequest(BaseModel):
     url: str
     product_category: str = "amazon_product"
