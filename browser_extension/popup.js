@@ -529,6 +529,72 @@ async function waitForTabLoad(tabId) {
   });
 }
 
+function workspaceBackendOrigin(backendUrl) {
+  try {
+    return new URL(backendUrl).origin;
+  } catch (error) {
+    return "";
+  }
+}
+
+async function openWorkspaceTabsForBackend(backendUrl) {
+  const origin = workspaceBackendOrigin(backendUrl);
+  if (!origin) return [];
+
+  try {
+    const tabs = await chrome.tabs.query({ url: `${origin}/*` });
+    return (tabs || []).filter((tab) => String(tab.url || "").startsWith(origin));
+  } catch (error) {
+    return [];
+  }
+}
+
+async function clearImportedWorkspaceFromOpenWebTabs() {
+  const backendUrl = $("backendUrl").value.trim().replace(/\/$/, "") || DEFAULT_BACKEND;
+  const tabs = await openWorkspaceTabsForBackend(backendUrl);
+
+  for (const tab of tabs) {
+    if (!tab.id) continue;
+
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          localStorage.removeItem("crossgrowth_extension_workspace");
+          try {
+            Object.keys(sessionStorage || {})
+              .filter((key) => key.startsWith("crossgrowth_extension_workspace_auto_analyzed"))
+              .forEach((key) => sessionStorage.removeItem(key));
+          } catch (error) {
+            // Keep clearing best-effort if sessionStorage is unavailable.
+          }
+          window.dispatchEvent(new CustomEvent("crossgrowth-extension-workspace-ready"));
+        }
+      });
+    } catch (error) {
+      // Keep the clear workflow best-effort across tabs where script injection is unavailable.
+    }
+  }
+}
+
+async function writeWorkspacePayloadToTab(tabId, payloadJson) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    args: [payloadJson],
+    func: (workspacePayload) => {
+      localStorage.setItem("crossgrowth_extension_workspace", workspacePayload);
+      try {
+        Object.keys(sessionStorage || {})
+          .filter((key) => key.startsWith("crossgrowth_extension_workspace_auto_analyzed"))
+          .forEach((key) => sessionStorage.removeItem(key));
+      } catch (error) {
+        // Keep workspace sync best-effort if sessionStorage is unavailable.
+      }
+      window.dispatchEvent(new CustomEvent("crossgrowth-extension-workspace-ready"));
+    }
+  });
+}
+
 async function openInWebWorkspace() {
   const backendUrl = $("backendUrl").value.trim().replace(/\/$/, "") || DEFAULT_BACKEND;
   await chrome.storage.local.set({ backendUrl });
@@ -542,25 +608,24 @@ async function openInWebWorkspace() {
   const payloadJson = JSON.stringify(payload);
   const targetUrl = `${backendUrl}/?extension_workspace=1&output_language=${encodeURIComponent(popupOutputLanguage())}`;
 
-  const tab = await chrome.tabs.create({ url: targetUrl, active: true });
+  const existingTabs = await openWorkspaceTabsForBackend(backendUrl);
+  let tab = existingTabs[0];
+
+  if (tab?.id) {
+    tab = await chrome.tabs.update(tab.id, { url: targetUrl, active: true });
+  } else {
+    tab = await chrome.tabs.create({ url: targetUrl, active: true });
+  }
+
   if (!tab.id) {
     throw new Error(tPopup("couldNotOpenWebWorkspace"));
   }
 
   await waitForTabLoad(tab.id);
-
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    args: [payloadJson],
-    func: (workspacePayload) => {
-      localStorage.setItem("crossgrowth_extension_workspace", workspacePayload);
-      window.dispatchEvent(new CustomEvent("crossgrowth-extension-workspace-ready"));
-    }
-  });
+  await writeWorkspacePayloadToTab(tab.id, payloadJson);
 
   setStatus(tPopup("openedWebWorkspace"));
 }
-
 
 async function copyInsights() {
   if (!lastWorkspaceAnalysis) {
@@ -2543,6 +2608,8 @@ async function analyzeWorkspace() {
 
 async function clearSavedProducts() {
   await setSavedProducts([]);
+  lastWorkspaceAnalysis = null;
+  await clearImportedWorkspaceFromOpenWebTabs();
   $("previewCard").hidden = true;
   $("analysisCard").hidden = true;
   $("preview").textContent = "";
