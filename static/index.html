@@ -4507,6 +4507,38 @@
                 : `Detected ${count} review snippets. This is enough to generate.`;
         }
 
+        function reviewConcernPreviewSnippet(line) {
+            const text = String(line || '').replace(/\s+/g, ' ').trim();
+            if (!text) return '';
+
+            const patterns = [
+                /however,?\s+there is not lid[^.!?]*(?:[.!?]|$)/i,
+                /there is not lid[^.!?]*(?:[.!?]|$)/i,
+                /no lid[^.!?]*(?:[.!?]|$)/i,
+                /without a lid[^.!?]*(?:[.!?]|$)/i,
+                /lid to go over the spout[^.!?]*(?:[.!?]|$)/i,
+                /air is ever present[^.!?]*(?:[.!?]|$)/i,
+                /air\s*=\s*oxidation[^.!?]*(?:[.!?]|$)/i,
+                /oxidation[^.!?]*(?:[.!?]|$)/i,
+                /not worth[^.!?]*(?:[.!?]|$)/i,
+                /overpriced[^.!?]*(?:[.!?]|$)/i,
+                /too expensive[^.!?]*(?:[.!?]|$)/i,
+                /flavorless[^.!?]*(?:[.!?]|$)/i,
+                /terrible[^.!?]*(?:[.!?]|$)/i,
+                /disappointed[^.!?]*(?:[.!?]|$)/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match && match[0]) {
+                    const cleaned = cleanPastedReviewLine(match[0]);
+                    if (cleaned) return cleaned;
+                }
+            }
+
+            return text;
+        }
+
         function reviewPainPointCandidates(value) {
             const positiveValueMarkers = [
                 'worth the price', 'cannot beat the price', "can't beat the price",
@@ -4539,7 +4571,7 @@
                     return hasExplicitConcern && !(hasPositiveValue && !hasPriceTradeoff);
                 })
                 .slice(0, 3)
-                .map(line => truncateReviewLine(line, 200));
+                .map(line => truncateReviewLine(reviewConcernPreviewSnippet(line), 200));
         }
 
 
