@@ -167,6 +167,13 @@ class VideoGenerationProvidersResponse(BaseModel):
     request_id: Optional[str] = None
 
 
+class VideoGenerationProviderPlanResponse(BaseModel):
+    status: str
+    provider: str
+    plan: Dict[str, Any] = Field(default_factory=dict)
+    request_id: Optional[str] = None
+
+
 class VideoGenerationJobResultRequest(BaseModel):
     status: str = "manual_export_completed"
     result_url: str = ""

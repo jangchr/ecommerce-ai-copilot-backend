@@ -34,6 +34,7 @@ from schemas.api_contract import (
     VideoGenerationJobStatusResponse,
     VideoGenerationJobListResponse,
     VideoGenerationProvidersResponse,
+    VideoGenerationProviderPlanResponse,
     VideoGenerationJobResultRequest,
 )
 from schemas.source_probe_contract import (
@@ -113,35 +114,75 @@ SUPPORTED_VIDEO_PROVIDERS = {
         "export_key": "generic_video_prompt",
         "handoff_type": "manual_export",
         "external_api_ready": False,
+        "supports_async_polling": False,
+        "requires_api_key": False,
+        "env_key_name": "",
+        "create_mode": "manual_export",
+        "status_lifecycle": ["ready_for_manual_export", "manual_export_completed", "external_result_ready", "failed"],
+        "polling_strategy": "none",
         "description": "Copy the generic prompt or any export format into your chosen video tool.",
+        "warnings": ["No external API call is needed for manual export."],
+        "next_steps": ["Copy the selected prompt into the user's chosen video tool.", "Record the external result URL when available."],
     },
     "generic": {
         "label": "Generic video prompt",
         "export_key": "generic_video_prompt",
         "handoff_type": "prompt_export",
         "external_api_ready": False,
+        "supports_async_polling": False,
+        "requires_api_key": False,
+        "env_key_name": "",
+        "create_mode": "prompt_export",
+        "status_lifecycle": ["ready_for_manual_export", "manual_export_completed", "external_result_ready", "failed"],
+        "polling_strategy": "none",
         "description": "General-purpose prompt for video generation tools.",
+        "warnings": ["Generic prompt export is manual; no external video API is called."],
+        "next_steps": ["Use the generic prompt in a compatible external video tool.", "Record result metadata manually."],
     },
     "capcut": {
         "label": "CapCut shot list",
         "export_key": "capcut_shot_list",
         "handoff_type": "shot_list_export",
         "external_api_ready": False,
+        "supports_async_polling": False,
+        "requires_api_key": False,
+        "env_key_name": "",
+        "create_mode": "shot_list_export",
+        "status_lifecycle": ["ready_for_manual_export", "manual_export_completed", "external_result_ready", "failed"],
+        "polling_strategy": "none",
         "description": "Numbered shot list for manual editing in CapCut or similar editors.",
+        "warnings": ["CapCut shot-list export is manual; no external editor API is called."],
+        "next_steps": ["Paste the shot list into an editor or production brief.", "Record final video links manually."],
     },
     "runway": {
         "label": "Runway-style prompt",
         "export_key": "runway_style_prompt",
         "handoff_type": "prompt_export",
         "external_api_ready": False,
+        "supports_async_polling": True,
+        "requires_api_key": True,
+        "env_key_name": "RUNWAY_API_KEY",
+        "create_mode": "planned_external_api",
+        "status_lifecycle": ["ready_for_manual_export", "queued", "processing", "external_result_ready", "failed"],
+        "polling_strategy": "planned async polling by provider_job_id; disabled until provider contract is finalized",
         "description": "Visual prompt shaped for Runway-style video generation.",
+        "warnings": ["Runway API integration is planned but disabled until keys, contracts, timeouts, and provider docs are finalized."],
+        "next_steps": ["Define tests-first provider contract.", "Add secret handling for RUNWAY_API_KEY.", "Keep manual export as fallback."],
     },
     "pika": {
         "label": "Pika-style prompt",
         "export_key": "pika_style_prompt",
         "handoff_type": "prompt_export",
         "external_api_ready": False,
+        "supports_async_polling": True,
+        "requires_api_key": True,
+        "env_key_name": "PIKA_API_KEY",
+        "create_mode": "planned_external_api",
+        "status_lifecycle": ["ready_for_manual_export", "queued", "processing", "external_result_ready", "failed"],
+        "polling_strategy": "planned async polling by provider_job_id; disabled until provider contract is finalized",
         "description": "Short motion prompt shaped for Pika-style generation.",
+        "warnings": ["Pika API integration is planned but disabled until keys, contracts, timeouts, and provider docs are finalized."],
+        "next_steps": ["Define tests-first provider contract.", "Add secret handling for PIKA_API_KEY.", "Keep manual export as fallback."],
     },
 }
 VIDEO_PROVIDER_ALIASES = {
@@ -1605,10 +1646,35 @@ def _video_generation_provider_catalog() -> list[dict]:
             "export_key": config["export_key"],
             "handoff_type": config["handoff_type"],
             "external_api_ready": config["external_api_ready"],
+            "supports_async_polling": config["supports_async_polling"],
+            "requires_api_key": config["requires_api_key"],
+            "env_key_name": config["env_key_name"],
+            "create_mode": config["create_mode"],
+            "status_lifecycle": config["status_lifecycle"],
             "description": config["description"],
         }
         for provider, config in SUPPORTED_VIDEO_PROVIDERS.items()
     ]
+
+
+def _video_generation_provider_plan(provider: str) -> dict:
+    provider_name = _normalize_video_provider(provider)
+    if not provider_name:
+        return {}
+    config = SUPPORTED_VIDEO_PROVIDERS[provider_name]
+    return {
+        "provider": provider_name,
+        "label": config["label"],
+        "external_api_ready": config["external_api_ready"],
+        "requires_api_key": config["requires_api_key"],
+        "env_key_name": config["env_key_name"],
+        "create_mode": config["create_mode"],
+        "supported_statuses": config["status_lifecycle"],
+        "supports_async_polling": config["supports_async_polling"],
+        "polling_strategy": config["polling_strategy"],
+        "next_steps": config["next_steps"],
+        "warnings": config["warnings"],
+    }
 
 
 def _video_job_export_formats(packet: dict) -> dict:
@@ -1639,6 +1705,11 @@ def _video_generation_provider_payload(packet: dict, provider: str) -> dict:
         "provider_label": provider_config["label"],
         "handoff_type": provider_config["handoff_type"],
         "external_api_ready": provider_config["external_api_ready"],
+        "supports_async_polling": provider_config["supports_async_polling"],
+        "requires_api_key": provider_config["requires_api_key"],
+        "env_key_name": provider_config["env_key_name"],
+        "create_mode": provider_config["create_mode"],
+        "status_lifecycle": provider_config["status_lifecycle"],
         "selected_export_key": selected_export_key,
         "prompt": selected_prompt,
         "export_formats": export_formats,
@@ -1758,6 +1829,28 @@ async def list_video_generation_providers(http_request: Request):
         "status": "success",
         "providers": _video_generation_provider_catalog(),
         "request_id": http_request.state.request_id,
+    }
+
+
+@app.get("/api/v1/video-generation/providers/{provider}/plan", response_model=VideoGenerationProviderPlanResponse)
+async def get_video_generation_provider_plan(provider: str, http_request: Request):
+    request_id = http_request.state.request_id
+    provider_name = _normalize_video_provider(provider)
+    plan = _video_generation_provider_plan(provider)
+    if not provider_name or not plan:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation provider not found",
+                "request_id": request_id,
+            },
+        )
+    return {
+        "status": "success",
+        "provider": provider_name,
+        "plan": plan,
+        "request_id": request_id,
     }
 
 

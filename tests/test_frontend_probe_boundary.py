@@ -97,6 +97,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("copyVideoJobText(prompt, 'videoJobPromptCopied')", self.source)
         self.assertIn("copyVideoJobText(jobId, 'videoJobIdCopied')", self.source)
         self.assertIn("status: (resultUrl || previewUrl) ? 'external_result_ready' : 'manual_export_completed'", self.source)
+        self.assertGreaterEqual(self.source.count("await refreshRecentVideoJobs();"), 2)
         self.assertNotIn("????", self.source)
 
     def test_agent_trace_panel_is_rendered_from_product_data(self):

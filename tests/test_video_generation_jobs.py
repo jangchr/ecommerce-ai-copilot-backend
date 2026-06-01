@@ -61,6 +61,64 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
             self.assertIn(provider, providers)
             self.assertIn("export_key", providers[provider])
             self.assertFalse(providers[provider]["external_api_ready"])
+            self.assertIn("supports_async_polling", providers[provider])
+            self.assertIn("requires_api_key", providers[provider])
+            self.assertIn("env_key_name", providers[provider])
+            self.assertIn("create_mode", providers[provider])
+            self.assertIn("status_lifecycle", providers[provider])
+
+        self.assertFalse(providers["manual_export"]["requires_api_key"])
+        self.assertFalse(providers["manual_export"]["supports_async_polling"])
+        self.assertTrue(providers["runway"]["requires_api_key"])
+        self.assertTrue(providers["runway"]["supports_async_polling"])
+        self.assertEqual(providers["runway"]["env_key_name"], "RUNWAY_API_KEY")
+        self.assertFalse(providers["runway"]["external_api_ready"])
+        self.assertTrue(providers["pika"]["requires_api_key"])
+        self.assertEqual(providers["pika"]["env_key_name"], "PIKA_API_KEY")
+
+    def test_video_generation_provider_plan_endpoint_returns_runway_plan(self):
+        response = self.client.get(
+            "/api/v1/video-generation/providers/runway/plan",
+            headers={"X-Request-ID": "video-provider-plan-runway-1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["provider"], "runway")
+        self.assertEqual(payload["request_id"], "video-provider-plan-runway-1")
+        plan = payload["plan"]
+        self.assertFalse(plan["external_api_ready"])
+        self.assertTrue(plan["requires_api_key"])
+        self.assertEqual(plan["env_key_name"], "RUNWAY_API_KEY")
+        self.assertEqual(plan["create_mode"], "planned_external_api")
+        self.assertTrue(plan["supports_async_polling"])
+        self.assertIn("queued", plan["supported_statuses"])
+        self.assertIn("processing", plan["supported_statuses"])
+        self.assertTrue(plan["warnings"])
+        self.assertIn("disabled", " ".join(plan["warnings"]).lower())
+
+    def test_video_generation_provider_plan_endpoint_returns_manual_plan(self):
+        response = self.client.get("/api/v1/video-generation/providers/manual_export/plan")
+
+        self.assertEqual(response.status_code, 200)
+        plan = response.json()["plan"]
+        self.assertEqual(plan["provider"], "manual_export")
+        self.assertFalse(plan["requires_api_key"])
+        self.assertFalse(plan["supports_async_polling"])
+        self.assertEqual(plan["create_mode"], "manual_export")
+        self.assertIn("manual_export_completed", plan["supported_statuses"])
+
+    def test_video_generation_provider_plan_endpoint_returns_404_for_unknown_provider(self):
+        response = self.client.get(
+            "/api/v1/video-generation/providers/unknown_provider/plan",
+            headers={"X-Request-ID": "video-provider-plan-missing-1"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["request_id"], "video-provider-plan-missing-1")
 
     def test_create_video_generation_job_selects_provider_export_prompt(self):
         response = self.client.post(
@@ -78,6 +136,11 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["provider_payload"]["selected_export_key"], "runway_style_prompt")
         self.assertEqual(job["provider_payload"]["prompt"], VIDEO_PACKET["export_formats"]["runway_style_prompt"])
         self.assertEqual(job["provider_payload"]["next_action"], "manual_copy_to_video_tool")
+        self.assertEqual(job["provider_payload"]["create_mode"], "planned_external_api")
+        self.assertTrue(job["provider_payload"]["requires_api_key"])
+        self.assertEqual(job["provider_payload"]["env_key_name"], "RUNWAY_API_KEY")
+        self.assertTrue(job["provider_payload"]["supports_async_polling"])
+        self.assertIn("queued", job["provider_payload"]["status_lifecycle"])
 
     def test_create_video_generation_job_accepts_export_key_alias(self):
         response = self.client.post(

@@ -7128,6 +7128,7 @@
                 const response = await postVideoGenerationJobResult(jobId, payload);
                 setCurrentVideoJob(response.job || {});
                 if (status) status.textContent = t('videoResultSaved');
+                await refreshRecentVideoJobs();
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoResultSaveFailed');
             } finally {
@@ -7191,6 +7192,7 @@
                 latestVideoGenerationJob = response.job || {};
                 if (status) status.textContent = t('videoJobCreated');
                 if (result) result.innerHTML = renderVideoJobResult(latestVideoGenerationJob);
+                await refreshRecentVideoJobs();
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoJobFailed');
             } finally {
