@@ -723,7 +723,7 @@ async def generate_pasted_reviews_brief(request: PastedReviewsRequest, evidence_
     ][:4]
     positive_signals = (signal_groups["positive"] + signal_groups["repeat_purchase"])[:4]
     neutral_signals = signal_groups["neutral"][:4]
-    llm_evidence_packet = _pasted_reviews_llm_evidence_packet(
+    llm_evidence_packet = _review_workspace_packet_from_pasted_request(request) or _pasted_reviews_llm_evidence_packet(
         request,
         evidence_quotes,
         signal_groups,
@@ -894,15 +894,24 @@ def _pasted_reviews_llm_evidence_packet(
     }
 
 
+def _review_workspace_packet_from_pasted_request(request: PastedReviewsRequest) -> dict | None:
+    packet = getattr(request, "llm_evidence_packet", None)
+    if isinstance(packet, dict) and packet.get("packet_version") == "review_workspace_v1":
+        return packet
+    return None
+
+
 def _pasted_reviews_llm_prompt_content(request: PastedReviewsRequest, llm_evidence_packet: dict) -> str:
+    target_platform = getattr(request, "target_platform", None) or "TikTok"
+    goal = getattr(request, "goal", None) or "tiktok_ctr"
     return (
         "Return JSON with keys: target_audience, core_hook_strategy, emotional_trigger, hook, "
         "cta, storyboard_scenes, evaluation_reasoning, feedback. "
         "storyboard_scenes must be a list of exactly 4 objects with visual_description, narration, evidence_quote_used.\n\n"
         "Use the following llm_evidence_packet as the only evidence source. "
         "Follow generation_constraints strictly. Do not use raw assumptions outside the packet.\n\n"
-        f"Target platform: {request.target_platform or 'TikTok'}\n"
-        f"Goal: {request.goal or 'tiktok_ctr'}\n"
+        f"Target platform: {target_platform}\n"
+        f"Goal: {goal}\n"
         "llm_evidence_packet JSON:\n"
         f"{json.dumps(llm_evidence_packet, ensure_ascii=False, indent=2)}"
     )
@@ -960,7 +969,7 @@ def _pasted_reviews_response_data(
 
     hook = generated.get("hook") or f"If this review sounds familiar, {product_name} needs a better creative angle."
     cta = generated.get("cta") or f"Use {product_name} to answer the review signal your buyers already mention."
-    llm_evidence_packet = _pasted_reviews_llm_evidence_packet(
+    llm_evidence_packet = _review_workspace_packet_from_pasted_request(request) or _pasted_reviews_llm_evidence_packet(
         request,
         evidence_quotes,
         signal_groups,

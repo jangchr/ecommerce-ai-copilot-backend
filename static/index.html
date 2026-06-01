@@ -6472,6 +6472,7 @@
                 if (!enrichedPastedReviews.trim()) {
                     throw new Error(t('pastedReviewsNoConcreteReviews'));
                 }
+                const workspaceLlmEvidencePacket = workspaceResponse?.llm_evidence_packet || null;
 
                 const response = await postPastedReviews({
                     product_name: productName,
@@ -6480,7 +6481,8 @@
                     pasted_reviews: enrichedPastedReviews,
                     target_platform: targetPlatform,
                     goal,
-                    output_language: currentOutputLanguage()
+                    output_language: currentOutputLanguage(),
+                    llm_evidence_packet: workspaceLlmEvidencePacket || undefined
                 });
                 renderProductDashboard(response.data, {
                     inputSlug: productName,

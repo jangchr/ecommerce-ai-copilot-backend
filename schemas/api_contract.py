@@ -117,6 +117,7 @@ class PastedReviewsRequest(BaseModel):
     target_platform: str = "TikTok"
     goal: str = "tiktok_ctr"
     output_language: str = "en"
+    llm_evidence_packet: Optional[Dict[str, Any]] = None
 
 
 class PastedReviewsResponse(BaseModel):

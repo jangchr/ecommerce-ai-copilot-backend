@@ -148,7 +148,7 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertEqual(packet["review_stats"]["review_count"], 3)
         self.assertIn("user_pasted_reviews_unverified", packet["review_stats"]["warnings"])
         self.assertIn("Use only the supplied review evidence and product fields.", packet["generation_constraints"])
-        self.assertIn("Hard to clean after one smoothie.", packet["evidence"]["quotes"])
+        self.assertIn("Hard to clean after one smoothie", "\n".join(packet["evidence"]["quotes"]))
 
         evidence = payload["data"]["insights"]["evidence"]
         self.assertEqual(evidence["source_type"], "user_pasted_reviews")
@@ -214,6 +214,142 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertIn("Do not turn buyer objections into positive claims", prompt)
         self.assertNotIn("Pasted review evidence:", prompt)
         self.assertEqual(result["hook"], "Evidence packet hook")
+
+    def test_pasted_reviews_generation_prompt_accepts_review_workspace_packet(self):
+        class CapturingLLM:
+            def __init__(self):
+                self.messages = None
+
+            async def ainvoke(self, messages):
+                self.messages = messages
+                return SimpleNamespace(
+                    content=json.dumps(
+                        {
+                            "target_audience": "Workspace packet audience",
+                            "core_hook_strategy": "Use workspace packet evidence only",
+                            "emotional_trigger": "Confidence",
+                            "hook": "Workspace packet hook",
+                            "cta": "Workspace packet CTA",
+                            "storyboard_scenes": [
+                                {
+                                    "visual_description": "Show the supplied workspace concern.",
+                                    "narration": "Use the workspace packet as evidence.",
+                                    "evidence_quote_used": "Hard to clean after one smoothie.",
+                                }
+                            ],
+                            "evaluation_reasoning": "Uses review workspace packet.",
+                            "feedback": "Workspace packet prompt generated.",
+                        }
+                    )
+                )
+
+        workspace_packet = {
+            "packet_version": "review_workspace_v1",
+            "intended_model_use": "creative_brief_generation",
+            "product": {
+                "title": "Portable Mini Blender",
+                "source_type": "review_workspace",
+                "product_count": 1,
+            },
+            "review_stats": {
+                "total_reviews": 3,
+                "parsed_reviews": 3,
+                "warnings": [],
+            },
+            "evidence": {
+                "buyer_objections": [
+                    {
+                        "label": "cleanup",
+                        "evidence_quotes": ["Hard to clean after one smoothie."],
+                    }
+                ],
+                "positive_signals": [
+                    {
+                        "label": "portable",
+                        "evidence_quotes": ["Small enough for travel and easy to carry."],
+                    }
+                ],
+                "quotes": [
+                    "Hard to clean after one smoothie.",
+                    "Small enough for travel and easy to carry.",
+                ],
+            },
+            "generation_constraints": [
+                "Use only supplied review evidence and product fields.",
+                "Do not generalize one variant/color/size issue to the whole product unless multiple reviews support it.",
+                "Do not turn buyer objections into positive claims unless evidence explicitly resolves the concern.",
+            ],
+        }
+        fake_llm = CapturingLLM()
+
+        with patch("main.ChatOpenAI", return_value=fake_llm):
+            result = asyncio.run(
+                main.generate_pasted_reviews_brief(
+                    SimpleNamespace(**VALID_REVIEWS_REQUEST, llm_evidence_packet=workspace_packet),
+                    ["fallback compact review should not be the prompt evidence"],
+                )
+            )
+
+        prompt = fake_llm.messages[1].content
+        self.assertIn("llm_evidence_packet JSON", prompt)
+        self.assertIn('"packet_version": "review_workspace_v1"', prompt)
+        self.assertIn("Do not generalize one variant/color/size issue", prompt)
+        self.assertIn("Do not turn buyer objections into positive claims", prompt)
+        self.assertNotIn("Pasted review evidence:", prompt)
+        self.assertNotIn("fallback compact review should not be the prompt evidence", prompt)
+        self.assertEqual(result["hook"], "Workspace packet hook")
+
+    def test_generate_from_reviews_accepts_review_workspace_packet(self):
+        workspace_packet = {
+            "packet_version": "review_workspace_v1",
+            "intended_model_use": "creative_brief_generation",
+            "product": {
+                "title": "Portable Mini Blender",
+                "source_type": "review_workspace",
+                "product_count": 1,
+            },
+            "review_stats": {
+                "total_reviews": 3,
+                "parsed_reviews": 3,
+                "warnings": [],
+            },
+            "evidence": {
+                "buyer_objections": [
+                    {
+                        "label": "cleanup",
+                        "evidence_quotes": ["Hard to clean after one smoothie."],
+                    }
+                ],
+                "positive_signals": [
+                    {
+                        "label": "portable",
+                        "evidence_quotes": ["Small enough for travel and easy to carry."],
+                    }
+                ],
+                "quotes": [
+                    "Hard to clean after one smoothie.",
+                    "Small enough for travel and easy to carry.",
+                ],
+            },
+            "generation_constraints": [
+                "Use only supplied review evidence and product fields.",
+                "Do not generalize one variant/color/size issue to the whole product unless multiple reviews support it.",
+            ],
+        }
+
+        with patch("main.generate_pasted_reviews_brief", new=AsyncMock(return_value=GENERATED_REVIEWS_BRIEF)) as generate:
+            response = self.client.post(
+                "/api/v1/generate-from-reviews",
+                json={**VALID_REVIEWS_REQUEST, "llm_evidence_packet": workspace_packet},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        request_arg = generate.await_args.args[0]
+        self.assertEqual(request_arg.llm_evidence_packet, workspace_packet)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["data"]["llm_evidence_packet"]["packet_version"], "review_workspace_v1")
+        self.assertEqual(payload["data"]["llm_evidence_packet"]["product"]["source_type"], "review_workspace")
 
     def test_root_beer_amazon_reviews_are_cleaned_and_classified(self):
         root_beer_reviews = (

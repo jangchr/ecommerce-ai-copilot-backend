@@ -1132,7 +1132,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         body = function_match.group("body")
         self.assertIn("workspaceResponse = await postPastedReviewWorkspaceAnalysis", body)
         self.assertIn("const enrichedPastedReviews = compactPastedReviewsForGeneration(workspaceResponse, pastedReviews);", body)
+        self.assertIn("const workspaceLlmEvidencePacket = workspaceResponse?.llm_evidence_packet || null;", body)
         self.assertIn("pasted_reviews: enrichedPastedReviews", body)
+        self.assertIn("llm_evidence_packet: workspaceLlmEvidencePacket || undefined", body)
         self.assertNotIn("const enrichedPastedReviews = pastedReviews;", body)
 
     def test_pasted_reviews_preview_and_extension_import_clean_deduped_reviews(self):
