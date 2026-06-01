@@ -3404,6 +3404,17 @@
                 exampleGalleryIntro: 'Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.',
                 amazonShadowLabel: 'Amazon Shadow',
                 debugModeLabel: 'Debug Mode',
+                agentTraceTitle: 'Multi-agent Trace',
+                agentTraceSubtitle: 'Lightweight trace scaffold, not real multi-agent execution yet.',
+                agentTraceExecutionMode: 'Execution mode',
+                agentTraceRealExecution: 'Real multi-agent execution',
+                agentTraceOrder: 'Agent order',
+                agentTraceRole: 'Role',
+                agentTraceInput: 'Input summary',
+                agentTraceOutput: 'Output summary',
+                agentTraceStatus: 'Status',
+                agentTraceWarnings: 'Warnings',
+                agentTraceKeyOutputs: 'Key outputs',
                 tryThisProduct: 'Use this sample',
                 productResult: 'Product Result',
                 copyActions: 'Copy / Download / Translation Actions',
@@ -3592,6 +3603,17 @@
                 agentGovernanceLabel: '\u89c4\u5219\u68c0\u67e5',
                 agentReflectionLabel: '\u81ea\u6211\u68c0\u67e5',
                 agentAnalyticsLabel: '\u6570\u636e\u5206\u6790',
+                agentTraceTitle: '\u591a Agent Trace',
+                agentTraceSubtitle: '\u8fd9\u662f\u8f7b\u91cf\u7ea7\u591a Agent \u8f68\u8ff9\u811a\u624b\u67b6\uff0c\u8fd8\u4e0d\u662f\u771f\u5b9e\u591a\u6a21\u578b Agent \u5e76\u884c\u6267\u884c\u3002',
+                agentTraceExecutionMode: '\u6267\u884c\u6a21\u5f0f',
+                agentTraceRealExecution: '\u771f\u5b9e\u591a Agent \u6267\u884c',
+                agentTraceOrder: 'Agent \u987a\u5e8f',
+                agentTraceRole: '\u89d2\u8272',
+                agentTraceInput: '\u8f93\u5165\u6458\u8981',
+                agentTraceOutput: '\u8f93\u51fa\u6458\u8981',
+                agentTraceStatus: '\u72b6\u6001',
+                agentTraceWarnings: '\u63d0\u793a / \u98ce\u9669',
+                agentTraceKeyOutputs: '\u5173\u952e\u8f93\u51fa',
                 yesLabel: '\u662f',
                 noLabel: '\u5426',
                 clearRecentGenerations: '清空最近生成记录',
@@ -6855,6 +6877,8 @@
             `;
 
             document.getElementById('res-evaluation').style.opacity = '1';
+            const agentTracePanel = renderAgentTracePanel(data.agent_trace);
+
             document.getElementById('res-evaluation').innerHTML = `
                 ${renderSectionHeader(t('evaluation'), 'evaluation')}
                 <div class="eval-box ${escapeHTML(riskCls)}">
@@ -6872,6 +6896,7 @@
                     </div>
                     ${block(t('qualityRationale'), localizeQualityRationale(evalData.reasoning || ''))}
                 </div>
+                ${agentTracePanel}
             `;
         }
 
@@ -6906,6 +6931,68 @@
                 ${block(t('shadowEvidencePreview'), evidencePreview.join('\n'))}
                 ${block(t('shadowDataWarnings'), warnings.join('\n'))}
                 ${block(t('shadowError'), amazon.error || metadata.error || '')}
+            `;
+        }
+
+        function renderAgentTracePanel(agentTrace) {
+            if (!agentTrace || !agentTrace.agents) return '';
+
+            const agents = agentTrace.agents || {};
+            const defaultOrder = [
+                'evidence_agent',
+                'strategy_agent',
+                'storyboard_agent',
+                'video_prompt_agent',
+                'risk_agent'
+            ];
+            const providedOrder = Array.isArray(agentTrace.agent_order) ? agentTrace.agent_order : [];
+            const seen = new Set();
+            const order = providedOrder
+                .concat(defaultOrder)
+                .concat(Object.keys(agents))
+                .filter((name) => {
+                    if (!name || seen.has(name) || !agents[name]) return false;
+                    seen.add(name);
+                    return true;
+                });
+
+            if (!order.length) return '';
+
+            const realExecution = boolText(Boolean(agentTrace.is_real_multi_agent_execution));
+            const agentCards = order
+                .map((name) => {
+                    const item = agents[name] || {};
+                    const keyOutputs = item.key_outputs
+                        ? JSON.stringify(item.key_outputs, null, 2)
+                        : '';
+                    const warnings = Array.isArray(item.warnings)
+                        ? item.warnings.join(String.fromCharCode(10))
+                        : String(item.warnings || '');
+                    return `
+                        <div class="section-block">
+                            <div class="json-key">${escapeHTML(item.agent_name || name)}</div>
+                            ${block(t('agentTraceRole'), item.role || '')}
+                            ${block(t('agentTraceInput'), item.input_summary || '')}
+                            ${block(t('agentTraceOutput'), item.output_summary || '')}
+                            ${block(t('agentTraceStatus'), item.status || '')}
+                            ${warnings ? block(t('agentTraceWarnings'), warnings) : ''}
+                            ${keyOutputs ? block(t('agentTraceKeyOutputs'), keyOutputs) : ''}
+                        </div>
+                    `;
+                })
+                .join('');
+
+            return `
+                <div class="section-block">
+                    ${renderSectionHeader(t('agentTraceTitle'), 'analytics')}
+                    <div class="feedback-box">${escapeHTML(t('agentTraceSubtitle'))}</div>
+                    <div class="probe-grid">
+                        ${block(t('agentTraceExecutionMode'), agentTrace.execution_mode || '')}
+                        ${block(t('agentTraceRealExecution'), realExecution)}
+                        ${block(t('agentTraceOrder'), order.join(' ? '))}
+                    </div>
+                    ${agentCards}
+                </div>
             `;
         }
 

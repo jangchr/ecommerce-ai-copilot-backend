@@ -11,6 +11,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
     def setUpClass(cls):
         cls.source = FRONTEND_PATH.read_text(encoding="utf-8")
 
+    def test_agent_trace_panel_is_rendered_from_product_data(self):
+        self.assertIn("function renderAgentTracePanel(agentTrace)", self.source)
+        self.assertIn("data.agent_trace", self.source)
+        self.assertIn("agentTraceTitle", self.source)
+        self.assertIn("agentTraceSubtitle", self.source)
+        self.assertIn("agentTraceExecutionMode", self.source)
+        self.assertIn("agentTraceRealExecution", self.source)
+        self.assertIn("agentTraceKeyOutputs", self.source)
+        self.assertIn("evidence_agent", self.source)
+        self.assertIn("strategy_agent", self.source)
+        self.assertIn("storyboard_agent", self.source)
+        self.assertIn("video_prompt_agent", self.source)
+        self.assertIn("risk_agent", self.source)
+
     def test_product_frontend_does_not_read_embedded_debug_state(self):
         self.assertNotIn("data.debug", self.source)
 
