@@ -3305,6 +3305,10 @@ def _rw_positive_hook_from_theme(theme) -> str:
         return "Buyers say this feels easy - here's the moment that makes it click."
 
     label = _rw_human_theme_phrase(raw_label)
+    if normalized in {"positive value signal", "value signal", "value proof"}:
+        if quote:
+            return f"Use the value proof as the payoff: \"{_rw_quote_snippet(quote, 90)}\""
+        return "Use the value proof as the payoff before the CTA."
     if label.lower().startswith("buyers "):
         return f"Use this positive review proof: \"{_rw_quote_snippet(quote, 90)}\""
     return f"Buyers keep mentioning {label} - here's the proof moment."

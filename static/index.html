@@ -4532,6 +4532,9 @@
                     const hasPositiveValue = positiveValueMarkers.some(marker => lower.includes(marker));
                     const hasExplicitConcern = explicitConcernMarkers.some(marker => lower.includes(marker));
                     const hasPriceTradeoff = /(pricy|pricey|too expensive|not worth|overpriced|high price|priced wrong|cost too much)/i.test(lower);
+                    const isRevisionTasteStory = /(tastes as described|wild cherry finish|update:|original review|change my review|taste buds|settled on 1 star)/i.test(lower);
+                    const hasHardConcern = /(no lid|without a lid|lid to go over the spout|air is ever present|oxidation|not worth|overpriced|too expensive|broken|cracked|leaked|missing bottle|wrong size|quantity mismatch|flavorless|terrible|disappointed)/i.test(lower);
+                    if (isRevisionTasteStory && !hasHardConcern) return false;
                     return hasExplicitConcern && !(hasPositiveValue && !hasPriceTradeoff);
                 })
                 .slice(0, 3)
