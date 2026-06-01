@@ -6307,9 +6307,19 @@
             };
         }
 
+        function currentExtensionWorkspacePayloadForDisplay() {
+            if (typeof readExtensionWorkspacePayload === 'function') {
+                return readExtensionWorkspacePayload();
+            }
+            try {
+                return JSON.parse(localStorage.getItem("crossgrowth_extension_workspace") || "null");
+            } catch (error) {
+                return null;
+            }
+        }
+
         async function extensionWorkspaceDisplayAnalysisForProduct(productName, fallbackReviewCount = 0) {
-            if (typeof readExtensionWorkspacePayload !== 'function') return null;
-            const payload = readExtensionWorkspacePayload();
+            const payload = currentExtensionWorkspacePayloadForDisplay();
             const extensionCount = extensionPayloadReviewCount(payload);
             if (!payload || extensionCount <= Math.max(1, Number(fallbackReviewCount || 0))) return null;
             if (!extensionPayloadMatchesProduct(payload, productName)) return null;
