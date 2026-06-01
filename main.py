@@ -836,6 +836,57 @@ def _description_response_data(request: ProductDescriptionRequest, generated: di
     }
 
 
+def _pasted_reviews_llm_evidence_packet(
+    request: PastedReviewsRequest,
+    evidence_quotes: list[str],
+    signal_groups: dict[str, list[str]],
+    pain_points: list[str],
+    buyer_objections: list[str],
+    positive_signals: list[str],
+    neutral_signals: list[str],
+) -> dict:
+    product_name = _clean_description_text(request.product_name)
+    category = _clean_description_text(request.product_category or "user_pasted_reviews_product")
+    warnings = [
+        "user_pasted_reviews_unverified",
+        "user_pasted_reviews_no_external_fetch",
+    ]
+
+    return {
+        "packet_version": "pasted_reviews_v1",
+        "intended_model_use": "creative_brief_generation",
+        "product": {
+            "title": product_name,
+            "category": category,
+            "source_type": "user_pasted_reviews",
+            "source_url": "",
+        },
+        "review_stats": {
+            "review_count": len(evidence_quotes),
+            "source_confidence": 0.64,
+            "review_confidence": 0.64,
+            "trend_confidence": 0.0,
+            "warnings": warnings,
+        },
+        "evidence": {
+            "quotes": evidence_quotes[:12],
+            "pain_points": pain_points[:4],
+            "buyer_objections": buyer_objections[:4],
+            "positive_signals": positive_signals[:4],
+            "repeat_purchase_signals": signal_groups.get("repeat_purchase", [])[:3],
+            "availability_signals": signal_groups.get("availability", [])[:3],
+            "use_cases": neutral_signals[:4],
+        },
+        "generation_constraints": [
+            "Use only the supplied review evidence and product fields.",
+            "Do not claim full-market statistics or verified purchase coverage beyond the provided metadata.",
+            "Keep uncertainty visible when evidence comes from pasted or extension-collected reviews.",
+            "Prefer product-specific review language over generic category claims.",
+            "Do not turn buyer objections into positive claims unless the evidence explicitly resolves the concern.",
+        ],
+    }
+
+
 def _pasted_reviews_response_data(
     request: PastedReviewsRequest,
     generated: dict,
@@ -888,6 +939,15 @@ def _pasted_reviews_response_data(
 
     hook = generated.get("hook") or f"If this review sounds familiar, {product_name} needs a better creative angle."
     cta = generated.get("cta") or f"Use {product_name} to answer the review signal your buyers already mention."
+    llm_evidence_packet = _pasted_reviews_llm_evidence_packet(
+        request,
+        evidence_quotes,
+        signal_groups,
+        pain_points,
+        buyer_objections,
+        positive_signals,
+        neutral_signals,
+    )
 
     return {
         "insights": {
@@ -951,6 +1011,7 @@ def _pasted_reviews_response_data(
             "feedback",
             "Generated from pasted reviews. Verify claims and review authenticity before using in paid creative.",
         ),
+        "llm_evidence_packet": llm_evidence_packet,
     }
 
 

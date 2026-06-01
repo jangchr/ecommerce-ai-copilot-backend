@@ -72,6 +72,7 @@ class GenerateCopilotData(BaseModel):
     assets: ProductAssets
     evaluation: ProductEvaluation
     feedback: str = ""
+    llm_evidence_packet: Dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateCopilotResponse(BaseModel):

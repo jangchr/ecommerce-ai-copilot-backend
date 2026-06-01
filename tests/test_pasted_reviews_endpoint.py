@@ -131,9 +131,18 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertEqual(payload["status"], "success")
         self.assertEqual(payload["output_language"], "en")
         self.assertEqual(payload["request_id"], "reviews-success-1")
-        for field in ["insights", "audience", "strategy", "assets", "evaluation", "feedback"]:
+        for field in ["insights", "audience", "strategy", "assets", "evaluation", "feedback", "llm_evidence_packet"]:
             with self.subTest(field=field):
                 self.assertIn(field, payload["data"])
+
+        packet = payload["data"]["llm_evidence_packet"]
+        self.assertEqual(packet["packet_version"], "pasted_reviews_v1")
+        self.assertEqual(packet["product"]["title"], "Portable Mini Blender")
+        self.assertEqual(packet["product"]["source_type"], "user_pasted_reviews")
+        self.assertEqual(packet["review_stats"]["review_count"], 3)
+        self.assertIn("user_pasted_reviews_unverified", packet["review_stats"]["warnings"])
+        self.assertIn("Use only the supplied review evidence and product fields.", packet["generation_constraints"])
+        self.assertIn("Hard to clean after one smoothie.", packet["evidence"]["quotes"])
 
         evidence = payload["data"]["insights"]["evidence"]
         self.assertEqual(evidence["source_type"], "user_pasted_reviews")
