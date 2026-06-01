@@ -1142,7 +1142,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             re.S,
         )
         self.assertIsNotNone(count_match)
-        self.assertIn("cleanedPastedReviewLines(value).length", count_match.group("body"))
+        self.assertIn("previewPastedReviewLines(value).length", count_match.group("body"))
+        self.assertIn("function previewPastedReviewLines(value, limit = 80)", self.source)
+        self.assertIn("compactReviewsFromVisibleLines([String(value || '')], limit)", self.source)
 
         preview_match = re.search(
             r"function reviewPainPointCandidates\(value\) \{(?P<body>.*?)\n        \}\n\n",
@@ -1151,7 +1153,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         )
         self.assertIsNotNone(preview_match)
         preview_body = preview_match.group("body")
-        self.assertIn("cleanedPastedReviewLines(value)", preview_body)
+        self.assertIn("previewPastedReviewLines(value)", preview_body)
         self.assertIn("positiveValueMarkers", preview_body)
         self.assertIn("explicitConcernMarkers", preview_body)
         self.assertIn("hasPriceTradeoff", preview_body)

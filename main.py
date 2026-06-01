@@ -428,6 +428,7 @@ def _clean_pasted_review_quote_text(value: str) -> str:
         text = cleaner(text)
 
     text = re.sub(r"^(?:Amazon Customer|Kindle Customer)\s*[1-5](?:\.0)?\s+out of\s+5\s+stars\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"^(?:Amazon Customer|Kindle Customer)(?=[A-Z])", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"^\[?\s*[1-5](?:\.0)?\s+out of\s+5\s+stars\s*\]?\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b[1-5](?:\.0)?\s+out of\s+5\s+stars\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"^(?:Amazon Customer|Kindle Customer)\s*[1-5](?:\.0)?\s+out of 5 stars\s*", " ", text, flags=re.IGNORECASE)
@@ -3295,6 +3296,8 @@ def _rw_positive_hook_from_theme(theme) -> str:
     if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
         return f"Start with the buyer concern: \"{_rw_quote_snippet(quote, 90)}\""
     label = _rw_human_theme_phrase(raw_label)
+    if label.lower().startswith("buyers "):
+        return f"Use this positive review proof: \"{_rw_quote_snippet(quote, 90)}\""
     return f"Buyers keep mentioning {label} - here's the proof moment."
 
 

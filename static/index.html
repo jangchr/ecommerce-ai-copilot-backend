@@ -4421,6 +4421,7 @@
             if (!text || isAmazonReviewChromeLine(text)) return '';
             text = text
                 .replace(/^(?:Amazon Customer|Kindle Customer)\s*[1-5](?:\.\d)?\s+out of\s+5\s+stars\s*/ig, ' ')
+                .replace(/^(?:Amazon Customer|Kindle Customer)(?=[A-Z])/ig, ' ')
                 .replace(/^\[?\s*[1-5](?:\.\d)?\s+out of\s+5\s+stars\s*\]?\s*/ig, ' ')
                 .replace(/\b[1-5](?:\.\d)?\s+out of\s+5\s+stars\b/ig, ' ')
                 .replace(/reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}/ig, ' ')
@@ -4460,8 +4461,23 @@
             return text.length > limit ? `${text.slice(0, limit).trim()}...` : text;
         }
 
+        function previewPastedReviewLines(value, limit = 80) {
+            const direct = cleanedPastedReviewLines(value, limit);
+            if (direct.length || !String(value || '').trim()) return direct;
+
+            if (typeof compactReviewsFromVisibleLines === 'function') {
+                const compact = compactReviewsFromVisibleLines([String(value || '')], limit)
+                    .map((line) => cleanPastedReviewLine(line))
+                    .filter(Boolean);
+                if (compact.length) return compact;
+            }
+
+            const fallback = cleanPastedReviewLine(String(value || ''));
+            return fallback ? [fallback] : [];
+        }
+
         function reviewLineCount(value) {
-            return cleanedPastedReviewLines(value).length;
+            return previewPastedReviewLines(value).length;
         }
 
 
@@ -4510,7 +4526,7 @@
                 '\u96be\u6e05\u6d17', '\u592a\u5435', '\u5931\u671b', '\u987e\u8651'
             ];
 
-            return cleanedPastedReviewLines(value)
+            return previewPastedReviewLines(value)
                 .filter(line => {
                     const lower = line.toLowerCase();
                     const hasPositiveValue = positiveValueMarkers.some(marker => lower.includes(marker));
