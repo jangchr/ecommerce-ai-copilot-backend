@@ -6899,13 +6899,10 @@
       return;
     }
 
-    const language = extensionWorkspaceLanguage(payload);
-    if (typeof setLanguageMode === "function") {
-      setLanguageMode(language);
-    }
+    const labelSource = extensionWorkspacePageLanguageSource();
 
     if (!fillPastedReviewsFromExtensionWorkspace(payload)) {
-      const message = tExtensionWorkspace("sendToReviewWorkflowNoReviews", payload);
+      const message = tExtensionWorkspace("sendToReviewWorkflowNoReviews", labelSource);
       setExtensionWorkspaceBridgeStatus(message);
       setReviewsStatus(message, "error");
       updateExtensionWorkspaceActionState(payload);
@@ -6915,17 +6912,17 @@
 
     if (button) button.disabled = true;
     if (amazonButton) amazonButton.disabled = true;
-    setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("sendToReviewWorkflowWorking", payload));
-    setReviewsStatus(tExtensionWorkspace("sendToReviewWorkflowWorking", payload));
+    setExtensionWorkspaceBridgeStatus(tExtensionWorkspace("sendToReviewWorkflowWorking", labelSource));
+    setReviewsStatus(tExtensionWorkspace("sendToReviewWorkflowWorking", labelSource));
     scrollToPastedReviewsMode();
 
     try {
       const ok = await generateFromReviews();
       setExtensionWorkspaceBridgeStatus(ok
-        ? tExtensionWorkspace("sendToReviewWorkflowReady", payload)
-        : tExtensionWorkspace("sendToReviewWorkflowFailed", payload));
+        ? tExtensionWorkspace("sendToReviewWorkflowReady", labelSource)
+        : tExtensionWorkspace("sendToReviewWorkflowFailed", labelSource));
     } catch (error) {
-      setExtensionWorkspaceBridgeStatus(error.message || tExtensionWorkspace("sendToReviewWorkflowFailed", payload));
+      setExtensionWorkspaceBridgeStatus(error.message || tExtensionWorkspace("sendToReviewWorkflowFailed", labelSource));
     } finally {
       if (button) button.disabled = false;
       if (amazonButton) amazonButton.disabled = false;

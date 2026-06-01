@@ -3291,6 +3291,9 @@ def _rw_positive_hook_from_theme(theme) -> str:
     if normalized == "easy":
         return "Buyers say this feels easy - here's the moment that makes it click."
 
+    quote = _rw_theme_first_quote(theme)
+    if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
+        return f"Start with the buyer concern: \"{_rw_quote_snippet(quote, 90)}\""
     label = _rw_human_theme_phrase(raw_label)
     return f"Buyers keep mentioning {label} - here's the proof moment."
 
@@ -3303,6 +3306,8 @@ def _rw_positive_hook_from_theme_zh(theme) -> str:
     label = _rw_output_theme_label(raw_label, "zh-CN")
 
     if quote:
+        if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
+            return f"\u5148\u770b\u8fd9\u6761\u4e70\u5bb6\u987e\u8651\uff1a\u201c{quote}\u201d"
         if "cannot beat the price" in lower_quote or "worth it" in lower_quote or "pricy" in lower_quote or "pricey" in lower_quote:
             return f"\u8fd9\u74f6\u9999\u918b\u8d35\u4e00\u70b9\u4e5f\u6709\u4eba\u8bf4\u503c\uff1f\u5148\u770b\u8fd9\u53e5\u4e70\u5bb6\u539f\u8bdd\uff1a\u201c{quote}\u201d"
 
@@ -3776,6 +3781,9 @@ def _rw_positive_theme_label_from_quote(quote: str, fallback_label: str = "") ->
     if "great" in lower or fallback == "great":
         return "buyers calling it great"
 
+    if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
+        return "buyer concern signal"
+
     if fallback:
         return f"liked signal: {fallback}"
 
@@ -3994,6 +4002,7 @@ def _rw_output_theme_label(label: str, language: str) -> str:
         "party or hosting context": "\u805a\u4f1a / \u62db\u5f85\u573a\u666f",
         "stocking or pack context": "\u56e4\u8d27 / \u5305\u88c5\u573a\u666f",
         "usage context": "\u4f7f\u7528\u573a\u666f",
+        "buyer concern signal": "\u8d2d\u4e70\u987e\u8651\u4fe1\u53f7",
         "recommend": "\u4e70\u5bb6\u613f\u610f\u63a8\u8350",
         "perfect": "\u4e70\u5bb6\u8ba4\u4e3a\u8868\u73b0\u5f88\u597d",
         "great": "\u4e70\u5bb6\u8ba4\u4e3a\u4f53\u9a8c\u5f88\u597d",

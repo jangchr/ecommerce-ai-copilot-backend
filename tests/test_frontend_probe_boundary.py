@@ -2273,9 +2273,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotEqual(bridge_start, -1)
         self.assertNotEqual(bridge_end, -1)
         bridge_body = self.source[bridge_start:bridge_end]
-        self.assertIn("setLanguageMode(language);", bridge_body)
+        self.assertNotIn("setLanguageMode(language);", bridge_body)
+        self.assertIn("const labelSource = extensionWorkspacePageLanguageSource();", bridge_body)
         self.assertIn("setExtensionWorkspaceBridgeStatus(message)", bridge_body)
-        self.assertIn("setExtensionWorkspaceBridgeStatus(tExtensionWorkspace(\"sendToReviewWorkflowWorking\", payload))", bridge_body)
+        self.assertIn("setExtensionWorkspaceBridgeStatus(tExtensionWorkspace(\"sendToReviewWorkflowWorking\", labelSource))", bridge_body)
         self.assertIn("updateExtensionWorkspaceActionState(null)", bridge_body)
         self.assertIn("updateExtensionWorkspaceActionState(payload)", bridge_body)
         self.assertIn("fillPastedReviewsFromExtensionWorkspace(payload)", bridge_body)
