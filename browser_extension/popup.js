@@ -612,9 +612,9 @@ async function openInWebWorkspace() {
   let tab = existingTabs[0];
 
   if (tab?.id) {
-    tab = await chrome.tabs.update(tab.id, { url: targetUrl, active: true });
+    tab = await chrome.tabs.update(tab.id, { url: targetUrl, active: false });
   } else {
-    tab = await chrome.tabs.create({ url: targetUrl, active: true });
+    tab = await chrome.tabs.create({ url: targetUrl, active: false });
   }
 
   if (!tab.id) {
@@ -623,6 +623,7 @@ async function openInWebWorkspace() {
 
   await waitForTabLoad(tab.id);
   await writeWorkspacePayloadToTab(tab.id, payloadJson);
+  await chrome.tabs.update(tab.id, { active: true });
 
   setStatus(tPopup("openedWebWorkspace"));
 }
