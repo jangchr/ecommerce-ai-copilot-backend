@@ -147,6 +147,12 @@ class VideoGenerationJobStatusResponse(BaseModel):
     request_id: Optional[str] = None
 
 
+class VideoGenerationProvidersResponse(BaseModel):
+    status: str
+    providers: List[Dict[str, Any]] = Field(default_factory=list)
+    request_id: Optional[str] = None
+
+
 class AmazonIntakeRequest(BaseModel):
     url: str
     product_category: str = "amazon_product"

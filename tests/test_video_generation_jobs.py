@@ -45,6 +45,72 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
 
+    def test_video_generation_providers_endpoint_lists_supported_providers(self):
+        response = self.client.get(
+            "/api/v1/video-generation/providers",
+            headers={"X-Request-ID": "video-providers-1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["request_id"], "video-providers-1")
+
+        providers = {item["provider"]: item for item in payload["providers"]}
+        for provider in ["manual_export", "generic", "capcut", "runway", "pika"]:
+            self.assertIn(provider, providers)
+            self.assertIn("export_key", providers[provider])
+            self.assertFalse(providers[provider]["external_api_ready"])
+
+    def test_create_video_generation_job_selects_provider_export_prompt(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+                "output_language": "en",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        job = response.json()["job"]
+        self.assertEqual(job["provider"], "runway")
+        self.assertEqual(job["provider_payload"]["selected_export_key"], "runway_style_prompt")
+        self.assertEqual(job["provider_payload"]["prompt"], VIDEO_PACKET["export_formats"]["runway_style_prompt"])
+        self.assertEqual(job["provider_payload"]["next_action"], "manual_copy_to_video_tool")
+
+    def test_create_video_generation_job_accepts_export_key_alias(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "capcut_shot_list",
+                "output_language": "en",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        job = response.json()["job"]
+        self.assertEqual(job["provider"], "capcut")
+        self.assertEqual(job["provider_payload"]["selected_export_key"], "capcut_shot_list")
+
+    def test_create_video_generation_job_rejects_unsupported_provider(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "unknown_video_tool",
+            },
+            headers={"X-Request-ID": "video-job-provider-invalid-1"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["request_id"], "video-job-provider-invalid-1")
+        self.assertIn("unsupported", payload["error"])
+        self.assertIn("runway", payload["supported_providers"])
+
     def test_create_video_generation_job_returns_manual_export_payload(self):
         response = self.client.post(
             "/api/v1/video-generation/jobs",

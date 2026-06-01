@@ -31,6 +31,7 @@ from schemas.api_contract import (
     VideoGenerationJobRequest,
     VideoGenerationJobResponse,
     VideoGenerationJobStatusResponse,
+    VideoGenerationProvidersResponse,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -103,6 +104,55 @@ PASTED_REVIEWS_COMPACT_QUOTE_LIMIT = 12
 PASTED_REVIEWS_RAW_MAX_CHARS = 50000
 SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
 VIDEO_GENERATION_JOBS: dict[str, dict] = {}
+SUPPORTED_VIDEO_PROVIDERS = {
+    "manual_export": {
+        "label": "Manual export",
+        "export_key": "generic_video_prompt",
+        "handoff_type": "manual_export",
+        "external_api_ready": False,
+        "description": "Copy the generic prompt or any export format into your chosen video tool.",
+    },
+    "generic": {
+        "label": "Generic video prompt",
+        "export_key": "generic_video_prompt",
+        "handoff_type": "prompt_export",
+        "external_api_ready": False,
+        "description": "General-purpose prompt for video generation tools.",
+    },
+    "capcut": {
+        "label": "CapCut shot list",
+        "export_key": "capcut_shot_list",
+        "handoff_type": "shot_list_export",
+        "external_api_ready": False,
+        "description": "Numbered shot list for manual editing in CapCut or similar editors.",
+    },
+    "runway": {
+        "label": "Runway-style prompt",
+        "export_key": "runway_style_prompt",
+        "handoff_type": "prompt_export",
+        "external_api_ready": False,
+        "description": "Visual prompt shaped for Runway-style video generation.",
+    },
+    "pika": {
+        "label": "Pika-style prompt",
+        "export_key": "pika_style_prompt",
+        "handoff_type": "prompt_export",
+        "external_api_ready": False,
+        "description": "Short motion prompt shaped for Pika-style generation.",
+    },
+}
+VIDEO_PROVIDER_ALIASES = {
+    "manual": "manual_export",
+    "manual_export": "manual_export",
+    "generic": "generic",
+    "generic_video_prompt": "generic",
+    "capcut": "capcut",
+    "capcut_shot_list": "capcut",
+    "runway": "runway",
+    "runway_style_prompt": "runway",
+    "pika": "pika",
+    "pika_style_prompt": "pika",
+}
 
 app.add_middleware(
     CORSMiddleware,
@@ -1534,6 +1584,25 @@ def _utc_now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
+def _normalize_video_provider(provider: str) -> str:
+    key = _clean_description_text(provider or "manual_export").lower().replace(" ", "_")
+    return VIDEO_PROVIDER_ALIASES.get(key, "")
+
+
+def _video_generation_provider_catalog() -> list[dict]:
+    return [
+        {
+            "provider": provider,
+            "label": config["label"],
+            "export_key": config["export_key"],
+            "handoff_type": config["handoff_type"],
+            "external_api_ready": config["external_api_ready"],
+            "description": config["description"],
+        }
+        for provider, config in SUPPORTED_VIDEO_PROVIDERS.items()
+    ]
+
+
 def _video_job_export_formats(packet: dict) -> dict:
     formats = packet.get("export_formats") if isinstance(packet, dict) else {}
     if not isinstance(formats, dict):
@@ -1552,24 +1621,31 @@ def _video_generation_provider_payload(packet: dict, provider: str) -> dict:
     if not isinstance(scenes, list):
         scenes = []
 
-    provider_name = _clean_description_text(provider or "manual_export") or "manual_export"
+    provider_name = _normalize_video_provider(provider) or "manual_export"
+    provider_config = SUPPORTED_VIDEO_PROVIDERS[provider_name]
+    selected_export_key = provider_config["export_key"]
+    selected_prompt = export_formats.get(selected_export_key) or export_formats.get("generic_video_prompt", "")
+
     return {
         "provider": provider_name,
-        "handoff_type": "manual_export",
-        "prompt": export_formats.get("generic_video_prompt", ""),
+        "provider_label": provider_config["label"],
+        "handoff_type": provider_config["handoff_type"],
+        "external_api_ready": provider_config["external_api_ready"],
+        "selected_export_key": selected_export_key,
+        "prompt": selected_prompt,
         "export_formats": export_formats,
         "scenes": scenes[:4],
         "instructions": [
-            "Copy one of the export prompts into the selected video tool.",
+            "Copy the selected prompt into the chosen video tool.",
             "Use the scene list as a shot-by-shot guide.",
             "This scaffold does not call an external video API yet.",
         ],
+        "next_action": "manual_copy_to_video_tool",
     }
-
 
 def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
     packet = dict(request.video_generation_packet or {})
-    provider = _clean_description_text(request.provider or "manual_export") or "manual_export"
+    provider = _normalize_video_provider(request.provider or "manual_export") or "manual_export"
     now = _utc_now_iso()
     job_id = f"video_job_{uuid4().hex[:12]}"
     provider_payload = _video_generation_provider_payload(packet, provider)
@@ -1601,6 +1677,15 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
     return job
 
 
+@app.get("/api/v1/video-generation/providers", response_model=VideoGenerationProvidersResponse)
+async def list_video_generation_providers(http_request: Request):
+    return {
+        "status": "success",
+        "providers": _video_generation_provider_catalog(),
+        "request_id": http_request.state.request_id,
+    }
+
+
 @app.post("/api/v1/video-generation/jobs", response_model=VideoGenerationJobResponse)
 async def create_video_generation_job(request: VideoGenerationJobRequest, http_request: Request):
     request_id = http_request.state.request_id
@@ -1612,6 +1697,17 @@ async def create_video_generation_job(request: VideoGenerationJobRequest, http_r
             content={
                 "status": "error",
                 "error": "video_generation_packet with packet_version=video_generation_v1 is required.",
+                "request_id": request_id,
+            },
+        )
+
+    if not _normalize_video_provider(request.provider or "manual_export"):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": "unsupported video generation provider",
+                "supported_providers": list(SUPPORTED_VIDEO_PROVIDERS.keys()),
                 "request_id": request_id,
             },
         )
