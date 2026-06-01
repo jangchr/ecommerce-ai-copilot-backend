@@ -1043,6 +1043,78 @@
             background: #f0fdf4;
         }
 
+        .video-draft-panel {
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid #c7d2fe;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        .video-draft-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .video-draft-title {
+            font-weight: 900;
+            color: #111827;
+            font-size: 1rem;
+        }
+
+        .video-draft-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .video-draft-scenes {
+            display: grid;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .video-draft-scene {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+
+        .video-draft-scene-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .video-draft-scene-title {
+            font-weight: 900;
+            color: #1e293b;
+        }
+
+        .video-draft-export-grid {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .video-draft-export-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
         @media (max-width: 720px) {
             .storyboard-scene-card {
                 padding: 12px;
@@ -1056,6 +1128,13 @@
             .storyboard-scene-number {
                 min-width: 30px;
                 height: 30px;
+            }
+
+            .video-draft-header,
+            .video-draft-scene-header,
+            .video-draft-export-row {
+                align-items: stretch;
+                flex-direction: column;
             }
         }
 
@@ -2792,6 +2871,112 @@
             `;
         }
 
+        function videoScenePromptText(scene) {
+            if (!scene) return '';
+            return [
+                `${t('sceneLabel')} ${scene.scene_id || ''}`.trim(),
+                scene.duration_seconds ? `${t('recommendedDuration')}: ${scene.duration_seconds}s` : '',
+                scene.visual_prompt ? `${t('visualPrompt')}: ${scene.visual_prompt}` : '',
+                scene.narration ? `${t('narration')}: ${scene.narration}` : '',
+                scene.overlay_text ? `${t('overlayText')}: ${scene.overlay_text}` : '',
+                scene.evidence_quote ? `${t('evidenceQuote')}: ${scene.evidence_quote}` : '',
+                (scene.risk_notes || []).length ? `${t('riskNotes')}: ${(scene.risk_notes || []).join('; ')}` : ''
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyVideoDraftText(text, successKey = 'videoPromptCopied') {
+            if (!text) {
+                showCopyFeedbackToast(t('videoPromptCopyFailed'), 'copyStatus');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopyFeedbackToast(t(successKey), 'copyStatus');
+            } catch (error) {
+                showCopyFeedbackToast(t('videoPromptCopyFailed'), 'copyStatus');
+            }
+        }
+
+        function copyFullVideoPrompt() {
+            const packet = latestProductData?.video_generation_packet || {};
+            const text = packet.full_video_prompt || packet.export_formats?.generic_video_prompt || '';
+            copyVideoDraftText(text, 'videoPromptCopied');
+        }
+
+        function copyVideoScenePrompt(index) {
+            const scene = (latestProductData?.video_generation_packet?.scenes || [])[index];
+            copyVideoDraftText(videoScenePromptText(scene), 'scenePromptCopied');
+        }
+
+        function copyVideoExportPrompt(formatKey) {
+            const prompt = latestProductData?.video_generation_packet?.export_formats?.[formatKey] || '';
+            copyVideoDraftText(prompt, 'videoPromptCopied');
+        }
+
+        function renderVideoDraftPanel(packet) {
+            if (!packet || !packet.packet_version) return '';
+            const video = packet.video || {};
+            const scenes = Array.isArray(packet.scenes) ? packet.scenes.slice(0, 4) : [];
+            const exportFormats = packet.export_formats || {};
+            const exportLabels = {
+                generic_video_prompt: t('genericVideoPrompt'),
+                capcut_shot_list: t('capcutShotList'),
+                runway_style_prompt: t('runwayStylePrompt'),
+                pika_style_prompt: t('pikaStylePrompt')
+            };
+            const exportRows = Object.keys(exportLabels)
+                .filter((key) => exportFormats[key])
+                .map((key) => `
+                    <div class="video-draft-export-row">
+                        <div>
+                            <div class="storyboard-scene-label">${escapeHTML(exportLabels[key])}</div>
+                            <div class="storyboard-scene-value">${escapeHTML(String(exportFormats[key]).slice(0, 180))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyVideoExportPrompt('${key}')">${escapeHTML(t('copyExportPrompt'))}</button>
+                    </div>
+                `)
+                .join('');
+
+            return `
+                <div class="video-draft-panel" id="videoDraftPanel">
+                    <div class="video-draft-header">
+                        <div>
+                            <div class="video-draft-title">${escapeHTML(t('videoDraftTitle'))}</div>
+                            <div class="brief-note">${escapeHTML(t('videoDraftSourceNote'))}</div>
+                            <div class="video-draft-meta">
+                                ${metricPill(t('videoPacketVersion'), packet.packet_version || '')}
+                                ${metricPill(t('recommendedDuration'), video.recommended_duration_seconds ? `${video.recommended_duration_seconds}s` : '')}
+                                ${metricPill(t('aspectRatio'), video.aspect_ratio || '')}
+                            </div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyFullVideoPrompt()">${escapeHTML(t('copyFullVideoPrompt'))}</button>
+                    </div>
+                    ${block(t('genericVideoPrompt'), packet.full_video_prompt || '')}
+                    <div class="video-draft-scenes">
+                        ${scenes.map((scene, index) => `
+                            <div class="video-draft-scene">
+                                <div class="video-draft-scene-header">
+                                    <div class="video-draft-scene-title">${escapeHTML(t('sceneLabel'))} ${escapeHTML(scene.scene_id || index + 1)} · ${escapeHTML(scene.duration_seconds || '')}s</div>
+                                    <button class="btn-secondary" type="button" onclick="copyVideoScenePrompt(${index})">${escapeHTML(t('copyScenePrompt'))}</button>
+                                </div>
+                                <div class="storyboard-scene-fields">
+                                    ${optionalBlock(t('visualPrompt'), scene.visual_prompt || '')}
+                                    ${optionalBlock(t('narration'), scene.narration || '')}
+                                    ${optionalBlock(t('overlayText'), scene.overlay_text || '')}
+                                    ${optionalBlock(t('evidenceQuote'), scene.evidence_quote || '')}
+                                    ${optionalBlock(t('riskNotes'), scene.risk_notes || [])}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${exportRows ? `
+                        <div class="json-key" style="margin-top:14px;">${escapeHTML(t('exportPrompts'))}</div>
+                        <div class="video-draft-export-grid">${exportRows}</div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
 
         function resultSourceLabel(sourceType) {
             const source = String(sourceType || '');
@@ -3948,6 +4133,54 @@
             revisionCount: '修订次数',
             regenerateNode: '重新生成节点',
             rawDebugState: '原始 Debug 状态'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            videoDraftTitle: 'Video Draft',
+            videoDraftSourceNote: 'Generated from the existing storyboard and TikTok script. No external video API is called.',
+            videoPacketVersion: 'Packet version',
+            copyFullVideoPrompt: 'Copy full video prompt',
+            copyScenePrompt: 'Copy scene prompt',
+            copyExportPrompt: 'Copy export prompt',
+            videoPromptCopied: 'Video prompt copied.',
+            scenePromptCopied: 'Scene prompt copied.',
+            videoPromptCopyFailed: 'Unable to copy video prompt.',
+            recommendedDuration: 'Recommended duration',
+            aspectRatio: 'Aspect ratio',
+            visualPrompt: 'Visual prompt',
+            narration: 'Narration',
+            overlayText: 'Overlay text',
+            evidenceQuote: 'Evidence quote',
+            riskNotes: 'Risk notes',
+            exportPrompts: 'Export prompts',
+            genericVideoPrompt: 'Generic video prompt',
+            capcutShotList: 'CapCut shot list',
+            runwayStylePrompt: 'Runway-style prompt',
+            pikaStylePrompt: 'Pika-style prompt'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            videoDraftTitle: '视频草稿',
+            videoDraftSourceNote: '根据现有分镜和 TikTok 脚本生成，不调用外部视频 API。',
+            videoPacketVersion: '包版本',
+            copyFullVideoPrompt: '复制完整视频提示词',
+            copyScenePrompt: '复制镜头提示词',
+            copyExportPrompt: '复制导出提示词',
+            videoPromptCopied: '视频提示词已复制。',
+            scenePromptCopied: '镜头提示词已复制。',
+            videoPromptCopyFailed: '无法复制视频提示词。',
+            recommendedDuration: '建议时长',
+            aspectRatio: '画幅比例',
+            visualPrompt: '画面提示词',
+            narration: '旁白',
+            overlayText: '屏幕字幕',
+            evidenceQuote: '证据原话',
+            riskNotes: '风险提示',
+            exportPrompts: '导出提示词',
+            genericVideoPrompt: '通用视频提示词',
+            capcutShotList: 'CapCut 拍摄清单',
+            runwayStylePrompt: 'Runway 风格提示词',
+            pikaStylePrompt: 'Pika 风格提示词'
         });
 
         function t(key) {
@@ -6617,6 +6850,7 @@
                 <div class="section-block">
                     ${renderSectionHeader(t('storyboard'), 'storyboard')}
                     ${renderStoryboardBrief(storyboard)}
+                    ${renderVideoDraftPanel(data.video_generation_packet)}
                 </div>
             `;
 

@@ -544,6 +544,52 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
 
+    def test_video_draft_frontend_panel_is_present(self):
+        self.assertIn("function renderVideoDraftPanel(packet)", self.source)
+        self.assertIn("renderVideoDraftPanel(data.video_generation_packet)", self.source)
+        self.assertIn("data.video_generation_packet", self.source)
+        self.assertIn("video-draft-panel", self.source)
+        self.assertIn("video-draft-scenes", self.source)
+        self.assertIn("function copyFullVideoPrompt()", self.source)
+        self.assertIn("function copyVideoScenePrompt(index)", self.source)
+        self.assertIn("function copyVideoExportPrompt(formatKey)", self.source)
+        self.assertIn("copyVideoDraftText", self.source)
+
+        for key in [
+            "videoDraftTitle",
+            "copyFullVideoPrompt",
+            "copyScenePrompt",
+            "videoPromptCopied",
+            "scenePromptCopied",
+            "videoPromptCopyFailed",
+            "recommendedDuration",
+            "aspectRatio",
+            "visualPrompt",
+            "narration",
+            "overlayText",
+            "evidenceQuote",
+            "riskNotes",
+            "exportPrompts",
+            "genericVideoPrompt",
+            "capcutShotList",
+            "runwayStylePrompt",
+            "pikaStylePrompt",
+        ]:
+            with self.subTest(copy_key=key):
+                self.assertIn(key, self.source)
+
+        self.assertIn("videoDraftTitle: 'Video Draft'", self.source)
+        self.assertIn("videoDraftTitle: '视频草稿'", self.source)
+        self.assertIn("copyFullVideoPrompt: 'Copy full video prompt'", self.source)
+        self.assertIn("copyFullVideoPrompt: '复制完整视频提示词'", self.source)
+        self.assertIn("copyScenePrompt: 'Copy scene prompt'", self.source)
+        self.assertIn("copyScenePrompt: '复制镜头提示词'", self.source)
+        self.assertIn("videoPromptCopied: 'Video prompt copied.'", self.source)
+        self.assertIn("videoPromptCopied: '视频提示词已复制。'", self.source)
+        self.assertIn("scenePromptCopied: 'Scene prompt copied.'", self.source)
+        self.assertIn("scenePromptCopied: '镜头提示词已复制。'", self.source)
+        self.assertNotIn("????", self.source)
+
     def test_chinese_recent_actions_and_bottom_ctas_are_deduped(self):
         self.assertIn("/* L18.1-D dedupe bottom feedback/waitlist UI */", self.source)
         self.assertIn(".feedback-panel,", self.source)
