@@ -4648,8 +4648,8 @@
                 }
             }
 
-            if (!selected.length) {
-                for (const line of cleanedPastedReviewLines(rawText, 16)) {
+            if (selected.length < 12) {
+                for (const line of cleanedPastedReviewLines(rawText, 24)) {
                     addCompactReviewQuote(selected, seen, line);
                     if (selected.length >= 12) break;
                 }
