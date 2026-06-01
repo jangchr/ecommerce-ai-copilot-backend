@@ -13,6 +13,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
     def test_video_job_controls_create_job_from_generation_data(self):
         self.assertIn("function renderVideoJobControls(data)", self.source)
+        self.assertIn("renderVideoDraftPanel(data.video_generation_packet)", self.source)
+        self.assertIn("renderVideoJobControls(data)", self.source)
         self.assertIn("async function createVideoJobFromLatestGeneration()", self.source)
         self.assertIn("async function postVideoJobFromGeneration(payload)", self.source)
         self.assertIn("async function getVideoGenerationJob(jobId)", self.source)
@@ -99,6 +101,22 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("status: (resultUrl || previewUrl) ? 'external_result_ready' : 'manual_export_completed'", self.source)
         self.assertGreaterEqual(self.source.count("await refreshRecentVideoJobs();"), 2)
         self.assertNotIn("????", self.source)
+
+    def test_video_job_controls_render_directly_after_video_draft(self):
+        dashboard_start = self.source.find("function renderProductDashboard(data, options = {})")
+        self.assertNotEqual(dashboard_start, -1)
+        dashboard_end = self.source.find("function renderAmazonShadowSummary", dashboard_start)
+        self.assertNotEqual(dashboard_end, -1)
+        dashboard_body = self.source[dashboard_start:dashboard_end]
+
+        draft_index = dashboard_body.find("renderVideoDraftPanel(data.video_generation_packet)")
+        job_index = dashboard_body.find("renderVideoJobControls(data)", draft_index)
+        self.assertNotEqual(draft_index, -1)
+        self.assertNotEqual(job_index, -1)
+        self.assertGreater(job_index, draft_index)
+        self.assertLess(job_index - draft_index, 180)
+        self.assertIn("packet.packet_version !== 'video_generation_v1'", self.source)
+        self.assertIn("if (!data || !data.video_generation_packet) return ''", self.source)
 
     def test_agent_trace_panel_is_rendered_from_product_data(self):
         self.assertIn("function renderAgentTracePanel(agentTrace)", self.source)
