@@ -139,6 +139,9 @@ class PastedReviewsEndpointTest(unittest.TestCase):
                 self.assertIn(field, payload["data"])
 
         packet = payload["data"]["llm_evidence_packet"]
+        for section in ["product", "review_stats", "evidence", "generation_constraints"]:
+            with self.subTest(packet_section=section):
+                self.assertIn(section, packet)
         self.assertEqual(packet["packet_version"], "pasted_reviews_v1")
         self.assertEqual(packet["product"]["title"], "Portable Mini Blender")
         self.assertEqual(packet["product"]["source_type"], "user_pasted_reviews")
@@ -188,7 +191,10 @@ class PastedReviewsEndpointTest(unittest.TestCase):
                 )
 
         fake_llm = CapturingLLM()
-        with patch("main.ChatOpenAI", return_value=fake_llm):
+        with patch("main.ChatOpenAI", return_value=fake_llm), patch(
+            "main._pasted_reviews_llm_prompt_content",
+            wraps=main._pasted_reviews_llm_prompt_content,
+        ) as prompt_builder:
             result = asyncio.run(
                 main.generate_pasted_reviews_brief(
                     SimpleNamespace(**VALID_REVIEWS_REQUEST),
@@ -200,6 +206,7 @@ class PastedReviewsEndpointTest(unittest.TestCase):
                 )
             )
 
+        prompt_builder.assert_called_once()
         prompt = fake_llm.messages[1].content
         self.assertIn("llm_evidence_packet JSON", prompt)
         self.assertIn('"packet_version": "pasted_reviews_v1"', prompt)

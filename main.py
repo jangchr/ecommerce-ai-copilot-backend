@@ -732,17 +732,7 @@ async def generate_pasted_reviews_brief(request: PastedReviewsRequest, evidence_
         positive_signals,
         neutral_signals,
     )
-    content = (
-        "Return JSON with keys: target_audience, core_hook_strategy, emotional_trigger, hook, "
-        "cta, storyboard_scenes, evaluation_reasoning, feedback. "
-        "storyboard_scenes must be a list of exactly 4 objects with visual_description, narration, evidence_quote_used.\n\n"
-        "Use the following llm_evidence_packet as the only evidence source. "
-        "Follow generation_constraints strictly. Do not use raw assumptions outside the packet.\n\n"
-        f"Target platform: {request.target_platform or 'TikTok'}\n"
-        f"Goal: {request.goal or 'tiktok_ctr'}\n"
-        "llm_evidence_packet JSON:\n"
-        f"{json.dumps(llm_evidence_packet, ensure_ascii=False, indent=2)}"
-    )
+    content = _pasted_reviews_llm_prompt_content(request, llm_evidence_packet)
     message = await llm.ainvoke(
         [
             SystemMessage(content=PASTED_REVIEWS_SYSTEM_PROMPT),
@@ -902,6 +892,20 @@ def _pasted_reviews_llm_evidence_packet(
             "Do not turn buyer objections into positive claims unless the evidence explicitly resolves the concern.",
         ],
     }
+
+
+def _pasted_reviews_llm_prompt_content(request: PastedReviewsRequest, llm_evidence_packet: dict) -> str:
+    return (
+        "Return JSON with keys: target_audience, core_hook_strategy, emotional_trigger, hook, "
+        "cta, storyboard_scenes, evaluation_reasoning, feedback. "
+        "storyboard_scenes must be a list of exactly 4 objects with visual_description, narration, evidence_quote_used.\n\n"
+        "Use the following llm_evidence_packet as the only evidence source. "
+        "Follow generation_constraints strictly. Do not use raw assumptions outside the packet.\n\n"
+        f"Target platform: {request.target_platform or 'TikTok'}\n"
+        f"Goal: {request.goal or 'tiktok_ctr'}\n"
+        "llm_evidence_packet JSON:\n"
+        f"{json.dumps(llm_evidence_packet, ensure_ascii=False, indent=2)}"
+    )
 
 
 def _pasted_reviews_response_data(
