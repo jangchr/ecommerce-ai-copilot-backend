@@ -1,9 +1,12 @@
+import asyncio
 import json
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
+import main
 from main import app
 
 
@@ -155,6 +158,55 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertNotIn("telemetry_summary", payload)
         self.assertNotIn("shadow_sources", payload)
         self.assertNotIn("memory_observability", payload)
+
+    def test_pasted_reviews_generation_prompt_uses_llm_evidence_packet(self):
+        class CapturingLLM:
+            def __init__(self):
+                self.messages = None
+
+            async def ainvoke(self, messages):
+                self.messages = messages
+                return SimpleNamespace(
+                    content=json.dumps(
+                        {
+                            "target_audience": "Evidence packet audience",
+                            "core_hook_strategy": "Use packet evidence only",
+                            "emotional_trigger": "Relief",
+                            "hook": "Evidence packet hook",
+                            "cta": "Evidence packet CTA",
+                            "storyboard_scenes": [
+                                {
+                                    "visual_description": "Show cleanup frustration.",
+                                    "narration": "One smoothie should not make cleanup hard.",
+                                    "evidence_quote_used": "Hard to clean after one smoothie",
+                                }
+                            ],
+                            "evaluation_reasoning": "Uses packet evidence.",
+                            "feedback": "Packet prompt generated.",
+                        }
+                    )
+                )
+
+        fake_llm = CapturingLLM()
+        with patch("main.ChatOpenAI", return_value=fake_llm):
+            result = asyncio.run(
+                main.generate_pasted_reviews_brief(
+                    SimpleNamespace(**VALID_REVIEWS_REQUEST),
+                    [
+                        "Hard to clean after one smoothie",
+                        "Too loud for early mornings",
+                        "Small enough for travel but the cup sometimes leaks in my bag",
+                    ],
+                )
+            )
+
+        prompt = fake_llm.messages[1].content
+        self.assertIn("llm_evidence_packet JSON", prompt)
+        self.assertIn('"packet_version": "pasted_reviews_v1"', prompt)
+        self.assertIn('"generation_constraints"', prompt)
+        self.assertIn("Do not turn buyer objections into positive claims", prompt)
+        self.assertNotIn("Pasted review evidence:", prompt)
+        self.assertEqual(result["hook"], "Evidence packet hook")
 
     def test_root_beer_amazon_reviews_are_cleaned_and_classified(self):
         root_beer_reviews = (

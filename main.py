@@ -714,17 +714,34 @@ async def generate_pasted_reviews_brief(request: PastedReviewsRequest, evidence_
         temperature=0.4,
         max_retries=0,
     )
+    signal_groups = _pasted_review_signal_groups(evidence_quotes)
+    pain_points = signal_groups["pain"][:4]
+    buyer_objections = [
+        quote
+        for quote in (signal_groups["objection"] + signal_groups["availability"])
+        if _pasted_review_is_real_buyer_objection(quote)
+    ][:4]
+    positive_signals = (signal_groups["positive"] + signal_groups["repeat_purchase"])[:4]
+    neutral_signals = signal_groups["neutral"][:4]
+    llm_evidence_packet = _pasted_reviews_llm_evidence_packet(
+        request,
+        evidence_quotes,
+        signal_groups,
+        pain_points,
+        buyer_objections,
+        positive_signals,
+        neutral_signals,
+    )
     content = (
         "Return JSON with keys: target_audience, core_hook_strategy, emotional_trigger, hook, "
         "cta, storyboard_scenes, evaluation_reasoning, feedback. "
         "storyboard_scenes must be a list of exactly 4 objects with visual_description, narration, evidence_quote_used.\n\n"
-        f"Product name: {request.product_name}\n"
-        f"Product category: {request.product_category or 'unspecified'}\n"
-        f"Product description: {request.product_description or 'unspecified'}\n"
+        "Use the following llm_evidence_packet as the only evidence source. "
+        "Follow generation_constraints strictly. Do not use raw assumptions outside the packet.\n\n"
         f"Target platform: {request.target_platform or 'TikTok'}\n"
         f"Goal: {request.goal or 'tiktok_ctr'}\n"
-        "Pasted review evidence:\n"
-        + "\n".join(f"- {quote}" for quote in evidence_quotes)
+        "llm_evidence_packet JSON:\n"
+        f"{json.dumps(llm_evidence_packet, ensure_ascii=False, indent=2)}"
     )
     message = await llm.ainvoke(
         [
