@@ -427,8 +427,10 @@ def _clean_pasted_review_quote_text(value: str) -> str:
     if callable(cleaner):
         text = cleaner(text)
 
+    text = re.sub(r"^(?:Amazon Customer|Kindle Customer)\s*[1-5](?:\.0)?\s+out of\s+5\s+stars\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"^\[?\s*[1-5](?:\.0)?\s+out of\s+5\s+stars\s*\]?\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b[1-5](?:\.0)?\s+out of\s+5\s+stars\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"^(?:Amazon Customer|Kindle Customer)\s*[1-5](?:\.0)?\s+out of 5 stars\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"Reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}", " ", text, flags=re.IGNORECASE)
     text = re.sub(
         r"\b(?:Flavor Name|Size|Color|Style|Pattern Name|Package Quantity)\s*:\s*"
@@ -539,7 +541,7 @@ def _pasted_review_signal_kind(quote: str) -> str:
         "\u4ef7\u683c\u8d35", "\u592a\u8d35", "\u4e0d\u503c",
     )
     packaging_objection_markers = (
-        "no lid", "not lid", "without a lid", "lid to go over the spout", "spout",
+        "no lid", "not lid", "without a lid", "lid to go over the spout",
         "air is ever present", "oxidation", "cap leaked", "leaky cap", "bottle cap",
     )
     objection_markers = (
@@ -1874,7 +1876,6 @@ _REVIEW_WORKSPACE_FOOD_THEME_MARKERS = {
         "packaging problem",
         "no lid",
         "not lid",
-        "spout",
         "air is ever present",
         "oxidation",
         "cap leaked",
@@ -2716,7 +2717,6 @@ def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
         "not lid",
         "without a lid",
         "lid to go over the spout",
-        "spout",
         "air is ever present",
         "oxidation",
         "cap leaked",
@@ -3011,7 +3011,6 @@ def _rw_quote_matches_theme(label: str, value: str) -> bool:
         "not lid",
         "without a lid",
         "lid to go over the spout",
-        "spout",
         "air is ever present",
         "oxidation",
         "cap leaked",
@@ -3734,6 +3733,8 @@ def _rw_unique_quote_count(themes: list[ReviewThemeSummary]) -> int:
         for quote in getattr(theme, "evidence_quotes", []) or []:
             compact = _rw_compact_evidence_quote(quote)
             key = " ".join(compact.lower().split())
+            if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(compact):
+                continue
             if key:
                 seen.add(key)
     return len(seen)

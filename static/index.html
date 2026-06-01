@@ -4420,6 +4420,7 @@
             let text = String(line || '').replace(/^[-*\u2022\d.)\s]+/, '').trim();
             if (!text || isAmazonReviewChromeLine(text)) return '';
             text = text
+                .replace(/^(?:Amazon Customer|Kindle Customer)\s*[1-5](?:\.\d)?\s+out of\s+5\s+stars\s*/ig, ' ')
                 .replace(/^\[?\s*[1-5](?:\.\d)?\s+out of\s+5\s+stars\s*\]?\s*/ig, ' ')
                 .replace(/\b[1-5](?:\.\d)?\s+out of\s+5\s+stars\b/ig, ' ')
                 .replace(/reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}/ig, ' ')
@@ -4498,7 +4499,7 @@
             const explicitConcernMarkers = [
                 'too expensive', 'high price', 'not worth', 'overpriced', 'pricey', 'pricy',
                 'priced wrong', 'price is wrong', 'cost too much', 'no lid', 'without a lid',
-                'lid to go over the spout', 'spout', 'air is ever present', 'oxidation',
+                'lid to go over the spout', 'air is ever present', 'oxidation',
                 'cap leaked', 'leaky cap', 'broken', 'cracked', 'leaked', 'leak',
                 'wrong size', 'size is wrong', 'missing bottle', 'quantity mismatch',
                 'not available', 'unavailable', 'west coast', 'hard to find',
