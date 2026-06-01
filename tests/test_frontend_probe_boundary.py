@@ -30,6 +30,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("renderVideoJobResultForm", self.source)
         self.assertIn("renderRecentVideoJobsPanel", self.source)
         self.assertIn("renderRecentVideoJobRows", self.source)
+        self.assertIn("renderVideoJobControls(data)", self.source)
         self.assertIn("refreshCurrentVideoJobStatus", self.source)
         self.assertIn("copyCurrentVideoJobPrompt", self.source)
         self.assertIn("copyCurrentVideoJobId", self.source)
