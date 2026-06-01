@@ -11,6 +11,19 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
     def setUpClass(cls):
         cls.source = FRONTEND_PATH.read_text(encoding="utf-8")
 
+    def test_video_job_controls_create_job_from_generation_data(self):
+        self.assertIn("function renderVideoJobControls(data)", self.source)
+        self.assertIn("async function createVideoJobFromLatestGeneration()", self.source)
+        self.assertIn("async function postVideoJobFromGeneration(payload)", self.source)
+        self.assertIn("/api/v1/video-generation/jobs/from-generation", self.source)
+        self.assertIn("generation_data: latestProductData", self.source)
+        self.assertIn("videoJobProviderSelect", self.source)
+        self.assertIn("videoJobCreateBtn", self.source)
+        self.assertIn("renderVideoJobResult", self.source)
+        self.assertIn("videoJobCreateTitle", self.source)
+        self.assertIn("videoJobCreated", self.source)
+        self.assertIn("videoJobFailed", self.source)
+
     def test_agent_trace_panel_is_rendered_from_product_data(self):
         self.assertIn("function renderAgentTracePanel(agentTrace)", self.source)
         self.assertIn("data.agent_trace", self.source)

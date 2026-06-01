@@ -3404,6 +3404,19 @@
                 exampleGalleryIntro: 'Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.',
                 amazonShadowLabel: 'Amazon Shadow',
                 debugModeLabel: 'Debug Mode',
+                videoJobCreateTitle: 'Create video job',
+                videoJobCreateSubtitle: 'Turn this video draft into a tracked export job. No external video API is called yet.',
+                videoJobProviderLabel: 'Video tool',
+                videoJobCreateButton: 'Create video job',
+                videoJobCreating: 'Creating video job...',
+                videoJobCreated: 'Video job created.',
+                videoJobFailed: 'Could not create video job.',
+                videoJobIdLabel: 'Job ID',
+                videoJobStatusLabel: 'Job status',
+                videoJobProviderResultLabel: 'Provider',
+                videoJobSelectedExportLabel: 'Selected export',
+                videoJobPromptLabel: 'Selected prompt',
+                videoJobManualExportNote: 'Copy this prompt into your selected video tool.',
                 agentTraceTitle: 'Multi-agent Trace',
                 agentTraceSubtitle: 'Lightweight trace scaffold, not real multi-agent execution yet.',
                 agentTraceExecutionMode: 'Execution mode',
@@ -3603,6 +3616,19 @@
                 agentGovernanceLabel: '\u89c4\u5219\u68c0\u67e5',
                 agentReflectionLabel: '\u81ea\u6211\u68c0\u67e5',
                 agentAnalyticsLabel: '\u6570\u636e\u5206\u6790',
+                videoJobCreateTitle: '\u521b\u5efa\u89c6\u9891\u4efb\u52a1',
+                videoJobCreateSubtitle: '\u628a\u8fd9\u4e2a\u89c6\u9891\u8349\u7a3f\u8f6c\u6210\u53ef\u8ddf\u8e2a\u7684\u5bfc\u51fa\u4efb\u52a1\u3002\u76ee\u524d\u8fd8\u4e0d\u4f1a\u8c03\u7528\u5916\u90e8\u89c6\u9891 API\u3002',
+                videoJobProviderLabel: '\u89c6\u9891\u5de5\u5177',
+                videoJobCreateButton: '\u521b\u5efa\u89c6\u9891\u4efb\u52a1',
+                videoJobCreating: '\u6b63\u5728\u521b\u5efa\u89c6\u9891\u4efb\u52a1...',
+                videoJobCreated: '\u89c6\u9891\u4efb\u52a1\u5df2\u521b\u5efa\u3002',
+                videoJobFailed: '\u65e0\u6cd5\u521b\u5efa\u89c6\u9891\u4efb\u52a1\u3002',
+                videoJobIdLabel: '\u4efb\u52a1 ID',
+                videoJobStatusLabel: '\u4efb\u52a1\u72b6\u6001',
+                videoJobProviderResultLabel: '\u63d0\u4f9b\u65b9',
+                videoJobSelectedExportLabel: '\u5df2\u9009\u5bfc\u51fa\u683c\u5f0f',
+                videoJobPromptLabel: '\u5df2\u9009\u63d0\u793a\u8bcd',
+                videoJobManualExportNote: '\u628a\u8fd9\u6bb5\u63d0\u793a\u8bcd\u590d\u5236\u5230\u4f60\u9009\u62e9\u7684\u89c6\u9891\u5de5\u5177\u91cc\u3002',
                 agentTraceTitle: '\u591a Agent Trace',
                 agentTraceSubtitle: '\u8fd9\u662f\u8f7b\u91cf\u7ea7\u591a Agent \u8f68\u8ff9\u811a\u624b\u67b6\uff0c\u8fd8\u4e0d\u662f\u771f\u5b9e\u591a\u6a21\u578b Agent \u5e76\u884c\u6267\u884c\u3002',
                 agentTraceExecutionMode: '\u6267\u884c\u6a21\u5f0f',
@@ -5670,6 +5696,19 @@
             return body;
         }
 
+        async function postVideoJobFromGeneration(payload) {
+            const response = await fetch('/api/v1/video-generation/jobs/from-generation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || t('videoJobFailed'));
+            }
+            return body;
+        }
+
         async function postPastedReviewWorkspaceAnalysis(payload) {
             const response = await fetch('/api/v1/analyze-pasted-review-workspace', {
                 method: 'POST',
@@ -6801,6 +6840,86 @@
                     </div>
                 </div>
             `;
+        }
+
+        function videoJobProviderOptions() {
+            return [
+                ['manual_export', 'Manual export'],
+                ['generic', 'Generic'],
+                ['capcut', 'CapCut'],
+                ['runway', 'Runway'],
+                ['pika', 'Pika']
+            ];
+        }
+
+        function renderVideoJobControls(data) {
+            if (!data || !data.video_generation_packet) return '';
+            const packet = data.video_generation_packet || {};
+            if (packet.packet_version !== 'video_generation_v1') return '';
+            const options = videoJobProviderOptions()
+                .map(([value, label]) => `<option value="${escapeHTML(value)}">${escapeHTML(label)}</option>`)
+                .join('');
+            return `
+                <div class="section-block" id="videoJobCreatePanel">
+                    <div class="json-key">${escapeHTML(t('videoJobCreateTitle'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('videoJobCreateSubtitle'))}</div>
+                    <div class="quick-use-pack-actions">
+                        <label class="json-key" for="videoJobProviderSelect">${escapeHTML(t('videoJobProviderLabel'))}</label>
+                        <select id="videoJobProviderSelect">${options}</select>
+                        <button class="btn-secondary" id="videoJobCreateBtn" type="button" onclick="createVideoJobFromLatestGeneration()">
+                            ${escapeHTML(t('videoJobCreateButton'))}
+                        </button>
+                    </div>
+                    <div class="quick-use-copy-status" id="videoJobStatus"></div>
+                    <div id="videoJobResult"></div>
+                </div>
+            `;
+        }
+
+        function renderVideoJobResult(job) {
+            if (!job) return '';
+            const providerPayload = job.provider_payload || {};
+            const prompt = providerPayload.prompt || '';
+            return `
+                <div class="probe-grid">
+                    ${block(t('videoJobIdLabel'), job.job_id || '')}
+                    ${block(t('videoJobStatusLabel'), job.status || '')}
+                    ${block(t('videoJobProviderResultLabel'), job.provider || '')}
+                    ${block(t('videoJobSelectedExportLabel'), providerPayload.selected_export_key || '')}
+                </div>
+                ${block(t('videoJobPromptLabel'), prompt)}
+                <div class="feedback-box">${escapeHTML(t('videoJobManualExportNote'))}</div>
+            `;
+        }
+
+        async function createVideoJobFromLatestGeneration() {
+            const btn = document.getElementById('videoJobCreateBtn');
+            const status = document.getElementById('videoJobStatus');
+            const result = document.getElementById('videoJobResult');
+            const provider = document.getElementById('videoJobProviderSelect')?.value || 'manual_export';
+
+            if (!latestProductData || !latestProductData.video_generation_packet) {
+                if (status) status.textContent = t('videoJobFailed');
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('videoJobCreating');
+            if (result) result.innerHTML = '';
+
+            try {
+                const response = await postVideoJobFromGeneration({
+                    generation_data: latestProductData,
+                    provider,
+                    output_language: currentOutputLanguage()
+                });
+                if (status) status.textContent = t('videoJobCreated');
+                if (result) result.innerHTML = renderVideoJobResult(response.job || {});
+            } catch (error) {
+                if (status) status.textContent = error.message || t('videoJobFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function renderProductDashboard(data, options = {}) {
