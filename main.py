@@ -96,6 +96,8 @@ PASTED_REVIEWS_SYSTEM_PROMPT = (
 DESCRIPTION_MIN_CHARS = 12
 DESCRIPTION_MAX_CHARS = 6000
 PASTED_REVIEWS_MIN_CHARS = 24
+PASTED_REVIEWS_COMPACT_QUOTE_LIMIT = 12
+PASTED_REVIEWS_RAW_MAX_CHARS = 50000
 SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
 
 app.add_middleware(
@@ -395,14 +397,25 @@ def _clean_pasted_review_quote_text(value: str) -> str:
     text = re.sub(r"^\[?\s*[1-5](?:\.0)?\s+out of\s+5\s+stars\s*\]?\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b[1-5](?:\.0)?\s+out of\s+5\s+stars\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"Reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}", " ", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"\b(?:Flavor Name|Size|Color|Style|Pattern Name|Package Quantity)\s*:\s*"
+        r".*?(?=\b(?:Flavor Name|Size|Color|Style|Pattern Name|Package Quantity|Verified Purchase|Reviewed in|[1-5](?:\.0)?\s+out of\s+5\s+stars)\b|$)",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
     text = re.sub(r"\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5[^\s]{0,18}\u8bc4\u8bba", " ", text)
     text = re.sub(r"\bVerified Purchase\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\u5df2\u9a8c\u8bc1\u8d2d\u4e70|\u5df2\u786e\u8ba4\u8d2d\u4e70", " ", text)
+    text = re.sub(r"\b(?:One|Two|\d+)\s+people?\s+found\s+this\s+helpful\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(?:Helpful|Report|Submit a review|Community guidelines?)\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+", " ", text).strip(" -:;,.[]")
+    if not re.search(r"[A-Za-z\u4e00-\u9fff]", text):
+        return ""
     return text
 
 
-def _split_pasted_review_quotes(text: str, limit: int = 6) -> list[str]:
+def _split_pasted_review_quotes(text: str, limit: int = 10) -> list[str]:
     cleaned_lines = []
     for raw_line in (text or "").replace("\r", "\n").split("\n"):
         line = raw_line.strip().lstrip("-*•0123456789. )(").strip()
@@ -430,6 +443,11 @@ def _split_pasted_review_quotes(text: str, limit: int = 6) -> list[str]:
     return quotes
 
 
+def _compact_pasted_reviews_for_generation(text: str, limit: int = PASTED_REVIEWS_COMPACT_QUOTE_LIMIT) -> str:
+    quotes = _split_pasted_review_quotes(text, limit=limit)
+    return "\n".join(quotes)
+
+
 def _validate_pasted_reviews_request(request: PastedReviewsRequest, request_id: str):
     product_name = _clean_description_text(request.product_name)
     pasted_reviews = _clean_description_text(request.pasted_reviews)
@@ -444,13 +462,21 @@ def _validate_pasted_reviews_request(request: PastedReviewsRequest, request_id: 
             "pasted_reviews_too_short",
             request_id,
         )
-    if not _split_pasted_review_quotes(pasted_reviews, limit=1):
+    compact_reviews = _compact_pasted_reviews_for_generation(pasted_reviews)
+    if not compact_reviews:
         return _description_error(
             "Pasted Reviews Mode needs at least one concrete review line, not only category labels.",
             "pasted_reviews_no_concrete_reviews",
             request_id,
         )
-    if len(product_name) + len(_clean_description_text(request.product_description or "")) + len(pasted_reviews) > DESCRIPTION_MAX_CHARS:
+    if len(pasted_reviews) > PASTED_REVIEWS_RAW_MAX_CHARS:
+        return _description_error(
+            "Input is too long for Pasted Reviews Mode. Please paste a smaller visible review sample.",
+            "input_too_long",
+            request_id,
+        )
+    effective_reviews = compact_reviews or pasted_reviews
+    if len(product_name) + len(_clean_description_text(request.product_description or "")) + len(effective_reviews) > DESCRIPTION_MAX_CHARS:
         return _description_error(
             "Input is too long for Pasted Reviews Mode. Please shorten the pasted reviews.",
             "input_too_long",

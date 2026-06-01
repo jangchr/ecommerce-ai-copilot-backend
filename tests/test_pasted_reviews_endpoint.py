@@ -226,6 +226,54 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertIn("buyer objection", scene_goals)
         self.assertNotIn("review pain point", scene_goals.lower())
 
+    def test_long_repeated_amazon_reviews_compact_before_generation(self):
+        dirty_reviews = "\n".join(
+            [
+                "[5 out of 5 stars]",
+                "Reviewed in the United States on May 12, 2026",
+                "Verified Purchase",
+                "Flavor Name: Traditional Size: 16.9 Fl Oz",
+                "This balsamic has a rich flavor and works well on salads.",
+                "Good taste, but the cap leaked during shipping.",
+                "This balsamic has a rich flavor and works well on salads.",
+                "Submit a review",
+            ]
+            * 90
+        )
+        self.assertGreater(len(dirty_reviews), 6000)
+
+        with patch(
+            "main.generate_pasted_reviews_brief",
+            new=AsyncMock(return_value=GENERATED_REVIEWS_BRIEF),
+        ) as generate:
+            response = self.client.post(
+                "/api/v1/generate-from-reviews",
+                json={
+                    **VALID_REVIEWS_REQUEST,
+                    "product_name": "Balsamic Vinegar",
+                    "product_category": "balsamic_vinegar",
+                    "pasted_reviews": dirty_reviews,
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        generate.assert_awaited_once()
+        evidence_quotes = generate.await_args.args[1]
+        evidence_text = "\n".join(evidence_quotes)
+        self.assertLessEqual(len(evidence_quotes), 12)
+        self.assertIn("rich flavor", evidence_text)
+        self.assertIn("cap leaked", evidence_text)
+        self.assertEqual(sum("This balsamic has a rich flavor" in quote for quote in evidence_quotes), 1)
+        for noisy in [
+            "5 out of 5 stars",
+            "Reviewed in the United States",
+            "Verified Purchase",
+            "Flavor Name",
+            "Size:",
+            "Submit a review",
+        ]:
+            self.assertNotIn(noisy, evidence_text)
+
     def test_explicit_english_language_succeeds(self):
         with patch(
             "main.generate_pasted_reviews_brief",

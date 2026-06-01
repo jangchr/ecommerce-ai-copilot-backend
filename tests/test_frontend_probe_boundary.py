@@ -1115,6 +1115,56 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertNotIn("shadow_sources", body)
         self.assertNotIn("memory_observability", body)
 
+    def test_pasted_reviews_generation_uses_compact_clean_reviews(self):
+        self.assertIn("function cleanedPastedReviewLines(value", self.source)
+        self.assertIn("function compactPastedReviewsForGeneration(workspaceResponse, rawText)", self.source)
+        self.assertIn("function compactReviewsFromVisibleLines(lines", self.source)
+        self.assertIn("flavor name|size|color|style|pattern name|package quantity", self.source)
+        self.assertIn("verified purchase", self.source)
+        self.assertIn("reviewed in .*? on", self.source)
+
+        function_match = re.search(
+            r"async function generateFromReviews\(\) \{(?P<body>.*?)\n        function renderProductDashboard",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(function_match)
+        body = function_match.group("body")
+        self.assertIn("workspaceResponse = await postPastedReviewWorkspaceAnalysis", body)
+        self.assertIn("const enrichedPastedReviews = compactPastedReviewsForGeneration(workspaceResponse, pastedReviews);", body)
+        self.assertIn("pasted_reviews: enrichedPastedReviews", body)
+        self.assertNotIn("const enrichedPastedReviews = pastedReviews;", body)
+
+    def test_pasted_reviews_preview_and_extension_import_clean_deduped_reviews(self):
+        count_match = re.search(
+            r"function reviewLineCount\(value\) \{(?P<body>.*?)\n        \}",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(count_match)
+        self.assertIn("cleanedPastedReviewLines(value).length", count_match.group("body"))
+
+        preview_match = re.search(
+            r"function reviewPainPointCandidates\(value\) \{(?P<body>.*?)\n        \}\n\n",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(preview_match)
+        preview_body = preview_match.group("body")
+        self.assertIn("cleanedPastedReviewLines(value)", preview_body)
+        self.assertIn("truncateReviewLine(line, 220)", preview_body)
+
+        fill_match = re.search(
+            r"function fillPastedReviewsFromExtensionWorkspace\(payload\) \{(?P<body>.*?)\n  async function sendExtensionWorkspaceToReviewWorkflow",
+            self.source,
+            re.S,
+        )
+        self.assertIsNotNone(fill_match)
+        self.assertIn(
+            "compactReviewsFromVisibleLines(extensionWorkspaceVisibleReviewLines(payload), 40)",
+            fill_match.group("body"),
+        )
+
     def test_language_mode_passes_output_language_without_debug_leakage(self):
         self.assertIn("const urlInput = sampleWorkspaceSlugFromValue(document.getElementById('urlInput').value.trim());", self.source)
         self.assertIn("const payload = { url: urlInput, goal: 'tiktok_ctr', output_language: currentOutputLanguage() };", self.source)

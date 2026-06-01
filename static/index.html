@@ -4371,16 +4371,68 @@
             return labelPrefixes.some((prefix) => normalized.startsWith(prefix));
         }
 
+        function normalizeReviewLineKey(line) {
+            return String(line || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        }
+
+        function isAmazonReviewChromeLine(line) {
+            const text = normalizeReviewLineKey(line);
+            if (!text) return true;
+            return [
+                'verified purchase',
+                'helpful',
+                'report',
+                'submit a review',
+                'community guideline'
+            ].some((marker) => text === marker || text.startsWith(`${marker} `))
+                || /^[1-5](?:\.0)?\s+out of\s+5\s+stars$/.test(text)
+                || /^reviewed in .* on [a-z]+ \d{1,2}, \d{4}$/.test(text)
+                || /^(flavor name|size|color|style|pattern name|package quantity)\s*:/.test(text);
+        }
+
         function cleanPastedReviewLine(line) {
-            return String(line || '').replace(/^[-*\u2022\d.\s]+/, '').trim();
+            let text = String(line || '').replace(/^[-*\u2022\d.)\s]+/, '').trim();
+            if (!text || isAmazonReviewChromeLine(text)) return '';
+            text = text
+                .replace(/^\[?\s*[1-5](?:\.\d)?\s+out of\s+5\s+stars\s*\]?\s*/ig, ' ')
+                .replace(/\b[1-5](?:\.\d)?\s+out of\s+5\s+stars\b/ig, ' ')
+                .replace(/reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}/ig, ' ')
+                .replace(/\b(?:flavor name|size|color|style|pattern name|package quantity)\s*:\s*.*?(?=\b(?:flavor name|size|color|style|pattern name|package quantity|verified purchase|reviewed in|[1-5](?:\.\d)?\s+out of\s+5\s+stars)\b|$)/ig, ' ')
+                .replace(/\bverified purchase\b/ig, ' ')
+                .replace(/\b(?:one|two|\d+)\s+people?\s+found\s+this\s+helpful\b/ig, ' ')
+                .replace(/\b(?:helpful|report|submit a review|community guidelines?)\b/ig, ' ')
+                .replace(/\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5[^\s]{0,18}\u8bc4\u8bba/g, ' ')
+                .replace(/\u5df2\u9a8c\u8bc1\u8d2d\u4e70|\u5df2\u786e\u8ba4\u8d2d\u4e70/g, ' ')
+                .replace(/\s+/g, ' ')
+                .replace(/^[\s\-:;,.。[\\\]]+|[\s\-:;,.。[\\\]]+$/g, '')
+                .trim();
+            if (!/[A-Za-z\u4e00-\u9fff]/.test(text)) return '';
+            if (isAmazonReviewChromeLine(text)) return '';
+            return text;
+        }
+
+        function cleanedPastedReviewLines(value, limit = 80) {
+            const seen = new Set();
+            const lines = [];
+            for (const raw of String(value || '').replace(/\r/g, '\n').split('\n')) {
+                const line = cleanPastedReviewLine(raw);
+                if (!line || line.length < 8 || isPastedReviewLabelLine(line)) continue;
+                const key = normalizeReviewLineKey(line);
+                if (!key || seen.has(key)) continue;
+                seen.add(key);
+                lines.push(line);
+                if (lines.length >= limit) break;
+            }
+            return lines;
+        }
+
+        function truncateReviewLine(line, limit = 240) {
+            const text = String(line || '').replace(/\s+/g, ' ').trim();
+            return text.length > limit ? `${text.slice(0, limit).trim()}...` : text;
         }
 
         function reviewLineCount(value) {
-            return (value || '')
-                .split('\n')
-                .map(cleanPastedReviewLine)
-                .filter(line => line.length >= 8 && !isPastedReviewLabelLine(line))
-                .length;
+            return cleanedPastedReviewLines(value).length;
         }
 
 
@@ -4419,12 +4471,10 @@
                 '\u4e0d\u65b9\u4fbf', '\u6e05\u6d17', '\u8d39\u65f6', '\u987e\u8651'
             ];
 
-            return (value || '')
-                .split('\n')
-                .map(cleanPastedReviewLine)
-                .filter(line => line.length >= 8 && !isPastedReviewLabelLine(line))
+            return cleanedPastedReviewLines(value)
                 .filter(line => markers.some(marker => line.toLowerCase().includes(marker.toLowerCase())))
-                .slice(0, 3);
+                .slice(0, 3)
+                .map(line => truncateReviewLine(line, 220));
         }
 
 
@@ -4448,6 +4498,80 @@
         function updateReviewInputPreviews() {
             updateReviewCountPreview();
             updatePainPointPreview();
+        }
+
+        function addCompactReviewQuote(target, seen, value) {
+            const line = truncateReviewLine(cleanPastedReviewLine(value), 260);
+            if (!line || line.length < 8 || isPastedReviewLabelLine(line)) return;
+            const key = normalizeReviewLineKey(line);
+            if (!key || seen.has(key)) return;
+            seen.add(key);
+            target.push(line);
+        }
+
+        function reviewThemeEvidenceQuotes(themes) {
+            const quotes = [];
+            for (const item of themes || []) {
+                if (!item) continue;
+                if (Array.isArray(item.evidence_quotes)) {
+                    quotes.push(...item.evidence_quotes);
+                }
+                for (const key of ['evidence_quote', 'evidence', 'quote', 'text']) {
+                    if (item[key]) quotes.push(item[key]);
+                }
+            }
+            return quotes;
+        }
+
+        function compactPastedReviewsForGeneration(workspaceResponse, rawText) {
+            const selected = [];
+            const seen = new Set();
+            const analysis = workspaceResponse?.analysis || {};
+            const parsedReviews = workspaceResponse?.parsed?.reviews || [];
+            const preferredThemeGroups = [
+                analysis.buyer_objections,
+                analysis.common_pain_points,
+                analysis.liked_points,
+                analysis.use_cases
+            ];
+
+            for (const themes of preferredThemeGroups) {
+                for (const quote of reviewThemeEvidenceQuotes(themes)) {
+                    addCompactReviewQuote(selected, seen, quote);
+                    if (selected.length >= 12) break;
+                }
+                if (selected.length >= 12) break;
+            }
+
+            if (selected.length < 12) {
+                for (const review of parsedReviews) {
+                    const quote = review?.text || review?.body || review?.content || review?.quote || '';
+                    addCompactReviewQuote(selected, seen, quote);
+                    if (selected.length >= 12) break;
+                }
+            }
+
+            if (!selected.length) {
+                for (const line of cleanedPastedReviewLines(rawText, 16)) {
+                    addCompactReviewQuote(selected, seen, line);
+                    if (selected.length >= 12) break;
+                }
+            }
+
+            const compactLines = [];
+            let totalLength = 0;
+            for (const line of selected) {
+                const next = truncateReviewLine(line, 260);
+                const projected = totalLength + next.length + 1;
+                if (projected > 3400) break;
+                compactLines.push(next);
+                totalLength = projected;
+            }
+            return compactLines.join('\n');
+        }
+
+        function compactReviewsFromVisibleLines(lines, limit = 40) {
+            return cleanedPastedReviewLines((lines || []).join('\n'), limit);
         }
 
 
@@ -5451,13 +5575,10 @@
                 if (description) descriptionInput.value = description;
             }
             if (reviewsInput) {
-                const fallbackLines = [
+                const fallbackLines = compactReviewsFromVisibleLines([
                     ...(data.review_items || []).map((item) => item.text || '').filter(Boolean),
-                    ...(data.evidence_preview || []),
-                    ...(data.bullet_points || []).map((item) => `Bullet: ${item}`),
-                    data.fallback_message ? `Amazon fallback note: ${data.fallback_message}` : '',
-                    data.input_url ? `Amazon URL: ${data.input_url}` : ''
-                ].filter(Boolean);
+                    ...(data.evidence_preview || [])
+                ].filter(Boolean), 24);
                 if (fallbackLines.length && !reviewsInput.value.trim()) {
                     reviewsInput.value = fallbackLines.join('\n');
                 }
@@ -6163,7 +6284,10 @@
                     (workspaceAnalysis.hooks || []).join(String.fromCharCode(10))
                 ].filter(Boolean).join(String.fromCharCode(10));
 
-                const enrichedPastedReviews = pastedReviews;
+                const enrichedPastedReviews = compactPastedReviewsForGeneration(workspaceResponse, pastedReviews);
+                if (!enrichedPastedReviews.trim()) {
+                    throw new Error(t('pastedReviewsNoConcreteReviews'));
+                }
 
                 const response = await postPastedReviews({
                     product_name: productName,
@@ -6688,7 +6812,7 @@
   function fillPastedReviewsFromExtensionWorkspace(payload) {
     const products = payload?.products || [];
     const product = products[0] || {};
-    const reviewLines = extensionWorkspaceVisibleReviewLines(payload);
+    const reviewLines = compactReviewsFromVisibleLines(extensionWorkspaceVisibleReviewLines(payload), 40);
 
     if (!reviewLines.length) {
       return false;
