@@ -4600,17 +4600,77 @@
             }).join('\n\n');
         }
 
-        async function copyText(label, text) {
-            const target = document.getElementById('copyStatus');
+        let copyFeedbackToastTimer = null;
+
+        function showCopyFeedbackToast(message, statusTarget = null) {
+            const target = typeof statusTarget === 'string'
+                ? document.getElementById(statusTarget)
+                : statusTarget;
+
+            if (target) {
+                target.textContent = message || '';
+            }
+
+            let toast = document.getElementById('copyFeedbackToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'copyFeedbackToast';
+                toast.setAttribute('role', 'status');
+                toast.setAttribute('aria-live', 'polite');
+                toast.style.position = 'fixed';
+                toast.style.right = '22px';
+                toast.style.bottom = '22px';
+                toast.style.zIndex = '9999';
+                toast.style.maxWidth = '320px';
+                toast.style.padding = '10px 14px';
+                toast.style.borderRadius = '999px';
+                toast.style.background = 'rgba(17, 24, 39, 0.94)';
+                toast.style.color = '#fff';
+                toast.style.fontSize = '13px';
+                toast.style.fontWeight = '800';
+                toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.18)';
+                toast.style.transition = 'opacity 0.2s ease';
+                toast.hidden = true;
+                document.body.appendChild(toast);
+            }
+
+            toast.textContent = message || '';
+            toast.hidden = false;
+            toast.style.opacity = '1';
+
+            if (copyFeedbackToastTimer) {
+                window.clearTimeout(copyFeedbackToastTimer);
+            }
+            copyFeedbackToastTimer = window.setTimeout(() => {
+                toast.style.opacity = '0';
+                window.setTimeout(() => {
+                    toast.hidden = true;
+                }, 220);
+            }, 1800);
+        }
+
+        function copyFeedbackMessage(label, state) {
+            const isZh = currentOutputLanguage() === 'zh-CN';
+            if (state === 'empty') {
+                return isZh ? `${label} \u4e3a\u7a7a\u3002` : `${label} is empty.`;
+            }
+            if (state === 'success') {
+                return isZh ? `${label} \u5df2\u590d\u5236\u3002` : `${label} copied.`;
+            }
+            return isZh ? `${label} \u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236\u3002` : `${label} copy unavailable. Select and copy manually.`;
+        }
+
+        async function copyText(label, text, statusTarget = null) {
+            const target = statusTarget || document.getElementById('copyStatus');
             if (!text) {
-                target.textContent = `${label} is empty.`;
+                showCopyFeedbackToast(copyFeedbackMessage(label, 'empty'), target);
                 return;
             }
             try {
                 await navigator.clipboard.writeText(text);
-                target.textContent = `${label} copied.`;
+                showCopyFeedbackToast(copyFeedbackMessage(label, 'success'), target);
             } catch (error) {
-                target.textContent = `${label} copy unavailable. Select and copy manually.`;
+                showCopyFeedbackToast(copyFeedbackMessage(label, 'failed'), target);
             }
         }
 
@@ -5924,9 +5984,9 @@
 
             try {
                 await navigator.clipboard.writeText(text);
-                if (status) status.textContent = reviewWorkspaceMatrixLabel('copied');
+                showCopyFeedbackToast(reviewWorkspaceMatrixLabel('copied'), status);
             } catch (error) {
-                if (status) status.textContent = reviewWorkspaceMatrixLabel('copyFailed');
+                showCopyFeedbackToast(reviewWorkspaceMatrixLabel('copyFailed'), status);
             }
         }
 
