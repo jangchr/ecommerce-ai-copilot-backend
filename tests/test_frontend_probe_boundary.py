@@ -254,8 +254,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("storyboard-scene-evidence", self.source)
         self.assertIn("Scene goal", self.source)
         self.assertIn("场景目标", self.source)
-        self.assertIn("Linked pain point", self.source)
-        self.assertIn("关联痛点", self.source)
+        self.assertIn("Linked review signal", self.source)
+        self.assertIn("关联评论信号", self.source)
         self.assertIn("Creative Summary", self.source)
         self.assertIn("Hook highlight", self.source)
         self.assertIn("创意摘要", self.source)
@@ -508,6 +508,13 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("storyboard-scene-list", self.source)
         self.assertIn("storyboard-scene-card", self.source)
         self.assertIn("storyboard-scene-evidence", self.source)
+        self.assertIn("function normalizeStoryboardSceneGoal(goal, storyboard)", self.source)
+        self.assertIn("Customer feedback signals", self.source)
+        self.assertIn("Positive signals", self.source)
+        self.assertIn("Buyer objections", self.source)
+        self.assertIn("用户反馈信号", self.source)
+        self.assertIn("正向信号", self.source)
+        self.assertIn("购买顾虑", self.source)
 
         start = self.source.find("function renderStoryboardBrief(storyboard)")
         end = self.source.find("let latestDebugCategory", start)
@@ -517,6 +524,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         body = self.source[start:end]
 
         self.assertIn("scene_goal", body)
+        self.assertIn("normalizeStoryboardSceneGoal", body)
         self.assertIn("visual_description", body)
         self.assertIn("evidence_quote_used", body)
         self.assertIn("linked_painpoint", body)

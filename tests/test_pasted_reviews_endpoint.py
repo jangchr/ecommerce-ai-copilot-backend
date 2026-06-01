@@ -147,6 +147,85 @@ class PastedReviewsEndpointTest(unittest.TestCase):
         self.assertNotIn("shadow_sources", payload)
         self.assertNotIn("memory_observability", payload)
 
+    def test_root_beer_amazon_reviews_are_cleaned_and_classified(self):
+        root_beer_reviews = (
+            "[5 out of 5 stars]\n"
+            "Reviewed in the United States on May 12, 2026\n"
+            "Verified Purchase\n"
+            "This is the best Rootbeer I have ever had and order it frequently.\n"
+            "Love it and will continue to purchase.\n"
+            "5 out of 5 stars Great flavor Reviewed in the United States on May 13, 2026 Verified Purchase Not as sharp as Barq's, but smoother, greater flavor than A&W.\n"
+            "Good root beer, just not worth the high price over something like IBC, which is half the price.\n"
+            "Best root beer and unfortunately not available on the West coast.\n"
+            "2026年5月12日在美国评论 已验证购买 有史以来最好的根汁汽水"
+        )
+        generated = {
+            **GENERATED_REVIEWS_BRIEF,
+            "storyboard_scenes": [
+                {
+                    "visual_description": "Show a chilled pour.",
+                    "narration": "Lead with the review signal.",
+                    "evidence_quote_used": "This is the best Rootbeer I have ever had and order it frequently.",
+                    "scene_goal": "Show pasted review pain point",
+                },
+                {
+                    "visual_description": "Show a price comparison.",
+                    "narration": "Address the buyer concern.",
+                    "evidence_quote_used": "Good root beer, just not worth the high price over something like IBC, which is half the price.",
+                    "scene_goal": "Show pasted review pain point",
+                },
+            ],
+        }
+
+        with patch("main.generate_pasted_reviews_brief", new=AsyncMock(return_value=generated)):
+            response = self.client.post(
+                "/api/v1/generate-from-reviews",
+                json={
+                    **VALID_REVIEWS_REQUEST,
+                    "product_name": "1919 Draft Root Beer",
+                    "product_category": "root_beer",
+                    "pasted_reviews": root_beer_reviews,
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        data = payload["data"]
+        evidence = data["insights"]["evidence"]
+        evidence_text = "\n".join(evidence["evidence_quotes"])
+
+        self.assertIn("This is the best Rootbeer I have ever had", evidence_text)
+        self.assertIn("有史以来最好的根汁汽水", evidence_text)
+        for noisy in [
+            "5 out of 5 stars",
+            "Reviewed in the United States",
+            "Verified Purchase",
+            "2026年5月12日在美国评论",
+            "已验证购买",
+        ]:
+            self.assertNotIn(noisy, evidence_text)
+
+        pain_text = "\n".join(data["insights"].get("pain_points", []))
+        trust_text = "\n".join(data["audience"].get("trust_barriers", []))
+        positive_text = "\n".join(data["insights"].get("positive_signals", []))
+
+        self.assertNotIn("Love it and will continue to purchase", pain_text)
+        self.assertNotIn("This is the best Rootbeer", pain_text)
+        self.assertNotIn("Love it and will continue to purchase", trust_text)
+        self.assertNotIn("This is the best Rootbeer", trust_text)
+        self.assertIn("Love it and will continue to purchase", positive_text)
+        self.assertIn("This is the best Rootbeer", positive_text)
+        self.assertIn("high price", trust_text)
+        self.assertIn("West coast", trust_text)
+
+        scene_goals = " ".join(
+            scene.get("scene_goal", "")
+            for scene in data["assets"]["storyboard"]["scenes"]
+        )
+        self.assertIn("positive review signal", scene_goals)
+        self.assertIn("buyer objection", scene_goals)
+        self.assertNotIn("review pain point", scene_goals.lower())
+
     def test_explicit_english_language_succeeds(self):
         with patch(
             "main.generate_pasted_reviews_brief",

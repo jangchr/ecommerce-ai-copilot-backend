@@ -2556,6 +2556,11 @@
             `;
         }
 
+        function optionalBlock(label, value) {
+            const text = Array.isArray(value) ? value.filter(Boolean).join('\n') : String(value || '').trim();
+            return text ? block(label, text) : '';
+        }
+
         function briefText(value) {
             return `<div class="brief-note">${escapeHTML(value || '')}</div>`;
         }
@@ -2656,13 +2661,15 @@
                     ...(evidenceDisplay.reviewQuotes.slice(0, 5).map((quote) => `- ${quote}`)),
                     evidenceDisplay.contextLines.length ? 'Product description / supplemental context:' : '',
                     ...(evidenceDisplay.contextLines.slice(0, 5).map((line) => `- ${line}`)),
-                    'Customer pain points:',
-                    ...((data.insights?.pain_points || []).map((pain) => `- ${pain}`)),
+                    'Customer feedback signals:',
+                    ...((data.insights?.customer_feedback_signals || data.insights?.pain_points || []).map((signal) => `- ${signal}`)),
+                    'Positive signals:',
+                    ...((data.insights?.positive_signals || []).map((signal) => `- ${signal}`)),
                 ].filter(Boolean).join('\n').trim(),
                 strategy: [
                     'Target Audience & Creative Strategy',
                     `Target Audience: ${data.audience?.primary || ''}`,
-                    `Trust Barriers: ${(data.audience?.trust_barriers || []).join('; ')}`,
+                    `Buyer objections / trust barriers: ${(data.audience?.trust_barriers || []).join('; ')}`,
                     `Core Hook Strategy: ${data.strategy?.core_hook_strategy || ''}`,
                     `Emotional Trigger: ${data.strategy?.emotional_trigger || ''}`,
                     `CTA Logic: ${cleanCta || ''}`,
@@ -2727,6 +2734,17 @@
             return { reviewQuotes, contextLines };
         }
 
+        function normalizeStoryboardSceneGoal(goal, storyboard) {
+            const text = String(goal || '').trim();
+            if ((storyboard?.source || '') !== 'user_pasted_reviews') return text;
+            return text
+                .replace(/pasted review pain point/gi, 'pasted review signal')
+                .replace(/review pain point/gi, 'review signal')
+                .replace(/customer complaint/gi, 'customer review signal')
+                .replace(/评论中的痛点/g, '评论中的核心信号')
+                .replace(/痛点/g, '评论信号');
+        }
+
         function renderStoryboardBrief(storyboard) {
             const scenes = storyboard?.scenes || [];
             if (!scenes.length) {
@@ -2749,7 +2767,7 @@
                         const visual = scene.visual_description || scene.visual || '';
                         const narration = scene.narration || '';
                         const quote = scene.evidence_quote_used || '';
-                        const goal = scene.scene_goal || `${t('sceneLabel')} ${index + 1}`;
+                        const goal = normalizeStoryboardSceneGoal(scene.scene_goal || `${t('sceneLabel')} ${index + 1}`, storyboard);
                         const linkedPainPoint = scene.linked_painpoint || '';
 
                         return `
@@ -3252,7 +3270,7 @@
                 visualLabel: 'Visual',
                 narrationLabel: 'Narration',
                 evidenceQuoteLabel: 'Evidence quote',
-                linkedPainPointLabel: 'Linked pain point',
+                linkedPainPointLabel: 'Linked review signal',
                 evaluation: 'Evaluation',
                 feedbackLabel: 'Feedback',
                 sourceUnknown: 'unknown source',
@@ -3262,8 +3280,10 @@
                 seeDebugMode: 'See Debug Mode',
                 evidenceQuotes: 'Evidence Quotes',
                 evidenceQuoteNote: 'Short review-backed signals used by the creative brief',
-                customerPainPointBlock: 'Customer Pain Points',
-                trustBarriers: 'Trust Barriers',
+                customerPainPointBlock: 'Customer feedback signals',
+                positiveSignalsBlock: 'Positive signals',
+                buyerObjectionsBlock: 'Buyer objections',
+                trustBarriers: 'Buyer objections / trust barriers',
                 coreHookStrategy: 'Core Hook Strategy',
                 emotionalTrigger: 'Emotional Trigger',
                 ctaLogic: 'CTA Logic',
@@ -3616,7 +3636,7 @@
                 visualLabel: '画面',
                 narrationLabel: '旁白',
                 evidenceQuoteLabel: '证据片段',
-                linkedPainPointLabel: '关联痛点',
+                linkedPainPointLabel: '关联评论信号',
                 evaluation: '评估',
                 feedbackLabel: '改进建议',
                 sourceUnknown: '未知来源',
@@ -3626,8 +3646,10 @@
                 seeDebugMode: '见调试模式',
                 evidenceQuotes: '证据片段',
                 evidenceQuoteNote: '用于生成创意 brief 的短证据信号',
-                customerPainPointBlock: '用户痛点',
-                trustBarriers: '信任阻碍',
+                customerPainPointBlock: '用户反馈信号',
+                positiveSignalsBlock: '正向信号',
+                buyerObjectionsBlock: '购买顾虑',
+                trustBarriers: '购买顾虑 / 信任阻碍',
                 coreHookStrategy: '核心 Hook 策略',
                 emotionalTrigger: '情绪触发点',
                 ctaLogic: 'CTA 逻辑',
@@ -3834,8 +3856,10 @@
             noCustomerReviewSnippets: '暂无用户评论片段。',
             customerReviewSnippets: '用户评论片段',
             productContextBlock: '产品描述 / 补充信息',
-            customerPainPointBlock: '用户痛点',
-            trustBarriers: '信任阻碍',
+            customerPainPointBlock: '用户反馈信号',
+            positiveSignalsBlock: '正向信号',
+            buyerObjectionsBlock: '购买顾虑',
+            trustBarriers: '购买顾虑 / 信任阻碍',
             coreHookStrategy: '核心 Hook 策略',
             emotionalTrigger: '情绪触发点',
             ctaLogic: 'CTA 逻辑',
@@ -3865,7 +3889,7 @@
             visualLabel: '画面',
             narrationLabel: '旁白',
             evidenceQuoteLabel: '证据原话',
-            linkedPainPointLabel: '关联痛点',
+            linkedPainPointLabel: '关联评论信号',
             running: '运行中...',
             requestFailed: '后端未启动或请求失败。',
             sendToReviewWorkflow: '用这些可见评论生成创意',
@@ -6256,14 +6280,16 @@
                 ${block(t('evidenceQuotes'), t('evidenceQuoteNote'))}
                 ${quoteList(evidenceDisplay.reviewQuotes)}
                 ${evidenceDisplay.contextLines.length ? block(t('productContextBlock'), evidenceDisplay.contextLines.join('\n')) : ''}
-                ${block(t('customerPainPointBlock'), (data.insights.pain_points || []).join('\n'))}
+                ${optionalBlock(t('customerPainPointBlock'), data.insights.customer_feedback_signals || data.insights.pain_points || [])}
+                ${optionalBlock(t('positiveSignalsBlock'), data.insights.positive_signals || data.insights.social_proof || [])}
+                ${optionalBlock(t('buyerObjectionsBlock'), data.insights.buyer_objections || [])}
             `;
 
             document.getElementById('res-strategy').style.opacity = '1';
             document.getElementById('res-strategy').innerHTML = `
                 ${renderSectionHeader(t('targetAudienceStrategy'), 'strategy')}
                 ${block(t('targetAudience'), data.audience.primary || '')}
-                ${block(t('trustBarriers'), (data.audience.trust_barriers || []).join('\n'))}
+                ${optionalBlock(t('trustBarriers'), data.audience.trust_barriers || [])}
                 ${block(t('coreHookStrategy'), data.strategy.core_hook_strategy || '')}
                 ${block(t('emotionalTrigger'), data.strategy.emotional_trigger || '')}
                 ${block(t('ctaLogic'), cleanCta || '')}

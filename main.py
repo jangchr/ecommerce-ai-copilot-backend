@@ -383,17 +383,42 @@ def _is_pasted_review_label_line(line: str) -> bool:
     return normalized.startswith(label_prefixes)
 
 
+def _clean_pasted_review_quote_text(value: str) -> str:
+    text = _clean_description_text(value)
+    if not text:
+        return ""
+
+    cleaner = globals().get("_rw_clean_evidence_fragment")
+    if callable(cleaner):
+        text = cleaner(text)
+
+    text = re.sub(r"^\[?\s*[1-5](?:\.0)?\s+out of\s+5\s+stars\s*\]?\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b[1-5](?:\.0)?\s+out of\s+5\s+stars\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"Reviewed in .*? on [A-Za-z]+ \d{1,2}, \d{4}", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5[^\s]{0,18}\u8bc4\u8bba", " ", text)
+    text = re.sub(r"\bVerified Purchase\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\u5df2\u9a8c\u8bc1\u8d2d\u4e70|\u5df2\u786e\u8ba4\u8d2d\u4e70", " ", text)
+    text = re.sub(r"\s+", " ", text).strip(" -:;,.[]")
+    return text
+
+
 def _split_pasted_review_quotes(text: str, limit: int = 6) -> list[str]:
     cleaned_lines = []
     for raw_line in (text or "").replace("\r", "\n").split("\n"):
         line = raw_line.strip().lstrip("-*•0123456789. )(").strip()
+        line = _clean_pasted_review_quote_text(line)
         if line and not _is_pasted_review_label_line(line):
             cleaned_lines.append(line)
 
     if not cleaned_lines:
         normalized = " ".join((text or "").split())
         pieces = [piece.strip() for piece in normalized.replace("!", ".").replace("?", ".").split(".")]
-        cleaned_lines = [piece for piece in pieces if piece and not _is_pasted_review_label_line(piece)]
+        cleaned_lines = [
+            cleaned
+            for piece in pieces
+            for cleaned in [_clean_pasted_review_quote_text(piece)]
+            if cleaned and not _is_pasted_review_label_line(cleaned)
+        ]
 
     quotes = []
     for line in cleaned_lines:
@@ -437,6 +462,80 @@ def _validate_pasted_reviews_request(request: PastedReviewsRequest, request_id: 
 def _safe_evidence_quote(text: str, limit: int = 220) -> str:
     cleaned = " ".join(_clean_description_text(text).split())
     return cleaned[:limit]
+
+
+def _pasted_review_signal_kind(quote: str) -> str:
+    lowered = _clean_description_text(quote).lower()
+    if not lowered:
+        return "neutral"
+
+    objection_markers = (
+        "expensive", "price", "high price", "not worth", "too much", "overpriced",
+        "\u4ef7\u683c\u8d35", "\u592a\u8d35", "\u4e0d\u503c", "\u6027\u4ef7\u6bd4",
+    )
+    availability_markers = (
+        "not available", "unavailable", "can't find", "cannot find", "hard to find",
+        "west coast", "local store", "\u4e70\u4e0d\u5230", "\u4e0d\u597d\u4e70", "\u7f3a\u8d27", "\u897f\u6d77\u5cb8",
+    )
+    pain_markers = (
+        "leak", "broken", "crack", "hard to clean", "too loud", "doesn't work",
+        "stopped working", "bad", "terrible", "disappointed", "complain",
+        "\u6f0f", "\u7834", "\u88c2", "\u96be\u6e05\u6d17", "\u592a\u5435", "\u5931\u671b", "\u5dee\u8bc4",
+    )
+    repeat_markers = (
+        "continue to purchase", "will continue", "order it frequently", "buy again",
+        "repeat purchase", "\u7ee7\u7eed\u8d2d\u4e70", "\u7ecf\u5e38\u8d2d\u4e70", "\u56de\u8d2d", "\u590d\u8d2d",
+    )
+    positive_markers = (
+        "love", "best", "great", "smooth", "smoother", "flavor", "tastes good",
+        "delicious", "worth it", "excellent", "favorite", "recommend",
+        "\u6700\u597d", "\u559c\u6b22", "\u5f88\u559c\u6b22", "\u8d85\u68d2", "\u53e3\u611f", "\u987a\u6ed1", "\u5473\u9053", "\u597d\u8bc4", "\u63a8\u8350",
+    )
+
+    if any(marker in lowered for marker in availability_markers):
+        return "availability"
+    if any(marker in lowered for marker in objection_markers):
+        return "objection"
+    if any(marker in lowered for marker in pain_markers):
+        return "pain"
+    if any(marker in lowered for marker in repeat_markers):
+        return "repeat_purchase"
+    if any(marker in lowered for marker in positive_markers):
+        return "positive"
+    return "neutral"
+
+
+def _pasted_review_signal_groups(evidence_quotes: list[str]) -> dict[str, list[str]]:
+    groups = {
+        "pain": [],
+        "objection": [],
+        "availability": [],
+        "repeat_purchase": [],
+        "positive": [],
+        "neutral": [],
+    }
+    for quote in evidence_quotes:
+        kind = _pasted_review_signal_kind(quote)
+        target = groups.get(kind, groups["neutral"])
+        if quote and quote not in target:
+            target.append(quote)
+    return groups
+
+
+def _pasted_review_scene_goal(quote: str, request: PastedReviewsRequest, product_name: str, provided_goal: str | None = None) -> str:
+    goal = _clean_description_text(provided_goal or "")
+    kind = _pasted_review_signal_kind(quote)
+    if goal and not (kind != "pain" and re.search(r"\bpain point\b|\bcustomer complaint\b", goal, flags=re.IGNORECASE)):
+        return goal
+    if kind in {"positive", "repeat_purchase"}:
+        return "Show the positive review signal"
+    if kind == "availability":
+        return "Show the availability or scarcity signal"
+    if kind == "objection":
+        return "Show the buyer objection"
+    if kind == "pain":
+        return "Show the customer pain point"
+    return "Show the core review signal"
 
 
 async def generate_description_brief(request: ProductDescriptionRequest) -> dict:
@@ -613,6 +712,11 @@ def _pasted_reviews_response_data(
     category = _clean_description_text(request.product_category or "user_pasted_reviews_product")
     description_quote = _safe_evidence_quote(request.product_description or "")
     primary_quote = evidence_quotes[0] if evidence_quotes else ""
+    signal_groups = _pasted_review_signal_groups(evidence_quotes)
+    pain_points = signal_groups["pain"][:4]
+    buyer_objections = (signal_groups["objection"] + signal_groups["availability"])[:4]
+    positive_signals = (signal_groups["positive"] + signal_groups["repeat_purchase"])[:4]
+    neutral_signals = signal_groups["neutral"][:4]
     scenes = generated.get("storyboard_scenes") or []
     if not isinstance(scenes, list):
         scenes = []
@@ -622,11 +726,11 @@ def _pasted_reviews_response_data(
         if not isinstance(scene, dict):
             continue
         fallback_quote = evidence_quotes[index % len(evidence_quotes)] if evidence_quotes else primary_quote
-        quote = scene.get("evidence_quote_used") or fallback_quote
+        quote = _safe_evidence_quote(_clean_pasted_review_quote_text(scene.get("evidence_quote_used") or fallback_quote), limit=240)
         normalized_scenes.append(
             {
                 "scene_id": index + 1,
-                "scene_goal": scene.get("scene_goal", f"Show {product_name} review pain point"),
+                "scene_goal": _pasted_review_scene_goal(quote, request, product_name, scene.get("scene_goal")),
                 "visual_description": scene.get("visual_description", ""),
                 "narration": scene.get("narration", ""),
                 "evidence_quote_used": quote,
@@ -637,25 +741,31 @@ def _pasted_reviews_response_data(
     while len(normalized_scenes) < 4:
         index = len(normalized_scenes) + 1
         quote = evidence_quotes[(index - 1) % len(evidence_quotes)] if evidence_quotes else primary_quote
+        quote = _safe_evidence_quote(_clean_pasted_review_quote_text(quote), limit=240)
         normalized_scenes.append(
             {
                 "scene_id": index,
-                "scene_goal": f"Turn pasted review pain point into a {request.target_platform or 'TikTok'} moment",
-                "visual_description": f"Show {product_name} addressing this customer complaint in a simple product scene.",
-                "narration": f"This review pain point becomes the creative angle: {quote}",
+                "scene_goal": _pasted_review_scene_goal(quote, request, product_name),
+                "visual_description": f"Show {product_name} turning this customer review signal into a simple product scene.",
+                "narration": f"This review signal becomes the creative angle: {quote}",
                 "evidence_quote_used": quote,
                 "linked_painpoint": quote,
             }
         )
 
     hook = generated.get("hook") or f"If this review sounds familiar, {product_name} needs a better creative angle."
-    cta = generated.get("cta") or f"Use {product_name} to answer the pain point your buyers already mention."
-    pain_points = evidence_quotes[:4] or [primary_quote]
+    cta = generated.get("cta") or f"Use {product_name} to answer the review signal your buyers already mention."
 
     return {
         "insights": {
             "pain_points": pain_points,
-            "user_complaint_cluster": pain_points,
+            "buyer_objections": buyer_objections,
+            "positive_signals": positive_signals,
+            "social_proof": positive_signals,
+            "repeat_purchase_signals": signal_groups["repeat_purchase"][:3],
+            "availability_signals": signal_groups["availability"][:3],
+            "user_complaint_cluster": pain_points + buyer_objections,
+            "customer_feedback_signals": (pain_points + buyer_objections + positive_signals + neutral_signals)[:6],
             "evidence": {
                 "source_type": "user_pasted_reviews",
                 "source_url": "",
@@ -674,7 +784,7 @@ def _pasted_reviews_response_data(
         "audience": {
             "primary": generated.get("target_audience", f"People considering {product_name}"),
             "sensitivity": generated.get("emotional_trigger", ""),
-            "trust_barriers": pain_points,
+            "trust_barriers": buyer_objections,
         },
         "strategy": {
             "core_hook_strategy": generated.get("core_hook_strategy", ""),

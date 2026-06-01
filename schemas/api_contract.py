@@ -24,6 +24,12 @@ class EvidencePayload(BaseModel):
 
 class ProductInsights(BaseModel):
     pain_points: List[str] = Field(default_factory=list)
+    buyer_objections: List[str] = Field(default_factory=list)
+    positive_signals: List[str] = Field(default_factory=list)
+    social_proof: List[str] = Field(default_factory=list)
+    repeat_purchase_signals: List[str] = Field(default_factory=list)
+    availability_signals: List[str] = Field(default_factory=list)
+    customer_feedback_signals: List[str] = Field(default_factory=list)
     user_complaint_cluster: List[str] = Field(default_factory=list)
     evidence: EvidencePayload = Field(default_factory=EvidencePayload)
 
