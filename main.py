@@ -121,6 +121,10 @@ SUPPORTED_VIDEO_PROVIDERS = {
         "status_lifecycle": ["ready_for_manual_export", "manual_export_completed", "external_result_ready", "failed"],
         "polling_strategy": "none",
         "description": "Copy the generic prompt or any export format into your chosen video tool.",
+        "prompt_title": "Manual video export prompt",
+        "recommended_use": "Copy any export prompt into your preferred video workflow.",
+        "copy_instructions": "Use the selected prompt as a manual handoff brief; record the external result URL when ready.",
+        "provider_limitations": ["No external video API is called.", "Manual export remains the source of truth."],
         "warnings": ["No external API call is needed for manual export."],
         "next_steps": ["Copy the selected prompt into the user's chosen video tool.", "Record the external result URL when available."],
     },
@@ -136,6 +140,10 @@ SUPPORTED_VIDEO_PROVIDERS = {
         "status_lifecycle": ["ready_for_manual_export", "manual_export_completed", "external_result_ready", "failed"],
         "polling_strategy": "none",
         "description": "General-purpose prompt for video generation tools.",
+        "prompt_title": "Generic video prompt",
+        "recommended_use": "Paste into a general video generation or creative production workflow.",
+        "copy_instructions": "Use this universal prompt when no provider-specific format is required.",
+        "provider_limitations": ["Generic prompt export is manual; no external video API is called."],
         "warnings": ["Generic prompt export is manual; no external video API is called."],
         "next_steps": ["Use the generic prompt in a compatible external video tool.", "Record result metadata manually."],
     },
@@ -151,6 +159,10 @@ SUPPORTED_VIDEO_PROVIDERS = {
         "status_lifecycle": ["ready_for_manual_export", "manual_export_completed", "external_result_ready", "failed"],
         "polling_strategy": "none",
         "description": "Numbered shot list for manual editing in CapCut or similar editors.",
+        "prompt_title": "CapCut shot list",
+        "recommended_use": "Use as an editing shot list.",
+        "copy_instructions": "Paste the numbered scenes into an editor brief and follow the shot directions.",
+        "provider_limitations": ["CapCut shot-list export is manual; no external editor API is called."],
         "warnings": ["CapCut shot-list export is manual; no external editor API is called."],
         "next_steps": ["Paste the shot list into an editor or production brief.", "Record final video links manually."],
     },
@@ -166,6 +178,10 @@ SUPPORTED_VIDEO_PROVIDERS = {
         "status_lifecycle": ["ready_for_manual_export", "queued", "processing", "external_result_ready", "failed"],
         "polling_strategy": "planned async polling by provider_job_id; disabled until provider contract is finalized",
         "description": "Visual prompt shaped for Runway-style video generation.",
+        "prompt_title": "Runway-style visual prompt",
+        "recommended_use": "Paste into a visual video generation tool as a product-focused prompt.",
+        "copy_instructions": "Copy this prompt manually; Runway API calls are not enabled in this scaffold.",
+        "provider_limitations": ["Runway API integration is planned but disabled.", "API key/config contract must be finalized before enabling."],
         "warnings": ["Runway API integration is planned but disabled until keys, contracts, timeouts, and provider docs are finalized."],
         "next_steps": ["Define tests-first provider contract.", "Add secret handling for RUNWAY_API_KEY.", "Keep manual export as fallback."],
     },
@@ -181,6 +197,10 @@ SUPPORTED_VIDEO_PROVIDERS = {
         "status_lifecycle": ["ready_for_manual_export", "queued", "processing", "external_result_ready", "failed"],
         "polling_strategy": "planned async polling by provider_job_id; disabled until provider contract is finalized",
         "description": "Short motion prompt shaped for Pika-style generation.",
+        "prompt_title": "Pika-style motion prompt",
+        "recommended_use": "Paste into a short motion video tool as a compact product demo prompt.",
+        "copy_instructions": "Copy this prompt manually; Pika API calls are not enabled in this scaffold.",
+        "provider_limitations": ["Pika API integration is planned but disabled.", "API key/config contract must be finalized before enabling."],
         "warnings": ["Pika API integration is planned but disabled until keys, contracts, timeouts, and provider docs are finalized."],
         "next_steps": ["Define tests-first provider contract.", "Add secret handling for PIKA_API_KEY.", "Keep manual export as fallback."],
     },
@@ -716,8 +736,13 @@ def _build_video_generation_packet(
             }
         )
 
+    duration_seconds = 20
+    aspect_ratio = "9:16"
+    product_descriptor = f"{product_name} ({category or 'product'})"
+    cta = _video_packet_text(script.get("cta") or "", limit=180)
     risk_boundary = (
-        "Keep every claim tied to supplied evidence. "
+        "Evidence boundary: use only the supplied review/product evidence; avoid unsupported claims, "
+        "before/after guarantees, medical claims, or full-market statistics. "
         "If a scene is missing an evidence quote, show product use visually but avoid unsupported factual claims."
     )
     scene_lines = [
@@ -730,11 +755,17 @@ def _build_video_generation_packet(
         )
         for scene in normalized_scenes
     ]
+    compact_scene_sequence = " | ".join(
+        f"Scene {scene['scene_id']}: {scene['visual_prompt']} (overlay: {scene['overlay_text'] or 'none'})"
+        for scene in normalized_scenes
+    )
     generic_video_prompt = (
-        f"Create a 20-second 9:16 TikTok product video for {product_name} "
-        f"({category or 'product'}). Use only this supplied creative brief and evidence. "
+        f"Universal video prompt for {product_descriptor}.\n"
+        f"Format: {duration_seconds}-second vertical {aspect_ratio} TikTok-style product video.\n"
         f"{risk_boundary}\n"
+        "Scene sequence:\n"
         + "\n".join(scene_lines)
+        + (f"\nCTA: {cta}" if cta else "\nCTA: Keep the ending grounded and non-exaggerated.")
     )
     capcut_shot_list = "\n".join(
         (
@@ -742,24 +773,27 @@ def _build_video_generation_packet(
             f"Shot direction: {scene['visual_prompt']}\n"
             f"Overlay text: {scene['overlay_text'] or 'None'}\n"
             f"Narration: {scene['narration'] or 'No narration supplied'}\n"
-            f"Evidence anchor: {scene['evidence_quote'] or 'Missing; keep claim conservative'}"
+            f"Evidence anchor: {scene['evidence_quote'] or 'Missing; keep claim conservative'}\n"
+            "Edit notes: use a quick cut, close-up, product handling, and a clean transition to the next scene."
         )
         for scene in normalized_scenes
     )
     runway_style_prompt = (
-        f"9:16 vertical product ad for {product_name}. "
-        "Use product-focused motion, clean ecommerce lighting, close-up product handling, "
-        "and natural short-form pacing. "
-        f"{risk_boundary} Visual sequence: "
-        + " | ".join(scene["visual_prompt"] for scene in normalized_scenes)
+        f"Cinematic vertical {aspect_ratio} product ad for {product_descriptor}. "
+        "Use clean ecommerce lighting, close-up product handling, shallow depth of field, "
+        "gentle push-in camera movement, and natural short-form pacing. "
+        f"{risk_boundary} "
+        f"Visual sequence: {compact_scene_sequence}. "
+        "Keep text overlays minimal and preserve the supplied evidence boundary."
     )
     pika_style_prompt = (
-        f"TikTok-style product demo for {product_name}. Quick cuts, clear hand-held product action, "
-        "simple overlays, and evidence-safe narration. Sequence: "
+        f"Short motion product demo for {product_name}: quick cuts, product-in-use action, "
+        "simple overlays, compact narration, and evidence-safe narration. Sequence: "
         + " -> ".join(
             f"{scene['visual_prompt']} [overlay: {scene['overlay_text'] or 'none'}]"
             for scene in normalized_scenes
         )
+        + ". Avoid unsupported claims."
     )
 
     return {
@@ -773,8 +807,8 @@ def _build_video_generation_packet(
         },
         "video": {
             "platform": "TikTok",
-            "recommended_duration_seconds": 20,
-            "aspect_ratio": "9:16",
+            "recommended_duration_seconds": duration_seconds,
+            "aspect_ratio": aspect_ratio,
             "style_notes": [
                 "Vertical short-form product demo.",
                 "Keep claims tied to supplied evidence quotes.",
@@ -782,6 +816,7 @@ def _build_video_generation_packet(
             ],
         },
         "scenes": normalized_scenes,
+        "evidence_boundary": risk_boundary,
         "full_video_prompt": generic_video_prompt,
         "export_formats": {
             "generic_video_prompt": generic_video_prompt,
@@ -1652,6 +1687,7 @@ def _video_generation_provider_catalog() -> list[dict]:
             "create_mode": config["create_mode"],
             "status_lifecycle": config["status_lifecycle"],
             "description": config["description"],
+            "recommended_use": config["recommended_use"],
         }
         for provider, config in SUPPORTED_VIDEO_PROVIDERS.items()
     ]
@@ -1665,6 +1701,8 @@ def _video_generation_provider_plan(provider: str) -> dict:
     return {
         "provider": provider_name,
         "label": config["label"],
+        "export_key": config["export_key"],
+        "selected_export_key": config["export_key"],
         "external_api_ready": config["external_api_ready"],
         "requires_api_key": config["requires_api_key"],
         "env_key_name": config["env_key_name"],
@@ -1672,6 +1710,9 @@ def _video_generation_provider_plan(provider: str) -> dict:
         "supported_statuses": config["status_lifecycle"],
         "supports_async_polling": config["supports_async_polling"],
         "polling_strategy": config["polling_strategy"],
+        "recommended_use": config["recommended_use"],
+        "copy_instructions": config["copy_instructions"],
+        "provider_limitations": config["provider_limitations"],
         "next_steps": config["next_steps"],
         "warnings": config["warnings"],
     }
@@ -1694,11 +1735,16 @@ def _video_generation_provider_payload(packet: dict, provider: str) -> dict:
     scenes = packet.get("scenes") if isinstance(packet, dict) else []
     if not isinstance(scenes, list):
         scenes = []
+    video = packet.get("video") if isinstance(packet.get("video"), dict) else {}
 
     provider_name = _normalize_video_provider(provider) or "manual_export"
     provider_config = SUPPORTED_VIDEO_PROVIDERS[provider_name]
     selected_export_key = provider_config["export_key"]
     selected_prompt = export_formats.get(selected_export_key) or export_formats.get("generic_video_prompt", "")
+    prompt_summary = _safe_evidence_quote(selected_prompt, limit=180)
+    evidence_boundary = packet.get("evidence_boundary") or (
+        "Use only supplied product and review evidence. Avoid unsupported claims or provider-specific assumptions."
+    )
 
     return {
         "provider": provider_name,
@@ -1712,6 +1758,15 @@ def _video_generation_provider_payload(packet: dict, provider: str) -> dict:
         "status_lifecycle": provider_config["status_lifecycle"],
         "selected_export_key": selected_export_key,
         "prompt": selected_prompt,
+        "prompt_title": provider_config["prompt_title"],
+        "prompt_summary": prompt_summary,
+        "recommended_use": provider_config["recommended_use"],
+        "copy_instructions": provider_config["copy_instructions"],
+        "provider_limitations": provider_config["provider_limitations"],
+        "evidence_boundary": evidence_boundary,
+        "scene_count": len(scenes[:4]),
+        "recommended_duration_seconds": video.get("recommended_duration_seconds") or 20,
+        "aspect_ratio": video.get("aspect_ratio") or "9:16",
         "export_formats": export_formats,
         "scenes": scenes[:4],
         "instructions": [

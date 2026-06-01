@@ -32,6 +32,7 @@ VIDEO_PACKET = {
         },
     ],
     "full_video_prompt": "Create a 9:16 TikTok video about a compact blender.",
+    "evidence_boundary": "Use only supplied review evidence and keep claims conservative.",
     "export_formats": {
         "generic_video_prompt": "Create a 9:16 TikTok video about a compact blender.",
         "capcut_shot_list": "Scene 1 - 5s - Show compact blender.\\nScene 2 - 5s - Blend early morning.",
@@ -66,6 +67,7 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
             self.assertIn("env_key_name", providers[provider])
             self.assertIn("create_mode", providers[provider])
             self.assertIn("status_lifecycle", providers[provider])
+            self.assertIn("recommended_use", providers[provider])
 
         self.assertFalse(providers["manual_export"]["requires_api_key"])
         self.assertFalse(providers["manual_export"]["supports_async_polling"])
@@ -95,6 +97,10 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertTrue(plan["supports_async_polling"])
         self.assertIn("queued", plan["supported_statuses"])
         self.assertIn("processing", plan["supported_statuses"])
+        self.assertEqual(plan["selected_export_key"], "runway_style_prompt")
+        self.assertEqual(plan["export_key"], "runway_style_prompt")
+        self.assertIn("visual video generation", plan["recommended_use"])
+        self.assertIn("disabled", " ".join(plan["provider_limitations"]).lower())
         self.assertTrue(plan["warnings"])
         self.assertIn("disabled", " ".join(plan["warnings"]).lower())
 
@@ -107,6 +113,9 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertFalse(plan["requires_api_key"])
         self.assertFalse(plan["supports_async_polling"])
         self.assertEqual(plan["create_mode"], "manual_export")
+        self.assertEqual(plan["selected_export_key"], "generic_video_prompt")
+        self.assertIn("preferred video workflow", plan["recommended_use"])
+        self.assertIn("No external API", " ".join(plan["warnings"]))
         self.assertIn("manual_export_completed", plan["supported_statuses"])
 
     def test_video_generation_provider_plan_endpoint_returns_404_for_unknown_provider(self):
@@ -137,10 +146,18 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["provider_payload"]["prompt"], VIDEO_PACKET["export_formats"]["runway_style_prompt"])
         self.assertEqual(job["provider_payload"]["next_action"], "manual_copy_to_video_tool")
         self.assertEqual(job["provider_payload"]["create_mode"], "planned_external_api")
+        self.assertFalse(job["provider_payload"]["external_api_ready"])
         self.assertTrue(job["provider_payload"]["requires_api_key"])
         self.assertEqual(job["provider_payload"]["env_key_name"], "RUNWAY_API_KEY")
         self.assertTrue(job["provider_payload"]["supports_async_polling"])
         self.assertIn("queued", job["provider_payload"]["status_lifecycle"])
+        self.assertEqual(job["provider_payload"]["prompt_title"], "Runway-style visual prompt")
+        self.assertIn("visual video generation", job["provider_payload"]["recommended_use"])
+        self.assertIn("Runway API integration is planned but disabled", " ".join(job["provider_payload"]["provider_limitations"]))
+        self.assertEqual(job["provider_payload"]["scene_count"], 2)
+        self.assertEqual(job["provider_payload"]["recommended_duration_seconds"], 20)
+        self.assertEqual(job["provider_payload"]["aspect_ratio"], "9:16")
+        self.assertEqual(job["provider_payload"]["evidence_boundary"], VIDEO_PACKET["evidence_boundary"])
 
     def test_create_video_generation_job_accepts_export_key_alias(self):
         response = self.client.post(
@@ -156,6 +173,9 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         job = response.json()["job"]
         self.assertEqual(job["provider"], "capcut")
         self.assertEqual(job["provider_payload"]["selected_export_key"], "capcut_shot_list")
+        self.assertEqual(job["provider_payload"]["prompt"], VIDEO_PACKET["export_formats"]["capcut_shot_list"])
+        self.assertEqual(job["provider_payload"]["prompt_title"], "CapCut shot list")
+        self.assertIn("editing shot list", job["provider_payload"]["recommended_use"])
 
     def test_create_video_generation_job_rejects_unsupported_provider(self):
         response = self.client.post(
@@ -196,6 +216,9 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["provider"], "manual_export")
         self.assertEqual(job["video_generation_packet"]["packet_version"], "video_generation_v1")
         self.assertEqual(job["provider_payload"]["handoff_type"], "manual_export")
+        self.assertEqual(job["provider_payload"]["prompt_title"], "Manual video export prompt")
+        self.assertIn("preferred video workflow", job["provider_payload"]["recommended_use"])
+        self.assertIn("No external video API is called", " ".join(job["provider_payload"]["provider_limitations"]))
         self.assertIn("generic_video_prompt", job["provider_payload"]["export_formats"])
         self.assertIn("capcut_shot_list", job["provider_payload"]["export_formats"])
         self.assertEqual(len(job["provider_payload"]["scenes"]), 2)

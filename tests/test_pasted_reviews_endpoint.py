@@ -187,9 +187,17 @@ class PastedReviewsEndpointTest(unittest.TestCase):
                 self.assertTrue(export_formats[export_key])
         self.assertIn("Scene 1 - 5s", export_formats["capcut_shot_list"])
         self.assertIn("Shot direction:", export_formats["capcut_shot_list"])
+        self.assertIn("Edit notes:", export_formats["capcut_shot_list"])
+        self.assertIn("Overlay text:", export_formats["capcut_shot_list"])
         self.assertIn("A sink full of blender parts", export_formats["generic_video_prompt"])
+        self.assertIn("Evidence boundary:", export_formats["generic_video_prompt"])
+        self.assertIn("CTA:", export_formats["generic_video_prompt"])
         self.assertIn("A sink full of blender parts", export_formats["runway_style_prompt"])
+        self.assertIn("Cinematic vertical 9:16 product ad", export_formats["runway_style_prompt"])
+        self.assertIn("close-up product handling", export_formats["runway_style_prompt"])
         self.assertIn("evidence-safe narration", export_formats["pika_style_prompt"])
+        self.assertIn("quick cuts", export_formats["pika_style_prompt"])
+        self.assertLess(len(export_formats["pika_style_prompt"]), len(export_formats["runway_style_prompt"]) + 400)
         for scene in video_packet["scenes"]:
             with self.subTest(video_scene=scene["scene_id"]):
                 self.assertIn("visual_prompt", scene)
