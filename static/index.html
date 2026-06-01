@@ -5789,6 +5789,148 @@
                 .join(String.fromCharCode(10));
         }
 
+        let latestReviewWorkspaceCreativeMatrix = [];
+
+        function reviewWorkspaceMatrixLabel(key, language = currentOutputLanguage()) {
+            const isZh = language === 'zh-CN';
+            const labels = {
+                title: isZh ? '\u521b\u610f\u65b9\u5411\u77e9\u9635' : 'Creative direction matrix',
+                subtitle: isZh
+                    ? '\u628a\u5df2\u5206\u6790\u7684\u53ef\u89c1\u8bc4\u8bba\u62c6\u6210\u51e0\u4e2a\u53ef\u6d4b\u8bd5\u7684\u77ed\u89c6\u9891\u65b9\u5411\u3002'
+                    : 'Turn the analyzed visible reviews into testable short-video directions.',
+                direction: isZh ? '\u521b\u610f\u65b9\u5411' : 'Creative direction',
+                hook: isZh ? '\u63a8\u8350 Hook' : 'Recommended hook',
+                painPoint: isZh ? '\u5bf9\u5e94\u75db\u70b9' : 'Target pain point',
+                evidence: isZh ? '\u8bc1\u636e\u539f\u8bdd' : 'Evidence quote',
+                useCase: isZh ? '\u9002\u7528\u573a\u666f' : 'Use case',
+                boundary: isZh ? '\u53ef\u4fe1\u5ea6\u8fb9\u754c' : 'Trust boundary',
+                copy: isZh ? '\u590d\u5236\u8fd9\u4e2a\u65b9\u5411' : 'Copy this direction',
+                copied: isZh ? '\u521b\u610f\u65b9\u5411\u5df2\u590d\u5236\u3002' : 'Creative direction copied.',
+                copyFailed: isZh ? '\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236\u3002' : 'Copy failed. Please copy manually.',
+                noPainPoint: isZh ? '\u6682\u65e0\u660e\u786e\u75db\u70b9' : 'No clear pain point yet',
+                noEvidence: isZh ? '\u6682\u65e0\u53ef\u5f15\u7528\u539f\u8bdd' : 'No quote available yet',
+                noUseCase: isZh ? '\u9002\u7528\u4e8e\u5f53\u524d\u8bc4\u8bba\u4e2d\u7684\u9ad8\u9891\u573a\u666f' : 'Use for the high-signal scenario in these reviews',
+                boundaryText: isZh
+                    ? '\u8fd9\u662f\u6839\u636e\u5f53\u524d\u53ef\u89c1\u8bc4\u8bba\u63d0\u70bc\u7684\u65b9\u5411\uff0c\u4e0d\u4ee3\u8868\u5168\u91cf\u5e02\u573a\u7ed3\u8bba\u3002'
+                    : 'This direction is based on currently visible reviews, not a full-market conclusion.'
+            };
+            return labels[key] || key;
+        }
+
+        function normalizeReviewWorkspaceAngleLine(value) {
+            return String(value || "")
+                .replace(/^Copy-ready angle:\s*/i, "")
+                .replace(/^\u521b\u610f\u65b9\u5411[\uff1a:]\s*/, "")
+                .trim();
+        }
+
+        function reviewWorkspaceThemeLabels(items) {
+            return (items || [])
+                .map((item) => String(item?.label || "").trim())
+                .filter(Boolean);
+        }
+
+        function reviewWorkspaceEvidenceQuoteLines(items) {
+            const quotes = [];
+            for (const item of items || []) {
+                for (const quote of item?.evidence_quotes || []) {
+                    const cleaned = String(quote || "").trim();
+                    if (cleaned && !quotes.includes(cleaned)) quotes.push(cleaned);
+                }
+            }
+            return quotes;
+        }
+
+        function buildReviewWorkspaceCreativeMatrix(analysis) {
+            const angles = (analysis.creative_angles || [])
+                .map(normalizeReviewWorkspaceAngleLine)
+                .filter(Boolean);
+            const hooks = (analysis.hooks || [])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean);
+            const painPoints = reviewWorkspaceThemeLabels(analysis.common_pain_points);
+            const objections = reviewWorkspaceThemeLabels(analysis.buyer_objections);
+            const useCases = reviewWorkspaceThemeLabels(analysis.use_cases);
+            const likedPoints = reviewWorkspaceThemeLabels(analysis.liked_points);
+            const evidenceQuotes = [
+                ...reviewWorkspaceEvidenceQuoteLines(analysis.common_pain_points),
+                ...reviewWorkspaceEvidenceQuoteLines(analysis.buyer_objections),
+                ...reviewWorkspaceEvidenceQuoteLines(analysis.use_cases),
+                ...reviewWorkspaceEvidenceQuoteLines(analysis.liked_points)
+            ];
+
+            const sourceAngles = angles.length ? angles : hooks;
+            return sourceAngles.slice(0, 5).map((angle, index) => ({
+                title: `${reviewWorkspaceMatrixLabel('direction')} ${index + 1}`,
+                angle,
+                hook: hooks[index] || hooks[0] || angle,
+                painPoint: painPoints[index] || objections[index] || painPoints[0] || objections[0] || reviewWorkspaceMatrixLabel('noPainPoint'),
+                evidenceQuote: evidenceQuotes[index] || evidenceQuotes[0] || reviewWorkspaceMatrixLabel('noEvidence'),
+                useCase: useCases[index] || likedPoints[index] || useCases[0] || likedPoints[0] || reviewWorkspaceMatrixLabel('noUseCase'),
+                boundary: reviewWorkspaceMatrixLabel('boundaryText')
+            }));
+        }
+
+        function renderReviewWorkspaceCreativeMatrix(analysis) {
+            latestReviewWorkspaceCreativeMatrix = buildReviewWorkspaceCreativeMatrix(analysis);
+            if (!latestReviewWorkspaceCreativeMatrix.length) return '';
+
+            const cards = latestReviewWorkspaceCreativeMatrix.map((item, index) => `
+                <div style="border:1px solid var(--border-light);border-radius:10px;padding:12px;background:#fff;">
+                    <div style="font-size:12px;font-weight:850;color:var(--accent-purple);margin-bottom:8px;">${escapeHTML(item.title)}</div>
+                    <div class="json-key">${escapeHTML(reviewWorkspaceMatrixLabel('direction'))}</div>
+                    <div class="brief-note">${escapeHTML(item.angle)}</div>
+                    <div class="json-key">${escapeHTML(reviewWorkspaceMatrixLabel('hook'))}</div>
+                    <div class="brief-note">${escapeHTML(item.hook)}</div>
+                    <div class="json-key">${escapeHTML(reviewWorkspaceMatrixLabel('painPoint'))}</div>
+                    <div class="brief-note">${escapeHTML(item.painPoint)}</div>
+                    <div class="json-key">${escapeHTML(reviewWorkspaceMatrixLabel('evidence'))}</div>
+                    <div class="quote-item">${escapeHTML(item.evidenceQuote)}</div>
+                    <div class="json-key">${escapeHTML(reviewWorkspaceMatrixLabel('useCase'))}</div>
+                    <div class="brief-note">${escapeHTML(item.useCase)}</div>
+                    <div class="json-key">${escapeHTML(reviewWorkspaceMatrixLabel('boundary'))}</div>
+                    <div class="field-helper">${escapeHTML(item.boundary)}</div>
+                    <div style="margin-top:10px;">
+                        <button class="btn-secondary" type="button" onclick="copyReviewWorkspaceCreativeMatrixItem(${index})">${escapeHTML(reviewWorkspaceMatrixLabel('copy'))}</button>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="good-inputs" style="margin-top:12px;">
+                    <div class="good-inputs-title">${escapeHTML(reviewWorkspaceMatrixLabel('title'))}</div>
+                    <div class="field-helper">${escapeHTML(reviewWorkspaceMatrixLabel('subtitle'))}</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:12px;">
+                        ${cards}
+                    </div>
+                    <div id="reviewWorkspaceCreativeMatrixStatus" class="description-status" style="margin-top:8px;"></div>
+                </div>
+            `;
+        }
+
+        async function copyReviewWorkspaceCreativeMatrixItem(index) {
+            const item = latestReviewWorkspaceCreativeMatrix[index];
+            const status = document.getElementById('reviewWorkspaceCreativeMatrixStatus');
+            if (!item) return;
+
+            const text = [
+                `${reviewWorkspaceMatrixLabel('direction')}: ${item.angle}`,
+                `${reviewWorkspaceMatrixLabel('hook')}: ${item.hook}`,
+                `${reviewWorkspaceMatrixLabel('painPoint')}: ${item.painPoint}`,
+                `${reviewWorkspaceMatrixLabel('evidence')}: ${item.evidenceQuote}`,
+                `${reviewWorkspaceMatrixLabel('useCase')}: ${item.useCase}`,
+                `${reviewWorkspaceMatrixLabel('boundary')}: ${item.boundary}`
+            ].join(String.fromCharCode(10));
+
+            try {
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = reviewWorkspaceMatrixLabel('copied');
+            } catch (error) {
+                if (status) status.textContent = reviewWorkspaceMatrixLabel('copyFailed');
+            }
+        }
+
+
         function renderPastedReviewWorkspaceAnalysis(payload) {
             const target = document.getElementById('pastedReviewWorkspaceResult');
             if (!target) return;
@@ -5809,10 +5951,9 @@
             const hooks = (analysis.hooks || []).slice(0, 6).join(String.fromCharCode(10));
             const angles = (analysis.creative_angles || [])
                 .slice(0, 6)
-                .map((value) => String(value || "")
-                    .replace(/^Copy-ready angle:\s*/i, "")
-                    .replace(/^\u521b\u610f\u65b9\u5411[\uff1a:]\s*/, ""))
+                .map(normalizeReviewWorkspaceAngleLine)
                 .join(String.fromCharCode(10));
+            const creativeMatrix = renderReviewWorkspaceCreativeMatrix(analysis);
 
             target.hidden = false;
             target.innerHTML = `
@@ -5828,6 +5969,7 @@
                 </div>
                 ${block(reviewWorkspaceSourceLabel('sourceBreakdownTitle'), sourceBreakdownText)}
                 ${block(reviewWorkspaceSourceLabel('sourceBreakdownGuidance'), sourceGuidanceText)}
+                ${creativeMatrix}
                 ${block(t('commonPainPointsLabel') || 'Common pain points', reviewWorkspaceThemeText(analysis.common_pain_points))}
                 ${block(t('buyerObjectionsLabel') || 'Buyer objections', reviewWorkspaceThemeText(analysis.buyer_objections))}
                 ${block(t('workspaceCreativeAnglesLabel') || 'Creative angles', angles)}
