@@ -3371,11 +3371,16 @@ def _rw_hooks(common_pain_points: list[ReviewThemeSummary], liked_points: list[R
         else:
             hooks.append(_rw_hook_from_theme(theme))
 
-    for theme in _rw_unique_themes_by_first_quote(liked_points)[:4]:
+    for theme in _rw_unique_themes_by_first_quote(liked_points):
+        quote = _rw_theme_first_quote(theme)
+        if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
+            continue
         if is_zh:
             hooks.append(_rw_positive_hook_from_theme_zh(theme))
         else:
             hooks.append(_rw_positive_hook_from_theme(theme))
+        if len(hooks) >= 6:
+            break
 
     if not hooks:
         hooks.append(
@@ -4005,7 +4010,10 @@ def _rw_creative_angles(
 ) -> list[str]:
     is_zh = language == "zh-CN"
     primary_signals = common_pain_points or (buyer_objections or [])
-    positive_signals = _rw_unique_themes_by_first_quote(liked_points)
+    positive_signals = [
+        theme for theme in _rw_unique_themes_by_first_quote(liked_points)
+        if not ("_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(_rw_theme_first_quote(theme)))
+    ]
     angles: list[str] = []
 
     primary = primary_signals[0] if primary_signals else None
