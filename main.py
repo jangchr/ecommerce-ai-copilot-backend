@@ -75,6 +75,7 @@ from video_generation.provider_runtime import (
     provider_submit_history_events,
     supports_provider_polling,
 )
+from video_generation.provider_integration import provider_plan_integration_metadata
 
 app = FastAPI()
 source_probe_registry = SourceAdapterRegistry()
@@ -1842,6 +1843,7 @@ async def get_video_generation_provider_plan(provider: str, http_request: Reques
                 "request_id": request_id,
             },
         )
+    plan.update(provider_plan_integration_metadata(provider_name))
     return {
         "status": "success",
         "provider": provider_name,

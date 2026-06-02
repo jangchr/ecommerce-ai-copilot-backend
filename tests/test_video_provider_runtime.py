@@ -23,7 +23,10 @@ class VideoProviderRuntimeTest(unittest.TestCase):
         self.assertEqual(runtime["submitted_at"], "2026-06-02T00:00:00Z")
         self.assertEqual(runtime["poll_count"], 0)
         self.assertEqual(runtime["mode"], "simulated_provider_polling")
+        self.assertEqual(runtime["integration_mode"], "simulated")
+        self.assertFalse(runtime["real_external_api_call_enabled"])
         self.assertFalse(runtime["external_api_called"])
+        self.assertFalse(runtime["integration_readiness"]["can_call_external_api"])
 
     def test_supports_polling_only_for_planned_async_providers(self):
         self.assertTrue(supports_provider_polling("runway"))
@@ -59,6 +62,8 @@ class VideoProviderRuntimeTest(unittest.TestCase):
         self.assertEqual(updated["last_polled_at"], "2026-06-02T00:01:00Z")
         self.assertEqual(updated["poll_count"], 1)
         self.assertEqual(updated["error_message"], "provider timeout")
+        self.assertEqual(updated["integration_mode"], "simulated")
+        self.assertFalse(updated["real_external_api_call_enabled"])
         self.assertFalse(updated["external_api_called"])
 
 

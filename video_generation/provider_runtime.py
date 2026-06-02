@@ -15,6 +15,7 @@ from video_generation.job_status import (
     normalize_video_job_status,
 )
 from video_generation.providers import get_video_provider_config
+from video_generation.provider_integration import provider_integration_readiness
 
 
 PROVIDER_RUNTIME_MODE = "simulated_provider_polling"
@@ -48,7 +49,10 @@ def build_provider_runtime(
         "last_polled_at": "",
         "poll_count": 0,
         "mode": PROVIDER_RUNTIME_MODE,
+        "integration_mode": "simulated",
+        "real_external_api_call_enabled": False,
         "external_api_called": False,
+        "integration_readiness": provider_integration_readiness(provider),
         "notes": str(notes or ""),
     }
 
@@ -91,6 +95,8 @@ def build_provider_poll_runtime(
     updated["last_polled_at"] = timestamp
     updated["poll_count"] = int(updated.get("poll_count") or 0) + 1
     updated["mode"] = updated.get("mode") or PROVIDER_RUNTIME_MODE
+    updated["integration_mode"] = "simulated"
+    updated["real_external_api_call_enabled"] = False
     updated["external_api_called"] = False
     if error_message:
         updated["error_message"] = str(error_message)
