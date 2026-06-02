@@ -368,6 +368,9 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["status"], "queued")
         self.assertEqual(job["provider_runtime"]["provider_job_id"], "runway_scaffold_123")
         self.assertEqual(job["provider_runtime"]["provider_status"], "queued")
+        self.assertEqual(job["provider_runtime"]["integration_mode"], "simulated")
+        self.assertFalse(job["provider_runtime"]["feature_flag_enabled"])
+        self.assertFalse(job["provider_runtime"]["real_external_api_call_enabled"])
         self.assertFalse(job["provider_runtime"]["external_api_called"])
         self.assertEqual(job["result"]["provider_job_id"], "runway_scaffold_123")
         self.assertIn("provider_submitted", [event["event"] for event in job["history"]])
@@ -471,6 +474,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(completed_job["result"]["preview_url"], "https://example.com/pika-preview.jpg")
         self.assertEqual(completed_job["result"]["download_url"], "https://example.com/pika-download.mp4")
         self.assertEqual(completed_job["provider_runtime"]["poll_count"], 2)
+        self.assertEqual(completed_job["provider_runtime"]["integration_mode"], "simulated")
+        self.assertFalse(completed_job["provider_runtime"]["real_external_api_call_enabled"])
         self.assertFalse(completed_job["provider_runtime"]["external_api_called"])
 
     def test_provider_poll_can_mark_processing_job_failed(self):

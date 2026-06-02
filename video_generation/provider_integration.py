@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from video_generation.providers import get_video_provider_config, normalize_video_provider
+from video_generation.provider_sandbox import provider_sandbox_readiness
 
 
 INTEGRATION_DISABLED_REASON = "Real external provider API integration is not enabled yet."
@@ -41,6 +42,7 @@ def provider_integration_config(provider: str) -> dict[str, Any]:
 
 def provider_integration_readiness(provider: str, env: Mapping[str, str] | None = None) -> dict[str, Any]:
     config = provider_integration_config(provider)
+    sandbox = provider_sandbox_readiness(provider, env=env)
     if not config:
         return {
             "provider": normalize_video_provider(provider) or str(provider or ""),
@@ -50,6 +52,12 @@ def provider_integration_readiness(provider: str, env: Mapping[str, str] | None 
             "env_key_name": "",
             "api_key_configured": False,
             "can_call_external_api": False,
+            "feature_flag_name": sandbox["feature_flag_name"],
+            "feature_flag_enabled": sandbox["feature_flag_enabled"],
+            "integration_mode": sandbox["integration_mode"],
+            "real_external_api_call_enabled": False,
+            "external_api_called": False,
+            "sandbox_ready": False,
             "disabled_reason": "Unknown video provider.",
             "warnings": ["Unknown video provider."],
         }
@@ -57,7 +65,9 @@ def provider_integration_readiness(provider: str, env: Mapping[str, str] | None 
     env_source = env if env is not None else os.environ
     env_key = config["env_key_name"]
     api_key_configured = bool(env_key and str(env_source.get(env_key) or "").strip())
-    disabled_reason = INTEGRATION_DISABLED_REASON if config["requires_api_key"] else MANUAL_EXPORT_DISABLED_REASON
+    disabled_reason = str(sandbox.get("disabled_reason") or (
+        INTEGRATION_DISABLED_REASON if config["requires_api_key"] else MANUAL_EXPORT_DISABLED_REASON
+    ))
     warnings = [
         "Real external video API calls are disabled in this scaffold.",
         "Use manual export/provider polling scaffold until the provider contract is verified.",
@@ -72,8 +82,14 @@ def provider_integration_readiness(provider: str, env: Mapping[str, str] | None 
         "env_key_name": env_key,
         "api_key_configured": api_key_configured,
         "can_call_external_api": False,
+        "feature_flag_name": sandbox["feature_flag_name"],
+        "feature_flag_enabled": sandbox["feature_flag_enabled"],
+        "integration_mode": sandbox["integration_mode"],
+        "real_external_api_call_enabled": False,
+        "external_api_called": False,
+        "sandbox_ready": sandbox["sandbox_ready"],
         "disabled_reason": disabled_reason,
-        "warnings": warnings,
+        "warnings": warnings + list(sandbox.get("warnings") or []),
     }
 
 

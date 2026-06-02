@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -9,6 +10,13 @@ from video_generation.provider_integration import (
     provider_error_contract,
     provider_integration_readiness,
     provider_polling_contract,
+)
+from video_generation.provider_sandbox import (
+    EXTERNAL_CALLS_FEATURE_FLAG,
+    blocked_provider_external_call_result,
+    build_provider_sandbox_request_preview,
+    provider_external_call_settings,
+    provider_sandbox_readiness,
 )
 
 
@@ -23,15 +31,59 @@ class VideoProviderIntegrationContractTest(unittest.TestCase):
         self.assertEqual(readiness["env_key_name"], "RUNWAY_API_KEY")
         self.assertFalse(readiness["api_key_configured"])
         self.assertFalse(readiness["can_call_external_api"])
-        self.assertIn("not enabled", readiness["disabled_reason"])
+        self.assertEqual(readiness["feature_flag_name"], EXTERNAL_CALLS_FEATURE_FLAG)
+        self.assertFalse(readiness["feature_flag_enabled"])
+        self.assertEqual(readiness["integration_mode"], "simulated")
+        self.assertFalse(readiness["real_external_api_call_enabled"])
+        self.assertFalse(readiness["external_api_called"])
+        self.assertIn("false", readiness["disabled_reason"])
 
     def test_pika_key_configured_still_cannot_call_external_api(self):
-        readiness = provider_integration_readiness("pika", env={"PIKA_API_KEY": "secret-pika-key"})
+        readiness = provider_integration_readiness(
+            "pika",
+            env={EXTERNAL_CALLS_FEATURE_FLAG: "true", "PIKA_API_KEY": "secret-pika-key"},
+        )
 
         self.assertTrue(readiness["api_key_configured"])
         self.assertFalse(readiness["can_call_external_api"])
         self.assertFalse(readiness["external_api_ready"])
+        self.assertTrue(readiness["feature_flag_enabled"])
+        self.assertEqual(readiness["integration_mode"], "sandbox_ready_no_external_call")
+        self.assertTrue(readiness["sandbox_ready"])
         self.assertNotIn("secret-pika-key", str(readiness))
+
+    def test_feature_flag_true_missing_runway_key_is_blocked(self):
+        readiness = provider_integration_readiness("runway", env={EXTERNAL_CALLS_FEATURE_FLAG: "true"})
+
+        self.assertTrue(readiness["feature_flag_enabled"])
+        self.assertFalse(readiness["api_key_configured"])
+        self.assertFalse(readiness["can_call_external_api"])
+        self.assertEqual(readiness["integration_mode"], "blocked_missing_api_key")
+        self.assertIn("RUNWAY_API_KEY", readiness["disabled_reason"])
+
+    def test_provider_sandbox_settings_default_off(self):
+        settings = provider_external_call_settings(env={})
+
+        self.assertEqual(settings["feature_flag_name"], EXTERNAL_CALLS_FEATURE_FLAG)
+        self.assertFalse(settings["feature_flag_enabled"])
+        self.assertFalse(settings["can_call_external_api"])
+        self.assertFalse(settings["real_external_api_call_enabled"])
+        self.assertFalse(settings["external_api_called"])
+        self.assertEqual(settings["integration_mode"], "simulated")
+
+    def test_provider_sandbox_fake_key_never_exposes_secret_or_enables_call(self):
+        readiness = provider_sandbox_readiness(
+            "runway",
+            env={EXTERNAL_CALLS_FEATURE_FLAG: "true", "RUNWAY_API_KEY": "secret-runway-key"},
+        )
+
+        self.assertTrue(readiness["api_key_configured"])
+        self.assertTrue(readiness["feature_flag_enabled"])
+        self.assertFalse(readiness["can_call_external_api"])
+        self.assertFalse(readiness["real_external_api_call_enabled"])
+        self.assertFalse(readiness["external_api_called"])
+        self.assertEqual(readiness["integration_mode"], "sandbox_ready_no_external_call")
+        self.assertNotIn("secret-runway-key", str(readiness))
 
     def test_manual_export_readiness_never_requires_key(self):
         readiness = provider_integration_readiness("manual_export", env={"RUNWAY_API_KEY": "secret"})
@@ -41,7 +93,8 @@ class VideoProviderIntegrationContractTest(unittest.TestCase):
         self.assertEqual(readiness["env_key_name"], "")
         self.assertFalse(readiness["api_key_configured"])
         self.assertFalse(readiness["can_call_external_api"])
-        self.assertIn("manual/export", readiness["disabled_reason"])
+        self.assertEqual(readiness["integration_mode"], "manual_or_prompt_export")
+        self.assertIn("manual", readiness["disabled_reason"])
 
     def test_request_contract_never_contains_real_api_key_value(self):
         job = {
@@ -64,6 +117,19 @@ class VideoProviderIntegrationContractTest(unittest.TestCase):
         self.assertTrue(contract["prompt_present"])
         self.assertFalse(contract["secrets_included"])
         self.assertNotIn("API_KEY", str(contract))
+
+        preview = build_provider_sandbox_request_preview(job)
+        self.assertEqual(preview["provider"], "runway")
+        self.assertFalse(preview["secrets_included"])
+
+    def test_blocked_external_call_result_is_safe(self):
+        result = blocked_provider_external_call_result("runway", "sandbox only")
+
+        self.assertEqual(result["provider"], "runway")
+        self.assertEqual(result["status"], "blocked")
+        self.assertFalse(result["can_call_external_api"])
+        self.assertFalse(result["external_api_called"])
+        self.assertIn("integration_mode", result)
 
     def test_response_and_error_contracts_are_safe_normalized_shapes(self):
         normalized = normalize_provider_response(
@@ -97,7 +163,8 @@ class VideoProviderIntegrationContractTest(unittest.TestCase):
 
     def test_provider_plan_endpoint_includes_integration_contract(self):
         client = TestClient(app)
-        response = client.get("/api/v1/video-generation/providers/runway/plan")
+        with patch.dict("os.environ", {}, clear=True):
+            response = client.get("/api/v1/video-generation/providers/runway/plan")
 
         self.assertEqual(response.status_code, 200)
         plan = response.json()["plan"]
@@ -109,6 +176,11 @@ class VideoProviderIntegrationContractTest(unittest.TestCase):
         readiness = plan["integration_readiness"]
         self.assertIsInstance(readiness["api_key_configured"], bool)
         self.assertFalse(readiness["can_call_external_api"])
+        self.assertEqual(readiness["feature_flag_name"], EXTERNAL_CALLS_FEATURE_FLAG)
+        self.assertFalse(readiness["feature_flag_enabled"])
+        self.assertEqual(readiness["integration_mode"], "simulated")
+        self.assertFalse(readiness["real_external_api_call_enabled"])
+        self.assertFalse(readiness["external_api_called"])
         self.assertNotIn("sk-", str(plan))
 
 

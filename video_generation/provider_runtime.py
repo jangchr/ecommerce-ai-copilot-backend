@@ -42,17 +42,20 @@ def build_provider_runtime(
     now: str | None = None,
 ) -> dict[str, Any]:
     timestamp = now or _utc_now_iso()
+    readiness = provider_integration_readiness(provider)
     return {
+        "provider": str(provider or ""),
         "provider_job_id": str(provider_job_id or simulated_provider_job_id(provider)),
         "provider_status": VIDEO_JOB_STATUS_QUEUED,
         "submitted_at": timestamp,
         "last_polled_at": "",
         "poll_count": 0,
         "mode": PROVIDER_RUNTIME_MODE,
-        "integration_mode": "simulated",
+        "integration_mode": readiness.get("integration_mode", "simulated"),
+        "feature_flag_enabled": bool(readiness.get("feature_flag_enabled", False)),
         "real_external_api_call_enabled": False,
         "external_api_called": False,
-        "integration_readiness": provider_integration_readiness(provider),
+        "integration_readiness": readiness,
         "notes": str(notes or ""),
     }
 
@@ -95,7 +98,11 @@ def build_provider_poll_runtime(
     updated["last_polled_at"] = timestamp
     updated["poll_count"] = int(updated.get("poll_count") or 0) + 1
     updated["mode"] = updated.get("mode") or PROVIDER_RUNTIME_MODE
-    updated["integration_mode"] = "simulated"
+    readiness = provider_integration_readiness(str(updated.get("provider") or ""))
+    if not readiness.get("provider"):
+        readiness = updated.get("integration_readiness") if isinstance(updated.get("integration_readiness"), dict) else {}
+    updated["integration_mode"] = updated.get("integration_mode") or readiness.get("integration_mode", "simulated")
+    updated["feature_flag_enabled"] = bool(updated.get("feature_flag_enabled", readiness.get("feature_flag_enabled", False)))
     updated["real_external_api_call_enabled"] = False
     updated["external_api_called"] = False
     if error_message:
