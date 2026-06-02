@@ -20,16 +20,21 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("async function getVideoGenerationJob(jobId)", self.source)
         self.assertIn("async function listVideoGenerationJobs(limit = 10)", self.source)
         self.assertIn("async function postVideoGenerationJobResult(jobId, payload)", self.source)
+        self.assertIn("async function postVideoProviderSubmit(jobId, payload)", self.source)
+        self.assertIn("async function postVideoProviderPoll(jobId, payload)", self.source)
         self.assertIn("async function videoGenerationJsonResponse(response, fallbackKey)", self.source)
         self.assertIn("/api/v1/video-generation/jobs/from-generation", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}", self.source)
         self.assertIn("/api/v1/video-generation/jobs?limit=${encodeURIComponent(limit)}", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/result", self.source)
+        self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-submit", self.source)
+        self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-poll", self.source)
         self.assertIn("generation_data: latestProductData", self.source)
         self.assertIn("videoJobProviderSelect", self.source)
         self.assertIn("videoJobCreateBtn", self.source)
         self.assertIn("renderVideoJobResult", self.source)
         self.assertIn("renderVideoJobResultForm", self.source)
+        self.assertIn("renderVideoProviderProgress", self.source)
         self.assertIn("renderRecentVideoJobsPanel", self.source)
         self.assertIn("renderRecentVideoJobRows", self.source)
         self.assertIn("renderVideoJobControls(data)", self.source)
@@ -45,14 +50,26 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         for marker in [
             "videoJobCurrentPanel",
             "videoJobExternalResultPanel",
+            "videoProviderProgressPanel",
+            "videoProviderRuntimePanel",
             "recentVideoJobsPanel",
             "videoJobRefreshBtn",
             "videoJobCopyPromptBtn",
             "videoJobCopyIdBtn",
             "videoJobSaveResultBtn",
+            "videoProviderSubmitBtn",
+            "videoProviderPollBtn",
+            "videoProviderCompleteBtn",
             "refreshVideoJobsBtn",
             "recentVideoJobsList",
             "provider_payload",
+            "provider_runtime",
+            "provider_job_id",
+            "provider_status",
+            "poll_count",
+            "external_api_called",
+            "submitted_at",
+            "last_polled_at",
             "selected_export_key",
             "provider_label",
             "result_url",
@@ -60,6 +77,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "download_url",
             "provider_job_id",
             "warnings",
+            "submitCurrentVideoProviderJob",
+            "pollCurrentVideoProviderStatus",
+            "completeCurrentVideoProviderResult",
         ]:
             with self.subTest(video_job_marker=marker):
                 self.assertIn(marker, self.source)
@@ -84,6 +104,24 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "updatedAt",
             "createdAt",
             "warnings",
+            "providerProgressTitle",
+            "providerProgressNote",
+            "submitProviderJob",
+            "providerJobSubmitted",
+            "providerJobSubmitFailed",
+            "providerJobSubmitting",
+            "pollProviderStatus",
+            "providerStatusRefreshed",
+            "providerStatusRefreshFailed",
+            "providerStatusRefreshing",
+            "completeSimulatedProviderResult",
+            "providerResultCompleted",
+            "providerJobIdLabel",
+            "providerStatusLabel",
+            "pollCountLabel",
+            "externalApiCalledLabel",
+            "submittedAtLabel",
+            "lastPolledAtLabel",
         ]:
             with self.subTest(video_job_copy_key=copy_key):
                 self.assertIn(copy_key, self.source)
@@ -96,9 +134,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("recordExternalVideoResult: '\\u8bb0\\u5f55\\u5916\\u90e8\\u89c6\\u9891\\u7ed3\\u679c'", self.source)
         self.assertIn("recentVideoJobs: 'Recent video jobs'", self.source)
         self.assertIn("recentVideoJobs: '\\u6700\\u8fd1\\u89c6\\u9891\\u4efb\\u52a1'", self.source)
+        self.assertIn("providerProgressTitle: 'Provider progress'", self.source)
+        self.assertIn("providerProgressTitle: '\\u63d0\\u4f9b\\u65b9\\u8fdb\\u5ea6'", self.source)
+        self.assertIn("submitProviderJob: 'Submit provider job'", self.source)
+        self.assertIn("pollProviderStatus: 'Poll provider status'", self.source)
+        self.assertIn("completeSimulatedProviderResult: 'Complete simulated provider result'", self.source)
+        self.assertIn("Simulated provider flow only. No external API is called.", self.source)
         self.assertIn("copyVideoJobText(prompt, 'videoJobPromptCopied')", self.source)
         self.assertIn("copyVideoJobText(jobId, 'videoJobIdCopied')", self.source)
         self.assertIn("status: (resultUrl || previewUrl) ? 'external_result_ready' : 'manual_export_completed'", self.source)
+        self.assertIn("await refreshRecentVideoJobs();", self.source)
+        self.assertIn("postVideoProviderSubmit(jobId", self.source)
+        self.assertIn("postVideoProviderPoll(jobId", self.source)
         self.assertGreaterEqual(self.source.count("await refreshRecentVideoJobs();"), 2)
         self.assertNotIn("????", self.source)
 

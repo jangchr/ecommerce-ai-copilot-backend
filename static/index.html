@@ -3418,6 +3418,24 @@
                 videoJobSelectedExportLabel: 'Selected export',
                 videoJobPromptLabel: 'Selected prompt',
                 videoJobManualExportNote: 'Copy this prompt into your selected video tool.',
+                providerProgressTitle: 'Provider progress',
+                providerProgressNote: 'Simulated provider flow only. No external API is called.',
+                providerJobSubmitted: 'Provider job submitted.',
+                providerJobSubmitFailed: 'Could not submit provider job.',
+                providerJobSubmitting: 'Submitting provider job...',
+                pollProviderStatus: 'Poll provider status',
+                providerStatusRefreshed: 'Provider status refreshed.',
+                providerStatusRefreshFailed: 'Could not poll provider status.',
+                providerStatusRefreshing: 'Polling provider status...',
+                completeSimulatedProviderResult: 'Complete simulated provider result',
+                providerResultCompleted: 'Simulated provider result completed.',
+                providerJobIdLabel: 'Provider job ID',
+                providerStatusLabel: 'Provider status',
+                pollCountLabel: 'Poll count',
+                externalApiCalledLabel: 'External API called',
+                submittedAtLabel: 'Submitted at',
+                lastPolledAtLabel: 'Last polled at',
+                submitProviderJob: 'Submit provider job',
                 refreshJobStatus: 'Refresh job status',
                 copySelectedPrompt: 'Copy selected prompt',
                 copyJobId: 'Copy job ID',
@@ -3657,6 +3675,24 @@
                 videoJobSelectedExportLabel: '\u5df2\u9009\u5bfc\u51fa\u683c\u5f0f',
                 videoJobPromptLabel: '\u5df2\u9009\u63d0\u793a\u8bcd',
                 videoJobManualExportNote: '\u628a\u8fd9\u6bb5\u63d0\u793a\u8bcd\u590d\u5236\u5230\u4f60\u9009\u62e9\u7684\u89c6\u9891\u5de5\u5177\u91cc\u3002',
+                providerProgressTitle: '\u63d0\u4f9b\u65b9\u8fdb\u5ea6',
+                providerProgressNote: '\u4ec5\u4e3a\u6a21\u62df\u63d0\u4f9b\u65b9\u6d41\u7a0b\u3002\u4e0d\u4f1a\u8c03\u7528\u5916\u90e8 API\u3002',
+                providerJobSubmitted: '\u63d0\u4f9b\u65b9\u4efb\u52a1\u5df2\u63d0\u4ea4\u3002',
+                providerJobSubmitFailed: '\u65e0\u6cd5\u63d0\u4ea4\u63d0\u4f9b\u65b9\u4efb\u52a1\u3002',
+                providerJobSubmitting: '\u6b63\u5728\u63d0\u4ea4\u63d0\u4f9b\u65b9\u4efb\u52a1...',
+                pollProviderStatus: '\u8f6e\u8be2\u63d0\u4f9b\u65b9\u72b6\u6001',
+                providerStatusRefreshed: '\u63d0\u4f9b\u65b9\u72b6\u6001\u5df2\u5237\u65b0\u3002',
+                providerStatusRefreshFailed: '\u65e0\u6cd5\u8f6e\u8be2\u63d0\u4f9b\u65b9\u72b6\u6001\u3002',
+                providerStatusRefreshing: '\u6b63\u5728\u8f6e\u8be2\u63d0\u4f9b\u65b9\u72b6\u6001...',
+                completeSimulatedProviderResult: '\u5b8c\u6210\u6a21\u62df\u63d0\u4f9b\u65b9\u7ed3\u679c',
+                providerResultCompleted: '\u6a21\u62df\u63d0\u4f9b\u65b9\u7ed3\u679c\u5df2\u5b8c\u6210\u3002',
+                providerJobIdLabel: '\u63d0\u4f9b\u65b9\u4efb\u52a1 ID',
+                providerStatusLabel: '\u63d0\u4f9b\u65b9\u72b6\u6001',
+                pollCountLabel: '\u8f6e\u8be2\u6b21\u6570',
+                externalApiCalledLabel: '\u662f\u5426\u8c03\u7528\u5916\u90e8 API',
+                submittedAtLabel: '\u63d0\u4ea4\u65f6\u95f4',
+                lastPolledAtLabel: '\u4e0a\u6b21\u8f6e\u8be2\u65f6\u95f4',
+                submitProviderJob: '\u63d0\u4ea4\u63d0\u4f9b\u65b9\u4efb\u52a1',
                 refreshJobStatus: '\u5237\u65b0\u4efb\u52a1\u72b6\u6001',
                 copySelectedPrompt: '\u590d\u5236\u5df2\u9009\u63d0\u793a\u8bcd',
                 copyJobId: '\u590d\u5236\u4efb\u52a1 ID',
@@ -5791,6 +5827,24 @@
             return videoGenerationJsonResponse(response, 'videoResultSaveFailed');
         }
 
+        async function postVideoProviderSubmit(jobId, payload) {
+            const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || {})
+            });
+            return videoGenerationJsonResponse(response, 'providerJobSubmitFailed');
+        }
+
+        async function postVideoProviderPoll(jobId, payload) {
+            const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-poll`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || {})
+            });
+            return videoGenerationJsonResponse(response, 'providerStatusRefreshFailed');
+        }
+
         async function postPastedReviewWorkspaceAnalysis(payload) {
             const response = await fetch('/api/v1/analyze-pasted-review-workspace', {
                 method: 'POST',
@@ -6982,12 +7036,50 @@
                 </div>
                 ${block(t('videoJobPromptLabel'), prompt)}
                 <div class="feedback-box">${escapeHTML(t('videoJobManualExportNote'))}</div>
+                ${renderVideoProviderProgress(job)}
                 <div class="quick-use-pack-actions">
                     <button class="btn-secondary" type="button" id="videoJobRefreshBtn" onclick="refreshCurrentVideoJobStatus()">${escapeHTML(t('refreshJobStatus'))}</button>
                     <button class="btn-secondary" type="button" id="videoJobCopyPromptBtn" onclick="copyCurrentVideoJobPrompt()">${escapeHTML(t('copySelectedPrompt'))}</button>
                     <button class="btn-secondary" type="button" id="videoJobCopyIdBtn" onclick="copyCurrentVideoJobId()">${escapeHTML(t('copyJobId'))}</button>
                 </div>
                 ${renderVideoJobResultForm(job)}
+            `;
+        }
+
+        function renderVideoProviderProgress(job) {
+            if (!job || !job.job_id) return '';
+            const providerPayload = job.provider_payload || {};
+            const runtime = job.provider_runtime || {};
+            const supportsPolling = !!(providerPayload.supports_async_polling || providerPayload.create_mode === 'planned_external_api');
+            const canSubmit = supportsPolling && job.status === 'ready_for_manual_export';
+            const canPoll = !!runtime.provider_job_id && ['queued', 'processing'].includes(job.status || '');
+            const canComplete = !!runtime.provider_job_id && job.status === 'processing';
+            const externalApiCalled = runtime.external_api_called === true ? 'true' : 'false';
+            return `
+                <div class="section-block" id="videoProviderProgressPanel">
+                    <div class="json-key">${escapeHTML(t('providerProgressTitle'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('providerProgressNote'))}</div>
+                    <div class="probe-grid" id="videoProviderRuntimePanel">
+                        ${block(t('videoJobStatusLabel'), job.status || '')}
+                        ${runtime.provider_job_id ? block(t('providerJobIdLabel'), runtime.provider_job_id) : ''}
+                        ${runtime.provider_status ? block(t('providerStatusLabel'), runtime.provider_status) : ''}
+                        ${block(t('externalApiCalledLabel'), externalApiCalled)}
+                        ${runtime.poll_count !== undefined ? block(t('pollCountLabel'), String(runtime.poll_count || 0)) : ''}
+                        ${runtime.submitted_at ? block(t('submittedAtLabel'), runtime.submitted_at) : ''}
+                        ${runtime.last_polled_at ? block(t('lastPolledAtLabel'), runtime.last_polled_at) : ''}
+                    </div>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" type="button" id="videoProviderSubmitBtn" onclick="submitCurrentVideoProviderJob()" ${canSubmit ? '' : 'disabled'}>
+                            ${escapeHTML(t('submitProviderJob'))}
+                        </button>
+                        <button class="btn-secondary" type="button" id="videoProviderPollBtn" onclick="pollCurrentVideoProviderStatus()" ${canPoll ? '' : 'disabled'}>
+                            ${escapeHTML(t('pollProviderStatus'))}
+                        </button>
+                        <button class="btn-secondary" type="button" id="videoProviderCompleteBtn" onclick="completeCurrentVideoProviderResult()" ${canComplete ? '' : 'disabled'}>
+                            ${escapeHTML(t('completeSimulatedProviderResult'))}
+                        </button>
+                    </div>
+                </div>
             `;
         }
 
@@ -7087,6 +7179,74 @@
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoJobRefreshFailed');
             } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function submitCurrentVideoProviderJob() {
+            const status = currentVideoJobStatusTarget();
+            const btn = document.getElementById('videoProviderSubmitBtn');
+            const jobId = latestVideoGenerationJob?.job_id;
+            if (!jobId) {
+                if (status) status.textContent = t('providerJobSubmitFailed');
+                return;
+            }
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('providerJobSubmitting');
+            try {
+                const response = await postVideoProviderSubmit(jobId, {
+                    provider_job_id: (document.getElementById('videoProviderJobIdInput')?.value || '').trim(),
+                    notes: (document.getElementById('videoResultNotesInput')?.value || '').trim()
+                });
+                setCurrentVideoJob(response.job || {});
+                if (status) status.textContent = t('providerJobSubmitted');
+                await refreshRecentVideoJobs();
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerJobSubmitFailed');
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function pollCurrentVideoProviderStatus(payload = {}) {
+            const status = currentVideoJobStatusTarget();
+            const btn = document.getElementById('videoProviderPollBtn');
+            const jobId = latestVideoGenerationJob?.job_id;
+            if (!jobId) {
+                if (status) status.textContent = t('providerStatusRefreshFailed');
+                return;
+            }
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('providerStatusRefreshing');
+            try {
+                const response = await postVideoProviderPoll(jobId, payload);
+                setCurrentVideoJob(response.job || {});
+                if (status) status.textContent = t('providerStatusRefreshed');
+                await refreshRecentVideoJobs();
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerStatusRefreshFailed');
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function completeCurrentVideoProviderResult() {
+            const status = currentVideoJobStatusTarget();
+            const btn = document.getElementById('videoProviderCompleteBtn');
+            const resultUrl = (document.getElementById('videoResultUrlInput')?.value || '').trim();
+            const previewUrl = (document.getElementById('videoPreviewUrlInput')?.value || '').trim();
+            const downloadUrl = (document.getElementById('videoDownloadUrlInput')?.value || '').trim();
+            const notes = (document.getElementById('videoResultNotesInput')?.value || '').trim();
+            if (btn) btn.disabled = true;
+            try {
+                await pollCurrentVideoProviderStatus({
+                    provider_status: 'external_result_ready',
+                    result_url: resultUrl,
+                    preview_url: previewUrl,
+                    download_url: downloadUrl,
+                    notes
+                });
+                if (status) status.textContent = t('providerResultCompleted');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerStatusRefreshFailed');
                 if (btn) btn.disabled = false;
             }
         }
