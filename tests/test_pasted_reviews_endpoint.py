@@ -143,6 +143,7 @@ class PastedReviewsEndpointTest(unittest.TestCase):
             "feedback",
             "llm_evidence_packet",
             "video_generation_packet",
+            "external_video_tool_handoff",
             "agent_trace",
         ]:
             with self.subTest(field=field):
@@ -205,6 +206,22 @@ class PastedReviewsEndpointTest(unittest.TestCase):
                 self.assertIn("overlay_text", scene)
                 self.assertIn("duration_seconds", scene)
                 self.assertIn("evidence_quote", scene)
+        handoff = payload["data"]["external_video_tool_handoff"]
+        self.assertEqual(handoff["packet_version"], "external_video_tool_handoff_v1")
+        self.assertEqual(handoff["source_packet_version"], "video_generation_v1")
+        self.assertFalse(handoff["external_api_called"])
+        self.assertFalse(handoff["cost_incurred_by_crossgrowth"])
+        self.assertTrue(handoff["requires_user_confirmation_before_paid_generation"])
+        self.assertIn("gemini_video_prompt", handoff["tool_prompts"])
+        self.assertIn("doubao_video_prompt", handoff["tool_prompts"])
+        self.assertIn("general_image_to_video_prompt", handoff["tool_prompts"])
+        self.assertTrue(handoff["tool_prompts"]["gemini_video_prompt"])
+        self.assertTrue(handoff["tool_prompts"]["doubao_video_prompt"])
+        self.assertEqual(len(handoff["keyframe_prompts"]), 4)
+        self.assertTrue(handoff["product_consistency_rules"])
+        self.assertTrue(handoff["negative_prompt"])
+        self.assertTrue(handoff["copy_ready_generation_brief"])
+        self.assertIn("CrossGrowth does not call external video APIs", " ".join(handoff["warnings"]))
         trace = payload["data"]["agent_trace"]
         self.assertEqual(trace["trace_version"], "agent_trace_v1")
         self.assertEqual(trace["execution_mode"], "single_workflow_scaffold")

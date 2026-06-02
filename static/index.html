@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2913,6 +2913,129 @@
             copyVideoDraftText(prompt, 'videoPromptCopied');
         }
 
+        function externalVideoHandoffKeyframeText(frame) {
+            if (!frame) return '';
+            return [
+                `${t('sceneLabel')} ${frame.scene_id || ''}`.trim(),
+                frame.duration_seconds ? `${t('recommendedDuration')}: ${frame.duration_seconds}s` : '',
+                frame.keyframe_goal ? `Goal: ${frame.keyframe_goal}` : '',
+                frame.image_prompt ? `${t('imageToVideoPrompt')}: ${frame.image_prompt}` : '',
+                frame.motion_prompt ? `${t('shortMotionPrompt')}: ${frame.motion_prompt}` : '',
+                frame.overlay_text ? `${t('overlayText')}: ${frame.overlay_text}` : '',
+                frame.evidence_anchor ? `${t('evidenceQuote')}: ${frame.evidence_anchor}` : ''
+            ].filter(Boolean).join('\n');
+        }
+
+        function externalVideoHandoffFullText(handoff) {
+            if (!handoff) return '';
+            const prompts = handoff.tool_prompts || {};
+            const keyframes = Array.isArray(handoff.keyframe_prompts) ? handoff.keyframe_prompts : [];
+            return [
+                t('externalVideoToolHandoffTitle'),
+                handoff.recommended_workflow || '',
+                `${t('geminiVideoPrompt')}:\n${prompts.gemini_video_prompt || ''}`,
+                `${t('doubaoVideoPrompt')}:\n${prompts.doubao_video_prompt || ''}`,
+                `${t('imageToVideoPrompt')}:\n${prompts.general_image_to_video_prompt || ''}`,
+                `${t('shortMotionPrompt')}:\n${prompts.short_motion_prompt || ''}`,
+                `${t('keyframePrompts')}:\n${keyframes.map(externalVideoHandoffKeyframeText).join('\n\n')}`,
+                `${t('productConsistencyRules')}:\n${(handoff.product_consistency_rules || []).join('\n')}`,
+                `${t('negativePrompt')}:\n${handoff.negative_prompt || ''}`,
+                `${t('copyReadyGenerationBrief')}:\n${handoff.copy_ready_generation_brief || ''}`,
+                `${t('manualSteps')}:\n${(handoff.manual_steps || []).join('\n')}`,
+                `${t('qualityChecklist')}:\n${(handoff.quality_checklist || []).join('\n')}`
+            ].filter(Boolean).join('\n\n');
+        }
+
+        async function copyExternalVideoHandoffText(text) {
+            if (!text) {
+                showCopyFeedbackToast(t('handoffPromptCopyFailed'), 'copyStatus');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopyFeedbackToast(t('handoffPromptCopied'), 'copyStatus');
+            } catch (error) {
+                showCopyFeedbackToast(t('handoffPromptCopyFailed'), 'copyStatus');
+            }
+        }
+
+        function copyExternalVideoToolPrompt(promptKey) {
+            const handoff = latestProductData?.external_video_tool_handoff || {};
+            const prompts = handoff.tool_prompts || {};
+            copyExternalVideoHandoffText(prompts[promptKey] || '');
+        }
+
+        function copyExternalVideoKeyframePrompt(index) {
+            const frame = (latestProductData?.external_video_tool_handoff?.keyframe_prompts || [])[index];
+            copyExternalVideoHandoffText(externalVideoHandoffKeyframeText(frame));
+        }
+
+        function copyFullExternalVideoHandoffPackage() {
+            copyExternalVideoHandoffText(externalVideoHandoffFullText(latestProductData?.external_video_tool_handoff || {}));
+        }
+
+        function renderExternalVideoToolHandoffPanel(handoff) {
+            if (!handoff || handoff.packet_version !== 'external_video_tool_handoff_v1') return '';
+            const prompts = handoff.tool_prompts || {};
+            const keyframes = Array.isArray(handoff.keyframe_prompts) ? handoff.keyframe_prompts.slice(0, 4) : [];
+            const listBlock = (title, values) => block(title, (Array.isArray(values) ? values : []).join('\n'));
+            const keyframeField = (label, value, extraClass = '') => value ? `
+                <div>
+                    <div class="storyboard-scene-label">${escapeHTML(label)}</div>
+                    <div class="storyboard-scene-value ${extraClass}">${escapeHTML(value)}</div>
+                </div>
+            ` : '';
+            const keyframeRows = keyframes.map((frame, index) => `
+                <div class="storyboard-scene-card">
+                    <div class="storyboard-scene-label">${escapeHTML(t('sceneLabel'))} ${escapeHTML(String(frame.scene_id || index + 1))}</div>
+                    <div class="storyboard-scene-fields">
+                        ${keyframeField('Goal', frame.keyframe_goal || '')}
+                        ${keyframeField(t('imageToVideoPrompt'), frame.image_prompt || '')}
+                        ${keyframeField(t('shortMotionPrompt'), frame.motion_prompt || '')}
+                        ${keyframeField(t('overlayText'), frame.overlay_text || '')}
+                        ${keyframeField(t('evidenceQuote'), frame.evidence_anchor || '', 'storyboard-scene-evidence')}
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="copyExternalVideoKeyframePrompt(${index})">${escapeHTML(t('copyKeyframePrompt'))}</button>
+                </div>
+            `).join('');
+            return `
+                <div class="section-block" id="externalVideoToolHandoffPanel">
+                    <div class="json-key">${escapeHTML(t('externalVideoToolHandoffTitle'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('externalVideoToolHandoffNote'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('noExternalVideoApiHandoff'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('reviewExternalPricing'))}</div>
+                    <details open>
+                        <summary>${escapeHTML(t('geminiVideoPrompt'))}</summary>
+                        ${block(t('geminiVideoPrompt'), prompts.gemini_video_prompt || '')}
+                        <button class="btn-secondary" type="button" onclick="copyExternalVideoToolPrompt('gemini_video_prompt')">${escapeHTML(t('copyGeminiPrompt'))}</button>
+                    </details>
+                    <details>
+                        <summary>${escapeHTML(t('doubaoVideoPrompt'))}</summary>
+                        ${block(t('doubaoVideoPrompt'), prompts.doubao_video_prompt || '')}
+                        <button class="btn-secondary" type="button" onclick="copyExternalVideoToolPrompt('doubao_video_prompt')">${escapeHTML(t('copyDoubaoPrompt'))}</button>
+                    </details>
+                    <details>
+                        <summary>${escapeHTML(t('imageToVideoPrompt'))}</summary>
+                        ${block(t('imageToVideoPrompt'), prompts.general_image_to_video_prompt || '')}
+                        ${block(t('shortMotionPrompt'), prompts.short_motion_prompt || '')}
+                        <button class="btn-secondary" type="button" onclick="copyExternalVideoToolPrompt('general_image_to_video_prompt')">${escapeHTML(t('copyImageToVideoPrompt'))}</button>
+                    </details>
+                    <details>
+                        <summary>${escapeHTML(t('keyframePrompts'))}</summary>
+                        <div class="storyboard-grid">${keyframeRows}</div>
+                    </details>
+                    ${listBlock(t('productConsistencyRules'), handoff.product_consistency_rules)}
+                    ${block(t('negativePrompt'), handoff.negative_prompt || '')}
+                    ${block(t('copyReadyGenerationBrief'), handoff.copy_ready_generation_brief || '')}
+                    ${listBlock(t('manualSteps'), handoff.manual_steps)}
+                    ${listBlock(t('qualityChecklist'), handoff.quality_checklist)}
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" type="button" onclick="copyFullExternalVideoHandoffPackage()">${escapeHTML(t('copyFullHandoffPackage'))}</button>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderVideoDraftPanel(packet) {
             if (!packet || !packet.packet_version) return '';
             const video = packet.video || {};
@@ -4342,13 +4465,53 @@
             pikaStylePrompt: 'Pika 风格提示词'
         });
 
-        function t(key) {
-            return LANGUAGE_COPY[outputLanguage]?.[key] || LANGUAGE_COPY.en[key] || key;
-        }
+        Object.assign(LANGUAGE_COPY.en, {
+            externalVideoToolHandoffTitle: 'External Video Tool Handoff',
+            externalVideoToolHandoffNote: 'Copy these prompts into Gemini, Doubao, Runway, Pika, Kling, or another video tool. CrossGrowth does not call external video APIs here.',
+            copyGeminiPrompt: 'Copy Gemini prompt',
+            copyDoubaoPrompt: 'Copy Doubao prompt',
+            copyImageToVideoPrompt: 'Copy image-to-video prompt',
+            copyFullHandoffPackage: 'Copy full handoff package',
+            copyKeyframePrompt: 'Copy keyframe prompt',
+            handoffPromptCopied: 'Handoff prompt copied.',
+            handoffPromptCopyFailed: 'Unable to copy handoff prompt.',
+            geminiVideoPrompt: 'Gemini video prompt',
+            doubaoVideoPrompt: 'Doubao video prompt',
+            imageToVideoPrompt: 'Image-to-video prompt',
+            shortMotionPrompt: 'Short motion prompt',
+            keyframePrompts: 'Keyframe prompts',
+            productConsistencyRules: 'Product consistency rules',
+            negativePrompt: 'Negative prompt',
+            copyReadyGenerationBrief: 'Copy-ready generation brief',
+            manualSteps: 'Manual steps',
+            qualityChecklist: 'Quality checklist',
+            noExternalVideoApiHandoff: 'No external video API is called by CrossGrowth in this flow.',
+            reviewExternalPricing: 'Review external tool pricing before paid generation.'
+        });
 
-        function currentOutputLanguage() {
-            return outputLanguage === 'zh-CN' ? 'zh-CN' : 'en';
-        }
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            externalVideoToolHandoffTitle: '\u5916\u90e8\u89c6\u9891\u5de5\u5177\u4ea4\u4ed8\u5305',
+            externalVideoToolHandoffNote: '\u5c06\u8fd9\u4e9b\u63d0\u793a\u8bcd\u590d\u5236\u5230 Gemini\u3001\u8c46\u5305\u3001Runway\u3001Pika\u3001Kling \u6216\u5176\u4ed6\u89c6\u9891\u5de5\u5177\u3002CrossGrowth \u5728\u8fd9\u4e2a\u6d41\u7a0b\u4e2d\u4e0d\u8c03\u7528\u5916\u90e8\u89c6\u9891 API\u3002',
+            copyGeminiPrompt: '\u590d\u5236 Gemini \u63d0\u793a\u8bcd',
+            copyDoubaoPrompt: '\u590d\u5236\u8c46\u5305\u63d0\u793a\u8bcd',
+            copyImageToVideoPrompt: '\u590d\u5236\u56fe\u751f\u89c6\u9891\u63d0\u793a\u8bcd',
+            copyFullHandoffPackage: '\u590d\u5236\u5b8c\u6574\u4ea4\u4ed8\u5305',
+            copyKeyframePrompt: '\u590d\u5236\u5173\u952e\u5e27\u63d0\u793a\u8bcd',
+            handoffPromptCopied: '\u4ea4\u4ed8\u63d0\u793a\u8bcd\u5df2\u590d\u5236\u3002',
+            handoffPromptCopyFailed: '\u65e0\u6cd5\u590d\u5236\u4ea4\u4ed8\u63d0\u793a\u8bcd\u3002',
+            geminiVideoPrompt: 'Gemini \u89c6\u9891\u63d0\u793a\u8bcd',
+            doubaoVideoPrompt: '\u8c46\u5305\u89c6\u9891\u63d0\u793a\u8bcd',
+            imageToVideoPrompt: '\u56fe\u751f\u89c6\u9891\u63d0\u793a\u8bcd',
+            shortMotionPrompt: '\u77ed\u52a8\u6548\u63d0\u793a\u8bcd',
+            keyframePrompts: '\u5173\u952e\u5e27\u63d0\u793a\u8bcd',
+            productConsistencyRules: '\u4ea7\u54c1\u4e00\u81f4\u6027\u89c4\u5219',
+            negativePrompt: '\u8d1f\u9762\u63d0\u793a\u8bcd',
+            copyReadyGenerationBrief: '\u53ef\u76f4\u63a5\u590d\u5236\u7684\u751f\u6210\u7b80\u62a5',
+            manualSteps: '\u624b\u52a8\u6b65\u9aa4',
+            qualityChecklist: '\u8d28\u91cf\u68c0\u67e5\u6e05\u5355',
+            noExternalVideoApiHandoff: 'CrossGrowth \u5728\u8fd9\u4e2a\u6d41\u7a0b\u4e2d\u4e0d\u8c03\u7528\u5916\u90e8\u89c6\u9891 API\u3002',
+            reviewExternalPricing: '\u4f7f\u7528\u4ed8\u8d39\u751f\u6210\u524d\u8bf7\u590d\u6838\u5916\u90e8\u5de5\u5177\u4ef7\u683c\u3002'
+        });
 
         function normalizeLocalizedPlaceholderText(value) {
             return String(value ?? '').replaceAll('\\n', String.fromCharCode(10));
@@ -5818,6 +5981,10 @@
                 throw new Error(body.error || t('videoJobFailed'));
             }
             return body;
+        }
+
+        function currentOutputLanguage() {
+            return outputLanguage === 'zh-CN' ? 'zh-CN' : 'en';
         }
 
         async function videoGenerationJsonResponse(response, fallbackKey) {
@@ -7478,6 +7645,7 @@
                     ${renderStoryboardBrief(storyboard)}
                 </div>
                 ${renderVideoDraftPanel(data.video_generation_packet)}
+                ${renderExternalVideoToolHandoffPanel(data.external_video_tool_handoff)}
                 ${renderVideoJobControls(data)}
             `;
 

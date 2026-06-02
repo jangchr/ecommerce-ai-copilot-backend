@@ -14,6 +14,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
     def test_video_job_controls_create_job_from_generation_data(self):
         self.assertIn("function renderVideoJobControls(data)", self.source)
         self.assertIn("renderVideoDraftPanel(data.video_generation_packet)", self.source)
+        self.assertIn("renderExternalVideoToolHandoffPanel(data.external_video_tool_handoff)", self.source)
         self.assertIn("renderVideoJobControls(data)", self.source)
         self.assertIn("async function createVideoJobFromLatestGeneration()", self.source)
         self.assertIn("async function postVideoJobFromGeneration(payload)", self.source)
@@ -157,6 +158,27 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Manual export has no API cost in this app.", self.source)
         self.assertIn("requires_user_confirmation", self.source)
         self.assertIn("pricing_is_estimate", self.source)
+        for marker in [
+            "externalVideoToolHandoffTitle",
+            "External Video Tool Handoff",
+            "renderExternalVideoToolHandoffPanel",
+            "external_video_tool_handoff",
+            "copyExternalVideoToolPrompt",
+            "copyFullExternalVideoHandoffPackage",
+            "copyExternalVideoKeyframePrompt",
+            "copyGeminiPrompt",
+            "copyDoubaoPrompt",
+            "copyImageToVideoPrompt",
+            "copyFullHandoffPackage",
+            "productConsistencyRules",
+            "negativePrompt",
+            "keyframePrompts",
+            "qualityChecklist",
+            "No external video API is called by CrossGrowth in this flow.",
+            "Review external tool pricing before paid generation.",
+        ]:
+            with self.subTest(external_handoff_marker=marker):
+                self.assertIn(marker, self.source)
         self.assertIn("submitProviderJob: 'Submit provider job'", self.source)
         self.assertIn("pollProviderStatus: 'Poll provider status'", self.source)
         self.assertIn("completeSimulatedProviderResult: 'Complete simulated provider result'", self.source)

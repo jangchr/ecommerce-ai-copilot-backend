@@ -758,6 +758,185 @@ def _build_video_generation_packet(
     }
 
 
+def _handoff_text(value, limit: int = 700) -> str:
+    return _safe_evidence_quote(str(value or ""), limit=limit)
+
+
+def _build_external_video_tool_handoff(
+    product_name: str,
+    category: str,
+    data: dict,
+) -> dict:
+    try:
+        data = data if isinstance(data, dict) else {}
+        assets = data.get("assets") if isinstance(data.get("assets"), dict) else {}
+        script = assets.get("tiktok_script") if isinstance(assets.get("tiktok_script"), dict) else {}
+        storyboard = assets.get("storyboard") if isinstance(assets.get("storyboard"), dict) else {}
+        insights = data.get("insights") if isinstance(data.get("insights"), dict) else {}
+        evidence = insights.get("evidence") if isinstance(insights.get("evidence"), dict) else {}
+        llm_packet = data.get("llm_evidence_packet") if isinstance(data.get("llm_evidence_packet"), dict) else {}
+        video_packet = data.get("video_generation_packet") if isinstance(data.get("video_generation_packet"), dict) else {}
+        video = video_packet.get("video") if isinstance(video_packet.get("video"), dict) else {}
+        export_formats = video_packet.get("export_formats") if isinstance(video_packet.get("export_formats"), dict) else {}
+        scenes = video_packet.get("scenes") if isinstance(video_packet.get("scenes"), list) else []
+        storyboard_scenes = storyboard.get("scenes") if isinstance(storyboard.get("scenes"), list) else []
+
+        if not scenes and storyboard_scenes:
+            for index, scene in enumerate(storyboard_scenes[:4]):
+                if not isinstance(scene, dict):
+                    continue
+                scenes.append(
+                    {
+                        "scene_id": scene.get("scene_id") or index + 1,
+                        "duration_seconds": 5,
+                        "visual_prompt": scene.get("visual_description") or scene.get("visual") or scene.get("scene_goal") or "",
+                        "narration": scene.get("narration") or "",
+                        "overlay_text": scene.get("on_screen_text") or scene.get("overlay_text") or "",
+                        "evidence_quote": scene.get("evidence_quote_used") or scene.get("evidence_quote") or scene.get("linked_painpoint") or "",
+                    }
+                )
+
+        product_title = _handoff_text(product_name or storyboard.get("product_name") or "Product", limit=160)
+        product_category = _handoff_text(category or storyboard.get("product_category") or "product", limit=120)
+        hook = _handoff_text(script.get("hook") or "", limit=220)
+        cta = _handoff_text(script.get("cta") or "", limit=180)
+        evidence_quotes = evidence.get("evidence_quotes") if isinstance(evidence.get("evidence_quotes"), list) else []
+        packet_evidence = llm_packet.get("evidence") if isinstance(llm_packet.get("evidence"), dict) else {}
+        packet_quotes = packet_evidence.get("quotes") if isinstance(packet_evidence.get("quotes"), list) else []
+        quote_preview = [_handoff_text(value, limit=220) for value in (evidence_quotes or packet_quotes)[:5] if value]
+        duration = int(video.get("recommended_duration_seconds") or 20)
+        aspect_ratio = _handoff_text(video.get("aspect_ratio") or "9:16", limit=20)
+        source_packet_version = _handoff_text(video_packet.get("packet_version") or "", limit=80)
+
+        keyframes = []
+        for index, scene in enumerate(scenes[:4]):
+            if not isinstance(scene, dict):
+                continue
+            visual = _handoff_text(scene.get("visual_prompt") or scene.get("visual_description") or "", limit=360)
+            narration = _handoff_text(scene.get("narration") or "", limit=260)
+            overlay = _handoff_text(scene.get("overlay_text") or "", limit=90)
+            evidence_anchor = _handoff_text(scene.get("evidence_quote") or scene.get("evidence_quote_used") or "", limit=240)
+            keyframe_goal = f"Create scene {scene.get('scene_id') or index + 1} for {product_title}: {overlay or narration or visual}"
+            keyframes.append(
+                {
+                    "scene_id": scene.get("scene_id") or index + 1,
+                    "duration_seconds": int(scene.get("duration_seconds") or 5),
+                    "keyframe_goal": _handoff_text(keyframe_goal, limit=260),
+                    "image_prompt": _handoff_text(
+                        f"Vertical {aspect_ratio} ecommerce keyframe for {product_title}. {visual} Keep product category as {product_category}.",
+                        limit=460,
+                    ),
+                    "motion_prompt": _handoff_text(
+                        f"Animate this keyframe with natural product handling and short-form pacing. Narration: {narration or hook}. Overlay: {overlay or 'minimal text'}.",
+                        limit=460,
+                    ),
+                    "overlay_text": overlay,
+                    "evidence_anchor": evidence_anchor,
+                }
+            )
+
+        if not keyframes:
+            keyframes.append(
+                {
+                    "scene_id": 1,
+                    "duration_seconds": 5,
+                    "keyframe_goal": f"Create a grounded product demo opening for {product_title}.",
+                    "image_prompt": f"Vertical {aspect_ratio} ecommerce keyframe showing {product_title} in a clean product-use moment.",
+                    "motion_prompt": f"Animate a short product demo clip for {product_title}; keep claims conservative and evidence-safe.",
+                    "overlay_text": hook[:72],
+                    "evidence_anchor": quote_preview[0] if quote_preview else "",
+                }
+            )
+
+        evidence_summary = "; ".join(quote_preview[:3]) or "Use only the supplied review/product evidence."
+        general_prompt = _handoff_text(export_formats.get("generic_video_prompt") or video_packet.get("full_video_prompt") or "", limit=1400)
+        gemini_prompt = (
+            f"Create a {duration}-second vertical {aspect_ratio} ecommerce video for {product_title} ({product_category}). "
+            f"Hook: {hook or 'Open with the strongest grounded buyer signal.'} "
+            f"CTA: {cta or 'End with a conservative product CTA.'} "
+            f"Use these evidence anchors only: {evidence_summary}. "
+            "Generate one short clip first, keep product appearance consistent, and avoid unsupported claims."
+        )
+        doubao_prompt = (
+            f"Generate a vertical {aspect_ratio} short product video draft for {product_title}. "
+            f"Scene plan: "
+            + " | ".join(
+                f"Scene {frame['scene_id']}: {frame['motion_prompt']}"
+                for frame in keyframes[:4]
+            )
+            + f" Evidence boundary: {evidence_summary}. No full-market claims."
+        )
+        image_to_video_prompt = (
+            f"Use the uploaded/reference product image as the product identity source. Product: {product_title}. "
+            f"Animate using the keyframe plan, preserve color/material/shape, keep overlays short, and avoid visual changes not supported by the product image or description."
+        )
+        short_motion_prompt = (
+            f"{product_title}, vertical {aspect_ratio}, quick ecommerce motion, product-in-use, evidence-safe hook, "
+            "clean lighting, short-form pacing, no exaggerated claims."
+        )
+        negative_prompt = (
+            "Do not change the product category, color, material, or package shape. "
+            "Do not add competitor logos, medical claims, full-market statistics, fake reviews, unrealistic transformations, or unsupported before/after guarantees."
+        )
+        copy_ready_generation_brief = "\n".join(
+            [
+                f"Product: {product_title}",
+                f"Category: {product_category}",
+                f"Format: {duration}s vertical {aspect_ratio}",
+                f"Hook: {hook}",
+                f"CTA: {cta}",
+                f"Evidence anchors: {evidence_summary}",
+                "Workflow: paste a tool prompt into Gemini, Doubao, Runway, Pika, Kling, or a manual video workflow. CrossGrowth does not call external video APIs.",
+                general_prompt,
+            ]
+        ).strip()
+
+        return {
+            "packet_version": "external_video_tool_handoff_v1",
+            "source_packet_version": source_packet_version or "video_generation_v1",
+            "recommended_workflow": "Use this package by copying prompts into external video tools. No API call is made by CrossGrowth.",
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "requires_user_confirmation_before_paid_generation": True,
+            "tool_prompts": {
+                "gemini_video_prompt": _handoff_text(gemini_prompt, limit=1600),
+                "doubao_video_prompt": _handoff_text(doubao_prompt, limit=1600),
+                "general_image_to_video_prompt": _handoff_text(image_to_video_prompt, limit=1200),
+                "short_motion_prompt": _handoff_text(short_motion_prompt, limit=700),
+            },
+            "keyframe_prompts": keyframes,
+            "product_consistency_rules": [
+                "Keep the product category unchanged.",
+                "Preserve the visible product color/material/shape from the supplied product image or product description.",
+                "Do not introduce unsupported claims.",
+                "Keep main product, variant, and competitor boundaries visible when evidence is variant-specific.",
+            ],
+            "negative_prompt": negative_prompt,
+            "copy_ready_generation_brief": _handoff_text(copy_ready_generation_brief, limit=3000),
+            "manual_steps": [
+                "Upload or reference the product image in the external video tool.",
+                "Paste the Gemini/Doubao/general prompt.",
+                "Generate one short clip first.",
+                "Review product consistency before generating more clips.",
+                "Paste the result URL back into the Video Job panel.",
+            ],
+            "quality_checklist": [
+                "Product still matches original product.",
+                "Claim is supported by review evidence.",
+                "Overlay text matches the scene.",
+                "No exaggerated market-wide claims.",
+                "Clip is usable before spending more credits.",
+            ],
+            "warnings": [
+                "External tool pricing can vary.",
+                "CrossGrowth does not call external video APIs in this flow.",
+                "Review costs before using paid generation.",
+            ],
+        }
+    except Exception:
+        return {}
+
+
 def _agent_trace_text(value, limit: int = 220) -> str:
     return _safe_evidence_quote(str(value or ""), limit=limit)
 
@@ -1249,6 +1428,7 @@ def _description_response_data(request: ProductDescriptionRequest, generated: di
         data["evaluation"],
         getattr(request, "output_language", "en"),
     )
+    data["external_video_tool_handoff"] = _build_external_video_tool_handoff(product_name, category, data)
     data["agent_trace"] = _build_agent_trace(data, getattr(request, "output_language", "en"))
     return data
 
@@ -1461,6 +1641,7 @@ def _pasted_reviews_response_data(
         data["evaluation"],
         getattr(request, "output_language", "en"),
     )
+    data["external_video_tool_handoff"] = _build_external_video_tool_handoff(product_name, category, data)
     data["agent_trace"] = _build_agent_trace(data, getattr(request, "output_language", "en"))
     return data
 
@@ -2549,6 +2730,11 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         response["data"]["insights"],
         response["data"]["evaluation"],
         output_language,
+    )
+    response["data"]["external_video_tool_handoff"] = _build_external_video_tool_handoff(
+        storyboard_data.get("product_name") or env_state.get("product_title") or request.url,
+        storyboard_data.get("product_category") or env_state.get("product_category") or "",
+        response["data"],
     )
     response["data"]["agent_trace"] = _build_agent_trace(response["data"], output_language)
     try:
