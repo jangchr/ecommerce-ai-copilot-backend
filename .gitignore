@@ -22,6 +22,7 @@ server.out.log
 server.job.log
 
 # Runtime storage
+.data/
 storage/faiss_memory/
 faiss_index/
 

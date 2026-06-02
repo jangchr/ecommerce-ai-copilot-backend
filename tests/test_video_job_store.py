@@ -64,16 +64,32 @@ class VideoJobStoreTest(unittest.TestCase):
 
             reloaded.clear()
             self.assertEqual(reloaded.list(limit=10), [])
+            self.assertEqual(FileVideoJobStore(path).list(limit=10), [])
+            self.assertFalse(path.with_name("video_jobs.json.tmp").exists())
 
     def test_file_store_missing_or_corrupt_json_starts_empty(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             missing_path = Path(temp_dir) / "missing" / "video_jobs.json"
             self.assertEqual(FileVideoJobStore(missing_path).list(), [])
 
+            empty_path = Path(temp_dir) / "empty.json"
+            empty_path.write_text("", encoding="utf-8")
+            self.assertEqual(FileVideoJobStore(empty_path).list(), [])
+
             corrupt_path = Path(temp_dir) / "corrupt.json"
             corrupt_path.write_text("{not json", encoding="utf-8")
             self.assertIsNone(FileVideoJobStore(corrupt_path).get("video_job_missing"))
             self.assertEqual(FileVideoJobStore(corrupt_path).list(), [])
+
+    def test_file_store_uses_inspectable_json_shape(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "video_jobs.json"
+            store = FileVideoJobStore(path)
+            store.create(sample_job("video_job_shape"))
+
+            text = path.read_text(encoding="utf-8")
+            self.assertIn('"jobs"', text)
+            self.assertIn('"video_job_shape"', text)
 
 
 if __name__ == "__main__":

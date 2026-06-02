@@ -86,10 +86,10 @@ class FileVideoJobStore(VideoJobStore):
 
     def _write_jobs(self, jobs: dict[str, dict[str, Any]]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps({"jobs": jobs}, ensure_ascii=False, indent=2, sort_keys=True),
-            encoding="utf-8",
-        )
+        payload = json.dumps({"jobs": jobs}, ensure_ascii=False, indent=2, sort_keys=True)
+        temp_path = self.path.with_name(f"{self.path.name}.tmp")
+        temp_path.write_text(payload, encoding="utf-8")
+        os.replace(temp_path, self.path)
 
     def create(self, job: dict[str, Any]) -> dict[str, Any]:
         job_id = str(job.get("job_id") or "")
