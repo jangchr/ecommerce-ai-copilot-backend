@@ -53,6 +53,7 @@ from video_generation.providers import (
     video_provider_payload_metadata,
     video_provider_plan,
 )
+from video_generation.job_store import get_video_job_store
 
 app = FastAPI()
 source_probe_registry = SourceAdapterRegistry()
@@ -115,7 +116,7 @@ PASTED_REVIEWS_MIN_CHARS = 24
 PASTED_REVIEWS_COMPACT_QUOTE_LIMIT = 12
 PASTED_REVIEWS_RAW_MAX_CHARS = 50000
 SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
-VIDEO_GENERATION_JOBS: dict[str, dict] = {}
+VIDEO_JOB_STORE = get_video_job_store()
 VIDEO_GENERATION_RESULT_STATUSES = {
     "manual_export_completed",
     "external_result_ready",
@@ -1608,8 +1609,7 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
             }
         ],
     }
-    VIDEO_GENERATION_JOBS[job_id] = job
-    return job
+    return VIDEO_JOB_STORE.create(job)
 
 
 def _update_video_generation_job_result(job: dict, request: VideoGenerationJobResultRequest) -> dict:
@@ -1745,12 +1745,8 @@ def _video_generation_source_summary(generation_data: dict) -> dict:
 @app.get("/api/v1/video-generation/jobs", response_model=VideoGenerationJobListResponse)
 async def list_video_generation_jobs(http_request: Request, limit: int = 20):
     safe_limit = max(1, min(int(limit or 20), 50))
-    jobs = sorted(
-        VIDEO_GENERATION_JOBS.values(),
-        key=lambda item: item.get("created_at", ""),
-        reverse=True,
-    )
-    summarized = [_summarize_video_generation_job(job) for job in jobs[:safe_limit]]
+    jobs = VIDEO_JOB_STORE.list(safe_limit)
+    summarized = [_summarize_video_generation_job(job) for job in jobs]
     return {
         "status": "success",
         "jobs": summarized,
@@ -1809,7 +1805,7 @@ async def update_video_generation_job_result(
     http_request: Request,
 ):
     request_id = http_request.state.request_id
-    job = VIDEO_GENERATION_JOBS.get(job_id)
+    job = VIDEO_JOB_STORE.get(job_id)
 
     if not job:
         return JSONResponse(
@@ -1822,7 +1818,7 @@ async def update_video_generation_job_result(
         )
 
     job = _update_video_generation_job_result(job, request)
-    VIDEO_GENERATION_JOBS[job_id] = job
+    job = VIDEO_JOB_STORE.update(job_id, job)
 
     emit_event(
         "video_generation_job_result_updated",
@@ -1879,7 +1875,7 @@ async def create_video_generation_job_from_generation(
     job = _create_video_generation_job(job_request)
     job["source_generation"] = _video_generation_source_summary(generation_data)
     job["updated_at"] = _utc_now_iso()
-    VIDEO_GENERATION_JOBS[job["job_id"]] = job
+    job = VIDEO_JOB_STORE.update(job["job_id"], job)
 
     emit_event(
         "video_generation_job_created_from_generation",
@@ -1900,7 +1896,7 @@ async def create_video_generation_job_from_generation(
 @app.get("/api/v1/video-generation/jobs/{job_id}", response_model=VideoGenerationJobStatusResponse)
 async def get_video_generation_job(job_id: str, http_request: Request):
     request_id = http_request.state.request_id
-    job = VIDEO_GENERATION_JOBS.get(job_id)
+    job = VIDEO_JOB_STORE.get(job_id)
 
     if not job:
         return JSONResponse(

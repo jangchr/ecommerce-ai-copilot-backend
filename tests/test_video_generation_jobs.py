@@ -2,7 +2,7 @@ import unittest
 
 from fastapi.testclient import TestClient
 
-from main import app
+from main import VIDEO_JOB_STORE, app
 
 
 VIDEO_PACKET = {
@@ -44,6 +44,7 @@ VIDEO_PACKET = {
 
 class VideoGenerationJobEndpointTest(unittest.TestCase):
     def setUp(self):
+        VIDEO_JOB_STORE.clear()
         self.client = TestClient(app)
 
     def test_video_generation_providers_endpoint_lists_supported_providers(self):
