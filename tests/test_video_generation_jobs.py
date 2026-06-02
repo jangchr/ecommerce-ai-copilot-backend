@@ -224,6 +224,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("capcut_shot_list", job["provider_payload"]["export_formats"])
         self.assertEqual(len(job["provider_payload"]["scenes"]), 2)
         self.assertEqual(job["result"]["result_url"], "")
+        self.assertEqual(job["history"][0]["event"], "created")
+        self.assertEqual(job["history"][0]["status"], "ready_for_manual_export")
 
     def test_update_video_generation_job_result_records_external_result(self):
         created = self.client.post(
@@ -262,7 +264,9 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["result"]["download_url"], "https://example.com/download.mp4")
         self.assertEqual(job["result"]["provider_job_id"], "runway_job_123")
         self.assertTrue(job["history"])
+        self.assertIn("status_changed", [event["event"] for event in job["history"]])
         self.assertEqual(job["history"][-1]["event"], "result_update")
+        self.assertEqual(job["history"][-1]["status"], "external_result_ready")
 
     def test_update_video_generation_job_result_falls_back_to_manual_completed_status(self):
         created = self.client.post(
@@ -286,6 +290,41 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         job = response.json()["job"]
         self.assertEqual(job["status"], "manual_export_completed")
         self.assertEqual(job["result"]["notes"], "Copied into a manual editor.")
+        self.assertEqual(job["history"][-1]["event"], "result_update")
+
+    def test_update_video_generation_job_result_rejects_invalid_transition(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+
+        first = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/result",
+            json={
+                "status": "external_result_ready",
+                "result_url": "https://example.com/video.mp4",
+            },
+        )
+        self.assertEqual(first.status_code, 200)
+
+        second = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/result",
+            json={
+                "status": "manual_export_completed",
+                "notes": "Should not move backward.",
+            },
+            headers={"X-Request-ID": "video-job-invalid-transition-1"},
+        )
+
+        self.assertEqual(second.status_code, 400)
+        payload = second.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["request_id"], "video-job-invalid-transition-1")
+        self.assertIn("invalid video job status transition", payload["error"])
 
     def test_update_video_generation_job_result_returns_404_for_missing_job(self):
         response = self.client.post(

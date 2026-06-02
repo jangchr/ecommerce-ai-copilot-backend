@@ -54,6 +54,15 @@ from video_generation.providers import (
     video_provider_plan,
 )
 from video_generation.job_store import get_video_job_store
+from video_generation.job_status import (
+    VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
+    VIDEO_JOB_STATUS_FAILED,
+    VIDEO_JOB_STATUS_MANUAL_EXPORT_COMPLETED,
+    VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT,
+    build_video_job_history_event,
+    can_transition_video_job_status,
+    normalize_video_job_status,
+)
 
 app = FastAPI()
 source_probe_registry = SourceAdapterRegistry()
@@ -118,9 +127,9 @@ PASTED_REVIEWS_RAW_MAX_CHARS = 50000
 SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
 VIDEO_JOB_STORE = get_video_job_store()
 VIDEO_GENERATION_RESULT_STATUSES = {
-    "manual_export_completed",
-    "external_result_ready",
-    "failed",
+    VIDEO_JOB_STATUS_MANUAL_EXPORT_COMPLETED,
+    VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
+    VIDEO_JOB_STATUS_FAILED,
 }
 
 app.add_middleware(
@@ -1575,6 +1584,7 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
     job_id = f"video_job_{uuid4().hex[:12]}"
     export_formats = video_job_export_formats(packet)
     provider_payload = video_provider_payload_metadata(provider, export_formats, packet)
+    initial_status = normalize_video_job_status(VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT)
 
     warnings = []
     if not provider_payload["prompt"]:
@@ -1584,7 +1594,7 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
 
     job = {
         "job_id": job_id,
-        "status": "ready_for_manual_export",
+        "status": initial_status,
         "provider": provider,
         "created_at": now,
         "updated_at": now,
@@ -1601,21 +1611,27 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
         },
         "warnings": warnings,
         "history": [
-            {
-                "event": "created",
-                "status": "ready_for_manual_export",
-                "updated_at": now,
-                "provider": provider,
-            }
+            build_video_job_history_event("created", initial_status, updated_at=now, provider=provider)
         ],
     }
     return VIDEO_JOB_STORE.create(job)
 
 
-def _update_video_generation_job_result(job: dict, request: VideoGenerationJobResultRequest) -> dict:
+def _update_video_generation_job_result(job: dict, request: VideoGenerationJobResultRequest) -> tuple[dict | None, str]:
     requested_status = _clean_description_text(request.status or "manual_export_completed")
     if requested_status not in VIDEO_GENERATION_RESULT_STATUSES:
-        requested_status = "manual_export_completed"
+        requested_status = VIDEO_JOB_STATUS_MANUAL_EXPORT_COMPLETED
+    requested_status = normalize_video_job_status(
+        requested_status,
+        fallback=VIDEO_JOB_STATUS_MANUAL_EXPORT_COMPLETED,
+    )
+
+    current_status = normalize_video_job_status(
+        job.get("status", ""),
+        fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT,
+    )
+    if not can_transition_video_job_status(current_status, requested_status):
+        return None, f"invalid video job status transition: {current_status} -> {requested_status}"
 
     result = dict(job.get("result") or {})
     result.update(
@@ -1630,21 +1646,32 @@ def _update_video_generation_job_result(job: dict, request: VideoGenerationJobRe
     )
 
     job["status"] = requested_status
-    job["updated_at"] = _utc_now_iso()
+    now = _utc_now_iso()
+    job["updated_at"] = now
     job["result"] = result
 
     history = list(job.get("history") or [])
+    if current_status != requested_status:
+        history.append(
+            build_video_job_history_event(
+                "status_changed",
+                requested_status,
+                updated_at=now,
+                from_status=current_status,
+                to_status=requested_status,
+            )
+        )
     history.append(
-        {
-            "event": "result_update",
-            "status": requested_status,
-            "updated_at": job["updated_at"],
-            "provider_job_id": result.get("provider_job_id", ""),
-            "has_result_url": bool(result.get("result_url")),
-        }
+        build_video_job_history_event(
+            "result_update",
+            requested_status,
+            updated_at=now,
+            provider_job_id=result.get("provider_job_id", ""),
+            has_result_url=bool(result.get("result_url")),
+        )
     )
     job["history"] = history
-    return job
+    return job, ""
 
 
 def _summarize_video_generation_job(job: dict) -> dict:
@@ -1817,7 +1844,16 @@ async def update_video_generation_job_result(
             },
         )
 
-    job = _update_video_generation_job_result(job, request)
+    job, transition_error = _update_video_generation_job_result(job, request)
+    if transition_error:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": transition_error,
+                "request_id": request_id,
+            },
+        )
     job = VIDEO_JOB_STORE.update(job_id, job)
 
     emit_event(
