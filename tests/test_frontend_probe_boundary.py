@@ -106,6 +106,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "warnings",
             "providerProgressTitle",
             "providerProgressNote",
+            "providerCostApprovalNote",
             "submitProviderJob",
             "providerJobSubmitted",
             "providerJobSubmitFailed",
@@ -136,10 +137,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("recentVideoJobs: '\\u6700\\u8fd1\\u89c6\\u9891\\u4efb\\u52a1'", self.source)
         self.assertIn("providerProgressTitle: 'Provider progress'", self.source)
         self.assertIn("providerProgressTitle: '\\u63d0\\u4f9b\\u65b9\\u8fdb\\u5ea6'", self.source)
+        self.assertIn("providerCostApprovalNote", self.source)
         self.assertIn("submitProviderJob: 'Submit provider job'", self.source)
         self.assertIn("pollProviderStatus: 'Poll provider status'", self.source)
         self.assertIn("completeSimulatedProviderResult: 'Complete simulated provider result'", self.source)
         self.assertIn("Simulated provider flow only. No external API is called.", self.source)
+        self.assertIn("Use this to test queued, processing, and completed lifecycle states.", self.source)
+        self.assertIn("Real Runway/Pika integration requires separate setup, pricing review, API key approval, and user approval later.", self.source)
+        self.assertIn("Manual result handoff is still available.", self.source)
+        self.assertIn("t('providerCostApprovalNote')", self.source)
         self.assertIn("copyVideoJobText(prompt, 'videoJobPromptCopied')", self.source)
         self.assertIn("copyVideoJobText(jobId, 'videoJobIdCopied')", self.source)
         self.assertIn("status: (resultUrl || previewUrl) ? 'external_result_ready' : 'manual_export_completed'", self.source)

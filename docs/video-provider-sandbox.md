@@ -39,6 +39,21 @@ The API key values are never returned in API responses, job payloads, logs, or r
 
 These clients do not replace the public provider submit/poll runtime. They are a tests-first scaffold for future request mapping, polling, timeout, retry, and result-normalization work.
 
+## Cost and Approval Rule
+
+The current implementation is simulated and free to run. Fake clients and the simulated provider lifecycle do not call external APIs.
+
+Real provider integration may require paid API access. Before implementing any cost-incurring provider call, review:
+
+- Official pricing or free-tier availability.
+- API availability and access requirements.
+- API key and account requirements.
+- Estimated per-demo cost.
+- Monthly or projected project cost.
+- Cancellation, rate-limit, timeout, and failure behavior.
+
+User approval is required before implementing provider calls that can incur external cost.
+
 ## Future Work
 
 Real provider integration still requires provider-specific request mapping, an HTTP client, timeout/retry policy, polling, error normalization, and result URL normalization. Until that work is implemented, manual export and simulated polling remain the source of truth.

@@ -3419,7 +3419,8 @@
                 videoJobPromptLabel: 'Selected prompt',
                 videoJobManualExportNote: 'Copy this prompt into your selected video tool.',
                 providerProgressTitle: 'Provider progress',
-                providerProgressNote: 'Simulated provider flow only. No external API is called.',
+                providerProgressNote: 'Simulated provider flow only. No external API is called. Use this to test queued, processing, and completed lifecycle states.',
+                providerCostApprovalNote: 'Real Runway/Pika integration requires separate setup, pricing review, API key approval, and user approval later. Manual result handoff is still available.',
                 providerJobSubmitted: 'Provider job submitted.',
                 providerJobSubmitFailed: 'Could not submit provider job.',
                 providerJobSubmitting: 'Submitting provider job...',
@@ -3676,7 +3677,8 @@
                 videoJobPromptLabel: '\u5df2\u9009\u63d0\u793a\u8bcd',
                 videoJobManualExportNote: '\u628a\u8fd9\u6bb5\u63d0\u793a\u8bcd\u590d\u5236\u5230\u4f60\u9009\u62e9\u7684\u89c6\u9891\u5de5\u5177\u91cc\u3002',
                 providerProgressTitle: '\u63d0\u4f9b\u65b9\u8fdb\u5ea6',
-                providerProgressNote: '\u4ec5\u4e3a\u6a21\u62df\u63d0\u4f9b\u65b9\u6d41\u7a0b\u3002\u4e0d\u4f1a\u8c03\u7528\u5916\u90e8 API\u3002',
+                providerProgressNote: '\u4ec5\u4e3a\u6a21\u62df\u63d0\u4f9b\u65b9\u6d41\u7a0b\u3002\u4e0d\u4f1a\u8c03\u7528\u5916\u90e8 API\u3002\u7528\u5b83\u6765\u6d4b\u8bd5 queued\u3001processing\u3001completed \u751f\u547d\u5468\u671f\u72b6\u6001\u3002',
+                providerCostApprovalNote: '\u771f\u5b9e Runway/Pika \u96c6\u6210\u9700\u8981\u540e\u7eed\u5355\u72ec\u914d\u7f6e\u3001\u4ef7\u683c\u5ba1\u6838\u3001API key \u5ba1\u6279\u548c\u7528\u6237\u786e\u8ba4\u3002\u624b\u52a8\u7ed3\u679c\u4ea4\u63a5\u4ecd\u7136\u53ef\u7528\u3002',
                 providerJobSubmitted: '\u63d0\u4f9b\u65b9\u4efb\u52a1\u5df2\u63d0\u4ea4\u3002',
                 providerJobSubmitFailed: '\u65e0\u6cd5\u63d0\u4ea4\u63d0\u4f9b\u65b9\u4efb\u52a1\u3002',
                 providerJobSubmitting: '\u6b63\u5728\u63d0\u4ea4\u63d0\u4f9b\u65b9\u4efb\u52a1...',
@@ -7059,6 +7061,7 @@
                 <div class="section-block" id="videoProviderProgressPanel">
                     <div class="json-key">${escapeHTML(t('providerProgressTitle'))}</div>
                     <div class="feedback-box">${escapeHTML(t('providerProgressNote'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('providerCostApprovalNote'))}</div>
                     <div class="probe-grid" id="videoProviderRuntimePanel">
                         ${block(t('videoJobStatusLabel'), job.status || '')}
                         ${runtime.provider_job_id ? block(t('providerJobIdLabel'), runtime.provider_job_id) : ''}
