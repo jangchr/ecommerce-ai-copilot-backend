@@ -36,6 +36,8 @@ from schemas.api_contract import (
     VideoGenerationProvidersResponse,
     VideoGenerationProviderPlanResponse,
     VideoGenerationJobResultRequest,
+    VideoGenerationProviderSubmitRequest,
+    VideoGenerationProviderPollRequest,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -58,10 +60,20 @@ from video_generation.job_status import (
     VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
     VIDEO_JOB_STATUS_FAILED,
     VIDEO_JOB_STATUS_MANUAL_EXPORT_COMPLETED,
+    VIDEO_JOB_STATUS_PROCESSING,
+    VIDEO_JOB_STATUS_QUEUED,
     VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT,
     build_video_job_history_event,
     can_transition_video_job_status,
     normalize_video_job_status,
+)
+from video_generation.provider_runtime import (
+    build_provider_poll_runtime,
+    build_provider_runtime,
+    next_simulated_provider_status,
+    provider_poll_history_event,
+    provider_submit_history_events,
+    supports_provider_polling,
 )
 
 app = FastAPI()
@@ -1696,6 +1708,117 @@ def _summarize_video_generation_job(job: dict) -> dict:
     }
 
 
+def _append_video_job_status_event(
+    history: list[dict],
+    current_status: str,
+    next_status: str,
+    now: str,
+) -> None:
+    if current_status != next_status:
+        history.append(
+            build_video_job_history_event(
+                "status_changed",
+                next_status,
+                updated_at=now,
+                from_status=current_status,
+                to_status=next_status,
+            )
+        )
+
+
+def _submit_video_generation_provider_job(job: dict, request: VideoGenerationProviderSubmitRequest) -> tuple[dict | None, str]:
+    provider = normalize_video_provider(job.get("provider", ""))
+    if not supports_provider_polling(provider):
+        return None, "provider does not support polling scaffold"
+
+    current_status = normalize_video_job_status(
+        job.get("status", ""),
+        fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT,
+    )
+    next_status = VIDEO_JOB_STATUS_QUEUED
+    if not can_transition_video_job_status(current_status, next_status):
+        return None, f"invalid video job status transition: {current_status} -> {next_status}"
+
+    now = _utc_now_iso()
+    runtime = build_provider_runtime(
+        provider,
+        provider_job_id=_clean_description_text(request.provider_job_id),
+        notes=_clean_description_text(request.notes),
+        now=now,
+    )
+    job["provider_runtime"] = runtime
+    job["status"] = next_status
+    job["updated_at"] = now
+
+    result = dict(job.get("result") or {})
+    result["provider_job_id"] = runtime.get("provider_job_id", "")
+    result["message"] = "Provider polling scaffold submitted. No external video API has been called."
+    if request.notes:
+        result["notes"] = _clean_description_text(request.notes)
+    job["result"] = result
+
+    history = list(job.get("history") or [])
+    history.extend(provider_submit_history_events(provider, next_status, now=now))
+    _append_video_job_status_event(history, current_status, next_status, now)
+    job["history"] = history
+    return job, ""
+
+
+def _poll_video_generation_provider_job(job: dict, request: VideoGenerationProviderPollRequest) -> tuple[dict | None, str]:
+    provider = normalize_video_provider(job.get("provider", ""))
+    runtime = dict(job.get("provider_runtime") or {})
+    if not runtime.get("provider_job_id"):
+        return None, "provider job has not been submitted"
+
+    current_status = normalize_video_job_status(
+        job.get("status", ""),
+        fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT,
+    )
+    requested_provider_status = _clean_description_text(request.provider_status)
+    next_status = next_simulated_provider_status(current_status, requested_provider_status)
+    if next_status not in {VIDEO_JOB_STATUS_PROCESSING, VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY, VIDEO_JOB_STATUS_FAILED}:
+        next_status = VIDEO_JOB_STATUS_PROCESSING
+    if not can_transition_video_job_status(current_status, next_status):
+        return None, f"invalid video job status transition: {current_status} -> {next_status}"
+
+    now = _utc_now_iso()
+    runtime = build_provider_poll_runtime(
+        runtime,
+        next_status,
+        error_message=_clean_description_text(request.error_message),
+        notes=_clean_description_text(request.notes),
+        now=now,
+    )
+    job["provider_runtime"] = runtime
+    job["status"] = next_status
+    job["updated_at"] = now
+
+    result = dict(job.get("result") or {})
+    result["provider_job_id"] = runtime.get("provider_job_id", "")
+    result["message"] = "Provider polling scaffold checked. No external video API has been called."
+    if next_status == VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY:
+        result.update(
+            {
+                "result_url": _clean_description_text(request.result_url),
+                "preview_url": _clean_description_text(request.preview_url),
+                "download_url": _clean_description_text(request.download_url),
+                "notes": _clean_description_text(request.notes),
+                "message": "Simulated provider result recorded.",
+            }
+        )
+    elif next_status == VIDEO_JOB_STATUS_FAILED:
+        result["notes"] = _clean_description_text(request.notes)
+        result["error_message"] = _clean_description_text(request.error_message)
+        result["message"] = "Simulated provider polling marked the job failed."
+    job["result"] = result
+
+    history = list(job.get("history") or [])
+    _append_video_job_status_event(history, current_status, next_status, now)
+    history.append(provider_poll_history_event(provider, next_status, runtime, now=now))
+    job["history"] = history
+    return job, ""
+
+
 @app.get("/api/v1/video-generation/providers", response_model=VideoGenerationProvidersResponse)
 async def list_video_generation_providers(http_request: Request):
     return {
@@ -1817,6 +1940,100 @@ async def create_video_generation_job(request: VideoGenerationJobRequest, http_r
         status="success",
         job_id=job["job_id"],
         provider=job["provider"],
+    )
+    return {
+        "status": "success",
+        "job": job,
+        "request_id": request_id,
+    }
+
+
+@app.post("/api/v1/video-generation/jobs/{job_id}/provider-submit", response_model=VideoGenerationJobStatusResponse)
+async def submit_video_generation_provider_job(
+    job_id: str,
+    request: VideoGenerationProviderSubmitRequest,
+    http_request: Request,
+):
+    request_id = http_request.state.request_id
+    job = VIDEO_JOB_STORE.get(job_id)
+
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation job not found",
+                "request_id": request_id,
+            },
+        )
+
+    job, submit_error = _submit_video_generation_provider_job(job, request)
+    if submit_error:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": submit_error,
+                "request_id": request_id,
+            },
+        )
+
+    job = VIDEO_JOB_STORE.update(job_id, job)
+    emit_event(
+        "video_generation_provider_submitted",
+        request_id,
+        endpoint="/api/v1/video-generation/jobs/{job_id}/provider-submit",
+        status="success",
+        job_id=job_id,
+        job_status=job["status"],
+        provider=job.get("provider", ""),
+    )
+    return {
+        "status": "success",
+        "job": job,
+        "request_id": request_id,
+    }
+
+
+@app.post("/api/v1/video-generation/jobs/{job_id}/provider-poll", response_model=VideoGenerationJobStatusResponse)
+async def poll_video_generation_provider_job(
+    job_id: str,
+    request: VideoGenerationProviderPollRequest,
+    http_request: Request,
+):
+    request_id = http_request.state.request_id
+    job = VIDEO_JOB_STORE.get(job_id)
+
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation job not found",
+                "request_id": request_id,
+            },
+        )
+
+    job, poll_error = _poll_video_generation_provider_job(job, request)
+    if poll_error:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": poll_error,
+                "request_id": request_id,
+            },
+        )
+
+    job = VIDEO_JOB_STORE.update(job_id, job)
+    emit_event(
+        "video_generation_provider_polled",
+        request_id,
+        endpoint="/api/v1/video-generation/jobs/{job_id}/provider-poll",
+        status="success",
+        job_id=job_id,
+        job_status=job["status"],
+        provider=job.get("provider", ""),
     )
     return {
         "status": "success",

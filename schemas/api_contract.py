@@ -183,6 +183,20 @@ class VideoGenerationJobResultRequest(BaseModel):
     notes: str = ""
 
 
+class VideoGenerationProviderSubmitRequest(BaseModel):
+    provider_job_id: str = ""
+    notes: str = ""
+
+
+class VideoGenerationProviderPollRequest(BaseModel):
+    provider_status: str = ""
+    result_url: str = ""
+    preview_url: str = ""
+    download_url: str = ""
+    error_message: str = ""
+    notes: str = ""
+
+
 class AmazonIntakeRequest(BaseModel):
     url: str
     product_category: str = "amazon_product"

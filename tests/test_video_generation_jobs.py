@@ -341,6 +341,176 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(payload["status"], "error")
         self.assertEqual(payload["request_id"], "video-job-result-missing-1")
 
+    def test_provider_submit_moves_runway_job_to_queued(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-submit",
+            json={
+                "provider_job_id": "runway_scaffold_123",
+                "notes": "Submit to simulated provider scaffold.",
+            },
+            headers={"X-Request-ID": "video-provider-submit-1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["request_id"], "video-provider-submit-1")
+        job = payload["job"]
+        self.assertEqual(job["status"], "queued")
+        self.assertEqual(job["provider_runtime"]["provider_job_id"], "runway_scaffold_123")
+        self.assertEqual(job["provider_runtime"]["provider_status"], "queued")
+        self.assertFalse(job["provider_runtime"]["external_api_called"])
+        self.assertEqual(job["result"]["provider_job_id"], "runway_scaffold_123")
+        self.assertIn("provider_submitted", [event["event"] for event in job["history"]])
+        self.assertIn("status_changed", [event["event"] for event in job["history"]])
+
+    def test_provider_submit_rejects_manual_export_provider(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "manual_export",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-submit",
+            json={},
+            headers={"X-Request-ID": "video-provider-submit-manual-1"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertIn("provider does not support polling scaffold", payload["error"])
+        self.assertEqual(payload["request_id"], "video-provider-submit-manual-1")
+
+    def test_provider_submit_returns_404_for_missing_job(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs/video_job_missing/provider-submit",
+            json={},
+            headers={"X-Request-ID": "video-provider-submit-missing-1"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["request_id"], "video-provider-submit-missing-1")
+
+    def test_provider_poll_before_submit_returns_400(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-poll",
+            json={},
+            headers={"X-Request-ID": "video-provider-poll-before-submit-1"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["request_id"], "video-provider-poll-before-submit-1")
+        self.assertIn("provider job has not been submitted", payload["error"])
+
+    def test_provider_poll_moves_queued_to_processing_then_complete(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "pika",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+
+        submitted = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-submit",
+            json={},
+        )
+        self.assertEqual(submitted.status_code, 200)
+        self.assertEqual(submitted.json()["job"]["status"], "queued")
+
+        processing = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-poll",
+            json={},
+        )
+        self.assertEqual(processing.status_code, 200)
+        processing_job = processing.json()["job"]
+        self.assertEqual(processing_job["status"], "processing")
+        self.assertEqual(processing_job["provider_runtime"]["provider_status"], "processing")
+        self.assertEqual(processing_job["provider_runtime"]["poll_count"], 1)
+        self.assertIn("provider_polled", [event["event"] for event in processing_job["history"]])
+
+        completed = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-poll",
+            json={
+                "provider_status": "external_result_ready",
+                "result_url": "https://example.com/pika-video.mp4",
+                "preview_url": "https://example.com/pika-preview.jpg",
+                "download_url": "https://example.com/pika-download.mp4",
+                "notes": "Simulated provider result.",
+            },
+        )
+        self.assertEqual(completed.status_code, 200)
+        completed_job = completed.json()["job"]
+        self.assertEqual(completed_job["status"], "external_result_ready")
+        self.assertEqual(completed_job["result"]["result_url"], "https://example.com/pika-video.mp4")
+        self.assertEqual(completed_job["result"]["preview_url"], "https://example.com/pika-preview.jpg")
+        self.assertEqual(completed_job["result"]["download_url"], "https://example.com/pika-download.mp4")
+        self.assertEqual(completed_job["provider_runtime"]["poll_count"], 2)
+        self.assertFalse(completed_job["provider_runtime"]["external_api_called"])
+
+    def test_provider_poll_can_mark_processing_job_failed(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+        self.client.post(f"/api/v1/video-generation/jobs/{job_id}/provider-submit", json={})
+        self.client.post(f"/api/v1/video-generation/jobs/{job_id}/provider-poll", json={})
+
+        failed = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-poll",
+            json={
+                "provider_status": "failed",
+                "error_message": "simulated provider timeout",
+                "notes": "Provider scaffold failure path.",
+            },
+        )
+
+        self.assertEqual(failed.status_code, 200)
+        job = failed.json()["job"]
+        self.assertEqual(job["status"], "failed")
+        self.assertEqual(job["provider_runtime"]["provider_status"], "failed")
+        self.assertEqual(job["provider_runtime"]["error_message"], "simulated provider timeout")
+        self.assertEqual(job["result"]["error_message"], "simulated provider timeout")
+
+    def test_provider_poll_returns_404_for_missing_job(self):
+        response = self.client.post(
+            "/api/v1/video-generation/jobs/video_job_missing/provider-poll",
+            json={},
+            headers={"X-Request-ID": "video-provider-poll-missing-1"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["request_id"], "video-provider-poll-missing-1")
+
     def test_create_video_generation_job_from_generation_data(self):
         generation_data = {
             "assets": {
