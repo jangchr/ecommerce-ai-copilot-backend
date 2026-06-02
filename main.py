@@ -38,6 +38,7 @@ from schemas.api_contract import (
     VideoGenerationJobResultRequest,
     VideoGenerationProviderSubmitRequest,
     VideoGenerationProviderPollRequest,
+    VideoGenerationStorageStatusResponse,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -55,7 +56,7 @@ from video_generation.providers import (
     video_provider_payload_metadata,
     video_provider_plan,
 )
-from video_generation.job_store import get_video_job_store
+from video_generation.job_store import get_video_job_store, video_job_storage_diagnostics
 from video_generation.job_status import (
     VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
     VIDEO_JOB_STATUS_FAILED,
@@ -1849,6 +1850,15 @@ async def get_video_generation_provider_plan(provider: str, http_request: Reques
         "provider": provider_name,
         "plan": plan,
         "request_id": request_id,
+    }
+
+
+@app.get("/api/v1/video-generation/storage/status", response_model=VideoGenerationStorageStatusResponse)
+async def get_video_generation_storage_status(http_request: Request):
+    return {
+        "status": "success",
+        "storage": video_job_storage_diagnostics(VIDEO_JOB_STORE),
+        "request_id": http_request.state.request_id,
     }
 
 

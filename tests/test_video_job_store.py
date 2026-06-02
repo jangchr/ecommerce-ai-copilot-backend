@@ -2,7 +2,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from video_generation.job_store import FileVideoJobStore, InMemoryVideoJobStore
+from video_generation.job_store import (
+    FileVideoJobStore,
+    InMemoryVideoJobStore,
+    video_job_storage_diagnostics,
+)
 
 
 def sample_job(job_id: str, created_at: str = "2026-06-02T00:00:00Z") -> dict:
@@ -90,6 +94,61 @@ class VideoJobStoreTest(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertIn('"jobs"', text)
             self.assertIn('"video_job_shape"', text)
+
+    def test_storage_diagnostics_for_memory_store(self):
+        diagnostics = video_job_storage_diagnostics(
+            InMemoryVideoJobStore(),
+            env={},
+        )
+
+        self.assertEqual(diagnostics["storage_mode"], "memory")
+        self.assertTrue(diagnostics["is_memory_store"])
+        self.assertFalse(diagnostics["is_file_store"])
+        self.assertFalse(diagnostics["file_store_configured"])
+        self.assertFalse(diagnostics["restart_persistence_enabled"])
+        self.assertFalse(diagnostics["path_configured"])
+        self.assertTrue(diagnostics["persistent_storage_required_for_restart_survival"])
+        self.assertIn("reset", " ".join(diagnostics["warnings"]).lower())
+
+    def test_storage_diagnostics_for_file_store_with_temp_path(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "video_jobs.json"
+            diagnostics = video_job_storage_diagnostics(
+                FileVideoJobStore(path),
+                env={
+                    "VIDEO_JOB_STORE": "file",
+                    "VIDEO_JOB_STORE_PATH": str(path),
+                },
+            )
+
+            self.assertEqual(diagnostics["storage_mode"], "file")
+            self.assertTrue(diagnostics["is_file_store"])
+            self.assertTrue(diagnostics["file_store_configured"])
+            self.assertTrue(diagnostics["path_configured"])
+            self.assertTrue(diagnostics["path_parent_exists"])
+            self.assertTrue(diagnostics["path_writable"])
+            self.assertTrue(diagnostics["restart_persistence_enabled"])
+            self.assertIn("video_jobs.json", diagnostics["safe_path_hint"])
+            self.assertNotIn(str(temp_dir), diagnostics["safe_path_hint"])
+
+    def test_storage_diagnostics_handles_corrupt_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "video_jobs.json"
+            path.write_text("{not json", encoding="utf-8")
+            store = FileVideoJobStore(path)
+
+            diagnostics = video_job_storage_diagnostics(
+                store,
+                env={
+                    "VIDEO_JOB_STORE": "file",
+                    "VIDEO_JOB_STORE_PATH": str(path),
+                },
+            )
+
+            self.assertEqual(store.list(), [])
+            self.assertEqual(diagnostics["storage_mode"], "file")
+            self.assertTrue(diagnostics["path_parent_exists"])
+            self.assertTrue(diagnostics["path_writable"])
 
 
 if __name__ == "__main__":
