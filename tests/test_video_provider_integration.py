@@ -11,6 +11,7 @@ from video_generation.provider_integration import (
     provider_integration_readiness,
     provider_polling_contract,
 )
+from video_generation.provider_clients import build_provider_create_request
 from video_generation.provider_sandbox import (
     EXTERNAL_CALLS_FEATURE_FLAG,
     blocked_provider_external_call_result,
@@ -121,6 +122,13 @@ class VideoProviderIntegrationContractTest(unittest.TestCase):
         preview = build_provider_sandbox_request_preview(job)
         self.assertEqual(preview["provider"], "runway")
         self.assertFalse(preview["secrets_included"])
+
+        fake_client_request = build_provider_create_request(job)
+        self.assertEqual(fake_client_request["provider"], contract["provider"])
+        self.assertEqual(fake_client_request["job_id"], contract["job_id"])
+        self.assertEqual(fake_client_request["selected_export_key"], contract["selected_export_key"])
+        self.assertEqual(fake_client_request["scene_count"], contract["scene_count"])
+        self.assertFalse(fake_client_request["secrets_included"])
 
     def test_blocked_external_call_result_is_safe(self):
         result = blocked_provider_external_call_result("runway", "sandbox only")

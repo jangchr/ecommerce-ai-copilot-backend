@@ -33,6 +33,12 @@ The API key values are never returned in API responses, job payloads, logs, or r
 - `sandbox_ready_no_external_call`: feature flag and key are present, but no real provider adapter is enabled yet.
 - `manual_or_prompt_export`: manual/prompt export provider; no API key or external call is needed.
 
+## Fake Provider Clients
+
+`video_generation/provider_clients.py` contains fake Runway/Pika clients for adapter contract tests. They return stable normalized shapes, fake provider job IDs, and simulated statuses without using network calls or API keys.
+
+These clients do not replace the public provider submit/poll runtime. They are a tests-first scaffold for future request mapping, polling, timeout, retry, and result-normalization work.
+
 ## Future Work
 
 Real provider integration still requires provider-specific request mapping, an HTTP client, timeout/retry policy, polling, error normalization, and result URL normalization. Until that work is implemented, manual export and simulated polling remain the source of truth.
