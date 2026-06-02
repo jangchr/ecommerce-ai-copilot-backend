@@ -35,6 +35,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("renderVideoJobResult", self.source)
         self.assertIn("renderVideoJobResultForm", self.source)
         self.assertIn("renderVideoProviderProgress", self.source)
+        self.assertIn("renderVideoCostEstimate", self.source)
+        self.assertIn("providerPayload.cost_estimate", self.source)
         self.assertIn("renderRecentVideoJobsPanel", self.source)
         self.assertIn("renderRecentVideoJobRows", self.source)
         self.assertIn("renderVideoJobControls(data)", self.source)
@@ -107,6 +109,15 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "providerProgressTitle",
             "providerProgressNote",
             "providerCostApprovalNote",
+            "videoCostEstimateTitle",
+            "videoEstimatedCostLabel",
+            "videoCostLevelLabel",
+            "videoCostDurationLabel",
+            "videoCostRetryLabel",
+            "videoPricingEstimateLabel",
+            "videoCostEstimateOnly",
+            "videoCostRequiresConfirmation",
+            "videoManualNoApiCost",
             "submitProviderJob",
             "providerJobSubmitted",
             "providerJobSubmitFailed",
@@ -138,6 +149,14 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("providerProgressTitle: 'Provider progress'", self.source)
         self.assertIn("providerProgressTitle: '\\u63d0\\u4f9b\\u65b9\\u8fdb\\u5ea6'", self.source)
         self.assertIn("providerCostApprovalNote", self.source)
+        self.assertIn("videoCostEstimateTitle: 'Estimated API cost'", self.source)
+        self.assertIn("videoCostEstimateTitle: '\\u9884\\u4f30 API \\u6210\\u672c'", self.source)
+        self.assertIn("videoCostEstimatePanel", self.source)
+        self.assertIn("Estimate only. Real provider pricing can change.", self.source)
+        self.assertIn("Real video generation requires user confirmation before cost is incurred.", self.source)
+        self.assertIn("Manual export has no API cost in this app.", self.source)
+        self.assertIn("requires_user_confirmation", self.source)
+        self.assertIn("pricing_is_estimate", self.source)
         self.assertIn("submitProviderJob: 'Submit provider job'", self.source)
         self.assertIn("pollProviderStatus: 'Poll provider status'", self.source)
         self.assertIn("completeSimulatedProviderResult: 'Complete simulated provider result'", self.source)

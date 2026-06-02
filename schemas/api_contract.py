@@ -174,6 +174,27 @@ class VideoGenerationProviderPlanResponse(BaseModel):
     request_id: Optional[str] = None
 
 
+class VideoGenerationCostEstimateRequest(BaseModel):
+    provider: str = "manual_export"
+    model: str = ""
+    duration_seconds: int = 5
+    clip_count: int = 1
+    retry_count: int = 1
+    budget_usd: Optional[float] = None
+
+
+class VideoGenerationCostEstimateResponse(BaseModel):
+    status: str
+    estimate: Dict[str, Any] = Field(default_factory=dict)
+    request_id: Optional[str] = None
+
+
+class VideoGenerationCostCatalogResponse(BaseModel):
+    status: str
+    catalog: List[Dict[str, Any]] = Field(default_factory=list)
+    request_id: Optional[str] = None
+
+
 class VideoGenerationStorageStatusResponse(BaseModel):
     status: str
     storage: Dict[str, Any] = Field(default_factory=dict)

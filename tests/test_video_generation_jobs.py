@@ -159,6 +159,13 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["provider_payload"]["recommended_duration_seconds"], 20)
         self.assertEqual(job["provider_payload"]["aspect_ratio"], "9:16")
         self.assertEqual(job["provider_payload"]["evidence_boundary"], VIDEO_PACKET["evidence_boundary"])
+        cost_estimate = job["provider_payload"]["cost_estimate"]
+        self.assertEqual(cost_estimate["provider"], "runway")
+        self.assertEqual(cost_estimate["model"], "runway_gen4_turbo")
+        self.assertTrue(cost_estimate["pricing_is_estimate"])
+        self.assertGreater(cost_estimate["estimated_cost_usd"], 0)
+        self.assertTrue(cost_estimate["requires_user_confirmation"])
+        self.assertFalse(cost_estimate["external_api_call_planned"])
 
     def test_create_video_generation_job_accepts_export_key_alias(self):
         response = self.client.post(
@@ -223,6 +230,12 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("generic_video_prompt", job["provider_payload"]["export_formats"])
         self.assertIn("capcut_shot_list", job["provider_payload"]["export_formats"])
         self.assertEqual(len(job["provider_payload"]["scenes"]), 2)
+        cost_estimate = job["provider_payload"]["cost_estimate"]
+        self.assertEqual(cost_estimate["provider"], "manual_export")
+        self.assertEqual(cost_estimate["estimated_cost_usd"], 0)
+        self.assertEqual(cost_estimate["cost_level"], "free")
+        self.assertFalse(cost_estimate["requires_user_confirmation"])
+        self.assertFalse(cost_estimate["external_api_call_planned"])
         self.assertEqual(job["result"]["result_url"], "")
         self.assertEqual(job["history"][0]["event"], "created")
         self.assertEqual(job["history"][0]["status"], "ready_for_manual_export")

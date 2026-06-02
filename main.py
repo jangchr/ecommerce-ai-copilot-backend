@@ -35,6 +35,9 @@ from schemas.api_contract import (
     VideoGenerationJobListResponse,
     VideoGenerationProvidersResponse,
     VideoGenerationProviderPlanResponse,
+    VideoGenerationCostCatalogResponse,
+    VideoGenerationCostEstimateRequest,
+    VideoGenerationCostEstimateResponse,
     VideoGenerationJobResultRequest,
     VideoGenerationProviderSubmitRequest,
     VideoGenerationProviderPollRequest,
@@ -55,6 +58,11 @@ from video_generation.providers import (
     video_provider_catalog,
     video_provider_payload_metadata,
     video_provider_plan,
+)
+from video_generation.provider_costs import (
+    estimate_cost_from_video_packet,
+    estimate_video_generation_cost,
+    video_provider_cost_catalog,
 )
 from video_generation.job_store import get_video_job_store, video_job_storage_diagnostics
 from video_generation.job_status import (
@@ -1598,6 +1606,7 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
     job_id = f"video_job_{uuid4().hex[:12]}"
     export_formats = video_job_export_formats(packet)
     provider_payload = video_provider_payload_metadata(provider, export_formats, packet)
+    provider_payload["cost_estimate"] = estimate_cost_from_video_packet(packet, provider=provider)
     initial_status = normalize_video_job_status(VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT)
 
     warnings = []
@@ -1850,6 +1859,31 @@ async def get_video_generation_provider_plan(provider: str, http_request: Reques
         "provider": provider_name,
         "plan": plan,
         "request_id": request_id,
+    }
+
+
+@app.get("/api/v1/video-generation/cost/catalog", response_model=VideoGenerationCostCatalogResponse)
+async def get_video_generation_cost_catalog(http_request: Request):
+    return {
+        "status": "success",
+        "catalog": video_provider_cost_catalog(),
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/video-generation/cost/estimate", response_model=VideoGenerationCostEstimateResponse)
+async def estimate_video_generation_provider_cost(request: VideoGenerationCostEstimateRequest, http_request: Request):
+    return {
+        "status": "success",
+        "estimate": estimate_video_generation_cost(
+            provider=request.provider,
+            model=request.model,
+            duration_seconds=request.duration_seconds,
+            clip_count=request.clip_count,
+            retry_count=request.retry_count,
+            budget_usd=request.budget_usd,
+        ),
+        "request_id": http_request.state.request_id,
     }
 
 

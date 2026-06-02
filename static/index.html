@@ -3421,6 +3421,15 @@
                 providerProgressTitle: 'Provider progress',
                 providerProgressNote: 'Simulated provider flow only. No external API is called. Use this to test queued, processing, and completed lifecycle states.',
                 providerCostApprovalNote: 'Real Runway/Pika integration requires separate setup, pricing review, API key approval, and user approval later. Manual result handoff is still available.',
+                videoCostEstimateTitle: 'Estimated API cost',
+                videoEstimatedCostLabel: 'Estimated cost',
+                videoCostLevelLabel: 'Cost level',
+                videoCostDurationLabel: 'Duration',
+                videoCostRetryLabel: 'Retry count',
+                videoPricingEstimateLabel: 'Pricing estimate',
+                videoCostEstimateOnly: 'Estimate only. Real provider pricing can change.',
+                videoCostRequiresConfirmation: 'Real video generation requires user confirmation before cost is incurred.',
+                videoManualNoApiCost: 'Manual export has no API cost in this app.',
                 providerJobSubmitted: 'Provider job submitted.',
                 providerJobSubmitFailed: 'Could not submit provider job.',
                 providerJobSubmitting: 'Submitting provider job...',
@@ -3679,6 +3688,15 @@
                 providerProgressTitle: '\u63d0\u4f9b\u65b9\u8fdb\u5ea6',
                 providerProgressNote: '\u4ec5\u4e3a\u6a21\u62df\u63d0\u4f9b\u65b9\u6d41\u7a0b\u3002\u4e0d\u4f1a\u8c03\u7528\u5916\u90e8 API\u3002\u7528\u5b83\u6765\u6d4b\u8bd5 queued\u3001processing\u3001completed \u751f\u547d\u5468\u671f\u72b6\u6001\u3002',
                 providerCostApprovalNote: '\u771f\u5b9e Runway/Pika \u96c6\u6210\u9700\u8981\u540e\u7eed\u5355\u72ec\u914d\u7f6e\u3001\u4ef7\u683c\u5ba1\u6838\u3001API key \u5ba1\u6279\u548c\u7528\u6237\u786e\u8ba4\u3002\u624b\u52a8\u7ed3\u679c\u4ea4\u63a5\u4ecd\u7136\u53ef\u7528\u3002',
+                videoCostEstimateTitle: '\u9884\u4f30 API \u6210\u672c',
+                videoEstimatedCostLabel: '\u9884\u4f30\u6210\u672c',
+                videoCostLevelLabel: '\u6210\u672c\u7b49\u7ea7',
+                videoCostDurationLabel: '\u65f6\u957f',
+                videoCostRetryLabel: '\u91cd\u8bd5\u6b21\u6570',
+                videoPricingEstimateLabel: '\u4ef7\u683c\u9884\u4f30',
+                videoCostEstimateOnly: '\u4ec5\u4e3a\u9884\u4f30\u3002\u771f\u5b9e\u63d0\u4f9b\u65b9\u4ef7\u683c\u53ef\u80fd\u53d8\u52a8\u3002',
+                videoCostRequiresConfirmation: '\u4ea7\u751f\u6210\u672c\u7684\u771f\u5b9e\u89c6\u9891\u751f\u6210\u9700\u8981\u5148\u83b7\u5f97\u7528\u6237\u786e\u8ba4\u3002',
+                videoManualNoApiCost: '\u624b\u52a8\u5bfc\u51fa\u5728\u672c\u5e94\u7528\u4e2d\u6ca1\u6709 API \u6210\u672c\u3002',
                 providerJobSubmitted: '\u63d0\u4f9b\u65b9\u4efb\u52a1\u5df2\u63d0\u4ea4\u3002',
                 providerJobSubmitFailed: '\u65e0\u6cd5\u63d0\u4ea4\u63d0\u4f9b\u65b9\u4efb\u52a1\u3002',
                 providerJobSubmitting: '\u6b63\u5728\u63d0\u4ea4\u63d0\u4f9b\u65b9\u4efb\u52a1...',
@@ -7038,6 +7056,7 @@
                 </div>
                 ${block(t('videoJobPromptLabel'), prompt)}
                 <div class="feedback-box">${escapeHTML(t('videoJobManualExportNote'))}</div>
+                ${renderVideoCostEstimate(providerPayload.cost_estimate)}
                 ${renderVideoProviderProgress(job)}
                 <div class="quick-use-pack-actions">
                     <button class="btn-secondary" type="button" id="videoJobRefreshBtn" onclick="refreshCurrentVideoJobStatus()">${escapeHTML(t('refreshJobStatus'))}</button>
@@ -7045,6 +7064,31 @@
                     <button class="btn-secondary" type="button" id="videoJobCopyIdBtn" onclick="copyCurrentVideoJobId()">${escapeHTML(t('copyJobId'))}</button>
                 </div>
                 ${renderVideoJobResultForm(job)}
+            `;
+        }
+
+        function renderVideoCostEstimate(costEstimate) {
+            if (!costEstimate || typeof costEstimate !== 'object') return '';
+            const estimatedCost = costEstimate.estimated_cost_usd;
+            const costText = estimatedCost === null || estimatedCost === undefined
+                ? 'unknown'
+                : `$${Number(estimatedCost || 0).toFixed(2)} USD`;
+            const confirmationNote = costEstimate.requires_user_confirmation
+                ? t('videoCostRequiresConfirmation')
+                : t('videoManualNoApiCost');
+            return `
+                <div class="section-block" id="videoCostEstimatePanel">
+                    <div class="json-key">${escapeHTML(t('videoCostEstimateTitle'))}</div>
+                    <div class="probe-grid">
+                        ${block(t('videoEstimatedCostLabel'), costText)}
+                        ${block(t('videoCostLevelLabel'), costEstimate.cost_level || '')}
+                        ${block(t('videoCostDurationLabel'), `${costEstimate.duration_seconds || ''}s`)}
+                        ${block(t('videoCostRetryLabel'), String(costEstimate.retry_count || 1))}
+                        ${block(t('videoPricingEstimateLabel'), costEstimate.pricing_is_estimate ? 'true' : 'false')}
+                    </div>
+                    <div class="feedback-box">${escapeHTML(t('videoCostEstimateOnly'))}</div>
+                    <div class="feedback-box">${escapeHTML(confirmationNote)}</div>
+                </div>
             `;
         }
 
