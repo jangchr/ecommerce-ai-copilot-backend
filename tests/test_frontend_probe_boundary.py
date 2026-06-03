@@ -21,6 +21,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("async function getVideoGenerationJob(jobId)", self.source)
         self.assertIn("async function listVideoGenerationJobs(limit = 10)", self.source)
         self.assertIn("async function postVideoGenerationJobResult(jobId, payload)", self.source)
+        self.assertIn("async function postVideoGenerationExperiment(jobId, payload)", self.source)
         self.assertIn("async function postVideoProviderSubmit(jobId, payload)", self.source)
         self.assertIn("async function postVideoProviderPoll(jobId, payload)", self.source)
         self.assertIn("async function videoGenerationJsonResponse(response, fallbackKey)", self.source)
@@ -28,6 +29,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}", self.source)
         self.assertIn("/api/v1/video-generation/jobs?limit=${encodeURIComponent(limit)}", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/result", self.source)
+        self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/experiments", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-submit", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-poll", self.source)
         self.assertIn("generation_data: latestProductData", self.source)
@@ -35,6 +37,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("videoJobCreateBtn", self.source)
         self.assertIn("renderVideoJobResult", self.source)
         self.assertIn("renderVideoJobResultForm", self.source)
+        self.assertIn("renderExternalVideoExperimentsPanel", self.source)
         self.assertIn("renderVideoProviderProgress", self.source)
         self.assertIn("renderVideoCostEstimate", self.source)
         self.assertIn("providerPayload.cost_estimate", self.source)
@@ -53,6 +56,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         for marker in [
             "videoJobCurrentPanel",
             "videoJobExternalResultPanel",
+            "externalVideoExperimentsPanel",
+            "videoExperimentSaveBtn",
+            "videoExperimentToolName",
+            "videoExperimentPromptType",
+            "videoExperimentResultUrl",
+            "videoExperimentPreviewUrl",
+            "videoExperimentActualCostUsd",
+            "videoExperimentProductConsistency",
+            "videoExperimentStoryboardFollowing",
+            "videoExperimentVisualQuality",
+            "videoExperimentAdReadiness",
+            "videoExperimentOverallScore",
+            "videoExperimentNotes",
+            "videoExperimentFailureReason",
             "videoProviderProgressPanel",
             "videoProviderRuntimePanel",
             "recentVideoJobsPanel",
@@ -83,6 +100,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "submitCurrentVideoProviderJob",
             "pollCurrentVideoProviderStatus",
             "completeCurrentVideoProviderResult",
+            "saveExternalVideoExperiment",
+            "external_video_experiments",
+            "external_api_called",
+            "cost_incurred_by_crossgrowth",
         ]:
             with self.subTest(video_job_marker=marker):
                 self.assertIn(marker, self.source)
@@ -110,6 +131,21 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "providerProgressTitle",
             "providerProgressNote",
             "providerCostApprovalNote",
+            "externalVideoExperimentsTitle",
+            "externalVideoExperimentsNote",
+            "externalExperimentTrackerNoApi",
+            "toolName",
+            "promptType",
+            "actualCostUsd",
+            "productConsistency",
+            "storyboardFollowing",
+            "visualQuality",
+            "adReadiness",
+            "overallScore",
+            "failureReason",
+            "saveExternalExperiment",
+            "externalExperimentSaved",
+            "videoExperimentSaveFailed",
             "videoCostEstimateTitle",
             "videoEstimatedCostLabel",
             "videoCostLevelLabel",
@@ -150,6 +186,12 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("providerProgressTitle: 'Provider progress'", self.source)
         self.assertIn("providerProgressTitle: '\\u63d0\\u4f9b\\u65b9\\u8fdb\\u5ea6'", self.source)
         self.assertIn("providerCostApprovalNote", self.source)
+        self.assertIn("externalVideoExperimentsTitle: 'External Video Experiments'", self.source)
+        self.assertIn("Record results from Gemini, Doubao, Runway, Pika, or other external tools.", self.source)
+        self.assertIn("CrossGrowth does not call external video APIs in this experiment tracker.", self.source)
+        self.assertIn("Save external experiment", self.source)
+        self.assertIn("Gemini", self.source)
+        self.assertIn("Doubao", self.source)
         self.assertIn("videoCostEstimateTitle: 'Estimated API cost'", self.source)
         self.assertIn("videoCostEstimateTitle: '\\u9884\\u4f30 API \\u6210\\u672c'", self.source)
         self.assertIn("videoCostEstimatePanel", self.source)

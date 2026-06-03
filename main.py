@@ -39,6 +39,7 @@ from schemas.api_contract import (
     VideoGenerationCostEstimateRequest,
     VideoGenerationCostEstimateResponse,
     VideoGenerationJobResultRequest,
+    VideoGenerationExperimentRequest,
     VideoGenerationProviderSubmitRequest,
     VideoGenerationProviderPollRequest,
     VideoGenerationStorageStatusResponse,
@@ -1878,6 +1879,70 @@ def _update_video_generation_job_result(job: dict, request: VideoGenerationJobRe
     return job, ""
 
 
+def _validate_video_experiment_scores(request: VideoGenerationExperimentRequest) -> str:
+    for field_name in [
+        "product_consistency_score",
+        "storyboard_following_score",
+        "visual_quality_score",
+        "ad_readiness_score",
+        "overall_score",
+    ]:
+        value = getattr(request, field_name)
+        if value is None:
+            continue
+        if value < 1 or value > 5:
+            return f"{field_name} must be between 1 and 5"
+    return ""
+
+
+def _record_external_video_experiment(job: dict, request: VideoGenerationExperimentRequest) -> tuple[dict | None, str]:
+    score_error = _validate_video_experiment_scores(request)
+    if score_error:
+        return None, score_error
+
+    now = _utc_now_iso()
+    experiment = {
+        "experiment_id": f"video_experiment_{uuid4().hex[:12]}",
+        "tool_name": _clean_description_text(request.tool_name or "other"),
+        "prompt_type": _clean_description_text(request.prompt_type or "custom"),
+        "result_url": _clean_description_text(request.result_url),
+        "preview_url": _clean_description_text(request.preview_url),
+        "prompt_used": _safe_evidence_quote(request.prompt_used, limit=4000),
+        "estimated_cost_usd": request.estimated_cost_usd,
+        "actual_cost_usd": request.actual_cost_usd,
+        "product_consistency_score": request.product_consistency_score,
+        "storyboard_following_score": request.storyboard_following_score,
+        "visual_quality_score": request.visual_quality_score,
+        "ad_readiness_score": request.ad_readiness_score,
+        "overall_score": request.overall_score,
+        "notes": _clean_description_text(request.notes),
+        "failure_reason": _clean_description_text(request.failure_reason),
+        "created_at": now,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+    }
+
+    experiments = list(job.get("external_video_experiments") or [])
+    experiments.append(experiment)
+    job["external_video_experiments"] = experiments
+    job["updated_at"] = now
+
+    history = list(job.get("history") or [])
+    history.append(
+        build_video_job_history_event(
+            "external_video_experiment_recorded",
+            normalize_video_job_status(job.get("status", ""), fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT),
+            updated_at=now,
+            experiment_id=experiment["experiment_id"],
+            tool_name=experiment["tool_name"],
+            prompt_type=experiment["prompt_type"],
+            has_result_url=bool(experiment["result_url"]),
+        )
+    )
+    job["history"] = history
+    return job, ""
+
+
 def _summarize_video_generation_job(job: dict) -> dict:
     provider_payload = job.get("provider_payload") or {}
     result = job.get("result") or {}
@@ -1897,6 +1962,7 @@ def _summarize_video_generation_job(job: dict) -> dict:
         "source_hook": source_generation.get("hook", ""),
         "source_risk_level": source_generation.get("risk_level", ""),
         "warning_count": len(job.get("warnings") or []),
+        "experiment_count": len(job.get("external_video_experiments") or []),
     }
 
 
@@ -2310,6 +2376,53 @@ async def update_video_generation_job_result(
         provider=job.get("provider", ""),
     )
 
+    return {
+        "status": "success",
+        "job": job,
+        "request_id": request_id,
+    }
+
+
+@app.post("/api/v1/video-generation/jobs/{job_id}/experiments", response_model=VideoGenerationJobStatusResponse)
+async def record_external_video_experiment(
+    job_id: str,
+    request: VideoGenerationExperimentRequest,
+    http_request: Request,
+):
+    request_id = http_request.state.request_id
+    job = VIDEO_JOB_STORE.get(job_id)
+
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation job not found",
+                "request_id": request_id,
+            },
+        )
+
+    job, experiment_error = _record_external_video_experiment(job, request)
+    if experiment_error:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": experiment_error,
+                "request_id": request_id,
+            },
+        )
+
+    job = VIDEO_JOB_STORE.update(job_id, job)
+    emit_event(
+        "external_video_experiment_recorded",
+        request_id,
+        endpoint="/api/v1/video-generation/jobs/{job_id}/experiments",
+        status="success",
+        job_id=job_id,
+        job_status=job["status"],
+        provider=job.get("provider", ""),
+    )
     return {
         "status": "success",
         "job": job,

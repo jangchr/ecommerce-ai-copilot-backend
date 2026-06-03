@@ -354,6 +354,90 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(payload["status"], "error")
         self.assertEqual(payload["request_id"], "video-job-result-missing-1")
 
+    def test_record_external_video_experiment_appends_manual_tracking_record(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+                "output_language": "en",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/experiments",
+            json={
+                "tool_name": "gemini",
+                "prompt_type": "gemini_video_prompt",
+                "result_url": "https://example.com/gemini-video.mp4",
+                "preview_url": "https://example.com/gemini-preview.jpg",
+                "actual_cost_usd": 0.25,
+                "product_consistency_score": 5,
+                "storyboard_following_score": 4,
+                "visual_quality_score": 4,
+                "ad_readiness_score": 3,
+                "overall_score": 4,
+                "notes": "Good product consistency.",
+                "failure_reason": "",
+            },
+            headers={"X-Request-ID": "video-experiment-1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(payload["request_id"], "video-experiment-1")
+        job = payload["job"]
+        self.assertEqual(job["status"], "ready_for_manual_export")
+        experiments = job["external_video_experiments"]
+        self.assertEqual(len(experiments), 1)
+        experiment = experiments[0]
+        self.assertTrue(experiment["experiment_id"].startswith("video_experiment_"))
+        self.assertEqual(experiment["tool_name"], "gemini")
+        self.assertEqual(experiment["prompt_type"], "gemini_video_prompt")
+        self.assertEqual(experiment["result_url"], "https://example.com/gemini-video.mp4")
+        self.assertFalse(experiment["external_api_called"])
+        self.assertFalse(experiment["cost_incurred_by_crossgrowth"])
+        self.assertEqual(experiment["overall_score"], 4)
+        self.assertIn("external_video_experiment_recorded", [event["event"] for event in job["history"]])
+
+        fetched = self.client.get(f"/api/v1/video-generation/jobs/{job_id}")
+        self.assertEqual(fetched.status_code, 200)
+        fetched_job = fetched.json()["job"]
+        self.assertEqual(fetched_job["external_video_experiments"][0]["experiment_id"], experiment["experiment_id"])
+
+        listed = self.client.get("/api/v1/video-generation/jobs?limit=10")
+        selected = next(item for item in listed.json()["jobs"] if item["job_id"] == job_id)
+        self.assertEqual(selected["experiment_count"], 1)
+
+    def test_record_external_video_experiment_rejects_invalid_score(self):
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": "runway",
+            },
+        ).json()
+        job_id = created["job"]["job_id"]
+
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/experiments",
+            json={
+                "tool_name": "gemini",
+                "prompt_type": "gemini_video_prompt",
+                "overall_score": 6,
+            },
+            headers={"X-Request-ID": "video-experiment-invalid-score-1"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["request_id"], "video-experiment-invalid-score-1")
+        self.assertIn("overall_score", payload["error"])
+        self.assertIn("between 1 and 5", payload["error"])
+
     def test_provider_submit_moves_runway_job_to_queued(self):
         created = self.client.post(
             "/api/v1/video-generation/jobs",

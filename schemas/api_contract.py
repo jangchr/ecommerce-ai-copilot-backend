@@ -211,6 +211,23 @@ class VideoGenerationJobResultRequest(BaseModel):
     notes: str = ""
 
 
+class VideoGenerationExperimentRequest(BaseModel):
+    tool_name: str = ""
+    prompt_type: str = ""
+    result_url: str = ""
+    preview_url: str = ""
+    prompt_used: str = ""
+    estimated_cost_usd: Optional[float] = None
+    actual_cost_usd: Optional[float] = None
+    product_consistency_score: Optional[int] = None
+    storyboard_following_score: Optional[int] = None
+    visual_quality_score: Optional[int] = None
+    ad_readiness_score: Optional[int] = None
+    overall_score: Optional[int] = None
+    notes: str = ""
+    failure_reason: str = ""
+
+
 class VideoGenerationProviderSubmitRequest(BaseModel):
     provider_job_id: str = ""
     notes: str = ""

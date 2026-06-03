@@ -3581,6 +3581,23 @@
                 saveVideoResultWorking: 'Saving video result...',
                 videoResultSaved: 'Video result saved.',
                 videoResultSaveFailed: 'Could not save video result.',
+                externalVideoExperimentsTitle: 'External Video Experiments',
+                externalVideoExperimentsNote: 'Record results from Gemini, Doubao, Runway, Pika, or other external tools. CrossGrowth does not call these APIs here.',
+                externalExperimentTrackerNoApi: 'CrossGrowth does not call external video APIs in this experiment tracker.',
+                toolName: 'Tool name',
+                promptType: 'Prompt type',
+                actualCostUsd: 'Actual cost USD',
+                productConsistency: 'Product consistency',
+                storyboardFollowing: 'Storyboard following',
+                visualQuality: 'Visual quality',
+                adReadiness: 'Ad readiness',
+                overallScore: 'Overall score',
+                failureReason: 'Failure reason',
+                saveExternalExperiment: 'Save external experiment',
+                saveExternalExperimentWorking: 'Saving external experiment...',
+                externalExperimentSaved: 'External experiment saved.',
+                videoExperimentSaveFailed: 'Could not save external experiment.',
+                noExternalExperimentsYet: 'No external experiments recorded yet.',
                 recentVideoJobs: 'Recent video jobs',
                 refreshVideoJobs: 'Refresh video jobs',
                 refreshVideoJobsWorking: 'Refreshing video jobs...',
@@ -3848,6 +3865,23 @@
                 saveVideoResultWorking: '\u6b63\u5728\u4fdd\u5b58\u89c6\u9891\u7ed3\u679c...',
                 videoResultSaved: '\u89c6\u9891\u7ed3\u679c\u5df2\u4fdd\u5b58\u3002',
                 videoResultSaveFailed: '\u65e0\u6cd5\u4fdd\u5b58\u89c6\u9891\u7ed3\u679c\u3002',
+                externalVideoExperimentsTitle: '\u5916\u90e8\u89c6\u9891\u5b9e\u9a8c',
+                externalVideoExperimentsNote: '\u8bb0\u5f55\u6765\u81ea Gemini\u3001\u8c46\u5305\u3001Runway\u3001Pika \u6216\u5176\u4ed6\u5916\u90e8\u5de5\u5177\u7684\u7ed3\u679c\u3002CrossGrowth \u5728\u8fd9\u91cc\u4e0d\u8c03\u7528\u8fd9\u4e9b API\u3002',
+                externalExperimentTrackerNoApi: 'CrossGrowth \u5728\u8fd9\u4e2a\u5b9e\u9a8c\u8bb0\u5f55\u5668\u4e2d\u4e0d\u8c03\u7528\u5916\u90e8\u89c6\u9891 API\u3002',
+                toolName: '\u5de5\u5177\u540d\u79f0',
+                promptType: '\u63d0\u793a\u8bcd\u7c7b\u578b',
+                actualCostUsd: '\u5b9e\u9645\u6210\u672c USD',
+                productConsistency: '\u4ea7\u54c1\u4e00\u81f4\u6027',
+                storyboardFollowing: '\u5206\u955c\u8ddf\u968f\u5ea6',
+                visualQuality: '\u753b\u9762\u8d28\u91cf',
+                adReadiness: '\u5e7f\u544a\u53ef\u7528\u5ea6',
+                overallScore: '\u603b\u4f53\u8bc4\u5206',
+                failureReason: '\u5931\u8d25\u539f\u56e0',
+                saveExternalExperiment: '\u4fdd\u5b58\u5916\u90e8\u5b9e\u9a8c',
+                saveExternalExperimentWorking: '\u6b63\u5728\u4fdd\u5b58\u5916\u90e8\u5b9e\u9a8c...',
+                externalExperimentSaved: '\u5916\u90e8\u5b9e\u9a8c\u5df2\u4fdd\u5b58\u3002',
+                videoExperimentSaveFailed: '\u65e0\u6cd5\u4fdd\u5b58\u5916\u90e8\u5b9e\u9a8c\u3002',
+                noExternalExperimentsYet: '\u8fd8\u6ca1\u6709\u8bb0\u5f55\u5916\u90e8\u5b9e\u9a8c\u3002',
                 recentVideoJobs: '\u6700\u8fd1\u89c6\u9891\u4efb\u52a1',
                 refreshVideoJobs: '\u5237\u65b0\u89c6\u9891\u4efb\u52a1',
                 refreshVideoJobsWorking: '\u6b63\u5728\u5237\u65b0\u89c6\u9891\u4efb\u52a1...',
@@ -6014,6 +6048,15 @@
             return videoGenerationJsonResponse(response, 'videoResultSaveFailed');
         }
 
+        async function postVideoGenerationExperiment(jobId, payload) {
+            const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/experiments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            return videoGenerationJsonResponse(response, 'videoExperimentSaveFailed');
+        }
+
         async function postVideoProviderSubmit(jobId, payload) {
             const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-submit`, {
                 method: 'POST',
@@ -7230,6 +7273,7 @@
                     <button class="btn-secondary" type="button" id="videoJobCopyPromptBtn" onclick="copyCurrentVideoJobPrompt()">${escapeHTML(t('copySelectedPrompt'))}</button>
                     <button class="btn-secondary" type="button" id="videoJobCopyIdBtn" onclick="copyCurrentVideoJobId()">${escapeHTML(t('copyJobId'))}</button>
                 </div>
+                ${renderExternalVideoExperimentsPanel(job)}
                 ${renderVideoJobResultForm(job)}
             `;
         }
@@ -7313,6 +7357,81 @@
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="videoJobSaveResultBtn" type="button" onclick="saveCurrentVideoJobResult()">${escapeHTML(t('saveVideoResult'))}</button>
                     </div>
+                </div>
+            `;
+        }
+
+        function renderExternalVideoExperimentsPanel(job) {
+            if (!job || !job.job_id) return '';
+            const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
+            const toolOptions = [
+                ['gemini', 'Gemini'],
+                ['doubao', 'Doubao'],
+                ['runway', 'Runway'],
+                ['pika', 'Pika'],
+                ['kling', 'Kling'],
+                ['luma', 'Luma'],
+                ['other', 'Other']
+            ].map(([value, label]) => `<option value="${escapeHTML(value)}">${escapeHTML(label)}</option>`).join('');
+            const promptOptions = [
+                ['gemini_video_prompt', 'Gemini prompt'],
+                ['doubao_video_prompt', 'Doubao prompt'],
+                ['general_image_to_video_prompt', 'Image-to-video prompt'],
+                ['full_handoff_package', 'Full handoff package'],
+                ['custom', 'Custom']
+            ].map(([value, label]) => `<option value="${escapeHTML(value)}">${escapeHTML(label)}</option>`).join('');
+            const scoreInput = (id, label) => `
+                <label>
+                    <span class="json-key">${escapeHTML(label)}</span>
+                    <input id="${escapeHTML(id)}" type="number" min="1" max="5" step="1" placeholder="1-5" />
+                </label>
+            `;
+            const rows = experiments.length ? experiments.slice().reverse().map((experiment) => `
+                <div class="recent-item">
+                    <div>
+                        <strong>${escapeHTML(experiment.tool_name || '')}</strong>
+                        <span class="source-badge">${escapeHTML(experiment.prompt_type || '')}</span>
+                    </div>
+                    <div>${escapeHTML(t('overallScore'))}: ${escapeHTML(String(experiment.overall_score || ''))}</div>
+                    <div class="json-key">external_api_called=${escapeHTML(String(experiment.external_api_called === true))} cost_incurred_by_crossgrowth=${escapeHTML(String(experiment.cost_incurred_by_crossgrowth === true))}</div>
+                    ${experiment.result_url ? `<a href="${escapeHTML(experiment.result_url)}" target="_blank" rel="noopener">${escapeHTML(experiment.result_url)}</a>` : ''}
+                    ${experiment.notes ? `<div>${escapeHTML(experiment.notes)}</div>` : ''}
+                    ${experiment.created_at ? `<small>${escapeHTML(experiment.created_at)}</small>` : ''}
+                </div>
+            `).join('') : `<div class="recent-empty">${escapeHTML(t('noExternalExperimentsYet'))}</div>`;
+            return `
+                <div class="section-block" id="externalVideoExperimentsPanel">
+                    <div class="json-key">${escapeHTML(t('externalVideoExperimentsTitle'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('externalVideoExperimentsNote'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('externalExperimentTrackerNoApi'))}</div>
+                    <details>
+                        <summary>${escapeHTML(t('saveExternalExperiment'))}</summary>
+                        <div class="input-grid">
+                            <label>
+                                <span class="json-key">${escapeHTML(t('toolName'))}</span>
+                                <select id="videoExperimentToolName">${toolOptions}</select>
+                            </label>
+                            <label>
+                                <span class="json-key">${escapeHTML(t('promptType'))}</span>
+                                <select id="videoExperimentPromptType">${promptOptions}</select>
+                            </label>
+                            <input id="videoExperimentResultUrl" placeholder="${escapeHTML(t('resultUrl'))}" />
+                            <input id="videoExperimentPreviewUrl" placeholder="${escapeHTML(t('previewUrl'))}" />
+                            <input id="videoExperimentActualCostUsd" type="number" min="0" step="0.01" placeholder="${escapeHTML(t('actualCostUsd'))}" />
+                            ${scoreInput('videoExperimentProductConsistency', t('productConsistency'))}
+                            ${scoreInput('videoExperimentStoryboardFollowing', t('storyboardFollowing'))}
+                            ${scoreInput('videoExperimentVisualQuality', t('visualQuality'))}
+                            ${scoreInput('videoExperimentAdReadiness', t('adReadiness'))}
+                            ${scoreInput('videoExperimentOverallScore', t('overallScore'))}
+                        </div>
+                        <textarea id="videoExperimentNotes" rows="3" placeholder="${escapeHTML(t('notes'))}"></textarea>
+                        <textarea id="videoExperimentFailureReason" rows="2" placeholder="${escapeHTML(t('failureReason'))}"></textarea>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="videoExperimentSaveBtn" type="button" onclick="saveExternalVideoExperiment()">${escapeHTML(t('saveExternalExperiment'))}</button>
+                        </div>
+                        <div class="quick-use-copy-status" id="videoExperimentStatus"></div>
+                    </details>
+                    <div class="recent-list" id="externalVideoExperimentsList">${rows}</div>
                 </div>
             `;
         }
@@ -7505,6 +7624,49 @@
                 await refreshRecentVideoJobs();
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoResultSaveFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function optionalNumberInput(id) {
+            const raw = (document.getElementById(id)?.value || '').trim();
+            if (!raw) return null;
+            const value = Number(raw);
+            return Number.isFinite(value) ? value : null;
+        }
+
+        async function saveExternalVideoExperiment() {
+            const status = document.getElementById('videoExperimentStatus') || currentVideoJobStatusTarget();
+            const btn = document.getElementById('videoExperimentSaveBtn');
+            const jobId = latestVideoGenerationJob?.job_id;
+            if (!jobId) {
+                if (status) status.textContent = t('videoExperimentSaveFailed');
+                return;
+            }
+            const payload = {
+                tool_name: (document.getElementById('videoExperimentToolName')?.value || 'other').trim(),
+                prompt_type: (document.getElementById('videoExperimentPromptType')?.value || 'custom').trim(),
+                result_url: (document.getElementById('videoExperimentResultUrl')?.value || '').trim(),
+                preview_url: (document.getElementById('videoExperimentPreviewUrl')?.value || '').trim(),
+                actual_cost_usd: optionalNumberInput('videoExperimentActualCostUsd'),
+                product_consistency_score: optionalNumberInput('videoExperimentProductConsistency'),
+                storyboard_following_score: optionalNumberInput('videoExperimentStoryboardFollowing'),
+                visual_quality_score: optionalNumberInput('videoExperimentVisualQuality'),
+                ad_readiness_score: optionalNumberInput('videoExperimentAdReadiness'),
+                overall_score: optionalNumberInput('videoExperimentOverallScore'),
+                notes: (document.getElementById('videoExperimentNotes')?.value || '').trim(),
+                failure_reason: (document.getElementById('videoExperimentFailureReason')?.value || '').trim()
+            };
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('saveExternalExperimentWorking');
+            try {
+                const response = await postVideoGenerationExperiment(jobId, payload);
+                setCurrentVideoJob(response.job || {});
+                if (status) status.textContent = t('externalExperimentSaved');
+                await refreshRecentVideoJobs();
+            } catch (error) {
+                if (status) status.textContent = error.message || t('videoExperimentSaveFailed');
             } finally {
                 if (btn) btn.disabled = false;
             }
