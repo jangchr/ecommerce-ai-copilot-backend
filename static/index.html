@@ -3624,6 +3624,27 @@
                 agentTraceStatus: 'Status',
                 agentTraceWarnings: 'Warnings',
                 agentTraceKeyOutputs: 'Key outputs',
+                multiAgentWorkflowTitle: 'Business-grounded Multi-Agent Workflow',
+                multiAgentWorkflowSubtitle: 'Agent collaboration view built from real business artifacts: review evidence, storyboard, video handoff, cost estimate context, provider jobs, and experiments.',
+                multiAgentNotAutomationNote: 'Not a plain automation: each agent shows a goal, decision, artifacts, handoff, warnings, and business impact.',
+                agentWorkflowExecutionMode: 'Execution mode',
+                agentWorkflowPlainAutomation: 'Plain automation',
+                agentWorkflowRealExecution: 'Real multi-agent execution',
+                agentWorkflowOrder: 'Agent order',
+                agentWorkflowDifferentiator: 'Why this is agentic',
+                agentWorkflowBusinessGoal: 'Business goal',
+                agentWorkflowNextAction: 'Next recommended action',
+                agentWorkflowArtifactIndex: 'Business artifacts',
+                agentWorkflowStatus: 'Agent status',
+                agentWorkflowConfidence: 'Confidence',
+                agentWorkflowHumanReview: 'Needs human review',
+                agentWorkflowGoal: 'Agent goal',
+                agentWorkflowDecision: 'Decision summary',
+                agentWorkflowBusinessImpact: 'Business impact',
+                agentWorkflowInputArtifacts: 'Input artifacts',
+                agentWorkflowOutputArtifacts: 'Output artifacts',
+                agentWorkflowHandoffTo: 'Handoff to',
+                agentLabel: 'Agent',
                 tryThisProduct: 'Use this sample',
                 productResult: 'Product Result',
                 copyActions: 'Copy / Download / Translation Actions',
@@ -3908,6 +3929,27 @@
                 agentTraceStatus: '\u72b6\u6001',
                 agentTraceWarnings: '\u63d0\u793a / \u98ce\u9669',
                 agentTraceKeyOutputs: '\u5173\u952e\u8f93\u51fa',
+                multiAgentWorkflowTitle: '\u4e1a\u52a1\u7ed1\u5b9a\u7684\u591a Agent \u534f\u4f5c\u6d41\u7a0b',
+                multiAgentWorkflowSubtitle: '\u8fd9\u662f\u4ece\u771f\u5b9e\u4e1a\u52a1\u4ea7\u7269\u7ec4\u7ec7\u51fa\u6765\u7684 Agent \u534f\u4f5c\u89c6\u56fe\uff1a\u8bc4\u8bba\u8bc1\u636e\u3001\u5206\u955c\u3001\u89c6\u9891\u4ea4\u4ed8\u5305\u3001\u6210\u672c\u4f30\u7b97\u3001Provider \u4efb\u52a1\u548c\u5b9e\u9a8c\u8bb0\u5f55\u3002',
+                multiAgentNotAutomationNote: '\u4e0d\u662f\u666e\u901a\u81ea\u52a8\u5316\uff1a\u6bcf\u4e2a Agent \u90fd\u6709\u76ee\u6807\u3001\u5224\u65ad\u3001\u4ea7\u7269\u3001\u4ea4\u63a5\u3001\u98ce\u9669\u548c\u4e1a\u52a1\u5f71\u54cd\u3002',
+                agentWorkflowExecutionMode: '\u6267\u884c\u6a21\u5f0f',
+                agentWorkflowPlainAutomation: '\u666e\u901a\u81ea\u52a8\u5316',
+                agentWorkflowRealExecution: '\u771f\u5b9e\u591a Agent \u6267\u884c',
+                agentWorkflowOrder: 'Agent \u987a\u5e8f',
+                agentWorkflowDifferentiator: '\u4e3a\u4ec0\u4e48\u4f53\u73b0 Agent \u80fd\u529b',
+                agentWorkflowBusinessGoal: '\u4e1a\u52a1\u76ee\u6807',
+                agentWorkflowNextAction: '\u4e0b\u4e00\u6b65\u5efa\u8bae',
+                agentWorkflowArtifactIndex: '\u4e1a\u52a1\u4ea7\u7269',
+                agentWorkflowStatus: 'Agent \u72b6\u6001',
+                agentWorkflowConfidence: '\u7f6e\u4fe1\u5ea6',
+                agentWorkflowHumanReview: '\u9700\u8981\u4eba\u5de5\u590d\u6838',
+                agentWorkflowGoal: 'Agent \u76ee\u6807',
+                agentWorkflowDecision: '\u5224\u65ad\u6458\u8981',
+                agentWorkflowBusinessImpact: '\u4e1a\u52a1\u5f71\u54cd',
+                agentWorkflowInputArtifacts: '\u8f93\u5165\u4ea7\u7269',
+                agentWorkflowOutputArtifacts: '\u8f93\u51fa\u4ea7\u7269',
+                agentWorkflowHandoffTo: '\u4ea4\u63a5\u7ed9',
+                agentLabel: 'Agent',
                 yesLabel: '\u662f',
                 noLabel: '\u5426',
                 clearRecentGenerations: '清空最近生成记录',
@@ -7812,6 +7854,7 @@
             `;
 
             document.getElementById('res-evaluation').style.opacity = '1';
+            const multiAgentWorkflowPanel = renderMultiAgentWorkflowPanel(data.multi_agent_workflow);
             const agentTracePanel = renderAgentTracePanel(data.agent_trace);
 
             document.getElementById('res-evaluation').innerHTML = `
@@ -7831,6 +7874,7 @@
                     </div>
                     ${block(t('qualityRationale'), localizeQualityRationale(evalData.reasoning || ''))}
                 </div>
+                ${multiAgentWorkflowPanel}
                 ${agentTracePanel}
             `;
         }
@@ -7868,6 +7912,74 @@
                 ${block(t('shadowError'), amazon.error || metadata.error || '')}
             `;
         }
+
+        function renderMultiAgentWorkflowPanel(workflow) {
+            if (!workflow || workflow.workflow_version !== 'multi_agent_workflow_v2') return '';
+            const agents = Array.isArray(workflow.agents) ? workflow.agents : [];
+            const order = Array.isArray(workflow.agent_order) ? workflow.agent_order : agents.map(agent => agent.agent_id).filter(Boolean);
+            const agentsById = new Map(agents.map(agent => [agent.agent_id, agent]));
+            const orderedAgents = order.map(agentId => agentsById.get(agentId)).filter(Boolean);
+            agents.forEach(agent => {
+                if (agent && agent.agent_id && !order.includes(agent.agent_id)) orderedAgents.push(agent);
+            });
+            const artifactIndex = workflow.artifact_index || {};
+            const artifactText = Object.entries(artifactIndex)
+                .map(([key, value]) => `${key}: ${value ? t('yesLabel') : t('noLabel')}`)
+                .join('\n');
+            const plainAutomationText = workflow.is_plain_automation ? t('yesLabel') : t('noLabel');
+            const realExecutionText = workflow.is_real_multi_agent_execution ? t('yesLabel') : t('noLabel');
+
+            const agentCards = orderedAgents.map((agent, index) => {
+                const warnings = Array.isArray(agent.warnings)
+                    ? agent.warnings.join('\n')
+                    : String(agent.warnings || '');
+                const inputArtifacts = Array.isArray(agent.input_artifacts) ? agent.input_artifacts.join('\n') : '';
+                const outputArtifacts = Array.isArray(agent.output_artifacts) ? agent.output_artifacts.join('\n') : '';
+                const handoffTo = Array.isArray(agent.handoff_to) ? agent.handoff_to.join(' -> ') : '';
+                const keyOutputs = agent.key_outputs ? JSON.stringify(agent.key_outputs, null, 2) : '';
+                const confidence = agent.confidence_score === null || agent.confidence_score === undefined
+                    ? ''
+                    : `${Math.round(Number(agent.confidence_score || 0) * 100)}%`;
+                return `
+                    <details class="section-block" ${index < 3 ? 'open' : ''}>
+                        <summary>${escapeHTML(agent.role || agent.agent_id || `${t('agentLabel')} ${index + 1}`)}</summary>
+                        <div class="probe-grid">
+                            ${block(t('agentWorkflowStatus'), agent.status || '')}
+                            ${block(t('agentWorkflowConfidence'), confidence)}
+                            ${block(t('agentWorkflowHumanReview'), agent.requires_human_review ? t('yesLabel') : t('noLabel'))}
+                        </div>
+                        ${block(t('agentWorkflowGoal'), agent.goal || '')}
+                        ${block(t('agentWorkflowDecision'), agent.decision_summary || '')}
+                        ${block(t('agentWorkflowBusinessImpact'), agent.business_impact || '')}
+                        ${block(t('agentWorkflowInputArtifacts'), inputArtifacts)}
+                        ${block(t('agentWorkflowOutputArtifacts'), outputArtifacts)}
+                        ${handoffTo ? block(t('agentWorkflowHandoffTo'), handoffTo) : ''}
+                        ${warnings ? block(t('agentTraceWarnings'), warnings) : ''}
+                        ${keyOutputs ? block(t('agentTraceKeyOutputs'), keyOutputs) : ''}
+                    </details>
+                `;
+            }).join('');
+
+            return `
+                <div class="section-block" id="multiAgentWorkflowPanel">
+                    ${renderSectionHeader(t('multiAgentWorkflowTitle'), 'analytics')}
+                    <div class="feedback-box">${escapeHTML(t('multiAgentWorkflowSubtitle'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('multiAgentNotAutomationNote'))}</div>
+                    <div class="probe-grid">
+                        ${block(t('agentWorkflowExecutionMode'), workflow.execution_mode || '')}
+                        ${block(t('agentWorkflowPlainAutomation'), plainAutomationText)}
+                        ${block(t('agentWorkflowRealExecution'), realExecutionText)}
+                        ${block(t('agentWorkflowOrder'), order.join(' -> '))}
+                    </div>
+                    ${block(t('agentWorkflowDifferentiator'), workflow.differentiator || '')}
+                    ${block(t('agentWorkflowBusinessGoal'), workflow.business_goal || '')}
+                    ${block(t('agentWorkflowNextAction'), workflow.next_recommended_action || '')}
+                    ${artifactText ? block(t('agentWorkflowArtifactIndex'), artifactText) : ''}
+                    ${agentCards}
+                </div>
+            `;
+        }
+
 
         function renderAgentTracePanel(agentTrace) {
             if (!agentTrace || !agentTrace.agents) return '';

@@ -2996,3 +2996,39 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
         for key, escaped_label in expected_mappings.items():
             self.assertIn(f"'{key}': '{escaped_label}',", self.source)
+
+
+
+class MultiAgentWorkflowPanelProbeTests(unittest.TestCase):
+    def test_multi_agent_workflow_panel_markers_exist(self):
+        from pathlib import Path
+
+        html = Path("static/index.html").read_text(encoding="utf-8")
+
+        self.assertIn("function renderMultiAgentWorkflowPanel(workflow)", html)
+        self.assertIn("multi_agent_workflow", html)
+        self.assertIn("multiAgentWorkflowTitle", html)
+        self.assertIn("Business-grounded Multi-Agent Workflow", html)
+        self.assertIn("Not a plain automation", html)
+        self.assertIn("agentWorkflowDecision", html)
+        self.assertIn("agentWorkflowBusinessImpact", html)
+        self.assertIn("agentWorkflowInputArtifacts", html)
+        self.assertIn("agentWorkflowOutputArtifacts", html)
+        self.assertIn("agentWorkflowHandoffTo", html)
+        self.assertIn("requires_human_review", html)
+        self.assertIn("confidence_score", html)
+        self.assertIn("${multiAgentWorkflowPanel}", html)
+
+    def test_multi_agent_workflow_panel_preserves_existing_video_sections(self):
+        from pathlib import Path
+
+        html = Path("static/index.html").read_text(encoding="utf-8")
+
+        self.assertIn("renderExternalVideoToolHandoffPanel(data.external_video_tool_handoff)", html)
+        self.assertIn("renderVideoDraftPanel(data.video_generation_packet)", html)
+        self.assertIn("renderVideoJobControls(data)", html)
+        self.assertIn("renderAgentTracePanel(data.agent_trace)", html)
+        self.assertIn("External Video Tool Handoff", html)
+        self.assertIn("External Video Experiments", html)
+        self.assertIn("Estimated API cost", html)
+        self.assertNotIn("????", html)
