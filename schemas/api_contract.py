@@ -76,6 +76,7 @@ class GenerateCopilotData(BaseModel):
     video_generation_packet: Dict[str, Any] = Field(default_factory=dict)
     external_video_tool_handoff: Dict[str, Any] = Field(default_factory=dict)
     agent_trace: Dict[str, Any] = Field(default_factory=dict)
+    multi_agent_workflow: Dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateCopilotResponse(BaseModel):

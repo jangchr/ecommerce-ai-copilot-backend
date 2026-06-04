@@ -1431,7 +1431,330 @@ def _description_response_data(request: ProductDescriptionRequest, generated: di
     )
     data["external_video_tool_handoff"] = _build_external_video_tool_handoff(product_name, category, data)
     data["agent_trace"] = _build_agent_trace(data, getattr(request, "output_language", "en"))
+    data["multi_agent_workflow"] = _build_multi_agent_workflow(data, getattr(request, "output_language", "en"))
     return data
+
+
+def _multi_agent_workflow_text(value, limit: int = 260) -> str:
+    return _agent_trace_text(value, limit=limit)
+
+
+def _multi_agent_workflow_list(value, limit: int = 5) -> list[str]:
+    return _agent_trace_items(value, limit=limit)
+
+
+def _multi_agent_workflow_score(value, default: float = 0.66) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return default
+    return max(0.0, min(1.0, number))
+
+
+def _build_multi_agent_workflow(data: dict, output_language: str = "en") -> dict:
+    """Build a business-grounded multi-agent workflow view from existing artifacts.
+
+    This is not a separate multi-model execution engine yet. It is a transparent
+    agent collaboration layer that maps current business artifacts into agent
+    responsibilities, decisions, warnings, and handoffs.
+    """
+    if not isinstance(data, dict):
+        return {}
+
+    insights = data.get("insights") if isinstance(data.get("insights"), dict) else {}
+    audience = data.get("audience") if isinstance(data.get("audience"), dict) else {}
+    strategy = data.get("strategy") if isinstance(data.get("strategy"), dict) else {}
+    assets = data.get("assets") if isinstance(data.get("assets"), dict) else {}
+    evaluation = data.get("evaluation") if isinstance(data.get("evaluation"), dict) else {}
+    script = assets.get("tiktok_script") if isinstance(assets.get("tiktok_script"), dict) else {}
+    storyboard = assets.get("storyboard") if isinstance(assets.get("storyboard"), dict) else {}
+    scenes = storyboard.get("scenes") if isinstance(storyboard.get("scenes"), list) else []
+
+    llm_packet = data.get("llm_evidence_packet") if isinstance(data.get("llm_evidence_packet"), dict) else {}
+    video_packet = data.get("video_generation_packet") if isinstance(data.get("video_generation_packet"), dict) else {}
+    handoff = data.get("external_video_tool_handoff") if isinstance(data.get("external_video_tool_handoff"), dict) else {}
+    agent_trace = data.get("agent_trace") if isinstance(data.get("agent_trace"), dict) else {}
+
+    packet_evidence = llm_packet.get("evidence") if isinstance(llm_packet.get("evidence"), dict) else {}
+    packet_stats = llm_packet.get("review_stats") if isinstance(llm_packet.get("review_stats"), dict) else {}
+    packet_product = llm_packet.get("product") if isinstance(llm_packet.get("product"), dict) else {}
+    constraints = llm_packet.get("generation_constraints") if isinstance(llm_packet.get("generation_constraints"), list) else []
+
+    handoff_prompts = handoff.get("tool_prompts") if isinstance(handoff.get("tool_prompts"), dict) else {}
+    keyframes = handoff.get("keyframe_prompts") if isinstance(handoff.get("keyframe_prompts"), list) else []
+    product_rules = handoff.get("product_consistency_rules") if isinstance(handoff.get("product_consistency_rules"), list) else []
+
+    source_type = (
+        packet_product.get("source_type")
+        or packet_evidence.get("source_type")
+        or insights.get("evidence_source")
+        or "unknown"
+    )
+    review_count = (
+        packet_stats.get("review_count")
+        or packet_evidence.get("review_count")
+        or insights.get("review_count")
+        or 0
+    )
+    evidence_quotes = packet_evidence.get("quotes") or packet_evidence.get("evidence_quotes") or insights.get("evidence_quotes") or []
+    warning_items = (
+        _multi_agent_workflow_list(packet_stats.get("warnings"), limit=4)
+        + _multi_agent_workflow_list(insights.get("data_warnings"), limit=4)
+        + _multi_agent_workflow_list(constraints, limit=4)
+    )
+
+    video_scenes = video_packet.get("scenes") if isinstance(video_packet.get("scenes"), list) else []
+    export_formats = video_packet.get("export_formats") if isinstance(video_packet.get("export_formats"), dict) else {}
+    export_keys = sorted(key for key, value in export_formats.items() if value)
+
+    estimated_cost_summary = {}
+    # A job-level provider_payload.cost_estimate is added later when a Video Job is created.
+    # At generation time we expose the estimate agent as ready_for_job_creation.
+    if isinstance(video_packet, dict):
+        estimated_cost_summary = {
+            "packet_version": video_packet.get("packet_version", ""),
+            "recommended_duration_seconds": (video_packet.get("video") or {}).get("recommended_duration_seconds", ""),
+            "scene_count": len(video_scenes),
+            "requires_job_selection": True,
+        }
+
+    def agent(
+        agent_id: str,
+        role: str,
+        goal: str,
+        input_artifacts: list[str],
+        decision_summary: str,
+        output_artifacts: list[str],
+        handoff_to: list[str],
+        status: str = "complete",
+        confidence_score: float = 0.66,
+        warnings: list[str] | None = None,
+        business_impact: str = "",
+        requires_human_review: bool = False,
+        key_outputs: dict | None = None,
+    ) -> dict:
+        return {
+            "agent_id": agent_id,
+            "role": role,
+            "goal": goal,
+            "status": status,
+            "input_artifacts": input_artifacts,
+            "decision_summary": _multi_agent_workflow_text(decision_summary, limit=420),
+            "output_artifacts": output_artifacts,
+            "handoff_to": handoff_to,
+            "confidence_score": _multi_agent_workflow_score(confidence_score),
+            "warnings": (warnings or [])[:8],
+            "requires_human_review": bool(requires_human_review),
+            "business_impact": business_impact,
+            "key_outputs": key_outputs or {},
+        }
+
+    evidence_confidence = _multi_agent_workflow_score(packet_stats.get("source_confidence") or insights.get("source_confidence") or 0.64)
+    risk_confidence = _multi_agent_workflow_score(evaluation.get("confidence_score") or 0.66)
+
+    agents = [
+        agent(
+            "evidence_agent",
+            "Evidence Agent",
+            "Extract review-backed buyer signals and source boundaries.",
+            ["llm_evidence_packet", "insights.evidence"],
+            f"Using source_type={source_type}, prepared {len(evidence_quotes) if isinstance(evidence_quotes, list) else 0} evidence quotes from {review_count} review signals.",
+            ["pain_points", "buyer_objections", "positive_signals", "evidence_quotes"],
+            ["strategy_agent", "risk_agent"],
+            confidence_score=evidence_confidence,
+            warnings=warning_items,
+            business_impact="Keeps creative generation grounded in buyer language instead of generic claims.",
+            requires_human_review=bool(warning_items),
+            key_outputs={
+                "source_type": source_type,
+                "review_count": review_count,
+                "pain_points": _multi_agent_workflow_list(insights.get("pain_points") or packet_evidence.get("pain_points"), limit=5),
+                "evidence_quote_count": len(evidence_quotes) if isinstance(evidence_quotes, list) else 0,
+            },
+        ),
+        agent(
+            "strategy_agent",
+            "Strategy Agent",
+            "Choose the audience, emotional trigger, and creative angle from the evidence.",
+            ["llm_evidence_packet", "audience", "strategy"],
+            strategy.get("core_hook_strategy") or script.get("hook") or "Use the strongest review-backed pain point as the creative angle.",
+            ["target_audience", "core_hook_strategy", "emotional_trigger"],
+            ["storyboard_agent", "risk_agent"],
+            confidence_score=risk_confidence,
+            business_impact="Turns raw buyer evidence into an ad direction that can convert.",
+            key_outputs={
+                "audience_primary": _multi_agent_workflow_text(audience.get("primary"), limit=320),
+                "emotional_trigger": _multi_agent_workflow_text(strategy.get("emotional_trigger"), limit=320),
+            },
+        ),
+        agent(
+            "storyboard_agent",
+            "Storyboard Agent",
+            "Turn strategy into a short-form hook, CTA, and scene plan.",
+            ["strategy", "assets.tiktok_script", "assets.storyboard"],
+            f"Built a short-form script with hook={bool(script.get('hook'))}, cta={bool(script.get('cta'))}, scenes={len(scenes)}.",
+            ["hook", "cta", "storyboard_scenes", "caption_draft"],
+            ["asset_lock_agent", "keyframe_agent", "prompt_handoff_agent"],
+            confidence_score=risk_confidence,
+            business_impact="Converts strategy into a concrete shot list that creators or video tools can follow.",
+            key_outputs={
+                "hook": _multi_agent_workflow_text(script.get("hook"), limit=320),
+                "cta": _multi_agent_workflow_text(script.get("cta"), limit=320),
+                "scene_count": len(scenes),
+            },
+        ),
+        agent(
+            "asset_lock_agent",
+            "Asset Lock Agent",
+            "Define product identity and visual consistency constraints before generation.",
+            ["product fields", "external_video_tool_handoff.product_consistency_rules"],
+            "Prepared product consistency rules so external video tools preserve the product category, visible material, color, and evidence boundaries.",
+            ["product_consistency_rules", "negative_prompt"],
+            ["keyframe_agent", "prompt_handoff_agent", "risk_agent"],
+            confidence_score=0.72 if product_rules else 0.55,
+            warnings=[] if product_rules else ["Product consistency rules are missing or weak."],
+            business_impact="Reduces product drift when using Gemini, Doubao, Runway, Pika, or other external tools.",
+            requires_human_review=not bool(product_rules),
+            key_outputs={
+                "rule_count": len(product_rules),
+                "rules": product_rules[:5],
+            },
+        ),
+        agent(
+            "keyframe_agent",
+            "Keyframe Agent",
+            "Convert storyboard scenes into controllable keyframes and motion prompts.",
+            ["video_generation_packet.scenes", "external_video_tool_handoff.keyframe_prompts"],
+            f"Prepared {len(keyframes)} keyframe prompts for external video generation tools.",
+            ["keyframe_prompts", "motion_prompts", "overlay_text"],
+            ["prompt_handoff_agent", "experiment_agent"],
+            confidence_score=0.72 if keyframes else 0.55,
+            warnings=[] if keyframes else ["Keyframe prompts are missing; external video tools may improvise too much."],
+            business_impact="Improves generation stability by breaking the video into scene-level visual targets.",
+            requires_human_review=not bool(keyframes),
+            key_outputs={
+                "keyframe_count": len(keyframes),
+                "first_keyframe_goal": _multi_agent_workflow_text((keyframes[0] or {}).get("keyframe_goal") if keyframes else "", limit=240),
+            },
+        ),
+        agent(
+            "prompt_handoff_agent",
+            "Prompt Handoff Agent",
+            "Create copy-ready prompts for Gemini, Doubao, image-to-video, and manual workflows.",
+            ["video_generation_packet", "external_video_tool_handoff"],
+            "Generated external tool prompts without calling external APIs or incurring CrossGrowth cost.",
+            ["gemini_video_prompt", "doubao_video_prompt", "general_image_to_video_prompt", "copy_ready_generation_brief"],
+            ["cost_agent", "experiment_agent"],
+            confidence_score=0.74 if handoff_prompts else 0.55,
+            warnings=_multi_agent_workflow_list(handoff.get("warnings"), limit=5),
+            business_impact="Lets the user test real external tools manually before committing to paid API integration.",
+            key_outputs={
+                "packet_version": handoff.get("packet_version", ""),
+                "prompt_keys": sorted(key for key, value in handoff_prompts.items() if value),
+                "external_api_called": bool(handoff.get("external_api_called", False)),
+                "cost_incurred_by_crossgrowth": bool(handoff.get("cost_incurred_by_crossgrowth", False)),
+            },
+        ),
+        agent(
+            "cost_agent",
+            "Cost Agent",
+            "Estimate video generation cost before any real paid provider call.",
+            ["video_generation_packet", "provider cost catalog"],
+            "Prepared cost-estimate context. Final provider-specific estimate is attached when the user creates a Video Job.",
+            ["cost_estimate_context", "requires_user_confirmation"],
+            ["provider_job_agent", "risk_agent"],
+            status="ready_for_job_creation",
+            confidence_score=0.7,
+            warnings=["Pricing is estimate-only and must be reviewed before enabling real external API calls."],
+            business_impact="Prevents accidental cost surprises before paid video generation.",
+            requires_human_review=True,
+            key_outputs=estimated_cost_summary,
+        ),
+        agent(
+            "risk_agent",
+            "Risk Agent",
+            "Check evidence grounding, unsupported claims, and generation risk.",
+            ["llm_evidence_packet", "evaluation", "generation_constraints"],
+            evaluation.get("reasoning") or "Checked available evidence boundaries and generation constraints.",
+            ["risk_level", "is_grounded", "approval_status", "warnings"],
+            ["provider_job_agent", "experiment_agent"],
+            confidence_score=risk_confidence,
+            warnings=_multi_agent_workflow_list(constraints, limit=5),
+            business_impact="Protects the output from unsupported market-wide or unverifiable claims.",
+            requires_human_review=bool(warning_items) or evaluation.get("risk_level") == "high",
+            key_outputs={
+                "risk_level": evaluation.get("risk_level", ""),
+                "is_grounded": bool(evaluation.get("is_grounded")),
+                "is_approved": bool(evaluation.get("is_approved")),
+                "confidence_score": evaluation.get("confidence_score", 0.0),
+            },
+        ),
+        agent(
+            "provider_job_agent",
+            "Provider Job Agent",
+            "Track video generation jobs, provider status, result URLs, and manual fallback.",
+            ["video_generation_packet", "provider_payload", "cost_estimate"],
+            "Ready to create a tracked Video Job. The current generation flow does not call external video APIs.",
+            ["video_job", "provider_runtime", "result_url", "history"],
+            ["experiment_agent"],
+            status="waiting_for_user_action",
+            confidence_score=0.66,
+            warnings=["Video Job records are memory-backed unless file storage or database persistence is enabled."],
+            business_impact="Turns generated prompts into a trackable production task with status and result history.",
+            requires_human_review=True,
+            key_outputs={
+                "supported_providers": ["manual_export", "generic", "capcut", "runway", "pika"],
+                "simulated_provider_flow": "ready_for_manual_export -> queued -> processing -> external_result_ready",
+            },
+        ),
+        agent(
+            "experiment_agent",
+            "Experiment Agent",
+            "Record and compare manual Gemini, Doubao, Runway, Pika, or other external video results.",
+            ["external_video_tool_handoff", "external_video_experiments"],
+            "Waiting for the user to paste external tool results, costs, scores, and notes.",
+            ["external_video_experiments", "quality_scores", "tool_comparison"],
+            [],
+            status="waiting_for_user_experiment",
+            confidence_score=0.62,
+            warnings=["Manual experiment quality requires user-provided result URLs, screenshots, or notes."],
+            business_impact="Collects evidence for deciding whether a real provider API is worth integrating.",
+            requires_human_review=True,
+            key_outputs={
+                "score_dimensions": [
+                    "product_consistency",
+                    "storyboard_following",
+                    "visual_quality",
+                    "ad_readiness",
+                    "overall",
+                ],
+            },
+        ),
+    ]
+
+    agent_order = [item["agent_id"] for item in agents]
+    artifact_index = {
+        "llm_evidence_packet": bool(llm_packet),
+        "video_generation_packet": bool(video_packet),
+        "external_video_tool_handoff": bool(handoff),
+        "agent_trace": bool(agent_trace),
+        "cost_estimate_context": bool(estimated_cost_summary),
+    }
+
+    return {
+        "workflow_version": "multi_agent_workflow_v2",
+        "workflow_name": "Business-grounded multi-agent video production workflow",
+        "execution_mode": "artifact_orchestrated_agent_workflow",
+        "is_real_multi_agent_execution": False,
+        "is_plain_automation": False,
+        "differentiator": "Each agent is mapped to a business artifact, decision, warning, and handoff instead of a simple linear automation step.",
+        "output_language": output_language or "en",
+        "agent_order": agent_order,
+        "agents": agents,
+        "artifact_index": artifact_index,
+        "business_goal": "Transform review evidence into a controllable external video generation package and track manual/paid provider experiments.",
+        "next_recommended_action": "Review the external video tool handoff, test Gemini or Doubao manually, then record the result in External Video Experiments.",
+    }
 
 
 def _pasted_reviews_llm_evidence_packet(
@@ -1644,6 +1967,7 @@ def _pasted_reviews_response_data(
     )
     data["external_video_tool_handoff"] = _build_external_video_tool_handoff(product_name, category, data)
     data["agent_trace"] = _build_agent_trace(data, getattr(request, "output_language", "en"))
+    data["multi_agent_workflow"] = _build_multi_agent_workflow(data, getattr(request, "output_language", "en"))
     return data
 
 
@@ -2850,6 +3174,7 @@ async def generate_copilot_flow(request: GrowthRequest, http_request: Request):
         response["data"],
     )
     response["data"]["agent_trace"] = _build_agent_trace(response["data"], output_language)
+    response["data"]["multi_agent_workflow"] = _build_multi_agent_workflow(response["data"], output_language)
     try:
         response["data"] = await translate_product_visible_data(
             response["data"],
