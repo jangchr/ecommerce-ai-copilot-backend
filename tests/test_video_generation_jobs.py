@@ -47,6 +47,37 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         VIDEO_JOB_STORE.clear()
         self.client = TestClient(app)
 
+    def _create_video_generation_job(self, provider: str = "runway") -> str:
+        created = self.client.post(
+            "/api/v1/video-generation/jobs",
+            json={
+                "video_generation_packet": VIDEO_PACKET,
+                "provider": provider,
+                "output_language": "en",
+            },
+        )
+        self.assertEqual(created.status_code, 200)
+        return created.json()["job"]["job_id"]
+
+    def _record_external_experiment(self, job_id: str, **overrides):
+        payload = {
+            "tool_name": "gemini",
+            "prompt_type": "gemini_video_prompt",
+            "result_url": "https://example.com/gemini-video.mp4",
+            "actual_cost_usd": 0.25,
+            "product_consistency_score": 5,
+            "storyboard_following_score": 5,
+            "visual_quality_score": 5,
+            "ad_readiness_score": 5,
+            "overall_score": 5,
+            "notes": "Recorded external result.",
+        }
+        payload.update(overrides)
+        return self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/experiments",
+            json=payload,
+        )
+
     def test_video_generation_providers_endpoint_lists_supported_providers(self):
         response = self.client.get(
             "/api/v1/video-generation/providers",
@@ -355,15 +386,7 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(payload["request_id"], "video-job-result-missing-1")
 
     def test_record_external_video_experiment_appends_manual_tracking_record(self):
-        created = self.client.post(
-            "/api/v1/video-generation/jobs",
-            json={
-                "video_generation_packet": VIDEO_PACKET,
-                "provider": "runway",
-                "output_language": "en",
-            },
-        ).json()
-        job_id = created["job"]["job_id"]
+        job_id = self._create_video_generation_job()
 
         response = self.client.post(
             f"/api/v1/video-generation/jobs/{job_id}/experiments",
@@ -400,6 +423,15 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertFalse(experiment["external_api_called"])
         self.assertFalse(experiment["cost_incurred_by_crossgrowth"])
         self.assertEqual(experiment["overall_score"], 4)
+        decision = experiment["agent_feedback_decision"]
+        self.assertFalse(decision["has_feedback"])
+        self.assertEqual(decision["decision_type"], "feedback_recorded_no_rework")
+        self.assertEqual(decision["source_agent_id"], "experiment_agent")
+        self.assertEqual(decision["issue_type"], "none")
+        self.assertEqual(job["latest_agent_feedback_decision"]["decision_type"], "feedback_recorded_no_rework")
+        self.assertFalse(job["latest_agent_feedback_decision"]["has_feedback"])
+        self.assertEqual(job["agent_graph_feedback"]["feedback_version"], "experiment_feedback_loop_v1")
+        self.assertEqual(job["agent_graph_feedback"]["decisions"][0]["issue_type"], "none")
         self.assertIn("external_video_experiment_recorded", [event["event"] for event in job["history"]])
 
         fetched = self.client.get(f"/api/v1/video-generation/jobs/{job_id}")
@@ -410,6 +442,85 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         listed = self.client.get("/api/v1/video-generation/jobs?limit=10")
         selected = next(item for item in listed.json()["jobs"] if item["job_id"] == job_id)
         self.assertEqual(selected["experiment_count"], 1)
+
+    def test_external_experiment_product_consistency_routes_to_keyframe_and_asset_lock(self):
+        job_id = self._create_video_generation_job()
+
+        response = self._record_external_experiment(
+            job_id,
+            product_consistency_score=2,
+            storyboard_following_score=5,
+            visual_quality_score=5,
+            ad_readiness_score=5,
+            overall_score=3,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        job = response.json()["job"]
+        decision = job["external_video_experiments"][0]["agent_feedback_decision"]
+        self.assertTrue(decision["has_feedback"])
+        self.assertEqual(decision["decision_type"], "feedback_rework_requested")
+        self.assertEqual(decision["issue_type"], "product_consistency")
+        self.assertEqual(decision["target_agent_id"], "keyframe_agent")
+        self.assertEqual(decision["secondary_target_agent_id"], "asset_lock_agent")
+        self.assertEqual(decision["severity"], "high")
+        self.assertIn("experiment_feedback_rework_requested", [event["event"] for event in job["history"]])
+
+    def test_external_experiment_storyboard_following_routes_to_prompt_handoff(self):
+        job_id = self._create_video_generation_job()
+
+        response = self._record_external_experiment(
+            job_id,
+            storyboard_following_score=2,
+            product_consistency_score=5,
+            visual_quality_score=5,
+            ad_readiness_score=5,
+            overall_score=3,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        decision = response.json()["job"]["external_video_experiments"][0]["agent_feedback_decision"]
+        self.assertEqual(decision["issue_type"], "storyboard_following")
+        self.assertEqual(decision["target_agent_id"], "prompt_handoff_agent")
+        self.assertEqual(decision["secondary_target_agent_id"], "keyframe_agent")
+
+    def test_external_experiment_ad_readiness_routes_to_storyboard(self):
+        job_id = self._create_video_generation_job()
+
+        response = self._record_external_experiment(
+            job_id,
+            ad_readiness_score=2,
+            product_consistency_score=5,
+            storyboard_following_score=5,
+            visual_quality_score=5,
+            overall_score=3,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        decision = response.json()["job"]["latest_agent_feedback_decision"]
+        self.assertEqual(decision["issue_type"], "ad_readiness")
+        self.assertEqual(decision["target_agent_id"], "storyboard_agent")
+        self.assertEqual(decision["secondary_target_agent_id"], "strategy_agent")
+
+    def test_external_experiment_cost_value_routes_to_cost_agent(self):
+        job_id = self._create_video_generation_job()
+
+        response = self._record_external_experiment(
+            job_id,
+            actual_cost_usd=1.25,
+            product_consistency_score=4,
+            storyboard_following_score=4,
+            visual_quality_score=4,
+            ad_readiness_score=4,
+            overall_score=3,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        decision = response.json()["job"]["latest_agent_feedback_decision"]
+        self.assertTrue(decision["has_feedback"])
+        self.assertEqual(decision["issue_type"], "cost_value")
+        self.assertEqual(decision["target_agent_id"], "cost_agent")
+        self.assertEqual(decision["secondary_target_agent_id"], "route_selector_agent")
 
     def test_record_external_video_experiment_rejects_invalid_score(self):
         created = self.client.post(

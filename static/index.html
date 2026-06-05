@@ -3724,6 +3724,20 @@
                 externalExperimentSaved: 'External experiment saved.',
                 videoExperimentSaveFailed: 'Could not save external experiment.',
                 noExternalExperimentsYet: 'No external experiments recorded yet.',
+                agentFeedbackDecision: 'Agent feedback decision',
+                feedbackLoop: 'Feedback loop',
+                sourceAgent: 'Source Agent',
+                targetAgent: 'Target Agent',
+                issueType: 'Issue type',
+                severity: 'Severity',
+                recommendedAction: 'Recommended action',
+                experimentAgentRecommendsRework: 'Experiment Agent recommends rework',
+                productConsistencyIssue: 'Product consistency issue',
+                storyboardFollowingIssue: 'Storyboard following issue',
+                visualQualityIssue: 'Visual quality issue',
+                adReadinessIssue: 'Ad readiness issue',
+                costValueIssue: 'Cost/value issue',
+                feedbackRecordedNoRework: 'Feedback recorded; no rework needed',
                 recentVideoJobs: 'Recent video jobs',
                 refreshVideoJobs: 'Refresh video jobs',
                 refreshVideoJobsWorking: 'Refreshing video jobs...',
@@ -4044,6 +4058,20 @@
                 externalExperimentSaved: '\u5916\u90e8\u5b9e\u9a8c\u5df2\u4fdd\u5b58\u3002',
                 videoExperimentSaveFailed: '\u65e0\u6cd5\u4fdd\u5b58\u5916\u90e8\u5b9e\u9a8c\u3002',
                 noExternalExperimentsYet: '\u8fd8\u6ca1\u6709\u8bb0\u5f55\u5916\u90e8\u5b9e\u9a8c\u3002',
+                agentFeedbackDecision: '\u0041\u0067\u0065\u006e\u0074 \u53cd\u9988\u51b3\u7b56',
+                feedbackLoop: '\u53cd\u9988\u5faa\u73af',
+                sourceAgent: '\u6765\u6e90 Agent',
+                targetAgent: '\u76ee\u6807 Agent',
+                issueType: '\u95ee\u9898\u7c7b\u578b',
+                severity: '\u4e25\u91cd\u7ea7\u522b',
+                recommendedAction: '\u5efa\u8bae\u64cd\u4f5c',
+                experimentAgentRecommendsRework: 'Experiment Agent \u5efa\u8bae\u8fd4\u56de\u4e0a\u6e38 Agent \u8fd4\u5de5',
+                productConsistencyIssue: '\u4ea7\u54c1\u4e00\u81f4\u6027\u95ee\u9898',
+                storyboardFollowingIssue: '\u5206\u955c\u8ddf\u968f\u95ee\u9898',
+                visualQualityIssue: '\u753b\u9762\u8d28\u91cf\u95ee\u9898',
+                adReadinessIssue: '\u5e7f\u544a\u53ef\u7528\u5ea6\u95ee\u9898',
+                costValueIssue: '\u6210\u672c / \u4ef7\u503c\u95ee\u9898',
+                feedbackRecordedNoRework: '\u5df2\u8bb0\u5f55\u53cd\u9988\uff1b\u6682\u4e0d\u9700\u8981\u8fd4\u5de5',
                 recentVideoJobs: '\u6700\u8fd1\u89c6\u9891\u4efb\u52a1',
                 refreshVideoJobs: '\u5237\u65b0\u89c6\u9891\u4efb\u52a1',
                 refreshVideoJobsWorking: '\u6b63\u5728\u5237\u65b0\u89c6\u9891\u4efb\u52a1...',
@@ -7936,6 +7964,42 @@
             `;
         }
 
+        function agentFeedbackIssueLabel(issueType) {
+            const issueLabels = {
+                product_consistency: t('productConsistencyIssue'),
+                storyboard_following: t('storyboardFollowingIssue'),
+                visual_quality: t('visualQualityIssue'),
+                ad_readiness: t('adReadinessIssue'),
+                cost_value: t('costValueIssue'),
+                none: t('feedbackRecordedNoRework')
+            };
+            return issueLabels[issueType] || issueType || '';
+        }
+
+        function renderAgentFeedbackDecision(decision) {
+            if (!decision || typeof decision !== 'object') return '';
+            const target = decision.target_agent_id || '';
+            const secondary = decision.secondary_target_agent_id || '';
+            const reworkTarget = [target, secondary].filter(Boolean).join(' / ');
+            const statusLine = decision.has_feedback && reworkTarget
+                ? `${t('experimentAgentRecommendsRework')}: ${reworkTarget}`
+                : t('feedbackRecordedNoRework');
+            return `
+                <div class="feedback-box agent-feedback-decision">
+                    <div class="json-key">${escapeHTML(t('agentFeedbackDecision'))}</div>
+                    <div>${escapeHTML(statusLine)}</div>
+                    <div class="metric-grid">
+                        <span>${escapeHTML(t('feedbackLoop'))}: ${escapeHTML(decision.feedback_version || '')}</span>
+                        <span>${escapeHTML(t('sourceAgent'))}: ${escapeHTML(decision.source_agent_id || '')}</span>
+                        <span>${escapeHTML(t('targetAgent'))}: ${escapeHTML(reworkTarget || '-')}</span>
+                        <span>${escapeHTML(t('issueType'))}: ${escapeHTML(agentFeedbackIssueLabel(decision.issue_type))}</span>
+                        <span>${escapeHTML(t('severity'))}: ${escapeHTML(decision.severity || '')}</span>
+                        <span>${escapeHTML(t('recommendedAction'))}: ${escapeHTML(decision.recommended_action || '')}</span>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderExternalVideoExperimentsPanel(job) {
             if (!job || !job.job_id) return '';
             const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
@@ -7971,6 +8035,7 @@
                     <div class="json-key">external_api_called=${escapeHTML(String(experiment.external_api_called === true))} cost_incurred_by_crossgrowth=${escapeHTML(String(experiment.cost_incurred_by_crossgrowth === true))}</div>
                     ${experiment.result_url ? `<a href="${escapeHTML(experiment.result_url)}" target="_blank" rel="noopener">${escapeHTML(experiment.result_url)}</a>` : ''}
                     ${experiment.notes ? `<div>${escapeHTML(experiment.notes)}</div>` : ''}
+                    ${renderAgentFeedbackDecision(experiment.agent_feedback_decision)}
                     ${experiment.created_at ? `<small>${escapeHTML(experiment.created_at)}</small>` : ''}
                 </div>
             `).join('') : `<div class="recent-empty">${escapeHTML(t('noExternalExperimentsYet'))}</div>`;

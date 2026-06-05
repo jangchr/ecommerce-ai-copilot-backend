@@ -38,6 +38,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("renderVideoJobResult", self.source)
         self.assertIn("renderVideoJobResultForm", self.source)
         self.assertIn("renderExternalVideoExperimentsPanel", self.source)
+        self.assertIn("renderAgentFeedbackDecision", self.source)
+        self.assertIn("agentFeedbackIssueLabel", self.source)
         self.assertIn("renderVideoProviderProgress", self.source)
         self.assertIn("renderVideoCostEstimate", self.source)
         self.assertIn("providerPayload.cost_estimate", self.source)
@@ -104,6 +106,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "external_video_experiments",
             "external_api_called",
             "cost_incurred_by_crossgrowth",
+            "agent_feedback_decision",
         ]:
             with self.subTest(video_job_marker=marker):
                 self.assertIn(marker, self.source)
@@ -142,6 +145,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "visualQuality",
             "adReadiness",
             "overallScore",
+            "agentFeedbackDecision",
+            "feedbackLoop",
+            "sourceAgent",
+            "targetAgent",
+            "issueType",
+            "severity",
+            "recommendedAction",
+            "experimentAgentRecommendsRework",
+            "productConsistencyIssue",
+            "storyboardFollowingIssue",
+            "visualQualityIssue",
+            "adReadinessIssue",
+            "costValueIssue",
+            "feedbackRecordedNoRework",
             "failureReason",
             "saveExternalExperiment",
             "externalExperimentSaved",
@@ -190,6 +207,20 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Record results from Gemini, Doubao, Runway, Pika, or other external tools.", self.source)
         self.assertIn("CrossGrowth does not call external video APIs in this experiment tracker.", self.source)
         self.assertIn("Save external experiment", self.source)
+        self.assertIn("Agent feedback decision", self.source)
+        self.assertIn("Feedback loop", self.source)
+        self.assertIn("Source Agent", self.source)
+        self.assertIn("Target Agent", self.source)
+        self.assertIn("Issue type", self.source)
+        self.assertIn("Severity", self.source)
+        self.assertIn("Recommended action", self.source)
+        self.assertIn("Experiment Agent recommends rework", self.source)
+        self.assertIn("Product consistency issue", self.source)
+        self.assertIn("Storyboard following issue", self.source)
+        self.assertIn("Visual quality issue", self.source)
+        self.assertIn("Ad readiness issue", self.source)
+        self.assertIn("Cost/value issue", self.source)
+        self.assertIn("Feedback recorded; no rework needed", self.source)
         self.assertIn("Gemini", self.source)
         self.assertIn("Doubao", self.source)
         self.assertIn("videoCostEstimateTitle: 'Estimated API cost'", self.source)

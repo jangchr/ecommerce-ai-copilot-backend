@@ -52,6 +52,7 @@ from agent_runs import (
     InMemoryAgentRunStore,
     apply_evidence_safe_storyboard_rework,
     build_agent_run,
+    build_experiment_feedback_decision,
     detect_storyboard_rework_need,
 )
 from schemas.source_probe_contract import (
@@ -3181,24 +3182,51 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
     }
+    feedback_decision = build_experiment_feedback_decision(experiment, job)
+    experiment["agent_feedback_decision"] = feedback_decision
 
     experiments = list(job.get("external_video_experiments") or [])
     experiments.append(experiment)
     job["external_video_experiments"] = experiments
+    job["latest_agent_feedback_decision"] = feedback_decision
+    existing_feedback = job.get("agent_graph_feedback") if isinstance(job.get("agent_graph_feedback"), dict) else {}
+    feedback_decisions = list(existing_feedback.get("decisions") or [])
+    feedback_decisions.append(feedback_decision)
+    job["agent_graph_feedback"] = {
+        "feedback_version": "experiment_feedback_loop_v1",
+        "decisions": feedback_decisions[-5:],
+    }
     job["updated_at"] = now
 
     history = list(job.get("history") or [])
+    job_status = normalize_video_job_status(job.get("status", ""), fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT)
     history.append(
         build_video_job_history_event(
             "external_video_experiment_recorded",
-            normalize_video_job_status(job.get("status", ""), fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT),
+            job_status,
             updated_at=now,
             experiment_id=experiment["experiment_id"],
             tool_name=experiment["tool_name"],
             prompt_type=experiment["prompt_type"],
             has_result_url=bool(experiment["result_url"]),
+            feedback_decision_type=feedback_decision["decision_type"],
+            feedback_target_agent_id=feedback_decision.get("target_agent_id", ""),
         )
     )
+    if feedback_decision.get("has_feedback"):
+        history.append(
+            build_video_job_history_event(
+                "experiment_feedback_rework_requested",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                source_agent_id=feedback_decision.get("source_agent_id", "experiment_agent"),
+                target_agent_id=feedback_decision.get("target_agent_id", ""),
+                secondary_target_agent_id=feedback_decision.get("secondary_target_agent_id", ""),
+                issue_type=feedback_decision.get("issue_type", ""),
+                severity=feedback_decision.get("severity", ""),
+            )
+        )
     job["history"] = history
     return job, ""
 

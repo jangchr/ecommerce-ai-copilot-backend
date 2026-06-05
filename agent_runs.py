@@ -249,6 +249,145 @@ def apply_evidence_safe_storyboard_rework(
     return data
 
 
+def _experiment_score_snapshot(experiment: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "product_consistency_score": experiment.get("product_consistency_score"),
+        "storyboard_following_score": experiment.get("storyboard_following_score"),
+        "visual_quality_score": experiment.get("visual_quality_score"),
+        "ad_readiness_score": experiment.get("ad_readiness_score"),
+        "overall_score": experiment.get("overall_score"),
+        "actual_cost_usd": experiment.get("actual_cost_usd"),
+    }
+
+
+def _numeric_experiment_score(value: Any) -> float | None:
+    try:
+        if value is None or value == "":
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_experiment_feedback_decision(
+    experiment: dict[str, Any],
+    job: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a deterministic graph feedback decision from external experiment scores."""
+
+    safe_experiment = experiment if isinstance(experiment, dict) else {}
+    scores = _experiment_score_snapshot(safe_experiment)
+    issue_options = [
+        (
+            "product_consistency_score",
+            "product_consistency",
+            "keyframe_agent",
+            "asset_lock_agent",
+            "high",
+            "Product drift or identity mismatch detected.",
+            "Route back to Keyframe Agent and Asset Lock Agent to tighten product identity and visual anchors.",
+        ),
+        (
+            "storyboard_following_score",
+            "storyboard_following",
+            "prompt_handoff_agent",
+            "keyframe_agent",
+            "medium",
+            "External result did not follow the storyboard enough.",
+            "Revise prompt handoff and keyframe constraints so the external tool follows the scene sequence.",
+        ),
+        (
+            "ad_readiness_score",
+            "ad_readiness",
+            "storyboard_agent",
+            "strategy_agent",
+            "medium",
+            "Result is not ad-ready; revise hook, CTA, or scene sequence.",
+            "Route back to Storyboard Agent to make the video draft more conversion-ready.",
+        ),
+        (
+            "visual_quality_score",
+            "visual_quality",
+            "prompt_handoff_agent",
+            "",
+            "medium",
+            "Visual quality is too weak for handoff.",
+            "Improve visual and motion prompt constraints before another external test.",
+        ),
+    ]
+    low_dimension_issues: list[tuple[float, int, tuple[str, str, str, str, str, str, str]]] = []
+    for priority, option in enumerate(issue_options):
+        score = _numeric_experiment_score(scores.get(option[0]))
+        if score is not None and score <= 2:
+            low_dimension_issues.append((score, priority, option))
+
+    actual_cost = _numeric_experiment_score(scores.get("actual_cost_usd"))
+    overall_score = _numeric_experiment_score(scores.get("overall_score"))
+    cost_value_issue = actual_cost is not None and actual_cost >= 1.0 and overall_score is not None and overall_score <= 3
+
+    selected: tuple[str, str, str, str, str, str, str] | None = None
+    if low_dimension_issues:
+        selected = sorted(low_dimension_issues, key=lambda item: (item[0], item[1]))[0][2]
+    elif overall_score is not None and overall_score <= 2:
+        selected = (
+            "overall_score",
+            "overall_quality",
+            "prompt_handoff_agent",
+            "",
+            "medium",
+            "Overall external result quality is too low.",
+            "Route back to Prompt Handoff Agent to tighten the next external generation prompt.",
+        )
+    elif cost_value_issue:
+        selected = (
+            "actual_cost_usd",
+            "cost_value",
+            "cost_agent",
+            "route_selector_agent",
+            "medium",
+            "Poor value for cost detected.",
+            "Route back to Cost Agent and Route Selector Agent to prefer cheaper or manual routes.",
+        )
+
+    if selected is None:
+        return {
+            "feedback_version": "experiment_feedback_loop_v1",
+            "has_feedback": False,
+            "source_agent_id": "experiment_agent",
+            "target_agent_id": "",
+            "secondary_target_agent_id": "",
+            "decision_type": "feedback_recorded_no_rework",
+            "severity": "low",
+            "issue_type": "none",
+            "reason": "Experiment scores do not require graph rework.",
+            "recommended_action": "Keep the current video workflow and record this experiment as a usable reference.",
+            "score_snapshot": scores,
+            "loop_guard": {
+                "max_feedback_loop_count": 1,
+                "feedback_loop_count": 0,
+            },
+        }
+
+    _, issue_type, target_agent_id, secondary_target_agent_id, severity, reason, recommended_action = selected
+    return {
+        "feedback_version": "experiment_feedback_loop_v1",
+        "has_feedback": True,
+        "source_agent_id": "experiment_agent",
+        "target_agent_id": target_agent_id,
+        "secondary_target_agent_id": secondary_target_agent_id,
+        "decision_type": "feedback_rework_requested",
+        "severity": "high" if severity == "high" else "medium",
+        "issue_type": issue_type,
+        "reason": reason,
+        "recommended_action": recommended_action,
+        "score_snapshot": scores,
+        "loop_guard": {
+            "max_feedback_loop_count": 1,
+            "feedback_loop_count": 1,
+        },
+    }
+
+
 def build_agent_state(
     agent_id: str,
     role: str,
