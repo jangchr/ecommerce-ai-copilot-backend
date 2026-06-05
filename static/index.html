@@ -3705,8 +3705,8 @@
                 updatedAt: 'Updated at',
                 createdAt: 'Created at',
                 warnings: 'Warnings',
-                agentTraceTitle: 'Multi-agent Trace',
-                agentTraceSubtitle: 'Lightweight trace scaffold, not real multi-agent execution yet.',
+                agentTraceTitle: 'Legacy Debug Trace',
+                agentTraceSubtitle: 'Debug scaffold for internal trace details. The Business-grounded Multi-Agent Workflow above is the primary agent collaboration view.',
                 agentTraceExecutionMode: 'Execution mode',
                 agentTraceRealExecution: 'Real multi-agent execution',
                 agentTraceOrder: 'Agent order',
@@ -3716,6 +3716,21 @@
                 agentTraceStatus: 'Status',
                 agentTraceWarnings: 'Warnings',
                 agentTraceKeyOutputs: 'Key outputs',
+                agentHandoffMap: 'Agent Handoff Map',
+                agentActionQueue: 'Agent Action Queue',
+                recommendedUserAction: 'Recommended user action',
+                debugKeyOutputs: 'Debug key outputs',
+                reviewEvidenceWarningsAction: 'Review evidence warnings before using claims.',
+                confirmCreativeAngleAction: 'Confirm selected creative angle.',
+                reviewHookCtaScenesAction: 'Review hook, CTA, and scenes.',
+                confirmProductIdentityAction: 'Confirm product identity and image reference rules.',
+                generateShortClipAction: 'Generate one short clip first and check product consistency.',
+                copyGeminiDoubaoAction: 'Copy Gemini/Doubao prompt for manual testing.',
+                reviewPricingAction: 'Review estimated pricing before paid generation.',
+                reviewUnsupportedClaimsAction: 'Review unsupported-claim warnings.',
+                createUpdateVideoJobAction: 'Create or update a Video Job.',
+                pasteExternalResultAction: 'Paste external video result and score experiment.',
+                reviewAgentDecisionAction: 'Review this agent decision before export.',
                 multiAgentWorkflowTitle: 'Business-grounded Multi-Agent Workflow',
                 multiAgentWorkflowSubtitle: 'Agent collaboration view built from real business artifacts: review evidence, storyboard, video handoff, cost estimate context, provider jobs, and experiments.',
                 multiAgentNotAutomationNote: 'Not a plain automation: each agent shows a goal, decision, artifacts, handoff, warnings, and business impact.',
@@ -4010,8 +4025,8 @@
                 updatedAt: '\u66f4\u65b0\u65f6\u95f4',
                 createdAt: '\u521b\u5efa\u65f6\u95f4',
                 warnings: '\u63d0\u793a',
-                agentTraceTitle: '\u591a Agent Trace',
-                agentTraceSubtitle: '\u8fd9\u662f\u8f7b\u91cf\u7ea7\u591a Agent \u8f68\u8ff9\u811a\u624b\u67b6\uff0c\u8fd8\u4e0d\u662f\u771f\u5b9e\u591a\u6a21\u578b Agent \u5e76\u884c\u6267\u884c\u3002',
+                agentTraceTitle: '\u65e7\u7248 Debug Trace',
+                agentTraceSubtitle: '\u8fd9\u662f\u5185\u90e8 trace \u7ec6\u8282\u7684 Debug \u811a\u624b\u67b6\u3002\u4e0a\u65b9\u7684\u4e1a\u52a1\u7ed1\u5b9a\u7684\u591a Agent \u534f\u4f5c\u6d41\u7a0b\u624d\u662f\u4e3b\u8981\u7684 Agent \u534f\u4f5c\u89c6\u56fe\u3002',
                 agentTraceExecutionMode: '\u6267\u884c\u6a21\u5f0f',
                 agentTraceRealExecution: '\u771f\u5b9e\u591a Agent \u6267\u884c',
                 agentTraceOrder: 'Agent \u987a\u5e8f',
@@ -4021,6 +4036,21 @@
                 agentTraceStatus: '\u72b6\u6001',
                 agentTraceWarnings: '\u63d0\u793a / \u98ce\u9669',
                 agentTraceKeyOutputs: '\u5173\u952e\u8f93\u51fa',
+                agentHandoffMap: 'Agent \u4ea4\u63a5\u5730\u56fe',
+                agentActionQueue: 'Agent \u884c\u52a8\u961f\u5217',
+                recommendedUserAction: '\u5efa\u8bae\u7528\u6237\u64cd\u4f5c',
+                debugKeyOutputs: 'Debug \u5173\u952e\u8f93\u51fa',
+                reviewEvidenceWarningsAction: '\u4f7f\u7528\u4efb\u4f55\u5356\u70b9\u524d\uff0c\u5148\u68c0\u67e5\u8bc1\u636e\u98ce\u9669\u63d0\u793a\u3002',
+                confirmCreativeAngleAction: '\u786e\u8ba4\u5df2\u9009\u5b9a\u7684\u521b\u610f\u89d2\u5ea6\u3002',
+                reviewHookCtaScenesAction: '\u68c0\u67e5 Hook\u3001CTA \u548c\u5206\u955c\u3002',
+                confirmProductIdentityAction: '\u786e\u8ba4\u4ea7\u54c1\u8eab\u4efd\u548c\u56fe\u50cf\u5f15\u7528\u89c4\u5219\u3002',
+                generateShortClipAction: '\u5148\u751f\u6210\u4e00\u6bb5\u77ed\u7247\uff0c\u68c0\u67e5\u4ea7\u54c1\u4e00\u81f4\u6027\u3002',
+                copyGeminiDoubaoAction: '\u590d\u5236 Gemini / \u8c46\u5305\u63d0\u793a\u8bcd\u505a\u624b\u52a8\u6d4b\u8bd5\u3002',
+                reviewPricingAction: '\u4ed8\u8d39\u751f\u6210\u524d\u68c0\u67e5\u9884\u4f30\u4ef7\u683c\u3002',
+                reviewUnsupportedClaimsAction: '\u68c0\u67e5\u672a\u652f\u6301\u5356\u70b9\u98ce\u9669\u3002',
+                createUpdateVideoJobAction: '\u521b\u5efa\u6216\u66f4\u65b0 Video Job\u3002',
+                pasteExternalResultAction: '\u7c98\u8d34\u5916\u90e8\u89c6\u9891\u7ed3\u679c\u5e76\u8bc4\u5206\u5b9e\u9a8c\u3002',
+                reviewAgentDecisionAction: '\u5bfc\u51fa\u524d\u68c0\u67e5\u8fd9\u4e2a Agent \u5224\u65ad\u3002',
                 multiAgentWorkflowTitle: '\u4e1a\u52a1\u7ed1\u5b9a\u7684\u591a Agent \u534f\u4f5c\u6d41\u7a0b',
                 multiAgentWorkflowSubtitle: '\u8fd9\u662f\u4ece\u771f\u5b9e\u4e1a\u52a1\u4ea7\u7269\u7ec4\u7ec7\u51fa\u6765\u7684 Agent \u534f\u4f5c\u89c6\u56fe\uff1a\u8bc4\u8bba\u8bc1\u636e\u3001\u5206\u955c\u3001\u89c6\u9891\u4ea4\u4ed8\u5305\u3001\u6210\u672c\u4f30\u7b97\u3001Provider \u4efb\u52a1\u548c\u5b9e\u9a8c\u8bb0\u5f55\u3002',
                 multiAgentNotAutomationNote: '\u4e0d\u662f\u666e\u901a\u81ea\u52a8\u5316\uff1a\u6bcf\u4e2a Agent \u90fd\u6709\u76ee\u6807\u3001\u5224\u65ad\u3001\u4ea7\u7269\u3001\u4ea4\u63a5\u3001\u98ce\u9669\u548c\u4e1a\u52a1\u5f71\u54cd\u3002',
@@ -8061,6 +8091,81 @@
             `;
         }
 
+        function multiAgentActionKey(agent) {
+            const agentId = String(agent?.agent_id || '').toLowerCase();
+            const role = String(agent?.role || '').toLowerCase();
+            const text = `${agentId} ${role}`;
+            if (text.includes('evidence')) return 'reviewEvidenceWarningsAction';
+            if (text.includes('strategy')) return 'confirmCreativeAngleAction';
+            if (text.includes('storyboard')) return 'reviewHookCtaScenesAction';
+            if (text.includes('asset') || text.includes('lock')) return 'confirmProductIdentityAction';
+            if (text.includes('keyframe')) return 'generateShortClipAction';
+            if (text.includes('prompt') || text.includes('handoff')) return 'copyGeminiDoubaoAction';
+            if (text.includes('cost')) return 'reviewPricingAction';
+            if (text.includes('risk')) return 'reviewUnsupportedClaimsAction';
+            if (text.includes('provider') || text.includes('job')) return 'createUpdateVideoJobAction';
+            if (text.includes('experiment')) return 'pasteExternalResultAction';
+            return 'reviewAgentDecisionAction';
+        }
+
+        function multiAgentRecommendedAction(agent) {
+            return t(multiAgentActionKey(agent));
+        }
+
+        function multiAgentActionPriority(agent, index) {
+            const status = String(agent?.status || '').toLowerCase();
+            const warnings = Array.isArray(agent?.warnings) ? agent.warnings : [];
+            const agentText = `${agent?.agent_id || ''} ${agent?.role || ''}`.toLowerCase();
+            if (agent?.requires_human_review) return [0, index];
+            if (status.startsWith('waiting')) return [1, index];
+            if (warnings.length) return [2, index];
+            if (/(cost|risk|provider|job|experiment)/.test(agentText)) return [3, index];
+            return [4, index];
+        }
+
+        function renderAgentHandoffMap(orderedAgents) {
+            if (!orderedAgents.length) return '';
+            const chips = orderedAgents.map((agent, index) => {
+                const label = agent.role || agent.agent_id || `${t('agentLabel')} ${index + 1}`;
+                const status = agent.status || '';
+                return `<span class="metric-pill">${escapeHTML(label)}${status ? `: ${escapeHTML(status)}` : ''}</span>`;
+            }).join('<span aria-hidden="true">-&gt;</span>');
+            return `
+                <div class="section-block" id="agentHandoffMapPanel">
+                    <div class="json-key">${escapeHTML(t('agentHandoffMap'))}</div>
+                    <div class="metric-strip">${chips}</div>
+                </div>
+            `;
+        }
+
+        function renderAgentActionQueue(orderedAgents) {
+            if (!orderedAgents.length) return '';
+            const rows = orderedAgents
+                .map((agent, index) => ({ agent, index, priority: multiAgentActionPriority(agent, index) }))
+                .sort((a, b) => a.priority[0] - b.priority[0] || a.priority[1] - b.priority[1])
+                .slice(0, 5)
+                .map(({ agent, index }) => {
+                    const role = agent.role || agent.agent_id || `${t('agentLabel')} ${index + 1}`;
+                    return `
+                        <div class="section-block">
+                            <div class="json-key">${escapeHTML(role)}</div>
+                            ${block(t('recommendedUserAction'), multiAgentRecommendedAction(agent))}
+                            <div class="probe-grid">
+                                ${block(t('agentWorkflowStatus'), agent.status || '')}
+                                ${block(t('agentWorkflowHumanReview'), agent.requires_human_review ? t('yesLabel') : t('noLabel'))}
+                            </div>
+                        </div>
+                    `;
+                })
+                .join('');
+            return `
+                <div class="section-block" id="agentActionQueuePanel">
+                    <div class="json-key">${escapeHTML(t('agentActionQueue'))}</div>
+                    ${rows}
+                </div>
+            `;
+        }
+
         function renderMultiAgentWorkflowPanel(workflow) {
             if (!workflow || workflow.workflow_version !== 'multi_agent_workflow_v2') return '';
             const agents = Array.isArray(workflow.agents) ? workflow.agents : [];
@@ -8099,11 +8204,17 @@
                         ${block(t('agentWorkflowGoal'), agent.goal || '')}
                         ${block(t('agentWorkflowDecision'), agent.decision_summary || '')}
                         ${block(t('agentWorkflowBusinessImpact'), agent.business_impact || '')}
+                        ${block(t('recommendedUserAction'), multiAgentRecommendedAction(agent))}
                         ${block(t('agentWorkflowInputArtifacts'), inputArtifacts)}
                         ${block(t('agentWorkflowOutputArtifacts'), outputArtifacts)}
                         ${handoffTo ? block(t('agentWorkflowHandoffTo'), handoffTo) : ''}
                         ${warnings ? block(t('agentTraceWarnings'), warnings) : ''}
-                        ${keyOutputs ? block(t('agentTraceKeyOutputs'), keyOutputs) : ''}
+                        ${keyOutputs ? `
+                            <details>
+                                <summary>${escapeHTML(t('debugKeyOutputs'))}</summary>
+                                ${block(t('agentTraceKeyOutputs'), keyOutputs)}
+                            </details>
+                        ` : ''}
                     </details>
                 `;
             }).join('');
@@ -8119,6 +8230,8 @@
                         ${block(t('agentWorkflowRealExecution'), realExecutionText)}
                         ${block(t('agentWorkflowOrder'), order.join(' -> '))}
                     </div>
+                    ${renderAgentHandoffMap(orderedAgents)}
+                    ${renderAgentActionQueue(orderedAgents)}
                     ${block(t('agentWorkflowDifferentiator'), workflow.differentiator || '')}
                     ${block(t('agentWorkflowBusinessGoal'), workflow.business_goal || '')}
                     ${block(t('agentWorkflowNextAction'), workflow.next_recommended_action || '')}
@@ -8178,8 +8291,8 @@
                 .join('');
 
             return `
-                <div class="section-block">
-                    ${renderSectionHeader(t('agentTraceTitle'), 'analytics')}
+                <details class="section-block" id="agentTracePanel">
+                    <summary>${escapeHTML(t('agentTraceTitle'))}</summary>
                     <div class="feedback-box">${escapeHTML(t('agentTraceSubtitle'))}</div>
                     <div class="probe-grid">
                         ${block(t('agentTraceExecutionMode'), agentTrace.execution_mode || '')}
@@ -8187,7 +8300,7 @@
                         ${block(t('agentTraceOrder'), order.join(' -> '))}
                     </div>
                     ${agentCards}
-                </div>
+                </details>
             `;
         }
 
