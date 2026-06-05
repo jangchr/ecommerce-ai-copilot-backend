@@ -763,6 +763,126 @@ def _handoff_text(value, limit: int = 700) -> str:
     return _safe_evidence_quote(str(value or ""), limit=limit)
 
 
+def _build_product_asset_lock(product_title: str, product_category: str) -> dict:
+    product_identity = _handoff_text(product_title or "Product", limit=160)
+    category = _handoff_text(product_category or "product", limit=120)
+    return {
+        "lock_version": "product_asset_lock_v1",
+        "product_identity": product_identity,
+        "product_category": category,
+        "visual_identity_source": "Use the supplied product name/category and a manually uploaded reference product image in external tools.",
+        "must_preserve": [
+            f"Keep product identity as {product_identity}.",
+            f"Keep product category as {category}; do not drift into another category.",
+            "Preserve visible color, material, label placement, package shape, and scale from the uploaded/reference product image.",
+            "Keep review-backed benefit and concern boundaries tied to supplied evidence.",
+        ],
+        "must_not_change": [
+            "Do not invent fake variants, colors, package sizes, logos, or competitor products.",
+            "Do not transform the product into a different category or unrealistic object.",
+            "Do not add unsupported medical, safety, before/after, or full-market performance claims.",
+            "Do not imply verified certifications, endorsements, or guarantees unless supplied in evidence.",
+        ],
+        "allowed_contexts": [
+            "Clean ecommerce product demo surface.",
+            "Simple product-in-use moment relevant to the supplied category.",
+            "Close-up handling, setup, or comparison visual that does not invent unsupported claims.",
+            "Neutral lifestyle background where the product remains the hero.",
+        ],
+        "image_reference_rules": [
+            "Upload or reference the real product image manually before paid generation.",
+            "Use the image as the source of truth for product appearance.",
+            "If the generated clip changes product identity, reject it and regenerate from one short clip.",
+            "Do not rely on text prompt alone for exact product appearance.",
+        ],
+        "human_review_required": True,
+    }
+
+
+def _build_keyframe_plan(
+    product_title: str,
+    product_category: str,
+    keyframes: list[dict],
+    product_asset_lock: dict,
+    aspect_ratio: str,
+    quote_preview: list[str],
+) -> dict:
+    must_preserve = product_asset_lock.get("must_preserve") if isinstance(product_asset_lock.get("must_preserve"), list) else []
+    scenes = []
+    for index, frame in enumerate((keyframes or [])[:4]):
+        if not isinstance(frame, dict):
+            continue
+        scene_id = frame.get("scene_id") or index + 1
+        duration = int(frame.get("duration_seconds") or 5)
+        evidence_anchor = _handoff_text(
+            frame.get("evidence_anchor") or (quote_preview[index % len(quote_preview)] if quote_preview else ""),
+            limit=240,
+        )
+        scenes.append(
+            {
+                "scene_id": scene_id,
+                "duration_seconds": duration,
+                "keyframe_goal": _handoff_text(
+                    frame.get("keyframe_goal") or f"Create scene {scene_id} for {product_title}.",
+                    limit=260,
+                ),
+                "product_position": _handoff_text(
+                    f"Keep {product_title} clearly visible as the hero product in a vertical {aspect_ratio} frame.",
+                    limit=220,
+                ),
+                "camera_direction": _handoff_text(
+                    "Use a stable close-up or gentle push-in; avoid fast camera moves that distort product identity.",
+                    limit=220,
+                ),
+                "motion_control": _handoff_text(
+                    frame.get("motion_prompt") or "Use natural product handling and conservative short-form motion.",
+                    limit=360,
+                ),
+                "overlay_text": _handoff_text(frame.get("overlay_text") or "", limit=90),
+                "evidence_anchor": evidence_anchor,
+                "product_constraints": must_preserve[:4],
+                "risk_notes": [
+                    "Review this keyframe before paid generation.",
+                    "Reject output if product category, shape, color, material, or label identity drifts.",
+                    "Do not treat one variant or complaint as a whole-market claim.",
+                ],
+            }
+        )
+
+    if not scenes:
+        scenes.append(
+            {
+                "scene_id": 1,
+                "duration_seconds": 5,
+                "keyframe_goal": f"Create one conservative product demo opening for {product_title}.",
+                "product_position": f"Keep {product_title} centered and clearly visible.",
+                "camera_direction": "Static product close-up with clean ecommerce lighting.",
+                "motion_control": "Use minimal motion; generate one short clip first.",
+                "overlay_text": "",
+                "evidence_anchor": quote_preview[0] if quote_preview else "",
+                "product_constraints": must_preserve[:4],
+                "risk_notes": [
+                    "Fallback scene only; review manually before using paid generation.",
+                    "Do not invent unsupported claims or product variants.",
+                ],
+            }
+        )
+
+    return {
+        "plan_version": "keyframe_plan_v1",
+        "recommended_clip_strategy": "Generate one short clip first, review product identity and evidence boundaries, then spend more credits only after approval.",
+        "scene_count": len(scenes),
+        "scenes": scenes,
+        "review_before_paid_generation": True,
+        "stability_notes": [
+            "Use the product asset lock with every external video prompt.",
+            "Keep evidence anchors visible in scene planning; do not invent claims.",
+            "Generate one short clip first before spending more credits.",
+            f"Preserve {product_category or 'product'} category and product image identity.",
+        ],
+    }
+
+
 def _build_external_video_tool_handoff(
     product_name: str,
     category: str,
@@ -851,25 +971,40 @@ def _build_external_video_tool_handoff(
 
         evidence_summary = "; ".join(quote_preview[:3]) or "Use only the supplied review/product evidence."
         general_prompt = _handoff_text(export_formats.get("generic_video_prompt") or video_packet.get("full_video_prompt") or "", limit=1400)
+        product_asset_lock = _build_product_asset_lock(product_title, product_category)
+        keyframe_plan = _build_keyframe_plan(product_title, product_category, keyframes, product_asset_lock, aspect_ratio, quote_preview)
+        lock_summary = (
+            f"Product asset lock: preserve {product_asset_lock['product_identity']} as a "
+            f"{product_asset_lock['product_category']}; use a manually uploaded/reference product image as identity source."
+        )
+        keyframe_summary = (
+            f"Keyframe plan: {keyframe_plan['scene_count']} scenes. "
+            f"{keyframe_plan['recommended_clip_strategy']}"
+        )
         gemini_prompt = (
             f"Create a {duration}-second vertical {aspect_ratio} ecommerce video for {product_title} ({product_category}). "
+            f"{lock_summary} "
+            f"{keyframe_summary} "
             f"Hook: {hook or 'Open with the strongest grounded buyer signal.'} "
             f"CTA: {cta or 'End with a conservative product CTA.'} "
             f"Use these evidence anchors only: {evidence_summary}. "
-            "Generate one short clip first, keep product appearance consistent, and avoid unsupported claims."
+            "Review before paid generation, keep product appearance consistent, and avoid unsupported claims."
         )
         doubao_prompt = (
             f"Generate a vertical {aspect_ratio} short product video draft for {product_title}. "
+            f"{lock_summary} "
+            f"{keyframe_summary} "
             f"Scene plan: "
             + " | ".join(
                 f"Scene {frame['scene_id']}: {frame['motion_prompt']}"
                 for frame in keyframes[:4]
             )
-            + f" Evidence boundary: {evidence_summary}. No full-market claims."
+            + f" Evidence boundary: {evidence_summary}. Review one short clip first. No full-market claims."
         )
         image_to_video_prompt = (
             f"Use the uploaded/reference product image as the product identity source. Product: {product_title}. "
-            f"Animate using the keyframe plan, preserve color/material/shape, keep overlays short, and avoid visual changes not supported by the product image or description."
+            f"Apply the product asset lock and keyframe plan. Animate using the keyframe plan, preserve color/material/shape, "
+            "generate one short clip first, and avoid visual changes not supported by the product image, description, or evidence."
         )
         short_motion_prompt = (
             f"{product_title}, vertical {aspect_ratio}, quick ecommerce motion, product-in-use, evidence-safe hook, "
@@ -887,7 +1022,12 @@ def _build_external_video_tool_handoff(
                 f"Hook: {hook}",
                 f"CTA: {cta}",
                 f"Evidence anchors: {evidence_summary}",
+                f"Product asset lock: {product_asset_lock['product_identity']} / {product_asset_lock['product_category']}",
+                f"Must preserve: {'; '.join(product_asset_lock['must_preserve'][:3])}",
+                f"Must not change: {'; '.join(product_asset_lock['must_not_change'][:3])}",
+                f"Keyframe plan: {keyframe_plan['scene_count']} scenes; {keyframe_plan['recommended_clip_strategy']}",
                 "Workflow: paste a tool prompt into Gemini, Doubao, Runway, Pika, Kling, or a manual video workflow. CrossGrowth does not call external video APIs.",
+                "Review the first short clip before paid generation and keep all claims inside the supplied evidence boundary.",
                 general_prompt,
             ]
         ).strip()
@@ -905,6 +1045,8 @@ def _build_external_video_tool_handoff(
                 "general_image_to_video_prompt": _handoff_text(image_to_video_prompt, limit=1200),
                 "short_motion_prompt": _handoff_text(short_motion_prompt, limit=700),
             },
+            "product_asset_lock": product_asset_lock,
+            "keyframe_plan": keyframe_plan,
             "keyframe_prompts": keyframes,
             "product_consistency_rules": [
                 "Keep the product category unchanged.",
@@ -1483,6 +1625,9 @@ def _build_multi_agent_workflow(data: dict, output_language: str = "en") -> dict
     handoff_prompts = handoff.get("tool_prompts") if isinstance(handoff.get("tool_prompts"), dict) else {}
     keyframes = handoff.get("keyframe_prompts") if isinstance(handoff.get("keyframe_prompts"), list) else []
     product_rules = handoff.get("product_consistency_rules") if isinstance(handoff.get("product_consistency_rules"), list) else []
+    product_asset_lock = handoff.get("product_asset_lock") if isinstance(handoff.get("product_asset_lock"), dict) else {}
+    keyframe_plan = handoff.get("keyframe_plan") if isinstance(handoff.get("keyframe_plan"), dict) else {}
+    plan_scenes = keyframe_plan.get("scenes") if isinstance(keyframe_plan.get("scenes"), list) else []
 
     source_type = (
         packet_product.get("source_type")
@@ -1607,15 +1752,19 @@ def _build_multi_agent_workflow(data: dict, output_language: str = "en") -> dict
             "asset_lock_agent",
             "Asset Lock Agent",
             "Define product identity and visual consistency constraints before generation.",
-            ["product fields", "external_video_tool_handoff.product_consistency_rules"],
-            "Prepared product consistency rules so external video tools preserve the product category, visible material, color, and evidence boundaries.",
-            ["product_consistency_rules", "negative_prompt"],
+            ["product fields", "external_video_tool_handoff.product_asset_lock", "external_video_tool_handoff.product_consistency_rules"],
+            "Prepared a product asset lock so external video tools preserve product identity, category, visible material, color, shape, and evidence boundaries.",
+            ["product_asset_lock", "product_consistency_rules", "negative_prompt"],
             ["keyframe_agent", "prompt_handoff_agent", "risk_agent"],
-            confidence_score=0.72 if product_rules else 0.55,
-            warnings=[] if product_rules else ["Product consistency rules are missing or weak."],
+            confidence_score=0.76 if product_asset_lock else (0.72 if product_rules else 0.55),
+            warnings=[] if product_asset_lock else ["Product asset lock is missing or weak."],
             business_impact="Reduces product drift when using Gemini, Doubao, Runway, Pika, or other external tools.",
-            requires_human_review=not bool(product_rules),
+            requires_human_review=not bool(product_asset_lock),
             key_outputs={
+                "asset_lock_version": product_asset_lock.get("lock_version", ""),
+                "product_identity": product_asset_lock.get("product_identity", ""),
+                "must_preserve": _multi_agent_workflow_list(product_asset_lock.get("must_preserve"), limit=5),
+                "must_not_change": _multi_agent_workflow_list(product_asset_lock.get("must_not_change"), limit=5),
                 "rule_count": len(product_rules),
                 "rules": product_rules[:5],
             },
@@ -1624,15 +1773,18 @@ def _build_multi_agent_workflow(data: dict, output_language: str = "en") -> dict
             "keyframe_agent",
             "Keyframe Agent",
             "Convert storyboard scenes into controllable keyframes and motion prompts.",
-            ["video_generation_packet.scenes", "external_video_tool_handoff.keyframe_prompts"],
-            f"Prepared {len(keyframes)} keyframe prompts for external video generation tools.",
-            ["keyframe_prompts", "motion_prompts", "overlay_text"],
+            ["video_generation_packet.scenes", "external_video_tool_handoff.keyframe_prompts", "external_video_tool_handoff.keyframe_plan"],
+            f"Prepared {len(plan_scenes) or len(keyframes)} planned keyframes for external video generation tools.",
+            ["keyframe_plan", "keyframe_prompts", "motion_prompts", "overlay_text"],
             ["prompt_handoff_agent", "experiment_agent"],
-            confidence_score=0.72 if keyframes else 0.55,
-            warnings=[] if keyframes else ["Keyframe prompts are missing; external video tools may improvise too much."],
+            confidence_score=0.76 if keyframe_plan else (0.72 if keyframes else 0.55),
+            warnings=[] if keyframe_plan else ["Keyframe plan is missing; external video tools may improvise too much."],
             business_impact="Improves generation stability by breaking the video into scene-level visual targets.",
-            requires_human_review=not bool(keyframes),
+            requires_human_review=not bool(keyframe_plan),
             key_outputs={
+                "keyframe_plan_version": keyframe_plan.get("plan_version", ""),
+                "keyframe_plan_scene_count": keyframe_plan.get("scene_count", 0),
+                "recommended_clip_strategy": keyframe_plan.get("recommended_clip_strategy", ""),
                 "keyframe_count": len(keyframes),
                 "first_keyframe_goal": _multi_agent_workflow_text((keyframes[0] or {}).get("keyframe_goal") if keyframes else "", limit=240),
             },
@@ -1737,6 +1889,8 @@ def _build_multi_agent_workflow(data: dict, output_language: str = "en") -> dict
         "llm_evidence_packet": bool(llm_packet),
         "video_generation_packet": bool(video_packet),
         "external_video_tool_handoff": bool(handoff),
+        "product_asset_lock": bool(product_asset_lock),
+        "keyframe_plan": bool(keyframe_plan),
         "agent_trace": bool(agent_trace),
         "cost_estimate_context": bool(estimated_cost_summary),
     }
