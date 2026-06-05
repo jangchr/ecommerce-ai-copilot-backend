@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -17,6 +17,10 @@ from core.workflow import copilot_engine, memory_engine
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from schemas.api_contract import (
+    AgentRunCreateResponse,
+    AgentRunEventsResponse,
+    AgentRunListResponse,
+    AgentRunStatusResponse,
     AmazonIntakeRequest,
     AmazonIntakeResponse,
     DebugCopilotResponse,
@@ -44,6 +48,7 @@ from schemas.api_contract import (
     VideoGenerationProviderPollRequest,
     VideoGenerationStorageStatusResponse,
 )
+from agent_runs import InMemoryAgentRunStore, build_agent_run
 from schemas.source_probe_contract import (
     SourceProbeRequest,
     SourceProbeResponse,
@@ -149,6 +154,7 @@ PASTED_REVIEWS_COMPACT_QUOTE_LIMIT = 12
 PASTED_REVIEWS_RAW_MAX_CHARS = 50000
 SUPPORTED_OUTPUT_LANGUAGES = {"en", "zh-CN"}
 VIDEO_JOB_STORE = get_video_job_store()
+AGENT_RUN_STORE = InMemoryAgentRunStore()
 VIDEO_GENERATION_RESULT_STATUSES = {
     VIDEO_JOB_STATUS_MANUAL_EXPORT_COMPLETED,
     VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
@@ -2125,6 +2131,237 @@ def _pasted_reviews_response_data(
     return data
 
 
+def _agent_run_not_found(run_id: str):
+    raise HTTPException(status_code=404, detail=f"Agent run not found: {run_id}")
+
+
+def _start_agent_run_stage(run_id: str, agent_id: str, message: str, data: dict | None = None) -> None:
+    AGENT_RUN_STORE.start_agent(run_id, agent_id)
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "agent_started",
+        message,
+        agent_id=agent_id,
+        data=data or {},
+    )
+
+
+def _complete_agent_run_stage(
+    run_id: str,
+    agent_id: str,
+    message: str,
+    decision_summary: str,
+    business_impact: str = "",
+    output_artifacts: list[str] | None = None,
+    warnings: list[str] | None = None,
+    data: dict | None = None,
+) -> None:
+    AGENT_RUN_STORE.complete_agent(
+        run_id,
+        agent_id,
+        decision_summary=decision_summary,
+        business_impact=business_impact,
+        output_artifacts=output_artifacts,
+        warnings=warnings,
+    )
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "agent_completed",
+        message,
+        agent_id=agent_id,
+        data=data or {},
+    )
+
+
+async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsRequest) -> None:
+    current_agent_id = ""
+    try:
+        AGENT_RUN_STORE.start_run(run_id)
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "run_started",
+            "Backend-tracked async agent run started.",
+            data={"input_type": "pasted_reviews", "output_language": request.output_language or "en"},
+        )
+
+        current_agent_id = "planner_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Planner Agent validating pasted feedback request.")
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Planner Agent completed request validation.",
+            "Validated the pasted customer feedback request for artifact-orchestrated async generation.",
+            "The run can proceed without changing the existing synchronous endpoint.",
+            ["validated_generation_plan"],
+        )
+
+        current_agent_id = "evidence_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Evidence Agent building review evidence packet.")
+        evidence_quotes = _split_pasted_review_quotes(request.pasted_reviews)
+        signal_groups = _pasted_review_signal_groups(evidence_quotes)
+        pain_points = signal_groups["pain"][:4]
+        buyer_objections = [
+            quote
+            for quote in (signal_groups["objection"] + signal_groups["availability"])
+            if _pasted_review_is_real_buyer_objection(quote)
+        ][:4]
+        positive_signals = (signal_groups["positive"] + signal_groups["repeat_purchase"])[:4]
+        neutral_signals = signal_groups["neutral"][:4]
+        llm_evidence_packet = _review_workspace_packet_from_pasted_request(request) or _pasted_reviews_llm_evidence_packet(
+            request,
+            evidence_quotes,
+            signal_groups,
+            pain_points,
+            buyer_objections,
+            positive_signals,
+            neutral_signals,
+        )
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Evidence Agent completed evidence packet.",
+            "Built the LLM evidence packet from supplied review snippets and product fields.",
+            "Keeps review evidence explicit before any creative claims are made.",
+            ["evidence_quotes", "llm_evidence_packet"],
+            warnings=(llm_evidence_packet.get("review_stats") or {}).get("warnings") or [],
+            data={
+                "quote_count": len(evidence_quotes),
+                "packet_version": llm_evidence_packet.get("packet_version"),
+            },
+        )
+
+        current_agent_id = "strategy_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Strategy Agent calling existing creative generation helper.")
+        generated = await generate_pasted_reviews_brief(request, evidence_quotes)
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Strategy Agent completed creative strategy generation.",
+            "Generated hook strategy, emotional trigger, hook, CTA, and storyboard draft from the evidence packet.",
+            "Turns review evidence into a creative direction while preserving the existing generation behavior.",
+            ["creative_strategy", "hook", "cta"],
+        )
+
+        current_agent_id = "storyboard_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Storyboard Agent building product response artifacts.")
+        data = _pasted_reviews_response_data(request, generated, evidence_quotes)
+        scenes = ((data.get("assets") or {}).get("storyboard") or {}).get("scenes") or []
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Storyboard Agent completed scenes and script assets.",
+            "Normalized generated storyboard scenes into the Product Mode response shape.",
+            "Makes the generated result reusable by copy, export, translation, and video job flows.",
+            ["storyboard", "tiktok_script"],
+            data={"scene_count": len(scenes)},
+        )
+
+        current_agent_id = "asset_lock_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Product Asset Lock Agent checking product identity artifacts.")
+        video_packet = data.get("video_generation_packet") or {}
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Product Asset Lock Agent completed product identity check.",
+            "Checked the video generation packet for product identity and image-reference guidance.",
+            "Helps prevent external video drafts from drifting away from the selected product.",
+            ["product_asset_lock"],
+            warnings=(video_packet.get("risk_notes") or [])[:3] if isinstance(video_packet.get("risk_notes"), list) else [],
+        )
+
+        current_agent_id = "keyframe_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Keyframe Agent checking scene/keyframe plan.")
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Keyframe Agent completed keyframe planning.",
+            "Prepared staged scene guidance for short test clips before longer video export.",
+            "Encourages low-risk clip validation before paid or external provider generation.",
+            ["keyframe_plan"],
+        )
+
+        current_agent_id = "prompt_handoff_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Prompt Handoff Agent preparing external tool handoff.")
+        handoff = data.get("external_video_tool_handoff") or {}
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Prompt Handoff Agent completed external video prompt handoff.",
+            "Prepared manual Gemini/Doubao/export prompts without calling external video APIs.",
+            "Keeps external provider work under user control and manual review.",
+            ["external_video_tool_handoff"],
+            data={"has_handoff": bool(handoff)},
+        )
+
+        current_agent_id = "cost_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Cost Agent checking cost boundary.")
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Cost Agent completed cost boundary check.",
+            "Confirmed this async run does not call paid external video APIs.",
+            "Cost-incurring provider execution remains gated behind manual/provider job controls.",
+            ["cost_boundary"],
+            data={"cost_incurred_by_crossgrowth": False},
+        )
+
+        current_agent_id = "risk_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Risk Agent reviewing warnings and evidence boundaries.")
+        evidence = ((data.get("insights") or {}).get("evidence") or {})
+        data_warnings = evidence.get("data_warnings") or []
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Risk Agent completed evidence-risk review.",
+            "Reviewed warnings and kept user-pasted evidence boundaries visible.",
+            "Keeps claims grounded to supplied feedback instead of unsupported market-wide conclusions.",
+            ["risk_notes", "data_warnings"],
+            warnings=data_warnings,
+        )
+
+        current_agent_id = "finalizer_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Finalizer Agent preparing final generated result.")
+        final_data = await translate_product_visible_data(data, request.output_language or "en")
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Finalizer Agent completed final result.",
+            "Stored the completed Product Mode result on the agent run.",
+            "The same dashboard, video job, provider progress, and manual handoff flows can use this result.",
+            ["final_product_result", "multi_agent_workflow"],
+        )
+
+        AGENT_RUN_STORE.complete_run(run_id, final_data)
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "run_completed",
+            "Agent run completed.",
+            data={
+                "has_result": True,
+                "external_api_called": False,
+                "cost_incurred_by_crossgrowth": False,
+            },
+        )
+    except Exception as exc:
+        error = str(exc or "Agent run failed.")
+        if current_agent_id:
+            AGENT_RUN_STORE.fail_agent(run_id, current_agent_id, error)
+            AGENT_RUN_STORE.append_event(
+                run_id,
+                "agent_failed",
+                "Agent stage failed safely.",
+                agent_id=current_agent_id,
+                data={"error_type": _error_type(exc)},
+            )
+        AGENT_RUN_STORE.fail_run(run_id, error)
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "run_failed",
+            "Agent run failed safely.",
+            data={"error_type": _error_type(exc), "error": error[:240]},
+        )
+
+
 @app.get("/healthz")
 async def healthz(request: Request):
     started = time.perf_counter()
@@ -3445,6 +3682,91 @@ async def generate_from_description(request: ProductDescriptionRequest, http_req
             request_id,
             status_code=503,
         )
+
+
+@app.post("/api/v1/agent-runs/from-reviews", response_model=AgentRunCreateResponse)
+async def create_agent_run_from_reviews(
+    request: PastedReviewsRequest,
+    http_request: Request,
+    background_tasks: BackgroundTasks,
+):
+    request_id = http_request.state.request_id
+    output_language, language_error = _validate_output_language(
+        request.output_language,
+        request_id,
+    )
+    if language_error:
+        return language_error
+
+    safe_request = request.model_copy(update={"output_language": output_language})
+    validation_error = _validate_pasted_reviews_request(safe_request, request_id)
+    if validation_error:
+        return validation_error
+
+    run = build_agent_run(
+        input_type="pasted_reviews",
+        output_language=output_language,
+        request_id=request_id,
+    )
+    AGENT_RUN_STORE.create(run)
+    AGENT_RUN_STORE.append_event(
+        run["run_id"],
+        "run_created",
+        "Agent run created for pasted customer feedback.",
+        data={
+            "input_type": "pasted_reviews",
+            "output_language": output_language,
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+        },
+    )
+    background_tasks.add_task(_execute_pasted_reviews_agent_run, run["run_id"], safe_request)
+    current_run = AGENT_RUN_STORE.get(run["run_id"]) or run
+    return {
+        "status": "success",
+        "run": current_run,
+        "poll_url": f"/api/v1/agent-runs/{run['run_id']}",
+        "events_url": f"/api/v1/agent-runs/{run['run_id']}/events",
+        "request_id": request_id,
+    }
+
+
+@app.get("/api/v1/agent-runs", response_model=AgentRunListResponse)
+async def list_agent_runs(http_request: Request, limit: int = 10):
+    safe_limit = max(1, min(int(limit or 10), 50))
+    runs = AGENT_RUN_STORE.list(safe_limit)
+    return {
+        "status": "success",
+        "runs": runs,
+        "run_count": len(runs),
+        "limit": safe_limit,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.get("/api/v1/agent-runs/{run_id}", response_model=AgentRunStatusResponse)
+async def get_agent_run(run_id: str, http_request: Request):
+    run = AGENT_RUN_STORE.get(run_id)
+    if not run:
+        _agent_run_not_found(run_id)
+    return {
+        "status": "success",
+        "run": run,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.get("/api/v1/agent-runs/{run_id}/events", response_model=AgentRunEventsResponse)
+async def get_agent_run_events(run_id: str, http_request: Request):
+    run = AGENT_RUN_STORE.get(run_id)
+    if not run:
+        _agent_run_not_found(run_id)
+    return {
+        "status": "success",
+        "run_id": run_id,
+        "events": run.get("events") or [],
+        "request_id": http_request.state.request_id,
+    }
 
 
 @app.post("/api/v1/generate-from-reviews", response_model=PastedReviewsResponse)

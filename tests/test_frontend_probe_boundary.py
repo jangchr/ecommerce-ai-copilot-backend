@@ -3091,6 +3091,53 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
 
 
 
+class AgentLiveRunFrontendProbeTests(unittest.TestCase):
+    def test_agent_live_run_timeline_markers_exist(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+
+        for marker in [
+            "Agent Live Run Timeline",
+            "Start Live Agent Run",
+            "Run status",
+            "Current agent",
+            "Latest events",
+            "Polling for agent updates",
+            "Agent run completed",
+            "Agent run failed",
+            "Backend-tracked async run",
+            "No external video API is called",
+            "function startLiveAgentRun()",
+            "function renderAgentLiveRunTimeline(run",
+            "function pollLiveAgentRun(runId, productName)",
+            "function postAgentRunFromReviews(payload)",
+            "function getAgentRun(runId)",
+            "function getAgentRunEvents(runId)",
+            "/api/v1/agent-runs/from-reviews",
+            "/api/v1/agent-runs/${encodeURIComponent(runId)}",
+            "/api/v1/agent-runs/${encodeURIComponent(runId)}/events",
+            "liveAgentRunBtn",
+            "agentLiveRunTimeline",
+            "startAgentRunPolling",
+            "stopAgentRunPolling",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+        for preserved_marker in [
+            "Business-grounded Multi-Agent Workflow",
+            "Agent Handoff Map",
+            "Agent Action Queue",
+            "Product Asset Lock",
+            "Keyframe Plan",
+            "Video Job",
+            "External Video Experiments",
+        ]:
+            with self.subTest(preserved_marker=preserved_marker):
+                self.assertIn(preserved_marker, html)
+
+        self.assertNotIn("????", html)
+
+
 class MultiAgentWorkflowPanelProbeTests(unittest.TestCase):
     def test_multi_agent_workflow_panel_markers_exist(self):
         from pathlib import Path

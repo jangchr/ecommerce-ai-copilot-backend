@@ -2451,8 +2451,10 @@
                     <button class="btn-secondary" id="reviewsPetHairSampleBtn" type="button" onclick="fillSamplePetHairReviews()" data-i18n="usePetHairSampleReviews">Use pet hair sample</button>
                     <button class="btn-secondary" id="reviewsDeskLampSampleBtn" type="button" onclick="fillSampleDeskLampReviews()" data-i18n="useDeskLampSampleReviews">Use desk lamp sample</button>
                     <button class="btn-primary" id="reviewsGenerateBtn" type="button" onclick="generateFromReviews()" data-i18n="generateFromReviews">Generate from reviews</button>
+                    <button class="btn-secondary" id="liveAgentRunBtn" type="button" onclick="startLiveAgentRun()" data-i18n="startLiveAgentRun">Start Live Agent Run</button>
                     <span class="description-status" id="reviewsStatus"></span>
                 </div>
+                <div id="agentLiveRunTimeline" class="section-block" hidden></div>
             </div>
         </section>
 
@@ -3380,6 +3382,8 @@
         let latestInputSlug = '';
         let latestGeneratedAt = '';
         let latestRecentId = '';
+        let latestAgentRunId = '';
+        let latestAgentRunPollTimer = null;
         let sectionTranslations = {};
         let sectionTextCache = {};
         let outputLanguage = 'en';
@@ -3592,6 +3596,19 @@
                 generatingReviews: 'Generating from pasted reviews...',
                 reviewsGenerated: 'Pasted Reviews Mode result generated.',
                 reviewsFailed: 'Pasted Reviews Mode failed. Please try again.',
+                startLiveAgentRun: 'Start Live Agent Run',
+                agentLiveRunTimeline: 'Agent Live Run Timeline',
+                runStatus: 'Run status',
+                currentAgent: 'Current agent',
+                latestEvents: 'Latest events',
+                pollingAgentUpdates: 'Polling for agent updates...',
+                agentRunCompleted: 'Agent run completed.',
+                agentRunFailed: 'Agent run failed.',
+                backendTrackedAsyncRun: 'Backend-tracked async run; final statuses are confirmed by run events.',
+                noExternalVideoApiCalled: 'No external video API is called.',
+                liveAgentRunStarted: 'Live agent run started.',
+                liveAgentRunStartFailed: 'Could not start live agent run.',
+                liveAgentRunId: 'Run ID',
                 pastedReviewsNoConcreteReviews: 'Paste at least one concrete review line, not only category labels.',
                 missingReviews: 'Please paste customer reviews or buyer feedback.',
                 reviewCountEmpty: 'Review count: 0. Paste at least 3 specific review snippets for stronger output.',
@@ -4234,6 +4251,19 @@
                 generatingReviews: '正在根据粘贴评论生成...',
                 reviewsGenerated: '粘贴评论模式结果已生成。',
                 reviewsFailed: '粘贴评论模式生成失败，请重试。',
+                startLiveAgentRun: '启动实时 Agent Run',
+                agentLiveRunTimeline: 'Agent 实时运行时间线',
+                runStatus: '运行状态',
+                currentAgent: '当前 Agent',
+                latestEvents: '最新事件',
+                pollingAgentUpdates: '正在轮询 Agent 更新...',
+                agentRunCompleted: 'Agent run 已完成。',
+                agentRunFailed: 'Agent run 失败。',
+                backendTrackedAsyncRun: '后端跟踪的异步运行；最终状态由 run events 确认。',
+                noExternalVideoApiCalled: '不会调用外部视频 API。',
+                liveAgentRunStarted: '实时 Agent Run 已启动。',
+                liveAgentRunStartFailed: '无法启动实时 Agent Run。',
+                liveAgentRunId: 'Run ID',
                 pastedReviewsNoConcreteReviews: '请至少粘贴一条具体用户原话，不要只粘贴痛点/正向/使用场景这类分类标签。',
                 missingReviews: '请粘贴用户评论或买家反馈。',
                 reviewCountEmpty: '评论条数：0。建议至少粘贴 3 条具体评论，生成效果会更好。',
@@ -6224,6 +6254,37 @@
             return body;
         }
 
+        async function postAgentRunFromReviews(payload) {
+            const response = await fetch('/api/v1/agent-runs/from-reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(localizedApiErrorMessage(body, 'liveAgentRunStartFailed'));
+            }
+            return body;
+        }
+
+        async function getAgentRun(runId) {
+            const response = await fetch(`/api/v1/agent-runs/${encodeURIComponent(runId)}`);
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || body.detail || t('agentRunFailed'));
+            }
+            return body;
+        }
+
+        async function getAgentRunEvents(runId) {
+            const response = await fetch(`/api/v1/agent-runs/${encodeURIComponent(runId)}/events`);
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(body.error || body.detail || t('agentRunFailed'));
+            }
+            return body;
+        }
+
         async function postVideoJobFromGeneration(payload) {
             const response = await fetch('/api/v1/video-generation/jobs/from-generation', {
                 method: 'POST',
@@ -7284,6 +7345,13 @@
                 return false;
             }
 
+            stopAgentRunPolling();
+            latestAgentRunId = '';
+            const liveTimeline = document.getElementById('agentLiveRunTimeline');
+            if (liveTimeline) {
+                liveTimeline.hidden = true;
+                liveTimeline.innerHTML = '';
+            }
             btn.disabled = true;
             setReviewsStatus(t('generatingReviews'));
             latestProductData = null;
@@ -7377,6 +7445,178 @@
                 btn.disabled = false;
             }
             return completed;
+        }
+
+        function stopAgentRunPolling() {
+            if (latestAgentRunPollTimer) {
+                window.clearInterval(latestAgentRunPollTimer);
+                latestAgentRunPollTimer = null;
+            }
+        }
+
+        function renderAgentLiveRunTimeline(run, eventsOverride = null) {
+            const target = document.getElementById('agentLiveRunTimeline');
+            if (!target || !run) return;
+            const events = Array.isArray(eventsOverride) ? eventsOverride : (Array.isArray(run.events) ? run.events : []);
+            const agents = Array.isArray(run.agents) ? run.agents : [];
+            const currentAgent = run.current_agent_id || '';
+            const agentRows = agents.map((agent) => {
+                const status = agent.status || 'pending';
+                const review = agent.requires_human_review ? t('yesLabel') : t('noLabel');
+                return `
+                    <details class="section-block" ${status === 'running' ? 'open' : ''}>
+                        <summary>${escapeHTML(agent.role || agent.agent_id || t('agentLabel'))} - ${escapeHTML(status)}</summary>
+                        <div class="probe-grid">
+                            ${block(t('runStatus'), status)}
+                            ${block(t('agentWorkflowHumanReview'), review)}
+                        </div>
+                        ${block(t('recommendedUserAction'), agent.recommended_user_action || '')}
+                        ${block(t('agentWorkflowDecision'), agent.decision_summary || '')}
+                        ${block(t('agentWorkflowBusinessImpact'), agent.business_impact || '')}
+                    </details>
+                `;
+            }).join('');
+            const eventRows = events.slice(-8).map((event) => `
+                <div class="quote-item">
+                    <strong>${escapeHTML(event.event_type || '')}</strong>
+                    ${event.agent_id ? ` - ${escapeHTML(event.agent_id)}` : ''}
+                    <div>${escapeHTML(event.message || '')}</div>
+                </div>
+            `).join('');
+
+            target.hidden = false;
+            target.innerHTML = `
+                <div class="probe-header">
+                    <h4>${escapeHTML(t('agentLiveRunTimeline'))}</h4>
+                    <span class="source-badge">${escapeHTML(t('liveAgentRunId'))}: ${escapeHTML(run.run_id || '')}</span>
+                </div>
+                <div class="feedback-box">${escapeHTML(t('backendTrackedAsyncRun'))}</div>
+                <div class="feedback-box">${escapeHTML(t('noExternalVideoApiCalled'))}</div>
+                <div class="probe-grid">
+                    ${block(t('runStatus'), run.status || '')}
+                    ${block(t('currentAgent'), currentAgent || 'n/a')}
+                </div>
+                <div class="json-key">${escapeHTML(t('latestEvents'))}</div>
+                <div class="quote-list">${eventRows || `<div class="feedback-box">${escapeHTML(t('pollingAgentUpdates'))}</div>`}</div>
+                ${agentRows}
+            `;
+        }
+
+        async function pollLiveAgentRun(runId, productName) {
+            const runResponse = await getAgentRun(runId);
+            const eventsResponse = await getAgentRunEvents(runId);
+            const run = runResponse.run || {};
+            renderAgentLiveRunTimeline(run, eventsResponse.events || run.events || []);
+            if (run.status === 'completed') {
+                stopAgentRunPolling();
+                if (run.result) {
+                    renderProductDashboard(run.result, {
+                        inputSlug: productName,
+                        generatedAt: run.completed_at || new Date().toISOString()
+                    });
+                    saveCurrentGenerationToRecent();
+                }
+                setReviewsStatus(t('agentRunCompleted'), 'success');
+                return;
+            }
+            if (run.status === 'failed' || run.status === 'cancelled') {
+                stopAgentRunPolling();
+                setReviewsStatus(run.error || t('agentRunFailed'), 'error');
+            }
+        }
+
+        function startAgentRunPolling(runId, productName) {
+            stopAgentRunPolling();
+            latestAgentRunPollTimer = window.setInterval(() => {
+                pollLiveAgentRun(runId, productName).catch((error) => {
+                    stopAgentRunPolling();
+                    setReviewsStatus(error.message || t('agentRunFailed'), 'error');
+                });
+            }, 1500);
+            pollLiveAgentRun(runId, productName).catch((error) => {
+                stopAgentRunPolling();
+                setReviewsStatus(error.message || t('agentRunFailed'), 'error');
+            });
+        }
+
+        async function startLiveAgentRun() {
+            const btn = document.getElementById('liveAgentRunBtn');
+            const productName = reviewsInputValue('reviewsProductName');
+            const productCategory = reviewsInputValue('reviewsProductCategory');
+            const productDescription = reviewsInputValue('reviewsProductDescription');
+            const pastedReviews = reviewsInputValue('reviewsPastedReviews');
+            updateReviewInputPreviews();
+            const targetPlatform = reviewsInputValue('reviewsTargetPlatform') || 'TikTok';
+            const goal = reviewsInputValue('reviewsGoal') || 'tiktok_ctr';
+
+            if (!productName) {
+                setReviewsStatus(t('missingName'), 'error');
+                return false;
+            }
+            if (!pastedReviews) {
+                setReviewsStatus(t('missingReviews'), 'error');
+                return false;
+            }
+            if (pastedReviews.length < 24) {
+                setReviewsStatus(t('inputTooShort'), 'error');
+                return false;
+            }
+
+            stopAgentRunPolling();
+            if (btn) btn.disabled = true;
+            setReviewsStatus(t('pollingAgentUpdates'));
+            latestProductData = null;
+            latestAgentRunId = '';
+            latestInputSlug = productName;
+            latestGeneratedAt = '';
+            latestRecentId = '';
+            latestDebugCategory = '';
+            resetSectionTranslations();
+            setCopyButtonsEnabled(false);
+            document.getElementById('copyStatus').textContent = '';
+            document.getElementById('debugMode').checked = false;
+            document.getElementById('amazonShadowMode').checked = false;
+            syncDebugMode();
+
+            try {
+                const workspaceResponse = await postPastedReviewWorkspaceAnalysis({
+                    workspace_id: `agent_run_${Date.now()}`,
+                    raw_text: pastedReviews,
+                    platform: 'manual',
+                    product_title: productName,
+                    source_section: 'pasted_review',
+                    goal,
+                    output_language: currentOutputLanguage()
+                });
+                renderPastedReviewWorkspaceAnalysis(workspaceResponse);
+                const compactReviews = compactPastedReviewsForGeneration(workspaceResponse, pastedReviews);
+                if (!compactReviews.trim()) {
+                    throw new Error(t('pastedReviewsNoConcreteReviews'));
+                }
+                const response = await postAgentRunFromReviews({
+                    product_name: productName,
+                    product_category: productCategory,
+                    product_description: productDescription,
+                    pasted_reviews: compactReviews,
+                    target_platform: targetPlatform,
+                    goal,
+                    output_language: currentOutputLanguage(),
+                    llm_evidence_packet: workspaceResponse?.llm_evidence_packet || undefined
+                });
+                const run = response.run || {};
+                latestAgentRunId = run.run_id || '';
+                renderAgentLiveRunTimeline(run);
+                setReviewsStatus(t('liveAgentRunStarted'), 'success');
+                if (latestAgentRunId) {
+                    startAgentRunPolling(latestAgentRunId, productName);
+                }
+                return true;
+            } catch (error) {
+                setReviewsStatus(error.message || t('liveAgentRunStartFailed'), 'error');
+                return false;
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
 

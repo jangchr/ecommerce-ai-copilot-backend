@@ -131,6 +131,35 @@ class PastedReviewsResponse(BaseModel):
     output_language: str = "en"
 
 
+class AgentRunCreateResponse(BaseModel):
+    status: str
+    run: Dict[str, Any] = Field(default_factory=dict)
+    poll_url: str = ""
+    events_url: str = ""
+    request_id: Optional[str] = None
+
+
+class AgentRunStatusResponse(BaseModel):
+    status: str
+    run: Dict[str, Any] = Field(default_factory=dict)
+    request_id: Optional[str] = None
+
+
+class AgentRunEventsResponse(BaseModel):
+    status: str
+    run_id: str
+    events: List[Dict[str, Any]] = Field(default_factory=list)
+    request_id: Optional[str] = None
+
+
+class AgentRunListResponse(BaseModel):
+    status: str
+    runs: List[Dict[str, Any]] = Field(default_factory=list)
+    run_count: int = 0
+    limit: int = 10
+    request_id: Optional[str] = None
+
+
 class VideoGenerationJobRequest(BaseModel):
     video_generation_packet: Dict[str, Any] = Field(default_factory=dict)
     provider: str = "manual_export"
