@@ -2137,12 +2137,20 @@ def _agent_run_not_found(run_id: str):
 
 def _start_agent_run_stage(run_id: str, agent_id: str, message: str, data: dict | None = None) -> None:
     AGENT_RUN_STORE.start_agent(run_id, agent_id)
+    AGENT_RUN_STORE.set_graph_node_status(run_id, agent_id, "running")
     AGENT_RUN_STORE.append_event(
         run_id,
         "agent_started",
         message,
         agent_id=agent_id,
         data=data or {},
+    )
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "node_started",
+        message,
+        agent_id=agent_id,
+        data={"node_id": agent_id, **(data or {})},
     )
 
 
@@ -2164,12 +2172,110 @@ def _complete_agent_run_stage(
         output_artifacts=output_artifacts,
         warnings=warnings,
     )
+    AGENT_RUN_STORE.set_graph_node_status(run_id, agent_id, "complete")
     AGENT_RUN_STORE.append_event(
         run_id,
         "agent_completed",
         message,
         agent_id=agent_id,
         data=data or {},
+    )
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "node_completed",
+        message,
+        agent_id=agent_id,
+        data={"node_id": agent_id, **(data or {})},
+    )
+
+
+def _traverse_agent_graph_edge(run_id: str, edge_id: str, reason: str) -> None:
+    AGENT_RUN_STORE.traverse_graph_edge(run_id, edge_id, reason)
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "edge_traversed",
+        f"Graph edge traversed: {edge_id}.",
+        data={"edge_id": edge_id, "reason": reason},
+    )
+
+
+def _record_graph_transition_decision(
+    run_id: str,
+    from_node_id: str,
+    selected_to_node_id: str,
+    agent_id: str,
+    decision_type: str,
+    reason: str,
+    data: dict | None = None,
+) -> None:
+    decision = AGENT_RUN_STORE.add_transition_decision(
+        run_id,
+        from_node_id,
+        selected_to_node_id,
+        agent_id,
+        decision_type,
+        reason,
+        data=data or {},
+    )
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "transition_decision",
+        reason,
+        agent_id=agent_id,
+        data=decision,
+    )
+
+
+def _record_graph_validation_result(
+    run_id: str,
+    validator_agent_id: str,
+    target_agent_id: str,
+    target_artifact: str,
+    status: str,
+    reason: str,
+    severity: str = "low",
+    rework_target: str = "",
+) -> None:
+    validation = AGENT_RUN_STORE.add_validation_result(
+        run_id,
+        validator_agent_id,
+        target_agent_id,
+        target_artifact,
+        status,
+        reason,
+        severity,
+        rework_target,
+    )
+    event_type = "validation_failed" if status == "failed" else "validation_passed"
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        event_type,
+        reason,
+        agent_id=validator_agent_id,
+        data=validation,
+    )
+
+
+def _record_graph_rework_loop(
+    run_id: str,
+    source_agent_id: str,
+    target_agent_id: str,
+    reason: str,
+    status: str = "requested",
+) -> None:
+    loop = AGENT_RUN_STORE.add_rework_loop(
+        run_id,
+        source_agent_id,
+        target_agent_id,
+        reason,
+        status=status,
+    )
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "rework_requested",
+        reason,
+        agent_id=source_agent_id,
+        data=loop,
     )
 
 
@@ -2183,6 +2289,17 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             "Backend-tracked async agent run started.",
             data={"input_type": "pasted_reviews", "output_language": request.output_language or "en"},
         )
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "graph_initialized",
+            "Rule-driven agent graph initialized.",
+            data={
+                "graph_version": "agent_graph_runtime_v1",
+                "graph_execution_mode": "rule_driven_agent_graph",
+                "autonomy_level": "rule_driven_v1",
+                "llm_autonomous_decision_enabled": False,
+            },
+        )
 
         current_agent_id = "planner_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Planner Agent validating pasted feedback request.")
@@ -2194,6 +2311,15 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             "The run can proceed without changing the existing synchronous endpoint.",
             ["validated_generation_plan"],
         )
+        _record_graph_transition_decision(
+            run_id,
+            "planner_agent",
+            "evidence_agent",
+            current_agent_id,
+            "proceed",
+            "Request validation passed; proceed to evidence extraction.",
+        )
+        _traverse_agent_graph_edge(run_id, "planner_to_evidence", "Request validation passed.")
 
         current_agent_id = "evidence_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Evidence Agent building review evidence packet.")
@@ -2229,6 +2355,16 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
                 "packet_version": llm_evidence_packet.get("packet_version"),
             },
         )
+        _record_graph_transition_decision(
+            run_id,
+            "evidence_agent",
+            "strategy_agent",
+            current_agent_id,
+            "proceed",
+            "Evidence packet exists; proceed to strategy generation.",
+            data={"packet_version": llm_evidence_packet.get("packet_version")},
+        )
+        _traverse_agent_graph_edge(run_id, "evidence_to_strategy", "Evidence packet built.")
 
         current_agent_id = "strategy_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Strategy Agent calling existing creative generation helper.")
@@ -2241,6 +2377,15 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             "Turns review evidence into a creative direction while preserving the existing generation behavior.",
             ["creative_strategy", "hook", "cta"],
         )
+        _record_graph_transition_decision(
+            run_id,
+            "strategy_agent",
+            "storyboard_agent",
+            current_agent_id,
+            "proceed",
+            "Creative strategy generated; proceed to storyboard normalization.",
+        )
+        _traverse_agent_graph_edge(run_id, "strategy_to_storyboard", "Creative strategy generated.")
 
         current_agent_id = "storyboard_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Storyboard Agent building product response artifacts.")
@@ -2255,6 +2400,81 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             ["storyboard", "tiktok_script"],
             data={"scene_count": len(scenes)},
         )
+        _record_graph_transition_decision(
+            run_id,
+            "storyboard_agent",
+            "risk_agent",
+            current_agent_id,
+            "proceed",
+            "Storyboard artifacts exist; run risk validation.",
+            data={"scene_count": len(scenes)},
+        )
+        _traverse_agent_graph_edge(run_id, "storyboard_to_risk", "Storyboard requires risk validation.")
+
+        current_agent_id = "risk_agent"
+        _start_agent_run_stage(run_id, current_agent_id, "Risk Agent reviewing warnings and evidence boundaries.")
+        evidence = ((data.get("insights") or {}).get("evidence") or {})
+        data_warnings = evidence.get("data_warnings") or []
+        evaluation = data.get("evaluation") or {}
+        risk_level = str(evaluation.get("risk_level") or "").lower()
+        warning_text = " ".join(str(item or "") for item in data_warnings).lower()
+        unsupported_risk = any(token in warning_text for token in ["unsupported", "medical", "full-market", "full market"])
+        risk_failed = risk_level == "high" or unsupported_risk
+        risk_validation_status = "failed" if risk_failed else ("warning" if risk_level == "medium" or data_warnings else "passed")
+        risk_reason = (
+            "Risk validation requested storyboard rework for high-risk or unsupported claims."
+            if risk_failed
+            else "Risk validation passed with warnings." if risk_validation_status == "warning"
+            else "Risk validation passed."
+        )
+        _record_graph_validation_result(
+            run_id,
+            "risk_agent",
+            "storyboard_agent",
+            "storyboard",
+            risk_validation_status,
+            risk_reason,
+            severity="high" if risk_failed else ("medium" if risk_validation_status == "warning" else "low"),
+            rework_target="storyboard_agent" if risk_failed else "",
+        )
+        if risk_failed:
+            _record_graph_transition_decision(
+                run_id,
+                "risk_agent",
+                "storyboard_agent",
+                current_agent_id,
+                "rework_requested",
+                risk_reason,
+                data={"risk_level": risk_level, "loop_count": 0, "max_loop_count": 1},
+            )
+            _record_graph_rework_loop(
+                run_id,
+                "risk_agent",
+                "storyboard_agent",
+                "Storyboard rework is recommended; no rewrite loop is applied in v1.",
+                status="skipped",
+            )
+            _traverse_agent_graph_edge(run_id, "risk_to_storyboard_rework", "Risk validation requested rework; v1 records but skips regeneration.")
+        else:
+            _record_graph_transition_decision(
+                run_id,
+                "risk_agent",
+                "asset_lock_agent",
+                current_agent_id,
+                "validation_passed",
+                risk_reason,
+                data={"risk_level": risk_level, "warning_count": len(data_warnings)},
+            )
+            _traverse_agent_graph_edge(run_id, "risk_to_asset_lock", "Risk accepted or warning-only.")
+        _complete_agent_run_stage(
+            run_id,
+            current_agent_id,
+            "Risk Agent completed evidence-risk review.",
+            "Reviewed warnings and kept user-pasted evidence boundaries visible.",
+            "Keeps claims grounded to supplied feedback instead of unsupported market-wide conclusions.",
+            ["risk_notes", "data_warnings"],
+            warnings=data_warnings,
+        )
 
         current_agent_id = "asset_lock_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Product Asset Lock Agent checking product identity artifacts.")
@@ -2268,6 +2488,85 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             ["product_asset_lock"],
             warnings=(video_packet.get("risk_notes") or [])[:3] if isinstance(video_packet.get("risk_notes"), list) else [],
         )
+        _record_graph_transition_decision(
+            run_id,
+            "asset_lock_agent",
+            "product_identity_validator",
+            current_agent_id,
+            "proceed",
+            "Product asset lock exists; validate product identity.",
+        )
+        _traverse_agent_graph_edge(run_id, "asset_lock_to_product_identity_validator", "Asset lock ready.")
+
+        product_identity = ((data.get("external_video_tool_handoff") or {}).get("product_asset_lock") or {}).get("product_identity") or ""
+        product_category = ((data.get("external_video_tool_handoff") or {}).get("product_asset_lock") or {}).get("product_category") or ""
+        AGENT_RUN_STORE.set_graph_node_status(run_id, "product_identity_validator", "running")
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "node_started",
+            "Product Identity Validator started.",
+            agent_id="product_identity_validator",
+            data={"node_id": "product_identity_validator"},
+        )
+        if not product_identity or not product_category:
+            identity_reason = "Product identity or category is missing; user review is needed before visual prompts."
+            _record_graph_validation_result(
+                run_id,
+                "product_identity_validator",
+                "asset_lock_agent",
+                "product_asset_lock",
+                "failed",
+                identity_reason,
+                severity="medium",
+                rework_target="asset_lock_agent",
+            )
+            _record_graph_transition_decision(
+                run_id,
+                "product_identity_validator",
+                "asset_lock_agent",
+                "product_identity_validator",
+                "waiting_for_user",
+                identity_reason,
+            )
+            AGENT_RUN_STORE.set_graph_node_status(run_id, "product_identity_validator", "waiting_for_user")
+            AGENT_RUN_STORE.set_waiting_for_user(run_id, True, identity_reason)
+            AGENT_RUN_STORE.append_event(
+                run_id,
+                "waiting_for_user",
+                identity_reason,
+                agent_id="product_identity_validator",
+                data={"node_id": "product_identity_validator"},
+            )
+            _traverse_agent_graph_edge(run_id, "product_identity_validator_waiting", "Product identity needs user confirmation.")
+        else:
+            identity_reason = "Product identity validation passed."
+            _record_graph_validation_result(
+                run_id,
+                "product_identity_validator",
+                "asset_lock_agent",
+                "product_asset_lock",
+                "passed",
+                identity_reason,
+                severity="low",
+            )
+            _record_graph_transition_decision(
+                run_id,
+                "product_identity_validator",
+                "keyframe_agent",
+                "product_identity_validator",
+                "validation_passed",
+                identity_reason,
+                data={"product_identity": product_identity, "product_category": product_category},
+            )
+            AGENT_RUN_STORE.set_graph_node_status(run_id, "product_identity_validator", "complete")
+            AGENT_RUN_STORE.append_event(
+                run_id,
+                "node_completed",
+                "Product Identity Validator completed.",
+                agent_id="product_identity_validator",
+                data={"node_id": "product_identity_validator"},
+            )
+            _traverse_agent_graph_edge(run_id, "product_identity_validator_to_keyframe", "Product identity validated.")
 
         current_agent_id = "keyframe_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Keyframe Agent checking scene/keyframe plan.")
@@ -2279,6 +2578,15 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             "Encourages low-risk clip validation before paid or external provider generation.",
             ["keyframe_plan"],
         )
+        _record_graph_transition_decision(
+            run_id,
+            "keyframe_agent",
+            "prompt_handoff_agent",
+            current_agent_id,
+            "proceed",
+            "Keyframe plan exists; proceed to prompt handoff.",
+        )
+        _traverse_agent_graph_edge(run_id, "keyframe_to_prompt_handoff", "Keyframe plan ready.")
 
         current_agent_id = "prompt_handoff_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Prompt Handoff Agent preparing external tool handoff.")
@@ -2292,9 +2600,27 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             ["external_video_tool_handoff"],
             data={"has_handoff": bool(handoff)},
         )
+        _record_graph_transition_decision(
+            run_id,
+            "prompt_handoff_agent",
+            "cost_agent",
+            current_agent_id,
+            "proceed",
+            "External video handoff exists; proceed to cost validation.",
+        )
+        _traverse_agent_graph_edge(run_id, "prompt_handoff_to_cost", "Handoff prompts ready.")
 
         current_agent_id = "cost_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Cost Agent checking cost boundary.")
+        _record_graph_validation_result(
+            run_id,
+            "cost_agent",
+            "route_selector_agent",
+            "provider_route",
+            "warning",
+            "Real external video APIs are disabled; route to manual external tool handoff.",
+            severity="medium",
+        )
         _complete_agent_run_stage(
             run_id,
             current_agent_id,
@@ -2304,20 +2630,66 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             ["cost_boundary"],
             data={"cost_incurred_by_crossgrowth": False},
         )
-
-        current_agent_id = "risk_agent"
-        _start_agent_run_stage(run_id, current_agent_id, "Risk Agent reviewing warnings and evidence boundaries.")
-        evidence = ((data.get("insights") or {}).get("evidence") or {})
-        data_warnings = evidence.get("data_warnings") or []
-        _complete_agent_run_stage(
+        _record_graph_transition_decision(
             run_id,
+            "cost_agent",
+            "route_selector_agent",
             current_agent_id,
-            "Risk Agent completed evidence-risk review.",
-            "Reviewed warnings and kept user-pasted evidence boundaries visible.",
-            "Keeps claims grounded to supplied feedback instead of unsupported market-wide conclusions.",
-            ["risk_notes", "data_warnings"],
-            warnings=data_warnings,
+            "validation_passed",
+            "Cost boundary checked; choose a safe route.",
+            data={"external_api_called": False},
         )
+        _traverse_agent_graph_edge(run_id, "cost_to_route_selector", "Cost boundary checked.")
+
+        AGENT_RUN_STORE.set_graph_node_status(run_id, "route_selector_agent", "running")
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "node_started",
+            "Route Selector Agent started.",
+            agent_id="route_selector_agent",
+            data={"node_id": "route_selector_agent"},
+        )
+        AGENT_RUN_STORE.set_branch_selected(run_id, "manual_external_tool_handoff")
+        _record_graph_transition_decision(
+            run_id,
+            "route_selector_agent",
+            "prompt_handoff_agent",
+            "route_selector_agent",
+            "branch_selected",
+            "Real provider APIs are disabled, so the graph selects manual_external_tool_handoff.",
+            data={"branch_selected": "manual_external_tool_handoff"},
+        )
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "branch_selected",
+            "Manual external tool handoff selected because real external API calls are disabled.",
+            agent_id="route_selector_agent",
+            data={"branch_selected": "manual_external_tool_handoff"},
+        )
+        AGENT_RUN_STORE.set_graph_node_status(run_id, "route_selector_agent", "complete")
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "node_completed",
+            "Route Selector Agent completed.",
+            agent_id="route_selector_agent",
+            data={"node_id": "route_selector_agent", "branch_selected": "manual_external_tool_handoff"},
+        )
+        _traverse_agent_graph_edge(run_id, "route_selector_to_prompt_handoff_fallback", "Manual fallback selected.")
+        AGENT_RUN_STORE.set_graph_node_status(run_id, "provider_job_agent", "waiting_for_user")
+        AGENT_RUN_STORE.set_graph_node_status(run_id, "experiment_agent", "waiting_for_user")
+        AGENT_RUN_STORE.set_waiting_for_user(
+            run_id,
+            True,
+            "Video Job creation and external experiment scoring are waiting for user action after generation.",
+        )
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "waiting_for_user",
+            "Provider job and experiment nodes are waiting for user action after generation.",
+            agent_id="provider_job_agent",
+            data={"nodes": ["provider_job_agent", "experiment_agent"]},
+        )
+        _traverse_agent_graph_edge(run_id, "prompt_handoff_to_finalizer_fallback", "Manual workflow can finalize generated artifacts.")
 
         current_agent_id = "finalizer_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Finalizer Agent preparing final generated result.")
@@ -2332,6 +2704,7 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
         )
 
         AGENT_RUN_STORE.complete_run(run_id, final_data)
+        AGENT_RUN_STORE.complete_graph(run_id)
         AGENT_RUN_STORE.append_event(
             run_id,
             "run_completed",
@@ -2341,6 +2714,12 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
                 "external_api_called": False,
                 "cost_incurred_by_crossgrowth": False,
             },
+        )
+        AGENT_RUN_STORE.append_event(
+            run_id,
+            "graph_completed",
+            "Rule-driven agent graph completed.",
+            data={"branch_selected": "manual_external_tool_handoff"},
         )
     except Exception as exc:
         error = str(exc or "Agent run failed.")

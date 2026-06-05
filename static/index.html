@@ -3609,6 +3609,19 @@
                 liveAgentRunStarted: 'Live agent run started.',
                 liveAgentRunStartFailed: 'Could not start live agent run.',
                 liveAgentRunId: 'Run ID',
+                agentGraphMap: 'Agent Graph Map',
+                graphExecutionMode: 'Graph execution mode',
+                autonomyLevel: 'Autonomy level',
+                activeNode: 'Active node',
+                traversedPath: 'Traversed path',
+                transitionDecisions: 'Transition decisions',
+                validationResults: 'Validation results',
+                reworkLoops: 'Rework loops',
+                branchSelected: 'Branch selected',
+                waitingForUser: 'Waiting for user',
+                ruleDrivenAutonomousGraph: 'Rule-driven autonomous graph',
+                llmAutonomousDecision: 'LLM autonomous decision',
+                graphLegend: 'Legend',
                 pastedReviewsNoConcreteReviews: 'Paste at least one concrete review line, not only category labels.',
                 missingReviews: 'Please paste customer reviews or buyer feedback.',
                 reviewCountEmpty: 'Review count: 0. Paste at least 3 specific review snippets for stronger output.',
@@ -4264,6 +4277,19 @@
                 liveAgentRunStarted: '实时 Agent Run 已启动。',
                 liveAgentRunStartFailed: '无法启动实时 Agent Run。',
                 liveAgentRunId: 'Run ID',
+                agentGraphMap: 'Agent 图谱地图',
+                graphExecutionMode: '图谱执行模式',
+                autonomyLevel: '自治级别',
+                activeNode: '当前节点',
+                traversedPath: '已走路径',
+                transitionDecisions: '转移决策',
+                validationResults: '校验结果',
+                reworkLoops: '返工循环',
+                branchSelected: '已选择分支',
+                waitingForUser: '等待用户',
+                ruleDrivenAutonomousGraph: '规则驱动自治图谱',
+                llmAutonomousDecision: 'LLM 自主决策',
+                graphLegend: '图例',
                 pastedReviewsNoConcreteReviews: '请至少粘贴一条具体用户原话，不要只粘贴痛点/正向/使用场景这类分类标签。',
                 missingReviews: '请粘贴用户评论或买家反馈。',
                 reviewCountEmpty: '评论条数：0。建议至少粘贴 3 条具体评论，生成效果会更好。',
@@ -7454,6 +7480,80 @@
             }
         }
 
+        function renderAgentGraphMap(run) {
+            const nodes = Array.isArray(run?.graph_nodes) ? run.graph_nodes : [];
+            const edges = Array.isArray(run?.graph_edges) ? run.graph_edges : [];
+            if (!nodes.length) return '';
+            const activeNode = run.active_node_id || '';
+            const visited = new Set(Array.isArray(run.visited_node_ids) ? run.visited_node_ids : []);
+            const activeEdges = new Set(Array.isArray(run.active_edge_ids) ? run.active_edge_ids : []);
+            const nodeRows = nodes.map((node) => {
+                const status = node.status || 'pending';
+                const isActive = activeNode && activeNode === node.node_id;
+                const isVisited = visited.has(node.node_id);
+                const borderColor = status === 'failed' ? '#d92d20'
+                    : status === 'waiting_for_user' ? '#b76e00'
+                    : status === 'rework_requested' ? '#8e44ad'
+                    : status === 'complete' ? '#1f9d55'
+                    : isActive ? '#007aff'
+                    : '#d1d5db';
+                const background = isActive ? 'rgba(0,122,255,0.08)' : (isVisited ? '#f8fafc' : '#ffffff');
+                return `
+                    <div class="section-block" style="border-color:${borderColor};background:${background};">
+                        <div class="json-key">${escapeHTML(node.role || node.node_id || '')}</div>
+                        <div class="metric-strip">
+                            <span class="metric-pill">${escapeHTML(status)}</span>
+                            <span class="metric-pill">${escapeHTML(node.node_type || '')}</span>
+                        </div>
+                        <div class="brief-note">${escapeHTML(node.description || '')}</div>
+                        ${block(t('recommendedUserAction'), node.recommended_user_action || '')}
+                    </div>
+                `;
+            }).join('');
+            const edgeRows = edges.map((edge) => {
+                const traversed = edge.status === 'traversed' || activeEdges.has(edge.edge_id);
+                const label = `${edge.from_node_id || ''} -> ${edge.to_node_id || ''}`;
+                return `<span class="metric-pill">${traversed ? '* ' : ''}${escapeHTML(label)} (${escapeHTML(edge.edge_type || '')}: ${escapeHTML(edge.status || 'inactive')})</span>`;
+            }).join('');
+            const decisions = (run.transition_decisions || [])
+                .map((decision) => `${decision.decision_type}: ${decision.from_node_id} -> ${decision.selected_to_node_id} - ${decision.reason}`)
+                .join('\n');
+            const validations = (run.validation_results || [])
+                .map((validation) => `${validation.status}: ${validation.validator_agent_id} -> ${validation.target_artifact || validation.target_agent_id} - ${validation.reason}`)
+                .join('\n');
+            const loops = (run.rework_loops || [])
+                .map((loop) => `${loop.status}: ${loop.source_agent_id} -> ${loop.target_agent_id} (${loop.loop_count}/${loop.max_loop_count}) - ${loop.reason}`)
+                .join('\n');
+            return `
+                <div class="section-block" id="agentGraphMapPanel">
+                    <div class="json-key">${escapeHTML(t('agentGraphMap'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('ruleDrivenAutonomousGraph'))}</div>
+                    <div class="probe-grid">
+                        ${block(t('graphExecutionMode'), run.graph_execution_mode || '')}
+                        ${block(t('autonomyLevel'), run.autonomy_level || '')}
+                        ${block(t('activeNode'), activeNode || 'n/a')}
+                        ${block(t('branchSelected'), run.branch_selected || '')}
+                        ${block(t('waitingForUser'), run.waiting_for_user ? t('yesLabel') : t('noLabel'))}
+                        ${block(t('llmAutonomousDecision'), run.llm_autonomous_decision_enabled ? t('yesLabel') : t('noLabel'))}
+                    </div>
+                    <div class="json-key">${escapeHTML(t('graphLegend'))}</div>
+                    <div class="metric-strip">
+                        <span class="metric-pill">pending</span>
+                        <span class="metric-pill">running</span>
+                        <span class="metric-pill">complete</span>
+                        <span class="metric-pill">waiting_for_user</span>
+                        <span class="metric-pill">rework_requested</span>
+                    </div>
+                    <div class="probe-grid">${nodeRows}</div>
+                    <div class="json-key">${escapeHTML(t('traversedPath'))}</div>
+                    <div class="metric-strip">${edgeRows}</div>
+                    ${block(t('transitionDecisions'), decisions)}
+                    ${block(t('validationResults'), validations)}
+                    ${block(t('reworkLoops'), loops)}
+                </div>
+            `;
+        }
+
         function renderAgentLiveRunTimeline(run, eventsOverride = null) {
             const target = document.getElementById('agentLiveRunTimeline');
             if (!target || !run) return;
@@ -7496,6 +7596,7 @@
                     ${block(t('runStatus'), run.status || '')}
                     ${block(t('currentAgent'), currentAgent || 'n/a')}
                 </div>
+                ${renderAgentGraphMap(run)}
                 <div class="json-key">${escapeHTML(t('latestEvents'))}</div>
                 <div class="quote-list">${eventRows || `<div class="feedback-box">${escapeHTML(t('pollingAgentUpdates'))}</div>`}</div>
                 ${agentRows}
