@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from datetime import datetime, timezone
+import re
 from threading import RLock
 from typing import Any
 from uuid import uuid4
@@ -15,6 +16,73 @@ GRAPH_VERSION = "agent_graph_runtime_v1"
 GRAPH_EXECUTION_MODE = "rule_driven_agent_graph"
 AUTONOMY_LEVEL = "rule_driven_v1"
 
+RISKY_STORYBOARD_TERMS = [
+    "leak-proof guarantee",
+    "no leaks guaranteed",
+    "clinically proven",
+    "best on the market",
+    "guarantees",
+    "guaranteed",
+    "permanent",
+    "eliminate",
+    "medical",
+    "always",
+    "never",
+    "100%",
+    "cure",
+    "#1",
+]
+
+STORYBOARD_REWORK_TEXT_KEYS = {
+    "caption",
+    "caption_draft",
+    "capcut_shot_list",
+    "cta",
+    "full_video_prompt",
+    "generic_video_prompt",
+    "hook",
+    "narration",
+    "on_screen_text",
+    "overlay_text",
+    "pika_style_prompt",
+    "prompt",
+    "runway_style_prompt",
+    "selected_prompt",
+    "scene_goal",
+    "visual",
+    "visual_description",
+    "visual_prompt",
+}
+
+STORYBOARD_REWORK_SKIP_KEYS = {
+    "evidence",
+    "evidence_quote",
+    "evidence_quote_used",
+    "evidence_quotes",
+    "product_category",
+    "product_identity",
+    "product_name",
+    "source",
+    "source_url",
+}
+
+STORYBOARD_REWRITE_REPLACEMENTS = [
+    (r"\bleak-proof guarantee\b", "check the supplied review concerns before buying"),
+    (r"\bno leaks guaranteed\b", "check the supplied review concerns before buying"),
+    (r"\bclinically proven\b", "unsupported claim removed"),
+    (r"\bbest on the market\b", "one review-backed option"),
+    (r"\bguarantees\b", "is framed by supplied reviews"),
+    (r"\bguaranteed\b", "review-backed"),
+    (r"\bpermanent\b", "longer-term review-backed"),
+    (r"\beliminate\b", "reduce in supplied review context"),
+    (r"\bmedical\b", "unsupported claim removed"),
+    (r"\balways\b", "in these supplied reviews"),
+    (r"\bnever\b", "not reported in these supplied reviews"),
+    (r"100%", "review-backed"),
+    (r"\bcure\b", "unsupported claim removed"),
+    (r"#1", "review-backed option"),
+]
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -22,6 +90,163 @@ def utc_now_iso() -> str:
 
 def utc_now_ms() -> float:
     return datetime.now(timezone.utc).timestamp() * 1000
+
+
+def _storyboard_rework_candidate_texts(value: Any, key: str = "") -> list[str]:
+    if isinstance(value, dict):
+        texts: list[str] = []
+        for child_key, child_value in value.items():
+            safe_key = str(child_key or "")
+            if safe_key in STORYBOARD_REWORK_SKIP_KEYS:
+                continue
+            texts.extend(_storyboard_rework_candidate_texts(child_value, safe_key))
+        return texts
+    if isinstance(value, list):
+        texts = []
+        for item in value:
+            texts.extend(_storyboard_rework_candidate_texts(item, key))
+        return texts
+    if isinstance(value, str) and key in STORYBOARD_REWORK_TEXT_KEYS:
+        return [value]
+    return []
+
+
+def _storyboard_risk_scan_text(text: str) -> str:
+    safe_text = str(text or "")
+    safety_boilerplate_patterns = [
+        r"Evidence boundary:.*?(?:\.|\n)",
+        r"avoid unsupported claims[^.]*\.",
+        r"before/after guarantees, medical claims, or full-market statistics",
+        r"Missing; keep claim conservative\.?",
+        r"Missing scene-level evidence quote; keep claim conservative\.?",
+    ]
+    for pattern in safety_boilerplate_patterns:
+        safe_text = re.sub(pattern, " ", safe_text, flags=re.IGNORECASE | re.DOTALL)
+    return safe_text
+
+
+def _append_graph_warning(data: dict[str, Any], warning: str) -> None:
+    insights = data.get("insights") if isinstance(data.get("insights"), dict) else None
+    evidence = insights.get("evidence") if isinstance(insights, dict) and isinstance(insights.get("evidence"), dict) else None
+    if evidence is not None:
+        warnings = evidence.get("data_warnings")
+        if not isinstance(warnings, list):
+            warnings = []
+        if warning not in warnings:
+            warnings.append(warning)
+        evidence["data_warnings"] = warnings
+    video_packet = data.get("video_generation_packet") if isinstance(data.get("video_generation_packet"), dict) else None
+    if video_packet is not None:
+        risk_notes = video_packet.get("risk_notes")
+        if not isinstance(risk_notes, list):
+            risk_notes = []
+        if warning not in risk_notes:
+            risk_notes.append(warning)
+        video_packet["risk_notes"] = risk_notes
+
+
+def detect_storyboard_rework_need(generated_data: dict[str, Any]) -> dict[str, Any]:
+    """Detect unsupported absolute claims in generated storyboard artifacts."""
+
+    if not isinstance(generated_data, dict):
+        return {
+            "needs_rework": False,
+            "reason": "No generated data available for storyboard risk validation.",
+            "matched_terms": [],
+            "severity": "medium",
+        }
+
+    evaluation = generated_data.get("evaluation") if isinstance(generated_data.get("evaluation"), dict) else {}
+    risk_level = str(evaluation.get("risk_level") or "").strip().lower()
+    matched_terms: list[str] = []
+    text_blob = "\n".join(
+        _storyboard_risk_scan_text(text)
+        for text in _storyboard_rework_candidate_texts(generated_data)
+    ).lower()
+    for term in RISKY_STORYBOARD_TERMS:
+        if term.lower() in text_blob and term not in matched_terms:
+            matched_terms.append(term)
+
+    high_terms = {
+        "#1",
+        "100%",
+        "best on the market",
+        "clinically proven",
+        "cure",
+        "eliminate",
+        "leak-proof guarantee",
+        "medical",
+        "no leaks guaranteed",
+        "permanent",
+    }
+    needs_rework = risk_level == "high" or bool(matched_terms)
+    severity = "high" if risk_level == "high" or any(term in high_terms for term in matched_terms) else "medium"
+    if risk_level == "high" and matched_terms:
+        reason = f"High risk level plus unsupported storyboard wording: {', '.join(matched_terms)}."
+    elif risk_level == "high":
+        reason = "High risk level requires storyboard rework before continuing."
+    elif matched_terms:
+        reason = f"Unsupported storyboard wording detected: {', '.join(matched_terms)}."
+    else:
+        reason = "No risky unsupported storyboard wording detected."
+
+    return {
+        "needs_rework": needs_rework,
+        "reason": reason,
+        "matched_terms": matched_terms,
+        "severity": severity,
+    }
+
+
+def _rewrite_storyboard_text(text: str) -> str:
+    rewritten = str(text or "")
+    for pattern, replacement in STORYBOARD_REWRITE_REPLACEMENTS:
+        rewritten = re.sub(pattern, replacement, rewritten, flags=re.IGNORECASE)
+    return rewritten
+
+
+def _rewrite_storyboard_fields(value: Any, key: str = "") -> Any:
+    if isinstance(value, dict):
+        rewritten: dict[str, Any] = {}
+        for child_key, child_value in value.items():
+            safe_key = str(child_key or "")
+            if safe_key in STORYBOARD_REWORK_SKIP_KEYS:
+                rewritten[child_key] = deepcopy(child_value)
+            else:
+                rewritten[child_key] = _rewrite_storyboard_fields(child_value, safe_key)
+        return rewritten
+    if isinstance(value, list):
+        return [_rewrite_storyboard_fields(item, key) for item in value]
+    if isinstance(value, str) and key in STORYBOARD_REWORK_TEXT_KEYS:
+        return _rewrite_storyboard_text(value)
+    return deepcopy(value)
+
+
+def apply_evidence_safe_storyboard_rework(
+    generated_data: dict[str, Any],
+    reason: str,
+    matched_terms: list[str],
+) -> dict[str, Any]:
+    """Apply a deterministic evidence-safe rewrite to generated storyboard text."""
+
+    data = _rewrite_storyboard_fields(generated_data if isinstance(generated_data, dict) else {})
+    rework_summary = {
+        "rework_version": "risk_storyboard_rework_v1",
+        "source_agent_id": "risk_agent",
+        "target_agent_id": "storyboard_agent",
+        "reason": str(reason or "Storyboard wording was revised for evidence safety."),
+        "matched_terms": list(matched_terms or []),
+        "changed": True,
+    }
+    data["agent_graph_rework_summary"] = rework_summary
+    evaluation = data.get("evaluation") if isinstance(data.get("evaluation"), dict) else None
+    if evaluation is not None and str(evaluation.get("risk_level") or "").lower() == "high":
+        evaluation["risk_level"] = "medium"
+        reasoning = str(evaluation.get("reasoning") or "").strip()
+        suffix = "Evidence-safe storyboard rework applied; keep human review on unsupported claim boundaries."
+        evaluation["reasoning"] = f"{reasoning} {suffix}".strip()
+    _append_graph_warning(data, "storyboard_reworked_for_evidence_safety")
+    return data
 
 
 def build_agent_state(
@@ -525,7 +750,8 @@ class InMemoryAgentRunStore:
     ) -> dict[str, Any]:
         with self._lock:
             run = deepcopy(self._runs[str(run_id)])
-            loop_count = int(run.get("loop_count") or 0) + 1
+            current_loop_count = int(run.get("loop_count") or 0)
+            loop_count = current_loop_count if status == "blocked" else current_loop_count + 1
             max_loop_count = int(run.get("max_loop_count") or 1)
             loop = {
                 "loop_id": str(uuid4()),

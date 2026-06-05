@@ -48,7 +48,12 @@ from schemas.api_contract import (
     VideoGenerationProviderPollRequest,
     VideoGenerationStorageStatusResponse,
 )
-from agent_runs import InMemoryAgentRunStore, build_agent_run
+from agent_runs import (
+    InMemoryAgentRunStore,
+    apply_evidence_safe_storyboard_rework,
+    build_agent_run,
+    detect_storyboard_rework_need,
+)
 from schemas.source_probe_contract import (
     SourceProbeRequest,
     SourceProbeResponse,
@@ -2414,16 +2419,25 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
         current_agent_id = "risk_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Risk Agent reviewing warnings and evidence boundaries.")
         evidence = ((data.get("insights") or {}).get("evidence") or {})
-        data_warnings = evidence.get("data_warnings") or []
+        data_warnings = list(evidence.get("data_warnings") or [])
         evaluation = data.get("evaluation") or {}
         risk_level = str(evaluation.get("risk_level") or "").lower()
         warning_text = " ".join(str(item or "") for item in data_warnings).lower()
         unsupported_risk = any(token in warning_text for token in ["unsupported", "medical", "full-market", "full market"])
-        risk_failed = risk_level == "high" or unsupported_risk
-        risk_validation_status = "failed" if risk_failed else ("warning" if risk_level == "medium" or data_warnings else "passed")
+        risk_check = detect_storyboard_rework_need(data)
+        if unsupported_risk and not risk_check.get("needs_rework"):
+            risk_check = {
+                "needs_rework": True,
+                "reason": "Unsupported evidence-boundary warning requires storyboard rework.",
+                "matched_terms": ["unsupported_warning"],
+                "severity": "high" if "medical" in warning_text else "medium",
+            }
+        needs_rework = bool(risk_check.get("needs_rework"))
+        risk_failed = needs_rework and risk_check.get("severity") == "high"
+        risk_validation_status = "failed" if risk_failed else ("warning" if needs_rework or risk_level == "medium" or data_warnings else "passed")
         risk_reason = (
-            "Risk validation requested storyboard rework for high-risk or unsupported claims."
-            if risk_failed
+            str(risk_check.get("reason") or "Risk validation requested storyboard rework.")
+            if needs_rework
             else "Risk validation passed with warnings." if risk_validation_status == "warning"
             else "Risk validation passed."
         )
@@ -2434,10 +2448,13 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             "storyboard",
             risk_validation_status,
             risk_reason,
-            severity="high" if risk_failed else ("medium" if risk_validation_status == "warning" else "low"),
-            rework_target="storyboard_agent" if risk_failed else "",
+            severity=str(risk_check.get("severity") or ("medium" if risk_validation_status == "warning" else "low")),
+            rework_target="storyboard_agent" if needs_rework else "",
         )
-        if risk_failed:
+        if needs_rework:
+            current_run_state = AGENT_RUN_STORE.get(run_id) or {}
+            loop_count = int(current_run_state.get("loop_count") or 0)
+            max_loop_count = int(current_run_state.get("max_loop_count") or 1)
             _record_graph_transition_decision(
                 run_id,
                 "risk_agent",
@@ -2445,16 +2462,165 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
                 current_agent_id,
                 "rework_requested",
                 risk_reason,
-                data={"risk_level": risk_level, "loop_count": 0, "max_loop_count": 1},
+                data={
+                    "risk_level": risk_level,
+                    "loop_count": loop_count,
+                    "max_loop_count": max_loop_count,
+                    "matched_terms": risk_check.get("matched_terms") or [],
+                },
             )
-            _record_graph_rework_loop(
-                run_id,
-                "risk_agent",
-                "storyboard_agent",
-                "Storyboard rework is recommended; no rewrite loop is applied in v1.",
-                status="skipped",
-            )
-            _traverse_agent_graph_edge(run_id, "risk_to_storyboard_rework", "Risk validation requested rework; v1 records but skips regeneration.")
+            if loop_count < max_loop_count:
+                _record_graph_rework_loop(
+                    run_id,
+                    "risk_agent",
+                    "storyboard_agent",
+                    risk_reason,
+                    status="applied",
+                )
+                _traverse_agent_graph_edge(run_id, "risk_to_storyboard_rework", "Risk validation requested evidence-safe storyboard rework.")
+                _complete_agent_run_stage(
+                    run_id,
+                    current_agent_id,
+                    "Risk Agent requested evidence-safe storyboard rework.",
+                    "Detected risky unsupported storyboard wording and routed the graph back to Storyboard Agent.",
+                    "Prevents absolute or unsupported claims from continuing into video handoff.",
+                    ["risk_notes", "rework_request"],
+                    warnings=data_warnings,
+                    data={
+                        "matched_terms": risk_check.get("matched_terms") or [],
+                        "severity": risk_check.get("severity"),
+                    },
+                )
+
+                current_agent_id = "storyboard_agent"
+                _start_agent_run_stage(run_id, current_agent_id, "Storyboard Agent applying evidence-safe rework.")
+                data = apply_evidence_safe_storyboard_rework(
+                    data,
+                    risk_reason,
+                    list(risk_check.get("matched_terms") or []),
+                )
+                scenes = ((data.get("assets") or {}).get("storyboard") or {}).get("scenes") or []
+                _complete_agent_run_stage(
+                    run_id,
+                    current_agent_id,
+                    "Storyboard Agent applied evidence-safe rework.",
+                    "Replaced unsupported absolute wording with evidence-bound phrasing.",
+                    "Keeps the generated storyboard usable while preserving supplied evidence and product identity.",
+                    ["storyboard", "tiktok_script", "agent_graph_rework_summary"],
+                    data={"scene_count": len(scenes), "rework_applied": True},
+                )
+                _record_graph_transition_decision(
+                    run_id,
+                    "storyboard_agent",
+                    "risk_agent",
+                    current_agent_id,
+                    "validation_requested",
+                    "Evidence-safe storyboard rework applied; Risk Agent must validate again.",
+                    data={"scene_count": len(scenes), "rework_applied": True},
+                )
+                _traverse_agent_graph_edge(run_id, "storyboard_to_risk", "Reworked storyboard requires risk validation.")
+
+                current_agent_id = "risk_agent"
+                _start_agent_run_stage(run_id, current_agent_id, "Risk Agent re-validating evidence-safe storyboard rework.")
+                evidence = ((data.get("insights") or {}).get("evidence") or {})
+                data_warnings = list(evidence.get("data_warnings") or [])
+                evaluation = data.get("evaluation") or {}
+                risk_level = str(evaluation.get("risk_level") or "").lower()
+                warning_text = " ".join(str(item or "") for item in data_warnings).lower()
+                unsupported_risk = any(token in warning_text for token in ["unsupported", "medical", "full-market", "full market"])
+                second_risk_check = detect_storyboard_rework_need(data)
+                if unsupported_risk and not second_risk_check.get("needs_rework"):
+                    second_risk_check = {
+                        "needs_rework": True,
+                        "reason": "Unsupported evidence-boundary warning remains after storyboard rework.",
+                        "matched_terms": ["unsupported_warning"],
+                        "severity": "high" if "medical" in warning_text else "medium",
+                    }
+                second_needs_rework = bool(second_risk_check.get("needs_rework"))
+                if second_needs_rework:
+                    second_reason = str(second_risk_check.get("reason") or "Risk remains after evidence-safe rework.")
+                    _record_graph_validation_result(
+                        run_id,
+                        "risk_agent",
+                        "storyboard_agent",
+                        "storyboard",
+                        "failed" if second_risk_check.get("severity") == "high" else "warning",
+                        second_reason,
+                        severity=str(second_risk_check.get("severity") or "medium"),
+                        rework_target="storyboard_agent",
+                    )
+                    _record_graph_rework_loop(
+                        run_id,
+                        "risk_agent",
+                        "storyboard_agent",
+                        "Risk rework limit reached; human review is required before relying on storyboard claims.",
+                        status="blocked",
+                    )
+                    AGENT_RUN_STORE.set_waiting_for_user(
+                        run_id,
+                        True,
+                        "risk rework limit reached; human review is required before relying on storyboard claims.",
+                    )
+                    AGENT_RUN_STORE.append_event(
+                        run_id,
+                        "waiting_for_user",
+                        "Risk rework limit reached; human review is required before relying on storyboard claims.",
+                        agent_id="risk_agent",
+                        data={"node_id": "risk_agent", "matched_terms": second_risk_check.get("matched_terms") or []},
+                    )
+                    _record_graph_transition_decision(
+                        run_id,
+                        "risk_agent",
+                        "asset_lock_agent",
+                        "risk_agent",
+                        "validation_warning",
+                        "Rework limit reached; continue with human review required and no further automatic loop.",
+                        data={"loop_count": int((AGENT_RUN_STORE.get(run_id) or {}).get("loop_count") or 0), "max_loop_count": max_loop_count},
+                    )
+                else:
+                    second_status = "warning" if risk_level == "medium" or data_warnings else "passed"
+                    second_reason = "Risk validation passed after evidence-safe storyboard rework." if second_status == "passed" else "Risk validation passed after rework with warnings."
+                    _record_graph_validation_result(
+                        run_id,
+                        "risk_agent",
+                        "storyboard_agent",
+                        "storyboard",
+                        second_status,
+                        second_reason,
+                        severity="medium" if second_status == "warning" else "low",
+                    )
+                    _record_graph_transition_decision(
+                        run_id,
+                        "risk_agent",
+                        "asset_lock_agent",
+                        "risk_agent",
+                        "validation_passed",
+                        second_reason,
+                        data={"risk_level": risk_level, "warning_count": len(data_warnings), "rework_applied": True},
+                    )
+                _traverse_agent_graph_edge(run_id, "risk_to_asset_lock", "Risk accepted after evidence-safe rework.")
+                risk_reason = second_reason
+            else:
+                _record_graph_rework_loop(
+                    run_id,
+                    "risk_agent",
+                    "storyboard_agent",
+                    "Risk rework limit reached; human review is required before relying on storyboard claims.",
+                    status="blocked",
+                )
+                AGENT_RUN_STORE.set_waiting_for_user(
+                    run_id,
+                    True,
+                    "risk rework limit reached; human review is required before relying on storyboard claims.",
+                )
+                AGENT_RUN_STORE.append_event(
+                    run_id,
+                    "waiting_for_user",
+                    "Risk rework limit reached; human review is required before relying on storyboard claims.",
+                    agent_id="risk_agent",
+                    data={"node_id": "risk_agent", "matched_terms": risk_check.get("matched_terms") or []},
+                )
+                _traverse_agent_graph_edge(run_id, "risk_to_asset_lock", "Risk rework limit reached; continue with human review required.")
         else:
             _record_graph_transition_decision(
                 run_id,

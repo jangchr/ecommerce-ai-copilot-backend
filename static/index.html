@@ -3617,6 +3617,10 @@
                 transitionDecisions: 'Transition decisions',
                 validationResults: 'Validation results',
                 reworkLoops: 'Rework loops',
+                reworkRequested: 'Rework requested',
+                reworkApplied: 'Rework applied',
+                reworkLimit: 'Rework limit',
+                evidenceSafeRework: 'Evidence-safe rework',
                 branchSelected: 'Branch selected',
                 waitingForUser: 'Waiting for user',
                 ruleDrivenAutonomousGraph: 'Rule-driven autonomous graph',
@@ -4285,6 +4289,10 @@
                 transitionDecisions: '转移决策',
                 validationResults: '校验结果',
                 reworkLoops: '返工循环',
+                reworkRequested: '已请求返工',
+                reworkApplied: '已应用返工',
+                reworkLimit: '返工上限',
+                evidenceSafeRework: '证据安全返工',
                 branchSelected: '已选择分支',
                 waitingForUser: '等待用户',
                 ruleDrivenAutonomousGraph: '规则驱动自治图谱',
@@ -7528,6 +7536,12 @@
                 <div class="section-block" id="agentGraphMapPanel">
                     <div class="json-key">${escapeHTML(t('agentGraphMap'))}</div>
                     <div class="feedback-box">${escapeHTML(t('ruleDrivenAutonomousGraph'))}</div>
+                    <div class="metric-strip">
+                        <span class="metric-pill">${escapeHTML(t('reworkRequested'))}</span>
+                        <span class="metric-pill">${escapeHTML(t('reworkApplied'))}</span>
+                        <span class="metric-pill">${escapeHTML(t('reworkLimit'))}</span>
+                        <span class="metric-pill">${escapeHTML(t('evidenceSafeRework'))}</span>
+                    </div>
                     <div class="probe-grid">
                         ${block(t('graphExecutionMode'), run.graph_execution_mode || '')}
                         ${block(t('autonomyLevel'), run.autonomy_level || '')}
