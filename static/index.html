@@ -2930,9 +2930,37 @@
             if (!handoff) return '';
             const prompts = handoff.tool_prompts || {};
             const keyframes = Array.isArray(handoff.keyframe_prompts) ? handoff.keyframe_prompts : [];
+            const assetLock = handoff.product_asset_lock || {};
+            const keyframePlan = handoff.keyframe_plan || {};
+            const planScenes = Array.isArray(keyframePlan.scenes) ? keyframePlan.scenes : [];
+            const assetLockText = [
+                `${t('productAssetLock')}:`,
+                assetLock.product_identity ? `${t('productIdentity')}: ${assetLock.product_identity}` : '',
+                assetLock.product_category ? `${t('productCategoryLabel')}: ${assetLock.product_category}` : '',
+                `${t('mustPreserve')}:\n${(assetLock.must_preserve || []).join('\n')}`,
+                `${t('mustNotChange')}:\n${(assetLock.must_not_change || []).join('\n')}`,
+                `${t('imageReferenceRules')}:\n${(assetLock.image_reference_rules || []).join('\n')}`,
+                `${t('humanReviewRequired')}: ${assetLock.human_review_required === true ? t('yesLabel') : t('noLabel')}`
+            ].filter(Boolean).join('\n');
+            const keyframePlanText = [
+                `${t('keyframePlan')}:`,
+                keyframePlan.recommended_clip_strategy ? `${t('recommendedClipStrategy')}: ${keyframePlan.recommended_clip_strategy}` : '',
+                keyframePlan.scene_count ? `${t('scriptScenes')}: ${keyframePlan.scene_count}` : '',
+                planScenes.slice(0, 4).map((scene) => [
+                    `${t('sceneLabel')} ${scene.scene_id || ''}`.trim(),
+                    scene.keyframe_goal ? `Goal: ${scene.keyframe_goal}` : '',
+                    scene.product_position ? `${t('productPosition')}: ${scene.product_position}` : '',
+                    scene.camera_direction ? `${t('cameraDirection')}: ${scene.camera_direction}` : '',
+                    scene.overlay_text ? `${t('overlayText')}: ${scene.overlay_text}` : '',
+                    scene.evidence_anchor ? `${t('evidenceAnchor')}: ${scene.evidence_anchor}` : '',
+                    (scene.risk_notes || []).length ? `${t('riskNotes')}: ${(scene.risk_notes || []).join('; ')}` : ''
+                ].filter(Boolean).join('\n')).join('\n\n')
+            ].filter(Boolean).join('\n');
             return [
                 t('externalVideoToolHandoffTitle'),
                 handoff.recommended_workflow || '',
+                assetLockText,
+                keyframePlanText,
                 `${t('geminiVideoPrompt')}:\n${prompts.gemini_video_prompt || ''}`,
                 `${t('doubaoVideoPrompt')}:\n${prompts.doubao_video_prompt || ''}`,
                 `${t('imageToVideoPrompt')}:\n${prompts.general_image_to_video_prompt || ''}`,
@@ -2978,12 +3006,47 @@
             if (!handoff || handoff.packet_version !== 'external_video_tool_handoff_v1') return '';
             const prompts = handoff.tool_prompts || {};
             const keyframes = Array.isArray(handoff.keyframe_prompts) ? handoff.keyframe_prompts.slice(0, 4) : [];
+            const assetLock = handoff.product_asset_lock || {};
+            const keyframePlan = handoff.keyframe_plan || {};
+            const planScenes = Array.isArray(keyframePlan.scenes) ? keyframePlan.scenes.slice(0, 4) : [];
             const listBlock = (title, values) => block(title, (Array.isArray(values) ? values : []).join('\n'));
             const keyframeField = (label, value, extraClass = '') => value ? `
                 <div>
                     <div class="storyboard-scene-label">${escapeHTML(label)}</div>
                     <div class="storyboard-scene-value ${extraClass}">${escapeHTML(value)}</div>
                 </div>
+            ` : '';
+            const assetLockDetails = assetLock.lock_version ? `
+                <details>
+                    <summary>${escapeHTML(t('productAssetLock'))}</summary>
+                    ${block(t('productIdentity'), assetLock.product_identity || '')}
+                    ${block(t('productCategoryLabel'), assetLock.product_category || '')}
+                    ${listBlock(t('mustPreserve'), (assetLock.must_preserve || []).slice(0, 5))}
+                    ${listBlock(t('mustNotChange'), (assetLock.must_not_change || []).slice(0, 5))}
+                    ${listBlock(t('imageReferenceRules'), (assetLock.image_reference_rules || []).slice(0, 3))}
+                    ${block(t('humanReviewRequired'), assetLock.human_review_required === true ? t('yesLabel') : t('noLabel'))}
+                </details>
+            ` : '';
+            const planSceneRows = planScenes.map((scene, index) => `
+                <div class="storyboard-scene-card">
+                    <div class="storyboard-scene-label">${escapeHTML(t('sceneLabel'))} ${escapeHTML(String(scene.scene_id || index + 1))}</div>
+                    <div class="storyboard-scene-fields">
+                        ${keyframeField('Goal', scene.keyframe_goal || '')}
+                        ${keyframeField(t('productPosition'), scene.product_position || '')}
+                        ${keyframeField(t('cameraDirection'), scene.camera_direction || '')}
+                        ${keyframeField(t('overlayText'), scene.overlay_text || '')}
+                        ${keyframeField(t('evidenceAnchor'), scene.evidence_anchor || '', 'storyboard-scene-evidence')}
+                        ${keyframeField(t('riskNotes'), (scene.risk_notes || []).slice(0, 3).join('; '))}
+                    </div>
+                </div>
+            `).join('');
+            const keyframePlanDetails = keyframePlan.plan_version ? `
+                <details>
+                    <summary>${escapeHTML(t('keyframePlan'))}</summary>
+                    ${block(t('recommendedClipStrategy'), keyframePlan.recommended_clip_strategy || '')}
+                    ${block(t('scriptScenes'), String(keyframePlan.scene_count || planScenes.length || ''))}
+                    <div class="storyboard-grid">${planSceneRows}</div>
+                </details>
             ` : '';
             const keyframeRows = keyframes.map((frame, index) => `
                 <div class="storyboard-scene-card">
@@ -3004,6 +3067,8 @@
                     <div class="feedback-box">${escapeHTML(t('externalVideoToolHandoffNote'))}</div>
                     <div class="feedback-box">${escapeHTML(t('noExternalVideoApiHandoff'))}</div>
                     <div class="feedback-box">${escapeHTML(t('reviewExternalPricing'))}</div>
+                    ${assetLockDetails}
+                    ${keyframePlanDetails}
                     <details open>
                         <summary>${escapeHTML(t('geminiVideoPrompt'))}</summary>
                         ${block(t('geminiVideoPrompt'), prompts.gemini_video_prompt || '')}
@@ -4556,6 +4621,17 @@
             imageToVideoPrompt: 'Image-to-video prompt',
             shortMotionPrompt: 'Short motion prompt',
             keyframePrompts: 'Keyframe prompts',
+            productAssetLock: 'Product Asset Lock',
+            keyframePlan: 'Keyframe Plan',
+            productIdentity: 'Product identity',
+            mustPreserve: 'Must preserve',
+            mustNotChange: 'Must not change',
+            imageReferenceRules: 'Image reference rules',
+            humanReviewRequired: 'Human review required',
+            recommendedClipStrategy: 'Recommended clip strategy',
+            productPosition: 'Product position',
+            cameraDirection: 'Camera direction',
+            evidenceAnchor: 'Evidence anchor',
             productConsistencyRules: 'Product consistency rules',
             negativePrompt: 'Negative prompt',
             copyReadyGenerationBrief: 'Copy-ready generation brief',
@@ -4580,6 +4656,17 @@
             imageToVideoPrompt: '\u56fe\u751f\u89c6\u9891\u63d0\u793a\u8bcd',
             shortMotionPrompt: '\u77ed\u52a8\u6548\u63d0\u793a\u8bcd',
             keyframePrompts: '\u5173\u952e\u5e27\u63d0\u793a\u8bcd',
+            productAssetLock: '\u4ea7\u54c1\u8d44\u4ea7\u9501\u5b9a',
+            keyframePlan: '\u5173\u952e\u5e27\u8ba1\u5212',
+            productIdentity: '\u4ea7\u54c1\u8eab\u4efd',
+            mustPreserve: '\u5fc5\u987b\u4fdd\u6301',
+            mustNotChange: '\u4e0d\u80fd\u6539\u53d8',
+            imageReferenceRules: '\u56fe\u7247\u53c2\u8003\u89c4\u5219',
+            humanReviewRequired: '\u9700\u8981\u4eba\u5de5\u590d\u6838',
+            recommendedClipStrategy: '\u5efa\u8bae\u77ed\u7247\u7b56\u7565',
+            productPosition: '\u4ea7\u54c1\u4f4d\u7f6e',
+            cameraDirection: '\u955c\u5934\u65b9\u5411',
+            evidenceAnchor: '\u8bc1\u636e\u951a\u70b9',
             productConsistencyRules: '\u4ea7\u54c1\u4e00\u81f4\u6027\u89c4\u5219',
             negativePrompt: '\u8d1f\u9762\u63d0\u793a\u8bcd',
             copyReadyGenerationBrief: '\u53ef\u76f4\u63a5\u590d\u5236\u7684\u751f\u6210\u7b80\u62a5',

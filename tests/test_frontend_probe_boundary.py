@@ -213,6 +213,16 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "copyImageToVideoPrompt",
             "copyFullHandoffPackage",
             "productConsistencyRules",
+            "productAssetLock",
+            "keyframePlan",
+            "mustPreserve",
+            "mustNotChange",
+            "imageReferenceRules",
+            "humanReviewRequired",
+            "recommendedClipStrategy",
+            "productPosition",
+            "cameraDirection",
+            "evidenceAnchor",
             "negativePrompt",
             "keyframePrompts",
             "qualityChecklist",
@@ -228,6 +238,35 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Use this to test queued, processing, and completed lifecycle states.", self.source)
         self.assertIn("Real Runway/Pika integration requires separate setup, pricing review, API key approval, and user approval later.", self.source)
         self.assertIn("Manual result handoff is still available.", self.source)
+        for label in [
+            "Product Asset Lock",
+            "Keyframe Plan",
+            "Must preserve",
+            "Must not change",
+            "Image reference rules",
+            "Human review required",
+            "Recommended clip strategy",
+            "Product position",
+            "Camera direction",
+            "Evidence anchor",
+        ]:
+            with self.subTest(asset_lock_keyframe_label=label):
+                self.assertIn(label, self.source)
+        for marker in [
+            "handoff.product_asset_lock",
+            "handoff.keyframe_plan",
+            "assetLock.must_preserve",
+            "assetLock.must_not_change",
+            "assetLock.image_reference_rules",
+            "keyframePlan.recommended_clip_strategy",
+            "keyframePlan.scenes",
+            "scene.product_position",
+            "scene.camera_direction",
+            "scene.evidence_anchor",
+            "scene.risk_notes",
+        ]:
+            with self.subTest(asset_lock_keyframe_marker=marker):
+                self.assertIn(marker, self.source)
         self.assertIn("t('providerCostApprovalNote')", self.source)
         self.assertIn("copyVideoJobText(prompt, 'videoJobPromptCopied')", self.source)
         self.assertIn("copyVideoJobText(jobId, 'videoJobIdCopied')", self.source)
