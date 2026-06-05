@@ -3184,13 +3184,27 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         "cost_incurred_by_crossgrowth": False,
     }
     feedback_decision = build_experiment_feedback_decision(experiment, job)
-    rework_run = trigger_experiment_rework_run(str(job.get("job_id") or ""), feedback_decision)
+    original_generation_data = {
+        "video_generation_packet": job.get("video_generation_packet") or {},
+        "provider_payload": job.get("provider_payload") or {},
+        "source_generation": job.get("source_generation") or {},
+        "external_video_tool_handoff": job.get("external_video_tool_handoff") or {},
+    }
+    rework_run = trigger_experiment_rework_run(
+        str(job.get("job_id") or ""),
+        feedback_decision,
+        original_generation_data=original_generation_data,
+        experiment=experiment,
+    )
     if rework_run:
         AGENT_RUN_STORE.create(rework_run)
         feedback_decision = dict(feedback_decision)
         feedback_decision["triggered_rework_run_id"] = rework_run["run_id"]
         feedback_decision["triggered_rework_poll_url"] = f"/api/v1/agent-runs/{rework_run['run_id']}"
         feedback_decision["triggered_rework_events_url"] = f"/api/v1/agent-runs/{rework_run['run_id']}/events"
+        if (rework_run.get("result") or {}).get("revised_keyframe_plan"):
+            feedback_decision["triggered_rework_result_type"] = "revised_keyframe_plan"
+            experiment["triggered_rework_result_type"] = "revised_keyframe_plan"
     experiment["agent_feedback_decision"] = feedback_decision
 
     experiments = list(job.get("external_video_experiments") or job.get("external_experiments") or [])
@@ -3203,6 +3217,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         rework_run_ids = list(job.get("experiment_rework_run_ids") or [])
         rework_run_ids.append(rework_run["run_id"])
         job["experiment_rework_run_ids"] = rework_run_ids[-10:]
+        if (rework_run.get("result") or {}).get("revised_keyframe_plan"):
+            job["latest_rework_artifact_type"] = "revised_keyframe_plan"
     existing_feedback = job.get("agent_graph_feedback") if isinstance(job.get("agent_graph_feedback"), dict) else {}
     feedback_decisions = list(existing_feedback.get("decisions") or [])
     feedback_decisions.append(feedback_decision)
@@ -3213,6 +3229,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
     if rework_run:
         job["agent_graph_feedback"]["latest_rework_run_id"] = rework_run["run_id"]
         job["agent_graph_feedback"]["rework_run_ids"] = list(job.get("experiment_rework_run_ids") or [])
+        if (rework_run.get("result") or {}).get("revised_keyframe_plan"):
+            job["agent_graph_feedback"]["latest_rework_artifact_type"] = "revised_keyframe_plan"
     job["updated_at"] = now
 
     history = list(job.get("history") or [])
@@ -3789,6 +3807,9 @@ async def create_video_generation_job_from_generation(
     )
     job = _create_video_generation_job(job_request)
     job["source_generation"] = _video_generation_source_summary(generation_data)
+    handoff = generation_data.get("external_video_tool_handoff") if isinstance(generation_data.get("external_video_tool_handoff"), dict) else {}
+    if handoff:
+        job["external_video_tool_handoff"] = handoff
     job["updated_at"] = _utc_now_iso()
     job = VIDEO_JOB_STORE.update(job["job_id"], job)
 

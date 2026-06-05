@@ -435,6 +435,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["agent_graph_feedback"]["feedback_version"], "experiment_feedback_loop_v1")
         self.assertEqual(job["agent_graph_feedback"]["decisions"][0]["issue_type"], "none")
         self.assertNotIn("latest_experiment_rework_run_id", job)
+        self.assertNotIn("latest_rework_artifact_type", job)
+        self.assertNotIn("triggered_rework_run_id", job["external_video_experiments"][0]["agent_feedback_decision"])
         history_events = [event["event"] for event in job["history"]]
         self.assertIn("external_video_experiment_recorded", history_events)
         self.assertIn("experiment_feedback_recorded", history_events)
@@ -476,7 +478,11 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertTrue(decision["triggered_rework_run_id"])
         self.assertIn("/api/v1/agent-runs/", decision["triggered_rework_poll_url"])
         self.assertEqual(job["latest_experiment_rework_run_id"], decision["triggered_rework_run_id"])
+        self.assertEqual(job["latest_rework_artifact_type"], "revised_keyframe_plan")
+        self.assertEqual(job["agent_graph_feedback"]["latest_rework_artifact_type"], "revised_keyframe_plan")
         self.assertIn(decision["triggered_rework_run_id"], job["agent_graph_feedback"]["rework_run_ids"])
+        self.assertEqual(job["external_video_experiments"][0]["triggered_rework_result_type"], "revised_keyframe_plan")
+        self.assertEqual(decision["triggered_rework_result_type"], "revised_keyframe_plan")
         self.assertIn("experiment_feedback_rework_requested", [event["event"] for event in job["history"]])
 
         rework_run = AGENT_RUN_STORE.get(decision["triggered_rework_run_id"])
@@ -488,6 +494,12 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertFalse(rework_run["waiting_for_user"])
         self.assertFalse(rework_run["external_api_called"])
         self.assertFalse(rework_run["cost_incurred_by_crossgrowth"])
+        self.assertIn("revised_keyframe_plan", rework_run["result"])
+        revised_plan = rework_run["result"]["revised_keyframe_plan"]
+        self.assertEqual(revised_plan["plan_version"], "revised_keyframe_plan_v1")
+        self.assertEqual(revised_plan["target_agent_id"], "keyframe_agent")
+        self.assertEqual(revised_plan["secondary_target_agent_id"], "asset_lock_agent")
+        self.assertTrue(revised_plan["human_review_required"])
         node_statuses = {node["node_id"]: node["status"] for node in rework_run["graph_nodes"]}
         self.assertEqual(node_statuses["experiment_agent"], "complete")
         self.assertEqual(node_statuses["keyframe_agent"], "rework_requested")
@@ -505,6 +517,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("rework_requested", event_types)
         self.assertIn("node_started", event_types)
         self.assertIn("node_completed", event_types)
+        self.assertIn("revised_keyframe_plan_created", event_types)
+        self.assertIn("rework_artifact_created", event_types)
         self.assertIn("graph_completed", event_types)
         self.assertIn("run_completed", event_types)
 

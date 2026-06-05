@@ -3734,6 +3734,15 @@
                 experimentAgentRecommendsRework: 'Experiment Agent recommends rework',
                 feedbackTriggeredReworkRun: 'Feedback-triggered rework run',
                 feedbackTriggeredReworkRunQueued: 'Rework run queued for upstream agent review.',
+                reworkArtifact: 'Rework artifact',
+                revisedKeyframePlan: 'Revised keyframe plan',
+                revisedSceneKeyframes: 'Revised scene keyframes',
+                productConsistencyConstraints: 'Product consistency constraints',
+                humanReviewRequired: 'Human review required',
+                planVersion: 'Plan version',
+                scriptScene: 'Scene',
+                pollReworkRun: 'Poll rework run',
+                experimentFeedbackCreatedRevisedKeyframePlan: 'Experiment feedback created a revised keyframe plan.',
                 productConsistencyIssue: 'Product consistency issue',
                 storyboardFollowingIssue: 'Storyboard following issue',
                 visualQualityIssue: 'Visual quality issue',
@@ -4070,6 +4079,15 @@
                 experimentAgentRecommendsRework: 'Experiment Agent \u5efa\u8bae\u8fd4\u56de\u4e0a\u6e38 Agent \u8fd4\u5de5',
                 feedbackTriggeredReworkRun: '\u53cd\u9988\u89e6\u53d1\u7684\u8fd4\u5de5 run',
                 feedbackTriggeredReworkRunQueued: '\u8fd4\u5de5 run \u5df2\u5165\u961f\uff0c\u7b49\u5f85\u4e0a\u6e38 Agent \u590d\u6838\u3002',
+                reworkArtifact: '\u8fd4\u5de5\u4ea7\u7269',
+                revisedKeyframePlan: '\u4fee\u8ba2\u540e\u7684\u5173\u952e\u5e27\u8ba1\u5212',
+                revisedSceneKeyframes: '\u4fee\u8ba2\u540e\u7684\u5206\u955c\u5173\u952e\u5e27',
+                productConsistencyConstraints: '\u4ea7\u54c1\u4e00\u81f4\u6027\u7ea6\u675f',
+                humanReviewRequired: '\u9700\u8981\u4eba\u5de5\u590d\u6838',
+                planVersion: '\u8ba1\u5212\u7248\u672c',
+                scriptScene: '\u573a\u666f',
+                pollReworkRun: '\u8f6e\u8be2\u8fd4\u5de5 run',
+                experimentFeedbackCreatedRevisedKeyframePlan: '\u5b9e\u9a8c\u53cd\u9988\u5df2\u521b\u5efa\u4fee\u8ba2\u540e\u7684\u5173\u952e\u5e27\u8ba1\u5212\u3002',
                 productConsistencyIssue: '\u4ea7\u54c1\u4e00\u81f4\u6027\u95ee\u9898',
                 storyboardFollowingIssue: '\u5206\u955c\u8ddf\u968f\u95ee\u9898',
                 visualQualityIssue: '\u753b\u9762\u8d28\u91cf\u95ee\u9898',
@@ -6351,6 +6369,28 @@
             return body;
         }
 
+        async function pollExperimentReworkRun(runId) {
+            const status = document.getElementById('videoExperimentStatus');
+            if (status) {
+                status.textContent = t('pollingAgentUpdates');
+                status.className = 'quick-use-copy-status';
+            }
+            try {
+                const runResponse = await getAgentRun(runId);
+                const eventsResponse = await getAgentRunEvents(runId);
+                renderAgentLiveRunTimeline(runResponse.run || {}, eventsResponse.events || runResponse.run?.events || []);
+                if (status) {
+                    status.textContent = t('agentRunCompleted');
+                    status.className = 'quick-use-copy-status success';
+                }
+            } catch (error) {
+                if (status) {
+                    status.textContent = error.message || t('agentRunFailed');
+                    status.className = 'quick-use-copy-status error';
+                }
+            }
+        }
+
         async function postVideoJobFromGeneration(payload) {
             const response = await fetch('/api/v1/video-generation/jobs/from-generation', {
                 method: 'POST',
@@ -7600,12 +7640,46 @@
             `;
         }
 
+        function renderRevisedKeyframePlan(plan) {
+            if (!plan || typeof plan !== 'object' || !plan.plan_version) return '';
+            const scenes = Array.isArray(plan.revised_scene_keyframes) ? plan.revised_scene_keyframes.slice(0, 3) : [];
+            const constraints = Array.isArray(plan.global_consistency_rules)
+                ? plan.global_consistency_rules.slice(0, 5).join('\n')
+                : '';
+            const sceneRows = scenes.map((scene) => `
+                <div class="quote-item">
+                    <strong>${escapeHTML(t('scriptScene'))} ${escapeHTML(String(scene.scene_index || ''))}</strong>
+                    ${block(t('sceneGoal'), scene.scene_goal || '')}
+                    ${block(t('revisedKeyframePlan'), scene.revised_keyframe_goal || '')}
+                    ${block(t('productPosition'), scene.product_position || '')}
+                    ${block(t('cameraDirection'), scene.camera_direction || '')}
+                    ${block(t('evidenceAnchor'), scene.evidence_anchor || '')}
+                </div>
+            `).join('');
+            return `
+                <div class="section-block" id="revisedKeyframePlanPanel">
+                    <div class="json-key">${escapeHTML(t('revisedKeyframePlan'))}</div>
+                    <div class="probe-grid">
+                        ${block(t('planVersion'), plan.plan_version || '')}
+                        ${block(t('targetAgent'), plan.target_agent_id || '')}
+                        ${block(t('issueType'), plan.issue_type || '')}
+                        ${block(t('recommendedAction'), plan.recommended_next_action || '')}
+                        ${block(t('humanReviewRequired'), plan.human_review_required ? t('yesLabel') : t('noLabel'))}
+                    </div>
+                    ${block(t('productConsistencyConstraints'), constraints)}
+                    <div class="json-key">${escapeHTML(t('revisedSceneKeyframes'))}</div>
+                    <div class="quote-list">${sceneRows}</div>
+                </div>
+            `;
+        }
+
         function renderAgentLiveRunTimeline(run, eventsOverride = null) {
             const target = document.getElementById('agentLiveRunTimeline');
             if (!target || !run) return;
             const events = Array.isArray(eventsOverride) ? eventsOverride : (Array.isArray(run.events) ? run.events : []);
             const agents = Array.isArray(run.agents) ? run.agents : [];
             const currentAgent = run.current_agent_id || '';
+            const revisedKeyframePlan = run.result?.revised_keyframe_plan || null;
             const agentRows = agents.map((agent) => {
                 const status = agent.status || 'pending';
                 const review = agent.requires_human_review ? t('yesLabel') : t('noLabel');
@@ -7643,6 +7717,7 @@
                     ${block(t('currentAgent'), currentAgent || 'n/a')}
                 </div>
                 ${renderAgentGraphMap(run)}
+                ${renderRevisedKeyframePlan(revisedKeyframePlan)}
                 <div class="json-key">${escapeHTML(t('latestEvents'))}</div>
                 <div class="quote-list">${eventRows || `<div class="feedback-box">${escapeHTML(t('pollingAgentUpdates'))}</div>`}</div>
                 ${agentRows}
@@ -7986,6 +8061,7 @@
             const secondary = decision.secondary_target_agent_id || '';
             const reworkTarget = [target, secondary].filter(Boolean).join(' / ');
             const reworkRunId = decision.triggered_rework_run_id || '';
+            const reworkArtifact = decision.triggered_rework_result_type || '';
             const statusLine = decision.has_feedback && reworkTarget
                 ? `${t('experimentAgentRecommendsRework')}: ${reworkTarget}`
                 : t('feedbackRecordedNoRework');
@@ -8006,8 +8082,24 @@
                             <div>${escapeHTML(t('feedbackTriggeredReworkRunQueued'))}</div>
                             <div class="json-key">${escapeHTML(t('feedbackTriggeredReworkRun'))}: ${escapeHTML(reworkRunId)}</div>
                             <div class="json-key">${escapeHTML(decision.triggered_rework_poll_url || '')}</div>
+                            ${reworkArtifact ? `<div class="json-key">${escapeHTML(t('reworkArtifact'))}: ${escapeHTML(reworkArtifact === 'revised_keyframe_plan' ? t('revisedKeyframePlan') : reworkArtifact)}</div>` : ''}
+                            <button class="btn-secondary" type="button" onclick="pollExperimentReworkRun('${escapeHTML(reworkRunId)}')">${escapeHTML(t('pollReworkRun'))}</button>
                         </div>
                     ` : ''}
+                </div>
+            `;
+        }
+
+        function renderExperimentReworkArtifact(experiment) {
+            const artifactType = experiment?.triggered_rework_result_type
+                || experiment?.agent_feedback_decision?.triggered_rework_result_type
+                || '';
+            if (!artifactType) return '';
+            const artifactLabel = artifactType === 'revised_keyframe_plan' ? t('revisedKeyframePlan') : artifactType;
+            return `
+                <div class="feedback-box">
+                    <div class="json-key">${escapeHTML(t('reworkArtifact'))}: ${escapeHTML(artifactLabel)}</div>
+                    ${artifactType === 'revised_keyframe_plan' ? `<div>${escapeHTML(t('experimentFeedbackCreatedRevisedKeyframePlan'))}</div>` : ''}
                 </div>
             `;
         }
@@ -8015,6 +8107,10 @@
         function renderExternalVideoExperimentsPanel(job) {
             if (!job || !job.job_id) return '';
             const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
+            const latestArtifactType = job.latest_rework_artifact_type || job.agent_graph_feedback?.latest_rework_artifact_type || '';
+            const latestArtifactNote = latestArtifactType === 'revised_keyframe_plan'
+                ? `<div class="feedback-box">${escapeHTML(t('experimentFeedbackCreatedRevisedKeyframePlan'))}</div>`
+                : '';
             const toolOptions = [
                 ['gemini', 'Gemini'],
                 ['doubao', 'Doubao'],
@@ -8048,6 +8144,7 @@
                     ${experiment.result_url ? `<a href="${escapeHTML(experiment.result_url)}" target="_blank" rel="noopener">${escapeHTML(experiment.result_url)}</a>` : ''}
                     ${experiment.notes ? `<div>${escapeHTML(experiment.notes)}</div>` : ''}
                     ${renderAgentFeedbackDecision(experiment.agent_feedback_decision)}
+                    ${renderExperimentReworkArtifact(experiment)}
                     ${experiment.created_at ? `<small>${escapeHTML(experiment.created_at)}</small>` : ''}
                 </div>
             `).join('') : `<div class="recent-empty">${escapeHTML(t('noExternalExperimentsYet'))}</div>`;
@@ -8056,6 +8153,7 @@
                     <div class="json-key">${escapeHTML(t('externalVideoExperimentsTitle'))}</div>
                     <div class="feedback-box">${escapeHTML(t('externalVideoExperimentsNote'))}</div>
                     <div class="feedback-box">${escapeHTML(t('externalExperimentTrackerNoApi'))}</div>
+                    ${latestArtifactNote}
                     <details>
                         <summary>${escapeHTML(t('saveExternalExperiment'))}</summary>
                         <div class="input-grid">

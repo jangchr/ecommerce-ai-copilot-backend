@@ -397,11 +397,255 @@ def _experiment_rework_edge_id(target_agent_id: str) -> str:
     }.get(str(target_agent_id or ""), "experiment_to_keyframe_rework")
 
 
-def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]) -> dict[str, Any]:
+def _experiment_rework_text(value: Any, limit: int = 260) -> str:
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    if len(text) <= limit:
+        return text
+    return text[: max(0, limit - 3)].rstrip() + "..."
+
+
+def _experiment_rework_list(values: Any, limit: int = 6, text_limit: int = 220) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = _experiment_rework_text(value, limit=text_limit)
+        key = text.lower()
+        if not text or key in seen:
+            continue
+        seen.add(key)
+        result.append(text)
+        if len(result) >= limit:
+            break
+    return result
+
+
+def _experiment_rework_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _experiment_rework_scene_source(original_generation_data: dict[str, Any]) -> tuple[list[dict[str, Any]], str]:
+    handoff = _experiment_rework_dict(original_generation_data.get("external_video_tool_handoff"))
+    keyframe_plan = _experiment_rework_dict(handoff.get("keyframe_plan"))
+    keyframe_scenes = keyframe_plan.get("scenes")
+    if isinstance(keyframe_scenes, list) and keyframe_scenes:
+        return [scene for scene in keyframe_scenes if isinstance(scene, dict)], "external_video_tool_handoff.keyframe_plan"
+
+    keyframe_prompts = handoff.get("keyframe_prompts")
+    if isinstance(keyframe_prompts, list) and keyframe_prompts:
+        return [scene for scene in keyframe_prompts if isinstance(scene, dict)], "external_video_tool_handoff.keyframe_prompts"
+
+    video_packet = _experiment_rework_dict(original_generation_data.get("video_generation_packet"))
+    video_scenes = video_packet.get("scenes")
+    if isinstance(video_scenes, list) and video_scenes:
+        return [scene for scene in video_scenes if isinstance(scene, dict)], "video_generation_packet.scenes"
+
+    assets = _experiment_rework_dict(original_generation_data.get("assets"))
+    storyboard = _experiment_rework_dict(assets.get("storyboard"))
+    storyboard_scenes = storyboard.get("scenes")
+    if isinstance(storyboard_scenes, list) and storyboard_scenes:
+        return [scene for scene in storyboard_scenes if isinstance(scene, dict)], "assets.storyboard.scenes"
+
+    return [], "fallback"
+
+
+def _experiment_rework_product_lock(original_generation_data: dict[str, Any]) -> dict[str, Any]:
+    handoff = _experiment_rework_dict(original_generation_data.get("external_video_tool_handoff"))
+    lock = _experiment_rework_dict(handoff.get("product_asset_lock"))
+    if lock:
+        return deepcopy(lock)
+
+    video_packet = _experiment_rework_dict(original_generation_data.get("video_generation_packet"))
+    video_text = " ".join(
+        _experiment_rework_text(value, limit=180)
+        for value in [
+            _experiment_rework_dict(video_packet.get("video")).get("product_name", ""),
+            video_packet.get("product_name", ""),
+            video_packet.get("product_title", ""),
+            video_packet.get("full_video_prompt", ""),
+        ]
+    ).strip()
+    source_generation = _experiment_rework_dict(original_generation_data.get("source_generation"))
+    product_identity = _experiment_rework_text(
+        original_generation_data.get("product_name")
+        or source_generation.get("product_name")
+        or video_packet.get("product_name")
+        or "Supplied product",
+        limit=160,
+    )
+    if product_identity == "Supplied product" and video_text:
+        product_identity = _experiment_rework_text(video_text, limit=120)
+    product_category = _experiment_rework_text(
+        original_generation_data.get("product_category")
+        or source_generation.get("product_category")
+        or video_packet.get("product_category")
+        or "product",
+        limit=120,
+    )
+    return {
+        "lock_version": "product_asset_lock_v1",
+        "product_identity": product_identity,
+        "product_category": product_category,
+        "visual_identity_source": "Use the supplied product fields, video packet, and manually supplied reference image when available.",
+        "must_preserve": [
+            f"Keep product identity as {product_identity}.",
+            f"Keep product category as {product_category}; do not drift into another category.",
+            "Preserve visible color, material, label placement, package shape, and scale from the supplied product reference.",
+        ],
+        "must_not_change": [
+            "Do not invent fake variants, colors, package sizes, logos, or competitor products.",
+            "Do not transform the product into a different category or unrealistic object.",
+            "Do not change size, function, or product form factor without supplied evidence.",
+        ],
+        "image_reference_rules": [
+            "Use a reference image when available.",
+            "Reject output if product identity visibly drifts.",
+        ],
+        "human_review_required": True,
+    }
+
+
+def build_revised_keyframe_plan_from_experiment_feedback(
+    original_generation_data: dict[str, Any],
+    feedback_decision: dict[str, Any],
+    experiment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a deterministic product-consistency keyframe rework artifact."""
+
+    data = original_generation_data if isinstance(original_generation_data, dict) else {}
+    decision = feedback_decision if isinstance(feedback_decision, dict) else {}
+    experiment = experiment if isinstance(experiment, dict) else {}
+    product_lock = _experiment_rework_product_lock(data)
+    product_identity = _experiment_rework_text(product_lock.get("product_identity") or "supplied product", limit=160)
+    product_category = _experiment_rework_text(product_lock.get("product_category") or "product", limit=120)
+    scenes, scene_source = _experiment_rework_scene_source(data)
+    reason_parts = [
+        decision.get("reason"),
+        decision.get("recommended_action"),
+        experiment.get("failure_reason"),
+        experiment.get("notes"),
+    ]
+    reason = _experiment_rework_text(" ".join(str(part or "") for part in reason_parts if part), limit=420)
+    if not reason:
+        reason = "Product consistency score was low; tighten visual identity before another external video test."
+
+    global_rules = [
+        "Keep the same product form factor in every scene.",
+        "Keep the same color/material/label/package shape when those details are supplied.",
+        "Do not change product category.",
+        "Do not add brand, logo, variant, color, size, or packaging details not supplied.",
+        "Do not change product size, function, or use case without supplied evidence.",
+        "Use a reference image when available.",
+        "Show the product clearly in the first frame.",
+        "Avoid morphing, replacing, or visually drifting away from the product.",
+    ]
+    must_preserve = _experiment_rework_list(product_lock.get("must_preserve"), limit=5)
+    must_not_change = _experiment_rework_list(product_lock.get("must_not_change"), limit=5)
+    image_rules = _experiment_rework_list(product_lock.get("image_reference_rules"), limit=4)
+
+    revised_scenes: list[dict[str, Any]] = []
+    for index, scene in enumerate(scenes[:4]):
+        scene_index = int(scene.get("scene_id") or scene.get("scene_index") or index + 1)
+        original_goal = _experiment_rework_text(
+            scene.get("keyframe_goal")
+            or scene.get("visual_prompt")
+            or scene.get("visual_description")
+            or scene.get("scene_goal")
+            or f"Create scene {scene_index} for {product_identity}.",
+            limit=300,
+        )
+        evidence_anchor = _experiment_rework_text(
+            scene.get("evidence_anchor")
+            or scene.get("evidence_quote")
+            or scene.get("evidence_quote_used")
+            or scene.get("linked_painpoint")
+            or "",
+            limit=220,
+        )
+        revised_scenes.append(
+            {
+                "scene_index": scene_index,
+                "scene_goal": original_goal,
+                "original_keyframe_goal": original_goal,
+                "revised_keyframe_goal": _experiment_rework_text(
+                    f"Regenerate scene {scene_index} with {product_identity} locked as the visible hero product. "
+                    f"Keep category as {product_category}, show product clearly in the first frame, and correct the product-consistency issue: {reason}",
+                    limit=420,
+                ),
+                "product_position": _experiment_rework_text(
+                    scene.get("product_position")
+                    or f"Keep {product_identity} centered or clearly foregrounded; do not replace it with a different object.",
+                    limit=260,
+                ),
+                "camera_direction": _experiment_rework_text(
+                    scene.get("camera_direction")
+                    or "Use a stable close-up or gentle push-in that preserves product shape, label, material, and scale.",
+                    limit=260,
+                ),
+                "identity_constraints": (must_preserve + image_rules + global_rules)[:8],
+                "negative_constraints": (must_not_change + global_rules[2:5] + [global_rules[-1]])[:8],
+                "evidence_anchor": evidence_anchor,
+                "review_before_generation": True,
+            }
+        )
+
+    if not revised_scenes:
+        revised_scenes.append(
+            {
+                "scene_index": 1,
+                "scene_goal": f"Create a conservative product-identity check clip for {product_identity}.",
+                "original_keyframe_goal": "",
+                "revised_keyframe_goal": f"Generate one short clip with {product_identity} clearly visible and locked to category {product_category}.",
+                "product_position": f"Keep {product_identity} as the hero object in the first frame.",
+                "camera_direction": "Static product close-up with clean lighting; avoid morphing.",
+                "identity_constraints": (must_preserve + image_rules + global_rules)[:8],
+                "negative_constraints": (must_not_change + global_rules[2:5] + [global_rules[-1]])[:8],
+                "evidence_anchor": "",
+                "review_before_generation": True,
+            }
+        )
+
+    score_snapshot = dict(decision.get("score_snapshot") or {})
+    for score_key in [
+        "product_consistency_score",
+        "storyboard_following_score",
+        "visual_quality_score",
+        "ad_readiness_score",
+        "overall_score",
+        "actual_cost_usd",
+    ]:
+        if score_key not in score_snapshot and score_key in experiment:
+            score_snapshot[score_key] = experiment.get(score_key)
+
+    return {
+        "plan_version": "revised_keyframe_plan_v1",
+        "source": "experiment_feedback_rework",
+        "source_agent_id": "experiment_agent",
+        "target_agent_id": "keyframe_agent",
+        "secondary_target_agent_id": "asset_lock_agent",
+        "issue_type": "product_consistency",
+        "reason": reason,
+        "score_snapshot": score_snapshot,
+        "product_identity_lock": product_lock,
+        "global_consistency_rules": global_rules,
+        "source_scene_plan": scene_source,
+        "revised_scene_keyframes": revised_scenes,
+        "recommended_next_action": "Regenerate one short clip using the revised keyframe plan before full video generation.",
+        "human_review_required": True,
+    }
+
+
+def trigger_experiment_rework_run(
+    job_id: str,
+    feedback_decision: dict[str, Any],
+    original_generation_data: dict[str, Any] | None = None,
+    experiment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Create a rule-driven agent run scaffold for experiment feedback rework.
 
-    This records the graph target and loop request only. It intentionally does not
-    regenerate creative artifacts or call external providers.
+    Product-consistency feedback also creates a deterministic revised keyframe
+    artifact. It intentionally does not call LLMs or external providers.
     """
 
     safe_decision = feedback_decision if isinstance(feedback_decision, dict) else {}
@@ -415,6 +659,14 @@ def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]
     severity = str(safe_decision.get("severity") or "medium")
     issue_type = str(safe_decision.get("issue_type") or "experiment_feedback")
     now = utc_now_iso()
+    original_generation_data = original_generation_data if isinstance(original_generation_data, dict) else {}
+    revised_keyframe_plan: dict[str, Any] = {}
+    if issue_type == "product_consistency" and target_agent_id == "keyframe_agent":
+        revised_keyframe_plan = build_revised_keyframe_plan_from_experiment_feedback(
+            original_generation_data,
+            safe_decision,
+            experiment,
+        )
 
     run = build_agent_run(
         input_type="experiment_feedback_rework",
@@ -435,7 +687,7 @@ def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]
     run["cost_incurred_by_crossgrowth"] = False
     run["updated_at"] = now
     run["result"] = {
-        "result_type": "experiment_feedback_rework_scaffold",
+        "result_type": "experiment_feedback_rework_result" if revised_keyframe_plan else "experiment_feedback_rework_scaffold",
         "source_video_job_id": str(job_id or ""),
         "target_agent_id": target_agent_id,
         "secondary_target_agent_id": secondary_target_agent_id,
@@ -444,6 +696,14 @@ def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
     }
+    if revised_keyframe_plan:
+        run["result"]["revised_keyframe_plan"] = revised_keyframe_plan
+        run["result"]["agent_feedback_decision"] = deepcopy(safe_decision)
+        run["rework_artifacts"] = {
+            "revised_keyframe_plan": True,
+            "target_agent_id": target_agent_id,
+            "secondary_target_agent_id": secondary_target_agent_id,
+        }
 
     visited = ["experiment_agent", target_agent_id]
     if secondary_target_agent_id:
@@ -591,17 +851,54 @@ def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]
             "created_at": now,
             "data": deepcopy(loop),
         },
+        *(
+            [
+                {
+                    "event_id": str(uuid4()),
+                    "event_type": "revised_keyframe_plan_created",
+                    "agent_id": "keyframe_agent",
+                    "message": "Revised keyframe plan created from experiment feedback.",
+                    "created_at": now,
+                    "data": {
+                        "plan_version": revised_keyframe_plan.get("plan_version", ""),
+                        "target_agent_id": target_agent_id,
+                        "secondary_target_agent_id": secondary_target_agent_id,
+                        "issue_type": issue_type,
+                        "source_video_job_id": str(job_id or ""),
+                    },
+                },
+                {
+                    "event_id": str(uuid4()),
+                    "event_type": "rework_artifact_created",
+                    "agent_id": "keyframe_agent",
+                    "message": "Feedback-triggered rework artifact created.",
+                    "created_at": now,
+                    "data": {
+                        "artifact_type": "revised_keyframe_plan",
+                        "target_agent_id": target_agent_id,
+                        "source_video_job_id": str(job_id or ""),
+                    },
+                },
+            ]
+            if revised_keyframe_plan
+            else []
+        ),
         {
             "event_id": str(uuid4()),
             "event_type": "node_completed",
             "agent_id": target_agent_id,
-            "message": f"{target_agent_id} completed feedback-triggered rework scaffold.",
+            "message": (
+                f"{target_agent_id} created revised keyframe plan."
+                if revised_keyframe_plan
+                else f"{target_agent_id} completed feedback-triggered rework scaffold."
+            ),
             "created_at": now,
             "data": {
                 "node_id": target_agent_id,
                 "source_agent_id": "experiment_agent",
                 "issue_type": issue_type,
                 "recommended_action": recommended_action,
+                "artifact_type": "revised_keyframe_plan" if revised_keyframe_plan else "",
             },
         },
         {
