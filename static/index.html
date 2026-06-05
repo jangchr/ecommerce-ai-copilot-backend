@@ -3019,6 +3019,28 @@
             copyExternalVideoHandoffText(externalVideoHandoffFullText(latestProductData?.external_video_tool_handoff || {}));
         }
 
+        function revisedExternalVideoHandoffFullText(handoff) {
+            if (!handoff) return '';
+            const prompts = handoff.tool_prompts || {};
+            return [
+                t('revisedExternalVideoHandoff'),
+                handoff.handoff_version ? `${t('planVersion')}: ${handoff.handoff_version}` : '',
+                handoff.revised_prompt_strategy ? `${t('revisedPromptHandoff')}: ${handoff.revised_prompt_strategy}` : '',
+                handoff.recommended_next_action ? `${t('nextExternalVideoTest')}: ${handoff.recommended_next_action}` : '',
+                `${t('productConsistencyPromptConstraints')}:\n${(handoff.product_consistency_rules || []).join('\n')}`,
+                `${t('revisedGeminiPrompt')}:\n${prompts.gemini_video_prompt || ''}`,
+                `${t('revisedDoubaoPrompt')}:\n${prompts.doubao_video_prompt || ''}`,
+                `${t('revisedImageToVideoPrompt')}:\n${prompts.image_to_video_prompt || ''}`,
+                `${t('shortMotionPrompt')}:\n${prompts.short_motion_prompt || ''}`,
+                `${t('negativePrompt')}:\n${handoff.negative_prompt || ''}`,
+                `${t('copyReadyGenerationBrief')}:\n${handoff.copy_ready_generation_brief || ''}`
+            ].filter(Boolean).join('\n\n');
+        }
+
+        function copyRevisedExternalVideoHandoffPackage() {
+            copyExternalVideoHandoffText(revisedExternalVideoHandoffFullText(latestRevisedExternalVideoHandoff || {}));
+        }
+
         function renderExternalVideoToolHandoffPanel(handoff) {
             if (!handoff || handoff.packet_version !== 'external_video_tool_handoff_v1') return '';
             const prompts = handoff.tool_prompts || {};
@@ -3384,6 +3406,7 @@
         let latestRecentId = '';
         let latestAgentRunId = '';
         let latestAgentRunPollTimer = null;
+        let latestRevisedExternalVideoHandoff = null;
         let sectionTranslations = {};
         let sectionTextCache = {};
         let outputLanguage = 'en';
@@ -3741,6 +3764,15 @@
                 humanReviewRequired: 'Human review required',
                 planVersion: 'Plan version',
                 scriptScene: 'Scene',
+                revisedExternalVideoHandoff: 'Revised external video handoff',
+                revisedGeminiPrompt: 'Revised Gemini prompt',
+                revisedDoubaoPrompt: 'Revised Doubao prompt',
+                revisedImageToVideoPrompt: 'Revised image-to-video prompt',
+                copyRevisedHandoffPackage: 'Copy revised handoff package',
+                revisedPromptHandoff: 'Revised prompt handoff',
+                experimentFeedbackCreatedRevisedVideoPrompts: 'Experiment feedback created revised video prompts.',
+                nextExternalVideoTest: 'Next external video test',
+                productConsistencyPromptConstraints: 'Product consistency prompt constraints',
                 pollReworkRun: 'Poll rework run',
                 experimentFeedbackCreatedRevisedKeyframePlan: 'Experiment feedback created a revised keyframe plan.',
                 productConsistencyIssue: 'Product consistency issue',
@@ -4086,6 +4118,15 @@
                 humanReviewRequired: '\u9700\u8981\u4eba\u5de5\u590d\u6838',
                 planVersion: '\u8ba1\u5212\u7248\u672c',
                 scriptScene: '\u573a\u666f',
+                revisedExternalVideoHandoff: '\u4fee\u8ba2\u540e\u7684\u5916\u90e8\u89c6\u9891\u4ea4\u4ed8\u5305',
+                revisedGeminiPrompt: '\u4fee\u8ba2\u540e\u7684 Gemini \u63d0\u793a\u8bcd',
+                revisedDoubaoPrompt: '\u4fee\u8ba2\u540e\u7684\u8c46\u5305\u63d0\u793a\u8bcd',
+                revisedImageToVideoPrompt: '\u4fee\u8ba2\u540e\u7684\u56fe\u751f\u89c6\u9891\u63d0\u793a\u8bcd',
+                copyRevisedHandoffPackage: '\u590d\u5236\u4fee\u8ba2\u540e\u7684\u4ea4\u4ed8\u5305',
+                revisedPromptHandoff: '\u4fee\u8ba2\u540e\u7684\u63d0\u793a\u8bcd\u4ea4\u4ed8',
+                experimentFeedbackCreatedRevisedVideoPrompts: '\u5b9e\u9a8c\u53cd\u9988\u5df2\u521b\u5efa\u4fee\u8ba2\u540e\u7684\u89c6\u9891\u63d0\u793a\u8bcd\u3002',
+                nextExternalVideoTest: '\u4e0b\u4e00\u6b21\u5916\u90e8\u89c6\u9891\u6d4b\u8bd5',
+                productConsistencyPromptConstraints: '\u4ea7\u54c1\u4e00\u81f4\u6027\u63d0\u793a\u8bcd\u7ea6\u675f',
                 pollReworkRun: '\u8f6e\u8be2\u8fd4\u5de5 run',
                 experimentFeedbackCreatedRevisedKeyframePlan: '\u5b9e\u9a8c\u53cd\u9988\u5df2\u521b\u5efa\u4fee\u8ba2\u540e\u7684\u5173\u952e\u5e27\u8ba1\u5212\u3002',
                 productConsistencyIssue: '\u4ea7\u54c1\u4e00\u81f4\u6027\u95ee\u9898',
@@ -7673,6 +7714,37 @@
             `;
         }
 
+        function renderRevisedExternalVideoHandoff(handoff) {
+            if (!handoff || typeof handoff !== 'object' || handoff.handoff_version !== 'revised_external_video_handoff_v1') return '';
+            latestRevisedExternalVideoHandoff = handoff;
+            const prompts = handoff.tool_prompts || {};
+            return `
+                <div class="section-block" id="revisedExternalVideoHandoffPanel">
+                    <div class="json-key">${escapeHTML(t('revisedExternalVideoHandoff'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('experimentFeedbackCreatedRevisedVideoPrompts'))}</div>
+                    <div class="probe-grid">
+                        ${block(t('planVersion'), handoff.handoff_version || '')}
+                        ${block(t('targetAgent'), handoff.target_agent_id || '')}
+                        ${block(t('recommendedAction'), handoff.recommended_next_action || '')}
+                        ${block(t('humanReviewRequired'), handoff.human_review_required ? t('yesLabel') : t('noLabel'))}
+                    </div>
+                    ${block(t('revisedPromptHandoff'), handoff.revised_prompt_strategy || '')}
+                    ${block(t('revisedGeminiPrompt'), prompts.gemini_video_prompt || '')}
+                    ${block(t('revisedDoubaoPrompt'), prompts.doubao_video_prompt || '')}
+                    ${block(t('revisedImageToVideoPrompt'), prompts.image_to_video_prompt || '')}
+                    ${block(t('negativePrompt'), handoff.negative_prompt || '')}
+                    ${block(t('copyReadyGenerationBrief'), handoff.copy_ready_generation_brief || '')}
+                    <details>
+                        <summary>${escapeHTML(t('productConsistencyPromptConstraints'))}</summary>
+                        ${block(t('productConsistencyPromptConstraints'), (handoff.product_consistency_rules || []).join('\n'))}
+                    </details>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" type="button" onclick="copyRevisedExternalVideoHandoffPackage()">${escapeHTML(t('copyRevisedHandoffPackage'))}</button>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderAgentLiveRunTimeline(run, eventsOverride = null) {
             const target = document.getElementById('agentLiveRunTimeline');
             if (!target || !run) return;
@@ -7680,6 +7752,8 @@
             const agents = Array.isArray(run.agents) ? run.agents : [];
             const currentAgent = run.current_agent_id || '';
             const revisedKeyframePlan = run.result?.revised_keyframe_plan || null;
+            const revisedExternalVideoHandoff = run.result?.revised_external_video_handoff || null;
+            latestRevisedExternalVideoHandoff = null;
             const agentRows = agents.map((agent) => {
                 const status = agent.status || 'pending';
                 const review = agent.requires_human_review ? t('yesLabel') : t('noLabel');
@@ -7718,6 +7792,7 @@
                 </div>
                 ${renderAgentGraphMap(run)}
                 ${renderRevisedKeyframePlan(revisedKeyframePlan)}
+                ${renderRevisedExternalVideoHandoff(revisedExternalVideoHandoff)}
                 <div class="json-key">${escapeHTML(t('latestEvents'))}</div>
                 <div class="quote-list">${eventRows || `<div class="feedback-box">${escapeHTML(t('pollingAgentUpdates'))}</div>`}</div>
                 ${agentRows}
@@ -8062,6 +8137,7 @@
             const reworkTarget = [target, secondary].filter(Boolean).join(' / ');
             const reworkRunId = decision.triggered_rework_run_id || '';
             const reworkArtifact = decision.triggered_rework_result_type || '';
+            const nextArtifact = decision.triggered_rework_next_artifact_type || '';
             const statusLine = decision.has_feedback && reworkTarget
                 ? `${t('experimentAgentRecommendsRework')}: ${reworkTarget}`
                 : t('feedbackRecordedNoRework');
@@ -8083,6 +8159,7 @@
                             <div class="json-key">${escapeHTML(t('feedbackTriggeredReworkRun'))}: ${escapeHTML(reworkRunId)}</div>
                             <div class="json-key">${escapeHTML(decision.triggered_rework_poll_url || '')}</div>
                             ${reworkArtifact ? `<div class="json-key">${escapeHTML(t('reworkArtifact'))}: ${escapeHTML(reworkArtifact === 'revised_keyframe_plan' ? t('revisedKeyframePlan') : reworkArtifact)}</div>` : ''}
+                            ${nextArtifact ? `<div class="json-key">${escapeHTML(t('revisedPromptHandoff'))}: ${escapeHTML(nextArtifact === 'revised_external_video_handoff' ? t('revisedExternalVideoHandoff') : nextArtifact)}</div>` : ''}
                             <button class="btn-secondary" type="button" onclick="pollExperimentReworkRun('${escapeHTML(reworkRunId)}')">${escapeHTML(t('pollReworkRun'))}</button>
                         </div>
                     ` : ''}
@@ -8094,12 +8171,18 @@
             const artifactType = experiment?.triggered_rework_result_type
                 || experiment?.agent_feedback_decision?.triggered_rework_result_type
                 || '';
+            const nextArtifactType = experiment?.triggered_rework_next_artifact_type
+                || experiment?.agent_feedback_decision?.triggered_rework_next_artifact_type
+                || '';
             if (!artifactType) return '';
             const artifactLabel = artifactType === 'revised_keyframe_plan' ? t('revisedKeyframePlan') : artifactType;
+            const nextArtifactLabel = nextArtifactType === 'revised_external_video_handoff' ? t('revisedExternalVideoHandoff') : nextArtifactType;
             return `
                 <div class="feedback-box">
                     <div class="json-key">${escapeHTML(t('reworkArtifact'))}: ${escapeHTML(artifactLabel)}</div>
                     ${artifactType === 'revised_keyframe_plan' ? `<div>${escapeHTML(t('experimentFeedbackCreatedRevisedKeyframePlan'))}</div>` : ''}
+                    ${nextArtifactType ? `<div class="json-key">${escapeHTML(t('revisedPromptHandoff'))}: ${escapeHTML(nextArtifactLabel)}</div>` : ''}
+                    ${nextArtifactType === 'revised_external_video_handoff' ? `<div>${escapeHTML(t('experimentFeedbackCreatedRevisedVideoPrompts'))}</div>` : ''}
                 </div>
             `;
         }
@@ -8108,8 +8191,12 @@
             if (!job || !job.job_id) return '';
             const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
             const latestArtifactType = job.latest_rework_artifact_type || job.agent_graph_feedback?.latest_rework_artifact_type || '';
+            const latestNextArtifactType = job.latest_rework_next_artifact_type || job.agent_graph_feedback?.latest_rework_next_artifact_type || '';
             const latestArtifactNote = latestArtifactType === 'revised_keyframe_plan'
                 ? `<div class="feedback-box">${escapeHTML(t('experimentFeedbackCreatedRevisedKeyframePlan'))}</div>`
+                : '';
+            const latestNextArtifactNote = latestNextArtifactType === 'revised_external_video_handoff'
+                ? `<div class="feedback-box">${escapeHTML(t('experimentFeedbackCreatedRevisedVideoPrompts'))}</div>`
                 : '';
             const toolOptions = [
                 ['gemini', 'Gemini'],
@@ -8154,6 +8241,7 @@
                     <div class="feedback-box">${escapeHTML(t('externalVideoExperimentsNote'))}</div>
                     <div class="feedback-box">${escapeHTML(t('externalExperimentTrackerNoApi'))}</div>
                     ${latestArtifactNote}
+                    ${latestNextArtifactNote}
                     <details>
                         <summary>${escapeHTML(t('saveExternalExperiment'))}</summary>
                         <div class="input-grid">

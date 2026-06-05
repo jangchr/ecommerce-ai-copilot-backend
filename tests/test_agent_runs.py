@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from agent_runs import (
     apply_evidence_safe_storyboard_rework,
+    build_revised_external_video_handoff_from_keyframe_plan,
     build_revised_keyframe_plan_from_experiment_feedback,
     detect_storyboard_rework_need,
     trigger_experiment_rework_run,
@@ -300,6 +301,91 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertIn("rework_artifact_created", event_types)
         self.assertIn("graph_completed", event_types)
         self.assertIn("run_completed", event_types)
+
+    def test_experiment_feedback_rework_run_creates_revised_external_video_handoff(self):
+        decision = {
+            "feedback_version": "experiment_feedback_loop_v1",
+            "has_feedback": True,
+            "source_agent_id": "experiment_agent",
+            "target_agent_id": "keyframe_agent",
+            "secondary_target_agent_id": "asset_lock_agent",
+            "decision_type": "feedback_rework_requested",
+            "severity": "high",
+            "issue_type": "product_consistency",
+            "reason": "Product drift or identity mismatch detected.",
+            "recommended_action": "Route back to Keyframe Agent and Asset Lock Agent.",
+            "score_snapshot": {"product_consistency_score": 1},
+            "loop_guard": {"max_feedback_loop_count": 1, "feedback_loop_count": 1},
+        }
+        original_generation_data = {
+            "external_video_tool_handoff": {
+                "product_asset_lock": {
+                    "lock_version": "product_asset_lock_v1",
+                    "product_identity": "Portable Mini Blender",
+                    "product_category": "kitchen_appliance",
+                    "must_preserve": ["Keep Portable Mini Blender visible."],
+                    "must_not_change": ["Do not turn it into a full-size countertop blender."],
+                    "image_reference_rules": ["Use the supplied reference image."],
+                    "human_review_required": True,
+                },
+                "keyframe_plan": {
+                    "plan_version": "keyframe_plan_v1",
+                    "scenes": [
+                        {
+                            "scene_id": 1,
+                            "keyframe_goal": "Show the mini blender on a gym bag.",
+                            "evidence_anchor": "Small enough for travel.",
+                        }
+                    ],
+                },
+            }
+        }
+        revised_plan = build_revised_keyframe_plan_from_experiment_feedback(
+            original_generation_data,
+            decision,
+            {"failure_reason": "Generated clip looked like a different blender."},
+        )
+        handoff = build_revised_external_video_handoff_from_keyframe_plan(
+            original_generation_data,
+            revised_plan,
+            decision,
+            {"failure_reason": "Generated clip looked like a different blender."},
+        )
+        self.assertEqual(handoff["handoff_version"], "revised_external_video_handoff_v1")
+        self.assertEqual(handoff["target_agent_id"], "prompt_handoff_agent")
+        self.assertTrue(handoff["tool_prompts"]["gemini_video_prompt"])
+        self.assertTrue(handoff["tool_prompts"]["doubao_video_prompt"])
+        self.assertTrue(handoff["tool_prompts"]["image_to_video_prompt"])
+        self.assertTrue(handoff["tool_prompts"]["short_motion_prompt"])
+        self.assertTrue(handoff["negative_prompt"])
+        self.assertTrue(handoff["copy_ready_generation_brief"])
+
+        run = trigger_experiment_rework_run(
+            "video_job_123",
+            decision,
+            original_generation_data=original_generation_data,
+            experiment={"failure_reason": "Generated clip looked like a different blender."},
+        )
+
+        self.assertEqual(run["status"], "completed")
+        self.assertIn("revised_keyframe_plan", run["result"])
+        self.assertIn("revised_external_video_handoff", run["result"])
+        self.assertEqual(
+            run["result"]["revised_external_video_handoff"]["handoff_version"],
+            "revised_external_video_handoff_v1",
+        )
+        self.assertEqual(run["result"]["revised_external_video_handoff"]["target_agent_id"], "prompt_handoff_agent")
+        self.assertTrue(run["result"]["revised_external_video_handoff"]["tool_prompts"]["gemini_video_prompt"])
+        self.assertTrue(run["result"]["revised_external_video_handoff"]["tool_prompts"]["doubao_video_prompt"])
+        self.assertTrue(run["result"]["revised_external_video_handoff"]["tool_prompts"]["image_to_video_prompt"])
+        self.assertTrue(run["result"]["revised_external_video_handoff"]["negative_prompt"])
+        self.assertTrue(run["result"]["revised_external_video_handoff"]["copy_ready_generation_brief"])
+        self.assertFalse(run["result"]["external_api_called"])
+        self.assertFalse(run["result"]["cost_incurred_by_crossgrowth"])
+        self.assertTrue(run["rework_artifacts"]["revised_external_video_handoff"])
+        event_types = [event["event_type"] for event in run["events"]]
+        self.assertIn("revised_external_video_handoff_created", event_types)
+        self.assertIn("revised_prompt_handoff_created", event_types)
 
     def test_agent_graph_runtime_records_rework_loop_when_storyboard_risk_detected(self):
         risky_generated = deepcopy(GENERATED_REVIEWS_BRIEF)

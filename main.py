@@ -3205,6 +3205,9 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         if (rework_run.get("result") or {}).get("revised_keyframe_plan"):
             feedback_decision["triggered_rework_result_type"] = "revised_keyframe_plan"
             experiment["triggered_rework_result_type"] = "revised_keyframe_plan"
+        if (rework_run.get("result") or {}).get("revised_external_video_handoff"):
+            feedback_decision["triggered_rework_next_artifact_type"] = "revised_external_video_handoff"
+            experiment["triggered_rework_next_artifact_type"] = "revised_external_video_handoff"
     experiment["agent_feedback_decision"] = feedback_decision
 
     experiments = list(job.get("external_video_experiments") or job.get("external_experiments") or [])
@@ -3219,6 +3222,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         job["experiment_rework_run_ids"] = rework_run_ids[-10:]
         if (rework_run.get("result") or {}).get("revised_keyframe_plan"):
             job["latest_rework_artifact_type"] = "revised_keyframe_plan"
+        if (rework_run.get("result") or {}).get("revised_external_video_handoff"):
+            job["latest_rework_next_artifact_type"] = "revised_external_video_handoff"
     existing_feedback = job.get("agent_graph_feedback") if isinstance(job.get("agent_graph_feedback"), dict) else {}
     feedback_decisions = list(existing_feedback.get("decisions") or [])
     feedback_decisions.append(feedback_decision)
@@ -3231,6 +3236,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         job["agent_graph_feedback"]["rework_run_ids"] = list(job.get("experiment_rework_run_ids") or [])
         if (rework_run.get("result") or {}).get("revised_keyframe_plan"):
             job["agent_graph_feedback"]["latest_rework_artifact_type"] = "revised_keyframe_plan"
+        if (rework_run.get("result") or {}).get("revised_external_video_handoff"):
+            job["agent_graph_feedback"]["latest_rework_next_artifact_type"] = "revised_external_video_handoff"
     job["updated_at"] = now
 
     history = list(job.get("history") or [])

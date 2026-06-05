@@ -636,6 +636,195 @@ def build_revised_keyframe_plan_from_experiment_feedback(
     }
 
 
+def _revised_handoff_product_lock(revised_keyframe_plan: dict[str, Any]) -> dict[str, Any]:
+    return _experiment_rework_dict(revised_keyframe_plan.get("product_identity_lock"))
+
+
+def _revised_handoff_scene_lines(revised_keyframe_plan: dict[str, Any]) -> list[str]:
+    scenes = revised_keyframe_plan.get("revised_scene_keyframes")
+    if not isinstance(scenes, list):
+        return []
+    lines: list[str] = []
+    for scene in scenes[:4]:
+        if not isinstance(scene, dict):
+            continue
+        scene_index = scene.get("scene_index") or len(lines) + 1
+        revised_goal = _experiment_rework_text(scene.get("revised_keyframe_goal") or scene.get("scene_goal"), limit=360)
+        product_position = _experiment_rework_text(scene.get("product_position"), limit=220)
+        camera_direction = _experiment_rework_text(scene.get("camera_direction"), limit=220)
+        evidence = _experiment_rework_text(scene.get("evidence_anchor"), limit=180)
+        line = (
+            f"Scene {scene_index}: {revised_goal} "
+            f"Product position: {product_position or 'product clearly visible in first frame'}. "
+            f"Camera: {camera_direction or 'stable product-safe close-up'}. "
+            f"Evidence: {evidence or 'use supplied evidence only'}."
+        )
+        lines.append(_experiment_rework_text(line, limit=700))
+    return lines
+
+
+def build_revised_external_video_handoff_from_keyframe_plan(
+    original_generation_data: dict[str, Any],
+    revised_keyframe_plan: dict[str, Any],
+    feedback_decision: dict[str, Any],
+    experiment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build deterministic revised external video prompts from revised keyframes."""
+
+    data = original_generation_data if isinstance(original_generation_data, dict) else {}
+    plan = revised_keyframe_plan if isinstance(revised_keyframe_plan, dict) else {}
+    decision = feedback_decision if isinstance(feedback_decision, dict) else {}
+    experiment = experiment if isinstance(experiment, dict) else {}
+    product_lock = _revised_handoff_product_lock(plan)
+    product_identity = _experiment_rework_text(product_lock.get("product_identity") or "supplied product", limit=160)
+    product_category = _experiment_rework_text(product_lock.get("product_category") or "product", limit=120)
+    score_snapshot = dict(plan.get("score_snapshot") or decision.get("score_snapshot") or {})
+    for score_key in [
+        "product_consistency_score",
+        "storyboard_following_score",
+        "visual_quality_score",
+        "ad_readiness_score",
+        "overall_score",
+        "actual_cost_usd",
+    ]:
+        if score_key not in score_snapshot and score_key in experiment:
+            score_snapshot[score_key] = experiment.get(score_key)
+
+    reason_parts = [
+        plan.get("reason"),
+        decision.get("reason"),
+        decision.get("recommended_action"),
+        experiment.get("failure_reason"),
+        experiment.get("notes"),
+    ]
+    reason = _experiment_rework_text(" ".join(str(part or "") for part in reason_parts if part), limit=460)
+    if not reason:
+        reason = "Previous external output drifted from product identity; regenerate with stricter keyframe constraints."
+
+    scene_lines = _revised_handoff_scene_lines(plan)
+    scene_prompt = " | ".join(scene_lines) or f"Scene 1: show {product_identity} clearly, preserve category {product_category}, and review before full generation."
+    global_rules = _experiment_rework_list(plan.get("global_consistency_rules"), limit=8, text_limit=240)
+    product_rules = _experiment_rework_list(product_lock.get("must_preserve"), limit=5, text_limit=240)
+    negative_rules = _experiment_rework_list(product_lock.get("must_not_change"), limit=5, text_limit=240)
+    image_rules = _experiment_rework_list(product_lock.get("image_reference_rules"), limit=4, text_limit=240)
+    keyframe_constraints = []
+    for scene in plan.get("revised_scene_keyframes") or []:
+        if not isinstance(scene, dict):
+            continue
+        for value in scene.get("identity_constraints") or []:
+            text = _experiment_rework_text(value, limit=220)
+            if text and text not in keyframe_constraints:
+                keyframe_constraints.append(text)
+        if len(keyframe_constraints) >= 8:
+            break
+    product_consistency_rules = list(dict.fromkeys(product_rules + image_rules + global_rules))[:10]
+    if not product_consistency_rules:
+        product_consistency_rules = [
+            "Keep the exact same product identity.",
+            "Use the product reference image if available.",
+            "Show the product clearly in the first frame.",
+            "Avoid morphing, replacing, or redesigning the product.",
+            "Do not add brand/logo not supplied.",
+            "Do not change product category or function.",
+        ]
+    negative_constraints = list(dict.fromkeys(negative_rules + [
+        "Do not add brand/logo not supplied.",
+        "Do not change product category or function.",
+        "Do not morph, replace, or redesign the product.",
+        "Do not make unsupported claims or full-market promises.",
+    ]))[:10]
+    prompt_strategy = _experiment_rework_text(
+        "Use the revised keyframe plan as the scene-by-scene source of truth. "
+        "Run one short external video test first, check product identity and product consistency, "
+        "then decide whether to generate the full clip.",
+        limit=520,
+    )
+    constraints_text = "; ".join(product_consistency_rules[:6])
+    negative_prompt = _experiment_rework_text(
+        "Do not change product category, function, form factor, color/material/package shape, supplied brand/logo boundaries, "
+        "or reference-image identity. Do not invent variants, competitor products, unsupported claims, fake reviews, "
+        "medical claims, or full-market statistics. Avoid morphing or replacing the product.",
+        limit=900,
+    )
+    gemini_prompt = _experiment_rework_text(
+        f"Create a revised vertical ecommerce video test for {product_identity} ({product_category}). "
+        f"Source: revised keyframe plan from experiment feedback. Reason: {reason}. "
+        f"Use product reference image if available. Product consistency rules: {constraints_text}. "
+        f"Follow revised scene keyframes exactly: {scene_prompt}. "
+        "Generate one short clip first and require human review before full video generation.",
+        limit=1800,
+    )
+    doubao_prompt = _experiment_rework_text(
+        f"Regenerate a short vertical product video draft for {product_identity}. "
+        f"Keep category as {product_category}; do not redesign or replace the product. "
+        f"Scene-by-scene revised keyframes: {scene_prompt}. "
+        f"Negative constraints: {'; '.join(negative_constraints[:6])}. "
+        "Output one short test clip first for product-consistency review.",
+        limit=1800,
+    )
+    image_to_video_prompt = _experiment_rework_text(
+        f"Use the uploaded/reference product image as identity source for {product_identity}. "
+        f"Animate only according to the revised keyframe plan. Show product clearly in the first frame, "
+        f"preserve {product_category} category, keep color/material/shape/scale stable, and avoid morphing or replacement.",
+        limit=1100,
+    )
+    short_motion_prompt = _experiment_rework_text(
+        f"{product_identity}, vertical short-form ecommerce motion, stable close-up, product clearly visible, "
+        "conservative motion, reference-image identity lock, no redesign, one short test clip.",
+        limit=700,
+    )
+    copy_ready_generation_brief = "\n".join(
+        [
+            "Revised external video handoff",
+            f"Product: {product_identity}",
+            f"Category: {product_category}",
+            f"Issue: {plan.get('issue_type') or decision.get('issue_type') or 'product_consistency'}",
+            f"Reason: {reason}",
+            f"Strategy: {prompt_strategy}",
+            "Product consistency rules:",
+            *[f"- {rule}" for rule in product_consistency_rules[:8]],
+            "Revised scene keyframes:",
+            *[f"- {line}" for line in scene_lines[:4]],
+            "Gemini prompt:",
+            gemini_prompt,
+            "Doubao prompt:",
+            doubao_prompt,
+            "Image-to-video prompt:",
+            image_to_video_prompt,
+            "Short motion prompt:",
+            short_motion_prompt,
+            "Negative prompt:",
+            negative_prompt,
+            "Next action: Run one short external video test using this revised prompt handoff before full video generation.",
+        ]
+    ).strip()
+
+    return {
+        "handoff_version": "revised_external_video_handoff_v1",
+        "source": "experiment_feedback_rework",
+        "source_agent_id": "keyframe_agent",
+        "target_agent_id": "prompt_handoff_agent",
+        "issue_type": "product_consistency",
+        "reason": reason,
+        "score_snapshot": score_snapshot,
+        "revised_prompt_strategy": prompt_strategy,
+        "tool_prompts": {
+            "gemini_video_prompt": gemini_prompt,
+            "doubao_video_prompt": doubao_prompt,
+            "image_to_video_prompt": image_to_video_prompt,
+            "short_motion_prompt": short_motion_prompt,
+        },
+        "negative_prompt": negative_prompt,
+        "copy_ready_generation_brief": _experiment_rework_text(copy_ready_generation_brief, limit=3600),
+        "product_consistency_rules": product_consistency_rules,
+        "keyframe_constraints": keyframe_constraints[:8],
+        "recommended_next_action": "Run one short external video test using the revised prompt handoff before full video generation.",
+        "human_review_required": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+    }
+
+
 def trigger_experiment_rework_run(
     job_id: str,
     feedback_decision: dict[str, Any],
@@ -664,6 +853,14 @@ def trigger_experiment_rework_run(
     if issue_type == "product_consistency" and target_agent_id == "keyframe_agent":
         revised_keyframe_plan = build_revised_keyframe_plan_from_experiment_feedback(
             original_generation_data,
+            safe_decision,
+            experiment,
+        )
+    revised_external_video_handoff: dict[str, Any] = {}
+    if revised_keyframe_plan:
+        revised_external_video_handoff = build_revised_external_video_handoff_from_keyframe_plan(
+            original_generation_data,
+            revised_keyframe_plan,
             safe_decision,
             experiment,
         )
@@ -698,11 +895,15 @@ def trigger_experiment_rework_run(
     }
     if revised_keyframe_plan:
         run["result"]["revised_keyframe_plan"] = revised_keyframe_plan
+        run["result"]["revised_external_video_handoff"] = revised_external_video_handoff
         run["result"]["agent_feedback_decision"] = deepcopy(safe_decision)
+        run["result"]["next_agent_id"] = "prompt_handoff_agent"
         run["rework_artifacts"] = {
             "revised_keyframe_plan": True,
+            "revised_external_video_handoff": bool(revised_external_video_handoff),
             "target_agent_id": target_agent_id,
             "secondary_target_agent_id": secondary_target_agent_id,
+            "next_agent_id": "prompt_handoff_agent",
         }
 
     visited = ["experiment_agent", target_agent_id]
@@ -876,6 +1077,30 @@ def trigger_experiment_rework_run(
                     "data": {
                         "artifact_type": "revised_keyframe_plan",
                         "target_agent_id": target_agent_id,
+                        "source_video_job_id": str(job_id or ""),
+                    },
+                },
+                {
+                    "event_id": str(uuid4()),
+                    "event_type": "revised_external_video_handoff_created",
+                    "agent_id": "prompt_handoff_agent",
+                    "message": "Revised external video handoff created from revised keyframes.",
+                    "created_at": now,
+                    "data": {
+                        "handoff_version": revised_external_video_handoff.get("handoff_version", ""),
+                        "target_agent_id": "prompt_handoff_agent",
+                        "source_video_job_id": str(job_id or ""),
+                    },
+                },
+                {
+                    "event_id": str(uuid4()),
+                    "event_type": "revised_prompt_handoff_created",
+                    "agent_id": "prompt_handoff_agent",
+                    "message": "Revised prompt handoff created for next external video test.",
+                    "created_at": now,
+                    "data": {
+                        "artifact_type": "revised_external_video_handoff",
+                        "next_agent_id": "prompt_handoff_agent",
                         "source_video_job_id": str(job_id or ""),
                     },
                 },
