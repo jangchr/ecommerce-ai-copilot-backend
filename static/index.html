@@ -3732,6 +3732,8 @@
                 severity: 'Severity',
                 recommendedAction: 'Recommended action',
                 experimentAgentRecommendsRework: 'Experiment Agent recommends rework',
+                feedbackTriggeredReworkRun: 'Feedback-triggered rework run',
+                feedbackTriggeredReworkRunQueued: 'Rework run queued for upstream agent review.',
                 productConsistencyIssue: 'Product consistency issue',
                 storyboardFollowingIssue: 'Storyboard following issue',
                 visualQualityIssue: 'Visual quality issue',
@@ -4066,6 +4068,8 @@
                 severity: '\u4e25\u91cd\u7ea7\u522b',
                 recommendedAction: '\u5efa\u8bae\u64cd\u4f5c',
                 experimentAgentRecommendsRework: 'Experiment Agent \u5efa\u8bae\u8fd4\u56de\u4e0a\u6e38 Agent \u8fd4\u5de5',
+                feedbackTriggeredReworkRun: '\u53cd\u9988\u89e6\u53d1\u7684\u8fd4\u5de5 run',
+                feedbackTriggeredReworkRunQueued: '\u8fd4\u5de5 run \u5df2\u5165\u961f\uff0c\u7b49\u5f85\u4e0a\u6e38 Agent \u590d\u6838\u3002',
                 productConsistencyIssue: '\u4ea7\u54c1\u4e00\u81f4\u6027\u95ee\u9898',
                 storyboardFollowingIssue: '\u5206\u955c\u8ddf\u968f\u95ee\u9898',
                 visualQualityIssue: '\u753b\u9762\u8d28\u91cf\u95ee\u9898',
@@ -7981,6 +7985,7 @@
             const target = decision.target_agent_id || '';
             const secondary = decision.secondary_target_agent_id || '';
             const reworkTarget = [target, secondary].filter(Boolean).join(' / ');
+            const reworkRunId = decision.triggered_rework_run_id || '';
             const statusLine = decision.has_feedback && reworkTarget
                 ? `${t('experimentAgentRecommendsRework')}: ${reworkTarget}`
                 : t('feedbackRecordedNoRework');
@@ -7996,6 +8001,13 @@
                         <span>${escapeHTML(t('severity'))}: ${escapeHTML(decision.severity || '')}</span>
                         <span>${escapeHTML(t('recommendedAction'))}: ${escapeHTML(decision.recommended_action || '')}</span>
                     </div>
+                    ${reworkRunId ? `
+                        <div class="feedback-box">
+                            <div>${escapeHTML(t('feedbackTriggeredReworkRunQueued'))}</div>
+                            <div class="json-key">${escapeHTML(t('feedbackTriggeredReworkRun'))}: ${escapeHTML(reworkRunId)}</div>
+                            <div class="json-key">${escapeHTML(decision.triggered_rework_poll_url || '')}</div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }

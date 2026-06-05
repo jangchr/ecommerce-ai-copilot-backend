@@ -388,6 +388,187 @@ def build_experiment_feedback_decision(
     }
 
 
+def _experiment_rework_edge_id(target_agent_id: str) -> str:
+    return {
+        "keyframe_agent": "experiment_to_keyframe_rework",
+        "prompt_handoff_agent": "experiment_to_prompt_handoff_rework",
+        "storyboard_agent": "experiment_to_storyboard_rework",
+        "cost_agent": "experiment_to_cost_rework",
+    }.get(str(target_agent_id or ""), "experiment_to_keyframe_rework")
+
+
+def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]) -> dict[str, Any]:
+    """Create a rule-driven agent run scaffold for experiment feedback rework.
+
+    This records the graph target and loop request only. It intentionally does not
+    regenerate creative artifacts or call external providers.
+    """
+
+    safe_decision = feedback_decision if isinstance(feedback_decision, dict) else {}
+    if not safe_decision.get("has_feedback"):
+        return {}
+
+    target_agent_id = str(safe_decision.get("target_agent_id") or "keyframe_agent")
+    secondary_target_agent_id = str(safe_decision.get("secondary_target_agent_id") or "")
+    reason = str(safe_decision.get("reason") or "Experiment feedback requested upstream rework.")
+    recommended_action = str(safe_decision.get("recommended_action") or "")
+    severity = str(safe_decision.get("severity") or "medium")
+    issue_type = str(safe_decision.get("issue_type") or "experiment_feedback")
+    now = utc_now_iso()
+
+    run = build_agent_run(
+        input_type="experiment_feedback_rework",
+        output_language=str(safe_decision.get("output_language") or "en"),
+        request_id="",
+    )
+    run["status"] = "queued"
+    run["current_agent_id"] = target_agent_id
+    run["active_node_id"] = target_agent_id
+    run["source_video_job_id"] = str(job_id or "")
+    run["trigger_type"] = "external_video_experiment_feedback"
+    run["trigger_feedback_decision"] = deepcopy(safe_decision)
+    run["waiting_for_user"] = True
+    run["waiting_reason"] = recommended_action or reason
+    run["external_api_called"] = False
+    run["cost_incurred_by_crossgrowth"] = False
+    run["updated_at"] = now
+
+    visited = ["experiment_agent", target_agent_id]
+    if secondary_target_agent_id:
+        visited.append(secondary_target_agent_id)
+    run["visited_node_ids"] = list(dict.fromkeys(visited))
+
+    for node in run.get("graph_nodes", []):
+        node_id = str(node.get("node_id") or "")
+        if node_id == "experiment_agent":
+            node["status"] = "complete"
+        elif node_id == target_agent_id or (secondary_target_agent_id and node_id == secondary_target_agent_id):
+            node["status"] = "rework_requested"
+
+    for agent in run.get("agents", []):
+        agent_id = str(agent.get("agent_id") or "")
+        if agent_id == "experiment_agent":
+            agent["status"] = "complete"
+            agent["completed_at"] = now
+            agent["decision_summary"] = "Experiment Agent converted poor external scores into a graph feedback decision."
+            agent["business_impact"] = "Poor external video results are routed back to the most relevant upstream agent."
+        elif agent_id == target_agent_id or (secondary_target_agent_id and agent_id == secondary_target_agent_id):
+            agent["status"] = "rework_requested"
+            agent["decision_summary"] = reason
+            agent["business_impact"] = recommended_action
+            warnings = list(agent.get("warnings") or [])
+            warnings.append(issue_type)
+            agent["warnings"] = warnings
+
+    edge_id = _experiment_rework_edge_id(target_agent_id)
+    for edge in run.get("graph_edges", []):
+        if edge.get("edge_id") == edge_id:
+            edge["status"] = "traversed"
+            edge["decision_reason"] = reason
+            break
+    run["active_edge_ids"] = [edge_id]
+
+    transition = {
+        "decision_id": str(uuid4()),
+        "from_node_id": "experiment_agent",
+        "selected_to_node_id": target_agent_id,
+        "agent_id": "experiment_agent",
+        "decision_type": "feedback_rework_requested",
+        "reason": reason,
+        "created_at": now,
+        "data": {
+            "feedback_decision": deepcopy(safe_decision),
+            "secondary_target_agent_id": secondary_target_agent_id,
+            "source_video_job_id": str(job_id or ""),
+        },
+    }
+    validation = {
+        "validation_id": str(uuid4()),
+        "validator_agent_id": "experiment_agent",
+        "target_agent_id": target_agent_id,
+        "target_artifact": "external_video_experiment",
+        "status": "failed" if severity == "high" else "warning",
+        "reason": reason,
+        "severity": severity,
+        "rework_target": target_agent_id,
+        "created_at": now,
+    }
+    loop = {
+        "loop_id": str(uuid4()),
+        "source_agent_id": "experiment_agent",
+        "target_agent_id": target_agent_id,
+        "reason": reason,
+        "loop_count": 1,
+        "max_loop_count": 1,
+        "status": "requested",
+    }
+    run["transition_decisions"] = [transition]
+    run["validation_results"] = [validation]
+    run["rework_loops"] = [loop]
+    run["loop_count"] = 1
+    run["max_loop_count"] = 1
+    run["events"] = [
+        {
+            "event_id": str(uuid4()),
+            "event_type": "run_created",
+            "agent_id": None,
+            "message": "Experiment feedback-triggered rework run created.",
+            "created_at": now,
+            "data": {
+                "input_type": "experiment_feedback_rework",
+                "source_video_job_id": str(job_id or ""),
+                "external_api_called": False,
+                "cost_incurred_by_crossgrowth": False,
+            },
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "graph_initialized",
+            "agent_id": None,
+            "message": "Rule-driven agent graph initialized for experiment feedback rework.",
+            "created_at": now,
+            "data": {
+                "graph_version": GRAPH_VERSION,
+                "graph_execution_mode": GRAPH_EXECUTION_MODE,
+                "autonomy_level": AUTONOMY_LEVEL,
+                "llm_autonomous_decision_enabled": False,
+            },
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "transition_decision",
+            "agent_id": "experiment_agent",
+            "message": reason,
+            "created_at": now,
+            "data": deepcopy(transition),
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "experiment_feedback_rework_requested",
+            "agent_id": "experiment_agent",
+            "message": recommended_action or reason,
+            "created_at": now,
+            "data": {
+                "source_agent_id": "experiment_agent",
+                "target_agent_id": target_agent_id,
+                "secondary_target_agent_id": secondary_target_agent_id,
+                "issue_type": issue_type,
+                "severity": severity,
+                "source_video_job_id": str(job_id or ""),
+            },
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "rework_requested",
+            "agent_id": "experiment_agent",
+            "message": reason,
+            "created_at": now,
+            "data": deepcopy(loop),
+        },
+    ]
+    return run
+
+
 def build_agent_state(
     agent_id: str,
     role: str,
@@ -572,6 +753,9 @@ def default_agent_graph_edges() -> list[dict[str, Any]]:
         build_graph_edge("route_selector_to_prompt_handoff_fallback", "route_selector_agent", "prompt_handoff_agent", "fallback", "cost too high or real API disabled"),
         build_graph_edge("provider_job_to_experiment", "provider_job_agent", "experiment_agent", "waiting_for_user", "provider job requires user action"),
         build_graph_edge("experiment_to_keyframe_rework", "experiment_agent", "keyframe_agent", "rework", "experiment failed or product drift detected"),
+        build_graph_edge("experiment_to_prompt_handoff_rework", "experiment_agent", "prompt_handoff_agent", "rework", "experiment did not follow storyboard or visual prompt constraints"),
+        build_graph_edge("experiment_to_storyboard_rework", "experiment_agent", "storyboard_agent", "rework", "experiment was not ad-ready"),
+        build_graph_edge("experiment_to_cost_rework", "experiment_agent", "cost_agent", "rework", "experiment cost/value was not acceptable"),
         build_graph_edge("experiment_to_finalizer", "experiment_agent", "finalizer_agent", "normal", "experiment accepted"),
         build_graph_edge("prompt_handoff_to_finalizer_fallback", "prompt_handoff_agent", "finalizer_agent", "fallback", "manual external tool workflow selected"),
     ]

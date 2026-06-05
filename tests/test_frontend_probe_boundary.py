@@ -153,6 +153,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "severity",
             "recommendedAction",
             "experimentAgentRecommendsRework",
+            "feedbackTriggeredReworkRun",
+            "feedbackTriggeredReworkRunQueued",
             "productConsistencyIssue",
             "storyboardFollowingIssue",
             "visualQualityIssue",
@@ -215,6 +217,10 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Severity", self.source)
         self.assertIn("Recommended action", self.source)
         self.assertIn("Experiment Agent recommends rework", self.source)
+        self.assertIn("Feedback-triggered rework run", self.source)
+        self.assertIn("Rework run queued for upstream agent review.", self.source)
+        self.assertIn("triggered_rework_run_id", self.source)
+        self.assertIn("triggered_rework_poll_url", self.source)
         self.assertIn("Product consistency issue", self.source)
         self.assertIn("Storyboard following issue", self.source)
         self.assertIn("Visual quality issue", self.source)

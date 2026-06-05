@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
-from agent_runs import apply_evidence_safe_storyboard_rework, detect_storyboard_rework_need
+from agent_runs import (
+    apply_evidence_safe_storyboard_rework,
+    detect_storyboard_rework_need,
+    trigger_experiment_rework_run,
+)
 from main import AGENT_RUN_STORE, app
 from tests.test_pasted_reviews_endpoint import GENERATED_REVIEWS_BRIEF, VALID_REVIEWS_REQUEST
 
@@ -179,6 +183,39 @@ class AgentRunsEndpointTest(unittest.TestCase):
             reworked["insights"]["evidence"]["data_warnings"],
         )
         self.assertEqual(reworked["evaluation"]["risk_level"], "medium")
+
+    def test_experiment_feedback_rework_run_helper_preserves_graph_structures(self):
+        decision = {
+            "feedback_version": "experiment_feedback_loop_v1",
+            "has_feedback": True,
+            "source_agent_id": "experiment_agent",
+            "target_agent_id": "prompt_handoff_agent",
+            "secondary_target_agent_id": "keyframe_agent",
+            "decision_type": "feedback_rework_requested",
+            "severity": "medium",
+            "issue_type": "storyboard_following",
+            "reason": "External result did not follow storyboard enough.",
+            "recommended_action": "Revise prompt handoff and keyframe constraints.",
+            "score_snapshot": {"storyboard_following_score": 1},
+            "loop_guard": {"max_feedback_loop_count": 1, "feedback_loop_count": 1},
+        }
+
+        run = trigger_experiment_rework_run("video_job_123", decision)
+
+        self.assertEqual(run["input_type"], "experiment_feedback_rework")
+        self.assertEqual(run["source_video_job_id"], "video_job_123")
+        self.assertEqual(run["active_node_id"], "prompt_handoff_agent")
+        self.assertEqual(run["trigger_feedback_decision"]["issue_type"], "storyboard_following")
+        self.assertFalse(run["llm_autonomous_decision_enabled"])
+        self.assertFalse(run["external_api_called"])
+        self.assertFalse(run["cost_incurred_by_crossgrowth"])
+        self.assertEqual(run["transition_decisions"][0]["decision_type"], "feedback_rework_requested")
+        self.assertEqual(run["validation_results"][0]["rework_target"], "prompt_handoff_agent")
+        self.assertEqual(run["rework_loops"][0]["target_agent_id"], "prompt_handoff_agent")
+        self.assertIn("experiment_to_prompt_handoff_rework", run["active_edge_ids"])
+        event_types = [event["event_type"] for event in run["events"]]
+        self.assertIn("run_created", event_types)
+        self.assertIn("experiment_feedback_rework_requested", event_types)
 
     def test_agent_graph_runtime_records_rework_loop_when_storyboard_risk_detected(self):
         risky_generated = deepcopy(GENERATED_REVIEWS_BRIEF)

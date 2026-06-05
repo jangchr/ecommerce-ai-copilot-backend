@@ -54,6 +54,7 @@ from agent_runs import (
     build_agent_run,
     build_experiment_feedback_decision,
     detect_storyboard_rework_need,
+    trigger_experiment_rework_run,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -3183,12 +3184,24 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         "cost_incurred_by_crossgrowth": False,
     }
     feedback_decision = build_experiment_feedback_decision(experiment, job)
+    rework_run = trigger_experiment_rework_run(str(job.get("job_id") or ""), feedback_decision)
+    if rework_run:
+        AGENT_RUN_STORE.create(rework_run)
+        feedback_decision = dict(feedback_decision)
+        feedback_decision["triggered_rework_run_id"] = rework_run["run_id"]
+        feedback_decision["triggered_rework_poll_url"] = f"/api/v1/agent-runs/{rework_run['run_id']}"
+        feedback_decision["triggered_rework_events_url"] = f"/api/v1/agent-runs/{rework_run['run_id']}/events"
     experiment["agent_feedback_decision"] = feedback_decision
 
     experiments = list(job.get("external_video_experiments") or [])
     experiments.append(experiment)
     job["external_video_experiments"] = experiments
     job["latest_agent_feedback_decision"] = feedback_decision
+    if rework_run:
+        job["latest_experiment_rework_run_id"] = rework_run["run_id"]
+        rework_run_ids = list(job.get("experiment_rework_run_ids") or [])
+        rework_run_ids.append(rework_run["run_id"])
+        job["experiment_rework_run_ids"] = rework_run_ids[-10:]
     existing_feedback = job.get("agent_graph_feedback") if isinstance(job.get("agent_graph_feedback"), dict) else {}
     feedback_decisions = list(existing_feedback.get("decisions") or [])
     feedback_decisions.append(feedback_decision)
@@ -3196,6 +3209,9 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         "feedback_version": "experiment_feedback_loop_v1",
         "decisions": feedback_decisions[-5:],
     }
+    if rework_run:
+        job["agent_graph_feedback"]["latest_rework_run_id"] = rework_run["run_id"]
+        job["agent_graph_feedback"]["rework_run_ids"] = list(job.get("experiment_rework_run_ids") or [])
     job["updated_at"] = now
 
     history = list(job.get("history") or [])
@@ -3211,6 +3227,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             has_result_url=bool(experiment["result_url"]),
             feedback_decision_type=feedback_decision["decision_type"],
             feedback_target_agent_id=feedback_decision.get("target_agent_id", ""),
+            feedback_rework_run_id=feedback_decision.get("triggered_rework_run_id", ""),
         )
     )
     if feedback_decision.get("has_feedback"):
@@ -3225,6 +3242,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 secondary_target_agent_id=feedback_decision.get("secondary_target_agent_id", ""),
                 issue_type=feedback_decision.get("issue_type", ""),
                 severity=feedback_decision.get("severity", ""),
+                rework_run_id=feedback_decision.get("triggered_rework_run_id", ""),
             )
         )
     job["history"] = history
