@@ -203,8 +203,10 @@ class AgentRunsEndpointTest(unittest.TestCase):
         run = trigger_experiment_rework_run("video_job_123", decision)
 
         self.assertEqual(run["input_type"], "experiment_feedback_rework")
+        self.assertEqual(run["status"], "completed")
         self.assertEqual(run["source_video_job_id"], "video_job_123")
-        self.assertEqual(run["active_node_id"], "prompt_handoff_agent")
+        self.assertIsNone(run["active_node_id"])
+        self.assertEqual(run["result"]["target_agent_id"], "prompt_handoff_agent")
         self.assertEqual(run["trigger_feedback_decision"]["issue_type"], "storyboard_following")
         self.assertFalse(run["llm_autonomous_decision_enabled"])
         self.assertFalse(run["external_api_called"])
@@ -215,7 +217,14 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertIn("experiment_to_prompt_handoff_rework", run["active_edge_ids"])
         event_types = [event["event_type"] for event in run["events"]]
         self.assertIn("run_created", event_types)
+        self.assertIn("graph_initialized", event_types)
+        self.assertIn("transition_decision", event_types)
         self.assertIn("experiment_feedback_rework_requested", event_types)
+        self.assertIn("rework_requested", event_types)
+        self.assertIn("node_started", event_types)
+        self.assertIn("node_completed", event_types)
+        self.assertIn("graph_completed", event_types)
+        self.assertIn("run_completed", event_types)
 
     def test_agent_graph_runtime_records_rework_loop_when_storyboard_risk_detected(self):
         risky_generated = deepcopy(GENERATED_REVIEWS_BRIEF)

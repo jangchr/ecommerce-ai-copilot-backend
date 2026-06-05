@@ -416,6 +416,7 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["status"], "ready_for_manual_export")
         experiments = job["external_video_experiments"]
         self.assertEqual(len(experiments), 1)
+        self.assertEqual(job["external_experiments"][0]["result_url"], "https://example.com/gemini-video.mp4")
         experiment = experiments[0]
         self.assertTrue(experiment["experiment_id"].startswith("video_experiment_"))
         self.assertEqual(experiment["tool_name"], "gemini")
@@ -434,7 +435,9 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["agent_graph_feedback"]["feedback_version"], "experiment_feedback_loop_v1")
         self.assertEqual(job["agent_graph_feedback"]["decisions"][0]["issue_type"], "none")
         self.assertNotIn("latest_experiment_rework_run_id", job)
-        self.assertIn("external_video_experiment_recorded", [event["event"] for event in job["history"]])
+        history_events = [event["event"] for event in job["history"]]
+        self.assertIn("external_video_experiment_recorded", history_events)
+        self.assertIn("experiment_feedback_recorded", history_events)
 
         fetched = self.client.get(f"/api/v1/video-generation/jobs/{job_id}")
         self.assertEqual(fetched.status_code, 200)
@@ -459,6 +462,10 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         job = response.json()["job"]
+        self.assertEqual(
+            job["external_experiments"][0]["result_url"],
+            "https://example.com/gemini-video.mp4",
+        )
         decision = job["external_video_experiments"][0]["agent_feedback_decision"]
         self.assertTrue(decision["has_feedback"])
         self.assertEqual(decision["decision_type"], "feedback_rework_requested")
@@ -475,9 +482,10 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         rework_run = AGENT_RUN_STORE.get(decision["triggered_rework_run_id"])
         self.assertIsNotNone(rework_run)
         self.assertEqual(rework_run["input_type"], "experiment_feedback_rework")
+        self.assertEqual(rework_run["status"], "completed")
         self.assertEqual(rework_run["source_video_job_id"], job_id)
-        self.assertEqual(rework_run["active_node_id"], "keyframe_agent")
-        self.assertTrue(rework_run["waiting_for_user"])
+        self.assertEqual(rework_run["active_node_id"], None)
+        self.assertFalse(rework_run["waiting_for_user"])
         self.assertFalse(rework_run["external_api_called"])
         self.assertFalse(rework_run["cost_incurred_by_crossgrowth"])
         node_statuses = {node["node_id"]: node["status"] for node in rework_run["graph_nodes"]}
@@ -491,8 +499,14 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(rework_run["rework_loops"][0]["status"], "requested")
         self.assertIn("experiment_to_keyframe_rework", rework_run["active_edge_ids"])
         event_types = [event["event_type"] for event in rework_run["events"]]
+        self.assertIn("graph_initialized", event_types)
+        self.assertIn("transition_decision", event_types)
         self.assertIn("experiment_feedback_rework_requested", event_types)
         self.assertIn("rework_requested", event_types)
+        self.assertIn("node_started", event_types)
+        self.assertIn("node_completed", event_types)
+        self.assertIn("graph_completed", event_types)
+        self.assertIn("run_completed", event_types)
 
     def test_external_experiment_storyboard_following_routes_to_prompt_handoff(self):
         job_id = self._create_video_generation_job()
@@ -512,7 +526,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(decision["target_agent_id"], "prompt_handoff_agent")
         self.assertEqual(decision["secondary_target_agent_id"], "keyframe_agent")
         rework_run = AGENT_RUN_STORE.get(decision["triggered_rework_run_id"])
-        self.assertEqual(rework_run["active_node_id"], "prompt_handoff_agent")
+        self.assertEqual(rework_run["status"], "completed")
+        self.assertEqual(rework_run["result"]["target_agent_id"], "prompt_handoff_agent")
         self.assertIn("experiment_to_prompt_handoff_rework", rework_run["active_edge_ids"])
 
     def test_external_experiment_ad_readiness_routes_to_storyboard(self):
@@ -533,7 +548,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(decision["target_agent_id"], "storyboard_agent")
         self.assertEqual(decision["secondary_target_agent_id"], "strategy_agent")
         rework_run = AGENT_RUN_STORE.get(decision["triggered_rework_run_id"])
-        self.assertEqual(rework_run["active_node_id"], "storyboard_agent")
+        self.assertEqual(rework_run["status"], "completed")
+        self.assertEqual(rework_run["result"]["target_agent_id"], "storyboard_agent")
         self.assertIn("experiment_to_storyboard_rework", rework_run["active_edge_ids"])
 
     def test_external_experiment_cost_value_routes_to_cost_agent(self):
@@ -556,7 +572,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(decision["target_agent_id"], "cost_agent")
         self.assertEqual(decision["secondary_target_agent_id"], "route_selector_agent")
         rework_run = AGENT_RUN_STORE.get(decision["triggered_rework_run_id"])
-        self.assertEqual(rework_run["active_node_id"], "cost_agent")
+        self.assertEqual(rework_run["status"], "completed")
+        self.assertEqual(rework_run["result"]["target_agent_id"], "cost_agent")
         self.assertIn("experiment_to_cost_rework", rework_run["active_edge_ids"])
 
     def test_record_external_video_experiment_rejects_invalid_score(self):

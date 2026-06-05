@@ -421,17 +421,29 @@ def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]
         output_language=str(safe_decision.get("output_language") or "en"),
         request_id="",
     )
-    run["status"] = "queued"
-    run["current_agent_id"] = target_agent_id
-    run["active_node_id"] = target_agent_id
+    run["status"] = "completed"
+    run["started_at"] = now
+    run["completed_at"] = now
+    run["current_agent_id"] = None
+    run["active_node_id"] = None
     run["source_video_job_id"] = str(job_id or "")
     run["trigger_type"] = "external_video_experiment_feedback"
     run["trigger_feedback_decision"] = deepcopy(safe_decision)
-    run["waiting_for_user"] = True
-    run["waiting_reason"] = recommended_action or reason
+    run["waiting_for_user"] = False
+    run["waiting_reason"] = ""
     run["external_api_called"] = False
     run["cost_incurred_by_crossgrowth"] = False
     run["updated_at"] = now
+    run["result"] = {
+        "result_type": "experiment_feedback_rework_scaffold",
+        "source_video_job_id": str(job_id or ""),
+        "target_agent_id": target_agent_id,
+        "secondary_target_agent_id": secondary_target_agent_id,
+        "issue_type": issue_type,
+        "feedback_decision": deepcopy(safe_decision),
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+    }
 
     visited = ["experiment_agent", target_agent_id]
     if secondary_target_agent_id:
@@ -453,7 +465,9 @@ def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]
             agent["decision_summary"] = "Experiment Agent converted poor external scores into a graph feedback decision."
             agent["business_impact"] = "Poor external video results are routed back to the most relevant upstream agent."
         elif agent_id == target_agent_id or (secondary_target_agent_id and agent_id == secondary_target_agent_id):
-            agent["status"] = "rework_requested"
+            agent["status"] = "complete"
+            agent["started_at"] = now
+            agent["completed_at"] = now
             agent["decision_summary"] = reason
             agent["business_impact"] = recommended_action
             warnings = list(agent.get("warnings") or [])
@@ -559,11 +573,61 @@ def trigger_experiment_rework_run(job_id: str, feedback_decision: dict[str, Any]
         },
         {
             "event_id": str(uuid4()),
+            "event_type": "node_started",
+            "agent_id": target_agent_id,
+            "message": f"{target_agent_id} started feedback-triggered rework scaffold.",
+            "created_at": now,
+            "data": {
+                "node_id": target_agent_id,
+                "source_agent_id": "experiment_agent",
+                "issue_type": issue_type,
+            },
+        },
+        {
+            "event_id": str(uuid4()),
             "event_type": "rework_requested",
             "agent_id": "experiment_agent",
             "message": reason,
             "created_at": now,
             "data": deepcopy(loop),
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "node_completed",
+            "agent_id": target_agent_id,
+            "message": f"{target_agent_id} completed feedback-triggered rework scaffold.",
+            "created_at": now,
+            "data": {
+                "node_id": target_agent_id,
+                "source_agent_id": "experiment_agent",
+                "issue_type": issue_type,
+                "recommended_action": recommended_action,
+            },
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "graph_completed",
+            "agent_id": None,
+            "message": "Experiment feedback-triggered rework graph completed.",
+            "created_at": now,
+            "data": {
+                "source_video_job_id": str(job_id or ""),
+                "target_agent_id": target_agent_id,
+                "external_api_called": False,
+                "cost_incurred_by_crossgrowth": False,
+            },
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "run_completed",
+            "agent_id": None,
+            "message": "Experiment feedback-triggered rework run completed.",
+            "created_at": now,
+            "data": {
+                "has_result": True,
+                "external_api_called": False,
+                "cost_incurred_by_crossgrowth": False,
+            },
         },
     ]
     return run

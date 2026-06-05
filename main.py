@@ -3193,9 +3193,10 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         feedback_decision["triggered_rework_events_url"] = f"/api/v1/agent-runs/{rework_run['run_id']}/events"
     experiment["agent_feedback_decision"] = feedback_decision
 
-    experiments = list(job.get("external_video_experiments") or [])
+    experiments = list(job.get("external_video_experiments") or job.get("external_experiments") or [])
     experiments.append(experiment)
     job["external_video_experiments"] = experiments
+    job["external_experiments"] = experiments
     job["latest_agent_feedback_decision"] = feedback_decision
     if rework_run:
         job["latest_experiment_rework_run_id"] = rework_run["run_id"]
@@ -3226,6 +3227,21 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             prompt_type=experiment["prompt_type"],
             has_result_url=bool(experiment["result_url"]),
             feedback_decision_type=feedback_decision["decision_type"],
+            feedback_target_agent_id=feedback_decision.get("target_agent_id", ""),
+            feedback_rework_run_id=feedback_decision.get("triggered_rework_run_id", ""),
+        )
+    )
+    history.append(
+        build_video_job_history_event(
+            "experiment_feedback_recorded",
+            job_status,
+            updated_at=now,
+            experiment_id=experiment["experiment_id"],
+            tool_name=experiment["tool_name"],
+            prompt_type=experiment["prompt_type"],
+            has_result_url=bool(experiment["result_url"]),
+            feedback_decision_type=feedback_decision["decision_type"],
+            feedback_has_feedback=bool(feedback_decision.get("has_feedback")),
             feedback_target_agent_id=feedback_decision.get("target_agent_id", ""),
             feedback_rework_run_id=feedback_decision.get("triggered_rework_run_id", ""),
         )
