@@ -1359,6 +1359,59 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn(zh_review_1, self.source)
         self.assertIn(zh_review_2, self.source)
 
+    def test_multi_agent_demo_sample_and_checklist_exist(self):
+        for text in [
+            "Use Multi-Agent Demo Sample",
+            "Multi-agent demo sample loaded.",
+            "Multi-Agent Demo Checklist",
+            "Generate from customer feedback.",
+            "Open Business-grounded Multi-Agent Workflow.",
+            "Review Evidence Agent, Asset Lock Agent, and Keyframe Agent.",
+            "Open External Video Tool Handoff.",
+            "Review Product Asset Lock and Keyframe Plan.",
+            "Create a Video Job.",
+            "Submit/poll simulated provider flow.",
+            "Optionally record an External Video Experiment.",
+            "Confirm no external video API is called.",
+            "Portable Mini Blender",
+            "kitchen_appliance",
+            "A compact rechargeable blender for smoothies, travel, and quick morning drinks.",
+            "Blends soft fruit well, but ice takes longer.",
+            "Great for office smoothies when it is fully charged.",
+        ]:
+            with self.subTest(multi_agent_demo_text=text):
+                self.assertIn(text, self.source)
+
+        for marker in [
+            "multiAgentDemoChecklist",
+            "multiAgentDemoSampleBtn",
+            "MULTI_AGENT_DEMO_SAMPLE",
+            "function fillMultiAgentDemoSample()",
+            "setLanguageMode('en')",
+            "applyReviewSample(MULTI_AGENT_DEMO_SAMPLE)",
+            "setReviewsStatus(t('multiAgentDemoSampleLoaded'))",
+            "updateReviewInputPreviews()",
+            "Business-grounded Multi-Agent Workflow",
+            "Product Asset Lock",
+            "Keyframe Plan",
+            "External Video Tool Handoff",
+            "videoJobCreateTitle",
+            "videoCostEstimateTitle",
+            "externalVideoExperimentsTitle",
+        ]:
+            with self.subTest(multi_agent_demo_marker=marker):
+                self.assertIn(marker, self.source)
+
+        fill_start = self.source.find("function fillMultiAgentDemoSample()")
+        self.assertNotEqual(fill_start, -1)
+        fill_body = self.source[fill_start:fill_start + 700]
+        self.assertNotIn("generateFromReviews()", fill_body)
+        self.assertNotIn("fetch(", fill_body)
+        self.assertNotIn("debug-copilot", fill_body)
+        self.assertNotIn("debug-source-probe", fill_body)
+        self.assertNotIn("data.debug", fill_body)
+        self.assertNotIn("????", self.source)
+
     def test_pasted_reviews_extra_samples_only_fill_inputs(self):
         samples = {
             "fillSamplePetHairReviews": "petHair",
