@@ -3775,6 +3775,21 @@
                 productConsistencyPromptConstraints: 'Product consistency prompt constraints',
                 pollReworkRun: 'Poll rework run',
                 experimentFeedbackCreatedRevisedKeyframePlan: 'Experiment feedback created a revised keyframe plan.',
+                secondExternalExperimentComparison: 'Second external experiment comparison',
+                baselineExperiment: 'Baseline experiment',
+                secondExperiment: 'Second experiment',
+                promptSource: 'Prompt source',
+                improvementStatus: 'Improvement status',
+                scoreDeltas: 'Score deltas',
+                improvedDimensions: 'Improved dimensions',
+                regressedDimensions: 'Regressed dimensions',
+                unchangedDimensions: 'Unchanged dimensions',
+                secondTestImprovedAfterRevisedPromptHandoff: 'Second test improved after revised prompt handoff.',
+                secondTestRegressed: 'Second test regressed; do not scale this prompt.',
+                noMeaningfulChange: 'No meaningful change',
+                mixedResult: 'Mixed result',
+                useRevisedPromptForAnotherShortClip: 'Use revised prompt for another short clip',
+                doNotScaleThisPrompt: 'Do not scale this prompt',
                 productConsistencyIssue: 'Product consistency issue',
                 storyboardFollowingIssue: 'Storyboard following issue',
                 visualQualityIssue: 'Visual quality issue',
@@ -4129,6 +4144,21 @@
                 productConsistencyPromptConstraints: '\u4ea7\u54c1\u4e00\u81f4\u6027\u63d0\u793a\u8bcd\u7ea6\u675f',
                 pollReworkRun: '\u8f6e\u8be2\u8fd4\u5de5 run',
                 experimentFeedbackCreatedRevisedKeyframePlan: '\u5b9e\u9a8c\u53cd\u9988\u5df2\u521b\u5efa\u4fee\u8ba2\u540e\u7684\u5173\u952e\u5e27\u8ba1\u5212\u3002',
+                secondExternalExperimentComparison: '\u7b2c\u4e8c\u6b21\u5916\u90e8\u5b9e\u9a8c\u5bf9\u6bd4',
+                baselineExperiment: '\u57fa\u7ebf\u5b9e\u9a8c',
+                secondExperiment: '\u7b2c\u4e8c\u6b21\u5b9e\u9a8c',
+                promptSource: '\u63d0\u793a\u8bcd\u6765\u6e90',
+                improvementStatus: '\u6539\u8fdb\u72b6\u6001',
+                scoreDeltas: '\u5206\u6570\u53d8\u5316',
+                improvedDimensions: '\u5df2\u6539\u8fdb\u7ef4\u5ea6',
+                regressedDimensions: '\u9000\u6b65\u7ef4\u5ea6',
+                unchangedDimensions: '\u672a\u53d8\u7ef4\u5ea6',
+                secondTestImprovedAfterRevisedPromptHandoff: '\u7b2c\u4e8c\u6b21\u6d4b\u8bd5\u5728\u4fee\u8ba2\u540e\u7684\u63d0\u793a\u8bcd\u4ea4\u4ed8\u540e\u6709\u6539\u8fdb\u3002',
+                secondTestRegressed: '\u7b2c\u4e8c\u6b21\u6d4b\u8bd5\u9000\u6b65\uff1b\u4e0d\u8981\u6269\u5927\u4f7f\u7528\u8fd9\u4e2a\u63d0\u793a\u8bcd\u3002',
+                noMeaningfulChange: '\u6ca1\u6709\u660e\u663e\u53d8\u5316',
+                mixedResult: '\u7ed3\u679c\u6df7\u5408',
+                useRevisedPromptForAnotherShortClip: '\u7528\u4fee\u8ba2\u540e\u63d0\u793a\u8bcd\u518d\u505a\u4e00\u4e2a\u77ed\u7247',
+                doNotScaleThisPrompt: '\u4e0d\u8981\u6269\u5927\u4f7f\u7528\u8fd9\u4e2a\u63d0\u793a\u8bcd',
                 productConsistencyIssue: '\u4ea7\u54c1\u4e00\u81f4\u6027\u95ee\u9898',
                 storyboardFollowingIssue: '\u5206\u955c\u8ddf\u968f\u95ee\u9898',
                 visualQualityIssue: '\u753b\u9762\u8d28\u91cf\u95ee\u9898',
@@ -8187,6 +8217,48 @@
             `;
         }
 
+        function secondExperimentComparisonMessage(status) {
+            if (status === 'improved') return t('secondTestImprovedAfterRevisedPromptHandoff');
+            if (status === 'regressed') return t('secondTestRegressed');
+            if (status === 'mixed') return t('mixedResult');
+            return t('noMeaningfulChange');
+        }
+
+        function secondExperimentComparisonAction(status, fallback) {
+            if (status === 'improved') return t('useRevisedPromptForAnotherShortClip');
+            if (status === 'regressed') return t('doNotScaleThisPrompt');
+            return fallback || '';
+        }
+
+        function renderSecondExperimentComparison(comparison) {
+            if (!comparison || typeof comparison !== 'object') return '';
+            const deltas = comparison.score_deltas && typeof comparison.score_deltas === 'object'
+                ? Object.entries(comparison.score_deltas)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(' | ')
+                : '';
+            const listText = (values) => Array.isArray(values) && values.length ? values.join(', ') : '-';
+            const status = comparison.status || '';
+            const recommendedAction = secondExperimentComparisonAction(status, comparison.recommended_next_action || '');
+            return `
+                <div class="feedback-box second-experiment-comparison" id="secondExternalExperimentComparisonPanel">
+                    <div class="json-key">${escapeHTML(t('secondExternalExperimentComparison'))}</div>
+                    <div>${escapeHTML(secondExperimentComparisonMessage(status))}</div>
+                    <div class="metric-grid">
+                        <span>${escapeHTML(t('baselineExperiment'))}: ${escapeHTML(comparison.baseline_experiment_id || '')}</span>
+                        <span>${escapeHTML(t('secondExperiment'))}: ${escapeHTML(comparison.second_experiment_id || '')}</span>
+                        <span>${escapeHTML(t('promptSource'))}: ${escapeHTML(comparison.prompt_source || '')}</span>
+                        <span>${escapeHTML(t('improvementStatus'))}: ${escapeHTML(status)}</span>
+                        <span>${escapeHTML(t('scoreDeltas'))}: ${escapeHTML(deltas || '-')}</span>
+                        <span>${escapeHTML(t('improvedDimensions'))}: ${escapeHTML(listText(comparison.improved_dimensions))}</span>
+                        <span>${escapeHTML(t('regressedDimensions'))}: ${escapeHTML(listText(comparison.regressed_dimensions))}</span>
+                        <span>${escapeHTML(t('unchangedDimensions'))}: ${escapeHTML(listText(comparison.unchanged_dimensions))}</span>
+                        <span>${escapeHTML(t('recommendedAction'))}: ${escapeHTML(recommendedAction)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderExternalVideoExperimentsPanel(job) {
             if (!job || !job.job_id) return '';
             const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
@@ -8232,6 +8304,7 @@
                     ${experiment.notes ? `<div>${escapeHTML(experiment.notes)}</div>` : ''}
                     ${renderAgentFeedbackDecision(experiment.agent_feedback_decision)}
                     ${renderExperimentReworkArtifact(experiment)}
+                    ${renderSecondExperimentComparison(experiment.second_experiment_comparison)}
                     ${experiment.created_at ? `<small>${escapeHTML(experiment.created_at)}</small>` : ''}
                 </div>
             `).join('') : `<div class="recent-empty">${escapeHTML(t('noExternalExperimentsYet'))}</div>`;

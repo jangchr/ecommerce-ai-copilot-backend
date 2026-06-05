@@ -40,6 +40,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("renderExternalVideoExperimentsPanel", self.source)
         self.assertIn("renderAgentFeedbackDecision", self.source)
         self.assertIn("agentFeedbackIssueLabel", self.source)
+        self.assertIn("renderSecondExperimentComparison", self.source)
+        self.assertIn("secondExperimentComparisonMessage", self.source)
+        self.assertIn("secondExternalExperimentComparisonPanel", self.source)
         self.assertIn("renderVideoProviderProgress", self.source)
         self.assertIn("renderVideoCostEstimate", self.source)
         self.assertIn("providerPayload.cost_estimate", self.source)
@@ -59,6 +62,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "videoJobCurrentPanel",
             "videoJobExternalResultPanel",
             "externalVideoExperimentsPanel",
+            "secondExternalExperimentComparisonPanel",
             "videoExperimentSaveBtn",
             "videoExperimentToolName",
             "videoExperimentPromptType",
@@ -3209,6 +3213,18 @@ class AgentLiveRunFrontendProbeTests(unittest.TestCase):
             "Keyframe Plan",
             "Video Job",
             "External Video Experiments",
+            "Second external experiment comparison",
+            "Baseline experiment",
+            "Second experiment",
+            "Prompt source",
+            "Improvement status",
+            "Score deltas",
+            "Improved dimensions",
+            "Regressed dimensions",
+            "Second test improved after revised prompt handoff",
+            "Second test regressed",
+            "Use revised prompt for another short clip",
+            "Do not scale this prompt",
         ]:
             with self.subTest(preserved_marker=preserved_marker):
                 self.assertIn(preserved_marker, html)

@@ -53,6 +53,7 @@ from agent_runs import (
     apply_evidence_safe_storyboard_rework,
     build_agent_run,
     build_experiment_feedback_decision,
+    build_second_experiment_comparison,
     detect_storyboard_rework_need,
     trigger_experiment_rework_run,
 )
@@ -3157,12 +3158,64 @@ def _validate_video_experiment_scores(request: VideoGenerationExperimentRequest)
     return ""
 
 
+def _is_second_video_experiment_request(request: VideoGenerationExperimentRequest) -> bool:
+    try:
+        round_number = int(getattr(request, "experiment_round", 1) or 1)
+    except (TypeError, ValueError):
+        round_number = 1
+    return round_number == 2 or bool(getattr(request, "compare_to_previous", False))
+
+
+def _experiment_triggered_rework_run_id(experiment: dict) -> str:
+    decision = experiment.get("agent_feedback_decision") if isinstance(experiment.get("agent_feedback_decision"), dict) else {}
+    return (
+        str(experiment.get("triggered_rework_run_id") or "").strip()
+        or str(decision.get("triggered_rework_run_id") or "").strip()
+    )
+
+
+def _find_second_experiment_baseline(
+    experiments: list[dict],
+    request: VideoGenerationExperimentRequest,
+) -> dict:
+    baseline_id = str(getattr(request, "baseline_experiment_id", "") or "").strip()
+    if baseline_id:
+        for experiment in experiments:
+            if str(experiment.get("experiment_id") or "") == baseline_id:
+                return experiment
+
+    linked_rework_run_id = str(getattr(request, "linked_rework_run_id", "") or "").strip()
+    if linked_rework_run_id:
+        for experiment in reversed(experiments):
+            if _experiment_triggered_rework_run_id(experiment) == linked_rework_run_id:
+                return experiment
+
+    for experiment in reversed(experiments):
+        decision = experiment.get("agent_feedback_decision") if isinstance(experiment.get("agent_feedback_decision"), dict) else {}
+        if decision.get("has_feedback") is True:
+            return experiment
+
+    return {}
+
+
+def _rework_run_for_second_experiment(request: VideoGenerationExperimentRequest, baseline: dict) -> dict:
+    linked_rework_run_id = (
+        str(getattr(request, "linked_rework_run_id", "") or "").strip()
+        or _experiment_triggered_rework_run_id(baseline)
+    )
+    if not linked_rework_run_id:
+        return {}
+    return AGENT_RUN_STORE.get(linked_rework_run_id) or {}
+
+
 def _record_external_video_experiment(job: dict, request: VideoGenerationExperimentRequest) -> tuple[dict | None, str]:
     score_error = _validate_video_experiment_scores(request)
     if score_error:
         return None, score_error
 
     now = _utc_now_iso()
+    existing_experiments = list(job.get("external_video_experiments") or job.get("external_experiments") or [])
+    is_second_experiment = _is_second_video_experiment_request(request)
     experiment = {
         "experiment_id": f"video_experiment_{uuid4().hex[:12]}",
         "tool_name": _clean_description_text(request.tool_name or "other"),
@@ -3183,6 +3236,18 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
     }
+    baseline_experiment_id = _clean_description_text(getattr(request, "baseline_experiment_id", ""))
+    linked_rework_run_id = _clean_description_text(getattr(request, "linked_rework_run_id", ""))
+    prompt_source = _clean_description_text(getattr(request, "prompt_source", ""))
+    if baseline_experiment_id:
+        experiment["baseline_experiment_id"] = baseline_experiment_id
+    if linked_rework_run_id:
+        experiment["linked_rework_run_id"] = linked_rework_run_id
+    if prompt_source:
+        experiment["prompt_source"] = prompt_source
+    if is_second_experiment:
+        experiment["experiment_round"] = 2
+        experiment["compare_to_previous"] = True
     feedback_decision = build_experiment_feedback_decision(experiment, job)
     original_generation_data = {
         "video_generation_packet": job.get("video_generation_packet") or {},
@@ -3190,12 +3255,14 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         "source_generation": job.get("source_generation") or {},
         "external_video_tool_handoff": job.get("external_video_tool_handoff") or {},
     }
-    rework_run = trigger_experiment_rework_run(
-        str(job.get("job_id") or ""),
-        feedback_decision,
-        original_generation_data=original_generation_data,
-        experiment=experiment,
-    )
+    rework_run = None
+    if not is_second_experiment:
+        rework_run = trigger_experiment_rework_run(
+            str(job.get("job_id") or ""),
+            feedback_decision,
+            original_generation_data=original_generation_data,
+            experiment=experiment,
+        )
     if rework_run:
         AGENT_RUN_STORE.create(rework_run)
         feedback_decision = dict(feedback_decision)
@@ -3210,11 +3277,33 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             experiment["triggered_rework_next_artifact_type"] = "revised_external_video_handoff"
     experiment["agent_feedback_decision"] = feedback_decision
 
-    experiments = list(job.get("external_video_experiments") or job.get("external_experiments") or [])
+    second_comparison: dict = {}
+    if is_second_experiment:
+        baseline_experiment = _find_second_experiment_baseline(existing_experiments, request)
+        baseline_decision = (
+            baseline_experiment.get("agent_feedback_decision")
+            if isinstance(baseline_experiment.get("agent_feedback_decision"), dict)
+            else {}
+        )
+        comparison_rework_run = _rework_run_for_second_experiment(request, baseline_experiment)
+        if baseline_experiment:
+            second_comparison = build_second_experiment_comparison(
+                baseline_experiment,
+                experiment,
+                baseline_decision,
+                comparison_rework_run,
+            )
+            if prompt_source and not second_comparison.get("prompt_source"):
+                second_comparison["prompt_source"] = prompt_source
+            experiment["second_experiment_comparison"] = second_comparison
+
+    experiments = list(existing_experiments)
     experiments.append(experiment)
     job["external_video_experiments"] = experiments
     job["external_experiments"] = experiments
     job["latest_agent_feedback_decision"] = feedback_decision
+    if second_comparison:
+        job["latest_second_experiment_comparison"] = second_comparison
     if rework_run:
         job["latest_experiment_rework_run_id"] = rework_run["run_id"]
         rework_run_ids = list(job.get("experiment_rework_run_ids") or [])
@@ -3238,6 +3327,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             job["agent_graph_feedback"]["latest_rework_artifact_type"] = "revised_keyframe_plan"
         if (rework_run.get("result") or {}).get("revised_external_video_handoff"):
             job["agent_graph_feedback"]["latest_rework_next_artifact_type"] = "revised_external_video_handoff"
+    if second_comparison:
+        job["agent_graph_feedback"]["latest_second_experiment_comparison"] = second_comparison
     job["updated_at"] = now
 
     history = list(job.get("history") or [])
@@ -3271,7 +3362,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             feedback_rework_run_id=feedback_decision.get("triggered_rework_run_id", ""),
         )
     )
-    if feedback_decision.get("has_feedback"):
+    if rework_run and feedback_decision.get("has_feedback"):
         history.append(
             build_video_job_history_event(
                 "experiment_feedback_rework_requested",
@@ -3284,6 +3375,29 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 issue_type=feedback_decision.get("issue_type", ""),
                 severity=feedback_decision.get("severity", ""),
                 rework_run_id=feedback_decision.get("triggered_rework_run_id", ""),
+            )
+        )
+    if second_comparison:
+        history.append(
+            build_video_job_history_event(
+                "second_external_experiment_recorded",
+                job_status,
+                updated_at=now,
+                baseline_experiment_id=second_comparison.get("baseline_experiment_id", ""),
+                second_experiment_id=second_comparison.get("second_experiment_id", ""),
+                linked_rework_run_id=second_comparison.get("linked_rework_run_id", ""),
+                comparison_status=second_comparison.get("status", ""),
+            )
+        )
+        history.append(
+            build_video_job_history_event(
+                second_comparison.get("decision_type", "second_experiment_no_change"),
+                job_status,
+                updated_at=now,
+                baseline_experiment_id=second_comparison.get("baseline_experiment_id", ""),
+                second_experiment_id=second_comparison.get("second_experiment_id", ""),
+                prompt_source=second_comparison.get("prompt_source", ""),
+                primary_metric=second_comparison.get("primary_metric", ""),
             )
         )
     job["history"] = history

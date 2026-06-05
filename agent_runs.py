@@ -388,6 +388,102 @@ def build_experiment_feedback_decision(
     }
 
 
+def build_second_experiment_comparison(
+    baseline_experiment: dict[str, Any],
+    second_experiment: dict[str, Any],
+    feedback_decision: dict[str, Any] | None = None,
+    rework_run: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Compare a second external result against the experiment that triggered rework."""
+
+    baseline = baseline_experiment if isinstance(baseline_experiment, dict) else {}
+    second = second_experiment if isinstance(second_experiment, dict) else {}
+    decision = feedback_decision if isinstance(feedback_decision, dict) else {}
+    run = rework_run if isinstance(rework_run, dict) else {}
+    score_fields = [
+        "product_consistency_score",
+        "storyboard_following_score",
+        "visual_quality_score",
+        "ad_readiness_score",
+        "overall_score",
+    ]
+    score_deltas: dict[str, float] = {}
+    improved_dimensions: list[str] = []
+    regressed_dimensions: list[str] = []
+    unchanged_dimensions: list[str] = []
+    for field_name in score_fields:
+        baseline_score = _numeric_experiment_score(baseline.get(field_name))
+        second_score = _numeric_experiment_score(second.get(field_name))
+        if baseline_score is None or second_score is None:
+            continue
+        delta = second_score - baseline_score
+        score_deltas[field_name] = int(delta) if float(delta).is_integer() else round(delta, 2)
+        if delta > 0:
+            improved_dimensions.append(field_name)
+        elif delta < 0:
+            regressed_dimensions.append(field_name)
+        else:
+            unchanged_dimensions.append(field_name)
+
+    primary_metric = "product_consistency_score"
+    primary_delta = _numeric_experiment_score(score_deltas.get(primary_metric))
+    overall_delta = _numeric_experiment_score(score_deltas.get("overall_score"))
+
+    if primary_delta is not None and primary_delta < 0:
+        status = "regressed"
+    elif overall_delta is not None and overall_delta <= -2:
+        status = "regressed"
+    elif primary_delta is not None and primary_delta >= 2 and (overall_delta is None or overall_delta >= 0):
+        status = "improved"
+    elif improved_dimensions and regressed_dimensions:
+        status = "mixed"
+    elif not score_deltas or all(_numeric_experiment_score(value) == 0 for value in score_deltas.values()):
+        status = "no_change"
+    else:
+        status = "mixed"
+
+    recommendations = {
+        "improved": "Use the revised prompt handoff for another short clip or proceed to a controlled provider/manual handoff test.",
+        "regressed": "Do not scale this prompt. Return to Keyframe Agent or Prompt Handoff Agent for another revision.",
+        "mixed": "Review dimensions manually before another rework. Keep improvements but fix regressed dimensions.",
+        "no_change": "Try a stronger product identity reference or revise the keyframe plan again.",
+    }
+    reasons = {
+        "improved": "The primary product consistency score improved by at least two points and overall score did not regress.",
+        "regressed": "The primary product consistency score or overall score regressed enough to block scale-up.",
+        "mixed": "The second result improved in some dimensions and regressed or moved only partially in others.",
+        "no_change": "The second result did not show a meaningful score movement from the baseline.",
+    }
+
+    linked_rework_run_id = (
+        str(second.get("linked_rework_run_id") or "").strip()
+        or str(decision.get("triggered_rework_run_id") or "").strip()
+        or str(run.get("run_id") or "").strip()
+    )
+    prompt_source = str(second.get("prompt_source") or "").strip()
+    if not prompt_source and (run.get("result") or {}).get("revised_external_video_handoff"):
+        prompt_source = "revised_external_video_handoff"
+
+    return {
+        "comparison_version": "second_external_experiment_comparison_v1",
+        "source_agent_id": "experiment_agent",
+        "baseline_experiment_id": str(baseline.get("experiment_id") or ""),
+        "second_experiment_id": str(second.get("experiment_id") or ""),
+        "linked_rework_run_id": linked_rework_run_id,
+        "prompt_source": prompt_source,
+        "status": status,
+        "primary_metric": primary_metric,
+        "score_deltas": score_deltas,
+        "improved_dimensions": improved_dimensions,
+        "regressed_dimensions": regressed_dimensions,
+        "unchanged_dimensions": unchanged_dimensions,
+        "decision_type": f"second_experiment_{status}",
+        "reason": reasons[status],
+        "recommended_next_action": recommendations[status],
+        "human_review_required": True,
+    }
+
+
 def _experiment_rework_edge_id(target_agent_id: str) -> str:
     return {
         "keyframe_agent": "experiment_to_keyframe_rework",

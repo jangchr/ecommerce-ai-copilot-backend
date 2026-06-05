@@ -434,6 +434,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertFalse(job["latest_agent_feedback_decision"]["has_feedback"])
         self.assertEqual(job["agent_graph_feedback"]["feedback_version"], "experiment_feedback_loop_v1")
         self.assertEqual(job["agent_graph_feedback"]["decisions"][0]["issue_type"], "none")
+        self.assertNotIn("second_experiment_comparison", experiment)
+        self.assertNotIn("latest_second_experiment_comparison", job)
         self.assertNotIn("latest_experiment_rework_run_id", job)
         self.assertNotIn("latest_rework_artifact_type", job)
         self.assertNotIn("triggered_rework_run_id", job["external_video_experiments"][0]["agent_feedback_decision"])
@@ -539,6 +541,110 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("revised_prompt_handoff_created", event_types)
         self.assertIn("graph_completed", event_types)
         self.assertIn("run_completed", event_types)
+
+    def test_second_external_experiment_improved_after_revised_prompt_handoff(self):
+        job_id = self._create_video_generation_job()
+
+        baseline_response = self._record_external_experiment(
+            job_id,
+            product_consistency_score=1,
+            storyboard_following_score=3,
+            visual_quality_score=3,
+            ad_readiness_score=3,
+            overall_score=2,
+            failure_reason="Product identity drifted away from the blender.",
+        )
+        self.assertEqual(baseline_response.status_code, 200)
+        baseline_job = baseline_response.json()["job"]
+        baseline_experiment = baseline_job["external_video_experiments"][0]
+        baseline_decision = baseline_experiment["agent_feedback_decision"]
+        triggered_rework_run_id = baseline_decision["triggered_rework_run_id"]
+        self.assertTrue(triggered_rework_run_id)
+
+        second_response = self._record_external_experiment(
+            job_id,
+            result_url="https://example.com/gemini-video-second.mp4",
+            product_consistency_score=4,
+            storyboard_following_score=4,
+            visual_quality_score=4,
+            ad_readiness_score=4,
+            overall_score=4,
+            experiment_round=2,
+            linked_rework_run_id=triggered_rework_run_id,
+            prompt_source="revised_external_video_handoff",
+            notes="Second external result after revised prompt.",
+        )
+
+        self.assertEqual(second_response.status_code, 200)
+        job = second_response.json()["job"]
+        self.assertEqual(len(job["external_video_experiments"]), 2)
+        comparison = job["external_video_experiments"][1]["second_experiment_comparison"]
+        self.assertEqual(comparison["comparison_version"], "second_external_experiment_comparison_v1")
+        self.assertEqual(comparison["status"], "improved")
+        self.assertEqual(comparison["decision_type"], "second_experiment_improved")
+        self.assertEqual(comparison["primary_metric"], "product_consistency_score")
+        self.assertEqual(comparison["score_deltas"]["product_consistency_score"], 3)
+        self.assertEqual(comparison["linked_rework_run_id"], triggered_rework_run_id)
+        self.assertEqual(comparison["prompt_source"], "revised_external_video_handoff")
+        self.assertEqual(job["latest_second_experiment_comparison"]["status"], "improved")
+        self.assertEqual(
+            job["agent_graph_feedback"]["latest_second_experiment_comparison"]["decision_type"],
+            "second_experiment_improved",
+        )
+        history_events = [event["event"] for event in job["history"]]
+        self.assertIn("second_external_experiment_recorded", history_events)
+        self.assertIn("second_experiment_improved", history_events)
+        self.assertEqual(
+            history_events.count("experiment_feedback_rework_requested"),
+            1,
+        )
+        self.assertEqual(job["latest_experiment_rework_run_id"], triggered_rework_run_id)
+
+    def test_second_external_experiment_regressed_against_selected_baseline(self):
+        job_id = self._create_video_generation_job()
+
+        baseline_response = self._record_external_experiment(
+            job_id,
+            result_url="https://example.com/baseline-good-enough.mp4",
+            product_consistency_score=3,
+            storyboard_following_score=3,
+            visual_quality_score=3,
+            ad_readiness_score=3,
+            overall_score=3,
+            notes="Baseline external test.",
+        )
+        self.assertEqual(baseline_response.status_code, 200)
+        baseline_job = baseline_response.json()["job"]
+        baseline_experiment_id = baseline_job["external_video_experiments"][0]["experiment_id"]
+        self.assertNotIn("latest_experiment_rework_run_id", baseline_job)
+
+        second_response = self._record_external_experiment(
+            job_id,
+            result_url="https://example.com/regressed-second.mp4",
+            product_consistency_score=1,
+            storyboard_following_score=3,
+            visual_quality_score=3,
+            ad_readiness_score=3,
+            overall_score=3,
+            experiment_round=2,
+            baseline_experiment_id=baseline_experiment_id,
+            prompt_source="revised_external_video_handoff",
+            notes="Second external result regressed product identity.",
+        )
+
+        self.assertEqual(second_response.status_code, 200)
+        job = second_response.json()["job"]
+        comparison = job["external_video_experiments"][1]["second_experiment_comparison"]
+        self.assertEqual(comparison["status"], "regressed")
+        self.assertEqual(comparison["decision_type"], "second_experiment_regressed")
+        self.assertEqual(comparison["baseline_experiment_id"], baseline_experiment_id)
+        self.assertEqual(comparison["score_deltas"]["product_consistency_score"], -2)
+        self.assertIn("product_consistency_score", comparison["regressed_dimensions"])
+        history_events = [event["event"] for event in job["history"]]
+        self.assertIn("second_external_experiment_recorded", history_events)
+        self.assertIn("second_experiment_regressed", history_events)
+        self.assertNotIn("experiment_feedback_rework_requested", history_events)
+        self.assertNotIn("latest_experiment_rework_run_id", job)
 
     def test_external_experiment_storyboard_following_routes_to_prompt_handoff(self):
         job_id = self._create_video_generation_job()

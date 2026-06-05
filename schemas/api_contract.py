@@ -256,6 +256,11 @@ class VideoGenerationExperimentRequest(BaseModel):
     overall_score: Optional[int] = None
     notes: str = ""
     failure_reason: str = ""
+    baseline_experiment_id: str = ""
+    linked_rework_run_id: str = ""
+    prompt_source: str = ""
+    experiment_round: int = 1
+    compare_to_previous: bool = False
 
 
 class VideoGenerationProviderSubmitRequest(BaseModel):
