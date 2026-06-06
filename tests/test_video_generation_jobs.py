@@ -609,11 +609,48 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
             job["agent_graph_feedback"]["latest_experiment_comparison_decision_gate"]["recommended_route"],
             "controlled_provider_or_manual_handoff",
         )
+        second_experiment = job["external_video_experiments"][1]
+        lineage = second_experiment["artifact_lineage"]
+        self.assertEqual(lineage["lineage_version"], "agent_artifact_lineage_v1")
+        self.assertTrue(lineage["graph_evidence"]["has_feedback_loop"])
+        self.assertTrue(lineage["graph_evidence"]["has_rework_run"])
+        self.assertTrue(lineage["graph_evidence"]["has_revised_artifacts"])
+        self.assertFalse(lineage["graph_evidence"]["is_linear_workflow"])
+        artifact_types = [artifact["artifact_type"] for artifact in lineage["artifact_chain"]]
+        self.assertIn("revised_keyframe_plan", artifact_types)
+        self.assertIn("revised_external_video_handoff", artifact_types)
+        self.assertIn("experiment_comparison_decision_gate", artifact_types)
+        checklist = second_experiment["controlled_provider_handoff_checklist"]
+        self.assertEqual(checklist["checklist_version"], "controlled_provider_handoff_checklist_v1")
+        self.assertEqual(checklist["provider_mode"], "manual_or_simulated")
+        self.assertFalse(checklist["external_api_call_allowed"])
+        self.assertFalse(checklist["cost_incurred_by_crossgrowth"])
+        self.assertTrue(checklist["human_approval_required"])
+        self.assertEqual(len(checklist["preflight_checks"]), 5)
+        summary = second_experiment["demo_ready_run_summary"]
+        self.assertEqual(summary["summary_version"], "multi_agent_demo_run_summary_v1")
+        self.assertTrue(summary["why_this_is_multi_agent_graph"])
+        self.assertEqual(summary["score_improvement_summary"]["baseline_score"], 1)
+        self.assertEqual(summary["score_improvement_summary"]["second_score"], 4)
+        self.assertEqual(summary["score_improvement_summary"]["delta"], 3)
+        self.assertFalse(summary["lineage"]["graph_evidence"]["is_linear_workflow"])
+        self.assertFalse(summary["is_linear_workflow"])
+        self.assertEqual(
+            job["latest_artifact_lineage"]["lineage_version"],
+            "agent_artifact_lineage_v1",
+        )
+        self.assertEqual(
+            job["agent_graph_feedback"]["latest_demo_ready_run_summary"]["summary_version"],
+            "multi_agent_demo_run_summary_v1",
+        )
         history_events = [event["event"] for event in job["history"]]
         self.assertIn("second_external_experiment_recorded", history_events)
         self.assertIn("second_experiment_improved", history_events)
         self.assertIn("experiment_comparison_decision_gate_created", history_events)
         self.assertIn("experiment_gate_proceed_to_controlled_test", history_events)
+        self.assertIn("artifact_lineage_summary_created", history_events)
+        self.assertIn("controlled_provider_handoff_checklist_created", history_events)
+        self.assertIn("demo_ready_run_summary_created", history_events)
         self.assertEqual(
             history_events.count("experiment_feedback_rework_requested"),
             1,
@@ -665,11 +702,23 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(gate["recommended_route"], "keyframe_or_prompt_rework")
         self.assertTrue(gate["should_trigger_new_rework"])
         self.assertFalse(gate["should_proceed_to_provider_test"])
+        second_experiment = job["external_video_experiments"][1]
+        self.assertEqual(
+            second_experiment["artifact_lineage"]["lineage_version"],
+            "agent_artifact_lineage_v1",
+        )
+        self.assertNotIn("controlled_provider_handoff_checklist", second_experiment)
+        self.assertNotIn("demo_ready_run_summary", second_experiment)
+        self.assertNotIn("latest_controlled_provider_handoff_checklist", job)
+        self.assertNotIn("latest_demo_ready_run_summary", job)
         history_events = [event["event"] for event in job["history"]]
         self.assertIn("second_external_experiment_recorded", history_events)
         self.assertIn("second_experiment_regressed", history_events)
         self.assertIn("experiment_comparison_decision_gate_created", history_events)
         self.assertIn("experiment_gate_retry_rework", history_events)
+        self.assertIn("artifact_lineage_summary_created", history_events)
+        self.assertNotIn("controlled_provider_handoff_checklist_created", history_events)
+        self.assertNotIn("demo_ready_run_summary_created", history_events)
         self.assertNotIn("experiment_feedback_rework_requested", history_events)
         self.assertNotIn("latest_experiment_rework_run_id", job)
 

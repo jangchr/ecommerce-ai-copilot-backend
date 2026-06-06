@@ -7,7 +7,10 @@ from fastapi.testclient import TestClient
 
 from agent_runs import (
     apply_evidence_safe_storyboard_rework,
+    build_controlled_provider_handoff_checklist,
+    build_demo_ready_run_summary,
     build_experiment_comparison_decision_gate,
+    build_lightweight_artifact_lineage,
     build_revised_external_video_handoff_from_keyframe_plan,
     build_revised_keyframe_plan_from_experiment_feedback,
     detect_storyboard_rework_need,
@@ -50,6 +53,96 @@ class AgentRunsEndpointTest(unittest.TestCase):
                 self.assertFalse(gate["safety_boundaries"]["external_api_called"])
                 self.assertFalse(gate["safety_boundaries"]["cost_incurred_by_crossgrowth"])
                 self.assertFalse(gate["safety_boundaries"]["llm_autonomous_decision_enabled"])
+
+    def test_demo_summary_lineage_and_checklist_preserve_controlled_handoff_boundaries(self):
+        baseline = {
+            "experiment_id": "baseline_1",
+            "product_consistency_score": 1,
+            "overall_score": 2,
+            "agent_feedback_decision": {
+                "feedback_version": "experiment_feedback_loop_v1",
+                "has_feedback": True,
+                "source_agent_id": "experiment_agent",
+                "target_agent_id": "keyframe_agent",
+                "secondary_target_agent_id": "asset_lock_agent",
+                "decision_type": "feedback_rework_requested",
+                "issue_type": "product_consistency",
+            },
+        }
+        second = {
+            "experiment_id": "second_1",
+            "product_consistency_score": 4,
+            "overall_score": 4,
+        }
+        rework_run = {
+            "run_id": "run_1",
+            "result": {
+                "revised_keyframe_plan": {
+                    "plan_version": "revised_keyframe_plan_v1",
+                    "target_agent_id": "keyframe_agent",
+                },
+                "revised_external_video_handoff": {
+                    "handoff_version": "revised_external_video_handoff_v1",
+                    "target_agent_id": "prompt_handoff_agent",
+                },
+            },
+        }
+        comparison = {
+            "status": "improved",
+            "primary_metric": "product_consistency_score",
+            "baseline_experiment_id": "baseline_1",
+            "second_experiment_id": "second_1",
+            "linked_rework_run_id": "run_1",
+            "score_deltas": {"product_consistency_score": 3, "overall_score": 2},
+            "decision_type": "second_experiment_improved",
+        }
+        gate = build_experiment_comparison_decision_gate(comparison)
+        lineage = build_lightweight_artifact_lineage(
+            {"job_id": "job_1"},
+            baseline,
+            second,
+            rework_run,
+            comparison,
+            gate,
+        )
+        checklist = build_controlled_provider_handoff_checklist(
+            {"job_id": "job_1"},
+            gate,
+            rework_run,
+            comparison,
+        )
+        summary = build_demo_ready_run_summary(
+            {"job_id": "job_1"},
+            baseline,
+            second,
+            rework_run,
+            comparison,
+            gate,
+            lineage,
+            checklist,
+        )
+
+        self.assertEqual(lineage["lineage_version"], "agent_artifact_lineage_v1")
+        self.assertEqual(lineage["lineage_type"], "experiment_feedback_demo_lineage")
+        artifact_types = [artifact["artifact_type"] for artifact in lineage["artifact_chain"]]
+        self.assertIn("revised_keyframe_plan", artifact_types)
+        self.assertIn("revised_external_video_handoff", artifact_types)
+        self.assertIn("experiment_comparison_decision_gate", artifact_types)
+        self.assertFalse(lineage["graph_evidence"]["is_linear_workflow"])
+        self.assertTrue(lineage["graph_evidence"]["has_rework_run"])
+        self.assertIn("provider_job_agent", lineage["agents_involved"])
+        self.assertEqual(checklist["checklist_version"], "controlled_provider_handoff_checklist_v1")
+        self.assertEqual(len(checklist["preflight_checks"]), 5)
+        self.assertTrue(all(check["required"] for check in checklist["preflight_checks"]))
+        self.assertFalse(checklist["external_api_call_allowed"])
+        self.assertFalse(checklist["cost_incurred_by_crossgrowth"])
+        self.assertTrue(checklist["human_approval_required"])
+        self.assertFalse(checklist["safety_boundaries"]["automatic_provider_submission_enabled"])
+        self.assertEqual(summary["summary_version"], "multi_agent_demo_run_summary_v1")
+        self.assertEqual(summary["score_improvement_summary"]["delta"], 3)
+        self.assertFalse(summary["lineage"]["graph_evidence"]["is_linear_workflow"])
+        self.assertFalse(summary["is_linear_workflow"])
+        self.assertFalse(summary["safety_summary"]["llm_autonomous_decision_enabled"])
 
     def test_create_poll_events_and_complete_agent_run_from_reviews(self):
         with patch(

@@ -3804,6 +3804,23 @@
                 controlledProviderManualTest: 'Controlled provider/manual test',
                 keyframeOrPromptRework: 'Keyframe or prompt rework',
                 strongerReferenceRequired: 'Stronger reference required',
+                demoReadyRunSummary: 'Demo-ready run summary',
+                whyMultiAgentGraph: 'Why this is a multi-agent graph',
+                agentDecisionChain: 'Agent decision chain',
+                scoreImprovement: 'Score improvement',
+                createdArtifacts: 'Created artifacts',
+                artifactLineage: 'Artifact lineage',
+                controlledProviderHandoffChecklist: 'Controlled provider/manual handoff checklist',
+                externalApiCallAllowed: 'External API call allowed',
+                costIncurredByCrossGrowth: 'Cost incurred by CrossGrowth',
+                preflightChecks: 'Preflight checks',
+                runOneShortClipFirst: 'Run one short clip first',
+                recordResultAsExternalExperiment: 'Record the result as an external experiment',
+                notLinearWorkflow: 'This is not a linear workflow',
+                feedbackDecision: 'Feedback decision',
+                reworkRun: 'Rework run',
+                decisionGate: 'Decision gate',
+                safetyBoundaries: 'Safety boundaries',
                 productConsistencyIssue: 'Product consistency issue',
                 storyboardFollowingIssue: 'Storyboard following issue',
                 visualQualityIssue: 'Visual quality issue',
@@ -4187,6 +4204,23 @@
                 controlledProviderManualTest: '\u53d7\u63a7\u7684\u63d0\u4f9b\u65b9 / \u624b\u52a8\u6d4b\u8bd5',
                 keyframeOrPromptRework: '\u5173\u952e\u5e27\u6216\u63d0\u793a\u8bcd\u8fd4\u5de5',
                 strongerReferenceRequired: '\u9700\u8981\u66f4\u5f3a\u7684\u4ea7\u54c1\u53c2\u8003',
+                demoReadyRunSummary: '\u53ef\u6f14\u793a\u8fd0\u884c\u6458\u8981',
+                whyMultiAgentGraph: '\u4e3a\u4ec0\u4e48\u8fd9\u662f\u591a Agent \u56fe',
+                agentDecisionChain: 'Agent \u51b3\u7b56\u94fe',
+                scoreImprovement: '\u5206\u6570\u6539\u8fdb',
+                createdArtifacts: '\u5df2\u521b\u5efa\u4ea7\u7269',
+                artifactLineage: '\u4ea7\u7269\u8c31\u7cfb',
+                controlledProviderHandoffChecklist: '\u53d7\u63a7\u63d0\u4f9b\u65b9 / \u624b\u52a8\u4ea4\u4ed8\u68c0\u67e5\u8868',
+                externalApiCallAllowed: '\u5141\u8bb8\u5916\u90e8 API \u8c03\u7528',
+                costIncurredByCrossGrowth: 'CrossGrowth \u627f\u62c5\u6210\u672c',
+                preflightChecks: '\u6267\u884c\u524d\u68c0\u67e5',
+                runOneShortClipFirst: '\u5148\u8fd0\u884c\u4e00\u4e2a\u77ed\u7247',
+                recordResultAsExternalExperiment: '\u5c06\u7ed3\u679c\u8bb0\u5f55\u4e3a\u5916\u90e8\u5b9e\u9a8c',
+                notLinearWorkflow: '\u8fd9\u4e0d\u662f\u7ebf\u6027\u5de5\u4f5c\u6d41',
+                feedbackDecision: '\u53cd\u9988\u51b3\u7b56',
+                reworkRun: '\u8fd4\u5de5 run',
+                decisionGate: '\u51b3\u7b56\u95e8',
+                safetyBoundaries: '\u5b89\u5168\u8fb9\u754c',
                 productConsistencyIssue: '\u4ea7\u54c1\u4e00\u81f4\u6027\u95ee\u9898',
                 storyboardFollowingIssue: '\u5206\u955c\u8ddf\u968f\u95ee\u9898',
                 visualQualityIssue: '\u753b\u9762\u8d28\u91cf\u95ee\u9898',
@@ -8321,6 +8355,88 @@
             `;
         }
 
+        function renderArtifactLineage(lineage) {
+            if (!lineage || typeof lineage !== 'object') return '';
+            const chain = Array.isArray(lineage.artifact_chain) ? lineage.artifact_chain : [];
+            const chainRows = chain.map((artifact) => `
+                <li>
+                    <strong>${escapeHTML(artifact.artifact_type || '')}</strong>
+                    ${artifact.artifact_id ? `: ${escapeHTML(artifact.artifact_id)}` : ''}
+                    ${artifact.produced_by_agent ? ` (${escapeHTML(artifact.produced_by_agent)})` : ''}
+                </li>
+            `).join('');
+            const agents = Array.isArray(lineage.agents_involved) ? lineage.agents_involved.join(' -> ') : '';
+            return `
+                <div class="feedback-box artifact-lineage-summary" id="artifactLineageSummaryPanel">
+                    <div class="json-key">${escapeHTML(t('artifactLineage'))}</div>
+                    <div class="metric-grid">
+                        <span>${escapeHTML(t('baselineExperiment'))}: ${escapeHTML(lineage.baseline_experiment_id || '-')}</span>
+                        <span>${escapeHTML(t('reworkRun'))}: ${escapeHTML(lineage.linked_rework_run_id || '-')}</span>
+                        <span>${escapeHTML(t('secondExperiment'))}: ${escapeHTML(lineage.second_experiment_id || '-')}</span>
+                        <span>${escapeHTML(t('notLinearWorkflow'))}: ${escapeHTML(String(lineage.graph_evidence?.is_linear_workflow === false))}</span>
+                    </div>
+                    ${agents ? `<div>${escapeHTML(t('agentDecisionChain'))}: ${escapeHTML(agents)}</div>` : ''}
+                    ${chainRows ? `<ul>${chainRows}</ul>` : ''}
+                </div>
+            `;
+        }
+
+        function renderControlledProviderHandoffChecklist(checklist) {
+            if (!checklist || typeof checklist !== 'object') return '';
+            const checks = Array.isArray(checklist.preflight_checks) ? checklist.preflight_checks : [];
+            const checkRows = checks.map((check) => `
+                <li><strong>${escapeHTML(check.status || 'pending')}</strong>: ${escapeHTML(check.label || check.check_id || '')}</li>
+            `).join('');
+            return `
+                <div class="feedback-box controlled-provider-handoff-checklist" id="controlledProviderHandoffChecklistPanel">
+                    <div class="json-key">${escapeHTML(t('controlledProviderHandoffChecklist'))}</div>
+                    <div class="metric-grid">
+                        <span>${escapeHTML(t('recommendedRoute'))}: ${escapeHTML(checklist.recommended_route || '-')}</span>
+                        <span>provider_mode: ${escapeHTML(checklist.provider_mode || '-')}</span>
+                        <span>${escapeHTML(t('externalApiCallAllowed'))}: ${escapeHTML(String(checklist.external_api_call_allowed === true))}</span>
+                        <span>${escapeHTML(t('costIncurredByCrossGrowth'))}: ${escapeHTML(String(checklist.cost_incurred_by_crossgrowth === true))}</span>
+                        <span>${escapeHTML(t('humanApprovalRequired'))}: ${escapeHTML(String(checklist.human_approval_required === true))}</span>
+                    </div>
+                    <div class="json-key">${escapeHTML(t('preflightChecks'))}</div>
+                    ${checkRows ? `<ul>${checkRows}</ul>` : ''}
+                    <div>${escapeHTML(t('runOneShortClipFirst'))}. ${escapeHTML(t('recordResultAsExternalExperiment'))}.</div>
+                </div>
+            `;
+        }
+
+        function renderDemoReadyRunSummary(summary) {
+            if (!summary || typeof summary !== 'object') return '';
+            const graphReasons = Array.isArray(summary.why_this_is_multi_agent_graph)
+                ? summary.why_this_is_multi_agent_graph.map((reason) => `<li>${escapeHTML(reason)}</li>`).join('')
+                : '';
+            const decisions = Array.isArray(summary.agent_decision_chain)
+                ? summary.agent_decision_chain.map((item) => `
+                    <li>${escapeHTML(item.agent_id || '')}: ${escapeHTML(item.decision || '')}</li>
+                `).join('')
+                : '';
+            const score = summary.score_improvement_summary && typeof summary.score_improvement_summary === 'object'
+                ? summary.score_improvement_summary
+                : {};
+            const artifacts = Array.isArray(summary.created_artifacts) ? summary.created_artifacts.join(', ') : '';
+            return `
+                <div class="feedback-box demo-ready-run-summary" id="demoReadyRunSummaryPanel">
+                    <div class="json-key">${escapeHTML(t('demoReadyRunSummary'))}</div>
+                    <div><strong>${escapeHTML(summary.headline || '')}</strong></div>
+                    <div class="metric-grid">
+                        <span>${escapeHTML(t('scoreImprovement'))}: ${escapeHTML(String(score.baseline_score ?? '-'))} -> ${escapeHTML(String(score.second_score ?? '-'))} (${escapeHTML(String(score.delta ?? '-'))})</span>
+                        <span>${escapeHTML(t('improvementStatus'))}: ${escapeHTML(score.status || '-')}</span>
+                        <span>${escapeHTML(t('humanReviewRequired'))}: ${escapeHTML(String(summary.human_review_required === true))}</span>
+                        <span>${escapeHTML(t('notLinearWorkflow'))}: ${escapeHTML(String(summary.is_linear_workflow === false))}</span>
+                    </div>
+                    ${graphReasons ? `<div class="json-key">${escapeHTML(t('whyMultiAgentGraph'))}</div><ul>${graphReasons}</ul>` : ''}
+                    ${decisions ? `<div class="json-key">${escapeHTML(t('agentDecisionChain'))}</div><ul>${decisions}</ul>` : ''}
+                    ${artifacts ? `<div>${escapeHTML(t('createdArtifacts'))}: ${escapeHTML(artifacts)}</div>` : ''}
+                    <div>${escapeHTML(t('recommendedAction'))}: ${escapeHTML(summary.next_action || '')}</div>
+                    <div class="json-key">${escapeHTML(t('safetyBoundaries'))}: external_api_called=false | cost_incurred_by_crossgrowth=false | llm_autonomous_decision_enabled=false</div>
+                </div>
+            `;
+        }
+
         function renderExternalVideoExperimentsPanel(job) {
             if (!job || !job.job_id) return '';
             const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
@@ -8368,6 +8484,9 @@
                     ${renderExperimentReworkArtifact(experiment)}
                     ${renderSecondExperimentComparison(experiment.second_experiment_comparison)}
                     ${renderExperimentComparisonDecisionGate(experiment.experiment_comparison_decision_gate)}
+                    ${renderDemoReadyRunSummary(experiment.demo_ready_run_summary)}
+                    ${renderArtifactLineage(experiment.artifact_lineage)}
+                    ${renderControlledProviderHandoffChecklist(experiment.controlled_provider_handoff_checklist)}
                     ${experiment.created_at ? `<small>${escapeHTML(experiment.created_at)}</small>` : ''}
                 </div>
             `).join('') : `<div class="recent-empty">${escapeHTML(t('noExternalExperimentsYet'))}</div>`;

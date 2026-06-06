@@ -619,6 +619,298 @@ def _experiment_rework_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def build_lightweight_artifact_lineage(
+    job: dict[str, Any] | None,
+    baseline_experiment: dict[str, Any] | None = None,
+    second_experiment: dict[str, Any] | None = None,
+    rework_run: dict[str, Any] | None = None,
+    comparison: dict[str, Any] | None = None,
+    decision_gate: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Summarize the experiment feedback artifact chain without changing runtime behavior."""
+
+    safe_job = _experiment_rework_dict(job)
+    baseline = _experiment_rework_dict(baseline_experiment)
+    second = _experiment_rework_dict(second_experiment)
+    run = _experiment_rework_dict(rework_run)
+    safe_comparison = _experiment_rework_dict(comparison)
+    gate = _experiment_rework_dict(decision_gate)
+    feedback = _experiment_rework_dict(baseline.get("agent_feedback_decision"))
+    run_result = _experiment_rework_dict(run.get("result"))
+    revised_plan = _experiment_rework_dict(run_result.get("revised_keyframe_plan"))
+    revised_handoff = _experiment_rework_dict(run_result.get("revised_external_video_handoff"))
+
+    artifact_chain: list[dict[str, Any]] = []
+
+    def append_artifact(
+        artifact_type: str,
+        artifact_id: str,
+        source_agent_id: str,
+        status: str,
+        summary: str,
+        **details: Any,
+    ) -> None:
+        clean_details = {
+            key: value for key, value in details.items() if value not in (None, "", [], {})
+        }
+        if not artifact_id and not clean_details:
+            return
+        artifact = {
+            "artifact_type": artifact_type,
+            "artifact_id": artifact_id,
+            "source_agent_id": source_agent_id,
+            "status": status,
+            "summary": summary,
+        }
+        artifact.update(clean_details)
+        artifact_chain.append(artifact)
+
+    append_artifact(
+        "baseline_external_experiment",
+        str(baseline.get("experiment_id") or ""),
+        "experiment_agent",
+        "failed_or_low_score" if feedback.get("has_feedback") else "recorded",
+        str(feedback.get("reason") or "Baseline external experiment recorded for comparison."),
+        overall_score=baseline.get("overall_score"),
+    )
+    append_artifact(
+        "feedback_decision",
+        str(feedback.get("feedback_version") or ""),
+        str(feedback.get("source_agent_id") or "experiment_agent"),
+        "rework_requested" if feedback.get("has_feedback") else "recorded",
+        str(feedback.get("recommended_action") or feedback.get("reason") or "Experiment feedback recorded."),
+        target_agent_id=feedback.get("target_agent_id"),
+        issue_type=feedback.get("issue_type"),
+    )
+    append_artifact(
+        "revised_keyframe_plan",
+        str(revised_plan.get("plan_version") or ""),
+        str(revised_plan.get("target_agent_id") or "keyframe_agent"),
+        "created",
+        "Keyframe Agent created a revised product-consistent keyframe plan.",
+        upstream_source_agent_id=revised_plan.get("source_agent_id"),
+    )
+    append_artifact(
+        "revised_external_video_handoff",
+        str(revised_handoff.get("handoff_version") or ""),
+        str(revised_handoff.get("target_agent_id") or "prompt_handoff_agent"),
+        "created",
+        "Prompt Handoff Agent created revised external video prompts.",
+        upstream_source_agent_id=revised_handoff.get("source_agent_id"),
+    )
+    append_artifact(
+        "second_external_experiment",
+        str(second.get("experiment_id") or ""),
+        "experiment_agent",
+        str(safe_comparison.get("status") or "recorded"),
+        str(safe_comparison.get("reason") or "Second external experiment compared with the baseline."),
+        overall_score=second.get("overall_score"),
+    )
+    append_artifact(
+        "experiment_comparison_decision_gate",
+        str(gate.get("gate_version") or ""),
+        str(gate.get("source_agent_id") or "experiment_agent"),
+        str(gate.get("decision_type") or "created"),
+        str(gate.get("recommended_next_action") or gate.get("reason") or "Decision gate created."),
+        target_agent_id=gate.get("next_agent_id"),
+        decision_type=gate.get("decision_type"),
+        recommended_route=gate.get("recommended_route"),
+    )
+
+    agents: list[str] = []
+    for candidate in [
+        "experiment_agent",
+        feedback.get("target_agent_id"),
+        feedback.get("secondary_target_agent_id"),
+        revised_plan.get("target_agent_id"),
+        revised_plan.get("secondary_target_agent_id"),
+        revised_handoff.get("target_agent_id"),
+        gate.get("next_agent_id"),
+        gate.get("secondary_next_agent_id"),
+    ]:
+        agent_id = str(candidate or "").strip()
+        if agent_id and agent_id not in agents:
+            agents.append(agent_id)
+
+    return {
+        "lineage_version": "agent_artifact_lineage_v1",
+        "lineage_type": "experiment_feedback_demo_lineage",
+        "root_job_id": str(safe_job.get("job_id") or ""),
+        "baseline_experiment_id": str(
+            safe_comparison.get("baseline_experiment_id") or baseline.get("experiment_id") or ""
+        ),
+        "linked_rework_run_id": str(
+            safe_comparison.get("linked_rework_run_id") or run.get("run_id") or ""
+        ),
+        "second_experiment_id": str(
+            safe_comparison.get("second_experiment_id") or second.get("experiment_id") or ""
+        ),
+        "agents_involved": agents,
+        "artifact_chain": artifact_chain,
+        "graph_evidence": {
+            "has_feedback_loop": bool(feedback.get("has_feedback")),
+            "has_rework_run": bool(run.get("run_id")),
+            "has_revised_artifacts": bool(revised_plan or revised_handoff),
+            "has_second_experiment_comparison": bool(safe_comparison),
+            "has_decision_gate": bool(gate),
+            "is_linear_workflow": False,
+        },
+    }
+
+
+def build_controlled_provider_handoff_checklist(
+    job: dict[str, Any] | None,
+    decision_gate: dict[str, Any] | None,
+    rework_run: dict[str, Any] | None = None,
+    comparison: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a human-approved provider/manual handoff checklist without submitting a job."""
+
+    safe_job = _experiment_rework_dict(job)
+    gate = _experiment_rework_dict(decision_gate)
+    run = _experiment_rework_dict(rework_run)
+    safe_comparison = _experiment_rework_dict(comparison)
+    checks = [
+        ("review_revised_handoff", "Review the revised prompt handoff against the winning experiment."),
+        ("confirm_product_identity", "Confirm product identity and visual references are locked."),
+        ("confirm_cost_boundary", "Review provider pricing and set a one-clip cost ceiling."),
+        ("run_one_short_clip", "Run one short controlled clip in manual or simulated mode."),
+        ("record_result_as_external_experiment", "Record the result as another external experiment."),
+    ]
+    return {
+        "checklist_version": "controlled_provider_handoff_checklist_v1",
+        "source_agent_id": "provider_job_agent",
+        "triggered_by_gate": str(gate.get("gate_version") or "experiment_comparison_decision_gate_v1"),
+        "job_id": str(safe_job.get("job_id") or ""),
+        "rework_run_id": str(run.get("run_id") or safe_comparison.get("linked_rework_run_id") or ""),
+        "recommended_route": str(gate.get("recommended_route") or ""),
+        "provider_mode": "manual_or_simulated",
+        "external_api_call_allowed": False,
+        "cost_incurred_by_crossgrowth": False,
+        "human_approval_required": True,
+        "preflight_checks": [
+            {"check_id": check_id, "label": label, "required": True, "status": "pending"}
+            for check_id, label in checks
+        ],
+        "recommended_next_action": (
+            "Run one controlled manual/provider test using the revised handoff, "
+            "then record the result as another external experiment."
+        ),
+        "safety_boundaries": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+            "requires_human_approval_before_paid_generation": True,
+            "automatic_provider_submission_enabled": False,
+        },
+    }
+
+
+def build_demo_ready_run_summary(
+    job: dict[str, Any] | None,
+    baseline_experiment: dict[str, Any] | None,
+    second_experiment: dict[str, Any] | None,
+    rework_run: dict[str, Any] | None,
+    comparison: dict[str, Any] | None,
+    decision_gate: dict[str, Any] | None,
+    artifact_lineage: dict[str, Any] | None = None,
+    handoff_checklist: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a compact demo narrative for the completed feedback and decision loop."""
+
+    baseline = _experiment_rework_dict(baseline_experiment)
+    second = _experiment_rework_dict(second_experiment)
+    run = _experiment_rework_dict(rework_run)
+    safe_comparison = _experiment_rework_dict(comparison)
+    gate = _experiment_rework_dict(decision_gate)
+    lineage = _experiment_rework_dict(artifact_lineage) or build_lightweight_artifact_lineage(
+        job,
+        baseline,
+        second,
+        run,
+        safe_comparison,
+        gate,
+    )
+    checklist = _experiment_rework_dict(handoff_checklist)
+    if not checklist and gate.get("should_proceed_to_provider_test") is True:
+        checklist = build_controlled_provider_handoff_checklist(job, gate, run, safe_comparison)
+    primary_metric = str(safe_comparison.get("primary_metric") or "product_consistency_score")
+    baseline_score = _numeric_experiment_score(baseline.get(primary_metric))
+    second_score = _numeric_experiment_score(second.get(primary_metric))
+    score_deltas = _experiment_rework_dict(safe_comparison.get("score_deltas"))
+
+    created_artifacts = [
+        artifact_type
+        for artifact_type in [
+            "revised_keyframe_plan" if run else "",
+            "revised_external_video_handoff" if run else "",
+            "second_experiment_comparison" if safe_comparison else "",
+            "experiment_comparison_decision_gate" if gate else "",
+        ]
+        if artifact_type
+    ]
+    if checklist:
+        created_artifacts.append("controlled_provider_handoff_checklist")
+
+    feedback = _experiment_rework_dict(baseline.get("agent_feedback_decision"))
+    decision_chain = [
+        {
+            "agent_id": "experiment_agent",
+            "decision": str(feedback.get("decision_type") or "feedback_recorded"),
+        },
+        {
+            "agent_id": str(feedback.get("target_agent_id") or "keyframe_agent"),
+            "decision": "revised_keyframe_plan_created" if run else "rework_not_available",
+        },
+        {
+            "agent_id": "prompt_handoff_agent",
+            "decision": "revised_external_video_handoff_created" if run else "handoff_not_available",
+        },
+        {
+            "agent_id": "experiment_agent",
+            "decision": str(safe_comparison.get("decision_type") or "second_experiment_compared"),
+        },
+        {
+            "agent_id": str(gate.get("next_agent_id") or "provider_job_agent"),
+            "decision": str(gate.get("decision_type") or "human_review_required"),
+        },
+    ]
+
+    return {
+        "summary_version": "multi_agent_demo_run_summary_v1",
+        "summary_type": "experiment_feedback_closed_loop_demo",
+        "headline": "Experiment feedback improved the revised video handoff and opened a human-approved controlled test gate.",
+        "why_this_is_multi_agent_graph": [
+            "Experiment Agent scored the baseline result and routed feedback upstream.",
+            "Keyframe and Prompt Handoff agents produced revised artifacts.",
+            "Experiment Agent compared a second external result against the baseline.",
+            "A deterministic decision gate selected the next business-safe route.",
+            "This is not a linear workflow: feedback creates an upstream rework loop before the next gate.",
+        ],
+        "agent_decision_chain": decision_chain,
+        "score_improvement_summary": {
+            "primary_metric": primary_metric,
+            "baseline_score": baseline_score,
+            "second_score": second_score,
+            "delta": _numeric_experiment_score(score_deltas.get(primary_metric)),
+            "overall_delta": _numeric_experiment_score(score_deltas.get("overall_score")),
+            "status": str(safe_comparison.get("status") or ""),
+        },
+        "created_artifacts": created_artifacts,
+        "next_action": str(gate.get("recommended_next_action") or ""),
+        "human_review_required": True,
+        "safety_summary": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+            "automatic_provider_submission_enabled": False,
+        },
+        "is_linear_workflow": False,
+        "lineage": lineage,
+        "controlled_provider_handoff_checklist": checklist,
+    }
+
+
 def _experiment_rework_scene_source(original_generation_data: dict[str, Any]) -> tuple[list[dict[str, Any]], str]:
     handoff = _experiment_rework_dict(original_generation_data.get("external_video_tool_handoff"))
     keyframe_plan = _experiment_rework_dict(handoff.get("keyframe_plan"))

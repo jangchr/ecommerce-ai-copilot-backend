@@ -52,8 +52,11 @@ from agent_runs import (
     InMemoryAgentRunStore,
     apply_evidence_safe_storyboard_rework,
     build_agent_run,
+    build_controlled_provider_handoff_checklist,
+    build_demo_ready_run_summary,
     build_experiment_comparison_decision_gate,
     build_experiment_feedback_decision,
+    build_lightweight_artifact_lineage,
     build_second_experiment_comparison,
     detect_storyboard_rework_need,
     trigger_experiment_rework_run,
@@ -3280,6 +3283,9 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
 
     second_comparison: dict = {}
     comparison_decision_gate: dict = {}
+    artifact_lineage_summary: dict = {}
+    controlled_provider_handoff_checklist: dict = {}
+    demo_ready_run_summary: dict = {}
     if is_second_experiment:
         baseline_experiment = _find_second_experiment_baseline(existing_experiments, request)
         baseline_decision = (
@@ -3305,6 +3311,34 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 second_experiment=experiment,
             )
             experiment["experiment_comparison_decision_gate"] = comparison_decision_gate
+            artifact_lineage_summary = build_lightweight_artifact_lineage(
+                job,
+                baseline_experiment=baseline_experiment,
+                second_experiment=experiment,
+                rework_run=comparison_rework_run,
+                comparison=second_comparison,
+                decision_gate=comparison_decision_gate,
+            )
+            experiment["artifact_lineage"] = artifact_lineage_summary
+            if comparison_decision_gate.get("should_proceed_to_provider_test") is True:
+                controlled_provider_handoff_checklist = build_controlled_provider_handoff_checklist(
+                    job,
+                    comparison_decision_gate,
+                    rework_run=comparison_rework_run,
+                    comparison=second_comparison,
+                )
+                demo_ready_run_summary = build_demo_ready_run_summary(
+                    job,
+                    baseline_experiment,
+                    experiment,
+                    comparison_rework_run,
+                    second_comparison,
+                    comparison_decision_gate,
+                    artifact_lineage_summary,
+                    controlled_provider_handoff_checklist,
+                )
+                experiment["controlled_provider_handoff_checklist"] = controlled_provider_handoff_checklist
+                experiment["demo_ready_run_summary"] = demo_ready_run_summary
 
     experiments = list(existing_experiments)
     experiments.append(experiment)
@@ -3315,6 +3349,12 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         job["latest_second_experiment_comparison"] = second_comparison
     if comparison_decision_gate:
         job["latest_experiment_comparison_decision_gate"] = comparison_decision_gate
+    if artifact_lineage_summary:
+        job["latest_artifact_lineage"] = artifact_lineage_summary
+    if controlled_provider_handoff_checklist:
+        job["latest_controlled_provider_handoff_checklist"] = controlled_provider_handoff_checklist
+    if demo_ready_run_summary:
+        job["latest_demo_ready_run_summary"] = demo_ready_run_summary
     if rework_run:
         job["latest_experiment_rework_run_id"] = rework_run["run_id"]
         rework_run_ids = list(job.get("experiment_rework_run_ids") or [])
@@ -3342,6 +3382,14 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         job["agent_graph_feedback"]["latest_second_experiment_comparison"] = second_comparison
     if comparison_decision_gate:
         job["agent_graph_feedback"]["latest_experiment_comparison_decision_gate"] = comparison_decision_gate
+    if artifact_lineage_summary:
+        job["agent_graph_feedback"]["latest_artifact_lineage"] = artifact_lineage_summary
+    if controlled_provider_handoff_checklist:
+        job["agent_graph_feedback"][
+            "latest_controlled_provider_handoff_checklist"
+        ] = controlled_provider_handoff_checklist
+    if demo_ready_run_summary:
+        job["agent_graph_feedback"]["latest_demo_ready_run_summary"] = demo_ready_run_summary
     job["updated_at"] = now
 
     history = list(job.get("history") or [])
@@ -3439,6 +3487,42 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 should_proceed_to_provider_test=bool(
                     comparison_decision_gate.get("should_proceed_to_provider_test")
                 ),
+            )
+        )
+    if artifact_lineage_summary:
+        history.append(
+            build_video_job_history_event(
+                "artifact_lineage_summary_created",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                lineage_version=artifact_lineage_summary.get("lineage_version", ""),
+                rework_run_id=artifact_lineage_summary.get("linked_rework_run_id", ""),
+                is_linear_workflow=False,
+            )
+        )
+    if controlled_provider_handoff_checklist:
+        history.append(
+            build_video_job_history_event(
+                "controlled_provider_handoff_checklist_created",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                checklist_version=controlled_provider_handoff_checklist.get("checklist_version", ""),
+                provider_mode=controlled_provider_handoff_checklist.get("provider_mode", ""),
+                human_approval_required=True,
+            )
+        )
+    if demo_ready_run_summary:
+        history.append(
+            build_video_job_history_event(
+                "demo_ready_run_summary_created",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                summary_version=demo_ready_run_summary.get("summary_version", ""),
+                summary_type=demo_ready_run_summary.get("summary_type", ""),
+                is_linear_workflow=False,
             )
         )
     job["history"] = history
