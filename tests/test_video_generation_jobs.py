@@ -1,7 +1,11 @@
+import os
+from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from agent_runs import trigger_experiment_rework_run
 from main import AGENT_RUN_STORE, VIDEO_JOB_STORE, app
 
 
@@ -298,6 +302,112 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["result"]["result_url"], "")
         self.assertEqual(job["history"][0]["event"], "created")
         self.assertEqual(job["history"][0]["status"], "ready_for_manual_export")
+
+    def test_artifact_registry_tracks_feedback_rework_and_second_experiment_chain(self):
+        job_id, job = self._create_job_with_pending_human_approval()
+
+        registry = job["latest_artifact_registry"]
+        artifact_types = {item["artifact_type"] for item in registry["artifacts"]}
+        self.assertEqual(registry["registry_version"], "artifact_registry_v1")
+        self.assertIn("experiment_feedback_decision", artifact_types)
+        self.assertIn("graph_router_decision", artifact_types)
+        self.assertIn("revised_keyframe_plan", artifact_types)
+        self.assertIn("revised_external_video_handoff", artifact_types)
+        self.assertIn("second_experiment_comparison", artifact_types)
+        self.assertIn("experiment_comparison_decision_gate", artifact_types)
+        self.assertIn("human_approval_gate", artifact_types)
+        self.assertTrue(registry["graph_evidence"]["has_artifact_chain"])
+        self.assertTrue(registry["graph_evidence"]["has_revised_artifacts"])
+        self.assertEqual(
+            job["agent_graph_feedback"]["latest_artifact_registry"]["registry_version"],
+            "artifact_registry_v1",
+        )
+        self.assertIn(
+            "artifact_registry_updated",
+            [event["event"] for event in job["history"]],
+        )
+        self.assertEqual(job["latest_graph_state_snapshot"]["snapshot_version"], "graph_state_snapshot_v1")
+        self.assertEqual(job["graph_health"]["health_version"], "graph_health_v1")
+        self.assertEqual(job["job_id"], job_id)
+
+    def test_graph_history_and_report_endpoints_use_lightweight_storage(self):
+        with TemporaryDirectory() as temp_dir, patch.dict(
+            os.environ,
+            {"AGENT_GRAPH_STORAGE_PATH": temp_dir},
+        ):
+            job_id = self._create_video_generation_job()
+            rework_run = trigger_experiment_rework_run(
+                job_id,
+                {
+                    "has_feedback": True,
+                    "target_agent_id": "keyframe_agent",
+                    "secondary_target_agent_id": "asset_lock_agent",
+                    "issue_type": "product_consistency",
+                    "severity": "high",
+                    "reason": "Product identity drifted.",
+                    "recommended_action": "Create revised keyframes.",
+                    "output_language": "en",
+                },
+                original_generation_data={
+                    "video_generation_packet": VIDEO_PACKET,
+                    "external_video_tool_handoff": {"handoff_version": "external_video_tool_handoff_v1"},
+                },
+                experiment={"experiment_id": "experiment_graph_history_1"},
+            )
+            AGENT_RUN_STORE.create(rework_run)
+
+            run_report_json = self.client.get(
+                f"/api/v1/agent-graph/runs/{rework_run['run_id']}/report?format=json"
+            )
+            run_report_markdown = self.client.get(
+                f"/api/v1/agent-graph/runs/{rework_run['run_id']}/report?format=markdown"
+            )
+            job_report_json = self.client.get(
+                f"/api/v1/video-generation/jobs/{job_id}/graph-report?format=json"
+            )
+            job_report_markdown = self.client.get(
+                f"/api/v1/video-generation/jobs/{job_id}/graph-report?format=markdown"
+            )
+
+            for response in (
+                run_report_json,
+                run_report_markdown,
+                job_report_json,
+                job_report_markdown,
+            ):
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["status"], "success")
+                self.assertFalse(
+                    response.json()["report"]["safety_boundaries"]["external_api_called"]
+                )
+                self.assertTrue(response.json()["report"]["why_not_workflow"])
+            self.assertIsInstance(run_report_markdown.json()["markdown_report"], str)
+            self.assertIsInstance(job_report_markdown.json()["markdown_report"], str)
+
+            history_responses = {
+                "runs": self.client.get("/api/v1/agent-graph/history/runs"),
+                "jobs": self.client.get("/api/v1/agent-graph/history/jobs"),
+                "artifacts": self.client.get("/api/v1/agent-graph/history/artifacts"),
+                "events": self.client.get("/api/v1/agent-graph/history/events"),
+                "messages": self.client.get("/api/v1/agent-graph/history/messages"),
+                "snapshots": self.client.get("/api/v1/agent-graph/history/snapshots"),
+                "exports": self.client.get("/api/v1/agent-graph/history/exports"),
+            }
+            for key, response in history_responses.items():
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["status"], "success")
+                self.assertIsInstance(response.json()[key], list)
+
+            summary = self.client.get("/api/v1/agent-graph/history/summary")
+            self.assertEqual(summary.status_code, 200)
+            payload = summary.json()
+            self.assertEqual(payload["status"], "success")
+            self.assertEqual(payload["persistence_mode"], "file_backed_lightweight_v1")
+            self.assertIsInstance(payload["recent_runs"], list)
+            self.assertTrue(any(job["job_id"] == job_id for job in payload["recent_jobs"]))
+            self.assertIsInstance(payload["recent_artifacts"], list)
+            self.assertIsInstance(payload["recent_messages"], list)
+            self.assertIsInstance(payload["recent_snapshots"], list)
 
     def test_update_video_generation_job_result_records_external_result(self):
         created = self.client.post(

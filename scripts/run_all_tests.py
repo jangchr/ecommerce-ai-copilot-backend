@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 FAST_COMMANDS = [
-    [sys.executable, "-m", "compileall", "main.py", "agent_runs.py", "core", "schemas", "source_adapters", "scripts", "tests"],
+    [sys.executable, "-m", "compileall", "main.py", "agent_runs.py", "agent_graph_storage.py", "core", "schemas", "source_adapters", "scripts", "tests"],
     [
         sys.executable,
         "-m",
@@ -35,6 +35,7 @@ FAST_COMMANDS = [
         "tests.test_language_mode_backend",
         "tests.test_pasted_reviews_endpoint",
         "tests.test_agent_runs",
+        "tests.test_agent_graph_storage",
         "tests.test_video_generation_jobs",
         "tests.test_translation_endpoint",
         "tests.test_source_probe_contract",

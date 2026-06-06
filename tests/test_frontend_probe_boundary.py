@@ -3460,6 +3460,87 @@ class LiveAgentGraphBoardProbeTests(unittest.TestCase):
                 self.assertIn(marker, html)
         self.assertNotIn("????", html)
 
+    def test_agent_graph_os_state_history_replay_and_export_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        markers = [
+            "function buildLiveGraphState(run, events",
+            "node_statuses",
+            "selected_edges",
+            "Routed by Graph Router",
+            "Selected route",
+            "Selected edge",
+            "Primary route",
+            "Secondary route",
+            "Active loop",
+            "Blocked reason",
+            "Waiting reason",
+            "Approval status",
+            "Provider status",
+            "Event-derived state",
+            "Node state source",
+            "provider_submit_blocked_by_human_approval",
+            "human_approval_approved",
+            "graph_router_route_selected",
+            "rework_requested",
+            "selected by Graph Router",
+            "function renderJobAgentGraphBoard",
+            "Job Agent Graph",
+            "Generation result",
+            "Feedback decision",
+            "Rework run",
+            "Revised artifacts",
+            "Second experiment",
+            "Decision gate",
+            "Controlled approval",
+            "Artifact Registry",
+            "Artifact chain",
+            "Source Agent",
+            "Parent artifacts",
+            "Used by next Agent",
+            "function renderArtifactRegistry",
+            "Graph explanation",
+            "Why this is not a workflow",
+            "Evidence of graph behavior",
+            "Recent Agent Graph Runs",
+            "Recent Video Jobs",
+            "Recent Artifacts",
+            "Recent Agent Messages",
+            "Recent Graph Snapshots",
+            "Artifact Timeline",
+            "Refresh graph history",
+            "Persistence mode",
+            "Durability note",
+            "Graph Replay",
+            "Replay step",
+            "Previous event",
+            "Next event",
+            "Graph Health",
+            "Graph completeness",
+            "Agent Message Protocol",
+            "Graph State Snapshot",
+            "Export graph JSON",
+            "Export graph Markdown",
+            "Copy graph report",
+        ]
+        for marker in markers:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+        board_start = html.index("function renderLiveAgentGraphBoard(run, events)")
+        board_end = html.index("function renderAgentLiveRunTimeline", board_start)
+        board_source = html[board_start:board_end]
+        self.assertIn("buildLiveGraphState(run, events", board_source)
+        self.assertIn("renderLiveGraphEdge", board_source)
+        self.assertIn("renderGraphReplayPanel", board_source)
+        self.assertIn("renderGraphExportControls", board_source)
+        self.assertIn("renderGraphHealthPanel", board_source)
+
+        self.assertIn('<details class="section-block" id="latestAgentEventsDetails">', html)
+        self.assertIn("detailedAgentGraphMap", html)
+        self.assertIn("<details", html[html.index("function renderArtifactRegistry"):])
+        self.assertIn("${renderJobAgentGraphBoard(job)}", html)
+        self.assertNotIn("????", html)
+
     def test_live_agent_graph_details_are_collapsed_and_ordered(self):
         html = FRONTEND_PATH.read_text(encoding="utf-8")
         timeline_start = html.index("function renderAgentLiveRunTimeline(run")

@@ -794,6 +794,45 @@
             background: #f8fafc;
             color: #64748b;
         }
+        .live-graph-edge-list {
+            display: grid;
+            gap: 8px;
+            margin: 10px 0 0 144px;
+        }
+        .live-graph-edge {
+            border-left: 4px solid #14b8a6;
+            border-radius: 6px;
+            padding: 8px 10px;
+            background: #f0fdfa;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+        .live-graph-edge[data-tone="selected"] { border-color: #2563eb; background: #eff6ff; }
+        .live-graph-edge[data-tone="secondary"] { border-color: #64748b; background: #f8fafc; }
+        .live-graph-edge[data-tone="blocked"] { border-color: #ef4444; background: #fef2f2; }
+        .live-graph-edge[data-tone="waiting"] { border-color: #f59e0b; background: #fffbeb; }
+        .live-graph-edge[data-tone="rework"] { border-color: #8b5cf6; background: #f5f3ff; }
+        .graph-os-compact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 9px;
+            margin-top: 10px;
+        }
+        .graph-os-card {
+            border: 1px solid #dbe4f0;
+            border-radius: 8px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.88);
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+        .artifact-timeline-row {
+            border-left: 3px solid #14b8a6;
+            padding: 7px 9px;
+            margin-top: 7px;
+            background: #f8fafc;
+            font-size: 12px;
+        }
         .live-graph-next-action {
             margin-top: 12px;
             border-left: 4px solid var(--accent-blue);
@@ -3557,6 +3596,10 @@
         let latestRecentId = '';
         let latestAgentRunId = '';
         let latestAgentRunPollTimer = null;
+        let latestLiveAgentRun = null;
+        let latestLiveAgentEvents = [];
+        let graphReplayStep = -1;
+        let latestGraphReportText = '';
         let latestRevisedExternalVideoHandoff = null;
         let sectionTranslations = {};
         let sectionTextCache = {};
@@ -5303,6 +5346,206 @@
             reviewExternalPricing: '\u4f7f\u7528\u4ed8\u8d39\u751f\u6210\u524d\u8bf7\u590d\u6838\u5916\u90e8\u5de5\u5177\u4ef7\u683c\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            selectedRoute: 'Selected route',
+            selectedEdge: 'Selected edge',
+            routedByGraphRouter: 'Routed by Graph Router',
+            selectedByGraphRouter: 'selected by Graph Router',
+            primaryRoute: 'Primary route',
+            secondaryRoute: 'Secondary route',
+            blockedEdge: 'Blocked edge',
+            waitingEdge: 'Waiting edge',
+            routerReason: 'Router reason',
+            routeType: 'Route type',
+            artifactEdge: 'Artifact edge',
+            graphEdgeStatus: 'Graph edge status',
+            activeLoop: 'Active loop',
+            blockedReason: 'Blocked reason',
+            waitingReason: 'Waiting reason',
+            approvalStatus: 'Approval status',
+            providerStatus: 'Provider status',
+            eventDerivedState: 'Event-derived state',
+            nodeStateSource: 'Node state source',
+            routerBranch: 'Router branch',
+            artifactProduction: 'Artifact production',
+            jobAgentGraph: 'Job Agent Graph',
+            generationResult: 'Generation result',
+            videoJob: 'Video job',
+            externalExperiment: 'External experiment',
+            feedbackDecision: 'Feedback decision',
+            reworkRun: 'Rework run',
+            revisedArtifacts: 'Revised artifacts',
+            secondExperiment: 'Second experiment',
+            decisionGate: 'Decision gate',
+            controlledApproval: 'Controlled approval',
+            providerResult: 'Provider result',
+            jobGraphDetails: 'Job graph details',
+            jobGraphContinuesRun: 'Job graph continues the agent run',
+            artifactRegistry: 'Artifact Registry',
+            artifactChain: 'Artifact chain',
+            sourceAgent: 'Source Agent',
+            parentArtifacts: 'Parent artifacts',
+            artifactStatus: 'Artifact status',
+            revisedArtifact: 'Revised artifact',
+            usedByNextAgent: 'Used by next Agent',
+            artifactRegistryDetails: 'Artifact registry details',
+            artifactCounts: 'Artifact counts',
+            graphExplanation: 'Graph explanation',
+            whyNotWorkflow: 'Why this is not a workflow',
+            graphBehaviorEvidence: 'Evidence of graph behavior',
+            graphExplanationSummary: 'Events select node states and router edges; artifacts, gates, and feedback loops preserve non-linear lineage.',
+            graphExplanationDetail: 'Event-derived states, Router-selected edge, Artifact-producing agents, Human gate / safety boundary, Persistence / lineage evidence, Agent Message Protocol evidence, and Replayable event trace are recorded separately.',
+            graphReplay: 'Graph Replay',
+            replayStep: 'Replay step',
+            previousEvent: 'Previous event',
+            nextEvent: 'Next event',
+            replayFromStart: 'Replay from start',
+            currentReplayEvent: 'Current replay event',
+            replayNodeState: 'Replay node state',
+            replaySelectedEdge: 'Replay selected edge',
+            replayArtifactState: 'Replay artifact state',
+            replayReset: 'Replay reset',
+            graphHealth: 'Graph Health',
+            graphCompleteness: 'Graph completeness',
+            missingCapability: 'Missing capability',
+            safetyBoundary: 'Safety boundary',
+            lineageCoverage: 'Lineage coverage',
+            eventCoverage: 'Event coverage',
+            artifactCoverage: 'Artifact coverage',
+            routerCoverage: 'Router coverage',
+            humanGateCoverage: 'Human gate coverage',
+            agentMessageProtocol: 'Agent Message Protocol',
+            graphStateSnapshot: 'Graph State Snapshot',
+            exportGraphJson: 'Export graph JSON',
+            exportGraphMarkdown: 'Export graph Markdown',
+            copyGraphReport: 'Copy graph report',
+            exportingGraphReport: 'Exporting...',
+            graphReportCopied: 'Graph report copied',
+            graphReportExportFailed: 'Failed to export graph report',
+            recentAgentGraphRuns: 'Recent Agent Graph Runs',
+            recentVideoJobsGraph: 'Recent Video Jobs',
+            recentArtifacts: 'Recent Artifacts',
+            recentAgentMessages: 'Recent Agent Messages',
+            recentGraphSnapshots: 'Recent Graph Snapshots',
+            artifactTimeline: 'Artifact Timeline',
+            refreshGraphHistory: 'Refresh graph history',
+            refreshingGraphHistory: 'Refreshing graph history...',
+            graphHistoryRefreshed: 'Graph history refreshed.',
+            graphHistoryFailed: 'Failed to refresh graph history.',
+            persistenceMode: 'Persistence mode',
+            durabilityNote: 'Durability note',
+            openRun: 'Open run',
+            openJob: 'Open job',
+            artifactType: 'Artifact type',
+            createdFromRunJob: 'Created from run/job',
+            createdStatus: 'Created',
+            usedStatus: 'Used',
+            revisedStatus: 'Revised',
+            supersededStatus: 'Superseded',
+            compactSafetyStrip: 'Safety boundary: external_api_called=false; cost_incurred_by_crossgrowth=false; LLM autonomous decisions=false.',
+            approvalUnlocksSimulatedOnly: 'Approval unlocks simulated/manual provider flow only; real provider calls remain disabled.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            selectedRoute: '\u5df2\u9009\u8def\u7531',
+            selectedEdge: '\u5df2\u9009\u8fb9',
+            routedByGraphRouter: '\u7531 Graph Router \u8def\u7531',
+            selectedByGraphRouter: '\u7531 Graph Router \u9009\u4e2d',
+            primaryRoute: '\u4e3b\u8def\u7531',
+            secondaryRoute: '\u6b21\u8def\u7531',
+            blockedEdge: '\u5df2\u963b\u65ad\u8fb9',
+            waitingEdge: '\u7b49\u5f85\u4e2d\u8fb9',
+            routerReason: '\u8def\u7531\u539f\u56e0',
+            routeType: '\u8def\u7531\u7c7b\u578b',
+            artifactEdge: '\u4ea7\u7269\u8fb9',
+            graphEdgeStatus: '\u56fe\u8fb9\u72b6\u6001',
+            activeLoop: '\u6d3b\u8dc3\u5faa\u73af',
+            blockedReason: '\u963b\u65ad\u539f\u56e0',
+            waitingReason: '\u7b49\u5f85\u539f\u56e0',
+            approvalStatus: '\u5ba1\u6279\u72b6\u6001',
+            providerStatus: 'Provider \u72b6\u6001',
+            eventDerivedState: '\u4e8b\u4ef6\u6d3e\u751f\u72b6\u6001',
+            nodeStateSource: '\u8282\u70b9\u72b6\u6001\u6765\u6e90',
+            routerBranch: '\u8def\u7531\u5206\u652f',
+            artifactProduction: '\u4ea7\u7269\u751f\u6210',
+            jobAgentGraph: 'Job Agent \u56fe',
+            generationResult: '\u751f\u6210\u7ed3\u679c',
+            videoJob: '\u89c6\u9891 Job',
+            externalExperiment: '\u5916\u90e8\u5b9e\u9a8c',
+            feedbackDecision: '\u53cd\u9988\u51b3\u7b56',
+            reworkRun: '\u8fd4\u5de5 Run',
+            revisedArtifacts: '\u4fee\u8ba2\u4ea7\u7269',
+            secondExperiment: '\u7b2c\u4e8c\u8f6e\u5b9e\u9a8c',
+            decisionGate: '\u51b3\u7b56\u95e8',
+            controlledApproval: '\u53d7\u63a7\u5ba1\u6279',
+            providerResult: 'Provider \u7ed3\u679c',
+            jobGraphDetails: 'Job \u56fe\u8be6\u60c5',
+            jobGraphContinuesRun: 'Job \u56fe\u7ee7\u7eed Agent Run',
+            artifactRegistry: '\u4ea7\u7269\u6ce8\u518c\u8868',
+            artifactChain: '\u4ea7\u7269\u94fe',
+            sourceAgent: '\u6765\u6e90 Agent',
+            parentArtifacts: '\u7236\u4ea7\u7269',
+            artifactStatus: '\u4ea7\u7269\u72b6\u6001',
+            revisedArtifact: '\u4fee\u8ba2\u4ea7\u7269',
+            usedByNextAgent: '\u88ab\u4e0b\u4e00\u4e2a Agent \u4f7f\u7528',
+            artifactRegistryDetails: '\u4ea7\u7269\u6ce8\u518c\u8868\u8be6\u60c5',
+            artifactCounts: '\u4ea7\u7269\u8ba1\u6570',
+            graphExplanation: '\u56fe\u89e3\u91ca',
+            whyNotWorkflow: '\u4e3a\u4ec0\u4e48\u8fd9\u4e0d\u662f\u7ebf\u6027\u5de5\u4f5c\u6d41',
+            graphBehaviorEvidence: '\u56fe\u884c\u4e3a\u8bc1\u636e',
+            graphExplanationSummary: '\u4e8b\u4ef6\u51b3\u5b9a\u8282\u70b9\u72b6\u6001\u4e0e\u8def\u7531\u8fb9\uff1b\u4ea7\u7269\u3001\u95e8\u7981\u548c\u53cd\u9988\u5faa\u73af\u4fdd\u7559\u975e\u7ebf\u6027\u8c31\u7cfb\u3002',
+            graphExplanationDetail: '\u7cfb\u7edf\u5206\u522b\u8bb0\u5f55\u4e8b\u4ef6\u6d3e\u751f\u72b6\u6001\u3001Router \u9009\u8fb9\u3001\u4ea7\u7269 Agent\u3001\u4eba\u5de5\u95e8\u7981\u3001\u6301\u4e45\u5316\u8c31\u7cfb\u3001Agent Message Protocol \u548c\u53ef\u56de\u653e\u4e8b\u4ef6\u8f68\u8ff9\u3002',
+            graphReplay: '\u56fe\u56de\u653e',
+            replayStep: '\u56de\u653e\u6b65\u9aa4',
+            previousEvent: '\u4e0a\u4e00\u4e2a\u4e8b\u4ef6',
+            nextEvent: '\u4e0b\u4e00\u4e2a\u4e8b\u4ef6',
+            replayFromStart: '\u4ece\u5934\u56de\u653e',
+            currentReplayEvent: '\u5f53\u524d\u56de\u653e\u4e8b\u4ef6',
+            replayNodeState: '\u56de\u653e\u8282\u70b9\u72b6\u6001',
+            replaySelectedEdge: '\u56de\u653e\u9009\u4e2d\u8fb9',
+            replayArtifactState: '\u56de\u653e\u4ea7\u7269\u72b6\u6001',
+            replayReset: '\u91cd\u7f6e\u56de\u653e',
+            graphHealth: '\u56fe\u5065\u5eb7\u5ea6',
+            graphCompleteness: '\u56fe\u5b8c\u6574\u5ea6',
+            missingCapability: '\u7f3a\u5931\u80fd\u529b',
+            safetyBoundary: '\u5b89\u5168\u8fb9\u754c',
+            lineageCoverage: '\u8c31\u7cfb\u8986\u76d6',
+            eventCoverage: '\u4e8b\u4ef6\u8986\u76d6',
+            artifactCoverage: '\u4ea7\u7269\u8986\u76d6',
+            routerCoverage: '\u8def\u7531\u8986\u76d6',
+            humanGateCoverage: '\u4eba\u5de5\u95e8\u7981\u8986\u76d6',
+            agentMessageProtocol: 'Agent Message Protocol',
+            graphStateSnapshot: 'Graph State Snapshot',
+            exportGraphJson: '\u5bfc\u51fa\u56fe JSON',
+            exportGraphMarkdown: '\u5bfc\u51fa\u56fe Markdown',
+            copyGraphReport: '\u590d\u5236\u56fe\u62a5\u544a',
+            exportingGraphReport: '\u6b63\u5728\u5bfc\u51fa...',
+            graphReportCopied: '\u56fe\u62a5\u544a\u5df2\u590d\u5236',
+            graphReportExportFailed: '\u56fe\u62a5\u544a\u5bfc\u51fa\u5931\u8d25',
+            recentAgentGraphRuns: '\u6700\u8fd1 Agent Graph Runs',
+            recentVideoJobsGraph: '\u6700\u8fd1\u89c6\u9891\u4efb\u52a1',
+            recentArtifacts: '\u6700\u8fd1\u4ea7\u7269',
+            recentAgentMessages: '\u6700\u8fd1 Agent \u6d88\u606f',
+            recentGraphSnapshots: '\u6700\u8fd1\u56fe\u5feb\u7167',
+            artifactTimeline: '\u4ea7\u7269\u65f6\u95f4\u7ebf',
+            refreshGraphHistory: '\u5237\u65b0\u56fe\u5386\u53f2',
+            refreshingGraphHistory: '\u6b63\u5728\u5237\u65b0\u56fe\u5386\u53f2...',
+            graphHistoryRefreshed: '\u56fe\u5386\u53f2\u5df2\u5237\u65b0\u3002',
+            graphHistoryFailed: '\u56fe\u5386\u53f2\u5237\u65b0\u5931\u8d25\u3002',
+            persistenceMode: '\u6301\u4e45\u5316\u6a21\u5f0f',
+            durabilityNote: '\u8010\u4e45\u6027\u8bf4\u660e',
+            openRun: '\u6253\u5f00 Run',
+            openJob: '\u6253\u5f00 Job',
+            artifactType: '\u4ea7\u7269\u7c7b\u578b',
+            createdFromRunJob: '\u6765\u81ea Run/Job',
+            createdStatus: '\u5df2\u521b\u5efa',
+            usedStatus: '\u5df2\u4f7f\u7528',
+            revisedStatus: '\u5df2\u4fee\u8ba2',
+            supersededStatus: '\u5df2\u66ff\u4ee3',
+            compactSafetyStrip: '\u5b89\u5168\u8fb9\u754c\uff1aexternal_api_called=false\uff1bcost_incurred_by_crossgrowth=false\uff1bLLM \u81ea\u4e3b\u51b3\u7b56=false\u3002',
+            approvalUnlocksSimulatedOnly: '\u5ba1\u6279\u53ea\u89e3\u9501\u6a21\u62df/\u624b\u52a8 provider \u6d41\u7a0b\uff1b\u771f\u5b9e provider \u8c03\u7528\u4ecd\u7981\u7528\u3002'
+        });
+
         function normalizeLocalizedPlaceholderText(value) {
             return String(value ?? '').replaceAll('\\n', String.fromCharCode(10));
         }
@@ -6920,6 +7163,55 @@
             return videoGenerationJsonResponse(response, 'approvalUpdateFailed');
         }
 
+        async function getAgentGraphHistorySummary() {
+            const response = await fetch('/api/v1/agent-graph/history/summary');
+            return videoGenerationJsonResponse(response, 'graphHistoryFailed');
+        }
+
+        async function getGraphReport(kind, id, format = 'json') {
+            const path = kind === 'job'
+                ? `/api/v1/video-generation/jobs/${encodeURIComponent(id)}/graph-report?format=${encodeURIComponent(format)}`
+                : `/api/v1/agent-graph/runs/${encodeURIComponent(id)}/report?format=${encodeURIComponent(format)}`;
+            const response = await fetch(path);
+            return videoGenerationJsonResponse(response, 'graphReportExportFailed');
+        }
+
+        async function exportGraphReport(kind, id, format = 'json') {
+            const status = document.getElementById('graphReportStatus') || document.getElementById('copyStatus');
+            if (status) status.textContent = t('exportingGraphReport');
+            try {
+                const response = await getGraphReport(kind, id, format);
+                latestGraphReportText = format === 'markdown'
+                    ? (response.markdown_report || '')
+                    : JSON.stringify(response.report || {}, null, 2);
+                const blob = new Blob([latestGraphReportText], {
+                    type: format === 'markdown' ? 'text/markdown;charset=utf-8' : 'application/json;charset=utf-8'
+                });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `agent_graph_${kind}_${id}.${format === 'markdown' ? 'md' : 'json'}`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                if (status) status.textContent = t('graphHistoryRefreshed');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('graphReportExportFailed');
+            }
+        }
+
+        async function copyLatestGraphReport() {
+            const status = document.getElementById('graphReportStatus') || document.getElementById('copyStatus');
+            if (!latestGraphReportText) {
+                if (status) status.textContent = t('graphReportExportFailed');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(latestGraphReportText);
+                if (status) status.textContent = t('graphReportCopied');
+            } catch (error) {
+                if (status) status.textContent = t('graphReportExportFailed');
+            }
+        }
+
         async function postPastedReviewWorkspaceAnalysis(payload) {
             const response = await fetch('/api/v1/analyze-pasted-review-workspace', {
                 method: 'POST',
@@ -8206,36 +8498,240 @@
             return labels[agentId] || agentId;
         }
 
-        function getLiveGraphNodeStatus(run, agentId, currentAgentId) {
-            const nodes = Array.isArray(run?.graph_nodes) ? run.graph_nodes : [];
-            const node = nodes.find((item) => item && item.node_id === agentId);
-            if (currentAgentId && currentAgentId === agentId) return 'active';
-
-            const agents = Array.isArray(run?.agents) ? run.agents : [];
-            const agent = agents.find((item) => item && item.agent_id === agentId);
-            const approvalGate = run?.latest_human_approval_gate
-                || run?.human_approval_gate
-                || run?.result?.latest_human_approval_gate
-                || run?.result?.human_approval_gate
-                || {};
-            const routerDecisions = run?.graph_router_decisions
+        function getLiveGraphSelectedEdges(run, job = null) {
+            const decisions = job?.graph_router_decisions
+                || run?.graph_router_decisions
                 || run?.result?.graph_router_decisions
                 || [];
+            const latest = job?.latest_graph_router_decision
+                || run?.latest_graph_router_decision
+                || run?.result?.latest_graph_router_decision
+                || decisions[decisions.length - 1]
+                || {};
+            const selected = [];
+            (Array.isArray(decisions) && decisions.length ? decisions : (latest?.selected_next_agent_id ? [latest] : []))
+                .slice(-6)
+                .forEach((decision) => {
+                    const edge = decision?.selected_edge || {};
+                    const fromNode = edge.from_node_id || decision.source_node_id || 'graph_router_agent';
+                    const toNode = edge.to_node_id || decision.selected_next_agent_id || '';
+                    if (!toNode) return;
+                    selected.push({
+                        from_node_id: fromNode,
+                        to_node_id: toNode,
+                        edge_type: edge.edge_type || decision.route_type || 'router',
+                        status: decision === latest ? 'selected' : 'traversed',
+                        selected_by_agent_id: 'graph_router_agent',
+                        reason: decision.reason || '',
+                        route_type: decision.route_type || '',
+                        is_primary_route: true,
+                        is_secondary_route: false
+                    });
+                    if (decision.secondary_next_agent_id) {
+                        selected.push({
+                            from_node_id: 'graph_router_agent',
+                            to_node_id: decision.secondary_next_agent_id,
+                            edge_type: decision.route_type || 'router',
+                            status: decision === latest ? 'selected' : 'traversed',
+                            selected_by_agent_id: 'graph_router_agent',
+                            reason: decision.reason || '',
+                            route_type: decision.route_type || '',
+                            is_primary_route: false,
+                            is_secondary_route: true
+                        });
+                    }
+                });
+            return selected;
+        }
 
-            if (agentId === 'human_approval_agent' && approvalGate?.status) return approvalGate.status;
-            if (
-                agentId === 'provider_job_agent'
-                && approvalGate?.blocks_provider_submit === true
-                && approvalGate?.status !== 'approved'
-            ) return 'blocked_by_human_approval';
-            if (agentId === 'graph_router_agent') {
-                return Array.isArray(routerDecisions) && routerDecisions.length ? 'routed' : 'idle';
+        function buildLiveGraphState(run, events, job = null) {
+            const agentIds = [
+                'planner_agent', 'evidence_agent', 'strategy_agent', 'storyboard_agent',
+                'risk_agent', 'asset_lock_agent', 'product_identity_validator',
+                'keyframe_agent', 'prompt_handoff_agent', 'cost_agent',
+                'route_selector_agent', 'graph_router_agent', 'human_approval_agent',
+                'provider_job_agent', 'experiment_agent', 'finalizer_agent'
+            ];
+            const node_statuses = {};
+            const node_sources = {};
+            agentIds.forEach((agentId) => {
+                node_statuses[agentId] = 'idle';
+                node_sources[agentId] = 'fallback';
+            });
+
+            (run?.graph_nodes || []).forEach((node) => {
+                if (!node?.node_id || !(node.node_id in node_statuses)) return;
+                node_statuses[node.node_id] = node.status || 'idle';
+                node_sources[node.node_id] = 'graph_node';
+            });
+            (run?.agents || []).forEach((agent) => {
+                if (!agent?.agent_id || !(agent.agent_id in node_statuses)) return;
+                if (node_sources[agent.agent_id] === 'fallback') {
+                    node_statuses[agent.agent_id] = agent.status || 'idle';
+                    node_sources[agent.agent_id] = 'agent';
+                }
+            });
+
+            const safeEvents = Array.isArray(events) ? events : [];
+            let latestEventType = '';
+            let activeNodeId = run?.current_agent_id || run?.active_node_id || '';
+            let waitingReason = run?.waiting_reason || '';
+            let blockedReason = '';
+            let hasRiskRework = false;
+            let hasExperimentFeedbackLoop = false;
+            safeEvents.forEach((event) => {
+                const eventType = event?.event_type || event?.event || '';
+                const data = event?.data || {};
+                const agentId = event?.agent_id || data.node_id || '';
+                latestEventType = eventType || latestEventType;
+                if ((eventType === 'agent_started' || eventType === 'node_started') && agentId) {
+                    node_statuses[agentId] = 'active';
+                    node_sources[agentId] = 'event';
+                    activeNodeId = agentId;
+                }
+                if ((eventType === 'agent_completed' || eventType === 'node_completed') && agentId) {
+                    node_statuses[agentId] = 'done';
+                    node_sources[agentId] = 'event';
+                }
+                if (eventType === 'run_completed' || eventType === 'graph_completed') {
+                    node_statuses.finalizer_agent = 'done';
+                    node_sources.finalizer_agent = 'event';
+                }
+                if (eventType === 'waiting_for_user') {
+                    node_statuses.provider_job_agent = 'waiting';
+                    node_statuses.experiment_agent = 'waiting';
+                    node_sources.provider_job_agent = 'event';
+                    node_sources.experiment_agent = 'event';
+                    waitingReason = event.message || waitingReason;
+                }
+                if (eventType === 'validation_failed' || eventType === 'validation_warning') {
+                    node_statuses.risk_agent = eventType === 'validation_failed' ? 'blocked' : 'rework';
+                    node_sources.risk_agent = 'event';
+                    blockedReason = event.message || blockedReason;
+                }
+                if (eventType === 'rework_requested') {
+                    hasRiskRework = true;
+                    node_statuses[data.target_agent_id || 'storyboard_agent'] = 'rework';
+                    node_sources[data.target_agent_id || 'storyboard_agent'] = 'event';
+                }
+                if (eventType === 'experiment_feedback_rework_requested') {
+                    hasExperimentFeedbackLoop = true;
+                    node_statuses.experiment_agent = 'rework';
+                    node_statuses.keyframe_agent = 'rework';
+                    node_sources.experiment_agent = 'event';
+                    node_sources.keyframe_agent = 'event';
+                }
+                if (eventType === 'revised_keyframe_plan_created') {
+                    node_statuses.keyframe_agent = 'done';
+                    node_sources.keyframe_agent = 'event';
+                }
+                if (eventType === 'revised_external_video_handoff_created') {
+                    node_statuses.prompt_handoff_agent = 'done';
+                    node_sources.prompt_handoff_agent = 'event';
+                }
+                if (eventType === 'graph_router_decision_created' || eventType === 'graph_router_route_selected') {
+                    node_statuses.graph_router_agent = 'done';
+                    node_sources.graph_router_agent = 'event';
+                }
+                if (eventType === 'provider_submit_blocked_by_human_approval') {
+                    node_statuses.provider_job_agent = 'blocked';
+                    node_statuses.human_approval_agent = 'waiting';
+                    node_sources.provider_job_agent = 'event';
+                    node_sources.human_approval_agent = 'event';
+                    blockedReason = event.message || 'provider_submit_blocked_by_human_approval';
+                }
+                if (eventType === 'provider_submit_allowed_by_human_approval') {
+                    node_statuses.provider_job_agent = 'active';
+                    node_sources.provider_job_agent = 'event';
+                }
+                if (eventType === 'human_approval_pending') node_statuses.human_approval_agent = 'waiting';
+                if (eventType === 'human_approval_approved') node_statuses.human_approval_agent = 'done';
+                if (eventType === 'human_approval_changes_requested') node_statuses.human_approval_agent = 'rework';
+                if (eventType === 'human_approval_rejected' || eventType === 'human_approval_cancelled') {
+                    node_statuses.human_approval_agent = 'blocked';
+                }
+                if (eventType.startsWith('human_approval_')) node_sources.human_approval_agent = 'event';
+                if (eventType === 'artifact_registry_updated') {
+                    ['evidence_agent', 'asset_lock_agent', 'keyframe_agent', 'prompt_handoff_agent'].forEach((id) => {
+                        if (node_statuses[id] === 'idle') node_statuses[id] = 'done';
+                        if (node_sources[id] === 'fallback') node_sources[id] = 'artifact_registry';
+                    });
+                }
+            });
+
+            const approval = job?.latest_human_approval_gate
+                || run?.latest_human_approval_gate
+                || run?.result?.latest_human_approval_gate
+                || {};
+            const approvalStatus = approval.status || '';
+            if (approvalStatus) {
+                node_statuses.human_approval_agent = approvalStatus === 'approved'
+                    ? 'done'
+                    : (approvalStatus === 'changes_requested' ? 'rework'
+                        : (['rejected', 'cancelled'].includes(approvalStatus) ? 'blocked' : 'waiting'));
+                node_sources.human_approval_agent = node_sources.human_approval_agent === 'event' ? 'event' : 'job';
             }
-            if (node?.status) return node.status;
-            if (agent?.status) return agent.status;
-            if (agentId === 'experiment_agent' && run?.waiting_for_user) return 'waiting_for_user';
-            if (agentId === 'finalizer_agent' && run?.status === 'completed') return 'complete';
-            return 'idle';
+            const provider = job?.provider_runtime || {};
+            const providerStatus = provider.provider_status || job?.status || '';
+            if (providerStatus) {
+                if (['queued', 'processing'].includes(providerStatus)) node_statuses.provider_job_agent = 'active';
+                if (['external_result_ready', 'manual_export_completed'].includes(providerStatus)) node_statuses.provider_job_agent = 'done';
+                if (providerStatus === 'blocked_by_human_approval') node_statuses.provider_job_agent = 'blocked';
+                if (/ready_for_manual_export|waiting/i.test(providerStatus)) node_statuses.provider_job_agent = 'waiting';
+                if (node_sources.provider_job_agent !== 'event') node_sources.provider_job_agent = 'job';
+            }
+            if (approval.blocks_provider_submit === true && approvalStatus !== 'approved') {
+                node_statuses.provider_job_agent = 'blocked';
+                blockedReason = 'provider_submit_blocked_by_human_approval';
+            }
+
+            const selected_edges = getLiveGraphSelectedEdges(run, job);
+            const latestRouter = job?.latest_graph_router_decision
+                || run?.latest_graph_router_decision
+                || selected_edges[selected_edges.length - 1]
+                || {};
+            const registry = job?.latest_artifact_registry || run?.artifact_registry || run?.result?.artifact_registry || {};
+            const hasArtifacts = Array.isArray(registry.artifacts) && registry.artifacts.length > 0;
+            const hasProviderBlock = node_statuses.provider_job_agent === 'blocked';
+            const hasApprovalGate = Boolean(approvalStatus);
+            const hasRouter = selected_edges.length > 0;
+            const hasManualBranch = job?.branch_selected === 'manual_external_tool_handoff'
+                || run?.branch_selected === 'manual_external_tool_handoff'
+                || Boolean(job?.latest_controlled_provider_handoff_checklist)
+                || Boolean(job?.job_id);
+            if ((run?.rework_loops || []).length) hasRiskRework = true;
+            if (job?.latest_experiment_rework_run_id || job?.latest_rework_artifact_type) hasExperimentFeedbackLoop = true;
+            if (job?.external_video_experiments?.length > 1) node_statuses.experiment_agent = 'done';
+
+            let nextGraphAction = t('nextFollowActiveAgent');
+            if (hasProviderBlock) nextGraphAction = 'Next: approve the controlled test or request changes before provider submit.';
+            else if (approvalStatus === 'pending_approval') nextGraphAction = 'Next: review the checklist and approve, request changes, reject, or cancel.';
+            else if (hasExperimentFeedbackLoop && !job?.latest_second_experiment_comparison) nextGraphAction = 'Next: review the revised artifact before rerunning the experiment.';
+            else if (hasArtifacts && job && !(job?.external_video_experiments || []).length) nextGraphAction = 'Next: use the revised handoff in a second external experiment.';
+            else if (run?.status === 'completed' && !job) nextGraphAction = t('nextReviewHandoffCreateJob');
+            else if (run?.waiting_for_user) nextGraphAction = t('nextCreateJobOrExperiment');
+
+            return {
+                node_statuses,
+                node_sources,
+                selected_edges,
+                active_node_id: activeNodeId,
+                latest_event_type: latestEventType,
+                waiting_reason: waitingReason,
+                blocked_reason: blockedReason,
+                approval_status: approvalStatus,
+                provider_status: providerStatus,
+                router_decision_type: latestRouter.decision_type || '',
+                router_selected_next_agent_id: latestRouter.selected_next_agent_id || selected_edges[0]?.to_node_id || '',
+                has_risk_rework: hasRiskRework,
+                has_experiment_feedback_loop: hasExperimentFeedbackLoop,
+                has_human_approval_gate: hasApprovalGate,
+                has_provider_block: hasProviderBlock,
+                has_artifact_registry: hasArtifacts,
+                has_router_branch: hasRouter,
+                has_manual_provider_branch: hasManualBranch,
+                next_graph_action: nextGraphAction
+            };
         }
 
         function getLiveGraphNodeTone(status) {
@@ -8243,67 +8739,73 @@
         }
 
         function renderLiveGraphNode(run, agentId, currentAgentId) {
-            const status = getLiveGraphNodeStatus(run, agentId, currentAgentId);
+            const graphState = run?.node_statuses
+                ? run
+                : buildLiveGraphState(run || {}, run?.events || [], null);
+            const status = graphState.node_statuses[agentId] || 'idle';
             const tone = liveAgentGraphStatusTone(status);
             return `
                 <div class="live-graph-node" data-agent-id="${escapeHTML(agentId)}" data-tone="${tone.tone}">
                     <div class="live-graph-node-title">${tone.symbol} ${escapeHTML(liveAgentGraphNodeLabel(agentId))}</div>
-                    <div class="live-graph-node-status">${escapeHTML(t(tone.labelKey))}: ${escapeHTML(status || t('notUsedYet'))}</div>
+                    <div class="live-graph-node-status">${escapeHTML(t(tone.labelKey))}: ${escapeHTML(status)}</div>
+                    <div class="live-graph-node-status">${escapeHTML(t('nodeStateSource'))}: ${escapeHTML(graphState.node_sources[agentId] || 'fallback')}</div>
                 </div>
             `;
         }
 
-        function renderLiveGraphEdge(labelKey, tone = 'rework') {
-            return `<span class="live-graph-loop-chip" data-tone="${escapeHTML(tone)}">\u2192 ${escapeHTML(t(labelKey))}</span>`;
+        function liveGraphEdgeTone(edge) {
+            if (edge.status === 'blocked') return 'blocked';
+            if (edge.status === 'waiting') return 'waiting';
+            if (edge.edge_type === 'rework' || edge.edge_type === 'experiment_feedback') return 'rework';
+            if (edge.is_secondary_route) return 'secondary';
+            return 'selected';
+        }
+
+        function renderLiveGraphEdge(edge) {
+            const routeLabel = edge.is_secondary_route ? t('secondaryRoute') : t('primaryRoute');
+            return `
+                <div class="live-graph-edge" data-tone="${escapeHTML(liveGraphEdgeTone(edge))}">
+                    <strong>${escapeHTML(t('selectedEdge'))}: ${escapeHTML(liveAgentGraphNodeLabel(edge.from_node_id))} \u2192 ${escapeHTML(liveAgentGraphNodeLabel(edge.to_node_id))}</strong>
+                    <div>${escapeHTML(routeLabel)} \u00b7 ${escapeHTML(t('selectedByGraphRouter'))} \u00b7 ${escapeHTML(t('routeType'))}: ${escapeHTML(edge.route_type || edge.edge_type || '')}</div>
+                    ${edge.reason ? `<div>${escapeHTML(t('routerReason'))}: ${escapeHTML(edge.reason)}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function renderSelectedRouteSummary(graphState) {
+            if (!graphState.selected_edges.length) return '';
+            return `
+                <div class="feedback-box">
+                    <strong>${escapeHTML(t('selectedRoute'))}</strong>:
+                    ${escapeHTML(graphState.selected_edges.map((edge) => `${liveAgentGraphNodeLabel(edge.from_node_id)} \u2192 ${liveAgentGraphNodeLabel(edge.to_node_id)}`).join(' | '))}
+                    <div>${escapeHTML(t('routedByGraphRouter'))}</div>
+                </div>
+            `;
         }
 
         function renderLiveGraphLoopChip(labelKey, detailKey, tone = 'rework') {
+            const active = typeof detailKey === 'boolean' ? detailKey : tone !== 'idle';
+            const detail = arguments.length >= 4 ? arguments[2] : detailKey;
+            const resolvedTone = arguments.length >= 4 ? arguments[3] : tone;
             return `
-                <span class="live-graph-loop-chip" data-tone="${escapeHTML(tone)}">
-                    \u21ba ${escapeHTML(t(labelKey))}: ${escapeHTML(t(detailKey))}
+                <span class="live-graph-loop-chip" data-tone="${escapeHTML(active ? resolvedTone : 'idle')}">
+                    \u21ba ${escapeHTML(t(labelKey))}: ${escapeHTML(active ? `${t('activeLoop')} \u00b7 ${detail || t('routedStatus')}` : t('notUsedYet'))}
                 </span>
             `;
         }
 
         function renderLiveGraphLane(run, labelKey, agentIds, currentAgentId) {
+            const graphState = run?.node_statuses
+                ? run
+                : buildLiveGraphState(run || {}, run?.events || [], null);
             return `
                 <div class="live-graph-lane" data-live-graph-lane="${escapeHTML(labelKey)}">
                     <div class="live-graph-lane-label">${escapeHTML(t(labelKey))}</div>
                     <div class="live-graph-track">
-                        ${agentIds.map((agentId) => renderLiveGraphNode(run, agentId, currentAgentId)).join('')}
+                        ${agentIds.map((agentId) => renderLiveGraphNode(graphState, agentId)).join('')}
                     </div>
                 </div>
             `;
-        }
-
-        function liveGraphApprovalGate(run) {
-            return run?.latest_human_approval_gate
-                || run?.human_approval_gate
-                || run?.result?.latest_human_approval_gate
-                || run?.result?.human_approval_gate
-                || {};
-        }
-
-        function liveGraphNextAction(run) {
-            const gate = liveGraphApprovalGate(run);
-            const nodes = Array.isArray(run?.graph_nodes) ? run.graph_nodes : [];
-            const blockedNode = nodes.find((node) => /blocked|failed|rejected/i.test(String(node?.status || '')));
-            if (blockedNode) {
-                return run.waiting_reason || blockedNode.recommended_user_action || `${liveAgentGraphNodeLabel(blockedNode.node_id)}: ${blockedNode.status}`;
-            }
-            if (gate?.status === 'pending_approval') return t('nextApproveOrRequestChanges');
-            if (run?.waiting_for_user) return t('nextCreateJobOrExperiment');
-            if (run?.status === 'completed') return t('nextReviewHandoffCreateJob');
-            return t('nextFollowActiveAgent');
-        }
-
-        function liveGraphApprovalChipState(gate) {
-            const status = String(gate?.status || '').toLowerCase();
-            if (!status) return { detailKey: 'notUsedYet', tone: 'idle' };
-            if (status === 'approved') return { detailKey: 'routedStatus', tone: 'done' };
-            if (status === 'changes_requested') return { detailKey: 'liveGraphStatusRework', tone: 'rework' };
-            if (status === 'rejected' || status === 'cancelled') return { detailKey: 'liveGraphStatusBlocked', tone: 'blocked' };
-            return { detailKey: 'liveGraphStatusWaiting', tone: 'waiting' };
         }
 
         function renderLiveGraphLegend() {
@@ -8327,17 +8829,84 @@
             `;
         }
 
+        function renderGraphHealthPanel(health, graphState) {
+            const safeHealth = health || {};
+            const checks = [
+                ['eventCoverage', safeHealth.has_events ?? Boolean(graphState.latest_event_type)],
+                ['routerCoverage', safeHealth.has_router_decision ?? Boolean(graphState.selected_edges.length)],
+                ['artifactCoverage', safeHealth.has_artifacts ?? graphState.has_artifact_registry],
+                ['humanGateCoverage', safeHealth.has_human_gate ?? graphState.has_human_approval_gate],
+                ['safetyBoundary', safeHealth.has_safety_boundary ?? true]
+            ];
+            const complete = checks.filter(([, value]) => value).length;
+            return `
+                <div class="graph-os-card" id="graphHealthPanel">
+                    <strong>${escapeHTML(t('graphHealth'))}</strong>
+                    <div>${escapeHTML(t('graphCompleteness'))}: ${complete}/${checks.length}</div>
+                    <div>${checks.map(([key, value]) => `${t(key)}=${value ? 'true' : 'false'}`).join(' \u00b7 ')}</div>
+                </div>
+            `;
+        }
+
+        function renderGraphExplanationPanel() {
+            return `
+                <div class="section-block" id="graphExplanationPanel">
+                    <div class="json-key">${escapeHTML(t('graphExplanation'))}</div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('whyNotWorkflow'))}:</strong> ${escapeHTML(t('graphExplanationSummary'))}</div>
+                    <details>
+                        <summary>${escapeHTML(t('graphBehaviorEvidence'))}</summary>
+                        <div class="feedback-box">${escapeHTML(t('graphExplanationDetail'))}</div>
+                    </details>
+                </div>
+            `;
+        }
+
+        function renderGraphReplayPanel(run, events) {
+            const safeEvents = Array.isArray(events) ? events : [];
+            const step = graphReplayStep < 0 ? safeEvents.length : Math.min(graphReplayStep, safeEvents.length);
+            const replayEvents = safeEvents.slice(0, step);
+            const replayState = buildLiveGraphState(run, replayEvents);
+            const currentEvent = replayEvents[replayEvents.length - 1] || {};
+            return `
+                <details class="section-block" id="graphReplayPanel">
+                    <summary>${escapeHTML(t('graphReplay'))}</summary>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" type="button" onclick="setGraphReplayStep(0)">${escapeHTML(t('replayFromStart'))}</button>
+                        <button class="btn-secondary" type="button" onclick="setGraphReplayStep(${Math.max(0, step - 1)})">${escapeHTML(t('previousEvent'))}</button>
+                        <button class="btn-secondary" type="button" onclick="setGraphReplayStep(${Math.min(safeEvents.length, step + 1)})">${escapeHTML(t('nextEvent'))}</button>
+                        <button class="btn-secondary" type="button" onclick="setGraphReplayStep(-1)">${escapeHTML(t('replayReset'))}</button>
+                    </div>
+                    <div>${escapeHTML(t('replayStep'))}: ${step}/${safeEvents.length}</div>
+                    <div>${escapeHTML(t('currentReplayEvent'))}: ${escapeHTML(currentEvent.event_type || currentEvent.event || 'none')}</div>
+                    <div>${escapeHTML(t('replayNodeState'))}: ${escapeHTML(replayState.active_node_id || 'none')}</div>
+                    <div>${escapeHTML(t('replaySelectedEdge'))}: ${escapeHTML(replayState.selected_edges.map((edge) => `${edge.from_node_id}->${edge.to_node_id}`).join(', ') || 'none')}</div>
+                    <div>${escapeHTML(t('replayArtifactState'))}: ${escapeHTML(String(replayState.has_artifact_registry))}</div>
+                </details>
+            `;
+        }
+
+        function setGraphReplayStep(step) {
+            graphReplayStep = Number(step);
+            if (latestLiveAgentRun) renderAgentLiveRunTimeline(latestLiveAgentRun, latestLiveAgentEvents);
+        }
+
+        function renderGraphExportControls(kind, id) {
+            if (!id) return '';
+            return `
+                <div class="quick-use-pack-actions">
+                    <button class="btn-secondary" type="button" onclick="exportGraphReport('${escapeHTML(kind)}','${escapeHTML(id)}','json')">${escapeHTML(t('exportGraphJson'))}</button>
+                    <button class="btn-secondary" type="button" onclick="exportGraphReport('${escapeHTML(kind)}','${escapeHTML(id)}','markdown')">${escapeHTML(t('exportGraphMarkdown'))}</button>
+                    <button class="btn-secondary" type="button" onclick="copyLatestGraphReport()">${escapeHTML(t('copyGraphReport'))}</button>
+                </div>
+                <div class="quick-use-copy-status" id="graphReportStatus"></div>
+            `;
+        }
+
         function renderLiveAgentGraphBoard(run, events) {
             if (!run) return '';
-            const currentAgentId = run.current_agent_id || run.active_node_id || '';
-            const hasRework = Array.isArray(run.rework_loops) && run.rework_loops.length > 0;
-            const hasExperimentFeedback = (run.rework_loops || []).some((loop) =>
-                String(loop?.source_agent_id || '').includes('experiment')
-            );
-            const gate = liveGraphApprovalGate(run);
-            const approvalChip = liveGraphApprovalChipState(gate);
-            const boardStatus = currentAgentId
-                ? `${t('currentAgent')}: ${liveAgentGraphNodeLabel(currentAgentId)}`
+            const graphState = buildLiveGraphState(run, events);
+            const boardStatus = graphState.active_node_id
+                ? `${t('currentAgent')}: ${liveAgentGraphNodeLabel(graphState.active_node_id)}`
                 : `${t('runStatus')}: ${run.status || 'pending'}`;
 
             return `
@@ -8355,22 +8924,39 @@
                     <div class="json-key">${escapeHTML(t('graphLanes'))}</div>
                     <div class="live-graph-scroll">
                         <div class="live-graph-lanes">
-                            ${renderLiveGraphLane(run, 'planningLane', ['planner_agent', 'evidence_agent', 'strategy_agent', 'storyboard_agent', 'risk_agent'], currentAgentId)}
-                            ${renderLiveGraphLane(run, 'artifactLane', ['asset_lock_agent', 'product_identity_validator', 'keyframe_agent', 'prompt_handoff_agent'], currentAgentId)}
-                            ${renderLiveGraphLane(run, 'decisionLane', ['cost_agent', 'route_selector_agent', 'graph_router_agent'], currentAgentId)}
-                            ${renderLiveGraphLane(run, 'humanProviderLane', ['human_approval_agent', 'provider_job_agent', 'experiment_agent', 'finalizer_agent'], currentAgentId)}
+                            ${renderLiveGraphLane(graphState, 'planningLane', ['planner_agent', 'evidence_agent', 'strategy_agent', 'storyboard_agent', 'risk_agent'])}
+                            ${renderLiveGraphLane(graphState, 'artifactLane', ['asset_lock_agent', 'product_identity_validator', 'keyframe_agent', 'prompt_handoff_agent'])}
+                            ${renderLiveGraphLane(graphState, 'decisionLane', ['cost_agent', 'route_selector_agent', 'graph_router_agent'])}
+                            ${renderLiveGraphLane(graphState, 'humanProviderLane', ['human_approval_agent', 'provider_job_agent', 'experiment_agent', 'finalizer_agent'])}
                         </div>
                         <div class="live-graph-branches">
-                            ${renderLiveGraphLoopChip('reworkLoop', 'riskReworkLoop', hasRework ? 'rework' : 'idle')}
-                            ${renderLiveGraphLoopChip('feedbackLoop', 'experimentFeedbackLoop', hasExperimentFeedback ? 'rework' : 'idle')}
-                            ${renderLiveGraphLoopChip('liveGraphHumanApprovalGate', approvalChip.detailKey, approvalChip.tone)}
-                            ${renderLiveGraphEdge('manualProviderBranch', 'waiting')}
+                            ${renderLiveGraphLoopChip('reworkLoop', graphState.has_risk_rework, graphState.blocked_reason, 'rework')}
+                            ${renderLiveGraphLoopChip('feedbackLoop', graphState.has_experiment_feedback_loop, 'keyframe_agent', 'rework')}
+                            ${renderLiveGraphLoopChip('liveGraphHumanApprovalGate', graphState.has_human_approval_gate, graphState.approval_status, graphState.has_provider_block ? 'blocked' : 'waiting')}
+                            ${renderLiveGraphLoopChip('manualProviderBranch', graphState.has_manual_provider_branch, graphState.provider_status, 'waiting')}
+                            ${renderLiveGraphLoopChip('routerBranch', graphState.has_router_branch, graphState.router_selected_next_agent_id, 'done')}
+                            ${renderLiveGraphLoopChip('artifactProduction', graphState.has_artifact_registry, t('artifactChain'), 'done')}
                         </div>
+                        <div class="live-graph-edge-list">${graphState.selected_edges.map(renderLiveGraphEdge).join('')}</div>
                     </div>
                     ${renderLiveGraphLegend()}
-                    <div class="live-graph-next-action">
-                        ${escapeHTML(t('nextGraphAction'))}: ${escapeHTML(liveGraphNextAction(run))}
+                    ${renderSelectedRouteSummary(graphState)}
+                    <div class="feedback-box">${escapeHTML(t('compactSafetyStrip'))}</div>
+                    <div class="graph-os-compact-grid">
+                        ${renderGraphHealthPanel(run.graph_health, graphState)}
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('graphStateSnapshot'))}</strong>
+                            <div>${escapeHTML(t('eventDerivedState'))}: ${escapeHTML(graphState.latest_event_type || 'none')}</div>
+                            <div>${escapeHTML(t('approvalStatus'))}: ${escapeHTML(graphState.approval_status || 'none')}</div>
+                            <div>${escapeHTML(t('providerStatus'))}: ${escapeHTML(graphState.provider_status || 'none')}</div>
+                        </div>
                     </div>
+                    <div class="live-graph-next-action">
+                        ${escapeHTML(t('nextGraphAction'))}: ${escapeHTML(graphState.next_graph_action)}
+                    </div>
+                    ${renderGraphExplanationPanel()}
+                    ${renderGraphReplayPanel(run, events)}
+                    ${renderGraphExportControls('run', run.run_id || '')}
                 </div>
             `;
         }
@@ -8380,6 +8966,8 @@
             const target = document.getElementById('agentLiveRunTimeline');
             if (!target || !run) return;
             const events = Array.isArray(eventsOverride) ? eventsOverride : (Array.isArray(run.events) ? run.events : []);
+            latestLiveAgentRun = run;
+            latestLiveAgentEvents = events;
             const agents = Array.isArray(run.agents) ? run.agents : [];
             const currentAgent = run.current_agent_id || '';
             const revisedKeyframePlan = run.result?.revised_keyframe_plan || null;
@@ -8640,6 +9228,91 @@
             `;
         }
 
+        function renderArtifactRegistry(registry) {
+            if (!registry || registry.registry_version !== 'artifact_registry_v1') return '';
+            const artifacts = Array.isArray(registry.artifacts) ? registry.artifacts : [];
+            const counts = registry.artifact_counts || {};
+            const keyRows = artifacts.slice(0, 6).map((artifact) => `
+                <div class="artifact-timeline-row">
+                    <strong>${escapeHTML(artifact.artifact_type || '')}</strong>
+                    <div>${escapeHTML(t('sourceAgent'))}: ${escapeHTML(artifact.source_agent_id || '')} \u00b7 ${escapeHTML(t('artifactStatus'))}: ${escapeHTML(artifact.status || '')}</div>
+                    ${artifact.summary ? `<div>${escapeHTML(artifact.summary)}</div>` : ''}
+                </div>
+            `).join('');
+            const detailRows = artifacts.map((artifact) => `
+                <div class="graph-os-card">
+                    <strong>${escapeHTML(artifact.artifact_type || '')}</strong>
+                    <div>${escapeHTML(t('sourceAgent'))}: ${escapeHTML(artifact.source_agent_id || '')}</div>
+                    <div>${escapeHTML(t('parentArtifacts'))}: ${escapeHTML((artifact.parent_artifact_ids || []).join(', ') || 'none')}</div>
+                    <div>${escapeHTML(t('usedByNextAgent'))}: ${escapeHTML((artifact.used_by_agent_ids || []).join(', ') || 'none')}</div>
+                    <div>${escapeHTML(artifact.summary || '')}</div>
+                </div>
+            `).join('');
+            return `
+                <div class="section-block" id="artifactRegistryPanel">
+                    <div class="probe-header">
+                        <div class="json-key">${escapeHTML(t('artifactRegistry'))}</div>
+                        <span class="source-badge">${escapeHTML(t('artifactCounts'))}: ${escapeHTML(String(counts.total || artifacts.length))}</span>
+                    </div>
+                    <div>${escapeHTML(t('artifactChain'))}</div>
+                    <div id="artifactTimeline">${keyRows}</div>
+                    <details>
+                        <summary>${escapeHTML(t('artifactRegistryDetails'))}</summary>
+                        <div class="graph-os-compact-grid">${detailRows}</div>
+                    </details>
+                </div>
+            `;
+        }
+
+        function renderJobAgentGraphBoard(job) {
+            if (!job?.job_id) return '';
+            const graphState = buildLiveGraphState({}, job.history || [], job);
+            const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
+            const reworkRun = job.latest_experiment_rework_run_id || job.agent_graph_feedback?.latest_rework_run_id || '';
+            const revised = job.latest_rework_artifact_type || job.latest_rework_next_artifact_type || '';
+            const second = job.latest_second_experiment_comparison || {};
+            const gate = job.latest_experiment_comparison_decision_gate || {};
+            const approval = job.latest_human_approval_gate || {};
+            const providerResult = job.result?.result_url || '';
+            const nodes = [
+                [t('generationResult'), true, 'done'],
+                [t('videoJob'), true, job.status === 'external_result_ready' ? 'done' : 'active'],
+                [t('externalExperiment'), experiments.length > 0, experiments.length > 0 ? 'done' : 'idle'],
+                [t('feedbackDecision'), Boolean(job.latest_agent_feedback_decision), graphState.has_experiment_feedback_loop ? 'rework' : 'done'],
+                [t('reworkRun'), Boolean(reworkRun), reworkRun ? 'done' : 'idle'],
+                [t('revisedArtifacts'), Boolean(revised), revised ? 'done' : 'idle'],
+                [t('secondExperiment'), Boolean(second.status), second.status ? 'done' : 'idle'],
+                [t('decisionGate'), Boolean(gate.decision_type), gate.decision_type ? 'done' : 'idle'],
+                [t('controlledApproval'), Boolean(approval.status), graphState.has_provider_block ? 'blocked' : (approval.status === 'approved' ? 'done' : 'waiting')],
+                [t('providerResult'), Boolean(providerResult), providerResult ? 'done' : (graphState.provider_status ? 'waiting' : 'idle')]
+            ];
+            return `
+                <div class="section-block live-agent-graph-board" id="jobAgentGraphBoard">
+                    <div class="probe-header">
+                        <div class="json-key">${escapeHTML(t('jobAgentGraph'))}</div>
+                        <span class="source-badge">${escapeHTML(t('jobGraphContinuesRun'))}</span>
+                    </div>
+                    <div class="live-graph-scroll">
+                        <div class="live-graph-track">
+                            ${nodes.map(([label, active, status]) => {
+                                const tone = liveAgentGraphStatusTone(active ? status : 'idle');
+                                return `<div class="live-graph-node" data-tone="${tone.tone}"><div class="live-graph-node-title">${tone.symbol} ${escapeHTML(label)}</div><div class="live-graph-node-status">${escapeHTML(status)}</div></div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    ${renderSelectedRouteSummary(graphState)}
+                    <div class="feedback-box">${escapeHTML(t('compactSafetyStrip'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('approvalUnlocksSimulatedOnly'))}</div>
+                    <details>
+                        <summary>${escapeHTML(t('jobGraphDetails'))}</summary>
+                        ${renderGraphHealthPanel(job.graph_health, graphState)}
+                        ${renderArtifactRegistry(job.latest_artifact_registry)}
+                    </details>
+                    ${renderGraphExportControls('job', job.job_id)}
+                </div>
+            `;
+        }
+
         function renderVideoJobResult(job) {
             if (!job) return '';
             const providerPayload = job.provider_payload || {};
@@ -8647,6 +9320,7 @@
             const prompt = providerPayload.prompt || '';
             const warnings = Array.isArray(job.warnings) ? job.warnings.filter(Boolean).join('\n') : '';
             return `
+                ${renderJobAgentGraphBoard(job)}
                 <div class="probe-grid" id="videoJobCurrentPanel">
                     ${block(t('videoJobIdLabel'), job.job_id || '')}
                     ${block(t('videoJobStatusLabel'), job.status || '')}
@@ -8666,6 +9340,7 @@
                 ${renderVideoCostEstimate(providerPayload.cost_estimate)}
                 ${renderHumanApprovalGate(job.latest_human_approval_gate, job.job_id)}
                 ${renderVideoProviderProgress(job)}
+                ${renderArtifactRegistry(job.latest_artifact_registry)}
                 <div class="quick-use-pack-actions">
                     <button class="btn-secondary" type="button" id="videoJobRefreshBtn" onclick="refreshCurrentVideoJobStatus()">${escapeHTML(t('refreshJobStatus'))}</button>
                     <button class="btn-secondary" type="button" id="videoJobCopyPromptBtn" onclick="copyCurrentVideoJobPrompt()">${escapeHTML(t('copySelectedPrompt'))}</button>
@@ -9191,8 +9866,57 @@
                     <div id="recentVideoJobsList" class="recent-list">
                         <div class="recent-empty">${escapeHTML(t('noVideoJobsYet'))}</div>
                     </div>
+                    <details class="section-block" id="agentGraphHistoryPanel">
+                        <summary>${escapeHTML(t('recentAgentGraphRuns'))} / ${escapeHTML(t('artifactTimeline'))}</summary>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="refreshGraphHistoryBtn" type="button" onclick="refreshAgentGraphHistory()">${escapeHTML(t('refreshGraphHistory'))}</button>
+                        </div>
+                        <div class="quick-use-copy-status" id="agentGraphHistoryStatus"></div>
+                        <div id="agentGraphHistoryContent" class="recent-list"></div>
+                    </details>
                 </div>
             `;
+        }
+
+        function renderAgentGraphHistorySummary(history) {
+            const runs = Array.isArray(history?.recent_runs) ? history.recent_runs : [];
+            const jobs = Array.isArray(history?.recent_jobs) ? history.recent_jobs : [];
+            const registries = Array.isArray(history?.recent_artifacts) ? history.recent_artifacts : [];
+            const messages = Array.isArray(history?.recent_messages) ? history.recent_messages : [];
+            const snapshots = Array.isArray(history?.recent_snapshots) ? history.recent_snapshots : [];
+            const artifacts = registries.flatMap((registry) => Array.isArray(registry?.artifacts) ? registry.artifacts : []).slice(0, 10);
+            const cards = [
+                [t('recentAgentGraphRuns'), runs.map((run) => `${run.run_id || ''} \u00b7 ${run.status || ''}`).join('\n')],
+                [t('recentVideoJobsGraph'), jobs.map((job) => `${job.job_id || ''} \u00b7 ${job.status || ''}`).join('\n')],
+                [t('recentArtifacts'), artifacts.map((artifact) => `${artifact.artifact_type || ''} \u00b7 ${artifact.source_agent_id || ''}`).join('\n')],
+                [t('recentAgentMessages'), messages.map((message) => `${message.message_type || ''} \u00b7 ${message.source_agent_id || ''}->${message.target_agent_id || ''}`).join('\n')],
+                [t('recentGraphSnapshots'), snapshots.map((snapshot) => `${snapshot.snapshot_version || ''} \u00b7 ${snapshot.run_id || snapshot.job_id || ''}`).join('\n')]
+            ];
+            return `
+                <div class="feedback-box">${escapeHTML(t('persistenceMode'))}: ${escapeHTML(history.persistence_mode || '')}<br>${escapeHTML(t('durabilityNote'))}: ${escapeHTML(history.durability_note || '')}</div>
+                <div class="graph-os-compact-grid">
+                    ${cards.map(([title, body]) => `<div class="graph-os-card"><strong>${escapeHTML(title)}</strong><pre>${escapeHTML(body || 'none')}</pre></div>`).join('')}
+                </div>
+                <div class="json-key">${escapeHTML(t('artifactTimeline'))}</div>
+                ${artifacts.map((artifact) => `<div class="artifact-timeline-row"><strong>${escapeHTML(artifact.artifact_type || '')}</strong><div>${escapeHTML(t('sourceAgent'))}: ${escapeHTML(artifact.source_agent_id || '')}</div></div>`).join('')}
+            `;
+        }
+
+        async function refreshAgentGraphHistory() {
+            const btn = document.getElementById('refreshGraphHistoryBtn');
+            const status = document.getElementById('agentGraphHistoryStatus');
+            const content = document.getElementById('agentGraphHistoryContent');
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('refreshingGraphHistory');
+            try {
+                const history = await getAgentGraphHistorySummary();
+                if (content) content.innerHTML = renderAgentGraphHistorySummary(history);
+                if (status) status.textContent = t('graphHistoryRefreshed');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('graphHistoryFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function renderRecentVideoJobRows(jobs) {
@@ -9594,8 +10318,9 @@
                     ${renderStoryboardBrief(storyboard)}
                 </div>
                 ${renderVideoDraftPanel(data.video_generation_packet)}
-                ${renderExternalVideoToolHandoffPanel(data.external_video_tool_handoff)}
                 ${renderVideoJobControls(data)}
+                ${renderExternalVideoToolHandoffPanel(data.external_video_tool_handoff)}
+                ${renderArtifactRegistry(data.artifact_registry)}
             `;
 
             document.getElementById('res-evaluation').style.opacity = '1';

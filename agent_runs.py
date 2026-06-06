@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 from datetime import datetime, timezone
+import hashlib
+import json
 import re
 from threading import RLock
 from typing import Any
@@ -950,6 +952,484 @@ def _experiment_rework_list(values: Any, limit: int = 6, text_limit: int = 220) 
 
 def _experiment_rework_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
+
+
+def _stable_graph_id(prefix: str, *parts: Any) -> str:
+    payload = json.dumps(parts, ensure_ascii=False, sort_keys=True, default=str)
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+    return f"{prefix}_{digest}"
+
+
+def _graph_safety_boundaries() -> dict[str, bool]:
+    return {
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+    }
+
+
+def build_agent_message(
+    message_type: str,
+    source_agent_id: str,
+    target_agent_id: str | None,
+    payload: dict[str, Any],
+    run_id: str | None = None,
+    job_id: str | None = None,
+    artifact_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Build one deterministic structured message without replacing run events."""
+
+    safe_payload = deepcopy(payload) if isinstance(payload, dict) else {}
+    safe_artifact_ids = [str(value) for value in (artifact_ids or []) if str(value or "")]
+    return {
+        "message_version": "agent_message_v1",
+        "message_id": _stable_graph_id(
+            "agent_message",
+            message_type,
+            source_agent_id,
+            target_agent_id or "",
+            run_id or "",
+            job_id or "",
+            safe_artifact_ids,
+            safe_payload,
+        ),
+        "message_type": str(message_type or "handoff"),
+        "source_agent_id": str(source_agent_id or ""),
+        "target_agent_id": str(target_agent_id or ""),
+        "run_id": str(run_id or ""),
+        "job_id": str(job_id or ""),
+        "artifact_ids": safe_artifact_ids,
+        "payload": safe_payload,
+        "created_at": utc_now_iso(),
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _artifact_summary(value: Any, fallback: str) -> str:
+    if isinstance(value, dict):
+        for key in (
+            "headline",
+            "recommended_next_action",
+            "reason",
+            "summary",
+            "approval_prompt",
+            "decision_type",
+            "status",
+        ):
+            text = str(value.get(key) or "").strip()
+            if text:
+                return _experiment_rework_text(text, limit=240)
+    return fallback
+
+
+def build_lightweight_artifact_registry(
+    generation_data: dict[str, Any] | None = None,
+    job: dict[str, Any] | None = None,
+    run: dict[str, Any] | None = None,
+    experiment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a deterministic registry across generation, run, job, and experiment artifacts."""
+
+    generation = _experiment_rework_dict(generation_data)
+    safe_job = _experiment_rework_dict(job)
+    safe_run = _experiment_rework_dict(run)
+    safe_experiment = _experiment_rework_dict(experiment)
+    run_result = _experiment_rework_dict(safe_run.get("result"))
+    source_generation = _experiment_rework_dict(safe_job.get("source_generation"))
+    graph_feedback = _experiment_rework_dict(safe_job.get("agent_graph_feedback"))
+    experiments = list(safe_job.get("external_video_experiments") or [])
+    latest_experiment = safe_experiment or (experiments[-1] if experiments else {})
+    rework_run_id = str(
+        latest_experiment.get("linked_rework_run_id")
+        or latest_experiment.get("triggered_rework_run_id")
+        or graph_feedback.get("latest_rework_run_id")
+        or ""
+    )
+    artifact_sources: list[tuple[str, Any, str, list[str], str, list[str]]] = [
+        (
+            "llm_evidence_packet",
+            generation.get("llm_evidence_packet") or source_generation.get("llm_evidence_packet"),
+            "evidence_agent",
+            [],
+            "used",
+            ["strategy_agent"],
+        ),
+        (
+            "video_generation_packet",
+            generation.get("video_generation_packet")
+            or safe_job.get("video_generation_packet")
+            or run_result.get("video_generation_packet"),
+            "prompt_handoff_agent",
+            [],
+            "used" if safe_job else "created",
+            ["provider_job_agent"],
+        ),
+        (
+            "external_video_tool_handoff",
+            generation.get("external_video_tool_handoff")
+            or safe_job.get("external_video_tool_handoff")
+            or run_result.get("external_video_tool_handoff"),
+            "prompt_handoff_agent",
+            [],
+            "used" if experiments else "created",
+            ["provider_job_agent", "experiment_agent"],
+        ),
+        (
+            "product_asset_lock",
+            generation.get("product_asset_lock")
+            or run_result.get("product_asset_lock")
+            or _experiment_rework_dict(source_generation.get("agent_trace")).get("product_asset_lock"),
+            "asset_lock_agent",
+            [],
+            "used",
+            ["product_identity_validator", "keyframe_agent"],
+        ),
+        (
+            "keyframe_plan",
+            generation.get("keyframe_plan")
+            or run_result.get("keyframe_plan")
+            or _experiment_rework_dict(source_generation.get("agent_trace")).get("keyframe_plan"),
+            "keyframe_agent",
+            [],
+            "used",
+            ["prompt_handoff_agent"],
+        ),
+        (
+            "revised_keyframe_plan",
+            latest_experiment.get("revised_keyframe_plan")
+            or run_result.get("revised_keyframe_plan")
+            or graph_feedback.get("latest_revised_keyframe_plan"),
+            "keyframe_agent",
+            ["keyframe_plan"],
+            "revised",
+            ["prompt_handoff_agent"],
+        ),
+        (
+            "revised_external_video_handoff",
+            latest_experiment.get("revised_external_video_handoff")
+            or run_result.get("revised_external_video_handoff")
+            or graph_feedback.get("latest_revised_external_video_handoff"),
+            "prompt_handoff_agent",
+            ["revised_keyframe_plan"],
+            "revised",
+            ["experiment_agent"],
+        ),
+        (
+            "experiment_feedback_decision",
+            latest_experiment.get("agent_feedback_decision")
+            or safe_job.get("latest_agent_feedback_decision"),
+            "experiment_agent",
+            [],
+            "created",
+            ["graph_router_agent"],
+        ),
+        (
+            "second_experiment_comparison",
+            latest_experiment.get("second_experiment_comparison")
+            or graph_feedback.get("latest_second_experiment_comparison"),
+            "experiment_agent",
+            ["experiment_feedback_decision", "revised_external_video_handoff"],
+            "created",
+            ["graph_router_agent"],
+        ),
+        (
+            "experiment_comparison_decision_gate",
+            latest_experiment.get("experiment_comparison_decision_gate")
+            or graph_feedback.get("latest_experiment_comparison_decision_gate"),
+            "experiment_agent",
+            ["second_experiment_comparison"],
+            "created",
+            ["graph_router_agent", "human_approval_agent"],
+        ),
+        (
+            "demo_ready_run_summary",
+            latest_experiment.get("demo_ready_run_summary")
+            or safe_job.get("latest_demo_ready_run_summary"),
+            "finalizer_agent",
+            ["experiment_comparison_decision_gate"],
+            "created",
+            [],
+        ),
+        (
+            "artifact_lineage",
+            latest_experiment.get("artifact_lineage")
+            or safe_job.get("latest_artifact_lineage"),
+            "finalizer_agent",
+            [],
+            "created",
+            [],
+        ),
+        (
+            "controlled_provider_handoff_checklist",
+            latest_experiment.get("controlled_provider_handoff_checklist")
+            or safe_job.get("latest_controlled_provider_handoff_checklist"),
+            "provider_job_agent",
+            ["experiment_comparison_decision_gate"],
+            "used",
+            ["human_approval_agent"],
+        ),
+        (
+            "human_approval_gate",
+            latest_experiment.get("human_approval_gate")
+            or safe_job.get("latest_human_approval_gate"),
+            "human_approval_agent",
+            ["controlled_provider_handoff_checklist"],
+            "used",
+            ["provider_job_agent"],
+        ),
+        (
+            "graph_router_decision",
+            latest_experiment.get("latest_graph_router_decision")
+            or safe_job.get("latest_graph_router_decision")
+            or safe_run.get("latest_graph_router_decision"),
+            "graph_router_agent",
+            [],
+            "used",
+            [],
+        ),
+        (
+            "provider_result",
+            safe_job.get("result")
+            if _experiment_rework_dict(safe_job.get("result")).get("result_url")
+            else {},
+            "provider_job_agent",
+            ["human_approval_gate", "video_generation_packet"],
+            "created",
+            ["experiment_agent"],
+        ),
+    ]
+    artifacts: list[dict[str, Any]] = []
+    artifact_ids_by_type: dict[str, str] = {}
+    for artifact_type, value, source_agent_id, parent_types, status, used_by in artifact_sources:
+        if not isinstance(value, dict) or not value:
+            continue
+        artifact_id = _stable_graph_id(
+            "artifact",
+            artifact_type,
+            safe_run.get("run_id"),
+            safe_job.get("job_id"),
+            value,
+        )
+        artifact_ids_by_type[artifact_type] = artifact_id
+        artifacts.append(
+            {
+                "artifact_id": artifact_id,
+                "artifact_type": artifact_type,
+                "source_agent_id": source_agent_id,
+                "parent_artifact_ids": list(parent_types),
+                "status": status,
+                "summary": _artifact_summary(
+                    value,
+                    f"{artifact_type.replace('_', ' ').title()} available.",
+                ),
+                "used_by_agent_ids": list(used_by),
+                "created_by_run_id": str(safe_run.get("run_id") or rework_run_id or ""),
+                "created_from_experiment_id": str(latest_experiment.get("experiment_id") or ""),
+            }
+        )
+    for artifact in artifacts:
+        artifact["parent_artifact_ids"] = [
+            artifact_ids_by_type[parent_type]
+            for parent_type in artifact["parent_artifact_ids"]
+            if parent_type in artifact_ids_by_type
+        ]
+    counts = {
+        "total": len(artifacts),
+        "created": sum(item["status"] == "created" for item in artifacts),
+        "used": sum(item["status"] == "used" for item in artifacts),
+        "revised": sum(item["status"] == "revised" for item in artifacts),
+    }
+    artifact_types = {item["artifact_type"] for item in artifacts}
+    router_artifacts = bool(
+        artifact_types.intersection(
+            {"graph_router_decision", "experiment_comparison_decision_gate"}
+        )
+    )
+    return {
+        "registry_version": "artifact_registry_v1",
+        "registry_type": "lightweight_run_job_artifacts",
+        "root_run_id": str(safe_run.get("run_id") or rework_run_id or ""),
+        "root_job_id": str(safe_job.get("job_id") or ""),
+        "artifacts": artifacts,
+        "artifact_counts": counts,
+        "graph_evidence": {
+            "has_artifact_chain": len(artifacts) > 1,
+            "has_revised_artifacts": bool(
+                artifact_types.intersection(
+                    {"revised_keyframe_plan", "revised_external_video_handoff"}
+                )
+            ),
+            "has_router_artifacts": router_artifacts,
+            "has_approval_artifact": "human_approval_gate" in artifact_types,
+            "is_linear_workflow": False,
+        },
+    }
+
+
+def _snapshot_router_edges(run: dict[str, Any], job: dict[str, Any]) -> list[dict[str, Any]]:
+    decisions = list(run.get("graph_router_decisions") or job.get("graph_router_decisions") or [])
+    latest = _experiment_rework_dict(
+        job.get("latest_graph_router_decision")
+        or run.get("latest_graph_router_decision")
+        or (decisions[-1] if decisions else {})
+    )
+    selected_edges: list[dict[str, Any]] = []
+    for index, decision in enumerate(decisions or ([latest] if latest else [])):
+        if not isinstance(decision, dict):
+            continue
+        edge = _experiment_rework_dict(decision.get("selected_edge"))
+        from_node = str(edge.get("from_node_id") or decision.get("source_node_id") or "")
+        to_node = str(
+            edge.get("to_node_id")
+            or decision.get("selected_next_agent_id")
+            or ""
+        )
+        if not from_node or not to_node:
+            continue
+        selected_edges.append(
+            {
+                "from_node_id": from_node,
+                "to_node_id": to_node,
+                "edge_type": str(edge.get("edge_type") or decision.get("route_type") or "router"),
+                "status": "selected" if decision == latest else "traversed",
+                "selected_by_agent_id": "graph_router_agent",
+                "reason": str(decision.get("reason") or ""),
+                "route_type": str(decision.get("route_type") or ""),
+                "is_primary_route": True,
+                "is_secondary_route": False,
+            }
+        )
+        secondary = str(decision.get("secondary_next_agent_id") or "")
+        if secondary:
+            selected_edges.append(
+                {
+                    "from_node_id": "graph_router_agent",
+                    "to_node_id": secondary,
+                    "edge_type": str(decision.get("route_type") or "router"),
+                    "status": "selected" if decision == latest else "traversed",
+                    "selected_by_agent_id": "graph_router_agent",
+                    "reason": str(decision.get("reason") or ""),
+                    "route_type": str(decision.get("route_type") or ""),
+                    "is_primary_route": False,
+                    "is_secondary_route": True,
+                }
+            )
+    return selected_edges[-12:]
+
+
+def build_graph_state_snapshot(
+    run: dict[str, Any] | None = None,
+    job: dict[str, Any] | None = None,
+    events: list[dict[str, Any]] | None = None,
+    artifact_registry: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a compact deterministic run/job graph snapshot for history and reports."""
+
+    safe_run = _experiment_rework_dict(run)
+    safe_job = _experiment_rework_dict(job)
+    safe_events = list(events or safe_run.get("events") or [])
+    registry = _experiment_rework_dict(artifact_registry)
+    node_statuses = {
+        str(node.get("node_id") or ""): str(node.get("status") or "pending")
+        for node in safe_run.get("graph_nodes") or []
+        if isinstance(node, dict) and node.get("node_id")
+    }
+    approval = _experiment_rework_dict(
+        safe_job.get("latest_human_approval_gate")
+        or safe_run.get("latest_human_approval_gate")
+    )
+    provider = _experiment_rework_dict(safe_job.get("provider_runtime"))
+    if approval:
+        approval_status = str(approval.get("status") or "pending_approval")
+        node_statuses["human_approval_agent"] = approval_status
+        if approval.get("blocks_provider_submit") is True:
+            node_statuses["provider_job_agent"] = "blocked"
+    if provider:
+        provider_status = str(provider.get("provider_status") or safe_job.get("status") or "")
+        if provider_status in {"queued", "processing"}:
+            node_statuses["provider_job_agent"] = "running"
+        elif provider_status in {"external_result_ready", "manual_export_completed"}:
+            node_statuses["provider_job_agent"] = "complete"
+    active_loops: list[str] = []
+    if safe_run.get("rework_loops"):
+        active_loops.append("risk_rework_loop")
+    if safe_job.get("latest_agent_feedback_decision") or safe_job.get("latest_rework_run_id"):
+        active_loops.append("experiment_feedback_loop")
+    active_gates = ["human_approval_gate"] if approval else []
+    blocked_by = ""
+    if approval.get("blocks_provider_submit") is True:
+        blocked_by = "human_approval_gate"
+    waiting_for_user = bool(safe_run.get("waiting_for_user")) or bool(
+        approval.get("status") == "pending_approval"
+    )
+    if blocked_by:
+        next_action = "Review the controlled checklist and approve or request changes before provider submit."
+    elif safe_job.get("latest_rework_run_id") and not safe_job.get("latest_second_experiment_comparison"):
+        next_action = "Use the revised handoff in a second external experiment."
+    elif safe_run.get("status") == "completed" and not safe_job:
+        next_action = "Review handoff and create a video job."
+    else:
+        next_action = "Review the latest graph artifact and selected route."
+    snapshot = {
+        "snapshot_version": "graph_state_snapshot_v1",
+        "snapshot_type": "run_job_graph_state",
+        "snapshot_id": _stable_graph_id(
+            "graph_snapshot",
+            safe_run.get("run_id"),
+            safe_job.get("job_id"),
+            node_statuses,
+            _snapshot_router_edges(safe_run, safe_job),
+            len(safe_events),
+        ),
+        "run_id": str(safe_run.get("run_id") or ""),
+        "job_id": str(safe_job.get("job_id") or ""),
+        "node_statuses": node_statuses,
+        "selected_edges": _snapshot_router_edges(safe_run, safe_job),
+        "active_loops": active_loops,
+        "active_gates": active_gates,
+        "artifact_counts": deepcopy(registry.get("artifact_counts") or {}),
+        "message_count": len(safe_run.get("agent_messages") or safe_job.get("agent_messages") or []),
+        "event_count": len(safe_events),
+        "waiting_for_user": waiting_for_user,
+        "blocked_by": blocked_by,
+        "next_graph_action": next_action,
+        "safety_boundaries": _graph_safety_boundaries(),
+        "is_linear_workflow": False,
+        "created_at": utc_now_iso(),
+    }
+    return snapshot
+
+
+def build_graph_health_summary(
+    run: dict[str, Any] | None,
+    job: dict[str, Any] | None,
+    artifact_registry: dict[str, Any] | None,
+    graph_state: dict[str, Any] | None,
+) -> dict[str, Any]:
+    safe_run = _experiment_rework_dict(run)
+    safe_job = _experiment_rework_dict(job)
+    registry = _experiment_rework_dict(artifact_registry)
+    state = _experiment_rework_dict(graph_state)
+    checks = {
+        "has_events": bool(safe_run.get("events") or safe_job.get("history")),
+        "has_router_decision": bool(state.get("selected_edges")),
+        "has_rework_loop": bool(state.get("active_loops")),
+        "has_human_gate": bool(state.get("active_gates")),
+        "has_artifacts": bool(registry.get("artifacts")),
+        "has_persistence_snapshot": bool(state.get("snapshot_version")),
+        "has_safety_boundary": state.get("safety_boundaries") == _graph_safety_boundaries(),
+    }
+    missing = [
+        key.replace("has_", "")
+        for key, value in checks.items()
+        if not value and key not in {"has_rework_loop", "has_human_gate"}
+    ]
+    return {
+        "health_version": "graph_health_v1",
+        "is_linear_workflow": False,
+        **checks,
+        "missing_recommended_capabilities": missing,
+    }
 
 
 def build_lightweight_artifact_lineage(

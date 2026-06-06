@@ -9,11 +9,15 @@ from agent_runs import (
     append_graph_router_decision,
     apply_human_approval_decision,
     apply_evidence_safe_storyboard_rework,
+    build_agent_message,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
     build_experiment_comparison_decision_gate,
+    build_graph_health_summary,
     build_graph_router_decision,
+    build_graph_state_snapshot,
     build_human_approval_gate,
+    build_lightweight_artifact_registry,
     build_lightweight_artifact_lineage,
     build_revised_external_video_handoff_from_keyframe_plan,
     build_revised_keyframe_plan_from_experiment_feedback,
@@ -60,6 +64,80 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertEqual(container["latest_graph_router_decision"], decision)
         self.assertTrue(container["graph_router_summary"]["has_rework_route"])
         self.assertFalse(container["graph_router_summary"]["is_linear_workflow"])
+
+    def test_agent_message_protocol_and_graph_snapshot_preserve_safety_boundaries(self):
+        decision = build_graph_router_decision(
+            {
+                "route_context_type": "experiment_feedback",
+                "issue_type": "product_consistency",
+                "reason": "Product identity needs stronger keyframes.",
+            }
+        )
+        message = build_agent_message(
+            "router_route",
+            "graph_router_agent",
+            "keyframe_agent",
+            {"selected_edge": decision["selected_edge"], "reason": decision["reason"]},
+            run_id="run_graph_os_1",
+            job_id="job_graph_os_1",
+            artifact_ids=["artifact_keyframe_1"],
+        )
+        run = {
+            "run_id": "run_graph_os_1",
+            "status": "completed",
+            "graph_nodes": [{"node_id": "graph_router_agent", "status": "complete"}],
+            "graph_router_decisions": [decision],
+            "latest_graph_router_decision": decision,
+            "agent_messages": [message],
+            "events": [{"event_type": "graph_router_route_selected"}],
+        }
+        registry = build_lightweight_artifact_registry(
+            generation_data={
+                "llm_evidence_packet": {"packet_version": "pasted_reviews_v1"},
+                "video_generation_packet": {"packet_version": "video_generation_v1"},
+                "external_video_tool_handoff": {"handoff_version": "external_video_tool_handoff_v1"},
+                "product_asset_lock": {"lock_version": "product_asset_lock_v1"},
+                "keyframe_plan": {"plan_version": "keyframe_plan_v1"},
+            },
+            run=run,
+        )
+        snapshot = build_graph_state_snapshot(
+            run=run,
+            events=run["events"],
+            artifact_registry=registry,
+        )
+        health = build_graph_health_summary(run, None, registry, snapshot)
+
+        self.assertEqual(message["message_version"], "agent_message_v1")
+        self.assertEqual(message["source_agent_id"], "graph_router_agent")
+        self.assertEqual(message["artifact_ids"], ["artifact_keyframe_1"])
+        self.assertEqual(
+            message["safety_boundaries"],
+            {
+                "external_api_called": False,
+                "cost_incurred_by_crossgrowth": False,
+                "llm_autonomous_decision_enabled": False,
+            },
+        )
+        self.assertEqual(registry["registry_version"], "artifact_registry_v1")
+        artifact_types = {item["artifact_type"] for item in registry["artifacts"]}
+        self.assertTrue(
+            {
+                "llm_evidence_packet",
+                "video_generation_packet",
+                "external_video_tool_handoff",
+                "product_asset_lock",
+                "keyframe_plan",
+            }.issubset(artifact_types)
+        )
+        self.assertFalse(registry["graph_evidence"]["is_linear_workflow"])
+        self.assertEqual(snapshot["snapshot_version"], "graph_state_snapshot_v1")
+        self.assertFalse(snapshot["is_linear_workflow"])
+        self.assertTrue(snapshot["selected_edges"])
+        self.assertEqual(snapshot["selected_edges"][0]["selected_by_agent_id"], "graph_router_agent")
+        self.assertFalse(snapshot["safety_boundaries"]["external_api_called"])
+        self.assertEqual(health["health_version"], "graph_health_v1")
+        self.assertFalse(health["is_linear_workflow"])
 
     def test_graph_router_maps_feedback_comparison_gate_and_approval_routes(self):
         feedback_expectations = {

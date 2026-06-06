@@ -24,6 +24,7 @@ server.job.log
 # Runtime storage
 .data/
 storage/faiss_memory/
+storage/agent_graph/
 faiss_index/
 
 # Regression outputs

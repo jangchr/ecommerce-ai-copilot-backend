@@ -19,6 +19,7 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
 
 COPY main.py .env.example ./
 COPY agent_runs.py ./
+COPY agent_graph_storage.py ./
 COPY core ./core
 COPY schemas ./schemas
 COPY video_generation ./video_generation

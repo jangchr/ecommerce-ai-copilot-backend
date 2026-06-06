@@ -55,17 +55,39 @@ from agent_runs import (
     append_graph_router_decision,
     apply_human_approval_decision,
     apply_evidence_safe_storyboard_rework,
+    build_agent_message,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
     build_experiment_comparison_decision_gate,
     build_experiment_feedback_decision,
+    build_graph_health_summary,
     build_graph_router_decision,
+    build_graph_state_snapshot,
     build_human_approval_gate,
+    build_lightweight_artifact_registry,
     build_lightweight_artifact_lineage,
     build_second_experiment_comparison,
     detect_storyboard_rework_need,
     trigger_experiment_rework_run,
+)
+from agent_graph_storage import (
+    list_recent_agent_messages,
+    list_recent_artifacts,
+    list_recent_graph_events,
+    list_recent_graph_exports,
+    list_recent_graph_snapshots,
+    load_recent_agent_run_snapshots,
+    load_recent_video_job_snapshots,
+    persistence_metadata,
+    save_agent_message_snapshot,
+    save_agent_run_snapshot,
+    save_approval_snapshot,
+    save_artifact_registry_snapshot,
+    save_graph_event_snapshot,
+    save_graph_report_export,
+    save_graph_state_snapshot,
+    save_video_job_snapshot,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -178,6 +200,267 @@ VIDEO_GENERATION_RESULT_STATUSES = {
     VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
     VIDEO_JOB_STATUS_FAILED,
 }
+
+def _graph_storage_warning(container: dict, exc: Exception) -> None:
+    warnings = list(container.get("persistence_warnings") or [])
+    warning = f"agent_graph_storage_write_failed:{type(exc).__name__}"
+    if warning not in warnings:
+        warnings.append(warning)
+    container["persistence_warnings"] = warnings[-5:]
+
+
+def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) -> list[dict]:
+    safe_run = run if isinstance(run, dict) else {}
+    safe_job = job if isinstance(job, dict) else {}
+    run_id = str(safe_run.get("run_id") or "")
+    job_id = str(safe_job.get("job_id") or "")
+    messages: list[dict] = []
+
+    for validation in safe_run.get("validation_results") or []:
+        if not isinstance(validation, dict) or validation.get("status") not in {"failed", "warning"}:
+            continue
+        messages.append(
+            build_agent_message(
+                "rework_request",
+                str(validation.get("validator_agent_id") or "risk_agent"),
+                str(validation.get("rework_target") or validation.get("target_agent_id") or "storyboard_agent"),
+                {
+                    "status": validation.get("status", ""),
+                    "reason": validation.get("reason", ""),
+                    "target_artifact": validation.get("target_artifact", ""),
+                },
+                run_id=run_id,
+                job_id=job_id,
+            )
+        )
+
+    router_decisions = list(
+        safe_job.get("graph_router_decisions")
+        or safe_run.get("graph_router_decisions")
+        or []
+    )
+    for decision in router_decisions[-6:]:
+        if not isinstance(decision, dict):
+            continue
+        messages.append(
+            build_agent_message(
+                "router_route",
+                "graph_router_agent",
+                str(decision.get("selected_next_agent_id") or ""),
+                {
+                    "decision_type": decision.get("decision_type", ""),
+                    "route_type": decision.get("route_type", ""),
+                    "reason": decision.get("reason", ""),
+                    "selected_edge": decision.get("selected_edge") or {},
+                },
+                run_id=run_id,
+                job_id=job_id,
+            )
+        )
+
+    feedback = safe_job.get("latest_agent_feedback_decision")
+    if isinstance(feedback, dict) and feedback:
+        messages.append(
+            build_agent_message(
+                "experiment_feedback",
+                "experiment_agent",
+                str(feedback.get("target_agent_id") or "graph_router_agent"),
+                {
+                    "decision_type": feedback.get("decision_type", ""),
+                    "issue_type": feedback.get("issue_type", ""),
+                    "reason": feedback.get("reason", ""),
+                    "rework_run_id": feedback.get("triggered_rework_run_id", ""),
+                },
+                run_id=run_id,
+                job_id=job_id,
+            )
+        )
+
+    approval = safe_job.get("latest_human_approval_gate")
+    if isinstance(approval, dict) and approval:
+        messages.append(
+            build_agent_message(
+                "approval_request" if approval.get("status") == "pending_approval" else "approval_decision",
+                "human_approval_agent",
+                "provider_job_agent",
+                {
+                    "status": approval.get("status", ""),
+                    "approval_scope": approval.get("approval_scope", ""),
+                    "blocks_provider_submit": approval.get("blocks_provider_submit", True),
+                },
+                run_id=run_id,
+                job_id=job_id,
+            )
+        )
+
+    provider = safe_job.get("provider_runtime")
+    if isinstance(provider, dict) and provider:
+        messages.append(
+            build_agent_message(
+                "provider_state",
+                "provider_job_agent",
+                "experiment_agent",
+                {
+                    "provider_status": provider.get("provider_status", ""),
+                    "integration_mode": provider.get("integration_mode", "simulated"),
+                    "external_api_called": False,
+                },
+                run_id=run_id,
+                job_id=job_id,
+            )
+        )
+
+    if safe_run.get("status") == "completed":
+        messages.append(
+            build_agent_message(
+                "final_summary",
+                "finalizer_agent",
+                None,
+                {
+                    "status": "completed",
+                    "waiting_for_user": bool(safe_run.get("waiting_for_user")),
+                    "next_action": "Review generated artifacts and continue with a video job.",
+                },
+                run_id=run_id,
+                job_id=job_id,
+            )
+        )
+
+    return list(
+        {
+            str(message.get("message_id") or index): message
+            for index, message in enumerate(messages)
+        }.values()
+    )[-20:]
+
+
+def _refresh_agent_run_graph_os(run: dict) -> dict:
+    safe_run = dict(run or {})
+    generation_data = safe_run.get("result") if isinstance(safe_run.get("result"), dict) else {}
+    registry = build_lightweight_artifact_registry(generation_data=generation_data, run=safe_run)
+    safe_run["artifact_registry"] = registry
+    safe_run["agent_messages"] = _graph_messages_for_state(run=safe_run)
+    snapshot = build_graph_state_snapshot(
+        run=safe_run,
+        events=safe_run.get("events") or [],
+        artifact_registry=registry,
+    )
+    safe_run["latest_graph_state_snapshot"] = snapshot
+    safe_run["graph_health"] = build_graph_health_summary(safe_run, None, registry, snapshot)
+    safe_run["persistence"] = persistence_metadata()
+    return safe_run
+
+
+def _persist_agent_run_graph_os(run: dict) -> dict:
+    safe_run = _refresh_agent_run_graph_os(run)
+    try:
+        save_agent_run_snapshot(safe_run)
+        save_graph_event_snapshot(str(safe_run.get("run_id") or ""), list(safe_run.get("events") or []))
+        registry = safe_run.get("artifact_registry") or {}
+        if registry.get("artifacts"):
+            save_artifact_registry_snapshot(registry, f"run_{safe_run.get('run_id')}")
+        for message in safe_run.get("agent_messages") or []:
+            save_agent_message_snapshot(message)
+        save_graph_state_snapshot(safe_run["latest_graph_state_snapshot"])
+    except Exception as exc:
+        _graph_storage_warning(safe_run, exc)
+    return safe_run
+
+
+def _refresh_video_job_graph_os(job: dict, experiment: dict | None = None) -> dict:
+    safe_job = dict(job or {})
+    experiments = list(safe_job.get("external_video_experiments") or [])
+    latest_experiment = experiment if isinstance(experiment, dict) else (experiments[-1] if experiments else {})
+    existing_feedback = (
+        dict(safe_job.get("agent_graph_feedback") or {})
+        if isinstance(safe_job.get("agent_graph_feedback"), dict)
+        else {}
+    )
+    feedback_decision = (
+        safe_job.get("latest_agent_feedback_decision")
+        if isinstance(safe_job.get("latest_agent_feedback_decision"), dict)
+        else {}
+    )
+    rework_run_id = str(
+        latest_experiment.get("linked_rework_run_id")
+        or latest_experiment.get("triggered_rework_run_id")
+        or feedback_decision.get("triggered_rework_run_id")
+        or existing_feedback.get("latest_rework_run_id")
+        or ""
+    )
+    rework_run = AGENT_RUN_STORE.get(rework_run_id) if rework_run_id else {}
+    source_generation = (
+        dict(safe_job.get("source_generation") or {})
+        if isinstance(safe_job.get("source_generation"), dict)
+        else {}
+    )
+    registry = build_lightweight_artifact_registry(
+        generation_data={
+            **source_generation,
+            "video_generation_packet": safe_job.get("video_generation_packet") or {},
+            "external_video_tool_handoff": safe_job.get("external_video_tool_handoff") or {},
+        },
+        job=safe_job,
+        run=rework_run,
+        experiment=latest_experiment,
+    )
+    previous_ids = {
+        item.get("artifact_id")
+        for item in (safe_job.get("latest_artifact_registry") or {}).get("artifacts", [])
+        if isinstance(item, dict)
+    }
+    next_ids = {
+        item.get("artifact_id")
+        for item in registry.get("artifacts", [])
+        if isinstance(item, dict)
+    }
+    safe_job["latest_artifact_registry"] = registry
+    feedback = existing_feedback
+    feedback["latest_artifact_registry"] = registry
+    safe_job["agent_messages"] = _graph_messages_for_state(job=safe_job)
+    feedback["latest_agent_messages"] = safe_job["agent_messages"][-10:]
+    safe_job["agent_graph_feedback"] = feedback
+    snapshot = build_graph_state_snapshot(
+        job=safe_job,
+        events=list(safe_job.get("history") or []),
+        artifact_registry=registry,
+    )
+    safe_job["latest_graph_state_snapshot"] = snapshot
+    safe_job["graph_health"] = build_graph_health_summary(None, safe_job, registry, snapshot)
+    safe_job["persistence"] = persistence_metadata()
+    if next_ids and next_ids != previous_ids:
+        history = list(safe_job.get("history") or [])
+        registry_event = build_video_job_history_event(
+            "artifact_registry_updated",
+            str(safe_job.get("status") or VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT),
+            updated_at=str(safe_job.get("updated_at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())),
+            registry_version=registry.get("registry_version", ""),
+            artifact_count=registry.get("artifact_counts", {}).get("total", 0),
+            is_linear_workflow=False,
+        )
+        insert_at = 1 if len(history) <= 1 else max(1, len(history) - 1)
+        history.insert(insert_at, registry_event)
+        safe_job["history"] = history
+    return safe_job
+
+
+def _persist_video_job_graph_os(job: dict, experiment: dict | None = None) -> dict:
+    safe_job = _refresh_video_job_graph_os(job, experiment)
+    try:
+        save_video_job_snapshot(safe_job)
+        registry = safe_job.get("latest_artifact_registry") or {}
+        if registry.get("artifacts"):
+            save_artifact_registry_snapshot(registry, f"job_{safe_job.get('job_id')}")
+        approval = safe_job.get("latest_human_approval_gate")
+        if isinstance(approval, dict) and approval:
+            save_approval_snapshot(approval, f"job_{safe_job.get('job_id')}")
+        for message in safe_job.get("agent_messages") or []:
+            save_agent_message_snapshot(message)
+        save_graph_state_snapshot(safe_job["latest_graph_state_snapshot"])
+    except Exception as exc:
+        _graph_storage_warning(safe_job, exc)
+    return safe_job
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -2962,6 +3245,19 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             "Rule-driven agent graph completed.",
             data={"branch_selected": "manual_external_tool_handoff"},
         )
+        completed_run = AGENT_RUN_STORE.get(run_id) or {}
+        completed_run = _persist_agent_run_graph_os(completed_run)
+        AGENT_RUN_STORE.update(
+            run_id,
+            {
+                "artifact_registry": completed_run.get("artifact_registry") or {},
+                "agent_messages": completed_run.get("agent_messages") or [],
+                "latest_graph_state_snapshot": completed_run.get("latest_graph_state_snapshot") or {},
+                "graph_health": completed_run.get("graph_health") or {},
+                "persistence": completed_run.get("persistence") or {},
+                "persistence_warnings": completed_run.get("persistence_warnings") or [],
+            },
+        )
     except Exception as exc:
         error = str(exc or "Agent run failed.")
         if current_agent_id:
@@ -2979,6 +3275,19 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             "run_failed",
             "Agent run failed safely.",
             data={"error_type": _error_type(exc), "error": error[:240]},
+        )
+        failed_run = AGENT_RUN_STORE.get(run_id) or {}
+        failed_run = _persist_agent_run_graph_os(failed_run)
+        AGENT_RUN_STORE.update(
+            run_id,
+            {
+                "artifact_registry": failed_run.get("artifact_registry") or {},
+                "agent_messages": failed_run.get("agent_messages") or [],
+                "latest_graph_state_snapshot": failed_run.get("latest_graph_state_snapshot") or {},
+                "graph_health": failed_run.get("graph_health") or {},
+                "persistence": failed_run.get("persistence") or {},
+                "persistence_warnings": failed_run.get("persistence_warnings") or [],
+            },
         )
 
 
@@ -3154,6 +3463,7 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
             build_video_job_history_event("created", initial_status, updated_at=now, provider=provider)
         ],
     }
+    job = _persist_video_job_graph_os(job)
     return VIDEO_JOB_STORE.create(job)
 
 
@@ -3352,6 +3662,17 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         )
     if rework_run:
         AGENT_RUN_STORE.create(rework_run)
+        persisted_rework_run = _persist_agent_run_graph_os(rework_run)
+        AGENT_RUN_STORE.update(
+            rework_run["run_id"],
+            {
+                "artifact_registry": persisted_rework_run.get("artifact_registry") or {},
+                "agent_messages": persisted_rework_run.get("agent_messages") or [],
+                "latest_graph_state_snapshot": persisted_rework_run.get("latest_graph_state_snapshot") or {},
+                "graph_health": persisted_rework_run.get("graph_health") or {},
+                "persistence": persisted_rework_run.get("persistence") or {},
+            },
+        )
         feedback_decision = dict(feedback_decision)
         feedback_decision["triggered_rework_run_id"] = rework_run["run_id"]
         feedback_decision["triggered_rework_poll_url"] = f"/api/v1/agent-runs/{rework_run['run_id']}"
@@ -3749,6 +4070,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             )
         )
     job["history"] = history
+    job = _persist_video_job_graph_os(job, experiment)
     return job, ""
 
 
@@ -4251,6 +4573,7 @@ async def decide_video_generation_approval_gate(
             },
         )
 
+    job = _persist_video_job_graph_os(job)
     job = VIDEO_JOB_STORE.update(job_id, job)
     emit_event(
         "human_approval_gate_decided",
@@ -4300,6 +4623,7 @@ async def submit_video_generation_provider_job(
             },
         )
 
+    job = _persist_video_job_graph_os(job)
     job = VIDEO_JOB_STORE.update(job_id, job)
     provider_submit_blocked = (
         (job.get("provider_runtime") or {}).get("provider_status")
@@ -4355,6 +4679,7 @@ async def poll_video_generation_provider_job(
             },
         )
 
+    job = _persist_video_job_graph_os(job)
     job = VIDEO_JOB_STORE.update(job_id, job)
     emit_event(
         "video_generation_provider_polled",
@@ -4401,6 +4726,7 @@ async def update_video_generation_job_result(
                 "request_id": request_id,
             },
         )
+    job = _persist_video_job_graph_os(job)
     job = VIDEO_JOB_STORE.update(job_id, job)
 
     emit_event(
@@ -4450,6 +4776,7 @@ async def record_external_video_experiment(
             },
         )
 
+    job = _persist_video_job_graph_os(job)
     job = VIDEO_JOB_STORE.update(job_id, job)
     emit_event(
         "external_video_experiment_recorded",
@@ -4508,6 +4835,7 @@ async def create_video_generation_job_from_generation(
     if handoff:
         job["external_video_tool_handoff"] = handoff
     job["updated_at"] = _utc_now_iso()
+    job = _persist_video_job_graph_os(job)
     job = VIDEO_JOB_STORE.update(job["job_id"], job)
 
     emit_event(
@@ -5009,6 +5337,258 @@ async def generate_from_description(request: ProductDescriptionRequest, http_req
         )
 
 
+def _stored_run_by_id(run_id: str) -> dict:
+    for run in load_recent_agent_run_snapshots(100):
+        if str(run.get("run_id") or "") == str(run_id or ""):
+            return run
+    return {}
+
+
+def _stored_job_by_id(job_id: str) -> dict:
+    for job in load_recent_video_job_snapshots(100):
+        if str(job.get("job_id") or "") == str(job_id or ""):
+            return job
+    return {}
+
+
+def _graph_report_markdown(report: dict) -> str:
+    summary = report.get("summary") or {}
+    snapshot = report.get("graph_state_snapshot") or {}
+    safety = report.get("safety_boundaries") or {}
+    artifact_registry = report.get("artifact_registry") or {}
+    selected_edges = snapshot.get("selected_edges") or []
+    lines = [
+        f"# {report.get('report_title') or 'Agent Graph Report'}",
+        "",
+        f"- Report version: {report.get('report_version', '')}",
+        f"- Run ID: {summary.get('run_id', '')}",
+        f"- Job ID: {summary.get('job_id', '')}",
+        f"- Status: {summary.get('status', '')}",
+        f"- Next action: {report.get('next_recommended_action', '')}",
+        "",
+        "## Why This Is Not A Workflow",
+        "",
+        str(report.get("why_not_workflow") or ""),
+        "",
+        "## Graph State Snapshot",
+        "",
+        f"- Active loops: {', '.join(snapshot.get('active_loops') or []) or 'none'}",
+        f"- Active gates: {', '.join(snapshot.get('active_gates') or []) or 'none'}",
+        f"- Selected edges: {len(selected_edges)}",
+        f"- Artifact count: {(artifact_registry.get('artifact_counts') or {}).get('total', 0)}",
+        "",
+        "## Safety Boundaries",
+        "",
+        f"- external_api_called: {str(safety.get('external_api_called', False)).lower()}",
+        f"- cost_incurred_by_crossgrowth: {str(safety.get('cost_incurred_by_crossgrowth', False)).lower()}",
+        f"- llm_autonomous_decision_enabled: {str(safety.get('llm_autonomous_decision_enabled', False)).lower()}",
+    ]
+    return "\n".join(lines).strip()
+
+
+def _build_run_graph_report(run: dict) -> dict:
+    enriched = _refresh_agent_run_graph_os(run)
+    report = {
+        "report_version": "agent_graph_report_v1",
+        "report_type": "agent_run_graph_report",
+        "report_title": "Agent Run Graph Report",
+        "summary": {
+            "run_id": enriched.get("run_id", ""),
+            "job_id": "",
+            "status": enriched.get("status", ""),
+            "input_type": enriched.get("input_type", ""),
+            "waiting_for_user": bool(enriched.get("waiting_for_user")),
+        },
+        "graph_state_snapshot": enriched.get("latest_graph_state_snapshot") or {},
+        "events_summary": [
+            {
+                "event_type": event.get("event_type", ""),
+                "agent_id": event.get("agent_id", ""),
+                "message": event.get("message", ""),
+                "created_at": event.get("created_at", ""),
+            }
+            for event in (enriched.get("events") or [])[-30:]
+            if isinstance(event, dict)
+        ],
+        "router_decisions": enriched.get("graph_router_decisions") or [],
+        "artifact_registry": enriched.get("artifact_registry") or {},
+        "agent_messages": enriched.get("agent_messages") or [],
+        "graph_health": enriched.get("graph_health") or {},
+        "safety_boundaries": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+        },
+        "why_not_workflow": (
+            "The run records routed edges, validation/rework loops, agent-produced artifacts, "
+            "structured messages, and human/provider waiting states instead of one fixed linear sequence."
+        ),
+        "next_recommended_action": (
+            enriched.get("latest_graph_state_snapshot") or {}
+        ).get("next_graph_action", ""),
+    }
+    return report
+
+
+def _build_job_graph_report(job: dict) -> dict:
+    enriched = _refresh_video_job_graph_os(job)
+    experiments = list(enriched.get("external_video_experiments") or [])
+    report = {
+        "report_version": "agent_graph_report_v1",
+        "report_type": "video_job_graph_report",
+        "report_title": "Video Job Agent Graph Report",
+        "summary": {
+            "run_id": str((enriched.get("latest_graph_state_snapshot") or {}).get("run_id") or ""),
+            "job_id": enriched.get("job_id", ""),
+            "status": enriched.get("status", ""),
+            "provider": enriched.get("provider", ""),
+            "experiment_count": len(experiments),
+        },
+        "graph_state_snapshot": enriched.get("latest_graph_state_snapshot") or {},
+        "experiments_summary": [
+            {
+                "experiment_id": experiment.get("experiment_id", ""),
+                "experiment_round": experiment.get("experiment_round", 1),
+                "overall_score": experiment.get("overall_score"),
+                "decision_type": (experiment.get("agent_feedback_decision") or {}).get("decision_type", ""),
+                "created_at": experiment.get("created_at", ""),
+            }
+            for experiment in experiments[-10:]
+            if isinstance(experiment, dict)
+        ],
+        "artifact_registry": enriched.get("latest_artifact_registry") or {},
+        "approval_gate": enriched.get("latest_human_approval_gate") or {},
+        "provider_runtime": enriched.get("provider_runtime") or {},
+        "router_decisions": enriched.get("graph_router_decisions") or [],
+        "agent_messages": enriched.get("agent_messages") or [],
+        "graph_health": enriched.get("graph_health") or {},
+        "safety_boundaries": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+        },
+        "why_not_workflow": (
+            "The job continues the graph through experiments, router-selected rework, revised artifacts, "
+            "a decision gate, human approval, and a simulated/manual provider branch."
+        ),
+        "next_recommended_action": (
+            enriched.get("latest_graph_state_snapshot") or {}
+        ).get("next_graph_action", ""),
+    }
+    return report
+
+
+def _graph_report_response(report: dict, report_format: str) -> dict:
+    safe_format = str(report_format or "json").strip().lower()
+    payload = {
+        "status": "success",
+        "format": "markdown" if safe_format == "markdown" else "json",
+        "report": report,
+    }
+    if safe_format == "markdown":
+        payload["markdown_report"] = _graph_report_markdown(report)
+    export = {
+        "export_id": f"graph_export_{uuid4().hex[:16]}",
+        "export_type": report.get("report_type", ""),
+        "format": payload["format"],
+        "run_id": (report.get("summary") or {}).get("run_id", ""),
+        "job_id": (report.get("summary") or {}).get("job_id", ""),
+        "created_at": _utc_now_iso(),
+        "report": report,
+        "markdown_report": payload.get("markdown_report", ""),
+    }
+    try:
+        save_graph_report_export(export)
+    except Exception:
+        pass
+    return payload
+
+
+@app.get("/api/v1/agent-graph/history/runs")
+async def agent_graph_history_runs(limit: int = 10):
+    return {"status": "success", "runs": load_recent_agent_run_snapshots(max(1, min(limit, 50)))}
+
+
+@app.get("/api/v1/agent-graph/history/jobs")
+async def agent_graph_history_jobs(limit: int = 10):
+    return {"status": "success", "jobs": load_recent_video_job_snapshots(max(1, min(limit, 50)))}
+
+
+@app.get("/api/v1/agent-graph/history/artifacts")
+async def agent_graph_history_artifacts(limit: int = 20):
+    return {"status": "success", "artifacts": list_recent_artifacts(max(1, min(limit, 100)))}
+
+
+@app.get("/api/v1/agent-graph/history/events")
+async def agent_graph_history_events(limit: int = 50):
+    return {"status": "success", "events": list_recent_graph_events(max(1, min(limit, 200)))}
+
+
+@app.get("/api/v1/agent-graph/history/messages")
+async def agent_graph_history_messages(limit: int = 50):
+    return {"status": "success", "messages": list_recent_agent_messages(max(1, min(limit, 200)))}
+
+
+@app.get("/api/v1/agent-graph/history/snapshots")
+async def agent_graph_history_snapshots(limit: int = 20):
+    return {"status": "success", "snapshots": list_recent_graph_snapshots(max(1, min(limit, 100)))}
+
+
+@app.get("/api/v1/agent-graph/history/exports")
+async def agent_graph_history_exports(limit: int = 20):
+    return {"status": "success", "exports": list_recent_graph_exports(max(1, min(limit, 100)))}
+
+
+@app.get("/api/v1/agent-graph/history/summary")
+async def agent_graph_history_summary():
+    runs = load_recent_agent_run_snapshots(10)
+    jobs = load_recent_video_job_snapshots(10)
+    artifacts = list_recent_artifacts(20)
+    events = list_recent_graph_events(50)
+    messages = list_recent_agent_messages(50)
+    snapshots = list_recent_graph_snapshots(20)
+    exports = list_recent_graph_exports(20)
+    metadata = persistence_metadata()
+    return {
+        "status": "success",
+        **metadata,
+        "run_count": len(runs),
+        "job_count": len(jobs),
+        "artifact_count": len(artifacts),
+        "event_count": len(events),
+        "message_count": len(messages),
+        "snapshot_count": len(snapshots),
+        "export_count": len(exports),
+        "recent_runs": runs,
+        "recent_jobs": jobs,
+        "recent_artifacts": artifacts,
+        "recent_messages": messages,
+        "recent_snapshots": snapshots,
+    }
+
+
+@app.get("/api/v1/agent-graph/runs/{run_id}/report")
+async def agent_run_graph_report(run_id: str, format: str = "json"):
+    run = AGENT_RUN_STORE.get(run_id) or _stored_run_by_id(run_id)
+    if not run:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "agent run not found"},
+        )
+    return _graph_report_response(_build_run_graph_report(run), format)
+
+
+@app.get("/api/v1/video-generation/jobs/{job_id}/graph-report")
+async def video_job_graph_report(job_id: str, format: str = "json"):
+    job = VIDEO_JOB_STORE.get(job_id) or _stored_job_by_id(job_id)
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "video generation job not found"},
+        )
+    return _graph_report_response(_build_job_graph_report(job), format)
+
+
 @app.post("/api/v1/agent-runs/from-reviews", response_model=AgentRunCreateResponse)
 async def create_agent_run_from_reviews(
     request: PastedReviewsRequest,
@@ -5043,6 +5623,17 @@ async def create_agent_run_from_reviews(
             "output_language": output_language,
             "external_api_called": False,
             "cost_incurred_by_crossgrowth": False,
+        },
+    )
+    initial_run = _persist_agent_run_graph_os(AGENT_RUN_STORE.get(run["run_id"]) or run)
+    AGENT_RUN_STORE.update(
+        run["run_id"],
+        {
+            "artifact_registry": initial_run.get("artifact_registry") or {},
+            "agent_messages": initial_run.get("agent_messages") or [],
+            "latest_graph_state_snapshot": initial_run.get("latest_graph_state_snapshot") or {},
+            "graph_health": initial_run.get("graph_health") or {},
+            "persistence": initial_run.get("persistence") or {},
         },
     )
     background_tasks.add_task(_execute_pasted_reviews_agent_run, run["run_id"], safe_request)
