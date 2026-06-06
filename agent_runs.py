@@ -959,6 +959,7 @@ def build_lightweight_artifact_lineage(
     rework_run: dict[str, Any] | None = None,
     comparison: dict[str, Any] | None = None,
     decision_gate: dict[str, Any] | None = None,
+    human_approval_gate: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Summarize the experiment feedback artifact chain without changing runtime behavior."""
 
@@ -968,6 +969,7 @@ def build_lightweight_artifact_lineage(
     run = _experiment_rework_dict(rework_run)
     safe_comparison = _experiment_rework_dict(comparison)
     gate = _experiment_rework_dict(decision_gate)
+    approval_gate = _experiment_rework_dict(human_approval_gate)
     feedback = _experiment_rework_dict(baseline.get("agent_feedback_decision"))
     run_result = _experiment_rework_dict(run.get("result"))
     revised_plan = _experiment_rework_dict(run_result.get("revised_keyframe_plan"))
@@ -1065,6 +1067,16 @@ def build_lightweight_artifact_lineage(
         selected_next_agent_id=latest_router_decision.get("selected_next_agent_id"),
         route_type=latest_router_decision.get("route_type"),
     )
+    append_artifact(
+        "human_approval_gate",
+        str(approval_gate.get("approval_gate_version") or ""),
+        str(approval_gate.get("source_agent_id") or "human_approval_agent"),
+        str(approval_gate.get("status") or "pending_approval"),
+        str(approval_gate.get("approval_prompt") or "Human approval is required before provider handoff."),
+        approval_scope=approval_gate.get("approval_scope"),
+        blocks_provider_submit=approval_gate.get("blocks_provider_submit"),
+        blocks_external_api_call=approval_gate.get("blocks_external_api_call"),
+    )
 
     agents: list[str] = []
     for candidate in [
@@ -1077,6 +1089,8 @@ def build_lightweight_artifact_lineage(
         gate.get("next_agent_id"),
         gate.get("secondary_next_agent_id"),
         "graph_router_agent" if latest_router_decision else "",
+        approval_gate.get("source_agent_id"),
+        approval_gate.get("recommended_route_after_approval"),
     ]:
         agent_id = str(candidate or "").strip()
         if agent_id and agent_id not in agents:
@@ -1105,6 +1119,7 @@ def build_lightweight_artifact_lineage(
             "has_decision_gate": bool(gate),
             "has_graph_router_decision": bool(latest_router_decision),
             "has_centralized_route_decision": bool(latest_router_decision),
+            "has_human_approval_gate": bool(approval_gate),
             "is_linear_workflow": False,
         },
     }
@@ -1158,6 +1173,118 @@ def build_controlled_provider_handoff_checklist(
     }
 
 
+def build_human_approval_gate(
+    job: dict[str, Any] | None,
+    decision_gate: dict[str, Any] | None = None,
+    checklist: dict[str, Any] | None = None,
+    router_decision: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a pending human-owned gate without approving or submitting anything."""
+
+    safe_job = _experiment_rework_dict(job)
+    gate = _experiment_rework_dict(decision_gate)
+    safe_checklist = _experiment_rework_dict(checklist)
+    router = _experiment_rework_dict(router_decision)
+    preflight_checks = safe_checklist.get("preflight_checks")
+    approval_checklist = deepcopy(preflight_checks) if isinstance(preflight_checks, list) else []
+    return {
+        "approval_gate_version": "human_approval_gate_v1",
+        "source_agent_id": "human_approval_agent",
+        "triggered_by_agent_id": str(router.get("source_agent_id") or "graph_router_agent"),
+        "triggered_by_decision_type": str(
+            router.get("decision_type") or "route_to_human_approval_before_provider"
+        ),
+        "job_id": str(safe_job.get("job_id") or ""),
+        "approval_scope": "controlled_provider_or_manual_handoff",
+        "status": "pending_approval",
+        "allowed_transitions": ["approved", "rejected", "changes_requested", "cancelled"],
+        "requires_human_approval": True,
+        "blocks_provider_submit": True,
+        "blocks_external_api_call": True,
+        "provider_mode": "manual_or_simulated",
+        "recommended_route_after_approval": "provider_job_agent",
+        "approval_prompt": (
+            "Review the revised handoff, product identity, cost boundary, and one-short-clip "
+            "plan before provider/manual test."
+        ),
+        "approval_checklist": approval_checklist,
+        "decision_history": [],
+        "created_at": utc_now_iso(),
+        "decision_gate_version": str(gate.get("gate_version") or ""),
+        "checklist_version": str(safe_checklist.get("checklist_version") or ""),
+        "safety_boundaries": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+            "requires_human_approval_before_paid_generation": True,
+        },
+    }
+
+
+def apply_human_approval_decision(
+    approval_gate: dict[str, Any],
+    decision: dict[str, Any],
+) -> dict[str, Any]:
+    """Apply one terminal human decision while preserving provider safety boundaries."""
+
+    gate = deepcopy(_experiment_rework_dict(approval_gate))
+    if not gate:
+        raise ValueError("human approval gate is required")
+    current_status = str(gate.get("status") or "pending_approval").strip().lower()
+    if current_status != "pending_approval":
+        raise ValueError(f"human approval gate is already terminal: {current_status}")
+
+    payload = _experiment_rework_dict(decision)
+    next_status = str(payload.get("decision") or "").strip().lower()
+    allowed = list(gate.get("allowed_transitions") or [])
+    if next_status not in allowed:
+        raise ValueError(
+            "unsupported human approval decision; use approved, rejected, changes_requested, or cancelled"
+        )
+
+    timestamp = utc_now_iso()
+    approval_scope = str(
+        payload.get("approved_scope")
+        or gate.get("approval_scope")
+        or "controlled_provider_or_manual_handoff"
+    )
+    history_entry = {
+        "decision": next_status,
+        "reviewer": str(payload.get("reviewer") or "manual_user"),
+        "notes": str(payload.get("notes") or ""),
+        "approved_scope": approval_scope,
+        "timestamp": timestamp,
+    }
+    gate["status"] = next_status
+    gate["blocks_provider_submit"] = next_status != "approved"
+    gate["blocks_external_api_call"] = True
+    gate["requires_human_approval"] = True
+    gate["updated_at"] = timestamp
+    gate["decided_at"] = timestamp
+    gate["approved_scope"] = approval_scope if next_status == "approved" else ""
+    decision_history = list(gate.get("decision_history") or [])
+    decision_history.append(history_entry)
+    gate["decision_history"] = decision_history
+    if next_status == "changes_requested":
+        gate["recommended_next_agent_id"] = str(
+            payload.get("recommended_next_agent_id") or "prompt_handoff_agent"
+        )
+    elif next_status == "approved":
+        gate["recommended_next_agent_id"] = "provider_job_agent"
+
+    safety = dict(gate.get("safety_boundaries") or {})
+    safety.update(
+        {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+            "requires_human_approval_before_paid_generation": True,
+        }
+    )
+    gate["safety_boundaries"] = safety
+    return gate
+
+
 def build_demo_ready_run_summary(
     job: dict[str, Any] | None,
     baseline_experiment: dict[str, Any] | None,
@@ -1167,6 +1294,7 @@ def build_demo_ready_run_summary(
     decision_gate: dict[str, Any] | None,
     artifact_lineage: dict[str, Any] | None = None,
     handoff_checklist: dict[str, Any] | None = None,
+    human_approval_gate: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a compact demo narrative for the completed feedback and decision loop."""
 
@@ -1175,6 +1303,7 @@ def build_demo_ready_run_summary(
     run = _experiment_rework_dict(rework_run)
     safe_comparison = _experiment_rework_dict(comparison)
     gate = _experiment_rework_dict(decision_gate)
+    approval_gate = _experiment_rework_dict(human_approval_gate)
     lineage = _experiment_rework_dict(artifact_lineage) or build_lightweight_artifact_lineage(
         job,
         baseline,
@@ -1182,6 +1311,7 @@ def build_demo_ready_run_summary(
         run,
         safe_comparison,
         gate,
+        approval_gate,
     )
     checklist = _experiment_rework_dict(handoff_checklist)
     if not checklist and gate.get("should_proceed_to_provider_test") is True:
@@ -1203,6 +1333,8 @@ def build_demo_ready_run_summary(
     ]
     if checklist:
         created_artifacts.append("controlled_provider_handoff_checklist")
+    if approval_gate:
+        created_artifacts.append("human_approval_gate")
 
     feedback = _experiment_rework_dict(baseline.get("agent_feedback_decision"))
     router_summary = _experiment_rework_dict(
@@ -1233,6 +1365,13 @@ def build_demo_ready_run_summary(
             "decision": str(gate.get("decision_type") or "human_review_required"),
         },
     ]
+    if approval_gate:
+        decision_chain.append(
+            {
+                "agent_id": "human_approval_agent",
+                "decision": str(approval_gate.get("status") or "pending_approval"),
+            }
+        )
 
     return {
         "summary_version": "multi_agent_demo_run_summary_v1",
@@ -1256,7 +1395,11 @@ def build_demo_ready_run_summary(
             "status": str(safe_comparison.get("status") or ""),
         },
         "created_artifacts": created_artifacts,
-        "next_action": str(gate.get("recommended_next_action") or ""),
+        "next_action": (
+            "Human approval is required before the controlled provider/manual test."
+            if approval_gate
+            else str(gate.get("recommended_next_action") or "")
+        ),
         "human_review_required": True,
         "safety_summary": {
             "external_api_called": False,
@@ -1268,6 +1411,7 @@ def build_demo_ready_run_summary(
         "graph_router_summary": router_summary,
         "lineage": lineage,
         "controlled_provider_handoff_checklist": checklist,
+        "human_approval_gate": approval_gate,
     }
 
 

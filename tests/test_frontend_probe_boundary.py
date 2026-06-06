@@ -24,6 +24,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("async function postVideoGenerationExperiment(jobId, payload)", self.source)
         self.assertIn("async function postVideoProviderSubmit(jobId, payload)", self.source)
         self.assertIn("async function postVideoProviderPoll(jobId, payload)", self.source)
+        self.assertIn("async function getVideoApprovalGate(jobId)", self.source)
+        self.assertIn("async function postVideoApprovalDecision(jobId, payload)", self.source)
         self.assertIn("async function videoGenerationJsonResponse(response, fallbackKey)", self.source)
         self.assertIn("/api/v1/video-generation/jobs/from-generation", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}", self.source)
@@ -32,6 +34,11 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/experiments", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-submit", self.source)
         self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/provider-poll", self.source)
+        self.assertIn("/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/approval-gate", self.source)
+        self.assertIn(
+            "/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/approval-gate/decision",
+            self.source,
+        )
         self.assertIn("generation_data: latestProductData", self.source)
         self.assertIn("videoJobProviderSelect", self.source)
         self.assertIn("videoJobCreateBtn", self.source)
@@ -44,6 +51,8 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("secondExperimentComparisonMessage", self.source)
         self.assertIn("secondExternalExperimentComparisonPanel", self.source)
         self.assertIn("renderExperimentComparisonDecisionGate", self.source)
+        self.assertIn("function renderHumanApprovalGate(approvalGate, jobId)", self.source)
+        self.assertIn("async function updateHumanApprovalGate(decision)", self.source)
         self.assertIn("experimentDecisionGateMessage", self.source)
         self.assertIn("experimentComparisonDecisionGatePanel", self.source)
         self.assertIn("function renderDemoReadyRunSummary(summary)", self.source)
@@ -61,6 +70,33 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Why this is a multi-agent graph", self.source)
         self.assertIn("Controlled provider/manual handoff checklist", self.source)
         self.assertIn("This is not a linear workflow", self.source)
+        for approval_marker in [
+            "Human Approval Gate",
+            "Approval status",
+            "Approval scope",
+            "Blocks provider submit",
+            "Blocks external API call",
+            "Approval checklist",
+            "Approval decision history",
+            "Approve controlled test",
+            "Request changes",
+            "Reject",
+            "Cancel approval",
+            "Approved controlled provider/manual test",
+            "Blocked by human approval",
+            "Provider submit is blocked until human approval.",
+            "Approval required before provider/manual test.",
+            "Approval updated.",
+            "Failed to update approval gate.",
+            "Changes requested.",
+            "Approval rejected.",
+            "Approval cancelled.",
+            "humanApprovalGatePanel",
+            "humanApprovalGateStatus",
+            "blocked_by_human_approval",
+        ]:
+            with self.subTest(approval_marker=approval_marker):
+                self.assertIn(approval_marker, self.source)
         self.assertIn("renderVideoProviderProgress", self.source)
         self.assertIn("renderVideoCostEstimate", self.source)
         self.assertIn("providerPayload.cost_estimate", self.source)

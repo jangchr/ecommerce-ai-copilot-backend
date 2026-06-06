@@ -46,11 +46,14 @@ from schemas.api_contract import (
     VideoGenerationExperimentRequest,
     VideoGenerationProviderSubmitRequest,
     VideoGenerationProviderPollRequest,
+    VideoGenerationApprovalDecisionRequest,
+    VideoGenerationApprovalGateResponse,
     VideoGenerationStorageStatusResponse,
 )
 from agent_runs import (
     InMemoryAgentRunStore,
     append_graph_router_decision,
+    apply_human_approval_decision,
     apply_evidence_safe_storyboard_rework,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
@@ -58,6 +61,7 @@ from agent_runs import (
     build_experiment_comparison_decision_gate,
     build_experiment_feedback_decision,
     build_graph_router_decision,
+    build_human_approval_gate,
     build_lightweight_artifact_lineage,
     build_second_experiment_comparison,
     detect_storyboard_rework_need,
@@ -3364,6 +3368,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
     comparison_decision_gate: dict = {}
     artifact_lineage_summary: dict = {}
     controlled_provider_handoff_checklist: dict = {}
+    human_approval_gate: dict = {}
     demo_ready_run_summary: dict = {}
     if is_second_experiment:
         baseline_experiment = _find_second_experiment_baseline(existing_experiments, request)
@@ -3440,6 +3445,20 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 append_graph_router_decision(experiment, checklist_router_decision)
                 router_decisions.append(checklist_router_decision)
                 experiment["controlled_provider_handoff_checklist"] = controlled_provider_handoff_checklist
+                if (
+                    second_comparison.get("status") == "improved"
+                    and comparison_decision_gate.get("decision_type") == "proceed_to_controlled_test"
+                    and checklist_router_decision.get("decision_type")
+                    == "route_to_human_approval_before_provider"
+                    and checklist_router_decision.get("selected_next_agent_id") == "human_approval_agent"
+                ):
+                    human_approval_gate = build_human_approval_gate(
+                        job,
+                        decision_gate=comparison_decision_gate,
+                        checklist=controlled_provider_handoff_checklist,
+                        router_decision=checklist_router_decision,
+                    )
+                    experiment["human_approval_gate"] = human_approval_gate
             artifact_lineage_summary = build_lightweight_artifact_lineage(
                 job,
                 baseline_experiment=baseline_experiment,
@@ -3447,6 +3466,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 rework_run=comparison_rework_run,
                 comparison=second_comparison,
                 decision_gate=comparison_decision_gate,
+                human_approval_gate=human_approval_gate,
             )
             experiment["artifact_lineage"] = artifact_lineage_summary
             if controlled_provider_handoff_checklist:
@@ -3459,6 +3479,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                     comparison_decision_gate,
                     artifact_lineage_summary,
                     controlled_provider_handoff_checklist,
+                    human_approval_gate,
                 )
                 experiment["demo_ready_run_summary"] = demo_ready_run_summary
 
@@ -3477,6 +3498,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         job["latest_artifact_lineage"] = artifact_lineage_summary
     if controlled_provider_handoff_checklist:
         job["latest_controlled_provider_handoff_checklist"] = controlled_provider_handoff_checklist
+    if human_approval_gate:
+        job["latest_human_approval_gate"] = human_approval_gate
     if demo_ready_run_summary:
         job["latest_demo_ready_run_summary"] = demo_ready_run_summary
     if rework_run:
@@ -3516,6 +3539,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         job["agent_graph_feedback"][
             "latest_controlled_provider_handoff_checklist"
         ] = controlled_provider_handoff_checklist
+    if human_approval_gate:
+        job["agent_graph_feedback"]["latest_human_approval_gate"] = human_approval_gate
     if demo_ready_run_summary:
         job["agent_graph_feedback"]["latest_demo_ready_run_summary"] = demo_ready_run_summary
     job["updated_at"] = now
@@ -3687,6 +3712,30 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 human_approval_required=True,
             )
         )
+    if human_approval_gate:
+        history.append(
+            build_video_job_history_event(
+                "human_approval_gate_created",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                approval_gate_version=human_approval_gate.get("approval_gate_version", ""),
+                approval_scope=human_approval_gate.get("approval_scope", ""),
+                source_agent_id=human_approval_gate.get("source_agent_id", "human_approval_agent"),
+                approval_status=human_approval_gate.get("status", "pending_approval"),
+            )
+        )
+        history.append(
+            build_video_job_history_event(
+                "human_approval_pending",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                approval_scope=human_approval_gate.get("approval_scope", ""),
+                blocks_provider_submit=True,
+                blocks_external_api_call=True,
+            )
+        )
     if demo_ready_run_summary:
         history.append(
             build_video_job_history_event(
@@ -3744,6 +3793,91 @@ def _append_video_job_status_event(
         )
 
 
+def _apply_human_approval_to_video_job(
+    job: dict,
+    request: VideoGenerationApprovalDecisionRequest,
+) -> tuple[dict | None, str]:
+    approval_gate = job.get("latest_human_approval_gate")
+    if not isinstance(approval_gate, dict) or not approval_gate:
+        return None, "human approval gate not found"
+
+    try:
+        updated_gate = apply_human_approval_decision(
+            approval_gate,
+            {
+                "decision": request.decision,
+                "reviewer": request.reviewer,
+                "notes": request.notes,
+                "approved_scope": request.approved_scope,
+            },
+        )
+    except ValueError as exc:
+        return None, str(exc)
+
+    now = _utc_now_iso()
+    job["latest_human_approval_gate"] = updated_gate
+    feedback = (
+        dict(job.get("agent_graph_feedback") or {})
+        if isinstance(job.get("agent_graph_feedback"), dict)
+        else {}
+    )
+    feedback["latest_human_approval_gate"] = updated_gate
+    job["agent_graph_feedback"] = feedback
+
+    experiments = list(job.get("external_video_experiments") or job.get("external_experiments") or [])
+    for experiment in reversed(experiments):
+        if isinstance(experiment.get("human_approval_gate"), dict):
+            experiment["human_approval_gate"] = updated_gate
+            summary = (
+                dict(experiment.get("demo_ready_run_summary") or {})
+                if isinstance(experiment.get("demo_ready_run_summary"), dict)
+                else {}
+            )
+            if summary:
+                summary["human_approval_gate"] = updated_gate
+                experiment["demo_ready_run_summary"] = summary
+                job["latest_demo_ready_run_summary"] = summary
+                feedback["latest_demo_ready_run_summary"] = summary
+            break
+    job["external_video_experiments"] = experiments
+    job["external_experiments"] = experiments
+
+    decision_status = str(updated_gate.get("status") or "")
+    if decision_status == "approved":
+        job["controlled_provider_test_approval"] = {
+            "approved": True,
+            "provider_mode": "manual_or_simulated",
+            "external_api_call_allowed": False,
+            "approved_scope": str(
+                updated_gate.get("approved_scope")
+                or "controlled_provider_or_manual_handoff"
+            ),
+        }
+
+    history = list(job.get("history") or [])
+    job_status = normalize_video_job_status(
+        job.get("status", ""),
+        fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT,
+    )
+    history.append(
+        build_video_job_history_event(
+            f"human_approval_{decision_status}",
+            job_status,
+            updated_at=now,
+            approval_gate_version=updated_gate.get("approval_gate_version", ""),
+            approval_scope=updated_gate.get("approval_scope", ""),
+            reviewer=request.reviewer or "manual_user",
+            notes=_clean_description_text(request.notes),
+            blocks_provider_submit=bool(updated_gate.get("blocks_provider_submit", True)),
+            external_api_called=False,
+            cost_incurred_by_crossgrowth=False,
+        )
+    )
+    job["history"] = history
+    job["updated_at"] = now
+    return job, ""
+
+
 def _submit_video_generation_provider_job(job: dict, request: VideoGenerationProviderSubmitRequest) -> tuple[dict | None, str]:
     provider = normalize_video_provider(job.get("provider", ""))
     if not supports_provider_polling(provider):
@@ -3753,6 +3887,45 @@ def _submit_video_generation_provider_job(job: dict, request: VideoGenerationPro
         job.get("status", ""),
         fallback=VIDEO_JOB_STATUS_READY_FOR_MANUAL_EXPORT,
     )
+    approval_gate = job.get("latest_human_approval_gate")
+    if isinstance(approval_gate, dict) and approval_gate:
+        approval_status = str(approval_gate.get("status") or "pending_approval")
+        if approval_status != "approved":
+            now = _utc_now_iso()
+            runtime = (
+                dict(job.get("provider_runtime") or {})
+                if isinstance(job.get("provider_runtime"), dict)
+                else {}
+            )
+            runtime.update(
+                {
+                    "provider": provider,
+                    "provider_status": "blocked_by_human_approval",
+                    "mode": runtime.get("mode") or "simulated_provider_polling",
+                    "integration_mode": runtime.get("integration_mode") or "simulated",
+                    "real_external_api_call_enabled": False,
+                    "external_api_called": False,
+                    "blocked_reason": "human_approval_required",
+                    "approval_gate_status": approval_status,
+                }
+            )
+            job["provider_runtime"] = runtime
+            job["updated_at"] = now
+            history = list(job.get("history") or [])
+            history.append(
+                build_video_job_history_event(
+                    "provider_submit_blocked_by_human_approval",
+                    current_status,
+                    updated_at=now,
+                    provider=provider,
+                    approval_gate_status=approval_status,
+                    blocks_provider_submit=True,
+                    external_api_called=False,
+                )
+            )
+            job["history"] = history
+            return job, ""
+
     next_status = VIDEO_JOB_STATUS_QUEUED
     if not can_transition_video_job_status(current_status, next_status):
         return None, f"invalid video job status transition: {current_status} -> {next_status}"
@@ -3777,6 +3950,17 @@ def _submit_video_generation_provider_job(job: dict, request: VideoGenerationPro
 
     history = list(job.get("history") or [])
     history.extend(provider_submit_history_events(provider, next_status, now=now))
+    if isinstance(approval_gate, dict) and approval_gate.get("status") == "approved":
+        history.append(
+            build_video_job_history_event(
+                "provider_submit_allowed_by_human_approval",
+                next_status,
+                updated_at=now,
+                provider=provider,
+                approval_scope=approval_gate.get("approval_scope", ""),
+                external_api_called=False,
+            )
+        )
     _append_video_job_status_event(history, current_status, next_status, now)
     job["history"] = history
     return job, ""
@@ -4001,6 +4185,91 @@ async def create_video_generation_job(request: VideoGenerationJobRequest, http_r
     }
 
 
+@app.get(
+    "/api/v1/video-generation/jobs/{job_id}/approval-gate",
+    response_model=VideoGenerationApprovalGateResponse,
+)
+async def get_video_generation_approval_gate(job_id: str, http_request: Request):
+    request_id = http_request.state.request_id
+    job = VIDEO_JOB_STORE.get(job_id)
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation job not found",
+                "request_id": request_id,
+            },
+        )
+    approval_gate = job.get("latest_human_approval_gate")
+    if not isinstance(approval_gate, dict) or not approval_gate:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "human approval gate not found",
+                "request_id": request_id,
+            },
+        )
+    return {
+        "status": "success",
+        "job_id": job_id,
+        "approval_gate": approval_gate,
+        "request_id": request_id,
+    }
+
+
+@app.post(
+    "/api/v1/video-generation/jobs/{job_id}/approval-gate/decision",
+    response_model=VideoGenerationApprovalGateResponse,
+)
+async def decide_video_generation_approval_gate(
+    job_id: str,
+    request: VideoGenerationApprovalDecisionRequest,
+    http_request: Request,
+):
+    request_id = http_request.state.request_id
+    job = VIDEO_JOB_STORE.get(job_id)
+    if not job:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "video generation job not found",
+                "request_id": request_id,
+            },
+        )
+
+    job, approval_error = _apply_human_approval_to_video_job(job, request)
+    if approval_error:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": approval_error,
+                "request_id": request_id,
+            },
+        )
+
+    job = VIDEO_JOB_STORE.update(job_id, job)
+    emit_event(
+        "human_approval_gate_decided",
+        request_id,
+        endpoint="/api/v1/video-generation/jobs/{job_id}/approval-gate/decision",
+        status="success",
+        job_id=job_id,
+        approval_status=job["latest_human_approval_gate"].get("status", ""),
+        external_api_called=False,
+    )
+    return {
+        "status": "success",
+        "job_id": job_id,
+        "approval_gate": job["latest_human_approval_gate"],
+        "job": job,
+        "request_id": request_id,
+    }
+
+
 @app.post("/api/v1/video-generation/jobs/{job_id}/provider-submit", response_model=VideoGenerationJobStatusResponse)
 async def submit_video_generation_provider_job(
     job_id: str,
@@ -4032,8 +4301,16 @@ async def submit_video_generation_provider_job(
         )
 
     job = VIDEO_JOB_STORE.update(job_id, job)
+    provider_submit_blocked = (
+        (job.get("provider_runtime") or {}).get("provider_status")
+        == "blocked_by_human_approval"
+    )
     emit_event(
-        "video_generation_provider_submitted",
+        (
+            "video_generation_provider_submit_blocked"
+            if provider_submit_blocked
+            else "video_generation_provider_submitted"
+        ),
         request_id,
         endpoint="/api/v1/video-generation/jobs/{job_id}/provider-submit",
         status="success",

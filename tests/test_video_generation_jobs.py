@@ -79,6 +79,33 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
             json=payload,
         )
 
+    def _create_job_with_pending_human_approval(self) -> tuple[str, dict]:
+        job_id = self._create_video_generation_job()
+        baseline = self._record_external_experiment(
+            job_id,
+            product_consistency_score=1,
+            storyboard_following_score=3,
+            visual_quality_score=3,
+            ad_readiness_score=3,
+            overall_score=2,
+            failure_reason="Product identity drifted away from the blender.",
+        ).json()["job"]
+        rework_run_id = baseline["latest_agent_feedback_decision"]["triggered_rework_run_id"]
+        second = self._record_external_experiment(
+            job_id,
+            result_url="https://example.com/improved-second.mp4",
+            product_consistency_score=4,
+            storyboard_following_score=4,
+            visual_quality_score=4,
+            ad_readiness_score=4,
+            overall_score=4,
+            experiment_round=2,
+            linked_rework_run_id=rework_run_id,
+            prompt_source="revised_external_video_handoff",
+        )
+        self.assertEqual(second.status_code, 200)
+        return job_id, second.json()["job"]
+
     def test_video_generation_providers_endpoint_lists_supported_providers(self):
         response = self.client.get(
             "/api/v1/video-generation/providers",
@@ -664,6 +691,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("revised_external_video_handoff", artifact_types)
         self.assertIn("experiment_comparison_decision_gate", artifact_types)
         self.assertIn("graph_router_decision", artifact_types)
+        self.assertIn("human_approval_gate", artifact_types)
+        self.assertTrue(lineage["graph_evidence"]["has_human_approval_gate"])
         checklist = second_experiment["controlled_provider_handoff_checklist"]
         self.assertEqual(checklist["checklist_version"], "controlled_provider_handoff_checklist_v1")
         self.assertEqual(checklist["provider_mode"], "manual_or_simulated")
@@ -671,6 +700,17 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertFalse(checklist["cost_incurred_by_crossgrowth"])
         self.assertTrue(checklist["human_approval_required"])
         self.assertEqual(len(checklist["preflight_checks"]), 5)
+        approval_gate = second_experiment["human_approval_gate"]
+        self.assertEqual(approval_gate["approval_gate_version"], "human_approval_gate_v1")
+        self.assertEqual(approval_gate["status"], "pending_approval")
+        self.assertTrue(approval_gate["blocks_provider_submit"])
+        self.assertTrue(approval_gate["blocks_external_api_call"])
+        self.assertTrue(approval_gate["requires_human_approval"])
+        self.assertEqual(job["latest_human_approval_gate"], approval_gate)
+        self.assertEqual(
+            job["agent_graph_feedback"]["latest_human_approval_gate"],
+            approval_gate,
+        )
         summary = second_experiment["demo_ready_run_summary"]
         self.assertEqual(summary["summary_version"], "multi_agent_demo_run_summary_v1")
         self.assertTrue(summary["why_this_is_multi_agent_graph"])
@@ -699,11 +739,115 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("graph_router_route_selected", history_events)
         self.assertIn("graph_router_gate_route_selected", history_events)
         self.assertIn("graph_router_human_approval_route_selected", history_events)
+        self.assertIn("human_approval_gate_created", history_events)
+        self.assertIn("human_approval_pending", history_events)
         self.assertEqual(
             history_events.count("experiment_feedback_rework_requested"),
             1,
         )
         self.assertEqual(job["latest_experiment_rework_run_id"], triggered_rework_run_id)
+
+    def test_provider_submit_is_blocked_before_human_approval(self):
+        job_id, _ = self._create_job_with_pending_human_approval()
+
+        response = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-submit",
+            json={"notes": "Attempt before approval."},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        job = response.json()["job"]
+        self.assertEqual(job["status"], "ready_for_manual_export")
+        self.assertEqual(
+            job["provider_runtime"]["provider_status"],
+            "blocked_by_human_approval",
+        )
+        self.assertFalse(job["provider_runtime"]["external_api_called"])
+        self.assertIn(
+            "provider_submit_blocked_by_human_approval",
+            [event["event"] for event in job["history"]],
+        )
+
+    def test_human_approval_endpoint_allows_simulated_provider_submit(self):
+        job_id, _ = self._create_job_with_pending_human_approval()
+
+        fetched = self.client.get(
+            f"/api/v1/video-generation/jobs/{job_id}/approval-gate",
+        )
+        self.assertEqual(fetched.status_code, 200)
+        self.assertEqual(fetched.json()["approval_gate"]["status"], "pending_approval")
+
+        approved = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/approval-gate/decision",
+            json={
+                "decision": "approved",
+                "reviewer": "manual_user",
+                "notes": "Approved for one simulated provider test.",
+            },
+        )
+        self.assertEqual(approved.status_code, 200)
+        approved_job = approved.json()["job"]
+        approval_gate = approved.json()["approval_gate"]
+        self.assertEqual(approval_gate["status"], "approved")
+        self.assertFalse(approval_gate["blocks_provider_submit"])
+        self.assertTrue(approval_gate["blocks_external_api_call"])
+        self.assertTrue(approved_job["controlled_provider_test_approval"]["approved"])
+        self.assertFalse(
+            approved_job["controlled_provider_test_approval"]["external_api_call_allowed"]
+        )
+        self.assertIn(
+            "human_approval_approved",
+            [event["event"] for event in approved_job["history"]],
+        )
+
+        submitted = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-submit",
+            json={"notes": "Approved simulated submit."},
+        )
+        self.assertEqual(submitted.status_code, 200)
+        submitted_job = submitted.json()["job"]
+        self.assertEqual(submitted_job["status"], "queued")
+        self.assertFalse(submitted_job["provider_runtime"]["external_api_called"])
+        self.assertIn(
+            "provider_submit_allowed_by_human_approval",
+            [event["event"] for event in submitted_job["history"]],
+        )
+
+    def test_human_approval_changes_requested_keeps_provider_blocked(self):
+        job_id, _ = self._create_job_with_pending_human_approval()
+
+        changed = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/approval-gate/decision",
+            json={
+                "decision": "changes_requested",
+                "reviewer": "manual_user",
+                "notes": "Tighten the product identity handoff.",
+            },
+        )
+        self.assertEqual(changed.status_code, 200)
+        gate = changed.json()["approval_gate"]
+        self.assertEqual(gate["status"], "changes_requested")
+        self.assertTrue(gate["blocks_provider_submit"])
+        self.assertIn(
+            gate["recommended_next_agent_id"],
+            {"prompt_handoff_agent", "keyframe_agent"},
+        )
+        self.assertIn(
+            "human_approval_changes_requested",
+            [event["event"] for event in changed.json()["job"]["history"]],
+        )
+
+        submitted = self.client.post(
+            f"/api/v1/video-generation/jobs/{job_id}/provider-submit",
+            json={},
+        )
+        self.assertEqual(submitted.status_code, 200)
+        submitted_job = submitted.json()["job"]
+        self.assertEqual(
+            submitted_job["provider_runtime"]["provider_status"],
+            "blocked_by_human_approval",
+        )
+        self.assertNotEqual(submitted_job["status"], "queued")
 
     def test_second_external_experiment_regressed_against_selected_baseline(self):
         job_id = self._create_video_generation_job()

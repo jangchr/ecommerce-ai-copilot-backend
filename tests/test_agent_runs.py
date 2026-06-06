@@ -7,11 +7,13 @@ from fastapi.testclient import TestClient
 
 from agent_runs import (
     append_graph_router_decision,
+    apply_human_approval_decision,
     apply_evidence_safe_storyboard_rework,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
     build_experiment_comparison_decision_gate,
     build_graph_router_decision,
+    build_human_approval_gate,
     build_lightweight_artifact_lineage,
     build_revised_external_video_handoff_from_keyframe_plan,
     build_revised_keyframe_plan_from_experiment_feedback,
@@ -197,6 +199,24 @@ class AgentRunsEndpointTest(unittest.TestCase):
                 }
             ),
         )
+        checklist = build_controlled_provider_handoff_checklist(
+            {"job_id": "job_1"},
+            gate,
+            rework_run,
+            comparison,
+        )
+        approval_router = build_graph_router_decision(
+            {
+                "route_context_type": "controlled_provider_checklist",
+                "artifact_types": ["controlled_provider_handoff_checklist"],
+            }
+        )
+        approval_gate = build_human_approval_gate(
+            {"job_id": "job_1"},
+            gate,
+            checklist,
+            approval_router,
+        )
         lineage = build_lightweight_artifact_lineage(
             {"job_id": "job_1"},
             baseline,
@@ -204,12 +224,7 @@ class AgentRunsEndpointTest(unittest.TestCase):
             rework_run,
             comparison,
             gate,
-        )
-        checklist = build_controlled_provider_handoff_checklist(
-            {"job_id": "job_1"},
-            gate,
-            rework_run,
-            comparison,
+            approval_gate,
         )
         summary = build_demo_ready_run_summary(
             {"job_id": "job_1"},
@@ -220,6 +235,7 @@ class AgentRunsEndpointTest(unittest.TestCase):
             gate,
             lineage,
             checklist,
+            approval_gate,
         )
 
         self.assertEqual(lineage["lineage_version"], "agent_artifact_lineage_v1")
@@ -229,12 +245,14 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertIn("revised_external_video_handoff", artifact_types)
         self.assertIn("experiment_comparison_decision_gate", artifact_types)
         self.assertIn("graph_router_decision", artifact_types)
+        self.assertIn("human_approval_gate", artifact_types)
         self.assertFalse(lineage["graph_evidence"]["is_linear_workflow"])
         self.assertTrue(lineage["graph_evidence"]["has_rework_run"])
         self.assertIn("provider_job_agent", lineage["agents_involved"])
         self.assertIn("graph_router_agent", lineage["agents_involved"])
         self.assertTrue(lineage["graph_evidence"]["has_graph_router_decision"])
         self.assertTrue(lineage["graph_evidence"]["has_centralized_route_decision"])
+        self.assertTrue(lineage["graph_evidence"]["has_human_approval_gate"])
         self.assertEqual(checklist["checklist_version"], "controlled_provider_handoff_checklist_v1")
         self.assertEqual(len(checklist["preflight_checks"]), 5)
         self.assertTrue(all(check["required"] for check in checklist["preflight_checks"]))
@@ -248,6 +266,47 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertFalse(summary["is_linear_workflow"])
         self.assertEqual(summary["graph_router_summary"]["router_version"], "graph_router_agent_v1")
         self.assertFalse(summary["safety_summary"]["llm_autonomous_decision_enabled"])
+        self.assertEqual(summary["human_approval_gate"]["status"], "pending_approval")
+        self.assertIn("approval is required", summary["next_action"].lower())
+
+    def test_human_approval_gate_transitions_preserve_safety_boundaries(self):
+        checklist = build_controlled_provider_handoff_checklist(
+            {"job_id": "job_approval_1"},
+            {"gate_version": "experiment_comparison_decision_gate_v1"},
+        )
+        router = build_graph_router_decision(
+            {"route_context_type": "controlled_provider_checklist"}
+        )
+        approval_gate = build_human_approval_gate(
+            {"job_id": "job_approval_1"},
+            {"gate_version": "experiment_comparison_decision_gate_v1"},
+            checklist,
+            router,
+        )
+
+        self.assertEqual(approval_gate["approval_gate_version"], "human_approval_gate_v1")
+        self.assertEqual(approval_gate["status"], "pending_approval")
+        self.assertTrue(approval_gate["blocks_provider_submit"])
+        self.assertEqual(len(approval_gate["approval_checklist"]), 5)
+
+        approved = apply_human_approval_decision(
+            approval_gate,
+            {
+                "decision": "approved",
+                "reviewer": "manual_user",
+                "notes": "Approved for one simulated clip.",
+            },
+        )
+        self.assertEqual(approved["status"], "approved")
+        self.assertFalse(approved["blocks_provider_submit"])
+        self.assertTrue(approved["blocks_external_api_call"])
+        self.assertFalse(approved["safety_boundaries"]["external_api_called"])
+        self.assertFalse(approved["safety_boundaries"]["cost_incurred_by_crossgrowth"])
+        self.assertFalse(approved["safety_boundaries"]["llm_autonomous_decision_enabled"])
+        self.assertEqual(approved["decision_history"][0]["reviewer"], "manual_user")
+
+        with self.assertRaises(ValueError):
+            apply_human_approval_decision(approved, {"decision": "rejected"})
 
     def test_create_poll_events_and_complete_agent_run_from_reviews(self):
         with patch(

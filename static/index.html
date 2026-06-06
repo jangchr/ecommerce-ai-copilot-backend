@@ -3831,6 +3831,28 @@
                 centralizedRouteDecision: 'Centralized route decision',
                 routeSelectedByGraphRouter: 'Route selected by Graph Router Agent',
                 graphEvidenceRouteNote: 'Not a linear workflow: route was selected from graph evidence',
+                humanApprovalGateTitle: 'Human Approval Gate',
+                approvalStatus: 'Approval status',
+                approvalScope: 'Approval scope',
+                blocksProviderSubmit: 'Blocks provider submit',
+                blocksExternalApiCall: 'Blocks external API call',
+                approvalChecklist: 'Approval checklist',
+                approvalDecisionHistory: 'Approval decision history',
+                approveControlledTest: 'Approve controlled test',
+                requestChanges: 'Request changes',
+                rejectApproval: 'Reject',
+                cancelApproval: 'Cancel approval',
+                approvedControlledProviderTest: 'Approved controlled provider/manual test',
+                blockedByHumanApproval: 'Blocked by human approval',
+                providerSubmitBlockedUntilHumanApproval: 'Provider submit is blocked until human approval.',
+                approvalRequiredBeforeProviderTest: 'Approval required before provider/manual test.',
+                approvalUpdating: 'Updating approval...',
+                approvalUpdated: 'Approval updated.',
+                approvalUpdateFailed: 'Failed to update approval gate.',
+                changesRequested: 'Changes requested.',
+                approvalRejected: 'Approval rejected.',
+                approvalCancelled: 'Approval cancelled.',
+                approvalNotes: 'Approval notes',
                 feedbackDecision: 'Feedback decision',
                 reworkRun: 'Rework run',
                 decisionGate: 'Decision gate',
@@ -4245,6 +4267,28 @@
                 centralizedRouteDecision: '\u96c6\u4e2d\u5f0f\u8def\u7531\u51b3\u7b56',
                 routeSelectedByGraphRouter: '\u7531\u56fe\u8def\u7531 Agent \u9009\u62e9\u8def\u7531',
                 graphEvidenceRouteNote: '\u8fd9\u4e0d\u662f\u7ebf\u6027\u5de5\u4f5c\u6d41\uff1a\u8def\u7531\u7531\u56fe\u8bc1\u636e\u9009\u62e9',
+                humanApprovalGateTitle: '\u4eba\u5de5\u6279\u51c6\u95e8',
+                approvalStatus: '\u6279\u51c6\u72b6\u6001',
+                approvalScope: '\u6279\u51c6\u8303\u56f4',
+                blocksProviderSubmit: '\u963b\u6b62\u63d0\u4f9b\u65b9\u63d0\u4ea4',
+                blocksExternalApiCall: '\u963b\u6b62\u5916\u90e8 API \u8c03\u7528',
+                approvalChecklist: '\u6279\u51c6\u68c0\u67e5\u8868',
+                approvalDecisionHistory: '\u6279\u51c6\u51b3\u7b56\u5386\u53f2',
+                approveControlledTest: '\u6279\u51c6\u53d7\u63a7\u6d4b\u8bd5',
+                requestChanges: '\u8bf7\u6c42\u4fee\u6539',
+                rejectApproval: '\u62d2\u7edd',
+                cancelApproval: '\u53d6\u6d88\u6279\u51c6',
+                approvedControlledProviderTest: '\u5df2\u6279\u51c6\u53d7\u63a7\u63d0\u4f9b\u65b9 / \u624b\u52a8\u6d4b\u8bd5',
+                blockedByHumanApproval: '\u5df2\u88ab\u4eba\u5de5\u6279\u51c6\u95e8\u963b\u6b62',
+                providerSubmitBlockedUntilHumanApproval: '\u83b7\u5f97\u4eba\u5de5\u6279\u51c6\u524d\uff0c\u63d0\u4f9b\u65b9\u63d0\u4ea4\u4fdd\u6301\u963b\u6b62\u3002',
+                approvalRequiredBeforeProviderTest: '\u63d0\u4f9b\u65b9 / \u624b\u52a8\u6d4b\u8bd5\u524d\u9700\u8981\u4eba\u5de5\u6279\u51c6\u3002',
+                approvalUpdating: '\u6b63\u5728\u66f4\u65b0\u6279\u51c6...',
+                approvalUpdated: '\u6279\u51c6\u5df2\u66f4\u65b0\u3002',
+                approvalUpdateFailed: '\u65e0\u6cd5\u66f4\u65b0\u6279\u51c6\u95e8\u3002',
+                changesRequested: '\u5df2\u8bf7\u6c42\u4fee\u6539\u3002',
+                approvalRejected: '\u6279\u51c6\u5df2\u62d2\u7edd\u3002',
+                approvalCancelled: '\u6279\u51c6\u5df2\u53d6\u6d88\u3002',
+                approvalNotes: '\u6279\u51c6\u5907\u6ce8',
                 feedbackDecision: '\u53cd\u9988\u51b3\u7b56',
                 reworkRun: '\u8fd4\u5de5 run',
                 decisionGate: '\u51b3\u7b56\u95e8',
@@ -6623,6 +6667,20 @@
             return videoGenerationJsonResponse(response, 'providerStatusRefreshFailed');
         }
 
+        async function getVideoApprovalGate(jobId) {
+            const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/approval-gate`);
+            return videoGenerationJsonResponse(response, 'approvalUpdateFailed');
+        }
+
+        async function postVideoApprovalDecision(jobId, payload) {
+            const response = await fetch(`/api/v1/video-generation/jobs/${encodeURIComponent(jobId)}/approval-gate/decision`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || {})
+            });
+            return videoGenerationJsonResponse(response, 'approvalUpdateFailed');
+        }
+
         async function postPastedReviewWorkspaceAnalysis(payload) {
             const response = await fetch('/api/v1/analyze-pasted-review-workspace', {
                 method: 'POST',
@@ -8145,6 +8203,7 @@
                 ${block(t('videoJobPromptLabel'), prompt)}
                 <div class="feedback-box">${escapeHTML(t('videoJobManualExportNote'))}</div>
                 ${renderVideoCostEstimate(providerPayload.cost_estimate)}
+                ${renderHumanApprovalGate(job.latest_human_approval_gate, job.job_id)}
                 ${renderVideoProviderProgress(job)}
                 <div class="quick-use-pack-actions">
                     <button class="btn-secondary" type="button" id="videoJobRefreshBtn" onclick="refreshCurrentVideoJobStatus()">${escapeHTML(t('refreshJobStatus'))}</button>
@@ -8181,12 +8240,71 @@
             `;
         }
 
+        function renderHumanApprovalGate(approvalGate, jobId) {
+            if (!approvalGate || typeof approvalGate !== 'object') return '';
+            const checks = Array.isArray(approvalGate.approval_checklist)
+                ? approvalGate.approval_checklist
+                : [];
+            const history = Array.isArray(approvalGate.decision_history)
+                ? approvalGate.decision_history
+                : [];
+            const checkRows = checks.map((check) => `
+                <li><strong>${escapeHTML(check.status || 'pending')}</strong>: ${escapeHTML(check.label || check.check_id || '')}</li>
+            `).join('');
+            const historyRows = history.map((entry) => `
+                <li>
+                    <strong>${escapeHTML(entry.decision || '')}</strong>
+                    ${entry.reviewer ? ` - ${escapeHTML(entry.reviewer)}` : ''}
+                    ${entry.notes ? `: ${escapeHTML(entry.notes)}` : ''}
+                </li>
+            `).join('');
+            const status = approvalGate.status || 'pending_approval';
+            const isPending = status === 'pending_approval';
+            const statusMessage = status === 'approved'
+                ? t('approvedControlledProviderTest')
+                : (status === 'changes_requested'
+                    ? t('changesRequested')
+                    : (status === 'rejected'
+                        ? t('approvalRejected')
+                        : (status === 'cancelled'
+                            ? t('approvalCancelled')
+                            : t('approvalRequiredBeforeProviderTest'))));
+            return `
+                <div class="section-block human-approval-gate" id="humanApprovalGatePanel">
+                    <div class="json-key">${escapeHTML(t('humanApprovalGateTitle'))}</div>
+                    <div class="feedback-box">${escapeHTML(statusMessage)}</div>
+                    <div class="probe-grid">
+                        ${block(t('approvalStatus'), status)}
+                        ${block(t('approvalScope'), approvalGate.approval_scope || '')}
+                        ${block(t('blocksProviderSubmit'), String(approvalGate.blocks_provider_submit === true))}
+                        ${block(t('blocksExternalApiCall'), String(approvalGate.blocks_external_api_call === true))}
+                        ${block(t('humanApprovalRequired'), String(approvalGate.requires_human_approval === true))}
+                    </div>
+                    <div class="json-key">${escapeHTML(t('approvalChecklist'))}</div>
+                    ${checkRows ? `<ul>${checkRows}</ul>` : ''}
+                    <div class="json-key">${escapeHTML(t('approvalDecisionHistory'))}</div>
+                    ${historyRows ? `<ul>${historyRows}</ul>` : '<div class="recent-empty">-</div>'}
+                    <textarea id="humanApprovalNotesInput" rows="2" placeholder="${escapeHTML(t('approvalNotes'))}" ${isPending ? '' : 'disabled'}></textarea>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" type="button" data-approval-action="approved" onclick="updateHumanApprovalGate('approved')" ${isPending ? '' : 'disabled'}>${escapeHTML(t('approveControlledTest'))}</button>
+                        <button class="btn-secondary" type="button" data-approval-action="changes_requested" onclick="updateHumanApprovalGate('changes_requested')" ${isPending ? '' : 'disabled'}>${escapeHTML(t('requestChanges'))}</button>
+                        <button class="btn-secondary" type="button" data-approval-action="rejected" onclick="updateHumanApprovalGate('rejected')" ${isPending ? '' : 'disabled'}>${escapeHTML(t('rejectApproval'))}</button>
+                        <button class="btn-secondary" type="button" data-approval-action="cancelled" onclick="updateHumanApprovalGate('cancelled')" ${isPending ? '' : 'disabled'}>${escapeHTML(t('cancelApproval'))}</button>
+                    </div>
+                    <div class="quick-use-copy-status" id="humanApprovalGateStatus"></div>
+                    <input type="hidden" id="humanApprovalGateJobId" value="${escapeHTML(jobId || '')}" />
+                </div>
+            `;
+        }
+
         function renderVideoProviderProgress(job) {
             if (!job || !job.job_id) return '';
             const providerPayload = job.provider_payload || {};
             const runtime = job.provider_runtime || {};
+            const approvalGate = job.latest_human_approval_gate || {};
+            const approvalBlocked = !!approvalGate.approval_gate_version && approvalGate.status !== 'approved';
             const supportsPolling = !!(providerPayload.supports_async_polling || providerPayload.create_mode === 'planned_external_api');
-            const canSubmit = supportsPolling && job.status === 'ready_for_manual_export';
+            const canSubmit = supportsPolling && job.status === 'ready_for_manual_export' && !approvalBlocked;
             const canPoll = !!runtime.provider_job_id && ['queued', 'processing'].includes(job.status || '');
             const canComplete = !!runtime.provider_job_id && job.status === 'processing';
             const externalApiCalled = runtime.external_api_called === true ? 'true' : 'false';
@@ -8195,6 +8313,7 @@
                     <div class="json-key">${escapeHTML(t('providerProgressTitle'))}</div>
                     <div class="feedback-box">${escapeHTML(t('providerProgressNote'))}</div>
                     <div class="feedback-box">${escapeHTML(t('providerCostApprovalNote'))}</div>
+                    ${approvalBlocked ? `<div class="feedback-box">${escapeHTML(t('blockedByHumanApproval'))}. ${escapeHTML(t('providerSubmitBlockedUntilHumanApproval'))}</div>` : ''}
                     <div class="probe-grid" id="videoProviderRuntimePanel">
                         ${block(t('videoJobStatusLabel'), job.status || '')}
                         ${runtime.provider_job_id ? block(t('providerJobIdLabel'), runtime.provider_job_id) : ''}
@@ -8680,6 +8799,43 @@
             }
         }
 
+        function humanApprovalDecisionMessage(decision) {
+            if (decision === 'approved') return t('approvalUpdated');
+            if (decision === 'changes_requested') return t('changesRequested');
+            if (decision === 'rejected') return t('approvalRejected');
+            if (decision === 'cancelled') return t('approvalCancelled');
+            return t('approvalUpdated');
+        }
+
+        async function updateHumanApprovalGate(decision) {
+            const jobId = latestVideoGenerationJob?.job_id
+                || document.getElementById('humanApprovalGateJobId')?.value
+                || '';
+            const status = document.getElementById('humanApprovalGateStatus') || currentVideoJobStatusTarget();
+            const buttons = Array.from(document.querySelectorAll('[data-approval-action]'));
+            if (!jobId) {
+                if (status) status.textContent = t('approvalUpdateFailed');
+                return;
+            }
+            buttons.forEach((button) => { button.disabled = true; });
+            if (status) status.textContent = t('approvalUpdating');
+            try {
+                const response = await postVideoApprovalDecision(jobId, {
+                    decision,
+                    reviewer: 'manual_user',
+                    notes: (document.getElementById('humanApprovalNotesInput')?.value || '').trim(),
+                    approved_scope: 'controlled_provider_or_manual_handoff'
+                });
+                setCurrentVideoJob(response.job || latestVideoGenerationJob || {});
+                const nextStatus = document.getElementById('humanApprovalGateStatus') || currentVideoJobStatusTarget();
+                if (nextStatus) nextStatus.textContent = humanApprovalDecisionMessage(decision);
+                await refreshRecentVideoJobs();
+            } catch (error) {
+                if (status) status.textContent = error.message || t('approvalUpdateFailed');
+                buttons.forEach((button) => { button.disabled = false; });
+            }
+        }
+
         async function submitCurrentVideoProviderJob() {
             const status = currentVideoJobStatusTarget();
             const btn = document.getElementById('videoProviderSubmitBtn');
@@ -8696,7 +8852,13 @@
                     notes: (document.getElementById('videoResultNotesInput')?.value || '').trim()
                 });
                 setCurrentVideoJob(response.job || {});
-                if (status) status.textContent = t('providerJobSubmitted');
+                const nextStatus = currentVideoJobStatusTarget();
+                const blocked = response.job?.provider_runtime?.provider_status === 'blocked_by_human_approval';
+                if (nextStatus) {
+                    nextStatus.textContent = blocked
+                        ? t('providerSubmitBlockedUntilHumanApproval')
+                        : t('providerJobSubmitted');
+                }
                 await refreshRecentVideoJobs();
             } catch (error) {
                 if (status) status.textContent = error.message || t('providerJobSubmitFailed');

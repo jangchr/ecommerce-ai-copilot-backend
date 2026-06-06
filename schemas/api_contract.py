@@ -277,6 +277,21 @@ class VideoGenerationProviderPollRequest(BaseModel):
     notes: str = ""
 
 
+class VideoGenerationApprovalDecisionRequest(BaseModel):
+    decision: str
+    reviewer: str = "manual_user"
+    notes: str = ""
+    approved_scope: str = "controlled_provider_or_manual_handoff"
+
+
+class VideoGenerationApprovalGateResponse(BaseModel):
+    status: str
+    job_id: str = ""
+    approval_gate: Dict[str, Any] = Field(default_factory=dict)
+    job: Dict[str, Any] = Field(default_factory=dict)
+    request_id: Optional[str] = None
+
+
 class AmazonIntakeRequest(BaseModel):
     url: str
     product_category: str = "amazon_product"
