@@ -3411,3 +3411,37 @@ class MultiAgentWorkflowPanelProbeTests(unittest.TestCase):
         self.assertIn("agentDetailsCollapsedNote", source)
         self.assertIn("${renderAgentStatusBoard(orderedAgents)}", source)
         self.assertNotIn("????", source)
+
+
+class LiveAgentGraphBoardProbeTests(unittest.TestCase):
+    def test_live_agent_graph_board_frontend_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Live Agent Graph Board",
+            "Graph-first view: nodes stay in place",
+            "function renderLiveAgentGraphBoard(run, events)",
+            "liveAgentGraphBoard",
+            "detailedAgentGraphMap",
+            "Detailed Agent Graph Map",
+            "riskReworkLoop",
+            "Risk rework loop",
+            "Planner",
+            "Evidence",
+            "Strategy",
+            "Storyboard",
+            "Risk",
+            "Asset Lock",
+            "Keyframe",
+            "Prompt Handoff",
+            "Cost",
+            "Graph Router",
+            "Human Approval",
+            "Provider Job",
+            "Experiment",
+            "Finalizer",
+            "${renderLiveAgentGraphBoard(run, events)}",
+            "<summary>${escapeHTML(t('detailedAgentGraphMap'))}</summary>",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)

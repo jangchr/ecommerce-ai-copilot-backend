@@ -3633,6 +3633,18 @@
                 liveAgentRunStartFailed: 'Could not start live agent run.',
                 liveAgentRunId: 'Run ID',
                 agentGraphMap: 'Agent Graph Map',
+                liveAgentGraphBoard: 'Live Agent Graph Board',
+                liveAgentGraphBoardHint: 'Graph-first view: nodes stay in place; the active, completed, waiting, and blocked agents light up as the run progresses.',
+                liveGraphStatusDone: 'Done',
+                liveGraphStatusActive: 'Active',
+                liveGraphStatusWaiting: 'Waiting',
+                liveGraphStatusBlocked: 'Blocked',
+                liveGraphStatusRework: 'Rework',
+                liveGraphStatusIdle: 'Idle',
+                liveGraphDetails: 'Detailed live run data',
+                detailedAgentGraphMap: 'Detailed Agent Graph Map',
+                riskReworkLoop: 'Risk rework loop',
+                reworkLoopAvailable: 'Rework loop available',
                 graphExecutionMode: 'Graph execution mode',
                 autonomyLevel: 'Autonomy level',
                 activeNode: 'Active node',
@@ -4557,6 +4569,18 @@
                 liveAgentRunStartFailed: '无法启动实时 Agent Run。',
                 liveAgentRunId: 'Run ID',
                 agentGraphMap: 'Agent 图谱地图',
+                liveAgentGraphBoard: '实时 Agent 图板',
+                liveAgentGraphBoardHint: '优先看图：节点固定显示，运行中、已完成、等待和阻断的 Agent 会在图上亮起。',
+                liveGraphStatusDone: '已完成',
+                liveGraphStatusActive: '运行中',
+                liveGraphStatusWaiting: '等待中',
+                liveGraphStatusBlocked: '已阻断',
+                liveGraphStatusRework: '返工',
+                liveGraphStatusIdle: '空闲',
+                liveGraphDetails: '详细实时运行数据',
+                detailedAgentGraphMap: '详细 Agent 图谱',
+                riskReworkLoop: '风险返工回路',
+                reworkLoopAvailable: '可触发返工回路',
                 graphExecutionMode: '图谱执行模式',
                 autonomyLevel: '自治级别',
                 activeNode: '当前节点',
@@ -7944,6 +7968,154 @@
             `;
         }
 
+
+        function liveAgentGraphStatusTone(status) {
+            const value = String(status || '').toLowerCase();
+            if (value.includes('blocked') || value.includes('failed') || value.includes('rejected')) {
+                return { labelKey: 'liveGraphStatusBlocked', symbol: '⛔', border: '#ef4444', bg: '#fef2f2' };
+            }
+            if (value.includes('waiting') || value.includes('pending') || value.includes('approval')) {
+                return { labelKey: 'liveGraphStatusWaiting', symbol: '⏳', border: '#f59e0b', bg: '#fffbeb' };
+            }
+            if (value.includes('running') || value.includes('active') || value.includes('processing')) {
+                return { labelKey: 'liveGraphStatusActive', symbol: '🟦', border: '#3b82f6', bg: '#eff6ff' };
+            }
+            if (value.includes('rework')) {
+                return { labelKey: 'liveGraphStatusRework', symbol: '↩️', border: '#8b5cf6', bg: '#f5f3ff' };
+            }
+            if (value.includes('complete') || value.includes('approved') || value.includes('done')) {
+                return { labelKey: 'liveGraphStatusDone', symbol: '✅', border: '#22c55e', bg: '#f0fdf4' };
+            }
+            return { labelKey: 'liveGraphStatusIdle', symbol: '○', border: '#cbd5e1', bg: '#f8fafc' };
+        }
+
+        function liveAgentGraphNodeLabel(agentId) {
+            const labels = {
+                planner_agent: 'Planner',
+                evidence_agent: 'Evidence',
+                strategy_agent: 'Strategy',
+                storyboard_agent: 'Storyboard',
+                risk_agent: 'Risk',
+                asset_lock_agent: 'Asset Lock',
+                product_identity_validator: 'Identity Check',
+                keyframe_agent: 'Keyframe',
+                prompt_handoff_agent: 'Prompt Handoff',
+                cost_agent: 'Cost',
+                route_selector_agent: 'Route Selector',
+                graph_router_agent: 'Graph Router',
+                human_approval_agent: 'Human Approval',
+                provider_job_agent: 'Provider Job',
+                experiment_agent: 'Experiment',
+                finalizer_agent: 'Finalizer'
+            };
+            return labels[agentId] || agentId;
+        }
+
+        function liveAgentGraphNodeStatus(run, agentId, currentAgentId) {
+            const nodes = Array.isArray(run?.graph_nodes) ? run.graph_nodes : [];
+            const node = nodes.find((item) => item && item.node_id === agentId);
+            if (currentAgentId && currentAgentId === agentId) return 'active';
+            if (node?.status) return node.status;
+
+            const agents = Array.isArray(run?.agents) ? run.agents : [];
+            const agent = agents.find((item) => item && item.agent_id === agentId);
+            if (agent?.status) return agent.status;
+
+            if (agentId === 'human_approval_agent' && run?.waiting_for_user) return 'waiting_for_user';
+            if (agentId === 'graph_router_agent' && JSON.stringify(run || {}).includes('graph_router_agent')) return 'complete';
+            return 'pending';
+        }
+
+        function liveAgentGraphNodeCard(run, agentId, currentAgentId) {
+            const status = liveAgentGraphNodeStatus(run, agentId, currentAgentId);
+            const tone = liveAgentGraphStatusTone(status);
+            const isActive = currentAgentId && currentAgentId === agentId;
+            return `
+                <div style="
+                    min-width:128px;
+                    border:2px solid ${tone.border};
+                    background:${tone.bg};
+                    border-radius:14px;
+                    padding:10px 12px;
+                    box-shadow:${isActive ? '0 0 0 4px rgba(59,130,246,0.16)' : 'none'};
+                ">
+                    <div style="font-weight:800; font-size:0.9rem;">${tone.symbol} ${escapeHTML(liveAgentGraphNodeLabel(agentId))}</div>
+                    <div style="font-size:0.78rem; opacity:0.82; margin-top:4px;">${escapeHTML(t(tone.labelKey))}: ${escapeHTML(status || 'pending')}</div>
+                </div>
+            `;
+        }
+
+        function liveAgentGraphRow(run, agentIds, currentAgentId) {
+            return `
+                <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0;">
+                    ${agentIds.map((agentId, index) => `
+                        ${index ? '<div style="font-weight:900; color:#64748b;">→</div>' : ''}
+                        ${liveAgentGraphNodeCard(run, agentId, currentAgentId)}
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderLiveAgentGraphBoard(run, events) {
+            if (!run) return '';
+            const currentAgentId = run.current_agent_id || run.active_node_id || '';
+            const latestEvent = Array.isArray(events) && events.length ? events[events.length - 1] : null;
+            const hasRework = Array.isArray(run.rework_loops) && run.rework_loops.length > 0;
+            const hasWaiting = Boolean(run.waiting_for_user);
+            const hasRouter = JSON.stringify(run || {}).includes('graph_router_agent');
+            const boardStatus = currentAgentId
+                ? `${t('currentAgent')}: ${liveAgentGraphNodeLabel(currentAgentId)}`
+                : `${t('runStatus')}: ${run.status || 'pending'}`;
+
+            return `
+                <div class="section-block" id="liveAgentGraphBoardPanel" style="border:1px solid #c7d2fe; background:#f8fbff;">
+                    <div class="probe-header">
+                        <h4>${escapeHTML(t('liveAgentGraphBoard'))}</h4>
+                        <span class="source-badge">${escapeHTML(boardStatus)}</span>
+                    </div>
+                    <div class="feedback-box">${escapeHTML(t('liveAgentGraphBoardHint'))}</div>
+
+                    <div style="overflow-x:auto; padding-bottom:6px;">
+                        ${liveAgentGraphRow(run, ['planner_agent', 'evidence_agent', 'strategy_agent', 'storyboard_agent', 'risk_agent'], currentAgentId)}
+
+                        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 4px 0;">
+                            <span class="metric-pill">↩ ${escapeHTML(t('riskReworkLoop'))}</span>
+                            <span class="metric-pill">${hasRework ? escapeHTML(t('reworkApplied')) : escapeHTML(t('reworkLoopAvailable'))}</span>
+                        </div>
+
+                        ${liveAgentGraphRow(run, ['asset_lock_agent', 'product_identity_validator', 'keyframe_agent', 'prompt_handoff_agent', 'cost_agent', 'route_selector_agent'], currentAgentId)}
+
+                        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 4px 0;">
+                            <span class="metric-pill">${escapeHTML(t('branchSelected'))}: ${escapeHTML(run.branch_selected || 'manual_external_tool_handoff')}</span>
+                            <span class="metric-pill">${escapeHTML(t('waitingForUser'))}: ${hasWaiting ? escapeHTML(t('yesLabel')) : escapeHTML(t('noLabel'))}</span>
+                            <span class="metric-pill">${escapeHTML(t('llmAutonomousDecision'))}: ${run.llm_autonomous_decision_enabled ? escapeHTML(t('yesLabel')) : escapeHTML(t('noLabel'))}</span>
+                        </div>
+
+                        ${liveAgentGraphRow(run, ['graph_router_agent', 'human_approval_agent', 'provider_job_agent', 'experiment_agent', 'finalizer_agent'], currentAgentId)}
+                    </div>
+
+                    <div class="metric-strip">
+                        ${metricPill(t('liveGraphStatusDone'), (run.graph_nodes || []).filter((node) => String(node.status || '').includes('complete')).length)}
+                        ${metricPill(t('liveGraphStatusActive'), currentAgentId ? liveAgentGraphNodeLabel(currentAgentId) : 'n/a')}
+                        ${metricPill(t('liveGraphStatusWaiting'), hasWaiting ? t('yesLabel') : t('noLabel'))}
+                        ${metricPill(t('graphRouterAgent'), hasRouter ? t('yesLabel') : t('noLabel'))}
+                    </div>
+
+                    <details style="margin-top:10px;">
+                        <summary>${escapeHTML(t('liveGraphDetails'))}</summary>
+                        <div class="probe-grid">
+                            ${block(t('graphExecutionMode'), run.graph_execution_mode || '')}
+                            ${block(t('autonomyLevel'), run.autonomy_level || '')}
+                            ${block(t('activeNode'), currentAgentId || 'n/a')}
+                            ${block(t('branchSelected'), run.branch_selected || '')}
+                            ${block(t('latestEvents'), latestEvent ? `${latestEvent.event_type || ''}: ${latestEvent.message || ''}` : '')}
+                        </div>
+                    </details>
+                </div>
+            `;
+        }
+
+
         function renderAgentLiveRunTimeline(run, eventsOverride = null) {
             const target = document.getElementById('agentLiveRunTimeline');
             if (!target || !run) return;
@@ -7989,7 +8161,11 @@
                     ${block(t('runStatus'), run.status || '')}
                     ${block(t('currentAgent'), currentAgent || 'n/a')}
                 </div>
-                ${renderAgentGraphMap(run)}
+                ${renderLiveAgentGraphBoard(run, events)}
+                <details class="section-block">
+                    <summary>${escapeHTML(t('detailedAgentGraphMap'))}</summary>
+                    ${renderAgentGraphMap(run)}
+                </details>
                 ${renderRevisedKeyframePlan(revisedKeyframePlan)}
                 ${renderRevisedExternalVideoHandoff(revisedExternalVideoHandoff)}
                 <div class="json-key">${escapeHTML(t('latestEvents'))}</div>
