@@ -39,9 +39,25 @@ Write-Host "Base URL: $base"
 $page = Invoke-WebRequest -Uri "$base/" -TimeoutSec 120
 Add-Check "page_load" ($page.StatusCode -eq 200)
 Add-Check "graph_board_marker" ($page.Content -match "Live Agent Graph Board")
+Add-Check "project_workspace_marker" ($page.Content -match "Project Workspace")
 Add-Check "no_garbled_marker" (-not ($page.Content -match "\?\?\?\?"))
 
+$projectCreated = Invoke-CgJson "POST" "/api/v1/projects" @{
+    project_name = "Agent Graph OS Public Smoke"
+    product_name = "Portable Mini Blender"
+    product_category = "kitchen_appliance"
+    source_type = "manual"
+}
+$projectId = [string]$projectCreated.project.project_id
+Add-Check "project_created" (-not [string]::IsNullOrWhiteSpace($projectId))
+$projectRead = Invoke-CgJson "GET" "/api/v1/projects/$projectId" $null
+$projectAssets = Invoke-CgJson "GET" "/api/v1/projects/$projectId/assets" $null
+Add-Check "project_readable" ($projectRead.project.project_id -eq $projectId)
+Add-Check "project_assets_list" ($null -ne $projectAssets.assets)
+Write-Host "Asset upload skipped in public smoke; upload is covered by local multipart tests." -ForegroundColor Yellow
+
 $reviewRequest = @{
+    project_id = $projectId
     product_name = "Portable Mini Blender"
     product_category = "kitchen_appliance"
     product_description = "A compact rechargeable blender for smoothies and travel."
@@ -53,6 +69,7 @@ $reviewRequest = @{
 
 $generated = Invoke-CgJson "POST" "/api/v1/generate-from-reviews" $reviewRequest
 Add-Check "generation_success" ($generated.status -eq "success")
+Add-Check "generation_project_scope" ($generated.data.project_id -eq $projectId)
 
 $runCreated = Invoke-CgJson "POST" "/api/v1/agent-runs/from-reviews" $reviewRequest
 $runId = [string]$runCreated.run.run_id
@@ -61,14 +78,17 @@ $run = Invoke-CgJson "GET" "/api/v1/agent-runs/$runId" $null
 $events = Invoke-CgJson "GET" "/api/v1/agent-runs/$runId/events" $null
 Add-Check "agent_run_created" (-not [string]::IsNullOrWhiteSpace($runId))
 Add-Check "agent_run_has_events" ($events.events.Count -gt 0)
+Add-Check "agent_run_project_scope" ($run.run.project_id -eq $projectId)
 
 $jobCreated = Invoke-CgJson "POST" "/api/v1/video-generation/jobs/from-generation" @{
     generation_data = $generated.data
     provider = "runway"
     output_language = "en"
+    project_id = $projectId
 }
 $jobId = [string]$jobCreated.job.job_id
 Add-Check "video_job_created" (-not [string]::IsNullOrWhiteSpace($jobId))
+Add-Check "video_job_project_scope" ($jobCreated.job.project_id -eq $projectId)
 
 $baseline = Invoke-CgJson "POST" "/api/v1/video-generation/jobs/$jobId/experiments" @{
     tool_name = "manual_test"
@@ -103,7 +123,8 @@ $second = Invoke-CgJson "POST" "/api/v1/video-generation/jobs/$jobId/experiments
     notes = "Agent Graph OS public smoke improved round."
 }
 Add-Check "second_experiment_comparison" ($null -ne $second.job.latest_second_experiment_comparison)
-Add-Check "artifact_registry_present" ($second.job.latest_artifact_registry.registry_version -eq "artifact_registry_v1")
+Add-Check "artifact_registry_v2_present" ($second.job.latest_artifact_registry.registry_version -eq "artifact_registry_v2")
+Add-Check "artifact_registry_project_scope" ($second.job.latest_artifact_registry.project_id -eq $projectId)
 
 if ($second.job.latest_human_approval_gate) {
     $approved = Invoke-CgJson "POST" "/api/v1/video-generation/jobs/$jobId/approval-gate/decision" @{
@@ -136,7 +157,19 @@ $jobReport = Invoke-CgJson "GET" "/api/v1/video-generation/jobs/$jobId/graph-rep
 Add-Check "history_summary_success" ($history.status -eq "success")
 Add-Check "run_report_success" ($runReport.status -eq "success")
 Add-Check "job_markdown_report_success" (-not [string]::IsNullOrWhiteSpace($jobReport.markdown_report))
+Add-Check "job_report_project_scope" ($jobReport.report.project_id -eq $projectId)
 Add-Check "cost_remains_false" ($jobReport.report.safety_boundaries.cost_incurred_by_crossgrowth -eq $false)
+
+$projectSummary = Invoke-CgJson "GET" "/api/v1/projects/$projectId/graph-summary" $null
+$projectRunHistory = Invoke-CgJson "GET" "/api/v1/projects/$projectId/history/runs" $null
+$projectJobHistory = Invoke-CgJson "GET" "/api/v1/projects/$projectId/history/jobs" $null
+$projectArtifactHistory = Invoke-CgJson "GET" "/api/v1/projects/$projectId/history/artifacts" $null
+$projectReportHistory = Invoke-CgJson "GET" "/api/v1/projects/$projectId/history/reports" $null
+Add-Check "project_graph_summary_success" ($projectSummary.status -eq "success")
+Add-Check "project_run_history_success" ($null -ne $projectRunHistory.runs)
+Add-Check "project_job_history_success" ($projectJobHistory.jobs.job_id -contains $jobId)
+Add-Check "project_artifact_history_success" ($projectArtifactHistory.artifacts.Count -gt 0)
+Add-Check "project_report_history_success" ($projectReportHistory.reports.Count -gt 0)
 
 Write-Host ""
 $checks | ConvertTo-Json -Depth 5

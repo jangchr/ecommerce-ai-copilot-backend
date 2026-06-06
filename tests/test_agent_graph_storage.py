@@ -6,9 +6,15 @@ import unittest
 from unittest.mock import patch
 
 from agent_graph_storage import (
+    DEFAULT_PROJECT_ID,
     load_artifact_registry_snapshot,
+    load_project,
+    load_project_asset,
     load_recent_agent_run_snapshots,
     load_recent_video_job_snapshots,
+    list_project_assets,
+    list_project_records,
+    list_recent_projects,
     list_recent_agent_messages,
     list_recent_graph_events,
     list_recent_graph_exports,
@@ -20,7 +26,10 @@ from agent_graph_storage import (
     save_graph_event_snapshot,
     save_graph_report_export,
     save_graph_state_snapshot,
+    save_project_asset_snapshot,
+    save_project_snapshot,
     save_video_job_snapshot,
+    update_project_summary,
 )
 
 
@@ -115,6 +124,53 @@ class AgentGraphStorageTest(unittest.TestCase):
         records = load_recent_agent_run_snapshots()
 
         self.assertEqual([record["run_id"] for record in records], ["valid_run"])
+
+    def test_project_workspace_and_assets_round_trip(self):
+        project = save_project_snapshot(
+            {
+                "project_version": "project_workspace_v1",
+                "project_id": "project_storage_1",
+                "project_name": "Portable Blender Launch",
+                "product_name": "Portable Mini Blender",
+                "product_category": "kitchen_appliance",
+                "source_type": "manual",
+                "status": "active",
+                "created_at": "2026-06-06T03:00:00Z",
+                "updated_at": "2026-06-06T03:00:00Z",
+            }
+        )
+        asset = save_project_asset_snapshot(
+            {
+                "asset_version": "project_asset_v1",
+                "asset_id": "asset_storage_1",
+                "project_id": project["project_id"],
+                "role": "primary_product",
+                "filename": "portable-blender.png",
+                "content_type": "image/png",
+                "size_bytes": 128,
+                "created_at": "2026-06-06T03:01:00Z",
+            }
+        )
+        save_agent_run_snapshot(
+            {
+                "run_id": "run_project_storage_1",
+                "project_id": project["project_id"],
+                "updated_at": "2026-06-06T03:02:00Z",
+            }
+        )
+        summary = update_project_summary(project["project_id"])
+
+        self.assertEqual(load_project(project["project_id"])["project_name"], "Portable Blender Launch")
+        self.assertEqual(list_recent_projects()[0]["project_id"], project["project_id"])
+        self.assertEqual(load_project_asset(project["project_id"], asset["asset_id"])["role"], "primary_product")
+        self.assertEqual(list_project_assets(project["project_id"])[0]["filename"], "portable-blender.png")
+        self.assertEqual(list_project_records("runs", project["project_id"])[0]["run_id"], "run_project_storage_1")
+        self.assertEqual(summary["graph_summary"]["asset_count"], 1)
+        self.assertEqual(summary["graph_summary"]["run_count"], 1)
+        self.assertEqual(
+            list_project_records("runs", DEFAULT_PROJECT_ID),
+            [],
+        )
 
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
 from copy import deepcopy
+import os
+from tempfile import TemporaryDirectory
 import time
 import unittest
 from unittest.mock import AsyncMock, patch
@@ -119,7 +121,9 @@ class AgentRunsEndpointTest(unittest.TestCase):
                 "llm_autonomous_decision_enabled": False,
             },
         )
-        self.assertEqual(registry["registry_version"], "artifact_registry_v1")
+        self.assertEqual(registry["registry_version"], "artifact_registry_v2")
+        self.assertIn("artifact_registry_v1", registry["compatible_with"])
+        self.assertEqual(registry["project_id"], "demo_project_default")
         artifact_types = {item["artifact_type"] for item in registry["artifacts"]}
         self.assertTrue(
             {
@@ -131,6 +135,7 @@ class AgentRunsEndpointTest(unittest.TestCase):
             }.issubset(artifact_types)
         )
         self.assertFalse(registry["graph_evidence"]["is_linear_workflow"])
+        self.assertFalse(registry["lineage_summary"]["is_linear_workflow"])
         self.assertEqual(snapshot["snapshot_version"], "graph_state_snapshot_v1")
         self.assertFalse(snapshot["is_linear_workflow"])
         self.assertTrue(snapshot["selected_edges"])
@@ -409,6 +414,7 @@ class AgentRunsEndpointTest(unittest.TestCase):
         run_id = created_run["run_id"]
         self.assertIn(created_run["status"], {"queued", "running"})
         self.assertEqual(created_run["input_type"], "pasted_reviews")
+        self.assertEqual(created_run["project_id"], "demo_project_default")
         self.assertFalse(created_run["external_api_called"])
         self.assertFalse(created_run["cost_incurred_by_crossgrowth"])
 
@@ -440,6 +446,7 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertEqual(completed_run["loop_count"], 0)
         self.assertIn("waiting_for_user", completed_run)
         self.assertEqual(completed_run["branch_selected"], "manual_external_tool_handoff")
+        self.assertEqual(completed_run["artifact_registry"]["registry_version"], "artifact_registry_v2")
         self.assertIsInstance(completed_run["result"], dict)
         self.assertIn("video_generation_packet", completed_run["result"])
         self.assertIn("external_video_tool_handoff", completed_run["result"])
@@ -477,6 +484,68 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertIn("waiting_for_user", event_types)
         self.assertIn("run_completed", event_types)
         self.assertIn("graph_completed", event_types)
+
+    def test_project_workspace_create_get_and_default_run_scope(self):
+        with TemporaryDirectory() as temp_dir, patch.dict(
+            os.environ,
+            {"AGENT_GRAPH_STORAGE_PATH": temp_dir},
+        ):
+            created = self.client.post(
+                "/api/v1/projects",
+                json={
+                    "project_name": "Portable Blender Launch",
+                    "product_name": "Portable Mini Blender",
+                    "product_category": "kitchen_appliance",
+                    "source_type": "manual",
+                },
+            )
+            self.assertEqual(created.status_code, 200, created.text)
+            project = created.json()["project"]
+            self.assertEqual(project["project_version"], "project_workspace_v1")
+            self.assertTrue(project["project_id"])
+            self.assertEqual(
+                project["durability_note"],
+                "File-backed demo storage; durability depends on deployment storage configuration.",
+            )
+            fetched = self.client.get(f"/api/v1/projects/{project['project_id']}")
+            self.assertEqual(fetched.status_code, 200)
+            self.assertEqual(fetched.json()["project"]["project_id"], project["project_id"])
+
+            with patch(
+                "main.generate_pasted_reviews_brief",
+                new=AsyncMock(return_value=GENERATED_REVIEWS_BRIEF),
+            ):
+                run_response = self.client.post(
+                    "/api/v1/agent-runs/from-reviews",
+                    json=VALID_REVIEWS_REQUEST,
+                )
+            self.assertEqual(run_response.status_code, 200, run_response.text)
+            self.assertEqual(
+                run_response.json()["run"]["project_id"],
+                "demo_project_default",
+            )
+
+            project_request = {
+                **VALID_REVIEWS_REQUEST,
+                "project_id": project["project_id"],
+            }
+            with patch(
+                "main.generate_pasted_reviews_brief",
+                new=AsyncMock(return_value=GENERATED_REVIEWS_BRIEF),
+            ):
+                scoped_run_response = self.client.post(
+                    "/api/v1/agent-runs/from-reviews",
+                    json=project_request,
+                )
+            self.assertEqual(
+                scoped_run_response.status_code,
+                200,
+                scoped_run_response.text,
+            )
+            self.assertEqual(
+                scoped_run_response.json()["run"]["project_id"],
+                project["project_id"],
+            )
 
     def test_storyboard_rework_detection_helper(self):
         risky_data = {

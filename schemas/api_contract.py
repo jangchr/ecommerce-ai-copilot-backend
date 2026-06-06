@@ -66,6 +66,7 @@ class ProductEvaluation(BaseModel):
 
 
 class GenerateCopilotData(BaseModel):
+    project_id: str = "demo_project_default"
     insights: ProductInsights
     audience: ProductAudience
     strategy: ProductStrategy
@@ -75,6 +76,8 @@ class GenerateCopilotData(BaseModel):
     llm_evidence_packet: Dict[str, Any] = Field(default_factory=dict)
     video_generation_packet: Dict[str, Any] = Field(default_factory=dict)
     external_video_tool_handoff: Dict[str, Any] = Field(default_factory=dict)
+    product_asset_lock_v2: Dict[str, Any] = Field(default_factory=dict)
+    artifact_registry: Dict[str, Any] = Field(default_factory=dict)
     agent_trace: Dict[str, Any] = Field(default_factory=dict)
     multi_agent_workflow: Dict[str, Any] = Field(default_factory=dict)
 
@@ -122,6 +125,7 @@ class PastedReviewsRequest(BaseModel):
     goal: str = "tiktok_ctr"
     output_language: str = "en"
     llm_evidence_packet: Optional[Dict[str, Any]] = None
+    project_id: Optional[str] = None
 
 
 class PastedReviewsResponse(BaseModel):
@@ -137,6 +141,13 @@ class AgentRunCreateResponse(BaseModel):
     poll_url: str = ""
     events_url: str = ""
     request_id: Optional[str] = None
+
+
+class ProjectCreateRequest(BaseModel):
+    project_name: str
+    product_name: str = ""
+    product_category: str = ""
+    source_type: str = "manual"
 
 
 class AgentRunStatusResponse(BaseModel):
@@ -164,12 +175,14 @@ class VideoGenerationJobRequest(BaseModel):
     video_generation_packet: Dict[str, Any] = Field(default_factory=dict)
     provider: str = "manual_export"
     output_language: str = "en"
+    project_id: Optional[str] = None
 
 
 class VideoGenerationFromGenerationRequest(BaseModel):
     generation_data: Dict[str, Any] = Field(default_factory=dict)
     provider: str = "manual_export"
     output_language: str = "en"
+    project_id: Optional[str] = None
 
 
 class VideoGenerationJobResponse(BaseModel):

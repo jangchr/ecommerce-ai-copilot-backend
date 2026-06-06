@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -30,6 +30,7 @@ from schemas.api_contract import (
     PastedReviewsResponse,
     ProductDescriptionRequest,
     ProductDescriptionResponse,
+    ProjectCreateRequest,
     TranslationRequest,
     TranslationResponse,
     VideoGenerationJobRequest,
@@ -66,12 +67,19 @@ from agent_runs import (
     build_graph_state_snapshot,
     build_human_approval_gate,
     build_lightweight_artifact_registry,
+    build_product_asset_lock_v2,
     build_lightweight_artifact_lineage,
     build_second_experiment_comparison,
     detect_storyboard_rework_need,
     trigger_experiment_rework_run,
 )
 from agent_graph_storage import (
+    DEFAULT_PROJECT_ID,
+    DEFAULT_PROJECT_NAME,
+    DURABILITY_NOTE,
+    list_project_assets,
+    list_project_records,
+    list_recent_projects,
     list_recent_agent_messages,
     list_recent_artifacts,
     list_recent_graph_events,
@@ -79,6 +87,8 @@ from agent_graph_storage import (
     list_recent_graph_snapshots,
     load_recent_agent_run_snapshots,
     load_recent_video_job_snapshots,
+    load_project,
+    load_project_asset,
     persistence_metadata,
     save_agent_message_snapshot,
     save_agent_run_snapshot,
@@ -87,7 +97,11 @@ from agent_graph_storage import (
     save_graph_event_snapshot,
     save_graph_report_export,
     save_graph_state_snapshot,
+    save_project_asset_snapshot,
+    save_project_snapshot,
     save_video_job_snapshot,
+    project_assets_directory,
+    update_project_summary,
 )
 from schemas.source_probe_contract import (
     SourceProbeRequest,
@@ -200,6 +214,95 @@ VIDEO_GENERATION_RESULT_STATUSES = {
     VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
     VIDEO_JOB_STATUS_FAILED,
 }
+PROJECT_SOURCE_TYPES = {"pasted_reviews", "amazon", "shopify", "manual", "demo"}
+PROJECT_ASSET_ROLES = {"product_image", "reference_image", "packaging_image", "other"}
+PROJECT_ASSET_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
+PROJECT_ASSET_MAX_BYTES = 8 * 1024 * 1024
+
+
+def _safe_project_id(value: str | None) -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9_.-]+", "_", str(value or "")).strip("._")
+    return (cleaned or DEFAULT_PROJECT_ID)[:120]
+
+
+def _project_shape(
+    project_id: str = DEFAULT_PROJECT_ID,
+    project_name: str = DEFAULT_PROJECT_NAME,
+    product_name: str = "",
+    product_category: str = "",
+    source_type: str = "demo",
+) -> dict:
+    now = _utc_now_iso()
+    safe_source = source_type if source_type in PROJECT_SOURCE_TYPES else "manual"
+    metadata = persistence_metadata()
+    return {
+        "project_version": "project_workspace_v1",
+        "project_id": _safe_project_id(project_id),
+        "project_name": _clean_description_text(project_name) or DEFAULT_PROJECT_NAME,
+        "product_name": _clean_description_text(product_name),
+        "product_category": _clean_description_text(product_category),
+        "source_type": safe_source,
+        "status": "active",
+        "created_at": now,
+        "updated_at": now,
+        "persistence_mode": metadata["persistence_mode"],
+        "durability_note": DURABILITY_NOTE,
+        "graph_summary": {
+            "run_count": 0,
+            "job_count": 0,
+            "artifact_count": 0,
+            "experiment_count": 0,
+            "approval_count": 0,
+            "asset_count": 0,
+            "report_count": 0,
+        },
+        "latest_run_id": None,
+        "latest_job_id": None,
+        "latest_artifact_registry_id": None,
+    }
+
+
+def _ensure_project(
+    project_id: str | None = None,
+    *,
+    product_name: str = "",
+    product_category: str = "",
+    source_type: str = "demo",
+) -> dict:
+    safe_id = _safe_project_id(project_id)
+    existing = load_project(safe_id)
+    if existing:
+        changed = False
+        if product_name and not existing.get("product_name"):
+            existing["product_name"] = _clean_description_text(product_name)
+            changed = True
+        if product_category and not existing.get("product_category"):
+            existing["product_category"] = _clean_description_text(product_category)
+            changed = True
+        if changed:
+            existing["updated_at"] = _utc_now_iso()
+            return save_project_snapshot(existing)
+        return existing
+    return save_project_snapshot(
+        _project_shape(
+            project_id=safe_id,
+            project_name=DEFAULT_PROJECT_NAME if safe_id == DEFAULT_PROJECT_ID else safe_id,
+            product_name=product_name,
+            product_category=product_category,
+            source_type="demo" if safe_id == DEFAULT_PROJECT_ID else source_type,
+        )
+    )
+
+
+def _project_context(project_id: str | None, related: dict | None = None) -> tuple[dict, list[dict]]:
+    related_data = related if isinstance(related, dict) else {}
+    project = _ensure_project(
+        project_id,
+        product_name=str(related_data.get("product_name") or ""),
+        product_category=str(related_data.get("product_category") or ""),
+        source_type=str(related_data.get("source_type") or "demo"),
+    )
+    return project, list_project_assets(project["project_id"], 50)
 
 def _graph_storage_warning(container: dict, exc: Exception) -> None:
     warnings = list(container.get("persistence_warnings") or [])
@@ -214,6 +317,9 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
     safe_job = job if isinstance(job, dict) else {}
     run_id = str(safe_run.get("run_id") or "")
     job_id = str(safe_job.get("job_id") or "")
+    project_id = str(
+        safe_job.get("project_id") or safe_run.get("project_id") or DEFAULT_PROJECT_ID
+    )
     messages: list[dict] = []
 
     for validation in safe_run.get("validation_results") or []:
@@ -231,6 +337,7 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
                 },
                 run_id=run_id,
                 job_id=job_id,
+                project_id=project_id,
             )
         )
 
@@ -255,6 +362,7 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
                 },
                 run_id=run_id,
                 job_id=job_id,
+                project_id=project_id,
             )
         )
 
@@ -273,6 +381,7 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
                 },
                 run_id=run_id,
                 job_id=job_id,
+                project_id=project_id,
             )
         )
 
@@ -290,6 +399,7 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
                 },
                 run_id=run_id,
                 job_id=job_id,
+                project_id=project_id,
             )
         )
 
@@ -307,6 +417,7 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
                 },
                 run_id=run_id,
                 job_id=job_id,
+                project_id=project_id,
             )
         )
 
@@ -323,6 +434,7 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
                 },
                 run_id=run_id,
                 job_id=job_id,
+                project_id=project_id,
             )
         )
 
@@ -336,8 +448,15 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
 
 def _refresh_agent_run_graph_os(run: dict) -> dict:
     safe_run = dict(run or {})
+    safe_run["project_id"] = _safe_project_id(safe_run.get("project_id"))
     generation_data = safe_run.get("result") if isinstance(safe_run.get("result"), dict) else {}
-    registry = build_lightweight_artifact_registry(generation_data=generation_data, run=safe_run)
+    project, uploaded_assets = _project_context(safe_run["project_id"], generation_data)
+    registry = build_lightweight_artifact_registry(
+        generation_data=generation_data,
+        run=safe_run,
+        project=project,
+        uploaded_assets=uploaded_assets,
+    )
     safe_run["artifact_registry"] = registry
     safe_run["agent_messages"] = _graph_messages_for_state(run=safe_run)
     snapshot = build_graph_state_snapshot(
@@ -362,6 +481,7 @@ def _persist_agent_run_graph_os(run: dict) -> dict:
         for message in safe_run.get("agent_messages") or []:
             save_agent_message_snapshot(message)
         save_graph_state_snapshot(safe_run["latest_graph_state_snapshot"])
+        update_project_summary(safe_run["project_id"], safe_run)
     except Exception as exc:
         _graph_storage_warning(safe_run, exc)
     return safe_run
@@ -369,6 +489,7 @@ def _persist_agent_run_graph_os(run: dict) -> dict:
 
 def _refresh_video_job_graph_os(job: dict, experiment: dict | None = None) -> dict:
     safe_job = dict(job or {})
+    safe_job["project_id"] = _safe_project_id(safe_job.get("project_id"))
     experiments = list(safe_job.get("external_video_experiments") or [])
     latest_experiment = experiment if isinstance(experiment, dict) else (experiments[-1] if experiments else {})
     existing_feedback = (
@@ -394,15 +515,42 @@ def _refresh_video_job_graph_os(job: dict, experiment: dict | None = None) -> di
         if isinstance(safe_job.get("source_generation"), dict)
         else {}
     )
+    project, uploaded_assets = _project_context(
+        safe_job["project_id"],
+        source_generation,
+    )
+    asset_lock_v2 = build_product_asset_lock_v2(
+        project,
+        {**source_generation, "project_id": safe_job["project_id"]},
+        uploaded_assets,
+    )
+    safe_job["product_asset_lock_v2"] = asset_lock_v2
+    handoff = (
+        dict(safe_job.get("external_video_tool_handoff") or {})
+        if isinstance(safe_job.get("external_video_tool_handoff"), dict)
+        else {}
+    )
+    if handoff:
+        handoff["product_asset_lock_v2"] = asset_lock_v2
+        handoff["uploaded_asset_reference"] = {
+            "primary_asset_id": asset_lock_v2.get("primary_asset_id", ""),
+            "reference_asset_ids": asset_lock_v2.get("reference_asset_ids", []),
+            "requires_manual_upload_to_external_tool": True,
+        }
+        safe_job["external_video_tool_handoff"] = handoff
     registry = build_lightweight_artifact_registry(
         generation_data={
             **source_generation,
+            "project_id": safe_job["project_id"],
             "video_generation_packet": safe_job.get("video_generation_packet") or {},
             "external_video_tool_handoff": safe_job.get("external_video_tool_handoff") or {},
+            "product_asset_lock_v2": asset_lock_v2,
         },
         job=safe_job,
         run=rework_run,
         experiment=latest_experiment,
+        project=project,
+        uploaded_assets=uploaded_assets,
     )
     previous_ids = {
         item.get("artifact_id")
@@ -457,6 +605,7 @@ def _persist_video_job_graph_os(job: dict, experiment: dict | None = None) -> di
         for message in safe_job.get("agent_messages") or []:
             save_agent_message_snapshot(message)
         save_graph_state_snapshot(safe_job["latest_graph_state_snapshot"])
+        update_project_summary(safe_job["project_id"], safe_job)
     except Exception as exc:
         _graph_storage_warning(safe_job, exc)
     return safe_job
@@ -3217,6 +3366,7 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
 
         current_agent_id = "finalizer_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Finalizer Agent preparing final generated result.")
+        data["project_id"] = _safe_project_id(request.project_id)
         final_data = await translate_product_visible_data(data, request.output_language or "en")
         _complete_agent_run_stage(
             run_id,
@@ -3443,6 +3593,7 @@ def _create_video_generation_job(request: VideoGenerationJobRequest) -> dict:
 
     job = {
         "job_id": job_id,
+        "project_id": _safe_project_id(request.project_id),
         "status": initial_status,
         "provider": provider,
         "created_at": now,
@@ -3600,6 +3751,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
     is_second_experiment = _is_second_video_experiment_request(request)
     experiment = {
         "experiment_id": f"video_experiment_{uuid4().hex[:12]}",
+        "project_id": _safe_project_id(job.get("project_id")),
         "tool_name": _clean_description_text(request.tool_name or "other"),
         "prompt_type": _clean_description_text(request.prompt_type or "custom"),
         "result_url": _clean_description_text(request.result_url),
@@ -3647,6 +3799,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         append_graph_router_decision(experiment, feedback_router_decision)
         router_decisions.append(feedback_router_decision)
     original_generation_data = {
+        "project_id": _safe_project_id(job.get("project_id")),
         "video_generation_packet": job.get("video_generation_packet") or {},
         "provider_payload": job.get("provider_payload") or {},
         "source_generation": job.get("source_generation") or {},
@@ -4080,6 +4233,7 @@ def _summarize_video_generation_job(job: dict) -> dict:
     source_generation = job.get("source_generation") or {}
     return {
         "job_id": job.get("job_id", ""),
+        "project_id": job.get("project_id", DEFAULT_PROJECT_ID),
         "status": job.get("status", ""),
         "provider": job.get("provider", ""),
         "provider_label": provider_payload.get("provider_label", ""),
@@ -4828,9 +4982,16 @@ async def create_video_generation_job_from_generation(
         video_generation_packet=packet,
         provider=request.provider,
         output_language=request.output_language,
+        project_id=request.project_id or generation_data.get("project_id"),
     )
     job = _create_video_generation_job(job_request)
-    job["source_generation"] = _video_generation_source_summary(generation_data)
+    job["source_generation"] = {
+        **_video_generation_source_summary(generation_data),
+        "project_id": job["project_id"],
+        "product_name": generation_data.get("product_name", ""),
+        "product_category": generation_data.get("product_category", ""),
+        "llm_evidence_packet": generation_data.get("llm_evidence_packet") or {},
+    }
     handoff = generation_data.get("external_video_tool_handoff") if isinstance(generation_data.get("external_video_tool_handoff"), dict) else {}
     if handoff:
         job["external_video_tool_handoff"] = handoff
@@ -5357,10 +5518,16 @@ def _graph_report_markdown(report: dict) -> str:
     safety = report.get("safety_boundaries") or {}
     artifact_registry = report.get("artifact_registry") or {}
     selected_edges = snapshot.get("selected_edges") or []
+    project = report.get("project") or {}
+    assets = report.get("uploaded_assets") or []
+    asset_lock_v2 = report.get("product_asset_lock_v2") or {}
     lines = [
         f"# {report.get('report_title') or 'Agent Graph Report'}",
         "",
         f"- Report version: {report.get('report_version', '')}",
+        f"- Project: {project.get('project_name', '')} ({report.get('project_id', DEFAULT_PROJECT_ID)})",
+        f"- Product: {project.get('product_name', '')}",
+        f"- Source: {project.get('source_type', '')}",
         f"- Run ID: {summary.get('run_id', '')}",
         f"- Job ID: {summary.get('job_id', '')}",
         f"- Status: {summary.get('status', '')}",
@@ -5376,20 +5543,57 @@ def _graph_report_markdown(report: dict) -> str:
         f"- Active gates: {', '.join(snapshot.get('active_gates') or []) or 'none'}",
         f"- Selected edges: {len(selected_edges)}",
         f"- Artifact count: {(artifact_registry.get('artifact_counts') or {}).get('total', 0)}",
+        f"- Uploaded assets: {len(assets)}",
+        f"- Product Asset Lock v2: {asset_lock_v2.get('lock_version', 'not available')}",
+        "",
+        "## Artifacts",
+        "",
+        f"- Registry version: {artifact_registry.get('registry_version', '')}",
+        f"- Registry ID: {artifact_registry.get('registry_id', '')}",
+        f"- Created: {(artifact_registry.get('artifact_counts') or {}).get('created', 0)}",
+        f"- Used: {(artifact_registry.get('artifact_counts') or {}).get('used', 0)}",
+        f"- Revised: {(artifact_registry.get('artifact_counts') or {}).get('revised', 0)}",
+        f"- Approved: {(artifact_registry.get('artifact_counts') or {}).get('approved', 0)}",
+        f"- Blocked: {(artifact_registry.get('artifact_counts') or {}).get('blocked', 0)}",
+        "",
+        "## Experiments",
+        "",
+        f"- Experiment count: {summary.get('experiment_count', 0)}",
+        "",
+        "## Graph Evidence",
+        "",
+        f"- Parent/child lineage: {str((artifact_registry.get('lineage_summary') or {}).get('has_parent_child_links', False)).lower()}",
+        f"- Revisions present: {str((artifact_registry.get('lineage_summary') or {}).get('has_revisions', False)).lower()}",
+        f"- Uploaded assets present: {str((artifact_registry.get('lineage_summary') or {}).get('has_uploaded_assets', False)).lower()}",
         "",
         "## Safety Boundaries",
         "",
         f"- external_api_called: {str(safety.get('external_api_called', False)).lower()}",
         f"- cost_incurred_by_crossgrowth: {str(safety.get('cost_incurred_by_crossgrowth', False)).lower()}",
         f"- llm_autonomous_decision_enabled: {str(safety.get('llm_autonomous_decision_enabled', False)).lower()}",
+        "",
+        "## Next Recommended Action",
+        "",
+        str(report.get("next_recommended_action") or ""),
     ]
     return "\n".join(lines).strip()
 
 
 def _build_run_graph_report(run: dict) -> dict:
     enriched = _refresh_agent_run_graph_os(run)
+    project = _ensure_project(enriched.get("project_id"))
+    assets = list_project_assets(project["project_id"], 50)
     report = {
-        "report_version": "agent_graph_report_v1",
+        "report_version": "agent_graph_report_v2",
+        "project_id": project["project_id"],
+        "project": project,
+        "project_graph_summary": project.get("graph_summary") or {},
+        "uploaded_assets": assets,
+        "product_asset_lock_v2": build_product_asset_lock_v2(
+            project,
+            enriched.get("result") or {},
+            assets,
+        ),
         "report_type": "agent_run_graph_report",
         "report_title": "Agent Run Graph Report",
         "summary": {
@@ -5432,9 +5636,20 @@ def _build_run_graph_report(run: dict) -> dict:
 
 def _build_job_graph_report(job: dict) -> dict:
     enriched = _refresh_video_job_graph_os(job)
+    project = _ensure_project(enriched.get("project_id"))
+    assets = list_project_assets(project["project_id"], 50)
     experiments = list(enriched.get("external_video_experiments") or [])
     report = {
-        "report_version": "agent_graph_report_v1",
+        "report_version": "agent_graph_report_v2",
+        "project_id": project["project_id"],
+        "project": project,
+        "project_graph_summary": project.get("graph_summary") or {},
+        "uploaded_assets": assets,
+        "product_asset_lock_v2": enriched.get("product_asset_lock_v2") or build_product_asset_lock_v2(
+            project,
+            enriched.get("source_generation") or {},
+            assets,
+        ),
         "report_type": "video_job_graph_report",
         "report_title": "Video Job Agent Graph Report",
         "summary": {
@@ -5493,6 +5708,7 @@ def _graph_report_response(report: dict, report_format: str) -> dict:
         "format": payload["format"],
         "run_id": (report.get("summary") or {}).get("run_id", ""),
         "job_id": (report.get("summary") or {}).get("job_id", ""),
+        "project_id": str(report.get("project_id") or DEFAULT_PROJECT_ID),
         "created_at": _utc_now_iso(),
         "report": report,
         "markdown_report": payload.get("markdown_report", ""),
@@ -5502,6 +5718,208 @@ def _graph_report_response(report: dict, report_format: str) -> dict:
     except Exception:
         pass
     return payload
+
+
+def _project_history_payload(project_id: str) -> dict:
+    safe_id = _safe_project_id(project_id)
+    project = update_project_summary(safe_id)
+    return {
+        "status": "success",
+        "project": project,
+        "recent_runs": list_project_records("runs", safe_id, 20),
+        "recent_jobs": list_project_records("jobs", safe_id, 20),
+        "recent_artifacts": list_project_records("artifacts", safe_id, 30),
+        "recent_reports": list_project_records("exports", safe_id, 20),
+        "recent_assets": list_project_assets(safe_id, 30),
+    }
+
+
+@app.get("/api/v1/projects")
+async def list_projects(limit: int = 20):
+    _ensure_project()
+    projects = list_recent_projects(max(1, min(limit, 100)))
+    return {"status": "success", "projects": projects, "project_count": len(projects)}
+
+
+@app.post("/api/v1/projects")
+async def create_project(request: ProjectCreateRequest, http_request: Request):
+    project_name = _clean_description_text(request.project_name)
+    if not project_name:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": "project_name is required",
+                "request_id": http_request.state.request_id,
+            },
+        )
+    project_id = _safe_project_id(
+        f"{project_name.lower()}_{uuid4().hex[:8]}"
+    )
+    project = save_project_snapshot(
+        _project_shape(
+            project_id=project_id,
+            project_name=project_name,
+            product_name=request.product_name,
+            product_category=request.product_category,
+            source_type=request.source_type,
+        )
+    )
+    return {
+        "status": "success",
+        "project": project,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.get("/api/v1/projects/{project_id}")
+async def get_project(project_id: str):
+    project = load_project(_safe_project_id(project_id))
+    if not project:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "project not found"},
+        )
+    return {"status": "success", "project": update_project_summary(project["project_id"])}
+
+
+@app.get("/api/v1/projects/{project_id}/graph-summary")
+async def get_project_graph_summary(project_id: str):
+    return _project_history_payload(project_id)
+
+
+@app.get("/api/v1/projects/{project_id}/history/runs")
+async def get_project_run_history(project_id: str, limit: int = 20):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "runs": list_project_records("runs", project_id, max(1, min(limit, 100))),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/history/jobs")
+async def get_project_job_history(project_id: str, limit: int = 20):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "jobs": list_project_records("jobs", project_id, max(1, min(limit, 100))),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/history/artifacts")
+async def get_project_artifact_history(project_id: str, limit: int = 30):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "artifacts": list_project_records("artifacts", project_id, max(1, min(limit, 100))),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/history/reports")
+async def get_project_report_history(project_id: str, limit: int = 20):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "reports": list_project_records("exports", project_id, max(1, min(limit, 100))),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/history/assets")
+async def get_project_asset_history(project_id: str, limit: int = 30):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "assets": list_project_assets(project_id, max(1, min(limit, 100))),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/assets")
+async def get_project_assets(project_id: str):
+    safe_id = _safe_project_id(project_id)
+    _ensure_project(safe_id)
+    assets = list_project_assets(safe_id, 100)
+    return {"status": "success", "project_id": safe_id, "assets": assets}
+
+
+@app.get("/api/v1/projects/{project_id}/assets/{asset_id}")
+async def get_project_asset(project_id: str, asset_id: str):
+    asset = load_project_asset(_safe_project_id(project_id), asset_id)
+    if not asset:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "project asset not found"},
+        )
+    return {"status": "success", "asset": asset}
+
+
+@app.post("/api/v1/projects/{project_id}/assets/upload")
+async def upload_project_asset(
+    project_id: str,
+    http_request: Request,
+    asset_role: str = Form("product_image"),
+    notes: str = Form(""),
+    product_name: str = Form(""),
+    product_category: str = Form(""),
+    file: UploadFile = File(...),
+):
+    safe_id = _safe_project_id(project_id)
+    if asset_role not in PROJECT_ASSET_ROLES:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "error": "unsupported asset_role"},
+        )
+    content_type = str(file.content_type or "").lower()
+    suffix = Path(file.filename or "").suffix.lower()
+    allowed_suffixes = {".png", ".jpg", ".jpeg", ".webp"}
+    if content_type not in PROJECT_ASSET_CONTENT_TYPES or suffix not in allowed_suffixes:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "error": "unsupported image file type"},
+        )
+    contents = await file.read(PROJECT_ASSET_MAX_BYTES + 1)
+    if not contents or len(contents) > PROJECT_ASSET_MAX_BYTES:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "error": "image file must be between 1 byte and 8 MB"},
+        )
+    project = _ensure_project(
+        safe_id,
+        product_name=product_name,
+        product_category=product_category,
+        source_type="manual",
+    )
+    asset_id = f"asset_{uuid4().hex[:16]}"
+    safe_filename = re.sub(
+        r"[^a-zA-Z0-9_.-]+",
+        "_",
+        Path(file.filename or f"{asset_id}{suffix}").name,
+    )[:160]
+    stored_name = f"{asset_id}_{safe_filename}"
+    asset_path = project_assets_directory(safe_id) / stored_name
+    temp_path = asset_path.with_name(f".{asset_path.name}.tmp")
+    temp_path.write_bytes(contents)
+    os.replace(temp_path, asset_path)
+    asset = {
+        "asset_version": "project_asset_v1",
+        "asset_id": asset_id,
+        "project_id": safe_id,
+        "asset_role": asset_role,
+        "filename": safe_filename,
+        "content_type": content_type,
+        "size_bytes": len(contents),
+        "storage_path": f"projects/{safe_id}/assets/{stored_name}",
+        "created_at": _utc_now_iso(),
+        "notes": _clean_description_text(notes),
+        "source": "user_upload",
+        "artifact_type": "uploaded_product_asset",
+    }
+    saved_asset = save_project_asset_snapshot(asset)
+    update_project_summary(safe_id, project)
+    return {
+        "status": "success",
+        "asset": saved_asset,
+        "request_id": http_request.state.request_id,
+    }
 
 
 @app.get("/api/v1/agent-graph/history/runs")
@@ -5603,7 +6021,18 @@ async def create_agent_run_from_reviews(
     if language_error:
         return language_error
 
-    safe_request = request.model_copy(update={"output_language": output_language})
+    project = _ensure_project(
+        request.project_id,
+        product_name=request.product_name,
+        product_category=request.product_category or "",
+        source_type="pasted_reviews",
+    )
+    safe_request = request.model_copy(
+        update={
+            "output_language": output_language,
+            "project_id": project["project_id"],
+        }
+    )
     validation_error = _validate_pasted_reviews_request(safe_request, request_id)
     if validation_error:
         return validation_error
@@ -5612,6 +6041,7 @@ async def create_agent_run_from_reviews(
         input_type="pasted_reviews",
         output_language=output_language,
         request_id=request_id,
+        project_id=project["project_id"],
     )
     AGENT_RUN_STORE.create(run)
     AGENT_RUN_STORE.append_event(
@@ -5723,8 +6153,27 @@ async def generate_from_reviews(request: PastedReviewsRequest, http_request: Req
 
     evidence_quotes = _split_pasted_review_quotes(request.pasted_reviews)
     try:
-        generated = await generate_pasted_reviews_brief(request, evidence_quotes)
-        data = _pasted_reviews_response_data(request, generated, evidence_quotes)
+        project = _ensure_project(
+            request.project_id,
+            product_name=request.product_name,
+            product_category=request.product_category or "",
+            source_type="pasted_reviews",
+        )
+        safe_request = request.model_copy(update={"project_id": project["project_id"]})
+        generated = await generate_pasted_reviews_brief(safe_request, evidence_quotes)
+        data = _pasted_reviews_response_data(safe_request, generated, evidence_quotes)
+        data["project_id"] = project["project_id"]
+        uploaded_assets = list_project_assets(project["project_id"], 50)
+        data["product_asset_lock_v2"] = build_product_asset_lock_v2(
+            project,
+            data,
+            uploaded_assets,
+        )
+        data["artifact_registry"] = build_lightweight_artifact_registry(
+            generation_data=data,
+            project=project,
+            uploaded_assets=uploaded_assets,
+        )
         data = await translate_product_visible_data(data, output_language)
         response = {
             "status": "success",

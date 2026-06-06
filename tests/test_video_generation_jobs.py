@@ -283,6 +283,7 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
 
         job = payload["job"]
         self.assertTrue(job["job_id"].startswith("video_job_"))
+        self.assertEqual(job["project_id"], "demo_project_default")
         self.assertEqual(job["status"], "ready_for_manual_export")
         self.assertEqual(job["provider"], "manual_export")
         self.assertEqual(job["video_generation_packet"]["packet_version"], "video_generation_v1")
@@ -308,7 +309,10 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
 
         registry = job["latest_artifact_registry"]
         artifact_types = {item["artifact_type"] for item in registry["artifacts"]}
-        self.assertEqual(registry["registry_version"], "artifact_registry_v1")
+        self.assertEqual(registry["registry_version"], "artifact_registry_v2")
+        self.assertIn("artifact_registry_v1", registry["compatible_with"])
+        self.assertEqual(registry["project_id"], "demo_project_default")
+        self.assertIn("lineage_summary", registry)
         self.assertIn("experiment_feedback_decision", artifact_types)
         self.assertIn("graph_router_decision", artifact_types)
         self.assertIn("revised_keyframe_plan", artifact_types)
@@ -320,7 +324,7 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertTrue(registry["graph_evidence"]["has_revised_artifacts"])
         self.assertEqual(
             job["agent_graph_feedback"]["latest_artifact_registry"]["registry_version"],
-            "artifact_registry_v1",
+            "artifact_registry_v2",
         )
         self.assertIn(
             "artifact_registry_updated",
@@ -329,6 +333,122 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["latest_graph_state_snapshot"]["snapshot_version"], "graph_state_snapshot_v1")
         self.assertEqual(job["graph_health"]["health_version"], "graph_health_v1")
         self.assertEqual(job["job_id"], job_id)
+
+    def test_project_scoped_job_uses_uploaded_asset_lock_and_registry_v2(self):
+        with TemporaryDirectory() as temp_dir, patch.dict(
+            os.environ,
+            {"AGENT_GRAPH_STORAGE_PATH": temp_dir},
+        ):
+            created_project = self.client.post(
+                "/api/v1/projects",
+                json={
+                    "project_name": "Blender Asset Project",
+                    "product_name": "Portable Mini Blender",
+                    "product_category": "kitchen_appliance",
+                    "source_type": "manual",
+                },
+            )
+            self.assertEqual(created_project.status_code, 200, created_project.text)
+            project_id = created_project.json()["project"]["project_id"]
+
+            uploaded = self.client.post(
+                f"/api/v1/projects/{project_id}/assets/upload",
+                data={"asset_role": "product_image", "notes": "Primary product reference"},
+                files={"file": ("portable-blender.png", b"\x89PNG\r\n\x1a\nfixture", "image/png")},
+            )
+            self.assertEqual(uploaded.status_code, 200, uploaded.text)
+            asset = uploaded.json()["asset"]
+            self.assertEqual(asset["asset_version"], "project_asset_v1")
+            self.assertEqual(asset["project_id"], project_id)
+            self.assertEqual(asset["artifact_type"], "uploaded_product_asset")
+
+            rejected = self.client.post(
+                f"/api/v1/projects/{project_id}/assets/upload",
+                data={"asset_role": "other"},
+                files={"file": ("notes.txt", b"not an image", "text/plain")},
+            )
+            self.assertEqual(rejected.status_code, 400)
+
+            response = self.client.post(
+                "/api/v1/video-generation/jobs/from-generation",
+                json={
+                    "project_id": project_id,
+                    "provider": "manual_export",
+                    "output_language": "en",
+                    "generation_data": {
+                        "project_id": project_id,
+                        "product_name": "Portable Mini Blender",
+                        "product_category": "kitchen_appliance",
+                        "video_generation_packet": VIDEO_PACKET,
+                        "llm_evidence_packet": {"packet_version": "pasted_reviews_v1"},
+                    },
+                },
+            )
+            self.assertEqual(response.status_code, 200, response.text)
+            job = response.json()["job"]
+            self.assertEqual(job["project_id"], project_id)
+            lock = job["product_asset_lock_v2"]
+            self.assertEqual(lock["lock_version"], "product_asset_lock_v2")
+            self.assertEqual(lock["primary_asset_id"], asset["asset_id"])
+            self.assertTrue(lock["handoff_usage"]["use_primary_image_as_identity_reference"])
+            self.assertFalse(lock["safety_boundaries"]["external_api_called"])
+            self.assertFalse(lock["safety_boundaries"]["cost_incurred_by_crossgrowth"])
+            self.assertFalse(lock["safety_boundaries"]["llm_autonomous_decision_enabled"])
+
+            registry = job["latest_artifact_registry"]
+            self.assertEqual(registry["registry_version"], "artifact_registry_v2")
+            self.assertEqual(registry["project_id"], project_id)
+            self.assertFalse(registry["lineage_summary"]["is_linear_workflow"])
+            self.assertTrue(registry["lineage_summary"]["has_uploaded_assets"])
+            artifacts_by_type = {
+                item["artifact_type"]: item for item in registry["artifacts"]
+            }
+            self.assertIn("uploaded_product_asset", artifacts_by_type)
+            self.assertIn("product_asset_lock_v2", artifacts_by_type)
+            self.assertIn(
+                artifacts_by_type["uploaded_product_asset"]["artifact_id"],
+                artifacts_by_type["product_asset_lock_v2"]["parent_artifact_ids"],
+            )
+
+            asset_list = self.client.get(f"/api/v1/projects/{project_id}/assets")
+            self.assertEqual(asset_list.status_code, 200)
+            self.assertEqual(asset_list.json()["assets"][0]["asset_id"], asset["asset_id"])
+
+            graph_summary = self.client.get(f"/api/v1/projects/{project_id}/graph-summary")
+            self.assertEqual(graph_summary.status_code, 200)
+            graph_payload = graph_summary.json()
+            self.assertEqual(graph_payload["status"], "success")
+            self.assertIsInstance(graph_payload["recent_runs"], list)
+            self.assertIsInstance(graph_payload["recent_jobs"], list)
+            self.assertIsInstance(graph_payload["recent_artifacts"], list)
+            self.assertEqual(graph_payload["recent_jobs"][0]["job_id"], job["job_id"])
+
+            for suffix, key in [
+                ("runs", "runs"),
+                ("jobs", "jobs"),
+                ("artifacts", "artifacts"),
+                ("reports", "reports"),
+                ("assets", "assets"),
+            ]:
+                history = self.client.get(
+                    f"/api/v1/projects/{project_id}/history/{suffix}"
+                )
+                self.assertEqual(history.status_code, 200, history.text)
+                self.assertIsInstance(history.json()[key], list)
+
+            report = self.client.get(
+                f"/api/v1/video-generation/jobs/{job['job_id']}/graph-report?format=markdown"
+            )
+            self.assertEqual(report.status_code, 200, report.text)
+            report_payload = report.json()
+            self.assertEqual(report_payload["report"]["project_id"], project_id)
+            self.assertEqual(
+                report_payload["report"]["artifact_registry"]["registry_version"],
+                "artifact_registry_v2",
+            )
+            self.assertIn("- Uploaded assets: 1", report_payload["markdown_report"])
+            self.assertIn("## Artifacts", report_payload["markdown_report"])
+            self.assertIn("## Experiments", report_payload["markdown_report"])
 
     def test_graph_history_and_report_endpoints_use_lightweight_storage(self):
         with TemporaryDirectory() as temp_dir, patch.dict(

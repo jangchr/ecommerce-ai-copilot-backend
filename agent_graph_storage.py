@@ -17,15 +17,20 @@ DURABILITY_NOTE = (
     "File-backed demo storage; durability depends on deployment storage configuration."
 )
 STORAGE_CATEGORIES = (
+    "projects",
     "runs",
     "jobs",
     "artifacts",
+    "assets",
     "events",
     "approvals",
     "messages",
     "snapshots",
     "exports",
 )
+
+DEFAULT_PROJECT_ID = "demo_project_default"
+DEFAULT_PROJECT_NAME = "Demo Project"
 
 
 def _utc_now_iso() -> str:
@@ -113,6 +118,26 @@ def save_agent_run_snapshot(run: dict[str, Any]) -> dict[str, Any]:
     return _write_record("runs", str(run.get("run_id") or uuid4()), run)
 
 
+def save_project_snapshot(project: dict[str, Any]) -> dict[str, Any]:
+    return _write_record(
+        "projects",
+        str(project.get("project_id") or DEFAULT_PROJECT_ID),
+        project,
+    )
+
+
+def save_project_index_entry(project: dict[str, Any]) -> dict[str, Any]:
+    return save_project_snapshot(project)
+
+
+def load_project(project_id: str) -> dict[str, Any] | None:
+    return _read_record("projects", project_id or DEFAULT_PROJECT_ID)
+
+
+def list_recent_projects(limit: int = 20) -> list[dict[str, Any]]:
+    return _read_records("projects", limit)
+
+
 def save_video_job_snapshot(job: dict[str, Any]) -> dict[str, Any]:
     return _write_record("jobs", str(job.get("job_id") or uuid4()), job)
 
@@ -160,6 +185,107 @@ def save_graph_report_export(report: dict[str, Any]) -> dict[str, Any]:
         str(report.get("export_id") or uuid4()),
         report,
     )
+
+
+def project_assets_directory(project_id: str) -> Path:
+    path = _storage_root() / "projects" / _safe_key(project_id or DEFAULT_PROJECT_ID) / "assets"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def save_project_asset_snapshot(asset: dict[str, Any]) -> dict[str, Any]:
+    project_id = str(asset.get("project_id") or DEFAULT_PROJECT_ID)
+    payload = deepcopy(asset)
+    payload["project_id"] = project_id
+    return _write_record(
+        "assets",
+        f"{project_id}_{asset.get('asset_id') or uuid4()}",
+        payload,
+    )
+
+
+def list_project_assets(project_id: str, limit: int = 50) -> list[dict[str, Any]]:
+    safe_project_id = str(project_id or DEFAULT_PROJECT_ID)
+    return [
+        item
+        for item in _read_records("assets", max(limit * 4, 100))
+        if str(item.get("project_id") or DEFAULT_PROJECT_ID) == safe_project_id
+    ][: max(1, int(limit or 1))]
+
+
+def load_project_asset(project_id: str, asset_id: str) -> dict[str, Any] | None:
+    safe_project_id = str(project_id or DEFAULT_PROJECT_ID)
+    for asset in list_project_assets(safe_project_id, 200):
+        if str(asset.get("asset_id") or "") == str(asset_id or ""):
+            return asset
+    return None
+
+
+def list_project_records(category: str, project_id: str, limit: int = 20) -> list[dict[str, Any]]:
+    safe_project_id = str(project_id or DEFAULT_PROJECT_ID)
+    records = _read_records(category, max(limit * 5, 100))
+    return [
+        item
+        for item in records
+        if str(item.get("project_id") or DEFAULT_PROJECT_ID) == safe_project_id
+    ][: max(1, int(limit or 1))]
+
+
+def update_project_summary(
+    project_id: str,
+    related_object: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    safe_project_id = str(project_id or DEFAULT_PROJECT_ID)
+    project = load_project(safe_project_id) or {
+        "project_version": "project_workspace_v1",
+        "project_id": safe_project_id,
+        "project_name": DEFAULT_PROJECT_NAME if safe_project_id == DEFAULT_PROJECT_ID else safe_project_id,
+        "product_name": "",
+        "product_category": "",
+        "source_type": "demo" if safe_project_id == DEFAULT_PROJECT_ID else "manual",
+        "status": "active",
+        "created_at": _utc_now_iso(),
+        **persistence_metadata(),
+    }
+    related = related_object if isinstance(related_object, dict) else {}
+    object_project_id = str(related.get("project_id") or safe_project_id)
+    if object_project_id == safe_project_id:
+        if related.get("product_name") and not project.get("product_name"):
+            project["product_name"] = str(related.get("product_name"))
+        if related.get("product_category") and not project.get("product_category"):
+            project["product_category"] = str(related.get("product_category"))
+        if related.get("run_id"):
+            project["latest_run_id"] = str(related.get("run_id"))
+        if related.get("job_id"):
+            project["latest_job_id"] = str(related.get("job_id"))
+        registry_id = related.get("registry_id") or related.get("latest_artifact_registry_id")
+        if registry_id:
+            project["latest_artifact_registry_id"] = str(registry_id)
+
+    runs = list_project_records("runs", safe_project_id, 200)
+    jobs = list_project_records("jobs", safe_project_id, 200)
+    artifacts = list_project_records("artifacts", safe_project_id, 200)
+    exports = list_project_records("exports", safe_project_id, 200)
+    assets = list_project_assets(safe_project_id, 200)
+    experiments = sum(len(item.get("external_video_experiments") or []) for item in jobs)
+    approvals = sum(bool(item.get("latest_human_approval_gate")) for item in jobs)
+    project["graph_summary"] = {
+        "run_count": len(runs),
+        "job_count": len(jobs),
+        "artifact_count": sum(
+            int((item.get("artifact_counts") or {}).get("total") or 0)
+            for item in artifacts
+        ),
+        "experiment_count": experiments,
+        "approval_count": approvals,
+        "asset_count": len(assets),
+        "report_count": len(exports),
+    }
+    project["updated_at"] = _utc_now_iso()
+    project.setdefault("latest_run_id", None)
+    project.setdefault("latest_job_id", None)
+    project.setdefault("latest_artifact_registry_id", None)
+    return save_project_snapshot(project)
 
 
 def load_recent_agent_run_snapshots(limit: int = 10) -> list[dict[str, Any]]:
@@ -211,4 +337,3 @@ def list_recent_graph_snapshots(limit: int = 20) -> list[dict[str, Any]]:
 
 def list_recent_graph_exports(limit: int = 20) -> list[dict[str, Any]]:
     return _read_records("exports", limit)
-

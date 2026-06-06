@@ -3413,6 +3413,68 @@ class MultiAgentWorkflowPanelProbeTests(unittest.TestCase):
         self.assertNotIn("????", source)
 
 
+class ProjectWorkspaceFoundationProbeTests(unittest.TestCase):
+    def test_project_workspace_asset_and_registry_v2_markers_exist(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+
+        for marker in [
+            "Project Workspace",
+            "Current project",
+            "Project ID",
+            "Project name",
+            "Project graph summary",
+            "Create project",
+            "Refresh project summary",
+            "Workspace Agent Graph",
+            "Project node",
+            "Asset node",
+            "Run node",
+            "Job node",
+            "Experiment node",
+            "Approval node",
+            "Report node",
+            "Product assets",
+            "Upload product image",
+            "Upload reference image",
+            "Asset role",
+            "Asset notes",
+            "Uploaded assets",
+            "Primary product asset",
+            "Use as product identity reference",
+            "Product Asset Lock v2",
+            "Asset uploaded",
+            "Failed to upload asset",
+            "Artifact Registry v2",
+            "Project-scoped artifact",
+            "Parent artifact",
+            "Child artifact",
+            "Revision chain",
+            "Supersedes",
+            "Superseded by",
+            "Artifact version",
+            "Lineage summary",
+            "Uploaded product asset",
+            "Creating project...",
+            "Project created",
+            "Failed to create project",
+            "Project summary refreshed",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+        self.assertIn('id="projectWorkspaceRoot"', html)
+        self.assertIn("function renderProjectWorkspacePanel", html)
+        self.assertIn("function renderWorkspaceAgentGraph", html)
+        self.assertIn("function uploadProjectAssetRequest", html)
+        self.assertIn(
+            "/api/v1/projects/${encodeURIComponent(projectId || 'demo_project_default')}/assets/upload",
+            html,
+        )
+        self.assertIn("artifact_registry_v2", html)
+        self.assertIn("product_asset_lock_v2", html)
+        self.assertNotIn("????", html)
+
+
 class LiveAgentGraphBoardProbeTests(unittest.TestCase):
     def test_live_agent_graph_board_frontend_markers(self):
         html = FRONTEND_PATH.read_text(encoding="utf-8")

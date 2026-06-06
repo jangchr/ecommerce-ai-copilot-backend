@@ -976,6 +976,7 @@ def build_agent_message(
     run_id: str | None = None,
     job_id: str | None = None,
     artifact_ids: list[str] | None = None,
+    project_id: str | None = None,
 ) -> dict[str, Any]:
     """Build one deterministic structured message without replacing run events."""
 
@@ -998,9 +999,77 @@ def build_agent_message(
         "target_agent_id": str(target_agent_id or ""),
         "run_id": str(run_id or ""),
         "job_id": str(job_id or ""),
+        "project_id": str(project_id or "demo_project_default"),
         "artifact_ids": safe_artifact_ids,
         "payload": safe_payload,
         "created_at": utc_now_iso(),
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_product_asset_lock_v2(
+    project: dict[str, Any] | None,
+    generation_data: dict[str, Any] | None,
+    uploaded_assets: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    safe_project = _experiment_rework_dict(project)
+    generation = _experiment_rework_dict(generation_data)
+    assets = [item for item in (uploaded_assets or []) if isinstance(item, dict)]
+    product_assets = [
+        item for item in assets if item.get("asset_role") == "product_image"
+    ]
+    primary = (product_assets or assets or [{}])[0]
+    reference_ids = [
+        str(item.get("asset_id"))
+        for item in assets
+        if item.get("asset_id") and item is not primary
+    ]
+    product_name = str(
+        safe_project.get("product_name")
+        or generation.get("product_name")
+        or _experiment_rework_dict(generation.get("video_generation_packet")).get("product_name")
+        or ""
+    )
+    product_category = str(
+        safe_project.get("product_category")
+        or generation.get("product_category")
+        or _experiment_rework_dict(generation.get("video_generation_packet")).get("product_category")
+        or ""
+    )
+    primary_id = str(primary.get("asset_id") or "")
+    asset_source = "uploaded_asset" if primary_id else "product_description"
+    if primary_id and (product_name or product_category):
+        asset_source = "mixed"
+    return {
+        "lock_version": "product_asset_lock_v2",
+        "project_id": str(safe_project.get("project_id") or generation.get("project_id") or "demo_project_default"),
+        "source_agent_id": "asset_lock_agent",
+        "asset_source": asset_source,
+        "primary_asset_id": primary_id,
+        "reference_asset_ids": reference_ids,
+        "product_name": product_name,
+        "product_category": product_category,
+        "identity_constraints": [
+            value
+            for value in (
+                f"Preserve the visible identity of uploaded asset {primary_id}." if primary_id else "",
+                f"Keep the product recognizable as {product_name}." if product_name else "",
+                f"Keep category cues consistent with {product_category}." if product_category else "",
+            )
+            if value
+        ],
+        "must_preserve": [
+            "Product shape, packaging, proportions, and visible branding supplied by the user.",
+            "Evidence-backed product identity across every generated scene.",
+        ],
+        "must_not_change": [
+            "Do not invent a different product, package, color, size, or logo.",
+            "Do not infer image details that are not visible in the uploaded asset metadata.",
+        ],
+        "handoff_usage": {
+            "use_primary_image_as_identity_reference": bool(primary_id),
+            "requires_manual_upload_to_external_tool": True,
+        },
         "safety_boundaries": _graph_safety_boundaries(),
     }
 
@@ -1027,6 +1096,8 @@ def build_lightweight_artifact_registry(
     job: dict[str, Any] | None = None,
     run: dict[str, Any] | None = None,
     experiment: dict[str, Any] | None = None,
+    project: dict[str, Any] | None = None,
+    uploaded_assets: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build a deterministic registry across generation, run, job, and experiment artifacts."""
 
@@ -1034,6 +1105,7 @@ def build_lightweight_artifact_registry(
     safe_job = _experiment_rework_dict(job)
     safe_run = _experiment_rework_dict(run)
     safe_experiment = _experiment_rework_dict(experiment)
+    safe_project = _experiment_rework_dict(project)
     run_result = _experiment_rework_dict(safe_run.get("result"))
     source_generation = _experiment_rework_dict(safe_job.get("source_generation"))
     graph_feedback = _experiment_rework_dict(safe_job.get("agent_graph_feedback"))
@@ -1045,12 +1117,38 @@ def build_lightweight_artifact_registry(
         or graph_feedback.get("latest_rework_run_id")
         or ""
     )
+    project_id = str(
+        safe_project.get("project_id")
+        or safe_job.get("project_id")
+        or safe_run.get("project_id")
+        or generation.get("project_id")
+        or "demo_project_default"
+    )
+    product_asset_lock_v2 = (
+        generation.get("product_asset_lock_v2")
+        or safe_job.get("product_asset_lock_v2")
+        or run_result.get("product_asset_lock_v2")
+    )
+    if not isinstance(product_asset_lock_v2, dict) or not product_asset_lock_v2:
+        product_asset_lock_v2 = build_product_asset_lock_v2(
+            {**safe_project, "project_id": project_id},
+            generation or source_generation,
+            uploaded_assets,
+        )
     artifact_sources: list[tuple[str, Any, str, list[str], str, list[str]]] = [
+        (
+            "project_workspace",
+            safe_project or {"project_id": project_id, "project_version": "project_workspace_v1"},
+            "planner_agent",
+            [],
+            "used",
+            ["evidence_agent", "asset_lock_agent"],
+        ),
         (
             "llm_evidence_packet",
             generation.get("llm_evidence_packet") or source_generation.get("llm_evidence_packet"),
             "evidence_agent",
-            [],
+            ["project_workspace"],
             "used",
             ["strategy_agent"],
         ),
@@ -1060,7 +1158,7 @@ def build_lightweight_artifact_registry(
             or safe_job.get("video_generation_packet")
             or run_result.get("video_generation_packet"),
             "prompt_handoff_agent",
-            [],
+            ["llm_evidence_packet"],
             "used" if safe_job else "created",
             ["provider_job_agent"],
         ),
@@ -1070,7 +1168,7 @@ def build_lightweight_artifact_registry(
             or safe_job.get("external_video_tool_handoff")
             or run_result.get("external_video_tool_handoff"),
             "prompt_handoff_agent",
-            [],
+            ["video_generation_packet"],
             "used" if experiments else "created",
             ["provider_job_agent", "experiment_agent"],
         ),
@@ -1080,9 +1178,17 @@ def build_lightweight_artifact_registry(
             or run_result.get("product_asset_lock")
             or _experiment_rework_dict(source_generation.get("agent_trace")).get("product_asset_lock"),
             "asset_lock_agent",
-            [],
+            ["external_video_tool_handoff"],
             "used",
             ["product_identity_validator", "keyframe_agent"],
+        ),
+        (
+            "product_asset_lock_v2",
+            product_asset_lock_v2,
+            "asset_lock_agent",
+            ["uploaded_product_asset", "product_asset_lock"],
+            "used",
+            ["product_identity_validator", "keyframe_agent", "prompt_handoff_agent"],
         ),
         (
             "keyframe_plan",
@@ -1090,7 +1196,7 @@ def build_lightweight_artifact_registry(
             or run_result.get("keyframe_plan")
             or _experiment_rework_dict(source_generation.get("agent_trace")).get("keyframe_plan"),
             "keyframe_agent",
-            [],
+            ["product_asset_lock_v2", "product_asset_lock"],
             "used",
             ["prompt_handoff_agent"],
         ),
@@ -1200,6 +1306,41 @@ def build_lightweight_artifact_registry(
     ]
     artifacts: list[dict[str, Any]] = []
     artifact_ids_by_type: dict[str, str] = {}
+    for uploaded_asset in uploaded_assets or []:
+        if not isinstance(uploaded_asset, dict) or not uploaded_asset.get("asset_id"):
+            continue
+        artifact_type = (
+            "uploaded_product_asset"
+            if uploaded_asset.get("asset_role") == "product_image"
+            else "uploaded_reference_asset"
+        )
+        artifact_id = _stable_graph_id(
+            "artifact",
+            artifact_type,
+            project_id,
+            uploaded_asset.get("asset_id"),
+        )
+        artifact_ids_by_type.setdefault(artifact_type, artifact_id)
+        artifacts.append(
+            {
+                "artifact_id": artifact_id,
+                "project_id": project_id,
+                "artifact_type": artifact_type,
+                "source_agent_id": "user_upload",
+                "parent_artifact_ids": [],
+                "child_artifact_ids": [],
+                "status": "created",
+                "version": 1,
+                "supersedes_artifact_id": None,
+                "superseded_by_artifact_id": None,
+                "quality_score": None,
+                "summary": str(uploaded_asset.get("filename") or "Uploaded product asset"),
+                "used_by_agent_ids": ["asset_lock_agent"],
+                "created_by_run_id": "",
+                "created_from_job_id": str(safe_job.get("job_id") or ""),
+                "created_from_experiment_id": "",
+            }
+        )
     for artifact_type, value, source_agent_id, parent_types, status, used_by in artifact_sources:
         if not isinstance(value, dict) or not value:
             continue
@@ -1214,16 +1355,30 @@ def build_lightweight_artifact_registry(
         artifacts.append(
             {
                 "artifact_id": artifact_id,
+                "project_id": project_id,
                 "artifact_type": artifact_type,
                 "source_agent_id": source_agent_id,
                 "parent_artifact_ids": list(parent_types),
+                "child_artifact_ids": [],
                 "status": status,
+                "version": 2 if artifact_type in {"product_asset_lock_v2"} else 1,
+                "supersedes_artifact_id": None,
+                "superseded_by_artifact_id": None,
+                "quality_score": (
+                    latest_experiment.get("overall_score")
+                    if artifact_type in {
+                        "second_experiment_comparison",
+                        "experiment_comparison_decision_gate",
+                    }
+                    else None
+                ),
                 "summary": _artifact_summary(
                     value,
                     f"{artifact_type.replace('_', ' ').title()} available.",
                 ),
                 "used_by_agent_ids": list(used_by),
                 "created_by_run_id": str(safe_run.get("run_id") or rework_run_id or ""),
+                "created_from_job_id": str(safe_job.get("job_id") or ""),
                 "created_from_experiment_id": str(latest_experiment.get("experiment_id") or ""),
             }
         )
@@ -1233,11 +1388,35 @@ def build_lightweight_artifact_registry(
             for parent_type in artifact["parent_artifact_ids"]
             if parent_type in artifact_ids_by_type
         ]
+    artifacts_by_id = {item["artifact_id"]: item for item in artifacts}
+    for artifact in artifacts:
+        for parent_id in artifact["parent_artifact_ids"]:
+            parent = artifacts_by_id.get(parent_id)
+            if parent and artifact["artifact_id"] not in parent["child_artifact_ids"]:
+                parent["child_artifact_ids"].append(artifact["artifact_id"])
+    for artifact in artifacts:
+        if artifact["artifact_type"] == "revised_keyframe_plan":
+            parent_id = next(iter(artifact["parent_artifact_ids"]), None)
+            artifact["supersedes_artifact_id"] = parent_id
+            if parent_id in artifacts_by_id:
+                artifacts_by_id[parent_id]["status"] = "superseded"
+                artifacts_by_id[parent_id]["superseded_by_artifact_id"] = artifact["artifact_id"]
+        if artifact["artifact_type"] == "human_approval_gate":
+            approval_value = _experiment_rework_dict(
+                latest_experiment.get("human_approval_gate")
+                or safe_job.get("latest_human_approval_gate")
+            )
+            if approval_value.get("status") == "approved":
+                artifact["status"] = "approved"
+            elif approval_value.get("status") in {"rejected", "cancelled"}:
+                artifact["status"] = "blocked"
     counts = {
         "total": len(artifacts),
         "created": sum(item["status"] == "created" for item in artifacts),
         "used": sum(item["status"] == "used" for item in artifacts),
         "revised": sum(item["status"] == "revised" for item in artifacts),
+        "approved": sum(item["status"] == "approved" for item in artifacts),
+        "blocked": sum(item["status"] == "blocked" for item in artifacts),
     }
     artifact_types = {item["artifact_type"] for item in artifacts}
     router_artifacts = bool(
@@ -1245,13 +1424,37 @@ def build_lightweight_artifact_registry(
             {"graph_router_decision", "experiment_comparison_decision_gate"}
         )
     )
+    lineage_summary = {
+        "has_parent_child_links": any(item["parent_artifact_ids"] for item in artifacts),
+        "has_revisions": bool(
+            artifact_types.intersection(
+                {"revised_keyframe_plan", "revised_external_video_handoff"}
+            )
+        ),
+        "has_uploaded_assets": bool(
+            artifact_types.intersection({"uploaded_product_asset", "uploaded_reference_asset"})
+        ),
+        "has_approval_artifact": "human_approval_gate" in artifact_types,
+        "has_provider_result": "provider_result" in artifact_types,
+        "is_linear_workflow": False,
+    }
     return {
-        "registry_version": "artifact_registry_v1",
-        "registry_type": "lightweight_run_job_artifacts",
+        "registry_version": "artifact_registry_v2",
+        "compatible_with": ["artifact_registry_v1"],
+        "registry_type": "project_scoped_graph_artifacts",
+        "registry_id": _stable_graph_id(
+            "artifact_registry",
+            project_id,
+            safe_run.get("run_id"),
+            safe_job.get("job_id"),
+            [item["artifact_id"] for item in artifacts],
+        ),
+        "project_id": project_id,
         "root_run_id": str(safe_run.get("run_id") or rework_run_id or ""),
         "root_job_id": str(safe_job.get("job_id") or ""),
         "artifacts": artifacts,
         "artifact_counts": counts,
+        "lineage_summary": lineage_summary,
         "graph_evidence": {
             "has_artifact_chain": len(artifacts) > 1,
             "has_revised_artifacts": bool(
@@ -1383,6 +1586,12 @@ def build_graph_state_snapshot(
         ),
         "run_id": str(safe_run.get("run_id") or ""),
         "job_id": str(safe_job.get("job_id") or ""),
+        "project_id": str(
+            safe_job.get("project_id")
+            or safe_run.get("project_id")
+            or registry.get("project_id")
+            or "demo_project_default"
+        ),
         "node_statuses": node_statuses,
         "selected_edges": _snapshot_router_edges(safe_run, safe_job),
         "active_loops": active_loops,
@@ -2364,6 +2573,10 @@ def trigger_experiment_rework_run(
         input_type="experiment_feedback_rework",
         output_language=str(safe_decision.get("output_language") or "en"),
         request_id="",
+        project_id=str(
+            _experiment_rework_dict(original_generation_data).get("project_id")
+            or "demo_project_default"
+        ),
     )
     run["status"] = "completed"
     run["started_at"] = now
@@ -2900,10 +3113,12 @@ def build_agent_run(
     input_type: str,
     output_language: str,
     request_id: str = "",
+    project_id: str = "demo_project_default",
 ) -> dict[str, Any]:
     now = utc_now_iso()
     return {
         "run_id": str(uuid4()),
+        "project_id": str(project_id or "demo_project_default"),
         "status": "queued",
         "created_at": now,
         "started_at": None,

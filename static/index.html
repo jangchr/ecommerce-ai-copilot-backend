@@ -2436,6 +2436,10 @@
             </div>
         </section>
 
+        <section class="active-workspace-panel" id="projectWorkspaceRootSection">
+            <div class="active-workspace-shell" id="projectWorkspaceRoot"></div>
+        </section>
+
         <section class="description-mode" id="productDescriptionMode">
             <div class="description-shell">
                 <div class="description-header">
@@ -3588,6 +3592,8 @@
         let latestDebugCategory = '';
         let latestProductData = null;
         let latestVideoGenerationJob = null;
+        let latestProjectId = 'demo_project_default';
+        let latestProjectWorkspace = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
         let latestChineseTranslation = '';
@@ -5446,6 +5452,60 @@
             approvalUnlocksSimulatedOnly: 'Approval unlocks simulated/manual provider flow only; real provider calls remain disabled.'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspace: 'Project Workspace',
+            currentProject: 'Current project',
+            projectId: 'Project ID',
+            projectName: 'Project name',
+            projectProduct: 'Product',
+            sourceType: 'Source type',
+            projectGraphSummary: 'Project graph summary',
+            recentProjectRuns: 'Recent project runs',
+            recentProjectJobs: 'Recent project jobs',
+            recentProjectArtifacts: 'Recent project artifacts',
+            recentProjectAssets: 'Recent project assets',
+            recentGraphReports: 'Recent graph reports',
+            createProject: 'Create project',
+            refreshProjectSummary: 'Refresh project summary',
+            creatingProject: 'Creating project...',
+            projectCreated: 'Project created',
+            projectCreateFailed: 'Failed to create project',
+            refreshingProjectSummary: 'Refreshing project summary...',
+            projectSummaryRefreshed: 'Project summary refreshed',
+            workspaceAgentGraph: 'Workspace Agent Graph',
+            projectNode: 'Project node',
+            assetNode: 'Asset node',
+            runNode: 'Run node',
+            jobNode: 'Job node',
+            experimentNode: 'Experiment node',
+            approvalNode: 'Approval node',
+            reportNode: 'Report node',
+            workspaceGraphDetails: 'Workspace graph details',
+            productAssets: 'Product assets',
+            uploadProductImage: 'Upload product image',
+            uploadReferenceImage: 'Upload reference image',
+            assetRole: 'Asset role',
+            assetNotes: 'Asset notes',
+            uploadedAssets: 'Uploaded assets',
+            primaryProductAsset: 'Primary product asset',
+            useAsProductIdentityReference: 'Use as product identity reference',
+            productAssetLockV2: 'Product Asset Lock v2',
+            assetUploadDetails: 'Asset upload details',
+            uploadingAsset: 'Uploading asset...',
+            assetUploaded: 'Asset uploaded',
+            assetUploadFailed: 'Failed to upload asset',
+            artifactRegistryV2: 'Artifact Registry v2',
+            projectScopedArtifact: 'Project-scoped artifact',
+            parentArtifact: 'Parent artifact',
+            childArtifact: 'Child artifact',
+            revisionChain: 'Revision chain',
+            supersedes: 'Supersedes',
+            supersededBy: 'Superseded by',
+            artifactVersion: 'Artifact version',
+            lineageSummary: 'Lineage summary',
+            uploadedProductAsset: 'Uploaded product asset'
+        });
+
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             selectedRoute: '\u5df2\u9009\u8def\u7531',
             selectedEdge: '\u5df2\u9009\u8fb9',
@@ -5546,6 +5606,60 @@
             approvalUnlocksSimulatedOnly: '\u5ba1\u6279\u53ea\u89e3\u9501\u6a21\u62df/\u624b\u52a8 provider \u6d41\u7a0b\uff1b\u771f\u5b9e provider \u8c03\u7528\u4ecd\u7981\u7528\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspace: '\u9879\u76ee\u5de5\u4f5c\u533a',
+            currentProject: '\u5f53\u524d\u9879\u76ee',
+            projectId: '\u9879\u76ee ID',
+            projectName: '\u9879\u76ee\u540d\u79f0',
+            projectProduct: '\u5546\u54c1',
+            sourceType: '\u6765\u6e90\u7c7b\u578b',
+            projectGraphSummary: '\u9879\u76ee\u56fe\u6458\u8981',
+            recentProjectRuns: '\u6700\u8fd1\u9879\u76ee Runs',
+            recentProjectJobs: '\u6700\u8fd1\u9879\u76ee Jobs',
+            recentProjectArtifacts: '\u6700\u8fd1\u9879\u76ee\u4ea7\u7269',
+            recentProjectAssets: '\u6700\u8fd1\u9879\u76ee\u8d44\u4ea7',
+            recentGraphReports: '\u6700\u8fd1\u56fe\u62a5\u544a',
+            createProject: '\u521b\u5efa\u9879\u76ee',
+            refreshProjectSummary: '\u5237\u65b0\u9879\u76ee\u6458\u8981',
+            creatingProject: '\u6b63\u5728\u521b\u5efa\u9879\u76ee...',
+            projectCreated: '\u9879\u76ee\u5df2\u521b\u5efa',
+            projectCreateFailed: '\u9879\u76ee\u521b\u5efa\u5931\u8d25',
+            refreshingProjectSummary: '\u6b63\u5728\u5237\u65b0\u9879\u76ee\u6458\u8981...',
+            projectSummaryRefreshed: '\u9879\u76ee\u6458\u8981\u5df2\u5237\u65b0',
+            workspaceAgentGraph: '\u5de5\u4f5c\u533a Agent \u56fe',
+            projectNode: '\u9879\u76ee\u8282\u70b9',
+            assetNode: '\u8d44\u4ea7\u8282\u70b9',
+            runNode: 'Run \u8282\u70b9',
+            jobNode: 'Job \u8282\u70b9',
+            experimentNode: '\u5b9e\u9a8c\u8282\u70b9',
+            approvalNode: '\u5ba1\u6279\u8282\u70b9',
+            reportNode: '\u62a5\u544a\u8282\u70b9',
+            workspaceGraphDetails: '\u5de5\u4f5c\u533a\u56fe\u8be6\u60c5',
+            productAssets: '\u5546\u54c1\u8d44\u4ea7',
+            uploadProductImage: '\u4e0a\u4f20\u5546\u54c1\u56fe',
+            uploadReferenceImage: '\u4e0a\u4f20\u53c2\u8003\u56fe',
+            assetRole: '\u8d44\u4ea7\u89d2\u8272',
+            assetNotes: '\u8d44\u4ea7\u5907\u6ce8',
+            uploadedAssets: '\u5df2\u4e0a\u4f20\u8d44\u4ea7',
+            primaryProductAsset: '\u4e3b\u5546\u54c1\u8d44\u4ea7',
+            useAsProductIdentityReference: '\u7528\u4f5c\u5546\u54c1\u8eab\u4efd\u53c2\u8003',
+            productAssetLockV2: '\u5546\u54c1\u8d44\u4ea7\u9501 v2',
+            assetUploadDetails: '\u8d44\u4ea7\u4e0a\u4f20\u8be6\u60c5',
+            uploadingAsset: '\u6b63\u5728\u4e0a\u4f20\u8d44\u4ea7...',
+            assetUploaded: '\u8d44\u4ea7\u5df2\u4e0a\u4f20',
+            assetUploadFailed: '\u8d44\u4ea7\u4e0a\u4f20\u5931\u8d25',
+            artifactRegistryV2: '\u4ea7\u7269\u6ce8\u518c\u8868 v2',
+            projectScopedArtifact: '\u9879\u76ee\u4f5c\u7528\u57df\u4ea7\u7269',
+            parentArtifact: '\u7236\u4ea7\u7269',
+            childArtifact: '\u5b50\u4ea7\u7269',
+            revisionChain: '\u4fee\u8ba2\u94fe',
+            supersedes: '\u53d6\u4ee3',
+            supersededBy: '\u88ab\u53d6\u4ee3',
+            artifactVersion: '\u4ea7\u7269\u7248\u672c',
+            lineageSummary: '\u8c31\u7cfb\u6458\u8981',
+            uploadedProductAsset: '\u5df2\u4e0a\u4f20\u5546\u54c1\u8d44\u4ea7'
+        });
+
         function normalizeLocalizedPlaceholderText(value) {
             return String(value ?? '').replaceAll('\\n', String.fromCharCode(10));
         }
@@ -5578,6 +5692,10 @@
             updateLanguageBodyClass(language);
             outputLanguage = language === 'zh-CN' ? 'zh-CN' : 'en';
             applyLanguageCopy();
+            const projectWorkspaceRoot = document.getElementById('projectWorkspaceRoot');
+            if (projectWorkspaceRoot) {
+                projectWorkspaceRoot.innerHTML = renderProjectWorkspacePanel();
+            }
             refreshDemoSlugDisplayForLanguage();
             refreshSampleWorkspaceCopyForLanguage();
             maybeRefreshSampleInputsForLanguage();
@@ -6619,12 +6737,15 @@
         function visibleProductData(data) {
             if (!data) return null;
             return {
+                project_id: data.project_id || latestProjectId || 'demo_project_default',
                 insights: data.insights || {},
                 audience: data.audience || {},
                 strategy: data.strategy || {},
                 assets: data.assets || {},
                 evaluation: data.evaluation || {},
-                feedback: data.feedback || ''
+                feedback: data.feedback || '',
+                product_asset_lock_v2: data.product_asset_lock_v2 || {},
+                artifact_registry: data.artifact_registry || {}
             };
         }
 
@@ -7166,6 +7287,32 @@
         async function getAgentGraphHistorySummary() {
             const response = await fetch('/api/v1/agent-graph/history/summary');
             return videoGenerationJsonResponse(response, 'graphHistoryFailed');
+        }
+
+        async function createProjectWorkspace(payload) {
+            const response = await fetch('/api/v1/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || {})
+            });
+            return videoGenerationJsonResponse(response, 'projectCreateFailed');
+        }
+
+        async function getProjectWorkspaceSummary(projectId = latestProjectId) {
+            const response = await fetch(`/api/v1/projects/${encodeURIComponent(projectId || 'demo_project_default')}/graph-summary`);
+            return videoGenerationJsonResponse(response, 'graphHistoryFailed');
+        }
+
+        async function uploadProjectAssetRequest(projectId, assetRole, file, notes = '') {
+            const form = new FormData();
+            form.append('asset_role', assetRole);
+            form.append('notes', notes);
+            form.append('file', file);
+            const response = await fetch(`/api/v1/projects/${encodeURIComponent(projectId || 'demo_project_default')}/assets/upload`, {
+                method: 'POST',
+                body: form
+            });
+            return videoGenerationJsonResponse(response, 'assetUploadFailed');
         }
 
         async function getGraphReport(kind, id, format = 'json') {
@@ -8286,6 +8433,7 @@
                     target_platform: targetPlatform,
                     goal,
                     output_language: currentOutputLanguage(),
+                    project_id: latestProjectId,
                     llm_evidence_packet: workspaceLlmEvidencePacket || undefined
                 });
                 renderProductDashboard(response.data, {
@@ -9126,6 +9274,7 @@
                     target_platform: targetPlatform,
                     goal,
                     output_language: currentOutputLanguage(),
+                    project_id: latestProjectId,
                     llm_evidence_packet: workspaceResponse?.llm_evidence_packet || undefined
                 });
                 const run = response.run || {};
@@ -9228,13 +9377,35 @@
             `;
         }
 
+        function renderProductAssetLockV2(lock) {
+            if (!lock || lock.lock_version !== 'product_asset_lock_v2') return '';
+            return `
+                <div class="section-block" id="productAssetLockV2Panel">
+                    <div class="json-key">${escapeHTML(t('productAssetLockV2'))}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('projectId'), lock.project_id || '')}
+                        ${metricPill(t('sourceType'), lock.asset_source || '')}
+                        ${metricPill(t('primaryProductAsset'), lock.primary_asset_id || 'none')}
+                    </div>
+                    <div class="feedback-box">${escapeHTML(t('useAsProductIdentityReference'))}: ${escapeHTML(String(lock.handoff_usage?.use_primary_image_as_identity_reference === true))}</div>
+                    <details>
+                        <summary>${escapeHTML(t('assetUploadDetails'))}</summary>
+                        ${block(t('mustPreserve'), (lock.must_preserve || []).join('\n'))}
+                        ${block(t('mustNotChange'), (lock.must_not_change || []).join('\n'))}
+                    </details>
+                </div>
+            `;
+        }
+
         function renderArtifactRegistry(registry) {
-            if (!registry || registry.registry_version !== 'artifact_registry_v1') return '';
+            if (!registry || !['artifact_registry_v1', 'artifact_registry_v2'].includes(registry.registry_version)) return '';
             const artifacts = Array.isArray(registry.artifacts) ? registry.artifacts : [];
             const counts = registry.artifact_counts || {};
+            const isV2 = registry.registry_version === 'artifact_registry_v2';
             const keyRows = artifacts.slice(0, 6).map((artifact) => `
                 <div class="artifact-timeline-row">
                     <strong>${escapeHTML(artifact.artifact_type || '')}</strong>
+                    ${isV2 ? `<span class="source-badge">${escapeHTML(t('projectScopedArtifact'))}</span>` : ''}
                     <div>${escapeHTML(t('sourceAgent'))}: ${escapeHTML(artifact.source_agent_id || '')} \u00b7 ${escapeHTML(t('artifactStatus'))}: ${escapeHTML(artifact.status || '')}</div>
                     ${artifact.summary ? `<div>${escapeHTML(artifact.summary)}</div>` : ''}
                 </div>
@@ -9242,8 +9413,13 @@
             const detailRows = artifacts.map((artifact) => `
                 <div class="graph-os-card">
                     <strong>${escapeHTML(artifact.artifact_type || '')}</strong>
+                    ${isV2 ? `<div>${escapeHTML(t('projectId'))}: ${escapeHTML(artifact.project_id || registry.project_id || '')}</div>` : ''}
                     <div>${escapeHTML(t('sourceAgent'))}: ${escapeHTML(artifact.source_agent_id || '')}</div>
-                    <div>${escapeHTML(t('parentArtifacts'))}: ${escapeHTML((artifact.parent_artifact_ids || []).join(', ') || 'none')}</div>
+                    <div>${escapeHTML(t('parentArtifact'))}: ${escapeHTML((artifact.parent_artifact_ids || []).join(', ') || 'none')}</div>
+                    ${isV2 ? `<div>${escapeHTML(t('childArtifact'))}: ${escapeHTML((artifact.child_artifact_ids || []).join(', ') || 'none')}</div>` : ''}
+                    ${isV2 ? `<div>${escapeHTML(t('artifactVersion'))}: ${escapeHTML(String(artifact.version || 1))}</div>` : ''}
+                    ${artifact.supersedes_artifact_id ? `<div>${escapeHTML(t('supersedes'))}: ${escapeHTML(artifact.supersedes_artifact_id)}</div>` : ''}
+                    ${artifact.superseded_by_artifact_id ? `<div>${escapeHTML(t('supersededBy'))}: ${escapeHTML(artifact.superseded_by_artifact_id)}</div>` : ''}
                     <div>${escapeHTML(t('usedByNextAgent'))}: ${escapeHTML((artifact.used_by_agent_ids || []).join(', ') || 'none')}</div>
                     <div>${escapeHTML(artifact.summary || '')}</div>
                 </div>
@@ -9251,10 +9427,12 @@
             return `
                 <div class="section-block" id="artifactRegistryPanel">
                     <div class="probe-header">
-                        <div class="json-key">${escapeHTML(t('artifactRegistry'))}</div>
+                        <div class="json-key">${escapeHTML(isV2 ? t('artifactRegistryV2') : t('artifactRegistry'))}</div>
+                        ${isV2 ? `<span class="source-badge">${escapeHTML(t('projectId'))}: ${escapeHTML(registry.project_id || '')}</span>` : ''}
                         <span class="source-badge">${escapeHTML(t('artifactCounts'))}: ${escapeHTML(String(counts.total || artifacts.length))}</span>
                     </div>
                     <div>${escapeHTML(t('artifactChain'))}</div>
+                    ${isV2 ? `<div class="feedback-box">${escapeHTML(t('lineageSummary'))}: ${escapeHTML(JSON.stringify(registry.lineage_summary || {}))}</div>` : ''}
                     <div id="artifactTimeline">${keyRows}</div>
                     <details>
                         <summary>${escapeHTML(t('artifactRegistryDetails'))}</summary>
@@ -9855,6 +10033,169 @@
             `;
         }
 
+        function renderWorkspaceAgentGraph(project) {
+            const summary = project?.graph_summary || {};
+            const nodes = [
+                [t('projectNode'), project?.project_id ? 'done' : 'idle'],
+                [t('assetNode'), Number(summary.asset_count || 0) > 0 ? 'done' : 'waiting'],
+                [t('runNode'), Number(summary.run_count || 0) > 0 ? 'done' : 'idle'],
+                [t('jobNode'), Number(summary.job_count || 0) > 0 ? 'done' : 'idle'],
+                [t('experimentNode'), Number(summary.experiment_count || 0) > 0 ? 'done' : 'idle'],
+                [t('approvalNode'), Number(summary.approval_count || 0) > 0 ? 'done' : 'waiting'],
+                [t('reportNode'), Number(summary.report_count || 0) > 0 ? 'done' : 'idle']
+            ];
+            return `
+                <div class="json-key">${escapeHTML(t('workspaceAgentGraph'))}</div>
+                <div class="live-graph-lane">
+                    ${nodes.map(([label, status]) => `<span class="live-graph-node ${escapeHTML(status)}">${escapeHTML(label)}</span>`).join('<span class="live-graph-edge">→</span>')}
+                </div>
+                <details>
+                    <summary>${escapeHTML(t('workspaceGraphDetails'))}</summary>
+                    <pre>${escapeHTML(JSON.stringify(summary, null, 2))}</pre>
+                </details>
+            `;
+        }
+
+        function renderProjectAssetRows(assets) {
+            if (!Array.isArray(assets) || !assets.length) {
+                return `<div class="recent-empty">${escapeHTML(t('uploadedAssets'))}: 0</div>`;
+            }
+            return assets.map((asset) => `
+                <div class="artifact-timeline-row">
+                    <strong>${escapeHTML(asset.filename || asset.asset_id || '')}</strong>
+                    <div>${escapeHTML(t('assetRole'))}: ${escapeHTML(asset.asset_role || '')}</div>
+                    <div>${escapeHTML(asset.asset_id || '')}</div>
+                    ${asset.asset_role === 'product_image' ? `<span class="source-badge">${escapeHTML(t('primaryProductAsset'))}</span>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderProjectWorkspacePanel(workspace = latestProjectWorkspace) {
+            const project = workspace?.project || {
+                project_id: latestProjectId || 'demo_project_default',
+                project_name: 'Demo Project',
+                graph_summary: {}
+            };
+            const assets = workspace?.recent_assets || [];
+            const summary = project.graph_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspacePanel">
+                    <div class="json-key">${escapeHTML(t('projectWorkspace'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('currentProject'))}: ${escapeHTML(project.project_name || 'Demo Project')}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('projectId'), project.project_id || 'demo_project_default')}
+                        ${metricPill(t('projectName'), project.project_name || 'Demo Project')}
+                        ${metricPill(t('projectProduct'), project.product_name || '')}
+                        ${metricPill(t('sourceType'), project.source_type || 'demo')}
+                    </div>
+                    <div class="json-key">${escapeHTML(t('projectGraphSummary'))}</div>
+                    ${renderWorkspaceAgentGraph(project)}
+                    <div class="metric-strip">
+                        ${metricPill(t('recentProjectRuns'), String(summary.run_count || 0))}
+                        ${metricPill(t('recentProjectJobs'), String(summary.job_count || 0))}
+                        ${metricPill(t('recentProjectArtifacts'), String(summary.artifact_count || 0))}
+                        ${metricPill(t('recentProjectAssets'), String(summary.asset_count || 0))}
+                        ${metricPill(t('recentGraphReports'), String(summary.report_count || 0))}
+                    </div>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceStatus"></div>
+                    <details>
+                        <summary>${escapeHTML(t('createProject'))}</summary>
+                        <div class="input-grid">
+                            <input id="projectWorkspaceNameInput" placeholder="${escapeHTML(t('projectName'))}" />
+                            <input id="projectWorkspaceProductInput" placeholder="${escapeHTML(t('projectProduct'))}" />
+                        </div>
+                        <button class="btn-secondary" id="createProjectWorkspaceBtn" type="button" onclick="createProjectWorkspaceFromForm()">${escapeHTML(t('createProject'))}</button>
+                    </details>
+                    <details id="projectAssetsPanel">
+                        <summary>${escapeHTML(t('productAssets'))}</summary>
+                        <input id="projectAssetFileInput" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" />
+                        <textarea id="projectAssetNotesInput" rows="2" placeholder="${escapeHTML(t('assetNotes'))}"></textarea>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="uploadProductAssetBtn" type="button" onclick="uploadCurrentProjectAsset('product_image')">${escapeHTML(t('uploadProductImage'))}</button>
+                            <button class="btn-secondary" id="uploadReferenceAssetBtn" type="button" onclick="uploadCurrentProjectAsset('reference_image')">${escapeHTML(t('uploadReferenceImage'))}</button>
+                        </div>
+                        <div class="quick-use-copy-status" id="projectAssetUploadStatus"></div>
+                        <div class="json-key">${escapeHTML(t('uploadedAssets'))}</div>
+                        <div id="projectAssetsList">${renderProjectAssetRows(assets)}</div>
+                        <div class="feedback-box">${escapeHTML(t('useAsProductIdentityReference'))}: ${escapeHTML(t('productAssetLockV2'))}</div>
+                        <details>
+                            <summary>${escapeHTML(t('assetUploadDetails'))}</summary>
+                            <div>${escapeHTML(t('durabilityNote'))}: ${escapeHTML(project.durability_note || 'File-backed demo storage; durability depends on deployment storage configuration.')}</div>
+                        </details>
+                    </details>
+                </div>
+            `;
+        }
+
+        async function createProjectWorkspaceFromForm() {
+            const btn = document.getElementById('createProjectWorkspaceBtn');
+            const status = document.getElementById('projectWorkspaceStatus');
+            const projectName = document.getElementById('projectWorkspaceNameInput')?.value?.trim() || '';
+            const productName = document.getElementById('projectWorkspaceProductInput')?.value?.trim() || '';
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('creatingProject');
+            try {
+                const response = await createProjectWorkspace({
+                    project_name: projectName,
+                    product_name: productName,
+                    source_type: 'manual'
+                });
+                latestProjectId = response.project?.project_id || 'demo_project_default';
+                await refreshProjectWorkspaceSummary();
+                if (status) status.textContent = t('projectCreated');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('projectCreateFailed');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function refreshProjectWorkspaceSummary() {
+            const btn = document.getElementById('refreshProjectSummaryBtn');
+            const status = document.getElementById('projectWorkspaceStatus');
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('refreshingProjectSummary');
+            try {
+                latestProjectWorkspace = await getProjectWorkspaceSummary(latestProjectId);
+                const panel = document.getElementById('projectWorkspacePanel');
+                if (panel) panel.outerHTML = renderProjectWorkspacePanel(latestProjectWorkspace);
+                const refreshedStatus = document.getElementById('projectWorkspaceStatus');
+                if (refreshedStatus) refreshedStatus.textContent = t('projectSummaryRefreshed');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('graphHistoryFailed');
+            } finally {
+                const refreshedBtn = document.getElementById('refreshProjectSummaryBtn');
+                if (refreshedBtn) refreshedBtn.disabled = false;
+            }
+        }
+
+        async function uploadCurrentProjectAsset(assetRole) {
+            const fileInput = document.getElementById('projectAssetFileInput');
+            const status = document.getElementById('projectAssetUploadStatus');
+            const file = fileInput?.files?.[0];
+            if (!file) {
+                if (status) status.textContent = t('assetUploadFailed');
+                return;
+            }
+            if (status) status.textContent = t('uploadingAsset');
+            try {
+                await uploadProjectAssetRequest(
+                    latestProjectId,
+                    assetRole,
+                    file,
+                    document.getElementById('projectAssetNotesInput')?.value || ''
+                );
+                await refreshProjectWorkspaceSummary();
+                const refreshedStatus = document.getElementById('projectAssetUploadStatus');
+                if (refreshedStatus) refreshedStatus.textContent = t('assetUploaded');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('assetUploadFailed');
+            }
+        }
+
         function renderRecentVideoJobsPanel() {
             return `
                 <div class="section-block" id="recentVideoJobsPanel">
@@ -10234,7 +10575,8 @@
                 const response = await postVideoJobFromGeneration({
                     generation_data: latestProductData,
                     provider,
-                    output_language: currentOutputLanguage()
+                    output_language: currentOutputLanguage(),
+                    project_id: latestProjectId
                 });
                 latestVideoGenerationJob = response.job || {};
                 if (status) status.textContent = t('videoJobCreated');
@@ -10253,6 +10595,7 @@
                 data._generatedOutputLanguage = options.outputLanguage || currentOutputLanguage();
             }
             latestProductData = data;
+            latestProjectId = data?.project_id || latestProjectId || 'demo_project_default';
             latestInputSlug = options.inputSlug ?? (document.getElementById('urlInput').value || '').trim();
             latestGeneratedAt = options.generatedAt ?? new Date().toISOString();
             setCopyButtonsEnabled(true);
@@ -10320,6 +10663,7 @@
                 ${renderVideoDraftPanel(data.video_generation_packet)}
                 ${renderVideoJobControls(data)}
                 ${renderExternalVideoToolHandoffPanel(data.external_video_tool_handoff)}
+                ${renderProductAssetLockV2(data.product_asset_lock_v2)}
                 ${renderArtifactRegistry(data.artifact_registry)}
             `;
 
@@ -10745,6 +11089,7 @@
         }
         applyLanguageCopy();
         mountUserTaskFlow();
+        document.getElementById('projectWorkspaceRoot').innerHTML = renderProjectWorkspacePanel();
         syncDebugMode();
         renderRecentGenerations();
     </script>
