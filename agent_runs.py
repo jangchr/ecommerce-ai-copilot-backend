@@ -388,6 +388,339 @@ def build_experiment_feedback_decision(
     }
 
 
+def build_graph_router_decision(
+    route_context: dict[str, Any],
+    job: dict[str, Any] | None = None,
+    run: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Select a deterministic next graph route without executing it."""
+
+    context = route_context if isinstance(route_context, dict) else {}
+    context_type = str(context.get("route_context_type") or "").strip()
+    validation_status = str(context.get("validation_status") or context.get("status") or "").strip().lower()
+    issue_type = str(context.get("issue_type") or "").strip().lower()
+    comparison_status = str(context.get("comparison_status") or context.get("status") or "").strip().lower()
+    gate_decision_type = str(context.get("gate_decision_type") or context.get("decision_type") or "").strip()
+    score_deltas = context.get("score_deltas")
+    score_deltas = deepcopy(score_deltas) if isinstance(score_deltas, dict) else {}
+    artifact_types = context.get("artifact_types")
+    artifact_types = list(artifact_types) if isinstance(artifact_types, list) else []
+    reason = str(context.get("reason") or "").strip()
+
+    selected = {
+        "from_agent_id": str(context.get("from_agent_id") or "graph_router_agent"),
+        "selected_next_agent_id": "finalizer_agent",
+        "secondary_next_agent_id": "",
+        "route_type": "stop",
+        "decision_type": "route_to_final_summary",
+        "reason": reason or "No supported graph branch matched; route to the final summary.",
+        "confidence": 0.7,
+        "should_continue_graph": False,
+        "should_trigger_rework": False,
+        "should_request_human_approval": False,
+        "should_proceed_to_provider_test": False,
+        "should_stop": True,
+        "edge_type": "normal",
+    }
+
+    if context_type == "risk_validation" and validation_status in {"failed", "warning", "risky", "risk_detected"}:
+        selected.update(
+            {
+                "from_agent_id": "risk_agent",
+                "selected_next_agent_id": "storyboard_agent",
+                "route_type": "rework",
+                "decision_type": "route_to_storyboard_rework",
+                "reason": reason or "Risk validation found unsupported or risky storyboard wording.",
+                "confidence": 0.95,
+                "should_continue_graph": True,
+                "should_trigger_rework": True,
+                "should_stop": False,
+                "edge_type": "rework",
+            }
+        )
+    elif context_type == "experiment_feedback":
+        feedback_routes = {
+            "product_consistency": (
+                "keyframe_agent",
+                "asset_lock_agent",
+                "route_to_keyframe_asset_lock_rework",
+                "Product consistency feedback requires tighter keyframes and product identity locks.",
+            ),
+            "storyboard_following": (
+                "prompt_handoff_agent",
+                "keyframe_agent",
+                "route_to_prompt_keyframe_rework",
+                "Storyboard-following feedback requires revised prompt handoff and keyframe constraints.",
+            ),
+            "ad_readiness": (
+                "storyboard_agent",
+                "strategy_agent",
+                "route_to_storyboard_strategy_rework",
+                "Ad-readiness feedback requires a stronger storyboard and creative strategy.",
+            ),
+            "visual_quality": (
+                "prompt_handoff_agent",
+                "",
+                "route_to_prompt_handoff_rework",
+                "Visual-quality feedback requires tighter external prompt constraints.",
+            ),
+            "cost_value": (
+                "cost_agent",
+                "route_selector_agent",
+                "route_to_cost_route_selector_review",
+                "Cost/value feedback requires cost review and safe route selection.",
+            ),
+            "overall_quality": (
+                "prompt_handoff_agent",
+                "",
+                "route_to_prompt_handoff_rework",
+                "Low overall quality requires tighter prompt handoff constraints.",
+            ),
+        }
+        route = feedback_routes.get(issue_type)
+        if route:
+            selected.update(
+                {
+                    "from_agent_id": "experiment_agent",
+                    "selected_next_agent_id": route[0],
+                    "secondary_next_agent_id": route[1],
+                    "route_type": "rework",
+                    "decision_type": route[2],
+                    "reason": reason or route[3],
+                    "confidence": 0.92 if issue_type == "product_consistency" else 0.88,
+                    "should_continue_graph": True,
+                    "should_trigger_rework": True,
+                    "should_stop": False,
+                    "edge_type": "rework",
+                }
+            )
+    elif context_type == "revised_keyframe_created":
+        selected.update(
+            {
+                "from_agent_id": "keyframe_agent",
+                "selected_next_agent_id": "prompt_handoff_agent",
+                "route_type": "handoff",
+                "decision_type": "route_to_prompt_handoff",
+                "reason": reason or "The revised keyframe plan is ready for external prompt handoff.",
+                "confidence": 0.96,
+                "should_continue_graph": True,
+                "should_stop": False,
+                "edge_type": "normal",
+            }
+        )
+    elif context_type == "second_experiment_comparison":
+        comparison_routes = {
+            "improved": {
+                "next": "provider_job_agent",
+                "secondary": "experiment_agent",
+                "route_type": "decision_gate",
+                "decision_type": "route_to_provider_controlled_test",
+                "reason": "The second experiment improved enough to open a controlled provider/manual test gate.",
+                "rework": False,
+                "approval": True,
+                "provider": True,
+                "edge_type": "gate",
+                "confidence": 0.9,
+            },
+            "regressed": {
+                "next": "prompt_handoff_agent",
+                "secondary": "keyframe_agent",
+                "route_type": "rework",
+                "decision_type": "route_to_prompt_keyframe_retry",
+                "reason": "The second experiment regressed and should return to prompt and keyframe rework.",
+                "rework": True,
+                "approval": False,
+                "provider": False,
+                "edge_type": "rework",
+                "confidence": 0.92,
+            },
+            "mixed": {
+                "next": "experiment_agent",
+                "secondary": "prompt_handoff_agent",
+                "route_type": "human_approval",
+                "decision_type": "route_to_manual_review",
+                "reason": "Mixed score movement requires human review before choosing another route.",
+                "rework": False,
+                "approval": True,
+                "provider": False,
+                "edge_type": "human_approval",
+                "confidence": 0.72,
+            },
+            "no_change": {
+                "next": "asset_lock_agent",
+                "secondary": "keyframe_agent",
+                "route_type": "rework",
+                "decision_type": "route_to_stronger_reference_keyframe_rework",
+                "reason": "No meaningful improvement requires a stronger reference and revised keyframes.",
+                "rework": True,
+                "approval": False,
+                "provider": False,
+                "edge_type": "rework",
+                "confidence": 0.8,
+            },
+        }
+        route = comparison_routes.get(comparison_status)
+        if route:
+            selected.update(
+                {
+                    "from_agent_id": "experiment_agent",
+                    "selected_next_agent_id": route["next"],
+                    "secondary_next_agent_id": route["secondary"],
+                    "route_type": route["route_type"],
+                    "decision_type": route["decision_type"],
+                    "reason": reason or route["reason"],
+                    "confidence": route["confidence"],
+                    "should_continue_graph": True,
+                    "should_trigger_rework": route["rework"],
+                    "should_request_human_approval": route["approval"],
+                    "should_proceed_to_provider_test": route["provider"],
+                    "should_stop": False,
+                    "edge_type": route["edge_type"],
+                }
+            )
+    elif context_type == "experiment_comparison_decision_gate":
+        gate_routes = {
+            "proceed_to_controlled_test": (
+                "provider_job_agent",
+                "experiment_agent",
+                "decision_gate",
+                "route_to_provider_controlled_test",
+                False,
+                True,
+                True,
+                "gate",
+            ),
+            "retry_rework": (
+                "prompt_handoff_agent",
+                "keyframe_agent",
+                "rework",
+                "route_to_prompt_keyframe_retry",
+                True,
+                False,
+                False,
+                "rework",
+            ),
+            "manual_review_required": (
+                "experiment_agent",
+                "prompt_handoff_agent",
+                "human_approval",
+                "route_to_manual_review",
+                False,
+                True,
+                False,
+                "human_approval",
+            ),
+            "stop_or_revise_reference": (
+                "asset_lock_agent",
+                "keyframe_agent",
+                "rework",
+                "route_to_stronger_reference_keyframe_rework",
+                True,
+                False,
+                False,
+                "rework",
+            ),
+        }
+        route = gate_routes.get(gate_decision_type)
+        if route:
+            selected.update(
+                {
+                    "from_agent_id": "experiment_agent",
+                    "selected_next_agent_id": route[0],
+                    "secondary_next_agent_id": route[1],
+                    "route_type": route[2],
+                    "decision_type": route[3],
+                    "reason": reason or "The experiment comparison decision gate selected the next safe graph route.",
+                    "confidence": float(context.get("confidence") or 0.86),
+                    "should_continue_graph": True,
+                    "should_trigger_rework": route[4],
+                    "should_request_human_approval": route[5],
+                    "should_proceed_to_provider_test": route[6],
+                    "should_stop": False,
+                    "edge_type": route[7],
+                }
+            )
+    elif context_type == "controlled_provider_checklist":
+        selected.update(
+            {
+                "from_agent_id": "provider_job_agent",
+                "selected_next_agent_id": "human_approval_agent",
+                "route_type": "human_approval",
+                "decision_type": "route_to_human_approval_before_provider",
+                "reason": reason or "Controlled provider/manual handoff requires explicit human approval before paid generation.",
+                "confidence": 0.99,
+                "should_continue_graph": True,
+                "should_request_human_approval": True,
+                "should_proceed_to_provider_test": False,
+                "should_stop": False,
+                "edge_type": "human_approval",
+            }
+        )
+
+    selected_edge = {
+        "from_node_id": selected["from_agent_id"],
+        "to_node_id": selected["selected_next_agent_id"],
+        "edge_type": selected.pop("edge_type"),
+    }
+    input_signal = str(
+        context.get("input_signal")
+        or issue_type
+        or comparison_status
+        or gate_decision_type
+        or validation_status
+        or "no_supported_route"
+    )
+    return {
+        "router_version": "graph_router_agent_v1",
+        "source_agent_id": "graph_router_agent",
+        "route_context_type": context_type or "fallback",
+        "input_signal": input_signal,
+        **selected,
+        "selected_edge": selected_edge,
+        "evidence": {
+            "score_deltas": score_deltas,
+            "validation_status": validation_status,
+            "issue_type": issue_type,
+            "comparison_status": comparison_status,
+            "gate_decision_type": gate_decision_type,
+            "artifact_types": artifact_types,
+        },
+        "safety_boundaries": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+            "requires_human_approval_before_paid_generation": True,
+        },
+    }
+
+
+def append_graph_router_decision(
+    container: dict[str, Any],
+    router_decision: dict[str, Any],
+) -> dict[str, Any]:
+    """Append a router decision and refresh compact non-linear graph counts."""
+
+    target = container if isinstance(container, dict) else {}
+    decision = router_decision if isinstance(router_decision, dict) else {}
+    if not decision:
+        return target
+    decisions = list(target.get("graph_router_decisions") or [])
+    decisions.append(deepcopy(decision))
+    decisions = decisions[-20:]
+    target["graph_router_decisions"] = decisions
+    target["latest_graph_router_decision"] = deepcopy(decisions[-1])
+    target["graph_router_summary"] = {
+        "router_version": "graph_router_agent_v1",
+        "decision_count": len(decisions),
+        "has_rework_route": any(item.get("should_trigger_rework") is True for item in decisions),
+        "has_provider_route": any(item.get("should_proceed_to_provider_test") is True for item in decisions),
+        "has_human_approval_route": any(item.get("should_request_human_approval") is True for item in decisions),
+        "has_stop_route": any(item.get("should_stop") is True for item in decisions),
+        "is_linear_workflow": False,
+    }
+    return target
+
+
 def build_second_experiment_comparison(
     baseline_experiment: dict[str, Any],
     second_experiment: dict[str, Any],
@@ -639,6 +972,12 @@ def build_lightweight_artifact_lineage(
     run_result = _experiment_rework_dict(run.get("result"))
     revised_plan = _experiment_rework_dict(run_result.get("revised_keyframe_plan"))
     revised_handoff = _experiment_rework_dict(run_result.get("revised_external_video_handoff"))
+    router_decisions = list(second.get("graph_router_decisions") or safe_job.get("graph_router_decisions") or [])
+    latest_router_decision = _experiment_rework_dict(
+        second.get("latest_graph_router_decision")
+        or safe_job.get("latest_graph_router_decision")
+        or (router_decisions[-1] if router_decisions else {})
+    )
 
     artifact_chain: list[dict[str, Any]] = []
 
@@ -716,6 +1055,16 @@ def build_lightweight_artifact_lineage(
         decision_type=gate.get("decision_type"),
         recommended_route=gate.get("recommended_route"),
     )
+    append_artifact(
+        "graph_router_decision",
+        str(latest_router_decision.get("router_version") or ""),
+        "graph_router_agent",
+        "route_selected",
+        "Graph Router Agent selected the next graph route based on comparison and gate evidence.",
+        decision_type=latest_router_decision.get("decision_type"),
+        selected_next_agent_id=latest_router_decision.get("selected_next_agent_id"),
+        route_type=latest_router_decision.get("route_type"),
+    )
 
     agents: list[str] = []
     for candidate in [
@@ -727,6 +1076,7 @@ def build_lightweight_artifact_lineage(
         revised_handoff.get("target_agent_id"),
         gate.get("next_agent_id"),
         gate.get("secondary_next_agent_id"),
+        "graph_router_agent" if latest_router_decision else "",
     ]:
         agent_id = str(candidate or "").strip()
         if agent_id and agent_id not in agents:
@@ -753,6 +1103,8 @@ def build_lightweight_artifact_lineage(
             "has_revised_artifacts": bool(revised_plan or revised_handoff),
             "has_second_experiment_comparison": bool(safe_comparison),
             "has_decision_gate": bool(gate),
+            "has_graph_router_decision": bool(latest_router_decision),
+            "has_centralized_route_decision": bool(latest_router_decision),
             "is_linear_workflow": False,
         },
     }
@@ -853,6 +1205,12 @@ def build_demo_ready_run_summary(
         created_artifacts.append("controlled_provider_handoff_checklist")
 
     feedback = _experiment_rework_dict(baseline.get("agent_feedback_decision"))
+    router_summary = _experiment_rework_dict(
+        second.get("graph_router_summary")
+        or _experiment_rework_dict(job).get("graph_router_summary")
+    )
+    if router_summary.get("decision_count"):
+        created_artifacts.append("graph_router_decision")
     decision_chain = [
         {
             "agent_id": "experiment_agent",
@@ -885,6 +1243,7 @@ def build_demo_ready_run_summary(
             "Keyframe and Prompt Handoff agents produced revised artifacts.",
             "Experiment Agent compared a second external result against the baseline.",
             "A deterministic decision gate selected the next business-safe route.",
+            "Graph Router Agent centralized route decisions across feedback, rework, comparison, and decision gate.",
             "This is not a linear workflow: feedback creates an upstream rework loop before the next gate.",
         ],
         "agent_decision_chain": decision_chain,
@@ -906,6 +1265,7 @@ def build_demo_ready_run_summary(
             "automatic_provider_submission_enabled": False,
         },
         "is_linear_workflow": False,
+        "graph_router_summary": router_summary,
         "lineage": lineage,
         "controlled_provider_handoff_checklist": checklist,
     }
@@ -1350,6 +1710,31 @@ def trigger_experiment_rework_run(
             safe_decision,
             experiment,
         )
+    feedback_router_decision = build_graph_router_decision(
+        {
+            "route_context_type": "experiment_feedback",
+            "input_signal": issue_type,
+            "issue_type": issue_type,
+            "reason": reason,
+            "score_deltas": safe_decision.get("score_snapshot") or {},
+            "artifact_types": ["external_video_experiment"],
+        },
+        job={"job_id": job_id},
+    )
+    revised_keyframe_router_decision: dict[str, Any] = {}
+    if revised_keyframe_plan and revised_external_video_handoff:
+        revised_keyframe_router_decision = build_graph_router_decision(
+            {
+                "route_context_type": "revised_keyframe_created",
+                "input_signal": revised_keyframe_plan.get("plan_version"),
+                "reason": "Revised keyframes are ready for Prompt Handoff Agent.",
+                "artifact_types": [
+                    "revised_keyframe_plan",
+                    "revised_external_video_handoff",
+                ],
+            },
+            job={"job_id": job_id},
+        )
 
     run = build_agent_run(
         input_type="experiment_feedback_rework",
@@ -1369,6 +1754,9 @@ def trigger_experiment_rework_run(
     run["external_api_called"] = False
     run["cost_incurred_by_crossgrowth"] = False
     run["updated_at"] = now
+    append_graph_router_decision(run, feedback_router_decision)
+    if revised_keyframe_router_decision:
+        append_graph_router_decision(run, revised_keyframe_router_decision)
     run["result"] = {
         "result_type": "experiment_feedback_rework_result" if revised_keyframe_plan else "experiment_feedback_rework_scaffold",
         "source_video_job_id": str(job_id or ""),
@@ -1392,7 +1780,7 @@ def trigger_experiment_rework_run(
             "next_agent_id": "prompt_handoff_agent",
         }
 
-    visited = ["experiment_agent", target_agent_id]
+    visited = ["experiment_agent", "graph_router_agent", target_agent_id]
     if secondary_target_agent_id:
         visited.append(secondary_target_agent_id)
     run["visited_node_ids"] = list(dict.fromkeys(visited))
@@ -1400,6 +1788,8 @@ def trigger_experiment_rework_run(
     for node in run.get("graph_nodes", []):
         node_id = str(node.get("node_id") or "")
         if node_id == "experiment_agent":
+            node["status"] = "complete"
+        elif node_id == "graph_router_agent":
             node["status"] = "complete"
         elif node_id == target_agent_id or (secondary_target_agent_id and node_id == secondary_target_agent_id):
             node["status"] = "rework_requested"
@@ -1411,6 +1801,12 @@ def trigger_experiment_rework_run(
             agent["completed_at"] = now
             agent["decision_summary"] = "Experiment Agent converted poor external scores into a graph feedback decision."
             agent["business_impact"] = "Poor external video results are routed back to the most relevant upstream agent."
+        elif agent_id == "graph_router_agent":
+            agent["status"] = "complete"
+            agent["started_at"] = now
+            agent["completed_at"] = now
+            agent["decision_summary"] = str(run["latest_graph_router_decision"].get("reason") or "")
+            agent["business_impact"] = "Centralizes the next graph edge while preserving human and provider safety boundaries."
         elif agent_id == target_agent_id or (secondary_target_agent_id and agent_id == secondary_target_agent_id):
             agent["status"] = "complete"
             agent["started_at"] = now
@@ -1505,6 +1901,25 @@ def trigger_experiment_rework_run(
         },
         {
             "event_id": str(uuid4()),
+            "event_type": "graph_router_decision_created",
+            "agent_id": "graph_router_agent",
+            "message": feedback_router_decision["reason"],
+            "created_at": now,
+            "data": deepcopy(feedback_router_decision),
+        },
+        {
+            "event_id": str(uuid4()),
+            "event_type": "graph_router_route_selected",
+            "agent_id": "graph_router_agent",
+            "message": (
+                f"Graph Router Agent selected {feedback_router_decision['selected_next_agent_id']} "
+                f"for {feedback_router_decision['route_type']}."
+            ),
+            "created_at": now,
+            "data": deepcopy(feedback_router_decision),
+        },
+        {
+            "event_id": str(uuid4()),
             "event_type": "experiment_feedback_rework_requested",
             "agent_id": "experiment_agent",
             "message": recommended_action or reason,
@@ -1589,6 +2004,22 @@ def trigger_experiment_rework_run(
                         "next_agent_id": "prompt_handoff_agent",
                         "source_video_job_id": str(job_id or ""),
                     },
+                },
+                {
+                    "event_id": str(uuid4()),
+                    "event_type": "graph_router_decision_created",
+                    "agent_id": "graph_router_agent",
+                    "message": revised_keyframe_router_decision["reason"],
+                    "created_at": now,
+                    "data": deepcopy(revised_keyframe_router_decision),
+                },
+                {
+                    "event_id": str(uuid4()),
+                    "event_type": "graph_router_route_selected",
+                    "agent_id": "graph_router_agent",
+                    "message": "Graph Router Agent routed revised keyframes to Prompt Handoff Agent.",
+                    "created_at": now,
+                    "data": deepcopy(revised_keyframe_router_decision),
                 },
             ]
             if revised_keyframe_plan
@@ -1778,6 +2209,13 @@ def default_pasted_reviews_agent_states() -> list[dict[str, Any]]:
             requires_human_review=True,
         ),
         build_agent_state(
+            "graph_router_agent",
+            "Graph Router Agent",
+            "Review the selected graph route and its safety boundary.",
+            ["validation_results", "experiment_feedback", "comparison_gate"],
+            ["graph_router_decision"],
+        ),
+        build_agent_state(
             "finalizer_agent",
             "Finalizer Agent",
             "Use the completed result for copy, video jobs, and manual handoff.",
@@ -1802,6 +2240,7 @@ def default_agent_graph_nodes() -> list[dict[str, Any]]:
         build_graph_node("route_selector_agent", "route_selector_agent", "Route Selector Agent", "validation", "Choose safe manual/provider route based on cost and feature flags.", "Use manual external tool handoff unless a real provider is explicitly enabled.", ["cost_boundary"], ["route_decision"]),
         build_graph_node("provider_job_agent", "provider_job_agent", "Provider Job Agent", "human_review", "Create or update a tracked Video Job when the user chooses.", "Create or update a Video Job.", ["route_decision"], ["video_job"]),
         build_graph_node("experiment_agent", "experiment_agent", "Experiment Agent", "human_review", "Wait for external result and score experiment quality.", "Paste external video result and score experiment.", ["video_job"], ["external_video_experiment"]),
+        build_graph_node("graph_router_agent", "graph_router_agent", "Graph Router Agent", "router", "Centralize deterministic graph branch, loop, gate, and human-approval route decisions.", "Review the selected graph edge and safety boundary.", ["validation_results", "experiment_feedback", "comparison_gate"], ["graph_router_decision"]),
         build_graph_node("finalizer_agent", "finalizer_agent", "Finalizer Agent", "terminal", "Finalize generated artifacts for the Product dashboard.", "Use the completed result for copy, video jobs, and manual handoff.", ["all_generated_artifacts"], ["final_product_result"]),
     ]
 
@@ -1858,6 +2297,17 @@ def build_agent_run(
         "visited_node_ids": [],
         "active_edge_ids": [],
         "transition_decisions": [],
+        "graph_router_decisions": [],
+        "latest_graph_router_decision": {},
+        "graph_router_summary": {
+            "router_version": "graph_router_agent_v1",
+            "decision_count": 0,
+            "has_rework_route": False,
+            "has_provider_route": False,
+            "has_human_approval_route": False,
+            "has_stop_route": False,
+            "is_linear_workflow": False,
+        },
         "validation_results": [],
         "rework_loops": [],
         "loop_count": 0,

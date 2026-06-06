@@ -3817,6 +3817,20 @@
                 runOneShortClipFirst: 'Run one short clip first',
                 recordResultAsExternalExperiment: 'Record the result as an external experiment',
                 notLinearWorkflow: 'This is not a linear workflow',
+                graphRouterAgent: 'Graph Router Agent',
+                routeDecision: 'Route decision',
+                selectedNextAgent: 'Selected next Agent',
+                secondaryNextAgent: 'Secondary next Agent',
+                routeType: 'Route type',
+                selectedEdge: 'Selected edge',
+                shouldTriggerRework: 'Should trigger rework',
+                shouldProceedProviderTest: 'Should proceed to provider test',
+                requiresHumanApproval: 'Requires human approval',
+                whyRouteSelected: 'Why this route was selected',
+                routerSummary: 'Router summary',
+                centralizedRouteDecision: 'Centralized route decision',
+                routeSelectedByGraphRouter: 'Route selected by Graph Router Agent',
+                graphEvidenceRouteNote: 'Not a linear workflow: route was selected from graph evidence',
                 feedbackDecision: 'Feedback decision',
                 reworkRun: 'Rework run',
                 decisionGate: 'Decision gate',
@@ -4217,6 +4231,20 @@
                 runOneShortClipFirst: '\u5148\u8fd0\u884c\u4e00\u4e2a\u77ed\u7247',
                 recordResultAsExternalExperiment: '\u5c06\u7ed3\u679c\u8bb0\u5f55\u4e3a\u5916\u90e8\u5b9e\u9a8c',
                 notLinearWorkflow: '\u8fd9\u4e0d\u662f\u7ebf\u6027\u5de5\u4f5c\u6d41',
+                graphRouterAgent: '\u56fe\u8def\u7531 Agent',
+                routeDecision: '\u8def\u7531\u51b3\u7b56',
+                selectedNextAgent: '\u9009\u4e2d\u7684\u4e0b\u4e00\u4e2a Agent',
+                secondaryNextAgent: '\u5907\u9009\u4e0b\u4e00\u4e2a Agent',
+                routeType: '\u8def\u7531\u7c7b\u578b',
+                selectedEdge: '\u9009\u4e2d\u7684\u56fe\u8fb9',
+                shouldTriggerRework: '\u662f\u5426\u89e6\u53d1\u8fd4\u5de5',
+                shouldProceedProviderTest: '\u662f\u5426\u8fdb\u5165\u63d0\u4f9b\u65b9\u6d4b\u8bd5',
+                requiresHumanApproval: '\u9700\u8981\u4eba\u5de5\u6279\u51c6',
+                whyRouteSelected: '\u4e3a\u4ec0\u4e48\u9009\u62e9\u8fd9\u6761\u8def\u7531',
+                routerSummary: '\u8def\u7531\u6458\u8981',
+                centralizedRouteDecision: '\u96c6\u4e2d\u5f0f\u8def\u7531\u51b3\u7b56',
+                routeSelectedByGraphRouter: '\u7531\u56fe\u8def\u7531 Agent \u9009\u62e9\u8def\u7531',
+                graphEvidenceRouteNote: '\u8fd9\u4e0d\u662f\u7ebf\u6027\u5de5\u4f5c\u6d41\uff1a\u8def\u7531\u7531\u56fe\u8bc1\u636e\u9009\u62e9',
                 feedbackDecision: '\u53cd\u9988\u51b3\u7b56',
                 reworkRun: '\u8fd4\u5de5 run',
                 decisionGate: '\u51b3\u7b56\u95e8',
@@ -7769,6 +7797,7 @@
                     ${block(t('transitionDecisions'), decisions)}
                     ${block(t('validationResults'), validations)}
                     ${block(t('reworkLoops'), loops)}
+                    ${renderGraphRouterDecisions(run)}
                 </div>
             `;
         }
@@ -8355,6 +8384,47 @@
             `;
         }
 
+        function renderGraphRouterDecisions(container) {
+            if (!container || typeof container !== 'object') return '';
+            const decisions = Array.isArray(container.graph_router_decisions)
+                ? container.graph_router_decisions
+                : [];
+            const latest = container.latest_graph_router_decision
+                || (decisions.length ? decisions[decisions.length - 1] : null);
+            if (!latest || typeof latest !== 'object') return '';
+            const edge = latest.selected_edge || {};
+            const selectedEdge = edge.from_node_id && edge.to_node_id
+                ? `${edge.from_node_id} -> ${edge.to_node_id} (${edge.edge_type || 'normal'})`
+                : '';
+            const summary = container.graph_router_summary || {};
+            const summaryText = [
+                `decision_count=${summary.decision_count ?? decisions.length}`,
+                `has_rework_route=${summary.has_rework_route === true}`,
+                `has_provider_route=${summary.has_provider_route === true}`,
+                `has_human_approval_route=${summary.has_human_approval_route === true}`,
+                `is_linear_workflow=${summary.is_linear_workflow === true}`
+            ].join(' | ');
+            return `
+                <div class="feedback-box graph-router-agent-summary" id="graphRouterAgentPanel">
+                    <div class="json-key">${escapeHTML(t('graphRouterAgent'))}</div>
+                    <div>${escapeHTML(t('routeSelectedByGraphRouter'))}</div>
+                    <div class="metric-grid">
+                        <span>${escapeHTML(t('routeDecision'))}: ${escapeHTML(latest.decision_type || '-')}</span>
+                        <span>${escapeHTML(t('selectedNextAgent'))}: ${escapeHTML(latest.selected_next_agent_id || '-')}</span>
+                        <span>${escapeHTML(t('secondaryNextAgent'))}: ${escapeHTML(latest.secondary_next_agent_id || '-')}</span>
+                        <span>${escapeHTML(t('routeType'))}: ${escapeHTML(latest.route_type || '-')}</span>
+                        <span>${escapeHTML(t('selectedEdge'))}: ${escapeHTML(selectedEdge || '-')}</span>
+                        <span>${escapeHTML(t('shouldTriggerRework'))}: ${escapeHTML(String(latest.should_trigger_rework === true))}</span>
+                        <span>${escapeHTML(t('shouldProceedProviderTest'))}: ${escapeHTML(String(latest.should_proceed_to_provider_test === true))}</span>
+                        <span>${escapeHTML(t('requiresHumanApproval'))}: ${escapeHTML(String(latest.should_request_human_approval === true))}</span>
+                    </div>
+                    <div>${escapeHTML(t('whyRouteSelected'))}: ${escapeHTML(latest.reason || '-')}</div>
+                    <div class="json-key">${escapeHTML(t('routerSummary'))}: ${escapeHTML(summaryText)}</div>
+                    <div class="brief-note">${escapeHTML(t('centralizedRouteDecision'))}. ${escapeHTML(t('graphEvidenceRouteNote'))}.</div>
+                </div>
+            `;
+        }
+
         function renderArtifactLineage(lineage) {
             if (!lineage || typeof lineage !== 'object') return '';
             const chain = Array.isArray(lineage.artifact_chain) ? lineage.artifact_chain : [];
@@ -8484,6 +8554,7 @@
                     ${renderExperimentReworkArtifact(experiment)}
                     ${renderSecondExperimentComparison(experiment.second_experiment_comparison)}
                     ${renderExperimentComparisonDecisionGate(experiment.experiment_comparison_decision_gate)}
+                    ${renderGraphRouterDecisions(experiment)}
                     ${renderDemoReadyRunSummary(experiment.demo_ready_run_summary)}
                     ${renderArtifactLineage(experiment.artifact_lineage)}
                     ${renderControlledProviderHandoffChecklist(experiment.controlled_provider_handoff_checklist)}

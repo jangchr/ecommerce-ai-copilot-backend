@@ -6,10 +6,12 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from agent_runs import (
+    append_graph_router_decision,
     apply_evidence_safe_storyboard_rework,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
     build_experiment_comparison_decision_gate,
+    build_graph_router_decision,
     build_lightweight_artifact_lineage,
     build_revised_external_video_handoff_from_keyframe_plan,
     build_revised_keyframe_plan_from_experiment_feedback,
@@ -24,6 +26,93 @@ class AgentRunsEndpointTest(unittest.TestCase):
     def setUp(self):
         AGENT_RUN_STORE.clear()
         self.client = TestClient(app)
+
+    def test_graph_router_risk_route_and_registry_are_deterministic_and_safe(self):
+        decision = build_graph_router_decision(
+            {
+                "route_context_type": "risk_validation",
+                "validation_status": "failed",
+                "issue_type": "unsupported_storyboard_claim",
+                "reason": "Unsupported claim requires storyboard rework.",
+                "artifact_types": ["storyboard", "risk_notes"],
+            }
+        )
+        container = append_graph_router_decision({}, decision)
+
+        self.assertEqual(decision["router_version"], "graph_router_agent_v1")
+        self.assertEqual(decision["source_agent_id"], "graph_router_agent")
+        self.assertEqual(decision["selected_next_agent_id"], "storyboard_agent")
+        self.assertEqual(decision["route_type"], "rework")
+        self.assertTrue(decision["should_trigger_rework"])
+        self.assertEqual(
+            decision["selected_edge"],
+            {
+                "from_node_id": "risk_agent",
+                "to_node_id": "storyboard_agent",
+                "edge_type": "rework",
+            },
+        )
+        self.assertFalse(decision["safety_boundaries"]["external_api_called"])
+        self.assertFalse(decision["safety_boundaries"]["cost_incurred_by_crossgrowth"])
+        self.assertFalse(decision["safety_boundaries"]["llm_autonomous_decision_enabled"])
+        self.assertEqual(container["latest_graph_router_decision"], decision)
+        self.assertTrue(container["graph_router_summary"]["has_rework_route"])
+        self.assertFalse(container["graph_router_summary"]["is_linear_workflow"])
+
+    def test_graph_router_maps_feedback_comparison_gate_and_approval_routes(self):
+        feedback_expectations = {
+            "product_consistency": ("keyframe_agent", "asset_lock_agent"),
+            "storyboard_following": ("prompt_handoff_agent", "keyframe_agent"),
+            "ad_readiness": ("storyboard_agent", "strategy_agent"),
+            "visual_quality": ("prompt_handoff_agent", ""),
+            "cost_value": ("cost_agent", "route_selector_agent"),
+        }
+        for issue_type, expected_agents in feedback_expectations.items():
+            with self.subTest(issue_type=issue_type):
+                decision = build_graph_router_decision(
+                    {
+                        "route_context_type": "experiment_feedback",
+                        "issue_type": issue_type,
+                    }
+                )
+                self.assertEqual(decision["selected_next_agent_id"], expected_agents[0])
+                self.assertEqual(decision["secondary_next_agent_id"], expected_agents[1])
+                self.assertTrue(decision["should_trigger_rework"])
+
+        comparison_expectations = {
+            "improved": ("provider_job_agent", "decision_gate", False, True),
+            "regressed": ("prompt_handoff_agent", "rework", True, False),
+            "mixed": ("experiment_agent", "human_approval", False, True),
+            "no_change": ("asset_lock_agent", "rework", True, False),
+        }
+        for status, expected in comparison_expectations.items():
+            with self.subTest(comparison_status=status):
+                decision = build_graph_router_decision(
+                    {
+                        "route_context_type": "second_experiment_comparison",
+                        "comparison_status": status,
+                    }
+                )
+                self.assertEqual(decision["selected_next_agent_id"], expected[0])
+                self.assertEqual(decision["route_type"], expected[1])
+                self.assertEqual(decision["should_trigger_rework"], expected[2])
+                self.assertEqual(decision["should_request_human_approval"], expected[3])
+
+        gate = build_graph_router_decision(
+            {
+                "route_context_type": "experiment_comparison_decision_gate",
+                "gate_decision_type": "retry_rework",
+            }
+        )
+        self.assertEqual(gate["selected_next_agent_id"], "prompt_handoff_agent")
+        self.assertEqual(gate["secondary_next_agent_id"], "keyframe_agent")
+
+        checklist = build_graph_router_decision(
+            {"route_context_type": "controlled_provider_checklist"}
+        )
+        self.assertEqual(checklist["selected_next_agent_id"], "human_approval_agent")
+        self.assertTrue(checklist["should_request_human_approval"])
+        self.assertFalse(checklist["should_proceed_to_provider_test"])
 
     def test_experiment_comparison_decision_gate_maps_all_statuses_without_autonomous_calls(self):
         expected = {
@@ -97,6 +186,17 @@ class AgentRunsEndpointTest(unittest.TestCase):
             "decision_type": "second_experiment_improved",
         }
         gate = build_experiment_comparison_decision_gate(comparison)
+        append_graph_router_decision(
+            second,
+            build_graph_router_decision(
+                {
+                    "route_context_type": "experiment_comparison_decision_gate",
+                    "gate_decision_type": gate["decision_type"],
+                    "comparison_status": comparison["status"],
+                    "score_deltas": comparison["score_deltas"],
+                }
+            ),
+        )
         lineage = build_lightweight_artifact_lineage(
             {"job_id": "job_1"},
             baseline,
@@ -128,9 +228,13 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertIn("revised_keyframe_plan", artifact_types)
         self.assertIn("revised_external_video_handoff", artifact_types)
         self.assertIn("experiment_comparison_decision_gate", artifact_types)
+        self.assertIn("graph_router_decision", artifact_types)
         self.assertFalse(lineage["graph_evidence"]["is_linear_workflow"])
         self.assertTrue(lineage["graph_evidence"]["has_rework_run"])
         self.assertIn("provider_job_agent", lineage["agents_involved"])
+        self.assertIn("graph_router_agent", lineage["agents_involved"])
+        self.assertTrue(lineage["graph_evidence"]["has_graph_router_decision"])
+        self.assertTrue(lineage["graph_evidence"]["has_centralized_route_decision"])
         self.assertEqual(checklist["checklist_version"], "controlled_provider_handoff_checklist_v1")
         self.assertEqual(len(checklist["preflight_checks"]), 5)
         self.assertTrue(all(check["required"] for check in checklist["preflight_checks"]))
@@ -142,6 +246,7 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertEqual(summary["score_improvement_summary"]["delta"], 3)
         self.assertFalse(summary["lineage"]["graph_evidence"]["is_linear_workflow"])
         self.assertFalse(summary["is_linear_workflow"])
+        self.assertEqual(summary["graph_router_summary"]["router_version"], "graph_router_agent_v1")
         self.assertFalse(summary["safety_summary"]["llm_autonomous_decision_enabled"])
 
     def test_create_poll_events_and_complete_agent_run_from_reviews(self):
@@ -346,6 +451,8 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertIn("transition_decision", event_types)
         self.assertIn("experiment_feedback_rework_requested", event_types)
         self.assertIn("rework_requested", event_types)
+        self.assertIn("graph_router_decision_created", event_types)
+        self.assertIn("graph_router_route_selected", event_types)
         self.assertIn("node_started", event_types)
         self.assertIn("node_completed", event_types)
         self.assertIn("graph_completed", event_types)
@@ -419,9 +526,18 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertFalse(run["result"]["external_api_called"])
         self.assertFalse(run["result"]["cost_incurred_by_crossgrowth"])
         self.assertTrue(run["rework_artifacts"]["revised_keyframe_plan"])
+        self.assertTrue(run["graph_router_decisions"])
+        self.assertTrue(
+            any(
+                decision["from_agent_id"] == "keyframe_agent"
+                and decision["selected_next_agent_id"] == "prompt_handoff_agent"
+                for decision in run["graph_router_decisions"]
+            )
+        )
         event_types = [event["event_type"] for event in run["events"]]
         self.assertIn("revised_keyframe_plan_created", event_types)
         self.assertIn("rework_artifact_created", event_types)
+        self.assertIn("graph_router_route_selected", event_types)
         self.assertIn("graph_completed", event_types)
         self.assertIn("run_completed", event_types)
 
@@ -551,6 +667,16 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertEqual(edge_statuses["risk_to_storyboard_rework"], "traversed")
         self.assertFalse(completed_run["external_api_called"])
         self.assertFalse(completed_run["cost_incurred_by_crossgrowth"])
+        self.assertTrue(completed_run["graph_router_decisions"])
+        self.assertEqual(
+            completed_run["latest_graph_router_decision"]["source_agent_id"],
+            "graph_router_agent",
+        )
+        self.assertEqual(
+            completed_run["latest_graph_router_decision"]["selected_next_agent_id"],
+            "storyboard_agent",
+        )
+        self.assertEqual(completed_run["latest_graph_router_decision"]["route_type"], "rework")
 
         final_data = completed_run["result"]
         self.assertIn("agent_graph_rework_summary", final_data)
@@ -570,6 +696,8 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertIn("validation_failed", event_types)
         self.assertIn("rework_requested", event_types)
         self.assertIn("edge_traversed", event_types)
+        self.assertIn("graph_router_decision_created", event_types)
+        self.assertIn("graph_router_route_selected", event_types)
 
     def test_invalid_run_id_returns_404(self):
         response = self.client.get("/api/v1/agent-runs/not-a-run")

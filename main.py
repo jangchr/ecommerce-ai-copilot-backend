@@ -50,12 +50,14 @@ from schemas.api_contract import (
 )
 from agent_runs import (
     InMemoryAgentRunStore,
+    append_graph_router_decision,
     apply_evidence_safe_storyboard_rework,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
     build_experiment_comparison_decision_gate,
     build_experiment_feedback_decision,
+    build_graph_router_decision,
     build_lightweight_artifact_lineage,
     build_second_experiment_comparison,
     detect_storyboard_rework_need,
@@ -2291,6 +2293,56 @@ def _record_graph_rework_loop(
     )
 
 
+def _record_graph_router_decision_for_run(run_id: str, router_decision: dict) -> None:
+    current_run = AGENT_RUN_STORE.get(run_id) or {}
+    append_graph_router_decision(current_run, router_decision)
+    visited_node_ids = list(current_run.get("visited_node_ids") or [])
+    if "graph_router_agent" not in visited_node_ids:
+        visited_node_ids.append("graph_router_agent")
+    graph_nodes = list(current_run.get("graph_nodes") or [])
+    for node in graph_nodes:
+        if node.get("node_id") == "graph_router_agent":
+            node["status"] = "complete"
+            break
+    agents = list(current_run.get("agents") or [])
+    for agent in agents:
+        if agent.get("agent_id") == "graph_router_agent":
+            agent["status"] = "complete"
+            agent["decision_summary"] = str(router_decision.get("reason") or "")
+            agent["business_impact"] = (
+                "Centralizes the selected graph edge without triggering autonomous provider or paid actions."
+            )
+            break
+    AGENT_RUN_STORE.update(
+        run_id,
+        {
+            "graph_router_decisions": current_run.get("graph_router_decisions") or [],
+            "latest_graph_router_decision": current_run.get("latest_graph_router_decision") or {},
+            "graph_router_summary": current_run.get("graph_router_summary") or {},
+            "visited_node_ids": visited_node_ids,
+            "graph_nodes": graph_nodes,
+            "agents": agents,
+        },
+    )
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "graph_router_decision_created",
+        str(router_decision.get("reason") or "Graph Router Agent created a route decision."),
+        agent_id="graph_router_agent",
+        data=router_decision,
+    )
+    AGENT_RUN_STORE.append_event(
+        run_id,
+        "graph_router_route_selected",
+        (
+            f"Graph Router Agent selected {router_decision.get('selected_next_agent_id') or 'finalizer_agent'} "
+            f"for {router_decision.get('route_type') or 'stop'}."
+        ),
+        agent_id="graph_router_agent",
+        data=router_decision,
+    )
+
+
 async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsRequest) -> None:
     current_agent_id = ""
     try:
@@ -2462,6 +2514,18 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
             current_run_state = AGENT_RUN_STORE.get(run_id) or {}
             loop_count = int(current_run_state.get("loop_count") or 0)
             max_loop_count = int(current_run_state.get("max_loop_count") or 1)
+            risk_router_decision = build_graph_router_decision(
+                {
+                    "route_context_type": "risk_validation",
+                    "input_signal": "risky_terms_detected",
+                    "validation_status": risk_validation_status,
+                    "issue_type": "unsupported_storyboard_claim",
+                    "reason": risk_reason,
+                    "artifact_types": ["storyboard", "risk_notes"],
+                },
+                run=current_run_state,
+            )
+            _record_graph_router_decision_for_run(run_id, risk_router_decision)
             _record_graph_transition_decision(
                 run_id,
                 "risk_agent",
@@ -3253,6 +3317,21 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         experiment["experiment_round"] = 2
         experiment["compare_to_previous"] = True
     feedback_decision = build_experiment_feedback_decision(experiment, job)
+    router_decisions: list[dict] = []
+    if not is_second_experiment and feedback_decision.get("has_feedback") is True:
+        feedback_router_decision = build_graph_router_decision(
+            {
+                "route_context_type": "experiment_feedback",
+                "input_signal": feedback_decision.get("issue_type"),
+                "issue_type": feedback_decision.get("issue_type"),
+                "reason": feedback_decision.get("reason"),
+                "score_deltas": feedback_decision.get("score_snapshot") or {},
+                "artifact_types": ["external_video_experiment"],
+            },
+            job=job,
+        )
+        append_graph_router_decision(experiment, feedback_router_decision)
+        router_decisions.append(feedback_router_decision)
     original_generation_data = {
         "video_generation_packet": job.get("video_generation_packet") or {},
         "provider_payload": job.get("provider_payload") or {},
@@ -3304,6 +3383,22 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             if prompt_source and not second_comparison.get("prompt_source"):
                 second_comparison["prompt_source"] = prompt_source
             experiment["second_experiment_comparison"] = second_comparison
+            comparison_router_decision = build_graph_router_decision(
+                {
+                    "route_context_type": "second_experiment_comparison",
+                    "input_signal": second_comparison.get("status"),
+                    "comparison_status": second_comparison.get("status"),
+                    "reason": second_comparison.get("reason"),
+                    "score_deltas": second_comparison.get("score_deltas") or {},
+                    "artifact_types": [
+                        "second_external_experiment",
+                        "second_experiment_comparison",
+                    ],
+                },
+                job=job,
+            )
+            append_graph_router_decision(experiment, comparison_router_decision)
+            router_decisions.append(comparison_router_decision)
             comparison_decision_gate = build_experiment_comparison_decision_gate(
                 second_comparison,
                 job=job,
@@ -3311,6 +3406,40 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 second_experiment=experiment,
             )
             experiment["experiment_comparison_decision_gate"] = comparison_decision_gate
+            gate_router_decision = build_graph_router_decision(
+                {
+                    "route_context_type": "experiment_comparison_decision_gate",
+                    "input_signal": comparison_decision_gate.get("decision_type"),
+                    "gate_decision_type": comparison_decision_gate.get("decision_type"),
+                    "comparison_status": comparison_decision_gate.get("comparison_status"),
+                    "reason": comparison_decision_gate.get("reason"),
+                    "confidence": comparison_decision_gate.get("confidence"),
+                    "score_deltas": second_comparison.get("score_deltas") or {},
+                    "artifact_types": ["experiment_comparison_decision_gate"],
+                },
+                job=job,
+            )
+            append_graph_router_decision(experiment, gate_router_decision)
+            router_decisions.append(gate_router_decision)
+            if comparison_decision_gate.get("should_proceed_to_provider_test") is True:
+                controlled_provider_handoff_checklist = build_controlled_provider_handoff_checklist(
+                    job,
+                    comparison_decision_gate,
+                    rework_run=comparison_rework_run,
+                    comparison=second_comparison,
+                )
+                checklist_router_decision = build_graph_router_decision(
+                    {
+                        "route_context_type": "controlled_provider_checklist",
+                        "input_signal": controlled_provider_handoff_checklist.get("checklist_version"),
+                        "reason": controlled_provider_handoff_checklist.get("recommended_next_action"),
+                        "artifact_types": ["controlled_provider_handoff_checklist"],
+                    },
+                    job=job,
+                )
+                append_graph_router_decision(experiment, checklist_router_decision)
+                router_decisions.append(checklist_router_decision)
+                experiment["controlled_provider_handoff_checklist"] = controlled_provider_handoff_checklist
             artifact_lineage_summary = build_lightweight_artifact_lineage(
                 job,
                 baseline_experiment=baseline_experiment,
@@ -3320,13 +3449,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 decision_gate=comparison_decision_gate,
             )
             experiment["artifact_lineage"] = artifact_lineage_summary
-            if comparison_decision_gate.get("should_proceed_to_provider_test") is True:
-                controlled_provider_handoff_checklist = build_controlled_provider_handoff_checklist(
-                    job,
-                    comparison_decision_gate,
-                    rework_run=comparison_rework_run,
-                    comparison=second_comparison,
-                )
+            if controlled_provider_handoff_checklist:
                 demo_ready_run_summary = build_demo_ready_run_summary(
                     job,
                     baseline_experiment,
@@ -3337,7 +3460,6 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                     artifact_lineage_summary,
                     controlled_provider_handoff_checklist,
                 )
-                experiment["controlled_provider_handoff_checklist"] = controlled_provider_handoff_checklist
                 experiment["demo_ready_run_summary"] = demo_ready_run_summary
 
     experiments = list(existing_experiments)
@@ -3345,6 +3467,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
     job["external_video_experiments"] = experiments
     job["external_experiments"] = experiments
     job["latest_agent_feedback_decision"] = feedback_decision
+    for router_decision in router_decisions:
+        append_graph_router_decision(job, router_decision)
     if second_comparison:
         job["latest_second_experiment_comparison"] = second_comparison
     if comparison_decision_gate:
@@ -3371,6 +3495,10 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
         "feedback_version": "experiment_feedback_loop_v1",
         "decisions": feedback_decisions[-5:],
     }
+    for router_decision in list(existing_feedback.get("graph_router_decisions") or []):
+        append_graph_router_decision(job["agent_graph_feedback"], router_decision)
+    for router_decision in router_decisions:
+        append_graph_router_decision(job["agent_graph_feedback"], router_decision)
     if rework_run:
         job["agent_graph_feedback"]["latest_rework_run_id"] = rework_run["run_id"]
         job["agent_graph_feedback"]["rework_run_ids"] = list(job.get("experiment_rework_run_ids") or [])
@@ -3423,6 +3551,52 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             feedback_rework_run_id=feedback_decision.get("triggered_rework_run_id", ""),
         )
     )
+    for router_decision in router_decisions:
+        route_context_type = str(router_decision.get("route_context_type") or "")
+        common_router_fields = {
+            "experiment_id": experiment["experiment_id"],
+            "router_version": router_decision.get("router_version", ""),
+            "route_context_type": route_context_type,
+            "decision_type": router_decision.get("decision_type", ""),
+            "selected_next_agent_id": router_decision.get("selected_next_agent_id", ""),
+            "secondary_next_agent_id": router_decision.get("secondary_next_agent_id", ""),
+            "route_type": router_decision.get("route_type", ""),
+        }
+        if route_context_type in {"experiment_feedback", "second_experiment_comparison"}:
+            history.append(
+                build_video_job_history_event(
+                    "graph_router_decision_created",
+                    job_status,
+                    updated_at=now,
+                    **common_router_fields,
+                )
+            )
+            history.append(
+                build_video_job_history_event(
+                    "graph_router_route_selected",
+                    job_status,
+                    updated_at=now,
+                    **common_router_fields,
+                )
+            )
+        elif route_context_type == "experiment_comparison_decision_gate":
+            history.append(
+                build_video_job_history_event(
+                    "graph_router_gate_route_selected",
+                    job_status,
+                    updated_at=now,
+                    **common_router_fields,
+                )
+            )
+        elif route_context_type == "controlled_provider_checklist":
+            history.append(
+                build_video_job_history_event(
+                    "graph_router_human_approval_route_selected",
+                    job_status,
+                    updated_at=now,
+                    **common_router_fields,
+                )
+            )
     if rework_run and feedback_decision.get("has_feedback"):
         history.append(
             build_video_job_history_event(

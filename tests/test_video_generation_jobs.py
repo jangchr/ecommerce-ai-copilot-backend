@@ -494,7 +494,21 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         )
         self.assertEqual(decision["triggered_rework_result_type"], "revised_keyframe_plan")
         self.assertEqual(decision["triggered_rework_next_artifact_type"], "revised_external_video_handoff")
+        router_decision = job["external_video_experiments"][0]["latest_graph_router_decision"]
+        self.assertEqual(router_decision["source_agent_id"], "graph_router_agent")
+        self.assertEqual(router_decision["selected_next_agent_id"], "keyframe_agent")
+        self.assertEqual(router_decision["secondary_next_agent_id"], "asset_lock_agent")
+        self.assertEqual(router_decision["route_type"], "rework")
+        self.assertEqual(job["latest_graph_router_decision"], router_decision)
+        self.assertEqual(
+            job["agent_graph_feedback"]["latest_graph_router_decision"],
+            router_decision,
+        )
+        self.assertFalse(job["graph_router_summary"]["is_linear_workflow"])
+        self.assertFalse(job["agent_graph_feedback"]["graph_router_summary"]["is_linear_workflow"])
         self.assertIn("experiment_feedback_rework_requested", [event["event"] for event in job["history"]])
+        self.assertIn("graph_router_decision_created", [event["event"] for event in job["history"]])
+        self.assertIn("graph_router_route_selected", [event["event"] for event in job["history"]])
 
         rework_run = AGENT_RUN_STORE.get(decision["triggered_rework_run_id"])
         self.assertIsNotNone(rework_run)
@@ -541,6 +555,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("rework_artifact_created", event_types)
         self.assertIn("revised_external_video_handoff_created", event_types)
         self.assertIn("revised_prompt_handoff_created", event_types)
+        self.assertIn("graph_router_decision_created", event_types)
+        self.assertIn("graph_router_route_selected", event_types)
         self.assertIn("graph_completed", event_types)
         self.assertIn("run_completed", event_types)
 
@@ -610,6 +626,33 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
             "controlled_provider_or_manual_handoff",
         )
         second_experiment = job["external_video_experiments"][1]
+        router_decisions = second_experiment["graph_router_decisions"]
+        comparison_router = next(
+            decision
+            for decision in router_decisions
+            if decision["route_context_type"] == "second_experiment_comparison"
+        )
+        self.assertEqual(comparison_router["selected_next_agent_id"], "provider_job_agent")
+        self.assertEqual(comparison_router["route_type"], "decision_gate")
+        self.assertTrue(comparison_router["should_proceed_to_provider_test"])
+        gate_router = next(
+            decision
+            for decision in router_decisions
+            if decision["route_context_type"] == "experiment_comparison_decision_gate"
+        )
+        self.assertEqual(gate_router["selected_next_agent_id"], "provider_job_agent")
+        checklist_router = next(
+            decision
+            for decision in router_decisions
+            if decision["route_context_type"] == "controlled_provider_checklist"
+        )
+        self.assertEqual(checklist_router["selected_next_agent_id"], "human_approval_agent")
+        self.assertTrue(checklist_router["should_request_human_approval"])
+        self.assertFalse(checklist_router["should_proceed_to_provider_test"])
+        router_summary = job["agent_graph_feedback"]["graph_router_summary"]
+        self.assertTrue(router_summary["has_provider_route"])
+        self.assertTrue(router_summary["has_human_approval_route"])
+        self.assertFalse(router_summary["is_linear_workflow"])
         lineage = second_experiment["artifact_lineage"]
         self.assertEqual(lineage["lineage_version"], "agent_artifact_lineage_v1")
         self.assertTrue(lineage["graph_evidence"]["has_feedback_loop"])
@@ -620,6 +663,7 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("revised_keyframe_plan", artifact_types)
         self.assertIn("revised_external_video_handoff", artifact_types)
         self.assertIn("experiment_comparison_decision_gate", artifact_types)
+        self.assertIn("graph_router_decision", artifact_types)
         checklist = second_experiment["controlled_provider_handoff_checklist"]
         self.assertEqual(checklist["checklist_version"], "controlled_provider_handoff_checklist_v1")
         self.assertEqual(checklist["provider_mode"], "manual_or_simulated")
@@ -651,6 +695,10 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertIn("artifact_lineage_summary_created", history_events)
         self.assertIn("controlled_provider_handoff_checklist_created", history_events)
         self.assertIn("demo_ready_run_summary_created", history_events)
+        self.assertIn("graph_router_decision_created", history_events)
+        self.assertIn("graph_router_route_selected", history_events)
+        self.assertIn("graph_router_gate_route_selected", history_events)
+        self.assertIn("graph_router_human_approval_route_selected", history_events)
         self.assertEqual(
             history_events.count("experiment_feedback_rework_requested"),
             1,
