@@ -3790,6 +3790,20 @@
                 mixedResult: 'Mixed result',
                 useRevisedPromptForAnotherShortClip: 'Use revised prompt for another short clip',
                 doNotScaleThisPrompt: 'Do not scale this prompt',
+                experimentDecisionGate: 'Experiment decision gate',
+                recommendedRoute: 'Recommended route',
+                nextAgent: 'Next Agent',
+                decisionType: 'Decision type',
+                humanApprovalRequired: 'Human approval required',
+                proceedToControlledTest: 'Proceed to controlled test',
+                triggerNewRework: 'Trigger new rework',
+                decisionProceedControlledTest: 'Decision: proceed to controlled provider/manual test.',
+                decisionRetryRework: 'Decision: retry rework before scaling.',
+                decisionManualReview: 'Decision: manual review required.',
+                decisionStrongerReference: 'Decision: stronger reference or keyframe revision required.',
+                controlledProviderManualTest: 'Controlled provider/manual test',
+                keyframeOrPromptRework: 'Keyframe or prompt rework',
+                strongerReferenceRequired: 'Stronger reference required',
                 productConsistencyIssue: 'Product consistency issue',
                 storyboardFollowingIssue: 'Storyboard following issue',
                 visualQualityIssue: 'Visual quality issue',
@@ -4159,6 +4173,20 @@
                 mixedResult: '\u7ed3\u679c\u6df7\u5408',
                 useRevisedPromptForAnotherShortClip: '\u7528\u4fee\u8ba2\u540e\u63d0\u793a\u8bcd\u518d\u505a\u4e00\u4e2a\u77ed\u7247',
                 doNotScaleThisPrompt: '\u4e0d\u8981\u6269\u5927\u4f7f\u7528\u8fd9\u4e2a\u63d0\u793a\u8bcd',
+                experimentDecisionGate: '\u5b9e\u9a8c\u51b3\u7b56\u95e8',
+                recommendedRoute: '\u5efa\u8bae\u8def\u7531',
+                nextAgent: '\u4e0b\u4e00\u4e2a Agent',
+                decisionType: '\u51b3\u7b56\u7c7b\u578b',
+                humanApprovalRequired: '\u9700\u8981\u4eba\u5de5\u6279\u51c6',
+                proceedToControlledTest: '\u8fdb\u5165\u53d7\u63a7\u6d4b\u8bd5',
+                triggerNewRework: '\u89e6\u53d1\u65b0\u8fd4\u5de5',
+                decisionProceedControlledTest: '\u51b3\u7b56\uff1a\u8fdb\u5165\u53d7\u63a7\u7684\u63d0\u4f9b\u65b9 / \u624b\u52a8\u4ea4\u4ed8\u6d4b\u8bd5\u3002',
+                decisionRetryRework: '\u51b3\u7b56\uff1a\u6269\u5927\u4f7f\u7528\u524d\u5148\u91cd\u8bd5\u8fd4\u5de5\u3002',
+                decisionManualReview: '\u51b3\u7b56\uff1a\u9700\u8981\u4eba\u5de5\u590d\u6838\u3002',
+                decisionStrongerReference: '\u51b3\u7b56\uff1a\u9700\u8981\u66f4\u5f3a\u7684\u53c2\u8003\u6216\u5173\u952e\u5e27\u4fee\u8ba2\u3002',
+                controlledProviderManualTest: '\u53d7\u63a7\u7684\u63d0\u4f9b\u65b9 / \u624b\u52a8\u6d4b\u8bd5',
+                keyframeOrPromptRework: '\u5173\u952e\u5e27\u6216\u63d0\u793a\u8bcd\u8fd4\u5de5',
+                strongerReferenceRequired: '\u9700\u8981\u66f4\u5f3a\u7684\u4ea7\u54c1\u53c2\u8003',
                 productConsistencyIssue: '\u4ea7\u54c1\u4e00\u81f4\u6027\u95ee\u9898',
                 storyboardFollowingIssue: '\u5206\u955c\u8ddf\u968f\u95ee\u9898',
                 visualQualityIssue: '\u753b\u9762\u8d28\u91cf\u95ee\u9898',
@@ -8259,6 +8287,40 @@
             `;
         }
 
+        function experimentDecisionGateMessage(decisionType) {
+            if (decisionType === 'proceed_to_controlled_test') return t('decisionProceedControlledTest');
+            if (decisionType === 'retry_rework') return t('decisionRetryRework');
+            if (decisionType === 'manual_review_required') return t('decisionManualReview');
+            return t('decisionStrongerReference');
+        }
+
+        function experimentDecisionGateRouteLabel(route) {
+            if (route === 'controlled_provider_or_manual_handoff') return t('controlledProviderManualTest');
+            if (route === 'keyframe_or_prompt_rework') return t('keyframeOrPromptRework');
+            if (route === 'stronger_reference_required') return t('strongerReferenceRequired');
+            return route || '';
+        }
+
+        function renderExperimentComparisonDecisionGate(gate) {
+            if (!gate || typeof gate !== 'object') return '';
+            const nextAgents = [gate.next_agent_id, gate.secondary_next_agent_id].filter(Boolean).join(' / ');
+            return `
+                <div class="feedback-box experiment-comparison-decision-gate" id="experimentComparisonDecisionGatePanel">
+                    <div class="json-key">${escapeHTML(t('experimentDecisionGate'))}</div>
+                    <div>${escapeHTML(experimentDecisionGateMessage(gate.decision_type))}</div>
+                    <div class="metric-grid">
+                        <span>${escapeHTML(t('recommendedRoute'))}: ${escapeHTML(experimentDecisionGateRouteLabel(gate.recommended_route))}</span>
+                        <span>${escapeHTML(t('nextAgent'))}: ${escapeHTML(nextAgents || '-')}</span>
+                        <span>${escapeHTML(t('decisionType'))}: ${escapeHTML(gate.decision_type || '')}</span>
+                        <span>${escapeHTML(t('recommendedAction'))}: ${escapeHTML(gate.recommended_next_action || '')}</span>
+                        <span>${escapeHTML(t('humanApprovalRequired'))}: ${escapeHTML(String(gate.requires_human_approval === true))}</span>
+                        <span>${escapeHTML(t('proceedToControlledTest'))}: ${escapeHTML(String(gate.should_proceed_to_provider_test === true))}</span>
+                        <span>${escapeHTML(t('triggerNewRework'))}: ${escapeHTML(String(gate.should_trigger_new_rework === true))}</span>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderExternalVideoExperimentsPanel(job) {
             if (!job || !job.job_id) return '';
             const experiments = Array.isArray(job.external_video_experiments) ? job.external_video_experiments : [];
@@ -8305,6 +8367,7 @@
                     ${renderAgentFeedbackDecision(experiment.agent_feedback_decision)}
                     ${renderExperimentReworkArtifact(experiment)}
                     ${renderSecondExperimentComparison(experiment.second_experiment_comparison)}
+                    ${renderExperimentComparisonDecisionGate(experiment.experiment_comparison_decision_gate)}
                     ${experiment.created_at ? `<small>${escapeHTML(experiment.created_at)}</small>` : ''}
                 </div>
             `).join('') : `<div class="recent-empty">${escapeHTML(t('noExternalExperimentsYet'))}</div>`;

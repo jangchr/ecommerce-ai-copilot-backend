@@ -52,6 +52,7 @@ from agent_runs import (
     InMemoryAgentRunStore,
     apply_evidence_safe_storyboard_rework,
     build_agent_run,
+    build_experiment_comparison_decision_gate,
     build_experiment_feedback_decision,
     build_second_experiment_comparison,
     detect_storyboard_rework_need,
@@ -3278,6 +3279,7 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
     experiment["agent_feedback_decision"] = feedback_decision
 
     second_comparison: dict = {}
+    comparison_decision_gate: dict = {}
     if is_second_experiment:
         baseline_experiment = _find_second_experiment_baseline(existing_experiments, request)
         baseline_decision = (
@@ -3296,6 +3298,13 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             if prompt_source and not second_comparison.get("prompt_source"):
                 second_comparison["prompt_source"] = prompt_source
             experiment["second_experiment_comparison"] = second_comparison
+            comparison_decision_gate = build_experiment_comparison_decision_gate(
+                second_comparison,
+                job=job,
+                baseline_experiment=baseline_experiment,
+                second_experiment=experiment,
+            )
+            experiment["experiment_comparison_decision_gate"] = comparison_decision_gate
 
     experiments = list(existing_experiments)
     experiments.append(experiment)
@@ -3304,6 +3313,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
     job["latest_agent_feedback_decision"] = feedback_decision
     if second_comparison:
         job["latest_second_experiment_comparison"] = second_comparison
+    if comparison_decision_gate:
+        job["latest_experiment_comparison_decision_gate"] = comparison_decision_gate
     if rework_run:
         job["latest_experiment_rework_run_id"] = rework_run["run_id"]
         rework_run_ids = list(job.get("experiment_rework_run_ids") or [])
@@ -3329,6 +3340,8 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
             job["agent_graph_feedback"]["latest_rework_next_artifact_type"] = "revised_external_video_handoff"
     if second_comparison:
         job["agent_graph_feedback"]["latest_second_experiment_comparison"] = second_comparison
+    if comparison_decision_gate:
+        job["agent_graph_feedback"]["latest_experiment_comparison_decision_gate"] = comparison_decision_gate
     job["updated_at"] = now
 
     history = list(job.get("history") or [])
@@ -3398,6 +3411,34 @@ def _record_external_video_experiment(job: dict, request: VideoGenerationExperim
                 second_experiment_id=second_comparison.get("second_experiment_id", ""),
                 prompt_source=second_comparison.get("prompt_source", ""),
                 primary_metric=second_comparison.get("primary_metric", ""),
+            )
+        )
+    if comparison_decision_gate:
+        history.append(
+            build_video_job_history_event(
+                "experiment_comparison_decision_gate_created",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                gate_version=comparison_decision_gate.get("gate_version", ""),
+                comparison_status=comparison_decision_gate.get("comparison_status", ""),
+                decision_type=comparison_decision_gate.get("decision_type", ""),
+                recommended_route=comparison_decision_gate.get("recommended_route", ""),
+            )
+        )
+        history.append(
+            build_video_job_history_event(
+                f"experiment_gate_{comparison_decision_gate.get('decision_type', 'manual_review_required')}",
+                job_status,
+                updated_at=now,
+                experiment_id=experiment["experiment_id"],
+                next_agent_id=comparison_decision_gate.get("next_agent_id", ""),
+                secondary_next_agent_id=comparison_decision_gate.get("secondary_next_agent_id", ""),
+                requires_human_approval=bool(comparison_decision_gate.get("requires_human_approval")),
+                should_trigger_new_rework=bool(comparison_decision_gate.get("should_trigger_new_rework")),
+                should_proceed_to_provider_test=bool(
+                    comparison_decision_gate.get("should_proceed_to_provider_test")
+                ),
             )
         )
     job["history"] = history

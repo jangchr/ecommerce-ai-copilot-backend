@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from agent_runs import (
     apply_evidence_safe_storyboard_rework,
+    build_experiment_comparison_decision_gate,
     build_revised_external_video_handoff_from_keyframe_plan,
     build_revised_keyframe_plan_from_experiment_feedback,
     detect_storyboard_rework_need,
@@ -20,6 +21,35 @@ class AgentRunsEndpointTest(unittest.TestCase):
     def setUp(self):
         AGENT_RUN_STORE.clear()
         self.client = TestClient(app)
+
+    def test_experiment_comparison_decision_gate_maps_all_statuses_without_autonomous_calls(self):
+        expected = {
+            "improved": ("proceed_to_controlled_test", "controlled_provider_or_manual_handoff"),
+            "regressed": ("retry_rework", "keyframe_or_prompt_rework"),
+            "mixed": ("manual_review_required", "manual_review"),
+            "no_change": ("stop_or_revise_reference", "stronger_reference_required"),
+        }
+        for status, (decision_type, route) in expected.items():
+            with self.subTest(status=status):
+                gate = build_experiment_comparison_decision_gate(
+                    {
+                        "status": status,
+                        "primary_metric": "product_consistency_score",
+                        "score_deltas": {
+                            "product_consistency_score": 3 if status == "improved" else 0,
+                            "overall_score": 2 if status == "improved" else 0,
+                        },
+                        "improved_dimensions": ["product_consistency_score"] if status == "improved" else [],
+                        "regressed_dimensions": ["product_consistency_score"] if status == "regressed" else [],
+                    }
+                )
+                self.assertEqual(gate["gate_version"], "experiment_comparison_decision_gate_v1")
+                self.assertEqual(gate["decision_type"], decision_type)
+                self.assertEqual(gate["recommended_route"], route)
+                self.assertTrue(gate["requires_human_approval"])
+                self.assertFalse(gate["safety_boundaries"]["external_api_called"])
+                self.assertFalse(gate["safety_boundaries"]["cost_incurred_by_crossgrowth"])
+                self.assertFalse(gate["safety_boundaries"]["llm_autonomous_decision_enabled"])
 
     def test_create_poll_events_and_complete_agent_run_from_reviews(self):
         with patch(

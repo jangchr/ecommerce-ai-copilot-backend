@@ -43,6 +43,9 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("renderSecondExperimentComparison", self.source)
         self.assertIn("secondExperimentComparisonMessage", self.source)
         self.assertIn("secondExternalExperimentComparisonPanel", self.source)
+        self.assertIn("renderExperimentComparisonDecisionGate", self.source)
+        self.assertIn("experimentDecisionGateMessage", self.source)
+        self.assertIn("experimentComparisonDecisionGatePanel", self.source)
         self.assertIn("renderVideoProviderProgress", self.source)
         self.assertIn("renderVideoCostEstimate", self.source)
         self.assertIn("providerPayload.cost_estimate", self.source)
@@ -63,6 +66,7 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
             "videoJobExternalResultPanel",
             "externalVideoExperimentsPanel",
             "secondExternalExperimentComparisonPanel",
+            "experimentComparisonDecisionGatePanel",
             "videoExperimentSaveBtn",
             "videoExperimentToolName",
             "videoExperimentPromptType",
@@ -239,6 +243,18 @@ class FrontendProbeBoundaryTest(unittest.TestCase):
         self.assertIn("Product consistency prompt constraints", self.source)
         self.assertIn("Poll rework run", self.source)
         self.assertIn("Experiment feedback created a revised keyframe plan.", self.source)
+        self.assertIn("Experiment decision gate", self.source)
+        self.assertIn("Recommended route", self.source)
+        self.assertIn("Next Agent", self.source)
+        self.assertIn("Decision type", self.source)
+        self.assertIn("Human approval required", self.source)
+        self.assertIn("Proceed to controlled test", self.source)
+        self.assertIn("Trigger new rework", self.source)
+        self.assertIn("Decision: proceed to controlled provider/manual test.", self.source)
+        self.assertIn("Decision: retry rework before scaling.", self.source)
+        self.assertIn("Decision: manual review required.", self.source)
+        self.assertIn("Decision: stronger reference or keyframe revision required.", self.source)
+        self.assertIn("Stronger reference required", self.source)
         self.assertIn("function renderRevisedKeyframePlan(plan)", self.source)
         self.assertIn("function renderRevisedExternalVideoHandoff(handoff)", self.source)
         self.assertIn("function copyRevisedExternalVideoHandoffPackage()", self.source)
@@ -3225,6 +3241,17 @@ class AgentLiveRunFrontendProbeTests(unittest.TestCase):
             "Second test regressed",
             "Use revised prompt for another short clip",
             "Do not scale this prompt",
+            "Experiment decision gate",
+            "Recommended route",
+            "Next Agent",
+            "Decision type",
+            "Human approval required",
+            "Proceed to controlled test",
+            "Trigger new rework",
+            "Decision: proceed to controlled provider/manual test",
+            "Decision: retry rework before scaling",
+            "Decision: manual review required",
+            "Stronger reference required",
         ]:
             with self.subTest(preserved_marker=preserved_marker):
                 self.assertIn(preserved_marker, html)

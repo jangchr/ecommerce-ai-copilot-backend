@@ -484,6 +484,104 @@ def build_second_experiment_comparison(
     }
 
 
+def build_experiment_comparison_decision_gate(
+    comparison: dict[str, Any],
+    job: dict[str, Any] | None = None,
+    baseline_experiment: dict[str, Any] | None = None,
+    second_experiment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a deterministic business-action gate from a second experiment comparison."""
+
+    safe_comparison = comparison if isinstance(comparison, dict) else {}
+    status = str(safe_comparison.get("status") or "no_change").strip().lower()
+    if status not in {"improved", "regressed", "mixed", "no_change"}:
+        status = "no_change"
+
+    routes = {
+        "improved": {
+            "decision_type": "proceed_to_controlled_test",
+            "recommended_route": "controlled_provider_or_manual_handoff",
+            "next_agent_id": "provider_job_agent",
+            "secondary_next_agent_id": "experiment_agent",
+            "reason": "The revised prompt improved the primary metric and did not regress overall.",
+            "recommended_next_action": "Run one controlled manual/provider test using the revised handoff before scaling.",
+            "should_trigger_new_rework": False,
+            "should_proceed_to_provider_test": True,
+        },
+        "regressed": {
+            "decision_type": "retry_rework",
+            "recommended_route": "keyframe_or_prompt_rework",
+            "next_agent_id": "prompt_handoff_agent",
+            "secondary_next_agent_id": "keyframe_agent",
+            "reason": "The second test regressed, so do not scale this prompt.",
+            "recommended_next_action": "Return to Prompt Handoff Agent or Keyframe Agent for another revision.",
+            "should_trigger_new_rework": True,
+            "should_proceed_to_provider_test": False,
+        },
+        "mixed": {
+            "decision_type": "manual_review_required",
+            "recommended_route": "manual_review",
+            "next_agent_id": "experiment_agent",
+            "secondary_next_agent_id": "prompt_handoff_agent",
+            "reason": "Some dimensions improved but others regressed.",
+            "recommended_next_action": "Manually review score tradeoffs before another rework.",
+            "should_trigger_new_rework": False,
+            "should_proceed_to_provider_test": False,
+        },
+        "no_change": {
+            "decision_type": "stop_or_revise_reference",
+            "recommended_route": "stronger_reference_required",
+            "next_agent_id": "asset_lock_agent",
+            "secondary_next_agent_id": "keyframe_agent",
+            "reason": "The second test did not meaningfully improve.",
+            "recommended_next_action": "Add stronger product reference or revise the keyframe plan again.",
+            "should_trigger_new_rework": True,
+            "should_proceed_to_provider_test": False,
+        },
+    }
+    selected = routes[status]
+    score_deltas = safe_comparison.get("score_deltas")
+    score_deltas = score_deltas if isinstance(score_deltas, dict) else {}
+    primary_metric = str(safe_comparison.get("primary_metric") or "product_consistency_score")
+    primary_delta = _numeric_experiment_score(score_deltas.get(primary_metric))
+    overall_delta = _numeric_experiment_score(score_deltas.get("overall_score"))
+
+    confidence = {
+        "improved": 0.82 if (primary_delta or 0) >= 2 and (overall_delta or 0) >= 1 else 0.76,
+        "regressed": 0.86,
+        "mixed": 0.64,
+        "no_change": 0.72,
+    }[status]
+
+    return {
+        "gate_version": "experiment_comparison_decision_gate_v1",
+        "source_agent_id": "experiment_agent",
+        "comparison_status": status,
+        "decision_type": selected["decision_type"],
+        "recommended_route": selected["recommended_route"],
+        "next_agent_id": selected["next_agent_id"],
+        "secondary_next_agent_id": selected["secondary_next_agent_id"],
+        "reason": selected["reason"],
+        "recommended_next_action": selected["recommended_next_action"],
+        "confidence": confidence,
+        "requires_human_approval": True,
+        "should_trigger_new_rework": selected["should_trigger_new_rework"],
+        "should_proceed_to_provider_test": selected["should_proceed_to_provider_test"],
+        "score_summary": {
+            "primary_metric": primary_metric,
+            "primary_delta": primary_delta,
+            "overall_delta": overall_delta,
+            "improved_dimensions": list(safe_comparison.get("improved_dimensions") or []),
+            "regressed_dimensions": list(safe_comparison.get("regressed_dimensions") or []),
+        },
+        "safety_boundaries": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+        },
+    }
+
+
 def _experiment_rework_edge_id(target_agent_id: str) -> str:
     return {
         "keyframe_agent": "experiment_to_keyframe_rework",

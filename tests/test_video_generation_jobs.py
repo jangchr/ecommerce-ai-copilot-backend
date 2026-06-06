@@ -436,6 +436,8 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(job["agent_graph_feedback"]["decisions"][0]["issue_type"], "none")
         self.assertNotIn("second_experiment_comparison", experiment)
         self.assertNotIn("latest_second_experiment_comparison", job)
+        self.assertNotIn("experiment_comparison_decision_gate", experiment)
+        self.assertNotIn("latest_experiment_comparison_decision_gate", job)
         self.assertNotIn("latest_experiment_rework_run_id", job)
         self.assertNotIn("latest_rework_artifact_type", job)
         self.assertNotIn("triggered_rework_run_id", job["external_video_experiments"][0]["agent_feedback_decision"])
@@ -591,9 +593,27 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
             job["agent_graph_feedback"]["latest_second_experiment_comparison"]["decision_type"],
             "second_experiment_improved",
         )
+        gate = job["external_video_experiments"][1]["experiment_comparison_decision_gate"]
+        self.assertEqual(gate["gate_version"], "experiment_comparison_decision_gate_v1")
+        self.assertEqual(gate["decision_type"], "proceed_to_controlled_test")
+        self.assertEqual(gate["recommended_route"], "controlled_provider_or_manual_handoff")
+        self.assertEqual(gate["next_agent_id"], "provider_job_agent")
+        self.assertTrue(gate["should_proceed_to_provider_test"])
+        self.assertFalse(gate["should_trigger_new_rework"])
+        self.assertTrue(gate["requires_human_approval"])
+        self.assertEqual(
+            job["latest_experiment_comparison_decision_gate"]["decision_type"],
+            "proceed_to_controlled_test",
+        )
+        self.assertEqual(
+            job["agent_graph_feedback"]["latest_experiment_comparison_decision_gate"]["recommended_route"],
+            "controlled_provider_or_manual_handoff",
+        )
         history_events = [event["event"] for event in job["history"]]
         self.assertIn("second_external_experiment_recorded", history_events)
         self.assertIn("second_experiment_improved", history_events)
+        self.assertIn("experiment_comparison_decision_gate_created", history_events)
+        self.assertIn("experiment_gate_proceed_to_controlled_test", history_events)
         self.assertEqual(
             history_events.count("experiment_feedback_rework_requested"),
             1,
@@ -640,11 +660,59 @@ class VideoGenerationJobEndpointTest(unittest.TestCase):
         self.assertEqual(comparison["baseline_experiment_id"], baseline_experiment_id)
         self.assertEqual(comparison["score_deltas"]["product_consistency_score"], -2)
         self.assertIn("product_consistency_score", comparison["regressed_dimensions"])
+        gate = job["external_video_experiments"][1]["experiment_comparison_decision_gate"]
+        self.assertEqual(gate["decision_type"], "retry_rework")
+        self.assertEqual(gate["recommended_route"], "keyframe_or_prompt_rework")
+        self.assertTrue(gate["should_trigger_new_rework"])
+        self.assertFalse(gate["should_proceed_to_provider_test"])
         history_events = [event["event"] for event in job["history"]]
         self.assertIn("second_external_experiment_recorded", history_events)
         self.assertIn("second_experiment_regressed", history_events)
+        self.assertIn("experiment_comparison_decision_gate_created", history_events)
+        self.assertIn("experiment_gate_retry_rework", history_events)
         self.assertNotIn("experiment_feedback_rework_requested", history_events)
         self.assertNotIn("latest_experiment_rework_run_id", job)
+
+    def test_second_external_experiment_no_change_creates_reference_gate(self):
+        job_id = self._create_video_generation_job()
+
+        baseline_response = self._record_external_experiment(
+            job_id,
+            product_consistency_score=3,
+            storyboard_following_score=3,
+            visual_quality_score=3,
+            ad_readiness_score=3,
+            overall_score=3,
+        )
+        baseline_experiment_id = baseline_response.json()["job"]["external_video_experiments"][0]["experiment_id"]
+
+        second_response = self._record_external_experiment(
+            job_id,
+            product_consistency_score=3,
+            storyboard_following_score=3,
+            visual_quality_score=3,
+            ad_readiness_score=3,
+            overall_score=3,
+            experiment_round=2,
+            baseline_experiment_id=baseline_experiment_id,
+            prompt_source="revised_external_video_handoff",
+        )
+
+        self.assertEqual(second_response.status_code, 200)
+        job = second_response.json()["job"]
+        experiment = job["external_video_experiments"][1]
+        comparison = experiment["second_experiment_comparison"]
+        gate = experiment["experiment_comparison_decision_gate"]
+        self.assertEqual(comparison["status"], "no_change")
+        self.assertEqual(gate["decision_type"], "stop_or_revise_reference")
+        self.assertEqual(gate["recommended_route"], "stronger_reference_required")
+        self.assertEqual(gate["next_agent_id"], "asset_lock_agent")
+        self.assertTrue(gate["should_trigger_new_rework"])
+        self.assertFalse(gate["should_proceed_to_provider_test"])
+        self.assertNotIn("latest_experiment_rework_run_id", job)
+        history_events = [event["event"] for event in job["history"]]
+        self.assertIn("experiment_gate_stop_or_revise_reference", history_events)
+        self.assertNotIn("experiment_feedback_rework_requested", history_events)
 
     def test_external_experiment_storyboard_following_routes_to_prompt_handoff(self):
         job_id = self._create_video_generation_job()
