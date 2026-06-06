@@ -3419,7 +3419,21 @@ class LiveAgentGraphBoardProbeTests(unittest.TestCase):
         for marker in [
             "Live Agent Graph Board",
             "Graph-first view: nodes stay in place",
+            "Agent graph board v2",
+            "Planning lane",
+            "Artifact lane",
+            "Decision lane",
+            "Human/provider lane",
+            "Feedback loop",
+            "Human approval gate",
+            "Manual/provider branch",
+            "Next graph action",
+            "Details are collapsed by default",
+            "Graph-first UI",
             "function renderLiveAgentGraphBoard(run, events)",
+            "function renderLiveGraphNode(run, agentId, currentAgentId)",
+            "function renderLiveGraphLane(run, labelKey, agentIds, currentAgentId)",
+            "function renderLiveGraphLoopChip(labelKey, detailKey, tone = 'rework')",
             "liveAgentGraphBoard",
             "detailedAgentGraphMap",
             "Detailed Agent Graph Map",
@@ -3440,8 +3454,22 @@ class LiveAgentGraphBoardProbeTests(unittest.TestCase):
             "Experiment",
             "Finalizer",
             "${renderLiveAgentGraphBoard(run, events)}",
-            "<summary>${escapeHTML(t('detailedAgentGraphMap'))}</summary>",
+            "<summary>${escapeHTML(t('showDetailedGraphMap'))}: ${escapeHTML(t('detailedAgentGraphMap'))}</summary>",
         ]:
             with self.subTest(marker=marker):
                 self.assertIn(marker, html)
         self.assertNotIn("????", html)
+
+    def test_live_agent_graph_details_are_collapsed_and_ordered(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        timeline_start = html.index("function renderAgentLiveRunTimeline(run")
+        timeline_end = html.index("async function pollLiveAgentRun", timeline_start)
+        timeline_source = html[timeline_start:timeline_end]
+
+        self.assertIn('<details class="section-block" id="latestAgentEventsDetails">', timeline_source)
+        self.assertIn("<summary>${escapeHTML(t('showDetailedEvents'))}", timeline_source)
+        self.assertIn("<summary>${escapeHTML(t('showDetailedGraphMap'))}", timeline_source)
+        self.assertLess(
+            timeline_source.index("${renderLiveAgentGraphBoard(run, events)}"),
+            timeline_source.index("${renderAgentGraphMap(run)}"),
+        )
