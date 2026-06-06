@@ -3891,6 +3891,16 @@
                 agentTraceKeyOutputs: 'Key outputs',
                 agentHandoffMap: 'Agent Handoff Map',
                 agentActionQueue: 'Agent Action Queue',
+                agentStatusBoard: 'Agent Status Board',
+                agentStatusBoardHint: 'Quick view: see which agents are done, active, waiting, blocked, or need review. Details stay collapsed until you open them.',
+                agentStatusDone: 'Done',
+                agentStatusActive: 'Active',
+                agentStatusWaiting: 'Waiting',
+                agentStatusBlocked: 'Blocked',
+                agentStatusNeedsReview: 'Needs review',
+                agentStatusIdle: 'Idle',
+                detailedAgentCards: 'Detailed agent cards',
+                agentDetailsCollapsedNote: 'Long goals, decisions, artifacts, warnings, and debug output are preserved here but collapsed by default.',
                 recommendedUserAction: 'Recommended user action',
                 debugKeyOutputs: 'Debug key outputs',
                 reviewEvidenceWarningsAction: 'Review evidence warnings before using claims.',
@@ -4327,6 +4337,16 @@
                 agentTraceKeyOutputs: '\u5173\u952e\u8f93\u51fa',
                 agentHandoffMap: 'Agent \u4ea4\u63a5\u5730\u56fe',
                 agentActionQueue: 'Agent \u884c\u52a8\u961f\u5217',
+                agentStatusBoard: 'Agent 状态看板',
+                agentStatusBoardHint: '快速查看：哪些 Agent 已完成、运行中、等待、阻断或需要人工审核。长文本默认折叠，需要时再打开。',
+                agentStatusDone: '已完成',
+                agentStatusActive: '运行中',
+                agentStatusWaiting: '等待中',
+                agentStatusBlocked: '已阻断',
+                agentStatusNeedsReview: '需审核',
+                agentStatusIdle: '空闲',
+                detailedAgentCards: '详细 Agent 卡片',
+                agentDetailsCollapsedNote: '目标、决策、产物、警告和调试输出都保留在这里，但默认折叠。',
                 recommendedUserAction: '\u5efa\u8bae\u7528\u6237\u64cd\u4f5c',
                 debugKeyOutputs: 'Debug \u5173\u952e\u8f93\u51fa',
                 reviewEvidenceWarningsAction: '\u4f7f\u7528\u4efb\u4f55\u5356\u70b9\u524d\uff0c\u5148\u68c0\u67e5\u8bc1\u636e\u98ce\u9669\u63d0\u793a\u3002',
@@ -9272,6 +9292,102 @@
             `;
         }
 
+
+        function agentStatusTone(agent) {
+            const rawStatus = String(agent?.status || '').toLowerCase();
+            const needsReview = Boolean(agent?.requires_human_review);
+            if (rawStatus.includes('blocked') || rawStatus.includes('rejected') || rawStatus.includes('failed')) {
+                return { key: 'agentStatusBlocked', symbol: '⛔', border: 'var(--accent-red, #ef4444)' };
+            }
+            if (rawStatus.includes('waiting') || rawStatus.includes('pending')) {
+                return { key: 'agentStatusWaiting', symbol: '⏳', border: 'var(--accent-yellow, #f59e0b)' };
+            }
+            if (rawStatus.includes('running') || rawStatus.includes('active') || rawStatus.includes('processing')) {
+                return { key: 'agentStatusActive', symbol: '🟦', border: 'var(--accent-blue, #3b82f6)' };
+            }
+            if (needsReview) {
+                return { key: 'agentStatusNeedsReview', symbol: '👀', border: 'var(--accent-purple, #8b5cf6)' };
+            }
+            if (rawStatus.includes('complete') || rawStatus.includes('approved') || rawStatus.includes('ready')) {
+                return { key: 'agentStatusDone', symbol: '✅', border: 'var(--accent-green, #22c55e)' };
+            }
+            return { key: 'agentStatusIdle', symbol: '○', border: 'rgba(148, 163, 184, 0.7)' };
+        }
+
+        function agentStatusPriority(agent, index) {
+            const rawStatus = String(agent?.status || '').toLowerCase();
+            if (rawStatus.includes('blocked') || rawStatus.includes('rejected') || rawStatus.includes('failed')) return [0, index];
+            if (rawStatus.includes('waiting') || rawStatus.includes('pending')) return [1, index];
+            if (agent?.requires_human_review) return [2, index];
+            if (rawStatus.includes('running') || rawStatus.includes('active') || rawStatus.includes('processing')) return [3, index];
+            if (rawStatus.includes('complete') || rawStatus.includes('approved') || rawStatus.includes('ready')) return [4, index];
+            return [5, index];
+        }
+
+        function renderAgentStatusBoard(orderedAgents) {
+            if (!orderedAgents.length) return '';
+            const sortedAgents = orderedAgents
+                .map((agent, index) => ({ agent, index, priority: agentStatusPriority(agent, index) }))
+                .sort((a, b) => a.priority[0] - b.priority[0] || a.priority[1] - b.priority[1]);
+
+            const summary = {
+                complete: 0,
+                waiting: 0,
+                blocked: 0,
+                review: 0,
+                active: 0
+            };
+
+            const cards = sortedAgents.map(({ agent, index }) => {
+                const tone = agentStatusTone(agent);
+                const rawStatus = String(agent?.status || '').toLowerCase();
+                if (rawStatus.includes('blocked') || rawStatus.includes('rejected') || rawStatus.includes('failed')) summary.blocked += 1;
+                else if (rawStatus.includes('waiting') || rawStatus.includes('pending')) summary.waiting += 1;
+                else if (rawStatus.includes('running') || rawStatus.includes('active') || rawStatus.includes('processing')) summary.active += 1;
+                else if (rawStatus.includes('complete') || rawStatus.includes('approved') || rawStatus.includes('ready')) summary.complete += 1;
+                if (agent?.requires_human_review) summary.review += 1;
+
+                const label = agent.role || agent.agent_id || `${t('agentLabel')} ${index + 1}`;
+                const status = agent.status || t('agentStatusIdle');
+                const action = multiAgentRecommendedAction(agent);
+                return `
+                    <div class="section-block" style="border-left:4px solid ${tone.border}; padding:10px 12px;">
+                        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+                            <div>
+                                <div class="json-key" style="margin-bottom:4px;">${tone.symbol} ${escapeHTML(label)}</div>
+                                <div style="font-size:0.88rem; opacity:0.85;">${escapeHTML(t(tone.key))}: ${escapeHTML(status)}</div>
+                            </div>
+                            <span class="metric-pill">${agent?.requires_human_review ? escapeHTML(t('agentStatusNeedsReview')) : escapeHTML(t(tone.key))}</span>
+                        </div>
+                        <details style="margin-top:8px;">
+                            <summary>${escapeHTML(t('recommendedUserAction'))}</summary>
+                            ${block(t('recommendedUserAction'), action)}
+                        </details>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="section-block" id="agentStatusBoardPanel">
+                    <div class="json-key">${escapeHTML(t('agentStatusBoard'))}</div>
+                    <div class="feedback-box">${escapeHTML(t('agentStatusBoardHint'))}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('agentStatusDone'), summary.complete)}
+                        ${metricPill(t('agentStatusActive'), summary.active)}
+                        ${metricPill(t('agentStatusWaiting'), summary.waiting)}
+                        ${metricPill(t('agentStatusBlocked'), summary.blocked)}
+                        ${metricPill(t('agentStatusNeedsReview'), summary.review)}
+                    </div>
+                    <div class="probe-grid">${cards}</div>
+                    <details>
+                        <summary>${escapeHTML(t('detailedAgentCards'))}</summary>
+                        <div class="feedback-box">${escapeHTML(t('agentDetailsCollapsedNote'))}</div>
+                    </details>
+                </div>
+            `;
+        }
+
+
         function renderMultiAgentWorkflowPanel(workflow) {
             if (!workflow || workflow.workflow_version !== 'multi_agent_workflow_v2') return '';
             const agents = Array.isArray(workflow.agents) ? workflow.agents : [];
@@ -9300,7 +9416,7 @@
                     ? ''
                     : `${Math.round(Number(agent.confidence_score || 0) * 100)}%`;
                 return `
-                    <details class="section-block" ${index < 3 ? 'open' : ''}>
+                    <details class="section-block">
                         <summary>${escapeHTML(agent.role || agent.agent_id || `${t('agentLabel')} ${index + 1}`)}</summary>
                         <div class="probe-grid">
                             ${block(t('agentWorkflowStatus'), agent.status || '')}
@@ -9336,6 +9452,7 @@
                         ${block(t('agentWorkflowRealExecution'), realExecutionText)}
                         ${block(t('agentWorkflowOrder'), order.join(' -> '))}
                     </div>
+                    ${renderAgentStatusBoard(orderedAgents)}
                     ${renderAgentHandoffMap(orderedAgents)}
                     ${renderAgentActionQueue(orderedAgents)}
                     ${block(t('agentWorkflowDifferentiator'), workflow.differentiator || '')}

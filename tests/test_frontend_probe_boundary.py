@@ -3394,3 +3394,20 @@ class MultiAgentWorkflowPanelProbeTests(unittest.TestCase):
         self.assertIn("External Video Experiments", html)
         self.assertIn("Estimated API cost", html)
         self.assertNotIn("????", html)
+
+
+    def test_agent_status_board_frontend_markers(self):
+        source = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("function renderAgentStatusBoard(orderedAgents)", source)
+        self.assertIn("agentStatusBoard", source)
+        self.assertIn("Agent Status Board", source)
+        self.assertIn("agentStatusBoardHint", source)
+        self.assertIn("Done", source)
+        self.assertIn("Active", source)
+        self.assertIn("Waiting", source)
+        self.assertIn("Blocked", source)
+        self.assertIn("Needs review", source)
+        self.assertIn("Detailed agent cards", source)
+        self.assertIn("agentDetailsCollapsedNote", source)
+        self.assertIn("${renderAgentStatusBoard(orderedAgents)}", source)
+        self.assertNotIn("????", source)
