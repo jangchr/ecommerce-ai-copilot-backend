@@ -1135,6 +1135,33 @@ def build_lightweight_artifact_registry(
             generation or source_generation,
             uploaded_assets,
         )
+    project_source = (
+        generation.get("project_source")
+        or source_generation.get("project_source")
+        or run_result.get("project_source")
+    )
+    source_quality_gate = (
+        generation.get("source_quality_gate")
+        or source_generation.get("source_quality_gate")
+        or run_result.get("source_quality_gate")
+    )
+    source_evidence_artifact = (
+        generation.get("source_evidence_artifact")
+        or source_generation.get("source_evidence_artifact")
+        or run_result.get("source_evidence_artifact")
+    )
+    source_snapshot = (
+        generation.get("source_snapshot")
+        or source_generation.get("source_snapshot")
+        or run_result.get("source_snapshot")
+    )
+    source_specific_type = ""
+    if isinstance(project_source, dict):
+        source_specific_type = {
+            "amazon_url": "amazon_source",
+            "shopify_url": "shopify_source",
+            "csv_reviews": "csv_reviews_source",
+        }.get(str(project_source.get("source_type") or ""), "")
     artifact_sources: list[tuple[str, Any, str, list[str], str, list[str]]] = [
         (
             "project_workspace",
@@ -1145,10 +1172,50 @@ def build_lightweight_artifact_registry(
             ["evidence_agent", "asset_lock_agent"],
         ),
         (
+            "project_source",
+            project_source,
+            "source_adapter_agent",
+            ["project_workspace"],
+            "used",
+            ["source_quality_agent"],
+        ),
+        (
+            source_specific_type,
+            project_source if source_specific_type else {},
+            "source_adapter_agent",
+            ["project_source"],
+            "created",
+            ["source_quality_agent"],
+        ),
+        (
+            "source_quality_gate",
+            source_quality_gate,
+            "source_quality_agent",
+            ["project_source"],
+            "used",
+            ["evidence_agent"],
+        ),
+        (
+            "source_evidence_artifact",
+            source_evidence_artifact,
+            "evidence_agent",
+            ["source_quality_gate"],
+            "used",
+            ["strategy_agent", "storyboard_agent"],
+        ),
+        (
+            "source_snapshot",
+            source_snapshot,
+            "source_adapter_agent",
+            ["source_evidence_artifact"],
+            "created",
+            [],
+        ),
+        (
             "llm_evidence_packet",
             generation.get("llm_evidence_packet") or source_generation.get("llm_evidence_packet"),
             "evidence_agent",
-            ["project_workspace"],
+            ["source_evidence_artifact", "project_workspace"],
             "used",
             ["strategy_agent"],
         ),
@@ -1380,6 +1447,39 @@ def build_lightweight_artifact_registry(
                 "created_by_run_id": str(safe_run.get("run_id") or rework_run_id or ""),
                 "created_from_job_id": str(safe_job.get("job_id") or ""),
                 "created_from_experiment_id": str(latest_experiment.get("experiment_id") or ""),
+                "artifact_metadata": (
+                    {
+                        "source_type": value.get("source_type", ""),
+                        "source_url": value.get("normalized_url")
+                        or value.get("source_url", ""),
+                        "source_confidence": value.get("source_confidence", ""),
+                        "warnings": value.get("warnings") or [],
+                        "manual_fallback_needed": value.get(
+                            "manual_fallback_needed",
+                            (value.get("source_summary") or {}).get(
+                                "manual_fallback_needed",
+                                False,
+                            ),
+                        ),
+                        "asin": value.get("asin", ""),
+                        "shopify_handle": value.get("shopify_handle", ""),
+                        "review_classifications": value.get(
+                            "review_classifications",
+                            [],
+                        ),
+                    }
+                    if artifact_type
+                    in {
+                        "project_source",
+                        "amazon_source",
+                        "shopify_source",
+                        "csv_reviews_source",
+                        "source_quality_gate",
+                        "source_evidence_artifact",
+                        "source_snapshot",
+                    }
+                    else {}
+                ),
             }
         )
     for artifact in artifacts:
@@ -1436,6 +1536,27 @@ def build_lightweight_artifact_registry(
         ),
         "has_approval_artifact": "human_approval_gate" in artifact_types,
         "has_provider_result": "provider_result" in artifact_types,
+        "has_source_artifacts": bool(
+            artifact_types.intersection(
+                {
+                    "project_source",
+                    "source_quality_gate",
+                    "source_evidence_artifact",
+                    "source_snapshot",
+                }
+            )
+        ),
+        "has_source_quality_gate": "source_quality_gate" in artifact_types,
+        "has_review_classifications": bool(
+            isinstance(source_evidence_artifact, dict)
+            and source_evidence_artifact.get("review_classifications")
+        ),
+        "has_manual_fallback": bool(
+            isinstance(project_source, dict)
+            and (project_source.get("source_summary") or {}).get(
+                "manual_fallback_needed"
+            )
+        ),
         "is_linear_workflow": False,
     }
     return {
@@ -3065,6 +3186,9 @@ def default_pasted_reviews_agent_states() -> list[dict[str, Any]]:
 def default_agent_graph_nodes() -> list[dict[str, Any]]:
     return [
         build_graph_node("planner_agent", "planner_agent", "Planner Agent", "agent", "Validate request and define the staged graph route.", "Confirm the pasted feedback brief is valid before generation.", ["pasted_reviews_request"], ["validated_generation_plan"]),
+        build_graph_node("source_adapter_agent", "source_adapter_agent", "Source Adapter", "agent", "Normalize the project source without bypassing platform controls.", "Review source warnings and manual fallback requirements.", ["project_source_request"], ["project_source"]),
+        build_graph_node("source_quality_agent", "source_quality_agent", "Source Quality Gate", "validation", "Check source confidence and evidence readiness.", "Add manual reviews when source evidence is insufficient.", ["project_source"], ["source_quality_gate"]),
+        build_graph_node("source_evidence_agent", "source_evidence_agent", "Source Evidence", "agent", "Create the project-scoped source evidence artifact.", "Review classifications before creative generation.", ["source_quality_gate"], ["source_evidence_artifact"]),
         build_graph_node("evidence_agent", "evidence_agent", "Evidence Agent", "agent", "Build the LLM evidence packet from supplied reviews.", "Review evidence warnings before using claims.", ["pasted_reviews"], ["evidence_quotes", "llm_evidence_packet"]),
         build_graph_node("strategy_agent", "strategy_agent", "Strategy Agent", "agent", "Turn evidence into a creative strategy and hook direction.", "Confirm selected creative angle.", ["llm_evidence_packet"], ["creative_strategy"]),
         build_graph_node("storyboard_agent", "storyboard_agent", "Storyboard Agent", "agent", "Build hook, CTA, and storyboard scenes.", "Review hook, CTA, and scenes.", ["creative_strategy"], ["storyboard"]),
@@ -3084,7 +3208,12 @@ def default_agent_graph_nodes() -> list[dict[str, Any]]:
 
 def default_agent_graph_edges() -> list[dict[str, Any]]:
     return [
-        build_graph_edge("planner_to_evidence", "planner_agent", "evidence_agent", "normal", "request valid"),
+        build_graph_edge("planner_to_source_adapter", "planner_agent", "source_adapter_agent", "normal", "request valid"),
+        build_graph_edge("source_adapter_to_source_quality", "source_adapter_agent", "source_quality_agent", "validation", "source normalized"),
+        build_graph_edge("source_quality_to_source_evidence", "source_quality_agent", "source_evidence_agent", "normal", "source evidence ready"),
+        build_graph_edge("source_quality_manual_fallback", "source_quality_agent", "source_adapter_agent", "waiting_for_user", "manual fallback required"),
+        build_graph_edge("source_evidence_to_evidence", "source_evidence_agent", "evidence_agent", "normal", "source evidence artifact created"),
+        build_graph_edge("planner_to_evidence", "planner_agent", "evidence_agent", "normal", "legacy request valid"),
         build_graph_edge("evidence_to_strategy", "evidence_agent", "strategy_agent", "normal", "evidence packet built"),
         build_graph_edge("strategy_to_storyboard", "strategy_agent", "storyboard_agent", "normal", "strategy generated"),
         build_graph_edge("storyboard_to_risk", "storyboard_agent", "risk_agent", "validation", "storyboard requires risk validation"),

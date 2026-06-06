@@ -95,6 +95,33 @@ class AgentRunsEndpointTest(unittest.TestCase):
         }
         registry = build_lightweight_artifact_registry(
             generation_data={
+                "project_source": {
+                    "source_id": "source_demo_1",
+                    "source_type": "pasted_reviews",
+                    "source_confidence": 0.82,
+                    "warnings": ["manual_review_classification_recommended"],
+                },
+                "source_quality_gate": {
+                    "gate_version": "source_quality_gate_v1",
+                    "source_id": "source_demo_1",
+                    "status": "warning",
+                    "allows_agent_run": True,
+                },
+                "source_evidence_artifact": {
+                    "artifact_version": "source_evidence_artifact_v1",
+                    "artifact_id": "source_artifact_demo_1",
+                    "source_id": "source_demo_1",
+                    "review_classifications": [
+                        {
+                            "text": "Hard to clean after one smoothie.",
+                            "categories": ["pain_point"],
+                        }
+                    ],
+                },
+                "source_snapshot": {
+                    "snapshot_version": "source_snapshot_v1",
+                    "source_id": "source_demo_1",
+                },
                 "llm_evidence_packet": {"packet_version": "pasted_reviews_v1"},
                 "video_generation_packet": {"packet_version": "video_generation_v1"},
                 "external_video_tool_handoff": {"handoff_version": "external_video_tool_handoff_v1"},
@@ -128,6 +155,10 @@ class AgentRunsEndpointTest(unittest.TestCase):
         self.assertTrue(
             {
                 "llm_evidence_packet",
+                "project_source",
+                "source_quality_gate",
+                "source_evidence_artifact",
+                "source_snapshot",
                 "video_generation_packet",
                 "external_video_tool_handoff",
                 "product_asset_lock",
@@ -136,6 +167,9 @@ class AgentRunsEndpointTest(unittest.TestCase):
         )
         self.assertFalse(registry["graph_evidence"]["is_linear_workflow"])
         self.assertFalse(registry["lineage_summary"]["is_linear_workflow"])
+        self.assertTrue(registry["lineage_summary"]["has_source_artifacts"])
+        self.assertTrue(registry["lineage_summary"]["has_source_quality_gate"])
+        self.assertTrue(registry["lineage_summary"]["has_review_classifications"])
         self.assertEqual(snapshot["snapshot_version"], "graph_state_snapshot_v1")
         self.assertFalse(snapshot["is_linear_workflow"])
         self.assertTrue(snapshot["selected_edges"])

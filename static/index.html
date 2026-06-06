@@ -452,6 +452,7 @@
             line-height: 1.55;
         }
         .description-field input,
+        .description-field select,
         .description-field textarea {
             width: 100%;
             border: 1px solid var(--border-light);
@@ -3594,6 +3595,7 @@
         let latestVideoGenerationJob = null;
         let latestProjectId = 'demo_project_default';
         let latestProjectWorkspace = null;
+        let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
         let latestChineseTranslation = '';
@@ -5454,6 +5456,67 @@
 
         Object.assign(LANGUAGE_COPY.en, {
             projectWorkspace: 'Project Workspace',
+            projectSources: 'Project Sources',
+            addProductSource: 'Add product source',
+            amazonProductUrl: 'Amazon product URL',
+            shopifyProductUrl: 'Shopify product URL',
+            manualProductSource: 'Manual product source',
+            pastedCustomerFeedbackSource: 'Pasted customer feedback source',
+            csvReviewBatch: 'CSV review batch',
+            textReviewBatch: 'Text review batch',
+            sourceUrl: 'Source URL',
+            sourceNotes: 'Source notes',
+            productDescription: 'Product description',
+            sourceReviewText: 'Review or CSV text',
+            fetchSource: 'Fetch source',
+            previewSource: 'Preview source',
+            sourceCreated: 'Source created',
+            sourceFetchLimited: 'Source fetch limited',
+            manualFallbackRequired: 'Manual fallback required',
+            sourceConfidence: 'Source confidence',
+            sourceWarnings: 'Source warnings',
+            sourceQualityGate: 'Source quality gate',
+            evidenceReadiness: 'Evidence readiness',
+            sourceEvidenceArtifact: 'Source evidence artifact',
+            generateFromSource: 'Generate from source',
+            recentProjectSources: 'Recent project sources',
+            sourceHistory: 'Source history',
+            sourceSnapshots: 'Source snapshots',
+            publicSourceFetch: 'Public source fetch',
+            noAntiBotBypass: 'No anti-bot bypass',
+            manualReviewsRecommended: 'Manual reviews recommended',
+            sourceNode: 'Source node',
+            sourceAdapterNode: 'Source adapter node',
+            sourceQualityNode: 'Source quality node',
+            sourceEvidenceNode: 'Evidence artifact node',
+            manualFallbackNode: 'Manual fallback node',
+            sourceArtifact: 'Source artifact',
+            sourceQualityArtifact: 'Source quality artifact',
+            sourceSnapshot: 'Source snapshot',
+            sourceLineage: 'Source lineage',
+            asin: 'ASIN',
+            shopifyHandle: 'Shopify handle',
+            reviewClassification: 'Review classification',
+            sourceEvidenceTimeline: 'Source Evidence Timeline',
+            qualityChecked: 'Quality checked',
+            evidenceAgentReady: 'Evidence Agent ready',
+            creatingSource: 'Creating source...',
+            previewingSource: 'Previewing source...',
+            failedToCreateSource: 'Failed to create source',
+            sourceGenerationCompleted: 'Source generation completed',
+            failedToGenerateFromSource: 'Failed to generate from source',
+            sourceTypeManual: 'Manual product source',
+            sourceTypePasted: 'Pasted customer feedback source',
+            sourceTypeAmazon: 'Amazon product URL',
+            sourceTypeShopify: 'Shopify product URL',
+            sourceTypeCsv: 'CSV review batch',
+            sourceTypeText: 'Text review batch',
+            noProjectSourcesYet: 'No project sources yet.',
+            adapterStatus: 'Adapter status',
+            sourceProductSignals: 'Product signals',
+            sourceReviewCount: 'Review count',
+            sourceAdapterWarnings: 'Adapter warnings',
+            sourceSafetyNote: 'Public URL fetch uses ordinary HTTP only. No login, CAPTCHA, proxy, cookie, or anti-bot bypass is used.',
             currentProject: 'Current project',
             projectId: 'Project ID',
             projectName: 'Project name',
@@ -5608,6 +5671,66 @@
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspace: '\u9879\u76ee\u5de5\u4f5c\u533a',
+            projectSources: '\u9879\u76ee\u6765\u6e90',
+            addProductSource: '\u6dfb\u52a0\u5546\u54c1\u6765\u6e90',
+            amazonProductUrl: 'Amazon \u5546\u54c1\u94fe\u63a5',
+            shopifyProductUrl: 'Shopify \u5546\u54c1\u94fe\u63a5',
+            manualProductSource: '\u624b\u52a8\u5546\u54c1\u6765\u6e90',
+            pastedCustomerFeedbackSource: '\u7c98\u8d34\u7684\u5ba2\u6237\u53cd\u9988\u6765\u6e90',
+            csvReviewBatch: 'CSV \u8bc4\u8bba\u6279\u6b21',
+            textReviewBatch: '\u6587\u672c\u8bc4\u8bba\u6279\u6b21',
+            sourceUrl: '\u6765\u6e90\u94fe\u63a5',
+            sourceNotes: '\u6765\u6e90\u5907\u6ce8',
+            sourceReviewText: '\u8bc4\u8bba\u6216 CSV \u6587\u672c',
+            fetchSource: '\u521b\u5efa\u6765\u6e90',
+            previewSource: '\u9884\u89c8\u6765\u6e90',
+            sourceCreated: '\u6765\u6e90\u5df2\u521b\u5efa',
+            sourceFetchLimited: '\u6765\u6e90\u83b7\u53d6\u53d7\u9650',
+            manualFallbackRequired: '\u9700\u8981\u624b\u52a8\u8865\u5145',
+            sourceConfidence: '\u6765\u6e90\u7f6e\u4fe1\u5ea6',
+            sourceWarnings: '\u6765\u6e90\u8b66\u544a',
+            sourceQualityGate: '\u6765\u6e90\u8d28\u91cf\u95e8',
+            evidenceReadiness: '\u8bc1\u636e\u5c31\u7eea\u72b6\u6001',
+            sourceEvidenceArtifact: '\u6765\u6e90\u8bc1\u636e\u4ea7\u7269',
+            generateFromSource: '\u4ece\u6765\u6e90\u751f\u6210',
+            recentProjectSources: '\u6700\u8fd1\u9879\u76ee\u6765\u6e90',
+            sourceHistory: '\u6765\u6e90\u5386\u53f2',
+            sourceSnapshots: '\u6765\u6e90\u5feb\u7167',
+            publicSourceFetch: '\u516c\u5f00\u6765\u6e90\u83b7\u53d6',
+            noAntiBotBypass: '\u4e0d\u7ed5\u8fc7\u53cd\u673a\u5668\u4eba\u9650\u5236',
+            manualReviewsRecommended: '\u5efa\u8bae\u624b\u52a8\u8865\u5145\u8bc4\u8bba',
+            sourceNode: '\u6765\u6e90\u8282\u70b9',
+            sourceAdapterNode: '\u6765\u6e90\u9002\u914d\u5668\u8282\u70b9',
+            sourceQualityNode: '\u6765\u6e90\u8d28\u91cf\u8282\u70b9',
+            sourceEvidenceNode: '\u8bc1\u636e\u4ea7\u7269\u8282\u70b9',
+            manualFallbackNode: '\u624b\u52a8\u8865\u5145\u8282\u70b9',
+            sourceArtifact: '\u6765\u6e90\u4ea7\u7269',
+            sourceQualityArtifact: '\u6765\u6e90\u8d28\u91cf\u4ea7\u7269',
+            sourceSnapshot: '\u6765\u6e90\u5feb\u7167',
+            sourceLineage: '\u6765\u6e90\u8c31\u7cfb',
+            asin: 'ASIN',
+            shopifyHandle: 'Shopify handle',
+            reviewClassification: '\u8bc4\u8bba\u5206\u7c7b',
+            sourceEvidenceTimeline: '\u6765\u6e90\u8bc1\u636e\u65f6\u95f4\u7ebf',
+            qualityChecked: '\u8d28\u91cf\u5df2\u68c0\u67e5',
+            evidenceAgentReady: '\u8bc1\u636e Agent \u5df2\u5c31\u7eea',
+            creatingSource: '\u6b63\u5728\u521b\u5efa\u6765\u6e90...',
+            previewingSource: '\u6b63\u5728\u9884\u89c8\u6765\u6e90...',
+            failedToCreateSource: '\u6765\u6e90\u521b\u5efa\u5931\u8d25',
+            sourceGenerationCompleted: '\u6765\u6e90\u751f\u6210\u5df2\u5b8c\u6210',
+            failedToGenerateFromSource: '\u4ece\u6765\u6e90\u751f\u6210\u5931\u8d25',
+            sourceTypeManual: '\u624b\u52a8\u5546\u54c1\u6765\u6e90',
+            sourceTypePasted: '\u7c98\u8d34\u7684\u5ba2\u6237\u53cd\u9988\u6765\u6e90',
+            sourceTypeAmazon: 'Amazon \u5546\u54c1\u94fe\u63a5',
+            sourceTypeShopify: 'Shopify \u5546\u54c1\u94fe\u63a5',
+            sourceTypeCsv: 'CSV \u8bc4\u8bba\u6279\u6b21',
+            sourceTypeText: '\u6587\u672c\u8bc4\u8bba\u6279\u6b21',
+            noProjectSourcesYet: '\u8fd8\u6ca1\u6709\u9879\u76ee\u6765\u6e90\u3002',
+            adapterStatus: '\u9002\u914d\u5668\u72b6\u6001',
+            sourceProductSignals: '\u5546\u54c1\u4fe1\u53f7',
+            sourceReviewCount: '\u8bc4\u8bba\u6570',
+            sourceAdapterWarnings: '\u9002\u914d\u5668\u8b66\u544a',
+            sourceSafetyNote: '\u516c\u5f00\u94fe\u63a5\u53ea\u4f7f\u7528\u666e\u901a HTTP \u8bf7\u6c42\uff0c\u4e0d\u4f7f\u7528\u767b\u5f55\u3001\u9a8c\u8bc1\u7801\u3001\u4ee3\u7406\u3001Cookie \u6216\u53cd\u673a\u5668\u4eba\u7ed5\u8fc7\u3002',
             currentProject: '\u5f53\u524d\u9879\u76ee',
             projectId: '\u9879\u76ee ID',
             projectName: '\u9879\u76ee\u540d\u79f0',
@@ -7301,6 +7424,35 @@
         async function getProjectWorkspaceSummary(projectId = latestProjectId) {
             const response = await fetch(`/api/v1/projects/${encodeURIComponent(projectId || 'demo_project_default')}/graph-summary`);
             return videoGenerationJsonResponse(response, 'graphHistoryFailed');
+        }
+
+        async function postProjectSourceRequest(projectId, payload, preview = false) {
+            const suffix = preview ? '/preview' : '';
+            const response = await fetch(
+                `/api/v1/projects/${encodeURIComponent(projectId || 'demo_project_default')}/sources${suffix}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload || {})
+                }
+            );
+            return videoGenerationJsonResponse(response, 'failedToCreateSource');
+        }
+
+        async function postProjectSourceGeneration(projectId, sourceId) {
+            const response = await fetch(
+                `/api/v1/projects/${encodeURIComponent(projectId || 'demo_project_default')}/sources/${encodeURIComponent(sourceId)}/generate`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target_platform: 'TikTok',
+                        goal: 'tiktok_ctr',
+                        output_language: currentOutputLanguage()
+                    })
+                }
+            );
+            return videoGenerationJsonResponse(response, 'failedToGenerateFromSource');
         }
 
         async function uploadProjectAssetRequest(projectId, assetRole, file, notes = '') {
@@ -9397,6 +9549,25 @@
             `;
         }
 
+        function renderArtifactSourceMetadata(artifact) {
+            const metadata = artifact?.metadata || {};
+            const sourceId = metadata.source_id || '';
+            const sourceType = metadata.source_type || '';
+            const sourceWarnings = Array.isArray(metadata.source_warnings)
+                ? metadata.source_warnings.map(sourceWarningText).filter(Boolean)
+                : [];
+            const classifications = Array.isArray(metadata.review_classifications)
+                ? metadata.review_classifications
+                : [];
+            if (!sourceId && !sourceType && !sourceWarnings.length && !classifications.length) return '';
+            return `
+                <div>${escapeHTML(t('sourceLineage'))}: ${escapeHTML(sourceId || 'none')}</div>
+                <div>${escapeHTML(t('sourceType'))}: ${escapeHTML(sourceType || 'none')}</div>
+                ${sourceWarnings.length ? `<div>${escapeHTML(t('sourceWarnings'))}: ${escapeHTML(sourceWarnings.join(', '))}</div>` : ''}
+                ${classifications.length ? `<div>${escapeHTML(t('reviewClassification'))}: ${escapeHTML(classifications.slice(0, 5).map((item) => (item.categories || []).join(', ')).join(' | '))}</div>` : ''}
+            `;
+        }
+
         function renderArtifactRegistry(registry) {
             if (!registry || !['artifact_registry_v1', 'artifact_registry_v2'].includes(registry.registry_version)) return '';
             const artifacts = Array.isArray(registry.artifacts) ? registry.artifacts : [];
@@ -9421,6 +9592,7 @@
                     ${artifact.supersedes_artifact_id ? `<div>${escapeHTML(t('supersedes'))}: ${escapeHTML(artifact.supersedes_artifact_id)}</div>` : ''}
                     ${artifact.superseded_by_artifact_id ? `<div>${escapeHTML(t('supersededBy'))}: ${escapeHTML(artifact.superseded_by_artifact_id)}</div>` : ''}
                     <div>${escapeHTML(t('usedByNextAgent'))}: ${escapeHTML((artifact.used_by_agent_ids || []).join(', ') || 'none')}</div>
+                    ${renderArtifactSourceMetadata(artifact)}
                     <div>${escapeHTML(artifact.summary || '')}</div>
                 </div>
             `).join('');
@@ -10033,8 +10205,251 @@
             `;
         }
 
+        function projectSourceTypeOptions(selected = 'manual') {
+            const options = [
+                ['manual', 'sourceTypeManual'],
+                ['pasted_reviews', 'sourceTypePasted'],
+                ['amazon_url', 'sourceTypeAmazon'],
+                ['shopify_url', 'sourceTypeShopify'],
+                ['csv_reviews', 'sourceTypeCsv'],
+                ['text_review_batch', 'sourceTypeText']
+            ];
+            return options.map(([value, labelKey]) => `
+                <option value="${escapeHTML(value)}" ${value === selected ? 'selected' : ''}>${escapeHTML(t(labelKey))}</option>
+            `).join('');
+        }
+
+        function sourceWarningText(warning) {
+            if (warning && typeof warning === 'object') {
+                return [warning.code, warning.detail].filter(Boolean).join(': ');
+            }
+            return String(warning || '');
+        }
+
+        function renderProjectSourceQuality(bundle) {
+            if (!bundle || typeof bundle !== 'object') return '';
+            const source = bundle.project_source || {};
+            const adapter = bundle.adapter_result || {};
+            const gate = bundle.source_quality_gate || {};
+            const artifact = bundle.source_evidence_artifact || {};
+            const warnings = [
+                ...(Array.isArray(source.warnings) ? source.warnings : []),
+                ...(Array.isArray(gate.warnings) ? gate.warnings : [])
+            ].map(sourceWarningText).filter(Boolean);
+            const summary = source.source_summary || {};
+            const classifications = Array.isArray(artifact.review_classifications)
+                ? artifact.review_classifications
+                : [];
+            const categorySummary = classifications
+                .slice(0, 8)
+                .map((item) => `${(item.categories || []).join(', ')}: ${item.text || ''}`)
+                .join('\n');
+            return `
+                <div class="metric-strip">
+                    ${metricPill(t('adapterStatus'), adapter.status || source.source_status || '')}
+                    ${metricPill(t('sourceConfidence'), formatMetric(source.source_confidence || gate.source_confidence || 0))}
+                    ${metricPill(t('sourceReviewCount'), String(summary.unique_review_count || 0))}
+                    ${metricPill(t('sourceQualityGate'), gate.status || '')}
+                    ${metricPill(t('evidenceReadiness'), gate.evidence_readiness || '')}
+                </div>
+                ${source.normalized_url ? block(t('sourceUrl'), source.normalized_url) : ''}
+                ${artifact.asin ? block(t('asin'), artifact.asin) : ''}
+                ${artifact.shopify_handle ? block(t('shopifyHandle'), artifact.shopify_handle) : ''}
+                ${warnings.length ? block(t('sourceWarnings'), [...new Set(warnings)].join('\n')) : ''}
+                ${categorySummary ? block(t('reviewClassification'), categorySummary) : ''}
+                <div class="feedback-box">${escapeHTML(t('sourceSafetyNote'))}</div>
+                <div class="feedback-box">${escapeHTML(t('manualFallbackRequired'))}: ${escapeHTML(boolText(summary.manual_fallback_needed === true || gate.status === 'fallback_required'))}</div>
+            `;
+        }
+
+        function renderProjectSourceRows(workspace) {
+            const sources = Array.isArray(workspace?.recent_sources) ? workspace.recent_sources : [];
+            const gates = Array.isArray(workspace?.recent_source_quality_gates)
+                ? workspace.recent_source_quality_gates
+                : [];
+            if (!sources.length) {
+                return `<div class="recent-empty">${escapeHTML(t('noProjectSourcesYet'))}</div>`;
+            }
+            return sources.map((source) => {
+                const gate = gates.find((item) => item.source_id === source.source_id) || {};
+                const canGenerate = gate.allows_agent_run === true;
+                return `
+                    <div class="artifact-timeline-row">
+                        <strong>${escapeHTML(source.product_name || source.source_type || source.source_id || '')}</strong>
+                        <span class="source-badge">${escapeHTML(source.source_type || '')}</span>
+                        <div>${escapeHTML(t('sourceConfidence'))}: ${escapeHTML(formatMetric(source.source_confidence || 0))} \u00b7 ${escapeHTML(t('sourceQualityGate'))}: ${escapeHTML(gate.status || source.source_status || '')}</div>
+                        <div>${escapeHTML(source.normalized_url || source.source_notes || '')}</div>
+                        <button class="btn-secondary" type="button" ${canGenerate ? '' : 'disabled'} onclick="generateProjectSourceFromWorkspace('${escapeHTML(source.source_id || '')}', this)">${escapeHTML(t('generateFromSource'))}</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSourceEvidenceTimeline(workspace) {
+            const snapshots = Array.isArray(workspace?.recent_source_snapshots)
+                ? workspace.recent_source_snapshots
+                : [];
+            const artifacts = Array.isArray(workspace?.recent_source_artifacts)
+                ? workspace.recent_source_artifacts
+                : [];
+            const rows = snapshots.slice(0, 6).map((snapshot) => {
+                const artifact = artifacts.find((item) => item.source_id === snapshot.source_id) || {};
+                return `
+                    <div class="artifact-timeline-row">
+                        <strong>${escapeHTML(snapshot.source_type || t('sourceSnapshot'))}</strong>
+                        <div>${escapeHTML(t('qualityChecked'))}: ${escapeHTML(snapshot.quality_gate_status || '')} \u00b7 ${escapeHTML(t('evidenceAgentReady'))}: ${escapeHTML(String(Boolean(artifact.artifact_id)))}</div>
+                        <div>${escapeHTML(snapshot.source_id || '')}</div>
+                    </div>
+                `;
+            }).join('');
+            return rows || `<div class="recent-empty">${escapeHTML(t('noProjectSourcesYet'))}</div>`;
+        }
+
+        function renderProjectSourcePanel(workspace) {
+            const bundle = latestProjectSourceBundle;
+            return `
+                <details id="projectSourcesPanel">
+                    <summary>${escapeHTML(t('projectSources'))}</summary>
+                    <div class="feedback-box">${escapeHTML(t('publicSourceFetch'))} \u00b7 ${escapeHTML(t('noAntiBotBypass'))} \u00b7 ${escapeHTML(t('manualReviewsRecommended'))}</div>
+                    <div class="json-key">${escapeHTML(t('addProductSource'))}</div>
+                    <div class="description-grid">
+                        <label class="description-field">
+                            <span class="json-key">${escapeHTML(t('sourceType'))}</span>
+                            <select id="projectSourceTypeInput">${projectSourceTypeOptions()}</select>
+                        </label>
+                        <label class="description-field">
+                            <span class="json-key">${escapeHTML(t('sourceUrl'))}</span>
+                            <input id="projectSourceUrlInput" placeholder="${escapeHTML(t('sourceUrl'))}" />
+                        </label>
+                        <label class="description-field">
+                            <span class="json-key">${escapeHTML(t('projectProduct'))}</span>
+                            <input id="projectSourceProductNameInput" placeholder="${escapeHTML(t('projectProduct'))}" />
+                        </label>
+                        <label class="description-field">
+                            <span class="json-key">${escapeHTML(t('productCategory'))}</span>
+                            <input id="projectSourceCategoryInput" placeholder="${escapeHTML(t('productCategory'))}" />
+                        </label>
+                        <label class="description-field">
+                            <span class="json-key">${escapeHTML(t('productDescription'))}</span>
+                            <textarea id="projectSourceDescriptionInput" rows="3" placeholder="${escapeHTML(t('productDescription'))}"></textarea>
+                        </label>
+                        <label class="description-field">
+                            <span class="json-key">${escapeHTML(t('sourceNotes'))}</span>
+                            <textarea id="projectSourceNotesInput" rows="3" placeholder="${escapeHTML(t('sourceNotes'))}"></textarea>
+                        </label>
+                        <label class="description-field wide">
+                            <span class="json-key">${escapeHTML(t('sourceReviewText'))}</span>
+                            <textarea id="projectSourceReviewsInput" rows="5" placeholder="${escapeHTML(t('sourceReviewText'))}"></textarea>
+                        </label>
+                    </div>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" id="previewProjectSourceBtn" type="button" onclick="previewProjectSourceFromForm()">${escapeHTML(t('previewSource'))}</button>
+                        <button class="btn-secondary" id="createProjectSourceBtn" type="button" onclick="createProjectSourceFromForm()">${escapeHTML(t('fetchSource'))}</button>
+                    </div>
+                    <div class="quick-use-copy-status" id="projectSourceStatus"></div>
+                    <div id="projectSourceQualityPanel">${renderProjectSourceQuality(bundle)}</div>
+                    <div class="json-key">${escapeHTML(t('recentProjectSources'))}</div>
+                    <div id="projectSourceList" class="recent-list">${renderProjectSourceRows(workspace)}</div>
+                    <details>
+                        <summary>${escapeHTML(t('sourceEvidenceTimeline'))}</summary>
+                        <div id="projectSourceTimeline">${renderSourceEvidenceTimeline(workspace)}</div>
+                    </details>
+                </details>
+            `;
+        }
+
+        function projectSourcePayloadFromForm() {
+            const sourceType = document.getElementById('projectSourceTypeInput')?.value || 'manual';
+            const reviewText = document.getElementById('projectSourceReviewsInput')?.value?.trim() || '';
+            return {
+                source_type: sourceType,
+                source_url: document.getElementById('projectSourceUrlInput')?.value?.trim() || '',
+                product_name: document.getElementById('projectSourceProductNameInput')?.value?.trim() || '',
+                product_category: document.getElementById('projectSourceCategoryInput')?.value?.trim() || '',
+                product_description: document.getElementById('projectSourceDescriptionInput')?.value?.trim() || '',
+                pasted_reviews: ['pasted_reviews', 'text_review_batch'].includes(sourceType) ? reviewText : '',
+                manual_reviews: ['manual', 'amazon_url', 'shopify_url'].includes(sourceType) ? reviewText : '',
+                csv_text: sourceType === 'csv_reviews' ? reviewText : '',
+                source_notes: document.getElementById('projectSourceNotesInput')?.value?.trim() || ''
+            };
+        }
+
+        async function previewProjectSourceFromForm() {
+            const btn = document.getElementById('previewProjectSourceBtn');
+            const status = document.getElementById('projectSourceStatus');
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('previewingSource');
+            try {
+                const response = await postProjectSourceRequest(
+                    latestProjectId,
+                    projectSourcePayloadFromForm(),
+                    true
+                );
+                latestProjectSourceBundle = response;
+                const quality = document.getElementById('projectSourceQualityPanel');
+                if (quality) quality.innerHTML = renderProjectSourceQuality(response);
+                if (status) status.textContent = t('qualityChecked');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('failedToCreateSource');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function createProjectSourceFromForm() {
+            const btn = document.getElementById('createProjectSourceBtn');
+            const status = document.getElementById('projectSourceStatus');
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('creatingSource');
+            try {
+                const response = await postProjectSourceRequest(
+                    latestProjectId,
+                    projectSourcePayloadFromForm(),
+                    false
+                );
+                latestProjectSourceBundle = response;
+                await refreshProjectWorkspaceSummary();
+                const refreshedStatus = document.getElementById('projectSourceStatus');
+                if (refreshedStatus) refreshedStatus.textContent = t('sourceCreated');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('failedToCreateSource');
+            } finally {
+                const refreshedBtn = document.getElementById('createProjectSourceBtn');
+                if (refreshedBtn) refreshedBtn.disabled = false;
+            }
+        }
+
+        async function generateProjectSourceFromWorkspace(sourceId, button) {
+            const status = document.getElementById('projectSourceStatus');
+            if (!sourceId) {
+                if (status) status.textContent = t('failedToGenerateFromSource');
+                return;
+            }
+            if (button) button.disabled = true;
+            if (status) status.textContent = t('creatingSource');
+            try {
+                const response = await postProjectSourceGeneration(latestProjectId, sourceId);
+                renderProductDashboard(response.data, {
+                    inputSlug: response.data?.project_source?.product_name || sourceId,
+                    outputLanguage: currentOutputLanguage()
+                });
+                if (status) status.textContent = t('sourceGenerationCompleted');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('failedToGenerateFromSource');
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
         function renderWorkspaceAgentGraph(project) {
             const summary = project?.graph_summary || {};
+            const sourceNodes = [
+                [t('sourceNode'), Number(summary.source_count || 0) > 0 ? 'done' : 'waiting'],
+                [t('sourceAdapterNode'), Number(summary.source_count || 0) > 0 ? 'done' : 'waiting'],
+                [t('sourceQualityNode'), Number(summary.source_quality_gate_count || 0) > 0 ? 'done' : 'waiting'],
+                [t('sourceEvidenceNode'), Number(summary.source_artifact_count || 0) > 0 ? 'done' : 'waiting'],
+                [t('manualFallbackNode'), Number(summary.manual_fallback_required_count || 0) > 0 ? 'waiting' : 'idle']
+            ];
             const nodes = [
                 [t('projectNode'), project?.project_id ? 'done' : 'idle'],
                 [t('assetNode'), Number(summary.asset_count || 0) > 0 ? 'done' : 'waiting'],
@@ -10048,6 +10463,10 @@
                 <div class="json-key">${escapeHTML(t('workspaceAgentGraph'))}</div>
                 <div class="live-graph-lane">
                     ${nodes.map(([label, status]) => `<span class="live-graph-node ${escapeHTML(status)}">${escapeHTML(label)}</span>`).join('<span class="live-graph-edge">→</span>')}
+                </div>
+                <div class="json-key">${escapeHTML(t('sourceLineage'))}</div>
+                <div class="live-graph-lane">
+                    ${sourceNodes.map(([label, status]) => `<span class="live-graph-node ${escapeHTML(status)}">${escapeHTML(label)}</span>`).join('<span class="live-graph-edge">→</span>')}
                 </div>
                 <details>
                     <summary>${escapeHTML(t('workspaceGraphDetails'))}</summary>
@@ -10091,6 +10510,7 @@
                     <div class="json-key">${escapeHTML(t('projectGraphSummary'))}</div>
                     ${renderWorkspaceAgentGraph(project)}
                     <div class="metric-strip">
+                        ${metricPill(t('recentProjectSources'), String(summary.source_count || 0))}
                         ${metricPill(t('recentProjectRuns'), String(summary.run_count || 0))}
                         ${metricPill(t('recentProjectJobs'), String(summary.job_count || 0))}
                         ${metricPill(t('recentProjectArtifacts'), String(summary.artifact_count || 0))}
@@ -10109,6 +10529,7 @@
                         </div>
                         <button class="btn-secondary" id="createProjectWorkspaceBtn" type="button" onclick="createProjectWorkspaceFromForm()">${escapeHTML(t('createProject'))}</button>
                     </details>
+                    ${renderProjectSourcePanel(workspace)}
                     <details id="projectAssetsPanel">
                         <summary>${escapeHTML(t('productAssets'))}</summary>
                         <input id="projectAssetFileInput" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" />

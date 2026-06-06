@@ -3475,6 +3475,93 @@ class ProjectWorkspaceFoundationProbeTests(unittest.TestCase):
         self.assertNotIn("????", html)
 
 
+class ProjectSourceIntelligenceProbeTests(unittest.TestCase):
+    def test_project_source_panel_and_bilingual_copy_markers_exist(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+
+        for marker in [
+            "Project Sources",
+            "Add product source",
+            "Amazon product URL",
+            "Shopify product URL",
+            "Manual product source",
+            "Pasted customer feedback source",
+            "CSV review batch",
+            "Text review batch",
+            "Source URL",
+            "Source notes",
+            "Fetch source",
+            "Preview source",
+            "Source created",
+            "Source fetch limited",
+            "Manual fallback required",
+            "Source confidence",
+            "Source warnings",
+            "Source quality gate",
+            "Evidence readiness",
+            "Source evidence artifact",
+            "Generate from source",
+            "Recent project sources",
+            "Source Evidence Timeline",
+            "Quality checked",
+            "Evidence Agent ready",
+            "No anti-bot bypass",
+            "Manual reviews recommended",
+            "Source node",
+            "Source adapter node",
+            "Source quality node",
+            "Evidence artifact node",
+            "Manual fallback node",
+            "ASIN",
+            "Shopify handle",
+            "Review classification",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+        for marker in [
+            "projectSourcesPanel",
+            "projectSourceTypeInput",
+            "projectSourceUrlInput",
+            "projectSourceReviewsInput",
+            "previewProjectSourceBtn",
+            "createProjectSourceBtn",
+            "projectSourceQualityPanel",
+            "projectSourceTimeline",
+            "function renderProjectSourcePanel",
+            "function renderProjectSourceQuality",
+            "function renderSourceEvidenceTimeline",
+            "function projectSourcePayloadFromForm",
+            "async function previewProjectSourceFromForm",
+            "async function createProjectSourceFromForm",
+            "async function generateProjectSourceFromWorkspace",
+            "function renderArtifactSourceMetadata",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+        self.assertIn("/sources${suffix}", html)
+        self.assertIn("/sources/${encodeURIComponent(sourceId)}/generate", html)
+        self.assertIn("renderProjectSourcePanel(workspace)", html)
+        self.assertIn("renderProductDashboard(response.data", html)
+        self.assertIn("anti-bot", html.lower())
+        self.assertIn("sourceTypeAmazon", html)
+        self.assertIn("sourceTypeShopify", html)
+        self.assertNotIn("????", html)
+
+    def test_project_source_ui_preserves_product_debug_boundary(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        source_panel_start = html.index("function renderProjectSourcePanel")
+        source_panel_end = html.index("function renderWorkspaceAgentGraph", source_panel_start)
+        source_panel = html[source_panel_start:source_panel_end]
+
+        self.assertNotIn("data.debug", source_panel)
+        self.assertNotIn("shadow_sources", source_panel)
+        self.assertNotIn("memory_observability", source_panel)
+        self.assertNotIn("telemetry_summary", source_panel)
+        self.assertIn("currentOutputLanguage()", source_panel)
+
+
 class LiveAgentGraphBoardProbeTests(unittest.TestCase):
     def test_live_agent_graph_board_frontend_markers(self):
         html = FRONTEND_PATH.read_text(encoding="utf-8")

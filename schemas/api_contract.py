@@ -80,6 +80,10 @@ class GenerateCopilotData(BaseModel):
     artifact_registry: Dict[str, Any] = Field(default_factory=dict)
     agent_trace: Dict[str, Any] = Field(default_factory=dict)
     multi_agent_workflow: Dict[str, Any] = Field(default_factory=dict)
+    project_source: Dict[str, Any] = Field(default_factory=dict)
+    source_evidence_artifact: Dict[str, Any] = Field(default_factory=dict)
+    source_quality_gate: Dict[str, Any] = Field(default_factory=dict)
+    source_snapshot: Dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateCopilotResponse(BaseModel):
@@ -148,6 +152,25 @@ class ProjectCreateRequest(BaseModel):
     product_name: str = ""
     product_category: str = ""
     source_type: str = "manual"
+
+
+class ProjectSourceRequest(BaseModel):
+    source_type: str = "manual"
+    source_url: str = ""
+    product_name: str = ""
+    product_category: str = ""
+    product_description: str = ""
+    pasted_reviews: str = ""
+    manual_reviews: str = ""
+    source_notes: str = ""
+    csv_text: str = ""
+    uploaded_asset_ids: List[str] = Field(default_factory=list)
+
+
+class ProjectSourceGenerateRequest(BaseModel):
+    target_platform: str = "TikTok"
+    goal: str = "tiktok_ctr"
+    output_language: str = "en"
 
 
 class AgentRunStatusResponse(BaseModel):

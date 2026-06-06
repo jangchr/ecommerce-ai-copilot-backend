@@ -193,6 +193,146 @@ def project_assets_directory(project_id: str) -> Path:
     return path
 
 
+def _project_subdirectory(project_id: str, category: str) -> Path:
+    allowed = {
+        "sources",
+        "source_artifacts",
+        "source_quality_gates",
+        "source_snapshots",
+    }
+    if category not in allowed:
+        raise ValueError(f"unsupported project subdirectory: {category}")
+    path = _storage_root() / "projects" / _safe_key(project_id or DEFAULT_PROJECT_ID) / category
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _write_project_record(
+    project_id: str,
+    category: str,
+    key: str,
+    record: dict[str, Any],
+) -> dict[str, Any]:
+    directory = _project_subdirectory(project_id, category)
+    payload = deepcopy(record)
+    payload["project_id"] = str(project_id or DEFAULT_PROJECT_ID)
+    payload.setdefault("saved_at", _utc_now_iso())
+    payload.setdefault("persistence", persistence_metadata())
+    final_path = directory / f"{_safe_key(key)}.json"
+    temp_path = directory / f".{final_path.name}.{uuid4().hex}.tmp"
+    temp_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True, default=str),
+        encoding="utf-8",
+    )
+    os.replace(temp_path, final_path)
+    return deepcopy(payload)
+
+
+def _list_project_subrecords(
+    project_id: str,
+    category: str,
+    limit: int,
+) -> list[dict[str, Any]]:
+    directory = _project_subdirectory(project_id, category)
+    records: list[dict[str, Any]] = []
+    for path in directory.glob("*.json"):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        if isinstance(payload, dict):
+            records.append(payload)
+    records.sort(key=_record_timestamp, reverse=True)
+    return deepcopy(records[: max(1, int(limit or 1))])
+
+
+def _load_project_subrecord(
+    project_id: str,
+    category: str,
+    key: str,
+) -> dict[str, Any] | None:
+    path = _project_subdirectory(project_id, category) / f"{_safe_key(key)}.json"
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    return deepcopy(payload) if isinstance(payload, dict) else None
+
+
+def save_project_source_snapshot(source: dict[str, Any]) -> dict[str, Any]:
+    return _write_project_record(
+        str(source.get("project_id") or DEFAULT_PROJECT_ID),
+        "sources",
+        str(source.get("source_id") or uuid4()),
+        source,
+    )
+
+
+def load_project_source(project_id: str, source_id: str) -> dict[str, Any] | None:
+    return _load_project_subrecord(project_id, "sources", source_id)
+
+
+def list_project_sources(project_id: str, limit: int = 20) -> list[dict[str, Any]]:
+    return _list_project_subrecords(project_id, "sources", limit)
+
+
+def save_source_evidence_artifact(
+    project_id: str,
+    artifact: dict[str, Any],
+) -> dict[str, Any]:
+    return _write_project_record(
+        project_id,
+        "source_artifacts",
+        str(artifact.get("source_id") or artifact.get("artifact_id") or uuid4()),
+        artifact,
+    )
+
+
+def load_source_evidence_artifact(
+    project_id: str,
+    source_id: str,
+) -> dict[str, Any] | None:
+    return _load_project_subrecord(project_id, "source_artifacts", source_id)
+
+
+def list_source_evidence_artifacts(
+    project_id: str,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    return _list_project_subrecords(project_id, "source_artifacts", limit)
+
+
+def save_source_quality_gate(
+    project_id: str,
+    source_id: str,
+    gate: dict[str, Any],
+) -> dict[str, Any]:
+    return _write_project_record(project_id, "source_quality_gates", source_id, gate)
+
+
+def load_source_quality_gate(project_id: str, source_id: str) -> dict[str, Any] | None:
+    return _load_project_subrecord(project_id, "source_quality_gates", source_id)
+
+
+def list_source_quality_gates(project_id: str, limit: int = 20) -> list[dict[str, Any]]:
+    return _list_project_subrecords(project_id, "source_quality_gates", limit)
+
+
+def save_source_snapshot(project_id: str, snapshot: dict[str, Any]) -> dict[str, Any]:
+    return _write_project_record(
+        project_id,
+        "source_snapshots",
+        str(snapshot.get("source_id") or uuid4()),
+        snapshot,
+    )
+
+
+def list_source_snapshots(project_id: str, limit: int = 20) -> list[dict[str, Any]]:
+    return _list_project_subrecords(project_id, "source_snapshots", limit)
+
+
 def save_project_asset_snapshot(asset: dict[str, Any]) -> dict[str, Any]:
     project_id = str(asset.get("project_id") or DEFAULT_PROJECT_ID)
     payload = deepcopy(asset)
@@ -267,6 +407,10 @@ def update_project_summary(
     artifacts = list_project_records("artifacts", safe_project_id, 200)
     exports = list_project_records("exports", safe_project_id, 200)
     assets = list_project_assets(safe_project_id, 200)
+    sources = list_project_sources(safe_project_id, 200)
+    source_artifacts = list_source_evidence_artifacts(safe_project_id, 200)
+    source_quality_gates = list_source_quality_gates(safe_project_id, 200)
+    source_snapshots = list_source_snapshots(safe_project_id, 200)
     experiments = sum(len(item.get("external_video_experiments") or []) for item in jobs)
     approvals = sum(bool(item.get("latest_human_approval_gate")) for item in jobs)
     project["graph_summary"] = {
@@ -280,6 +424,18 @@ def update_project_summary(
         "approval_count": approvals,
         "asset_count": len(assets),
         "report_count": len(exports),
+        "source_count": len(sources),
+        "source_artifact_count": len(source_artifacts),
+        "source_quality_gate_count": len(source_quality_gates),
+        "source_snapshot_count": len(source_snapshots),
+        "latest_source_id": str((sources[0] if sources else {}).get("source_id") or ""),
+        "latest_source_type": str((sources[0] if sources else {}).get("source_type") or ""),
+        "latest_source_confidence": float((sources[0] if sources else {}).get("source_confidence") or 0.0),
+        "latest_source_gate_status": str((source_quality_gates[0] if source_quality_gates else {}).get("status") or ""),
+        "manual_fallback_required_count": sum(
+            bool((item.get("source_summary") or {}).get("manual_fallback_needed"))
+            for item in sources
+        ),
     }
     project["updated_at"] = _utc_now_iso()
     project.setdefault("latest_run_id", None)

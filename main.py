@@ -31,6 +31,8 @@ from schemas.api_contract import (
     ProductDescriptionRequest,
     ProductDescriptionResponse,
     ProjectCreateRequest,
+    ProjectSourceGenerateRequest,
+    ProjectSourceRequest,
     TranslationRequest,
     TranslationResponse,
     VideoGenerationJobRequest,
@@ -78,7 +80,11 @@ from agent_graph_storage import (
     DEFAULT_PROJECT_NAME,
     DURABILITY_NOTE,
     list_project_assets,
+    list_project_sources,
     list_project_records,
+    list_source_evidence_artifacts,
+    list_source_quality_gates,
+    list_source_snapshots,
     list_recent_projects,
     list_recent_agent_messages,
     list_recent_artifacts,
@@ -89,6 +95,9 @@ from agent_graph_storage import (
     load_recent_video_job_snapshots,
     load_project,
     load_project_asset,
+    load_project_source,
+    load_source_evidence_artifact,
+    load_source_quality_gate,
     persistence_metadata,
     save_agent_message_snapshot,
     save_agent_run_snapshot,
@@ -98,7 +107,11 @@ from agent_graph_storage import (
     save_graph_report_export,
     save_graph_state_snapshot,
     save_project_asset_snapshot,
+    save_project_source_snapshot,
     save_project_snapshot,
+    save_source_evidence_artifact,
+    save_source_quality_gate,
+    save_source_snapshot,
     save_video_job_snapshot,
     project_assets_directory,
     update_project_summary,
@@ -110,6 +123,7 @@ from schemas.source_probe_contract import (
     SourceProbeTelemetry,
 )
 from source_adapters import SourceAdapterRegistry
+from source_adapters.project_sources import build_project_source
 from source_adapters.amazon_url_utils import normalize_amazon_product_url
 from video_generation.providers import (
     normalize_video_provider,
@@ -214,7 +228,18 @@ VIDEO_GENERATION_RESULT_STATUSES = {
     VIDEO_JOB_STATUS_EXTERNAL_RESULT_READY,
     VIDEO_JOB_STATUS_FAILED,
 }
-PROJECT_SOURCE_TYPES = {"pasted_reviews", "amazon", "shopify", "manual", "demo"}
+PROJECT_SOURCE_TYPES = {
+    "pasted_reviews",
+    "amazon",
+    "shopify",
+    "amazon_url",
+    "shopify_url",
+    "csv_reviews",
+    "text_review_batch",
+    "uploaded_asset",
+    "manual",
+    "demo",
+}
 PROJECT_ASSET_ROLES = {"product_image", "reference_image", "packaging_image", "other"}
 PROJECT_ASSET_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
 PROJECT_ASSET_MAX_BYTES = 8 * 1024 * 1024
@@ -304,6 +329,101 @@ def _project_context(project_id: str | None, related: dict | None = None) -> tup
     )
     return project, list_project_assets(project["project_id"], 50)
 
+
+def _source_registry_snapshot(
+    project: dict,
+    bundle: dict,
+    generation_data: dict | None = None,
+) -> dict:
+    source = bundle.get("project_source") or {}
+    artifact = bundle.get("source_evidence_artifact") or {}
+    gate = bundle.get("source_quality_gate") or {}
+    snapshot = bundle.get("source_snapshot") or {}
+    registry = build_lightweight_artifact_registry(
+        generation_data={
+            **(generation_data or {}),
+            "project_id": project["project_id"],
+            "project_source": source,
+            "source_evidence_artifact": artifact,
+            "source_quality_gate": gate,
+            "source_snapshot": snapshot,
+        },
+        project=project,
+        uploaded_assets=list_project_assets(project["project_id"], 50),
+    )
+    save_artifact_registry_snapshot(
+        registry,
+        f"source_{source.get('source_id') or uuid4().hex[:12]}",
+    )
+    return registry
+
+
+def _persist_project_source_bundle(bundle: dict) -> dict:
+    source = dict(bundle.get("project_source") or {})
+    project_id = _safe_project_id(source.get("project_id"))
+    project = _ensure_project(
+        project_id,
+        product_name=source.get("product_name", ""),
+        product_category=source.get("product_category", ""),
+        source_type=source.get("source_type", "manual"),
+    )
+    source["project_id"] = project["project_id"]
+    bundle["project_source"] = save_project_source_snapshot(source)
+    artifact = dict(bundle.get("source_evidence_artifact") or {})
+    artifact["project_id"] = project["project_id"]
+    bundle["source_evidence_artifact"] = save_source_evidence_artifact(
+        project["project_id"],
+        artifact,
+    )
+    gate = dict(bundle.get("source_quality_gate") or {})
+    gate["project_id"] = project["project_id"]
+    gate["source_id"] = source.get("source_id", "")
+    bundle["source_quality_gate"] = save_source_quality_gate(
+        project["project_id"],
+        source.get("source_id", ""),
+        gate,
+    )
+    snapshot = dict(bundle.get("source_snapshot") or {})
+    snapshot["project_id"] = project["project_id"]
+    bundle["source_snapshot"] = save_source_snapshot(project["project_id"], snapshot)
+    bundle["artifact_registry"] = _source_registry_snapshot(project, bundle)
+    return bundle
+
+
+def _build_project_source_bundle(
+    project_id: str,
+    request: ProjectSourceRequest | dict,
+    *,
+    persist: bool,
+    network_fetch: bool = True,
+) -> dict:
+    payload = (
+        request.model_dump()
+        if hasattr(request, "model_dump")
+        else dict(request or {})
+    )
+    payload["project_id"] = _safe_project_id(project_id)
+    bundle = build_project_source(payload, network_fetch=network_fetch)
+    return _persist_project_source_bundle(bundle) if persist else bundle
+
+
+def _pasted_request_source_bundle(
+    request: PastedReviewsRequest,
+    *,
+    persist: bool = True,
+) -> dict:
+    source_request = {
+        "project_id": _safe_project_id(request.project_id),
+        "source_type": "pasted_reviews",
+        "product_name": request.product_name,
+        "product_category": request.product_category or "",
+        "product_description": request.product_description or "",
+        "pasted_reviews": request.pasted_reviews,
+        "source_notes": "Created from the existing pasted customer feedback flow.",
+    }
+    bundle = build_project_source(source_request, network_fetch=False)
+    return _persist_project_source_bundle(bundle) if persist else bundle
+
 def _graph_storage_warning(container: dict, exc: Exception) -> None:
     warnings = list(container.get("persistence_warnings") or [])
     warning = f"agent_graph_storage_write_failed:{type(exc).__name__}"
@@ -321,6 +441,81 @@ def _graph_messages_for_state(run: dict | None = None, job: dict | None = None) 
         safe_job.get("project_id") or safe_run.get("project_id") or DEFAULT_PROJECT_ID
     )
     messages: list[dict] = []
+    generation_data = (
+        safe_run.get("result")
+        if isinstance(safe_run.get("result"), dict)
+        else safe_job.get("source_generation")
+        if isinstance(safe_job.get("source_generation"), dict)
+        else {}
+    )
+    source = generation_data.get("project_source") or {}
+    source_gate = generation_data.get("source_quality_gate") or {}
+    source_artifact = generation_data.get("source_evidence_artifact") or {}
+    if source:
+        messages.append(
+            build_agent_message(
+                "source_created",
+                "source_adapter_agent",
+                "source_quality_agent",
+                {
+                    "source_id": source.get("source_id", ""),
+                    "source_type": source.get("source_type", ""),
+                    "source_status": source.get("source_status", ""),
+                    "warnings": source.get("warnings") or [],
+                },
+                run_id=run_id,
+                job_id=job_id,
+                project_id=project_id,
+            )
+        )
+    if source_gate:
+        messages.append(
+            build_agent_message(
+                "quality_gate_decision",
+                "source_quality_agent",
+                "evidence_agent",
+                {
+                    "status": source_gate.get("status", ""),
+                    "evidence_readiness": source_gate.get("evidence_readiness", ""),
+                    "allows_agent_run": source_gate.get("allows_agent_run", False),
+                },
+                run_id=run_id,
+                job_id=job_id,
+                project_id=project_id,
+            )
+        )
+        if source_gate.get("status") == "fallback_required":
+            messages.append(
+                build_agent_message(
+                    "manual_fallback_required",
+                    "source_quality_agent",
+                    None,
+                    {
+                        "recommended_next_action": source_gate.get(
+                            "recommended_next_action",
+                            "",
+                        )
+                    },
+                    run_id=run_id,
+                    job_id=job_id,
+                    project_id=project_id,
+                )
+            )
+    if source_artifact:
+        messages.append(
+            build_agent_message(
+                "source_evidence_ready",
+                "evidence_agent",
+                "strategy_agent",
+                {
+                    "artifact_id": source_artifact.get("artifact_id", ""),
+                    "review_count": len(source_artifact.get("evidence_quotes") or []),
+                },
+                run_id=run_id,
+                job_id=job_id,
+                project_id=project_id,
+            )
+        )
 
     for validation in safe_run.get("validation_results") or []:
         if not isinstance(validation, dict) or validation.get("status") not in {"failed", "warning"}:
@@ -2420,7 +2615,10 @@ def _pasted_reviews_llm_evidence_packet(
 
 def _review_workspace_packet_from_pasted_request(request: PastedReviewsRequest) -> dict | None:
     packet = getattr(request, "llm_evidence_packet", None)
-    if isinstance(packet, dict) and packet.get("packet_version") == "review_workspace_v1":
+    if isinstance(packet, dict) and packet.get("packet_version") in {
+        "review_workspace_v1",
+        "source_evidence_v1",
+    }:
         return packet
     return None
 
@@ -2782,6 +2980,7 @@ def _record_graph_router_decision_for_run(run_id: str, router_decision: dict) ->
 async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsRequest) -> None:
     current_agent_id = ""
     try:
+        source_bundle = _pasted_request_source_bundle(request, persist=True)
         AGENT_RUN_STORE.start_run(run_id)
         AGENT_RUN_STORE.append_event(
             run_id,
@@ -3368,6 +3567,14 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
         _start_agent_run_stage(run_id, current_agent_id, "Finalizer Agent preparing final generated result.")
         data["project_id"] = _safe_project_id(request.project_id)
         final_data = await translate_product_visible_data(data, request.output_language or "en")
+        final_data.update(
+            {
+                "project_source": source_bundle.get("project_source") or {},
+                "source_evidence_artifact": source_bundle.get("source_evidence_artifact") or {},
+                "source_quality_gate": source_bundle.get("source_quality_gate") or {},
+                "source_snapshot": source_bundle.get("source_snapshot") or {},
+            }
+        )
         _complete_agent_run_stage(
             run_id,
             current_agent_id,
@@ -5521,6 +5728,11 @@ def _graph_report_markdown(report: dict) -> str:
     project = report.get("project") or {}
     assets = report.get("uploaded_assets") or []
     asset_lock_v2 = report.get("product_asset_lock_v2") or {}
+    source = report.get("project_source") or {}
+    source_gate = report.get("source_quality_gate") or {}
+    source_artifact = report.get("source_evidence_artifact") or {}
+    source_snapshot = report.get("source_snapshot") or {}
+    review_classifications = source_artifact.get("review_classifications") or []
     lines = [
         f"# {report.get('report_title') or 'Agent Graph Report'}",
         "",
@@ -5545,6 +5757,42 @@ def _graph_report_markdown(report: dict) -> str:
         f"- Artifact count: {(artifact_registry.get('artifact_counts') or {}).get('total', 0)}",
         f"- Uploaded assets: {len(assets)}",
         f"- Product Asset Lock v2: {asset_lock_v2.get('lock_version', 'not available')}",
+        "",
+        "## Project Source",
+        "",
+        f"- Source ID: {source.get('source_id', '')}",
+        f"- Source type: {source.get('source_type', '')}",
+        f"- Source URL: {source.get('normalized_url') or source.get('source_url', '')}",
+        f"- Source confidence: {source.get('source_confidence', 0.0)}",
+        "",
+        "## Source Adapter",
+        "",
+        f"- Source status: {source.get('source_status', '')}",
+        f"- No anti-bot bypass: {str(not bool((source.get('safety_boundaries') or {}).get('anti_bot_bypass_used', False))).lower()}",
+        "",
+        "## Source Quality Gate",
+        "",
+        f"- Gate status: {source_gate.get('status', '')}",
+        f"- Evidence readiness: {source_gate.get('evidence_readiness', '')}",
+        f"- Allows agent run: {str(source_gate.get('allows_agent_run', False)).lower()}",
+        "",
+        "## Source Evidence",
+        "",
+        f"- Artifact ID: {source_artifact.get('artifact_id', '')}",
+        f"- Evidence quotes: {len(source_artifact.get('evidence_quotes') or [])}",
+        f"- Source snapshot: {source_snapshot.get('snapshot_version', '')}",
+        "",
+        "## Review Classification",
+        "",
+        f"- Classified reviews: {len(review_classifications)}",
+        "",
+        "## Source Warnings",
+        "",
+        *(f"- {warning}" for warning in (source.get("warnings") or [])),
+        "",
+        "## Manual Fallback",
+        "",
+        f"- Required: {str((source.get('source_summary') or {}).get('manual_fallback_needed', False)).lower()}",
         "",
         "## Artifacts",
         "",
@@ -5571,6 +5819,7 @@ def _graph_report_markdown(report: dict) -> str:
         f"- external_api_called: {str(safety.get('external_api_called', False)).lower()}",
         f"- cost_incurred_by_crossgrowth: {str(safety.get('cost_incurred_by_crossgrowth', False)).lower()}",
         f"- llm_autonomous_decision_enabled: {str(safety.get('llm_autonomous_decision_enabled', False)).lower()}",
+        f"- anti_bot_bypass_used: {str(safety.get('anti_bot_bypass_used', False)).lower()}",
         "",
         "## Next Recommended Action",
         "",
@@ -5579,16 +5828,31 @@ def _graph_report_markdown(report: dict) -> str:
     return "\n".join(lines).strip()
 
 
+def _latest_project_source_context(project_id: str) -> dict:
+    sources = list_project_sources(project_id, 1)
+    artifacts = list_source_evidence_artifacts(project_id, 1)
+    gates = list_source_quality_gates(project_id, 1)
+    snapshots = list_source_snapshots(project_id, 1)
+    return {
+        "project_source": sources[0] if sources else {},
+        "source_evidence_artifact": artifacts[0] if artifacts else {},
+        "source_quality_gate": gates[0] if gates else {},
+        "source_snapshot": snapshots[0] if snapshots else {},
+    }
+
+
 def _build_run_graph_report(run: dict) -> dict:
     enriched = _refresh_agent_run_graph_os(run)
     project = _ensure_project(enriched.get("project_id"))
     assets = list_project_assets(project["project_id"], 50)
+    source_context = _latest_project_source_context(project["project_id"])
     report = {
         "report_version": "agent_graph_report_v2",
         "project_id": project["project_id"],
         "project": project,
         "project_graph_summary": project.get("graph_summary") or {},
         "uploaded_assets": assets,
+        **source_context,
         "product_asset_lock_v2": build_product_asset_lock_v2(
             project,
             enriched.get("result") or {},
@@ -5622,6 +5886,7 @@ def _build_run_graph_report(run: dict) -> dict:
             "external_api_called": False,
             "cost_incurred_by_crossgrowth": False,
             "llm_autonomous_decision_enabled": False,
+            "anti_bot_bypass_used": False,
         },
         "why_not_workflow": (
             "The run records routed edges, validation/rework loops, agent-produced artifacts, "
@@ -5638,6 +5903,7 @@ def _build_job_graph_report(job: dict) -> dict:
     enriched = _refresh_video_job_graph_os(job)
     project = _ensure_project(enriched.get("project_id"))
     assets = list_project_assets(project["project_id"], 50)
+    source_context = _latest_project_source_context(project["project_id"])
     experiments = list(enriched.get("external_video_experiments") or [])
     report = {
         "report_version": "agent_graph_report_v2",
@@ -5645,6 +5911,7 @@ def _build_job_graph_report(job: dict) -> dict:
         "project": project,
         "project_graph_summary": project.get("graph_summary") or {},
         "uploaded_assets": assets,
+        **source_context,
         "product_asset_lock_v2": enriched.get("product_asset_lock_v2") or build_product_asset_lock_v2(
             project,
             enriched.get("source_generation") or {},
@@ -5681,6 +5948,7 @@ def _build_job_graph_report(job: dict) -> dict:
             "external_api_called": False,
             "cost_incurred_by_crossgrowth": False,
             "llm_autonomous_decision_enabled": False,
+            "anti_bot_bypass_used": False,
         },
         "why_not_workflow": (
             "The job continues the graph through experiments, router-selected rework, revised artifacts, "
@@ -5731,6 +5999,10 @@ def _project_history_payload(project_id: str) -> dict:
         "recent_artifacts": list_project_records("artifacts", safe_id, 30),
         "recent_reports": list_project_records("exports", safe_id, 20),
         "recent_assets": list_project_assets(safe_id, 30),
+        "recent_sources": list_project_sources(safe_id, 30),
+        "recent_source_artifacts": list_source_evidence_artifacts(safe_id, 30),
+        "recent_source_quality_gates": list_source_quality_gates(safe_id, 30),
+        "recent_source_snapshots": list_source_snapshots(safe_id, 30),
     }
 
 
@@ -5831,6 +6103,277 @@ async def get_project_asset_history(project_id: str, limit: int = 30):
         "project_id": _safe_project_id(project_id),
         "assets": list_project_assets(project_id, max(1, min(limit, 100))),
     }
+
+
+@app.get("/api/v1/projects/{project_id}/history/sources")
+async def get_project_source_history(project_id: str, limit: int = 30):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "sources": list_project_sources(project_id, max(1, min(limit, 100))),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/history/source-artifacts")
+async def get_project_source_artifact_history(project_id: str, limit: int = 30):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "source_artifacts": list_source_evidence_artifacts(
+            project_id,
+            max(1, min(limit, 100)),
+        ),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/history/source-quality-gates")
+async def get_project_source_quality_gate_history(project_id: str, limit: int = 30):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "source_quality_gates": list_source_quality_gates(
+            project_id,
+            max(1, min(limit, 100)),
+        ),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/history/source-snapshots")
+async def get_project_source_snapshot_history(project_id: str, limit: int = 30):
+    return {
+        "status": "success",
+        "project_id": _safe_project_id(project_id),
+        "source_snapshots": list_source_snapshots(
+            project_id,
+            max(1, min(limit, 100)),
+        ),
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/sources/preview")
+async def preview_project_source(
+    project_id: str,
+    request: ProjectSourceRequest,
+    http_request: Request,
+):
+    try:
+        bundle = _build_project_source_bundle(
+            project_id,
+            request,
+            persist=False,
+        )
+    except ValueError as exc:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": str(exc),
+                "error_type": "invalid_project_source",
+                "request_id": http_request.state.request_id,
+            },
+        )
+    return {
+        "status": "success",
+        "preview": True,
+        **bundle,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/sources")
+async def create_project_source(
+    project_id: str,
+    request: ProjectSourceRequest,
+    http_request: Request,
+):
+    try:
+        bundle = _build_project_source_bundle(project_id, request, persist=True)
+    except ValueError as exc:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": str(exc),
+                "error_type": "invalid_project_source",
+                "request_id": http_request.state.request_id,
+            },
+        )
+    return {
+        "status": "success",
+        **bundle,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/sources")
+async def get_project_sources(project_id: str, limit: int = 30):
+    safe_id = _safe_project_id(project_id)
+    _ensure_project(safe_id)
+    sources = list_project_sources(safe_id, max(1, min(limit, 100)))
+    return {
+        "status": "success",
+        "project_id": safe_id,
+        "sources": sources,
+        "source_count": len(sources),
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/sources/{source_id}")
+async def get_project_source(project_id: str, source_id: str):
+    source = load_project_source(_safe_project_id(project_id), source_id)
+    if not source:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "project source not found"},
+        )
+    return {"status": "success", "project_source": source}
+
+
+@app.get("/api/v1/projects/{project_id}/sources/{source_id}/evidence")
+async def get_project_source_evidence(project_id: str, source_id: str):
+    artifact = load_source_evidence_artifact(_safe_project_id(project_id), source_id)
+    gate = load_source_quality_gate(_safe_project_id(project_id), source_id)
+    if not artifact:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "source evidence artifact not found"},
+        )
+    return {
+        "status": "success",
+        "source_evidence_artifact": artifact,
+        "source_quality_gate": gate or {},
+    }
+
+
+def _source_generation_packet(
+    source: dict,
+    artifact: dict,
+    gate: dict,
+) -> dict:
+    classifications = artifact.get("review_classifications") or []
+    categories: dict[str, list[str]] = {}
+    for item in classifications:
+        if not isinstance(item, dict):
+            continue
+        for category in item.get("categories") or ["unclear"]:
+            categories.setdefault(str(category), []).append(str(item.get("text") or ""))
+    return {
+        "packet_version": "source_evidence_v1",
+        "intended_model_use": "creative_brief_generation",
+        "product": {
+            "title": source.get("product_name", ""),
+            "category": source.get("product_category", ""),
+            "description": source.get("product_description", ""),
+            "source_type": source.get("source_type", ""),
+            "source_url": source.get("normalized_url") or source.get("source_url", ""),
+            "asin": artifact.get("asin", ""),
+            "shopify_handle": artifact.get("shopify_handle", ""),
+        },
+        "review_stats": {
+            **(source.get("source_summary") or {}),
+            "source_confidence": source.get("source_confidence", 0.0),
+            "warnings": list(source.get("warnings") or []),
+        },
+        "evidence": {
+            "quotes": list(artifact.get("evidence_quotes") or [])[:12],
+            "review_classifications": classifications[:20],
+            "pain_points": categories.get("pain_point", [])[:4],
+            "buyer_objections": categories.get("buyer_objection", [])[:4],
+            "positive_signals": categories.get("positive_signal", [])[:4],
+            "use_cases": categories.get("usage_context", [])[:4],
+            "product_signals": list(artifact.get("product_signals") or [])[:8],
+        },
+        "generation_constraints": [
+            "Use only the supplied review evidence and product fields.",
+            "Do not claim full-market statistics or verified purchase coverage beyond explicit metadata.",
+            "Do not hallucinate reviews from product descriptions or public product metadata.",
+            "Keep source warnings and manual fallback requirements visible.",
+            "Do not turn buyer objections into positive claims unless evidence explicitly resolves the concern.",
+        ],
+        "source_quality_gate": gate,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/sources/{source_id}/generate")
+async def generate_from_project_source(
+    project_id: str,
+    source_id: str,
+    request: ProjectSourceGenerateRequest,
+    http_request: Request,
+):
+    safe_id = _safe_project_id(project_id)
+    source = load_project_source(safe_id, source_id)
+    artifact = load_source_evidence_artifact(safe_id, source_id)
+    gate = load_source_quality_gate(safe_id, source_id)
+    if not source or not artifact or not gate:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": "error",
+                "error": "project source evidence is incomplete",
+                "error_type": "source_not_ready",
+                "request_id": http_request.state.request_id,
+            },
+        )
+    reviews = [
+        str(item.get("review") or "")
+        for item in artifact.get("review_snippets") or []
+        if isinstance(item, dict) and item.get("review")
+    ]
+    if not reviews or not gate.get("allows_agent_run"):
+        return JSONResponse(
+            status_code=409,
+            content={
+                "status": "fallback_required",
+                "error": gate.get("recommended_next_action")
+                or "Customer feedback is required for review-grounded generation.",
+                "error_type": "manual_reviews_required",
+                "source_quality_gate": gate,
+                "source_warnings": source.get("warnings") or [],
+                "request_id": http_request.state.request_id,
+            },
+        )
+    generation_request = PastedReviewsRequest(
+        project_id=safe_id,
+        product_name=source.get("product_name") or "Project product",
+        product_category=source.get("product_category") or "project_source",
+        product_description=source.get("product_description") or None,
+        pasted_reviews="\n".join(reviews),
+        target_platform=request.target_platform,
+        goal=request.goal,
+        output_language=request.output_language,
+        llm_evidence_packet=_source_generation_packet(source, artifact, gate),
+    )
+    generated = await generate_from_reviews(generation_request, http_request)
+    if isinstance(generated, JSONResponse):
+        return generated
+    data = generated.get("data") or {}
+    bundle = {
+        "project_source": source,
+        "source_evidence_artifact": artifact,
+        "source_quality_gate": gate,
+        "source_snapshot": next(
+            (
+                item
+                for item in list_source_snapshots(safe_id, 100)
+                if item.get("source_id") == source_id
+            ),
+            {},
+        ),
+    }
+    data.update(bundle)
+    data["artifact_registry"] = _source_registry_snapshot(
+        _ensure_project(safe_id),
+        bundle,
+        data,
+    )
+    evidence = ((data.get("insights") or {}).get("evidence") or {})
+    evidence["source_type"] = source.get("source_type", "")
+    evidence["source_url"] = source.get("normalized_url") or source.get("source_url", "")
+    evidence["data_warnings"] = list(
+        dict.fromkeys((evidence.get("data_warnings") or []) + (source.get("warnings") or []))
+    )
+    return generated
 
 
 @app.get("/api/v1/projects/{project_id}/assets")
@@ -6160,6 +6703,7 @@ async def generate_from_reviews(request: PastedReviewsRequest, http_request: Req
             source_type="pasted_reviews",
         )
         safe_request = request.model_copy(update={"project_id": project["project_id"]})
+        source_bundle = _pasted_request_source_bundle(safe_request, persist=True)
         generated = await generate_pasted_reviews_brief(safe_request, evidence_quotes)
         data = _pasted_reviews_response_data(safe_request, generated, evidence_quotes)
         data["project_id"] = project["project_id"]
@@ -6169,12 +6713,20 @@ async def generate_from_reviews(request: PastedReviewsRequest, http_request: Req
             data,
             uploaded_assets,
         )
+        data = await translate_product_visible_data(data, output_language)
+        data.update(
+            {
+                "project_source": source_bundle.get("project_source") or {},
+                "source_evidence_artifact": source_bundle.get("source_evidence_artifact") or {},
+                "source_quality_gate": source_bundle.get("source_quality_gate") or {},
+                "source_snapshot": source_bundle.get("source_snapshot") or {},
+            }
+        )
         data["artifact_registry"] = build_lightweight_artifact_registry(
             generation_data=data,
             project=project,
             uploaded_assets=uploaded_assets,
         )
-        data = await translate_product_visible_data(data, output_language)
         response = {
             "status": "success",
             "data": data,
