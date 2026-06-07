@@ -3839,3 +3839,39 @@ class GeneratedWorkspaceSyncFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("workspace_sync_after_generation_marker", script)
         self.assertIn("Workspace sync after generation", script)
+
+
+
+class PlannerButtonStateFrontendTests(unittest.TestCase):
+    def test_planner_button_state_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Planner button state",
+            "Planner recommended and ready",
+            "Planner recommended, waiting for prerequisite",
+            "Available, but not the next recommended action",
+            "Waiting on Planner prerequisite",
+            "function updatePlannerButtonStateHints(",
+            "function plannerButtonStateDefinitions(",
+            "function plannerButtonStateText(",
+            "function ensurePlannerButtonHint(",
+            "planner-button-state-hint",
+            "data-planner-button-state-hint",
+            "data-planner-action-state",
+            "data-planner-recommended",
+            "plannerButtonStateHint_start_agent_run",
+            "plannerButtonStateHint_create_video_job",
+            "plannerButtonStateHint_record_experiment",
+            "plannerButtonStateHint_submit_provider",
+            "plannerButtonStateHint_export_report",
+            "updatePlannerButtonStateHints(latestProjectWorkspace?.planner_recommendation || {})",
+            "window.setTimeout(() => updatePlannerButtonStateHints(planner), 0)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_planner_button_state_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("planner_button_state_marker", script)
+        self.assertIn("Planner button state", script)

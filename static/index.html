@@ -5084,6 +5084,17 @@
             plannerRecommendation: '规划 Agent 建议',
             plannerActionWiring: 'Planner 动作联动',
             plannerQuickAction: '去做推荐动作',
+            plannerButtonState: 'Planner 按钮状态',
+            plannerButtonRecommendedAndReady: 'Planner 推荐且可用',
+            plannerButtonRecommendedButWaiting: 'Planner 推荐，但仍在等待前置条件',
+            plannerButtonAvailableButNotNext: '可用，但不是当前最推荐动作',
+            plannerButtonWaiting: '等待 Planner 前置条件',
+            plannerStartRunUnavailableReason: 'Start Agent Run 等待来源证据就绪。',
+            plannerCreateVideoJobUnavailableReason: 'Create Video Job 等待完成的 handoff。',
+            plannerRecordExperimentUnavailableReason: 'Record Experiment 等待已有 Video Job。',
+            plannerSubmitProviderUnavailableReason: 'Provider Submit 等待 Human Approval 和安全模拟状态。',
+            plannerExportReportUnavailableReason: 'Export Report 等待 provider / result 完成。',
+            plannerButtonStateMarker: 'Planner 按钮状态',
             plannerQuickActionSafeNote: '只会滚动到推荐区域，不会提交 Provider，也不会调用外部 API。',
             plannerQuickActionMoved: '已跳转到推荐动作',
             plannerQuickActionTargetMissing: '当前页面暂时找不到推荐区域。',
@@ -5545,6 +5556,17 @@
             plannerRecommendation: 'Planner Recommendation',
             plannerActionWiring: 'Planner action wiring',
             plannerQuickAction: 'Go to recommended action',
+            plannerButtonState: 'Planner button state',
+            plannerButtonRecommendedAndReady: 'Planner recommended and ready',
+            plannerButtonRecommendedButWaiting: 'Planner recommended, waiting for prerequisite',
+            plannerButtonAvailableButNotNext: 'Available, but not the next recommended action',
+            plannerButtonWaiting: 'Waiting on Planner prerequisite',
+            plannerStartRunUnavailableReason: 'Start Agent Run waits for source evidence readiness.',
+            plannerCreateVideoJobUnavailableReason: 'Create Video Job waits for a completed handoff.',
+            plannerRecordExperimentUnavailableReason: 'Record Experiment waits for an existing Video Job.',
+            plannerSubmitProviderUnavailableReason: 'Provider Submit waits for Human Approval and safe simulation state.',
+            plannerExportReportUnavailableReason: 'Export Report waits for provider/result completion.',
+            plannerButtonStateMarker: 'Planner button state',
             plannerQuickActionSafeNote: 'Scrolls to the recommended area only. It will not submit provider jobs or call external APIs.',
             plannerQuickActionMoved: 'Moved to recommended action',
             plannerQuickActionTargetMissing: 'Could not find the recommended area on this page yet.',
@@ -10812,6 +10834,93 @@
         }
 
 
+
+        const PLANNER_BUTTON_STATE_HINT_MARKERS = [
+            'plannerButtonStateHint_start_agent_run',
+            'plannerButtonStateHint_create_video_job',
+            'plannerButtonStateHint_record_experiment',
+            'plannerButtonStateHint_submit_provider',
+            'plannerButtonStateHint_export_report'
+        ];
+
+        function plannerButtonStateDefinitions(planner = {}) {
+            const reasons = Array.isArray(planner.reasons) ? planner.reasons : [];
+            const defaultReason = reasons.length ? reasons[0] : t('plannerNoReason');
+            return [
+                {
+                    key: 'start_agent_run',
+                    selector: '#liveAgentRunBtn',
+                    allowed: Boolean(planner.can_start_agent_run),
+                    recommended: planner.next_action_type === 'start_agent_run' || planner.next_action_type === 'upload_asset',
+                    reason: planner.can_start_agent_run ? defaultReason : t('plannerStartRunUnavailableReason')
+                },
+                {
+                    key: 'create_video_job',
+                    selector: '#videoJobCreateButton',
+                    allowed: Boolean(planner.can_create_video_job),
+                    recommended: planner.next_action_type === 'create_video_job',
+                    reason: planner.can_create_video_job ? defaultReason : t('plannerCreateVideoJobUnavailableReason')
+                },
+                {
+                    key: 'record_experiment',
+                    selector: '#externalVideoExperimentsPanel button, #externalVideoExperiments button',
+                    allowed: Boolean(planner.can_record_experiment),
+                    recommended: planner.next_action_type === 'record_experiment',
+                    reason: planner.can_record_experiment ? defaultReason : t('plannerRecordExperimentUnavailableReason')
+                },
+                {
+                    key: 'submit_provider',
+                    selector: '#providerJobSubmitBtn, #submitProviderJobBtn, #providerProgressPanel button',
+                    allowed: Boolean(planner.can_submit_provider),
+                    recommended: planner.next_action_type === 'submit_provider_simulation',
+                    reason: planner.can_submit_provider ? defaultReason : t('plannerSubmitProviderUnavailableReason')
+                },
+                {
+                    key: 'export_report',
+                    selector: '#downloadMarkdownBtn, #downloadJsonBtn',
+                    allowed: planner.overall_status === 'completed',
+                    recommended: planner.next_action_type === 'export_report',
+                    reason: planner.overall_status === 'completed' ? defaultReason : t('plannerExportReportUnavailableReason')
+                }
+            ];
+        }
+
+        function plannerButtonStateText(definition) {
+            if (definition.recommended && definition.allowed) return t('plannerButtonRecommendedAndReady');
+            if (definition.recommended) return t('plannerButtonRecommendedButWaiting');
+            if (definition.allowed) return t('plannerButtonAvailableButNotNext');
+            return t('plannerButtonWaiting');
+        }
+
+        function ensurePlannerButtonHint(button, key) {
+            const hintId = `plannerButtonStateHint_${key}`;
+            let hint = document.getElementById(hintId);
+            if (!hint) {
+                hint = document.createElement('span');
+                hint.id = hintId;
+                hint.className = 'quick-use-copy-status planner-button-state-hint';
+                hint.setAttribute('data-planner-button-state-hint', key);
+                button.insertAdjacentElement('afterend', hint);
+            }
+            return hint;
+        }
+
+        function updatePlannerButtonStateHints(planner = latestProjectWorkspace?.planner_recommendation || {}) {
+            const safePlanner = planner || {};
+            plannerButtonStateDefinitions(safePlanner).forEach((definition) => {
+                const button = document.querySelector(definition.selector);
+                if (!button) return;
+                const stateText = plannerButtonStateText(definition);
+                const reason = definition.reason || t('plannerNoReason');
+                const hint = ensurePlannerButtonHint(button, definition.key);
+                hint.textContent = `${stateText}: ${reason}`;
+                button.setAttribute('data-planner-action-state', definition.allowed ? 'available' : 'waiting');
+                button.setAttribute('data-planner-recommended', definition.recommended ? 'true' : 'false');
+                button.title = `${stateText}: ${reason}`;
+            });
+        }
+
+
         function plannerQuickActionTargets(actionType) {
             const fallback = ['#plannerRecommendationPanel', '#projectWorkspacePanel'];
             const map = {
@@ -10876,6 +10985,7 @@
             const assets = workspace?.recent_assets || [];
             const summary = project.graph_summary || {};
             const planner = workspace?.planner_recommendation || {};
+            window.setTimeout(() => updatePlannerButtonStateHints(planner), 0);
             return `
                 <div class="section-block" id="projectWorkspacePanel">
                     <div class="json-key">${escapeHTML(t('projectWorkspace'))}</div>
@@ -10965,6 +11075,7 @@
                 latestProjectWorkspace = await getProjectWorkspaceSummary(latestProjectId);
                 const panel = document.getElementById('projectWorkspacePanel');
                 if (panel) panel.outerHTML = renderProjectWorkspacePanel(latestProjectWorkspace);
+                updatePlannerButtonStateHints(latestProjectWorkspace?.planner_recommendation || {});
                 const refreshedStatus = document.getElementById('projectWorkspaceStatus');
                 if (refreshedStatus) {
                     refreshedStatus.textContent = reason === 'video_job'
@@ -11028,6 +11139,7 @@
                 latestProjectId = body.project_id || latestProjectWorkspace.project?.project_id || projectId;
                 const panel = document.getElementById('projectWorkspacePanel');
                 if (panel) panel.outerHTML = renderProjectWorkspacePanel(latestProjectWorkspace);
+                updatePlannerButtonStateHints(latestProjectWorkspace?.planner_recommendation || {});
                 const refreshedStatus = document.getElementById('plannerRecommendationStatus');
                 if (refreshedStatus) refreshedStatus.textContent = t('plannerRecommendationRefreshed');
             } catch (error) {
