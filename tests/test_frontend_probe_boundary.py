@@ -3744,6 +3744,30 @@ class SupervisorPlannerFrontendProbeTests(unittest.TestCase):
                 self.assertIn(marker, html)
         self.assertNotIn("????", html)
 
+    def test_supervisor_planner_action_wiring_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Planner action wiring",
+            "Recommended action",
+            "Button reason",
+            "Button availability",
+            "Blocked / waiting",
+            "Planner says this action is available now.",
+            "Planner does not recommend this action yet.",
+            "Provider submit remains blocked until approval",
+            "function renderPlannerActionWiringPanel(",
+            "function plannerActionAvailabilityRows(",
+            "plannerActionWiringPanel",
+            "plannerRecommendedActionBanner",
+            "plannerButtonReason",
+            "plannerButtonAvailabilityList",
+            "data-planner-action-row",
+            "${renderPlannerActionWiringPanel(planner)}",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
     def test_supervisor_planner_public_smoke_markers(self):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         for marker in [

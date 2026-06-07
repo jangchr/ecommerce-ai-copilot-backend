@@ -5082,6 +5082,20 @@
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             plannerRecommendation: '规划 Agent 建议',
+            plannerActionWiring: 'Planner 动作联动',
+            plannerRecommendedAction: '推荐动作',
+            plannerButtonReason: '按钮原因',
+            plannerButtonAvailability: '按钮可用性',
+            plannerActionAvailable: '可用',
+            plannerActionBlockedOrWaiting: '阻断 / 等待',
+            plannerActionAllowed: 'Planner 判断这个动作现在可用。',
+            plannerActionNotRecommendedYet: 'Planner 暂时不建议这个动作，请先完成下一步建议。',
+            plannerProviderBlockedReason: 'Provider Submit 仍需等待人工审批和安全模拟状态。',
+            plannerReportAvailableLater: 'Provider / result 完成后，导出报告会成为推荐动作。',
+            plannerStartRunReason: 'Start Agent Run 取决于来源证据是否就绪。',
+            plannerCreateJobReason: 'Create Video Job 取决于是否已有完成的 handoff。',
+            plannerRecordExperimentReason: 'Record Experiment 取决于是否已有 Video Job。',
+            plannerSubmitProviderReason: 'Provider Submit 取决于 Human Approval 和安全模拟模式。',
             currentProjectStatus: '当前项目状态',
             nextBestAction: '下一步建议',
             nextActionType: '下一步类型',
@@ -5518,6 +5532,20 @@
         Object.assign(LANGUAGE_COPY.en, {
             projectWorkspace: 'Project Workspace',
             plannerRecommendation: 'Planner Recommendation',
+            plannerActionWiring: 'Planner action wiring',
+            plannerRecommendedAction: 'Recommended action',
+            plannerButtonReason: 'Button reason',
+            plannerButtonAvailability: 'Button availability',
+            plannerActionAvailable: 'Available',
+            plannerActionBlockedOrWaiting: 'Blocked / waiting',
+            plannerActionAllowed: 'Planner says this action is available now.',
+            plannerActionNotRecommendedYet: 'Planner does not recommend this action yet. Follow the next best action first.',
+            plannerProviderBlockedReason: 'Provider submit remains blocked until approval and safe simulation state are ready.',
+            plannerReportAvailableLater: 'Export report becomes the recommended action after provider/result completion.',
+            plannerStartRunReason: 'Start Agent Run depends on source evidence readiness.',
+            plannerCreateJobReason: 'Create Video Job depends on a completed handoff.',
+            plannerRecordExperimentReason: 'Record Experiment depends on an existing Video Job.',
+            plannerSubmitProviderReason: 'Provider Submit depends on Human Approval and safe simulation mode.',
             currentProjectStatus: 'Current project status',
             nextBestAction: 'Next best action',
             nextActionType: 'Next action type',
@@ -10659,6 +10687,7 @@
                         <div><strong>${escapeHTML(t('missingInputs'))}:</strong> ${escapeHTML(missingText)}</div>
                         <div><strong>${escapeHTML(t('sourceWarnings'))}:</strong> ${escapeHTML(warningText)}</div>
                     </div>
+                    ${renderPlannerActionWiringPanel(planner)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshPlannerRecommendationBtn" type="button" onclick="refreshProjectPlannerRecommendation()">${escapeHTML(t('refreshPlannerRecommendation'))}</button>
                         <span class="quick-use-copy-status" id="plannerRecommendationStatus"></span>
@@ -10675,6 +10704,87 @@
                         </div>
                         <div class="feedback-box">${escapeHTML(t('compactSafetyStrip'))}</div>
                         <pre>${escapeHTML(JSON.stringify(planner, null, 2))}</pre>
+                    </details>
+                </div>
+            `;
+        }
+
+
+        function plannerActionAvailabilityRows(planner = {}) {
+            const rows = [
+                {
+                    key: 'start_agent_run',
+                    label: t('startLiveAgentRun'),
+                    allowed: Boolean(planner.can_start_agent_run),
+                    reason: planner.can_start_agent_run ? t('plannerActionAllowed') : t('plannerActionNotRecommendedYet')
+                },
+                {
+                    key: 'create_video_job',
+                    label: t('videoJobCreateButton'),
+                    allowed: Boolean(planner.can_create_video_job),
+                    reason: planner.can_create_video_job ? t('plannerActionAllowed') : t('plannerActionNotRecommendedYet')
+                },
+                {
+                    key: 'record_experiment',
+                    label: t('recordExternalVideoResult'),
+                    allowed: Boolean(planner.can_record_experiment),
+                    reason: planner.can_record_experiment ? t('plannerActionAllowed') : t('plannerActionNotRecommendedYet')
+                },
+                {
+                    key: 'submit_provider',
+                    label: t('submitProviderJob'),
+                    allowed: Boolean(planner.can_submit_provider),
+                    reason: planner.can_submit_provider ? t('plannerActionAllowed') : t('plannerProviderBlockedReason')
+                },
+                {
+                    key: 'export_report',
+                    label: t('exportReport'),
+                    allowed: planner.overall_status === 'completed',
+                    reason: planner.overall_status === 'completed' ? t('plannerActionAllowed') : t('plannerReportAvailableLater')
+                }
+            ];
+
+            const recommendedType = String(planner.next_action_type || '');
+            return rows.map((row) => {
+                const isRecommended = recommendedType === row.key
+                    || (recommendedType === 'upload_asset' && row.key === 'start_agent_run')
+                    || (recommendedType === 'approve_controlled_test' && row.key === 'submit_provider_simulation')
+                    || (recommendedType === 'submit_provider_simulation' && row.key === 'submit_provider')
+                    || (recommendedType === 'export_report' && row.key === 'export_report');
+                const statusLabel = row.allowed ? t('plannerActionAvailable') : t('plannerActionBlockedOrWaiting');
+                const badge = isRecommended ? `<span class="source-badge">${escapeHTML(t('plannerRecommendedAction'))}</span>` : '';
+                return `
+                    <div class="storyboard-scene-card planner-action-row" data-planner-action-row="${escapeHTML(row.key)}">
+                        <div class="storyboard-scene-label">${escapeHTML(row.label)} ${badge}</div>
+                        <div class="storyboard-scene-value">${escapeHTML(statusLabel)} · ${escapeHTML(row.reason)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPlannerActionWiringPanel(planner = {}) {
+            const nextType = planner.next_action_type || '';
+            const reasons = Array.isArray(planner.reasons) ? planner.reasons : [];
+            const reasonText = reasons.length ? reasons[0] : t('plannerNoReason');
+            return `
+                <div class="section-block" id="plannerActionWiringPanel" data-planner-action="${escapeHTML(nextType)}">
+                    <div class="probe-header">
+                        <h4>${escapeHTML(t('plannerActionWiring'))}</h4>
+                        <span class="source-badge">${escapeHTML(plannerLabelFor('plannerAction_', nextType, nextType || t('none')))}</span>
+                    </div>
+                    <div class="feedback-box" id="plannerRecommendedActionBanner">
+                        <strong>${escapeHTML(t('plannerRecommendedAction'))}:</strong>
+                        ${escapeHTML(planner.next_best_action || '')}
+                    </div>
+                    <div class="feedback-box" id="plannerButtonReason">
+                        <strong>${escapeHTML(t('plannerButtonReason'))}:</strong>
+                        ${escapeHTML(reasonText)}
+                    </div>
+                    <details>
+                        <summary>${escapeHTML(t('plannerButtonAvailability'))}</summary>
+                        <div class="storyboard-grid" id="plannerButtonAvailabilityList">
+                            ${plannerActionAvailabilityRows(planner)}
+                        </div>
                     </details>
                 </div>
             `;

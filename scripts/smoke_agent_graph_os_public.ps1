@@ -43,6 +43,7 @@ Add-Check "project_workspace_marker" ($page.Content -match "Project Workspace")
 Add-Check "project_sources_marker" ($page.Content -match "Project Sources")
 Add-Check "source_quality_marker" ($page.Content -match "Source quality gate")
 Add-Check "planner_recommendation_marker" ($page.Content -match "Planner Recommendation")
+Add-Check "planner_action_wiring_marker" ($page.Content -match "Planner action wiring")
 Add-Check "no_garbled_marker" (-not ($page.Content -match "\?\?\?\?"))
 
 $projectCreated = Invoke-CgJson "POST" "/api/v1/projects" @{
