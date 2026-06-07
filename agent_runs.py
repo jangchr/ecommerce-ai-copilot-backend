@@ -1362,7 +1362,7 @@ def build_agent_contract_registry() -> dict[str, Any]:
             "input_contract": ["project_state", "source_quality_gate", "artifact_registry", "latest_run", "latest_job"],
             "output_contract": ["supervisor_planner_recommendation", "next_best_action", "next_agent_id"],
             "handoff_artifact_types": ["supervisor_planner_recommendation"],
-            "allowed_next_agent_ids": ["source_adapter_agent", "asset_lock_agent", "strategy_agent", "provider_job_agent", "human_approval_agent", "finalizer_agent"],
+            "allowed_next_agent_ids": ["source_adapter_agent", "source_quality_agent", "asset_lock_agent", "strategy_agent", "planner_agent", "prompt_handoff_agent", "provider_job_agent", "experiment_agent", "human_approval_agent", "finalizer_agent"],
             "failure_outputs": ["needs_source", "blocked", "waiting_for_approval"],
         },
         {
@@ -1684,6 +1684,224 @@ def build_agent_contract_handoff_message(
     message["contract_validation"] = validation
     message["handoff_valid"] = validation["valid"]
     return message
+
+
+AGENT_RUNNER_PLAN_VERSION = "agent_runner_plan_v1"
+
+
+def _runner_plan_step(
+    step_id: str,
+    step_type: str,
+    agent_id: str,
+    status: str,
+    description: str,
+    requires_user_action: bool = False,
+) -> dict[str, Any]:
+    return {
+        "step_id": str(step_id or ""),
+        "step_type": str(step_type or ""),
+        "agent_id": str(agent_id or ""),
+        "status": str(status or "pending"),
+        "description": str(description or ""),
+        "requires_user_action": bool(requires_user_action),
+    }
+
+
+def _runner_waiting_action_types() -> set[str]:
+    return {
+        "add_source",
+        "paste_reviews",
+        "review_blocker",
+        "upload_asset",
+        "record_experiment",
+        "approve_controlled_test",
+        "submit_provider_simulation",
+    }
+
+
+def build_agent_runner_plan(
+    planner_recommendation: dict[str, Any],
+    project: dict[str, Any] | None = None,
+    artifact_registry: dict[str, Any] | None = None,
+    latest_run: dict[str, Any] | None = None,
+    latest_job: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Turn one Supervisor Planner recommendation into a deterministic runner plan.
+
+    This function plans the next graph step only. It does not execute agents,
+    call external providers, or enable autonomous LLM decisions.
+    """
+
+    recommendation = planner_recommendation if isinstance(planner_recommendation, dict) else {}
+    safe_project = project if isinstance(project, dict) else {}
+    safe_registry = artifact_registry if isinstance(artifact_registry, dict) else {}
+    safe_run = latest_run if isinstance(latest_run, dict) else {}
+    safe_job = latest_job if isinstance(latest_job, dict) else {}
+
+    project_id = str(
+        recommendation.get("project_id")
+        or safe_project.get("project_id")
+        or safe_registry.get("project_id")
+        or safe_run.get("project_id")
+        or safe_job.get("project_id")
+        or "demo_project_default"
+    )
+    next_agent_id = str(recommendation.get("next_agent_id") or "").strip()
+    next_action_type = str(recommendation.get("next_action_type") or "").strip()
+    overall_status = str(recommendation.get("overall_status") or "").strip()
+    user_action_required = bool(recommendation.get("user_action_required"))
+    waiting_action = next_action_type in _runner_waiting_action_types()
+    optional_user_input = (
+        next_action_type == "upload_asset"
+        and recommendation.get("can_start_agent_run") is True
+    )
+
+    contract = get_agent_contract(next_agent_id)
+    handoff_message: dict[str, Any] = {}
+    validation: dict[str, Any] = {
+        "valid": False,
+        "reasons": ["No next_agent_id was provided."],
+        "warnings": [],
+    }
+
+    if next_agent_id:
+        handoff_message = build_agent_contract_handoff_message(
+            source_agent_id="planner_agent",
+            target_agent_id=next_agent_id,
+            payload={
+                "planner_recommendation": deepcopy(recommendation),
+                "project_id": project_id,
+                "overall_status": overall_status,
+                "next_action_type": next_action_type,
+            },
+            run_id=str(safe_run.get("run_id") or ""),
+            job_id=str(safe_job.get("job_id") or ""),
+            artifact_ids=[
+                str(value)
+                for value in (
+                    recommendation.get("artifact_ids")
+                    or safe_registry.get("artifact_ids")
+                    or []
+                )
+                if str(value or "")
+            ],
+            artifact_types=["supervisor_planner_recommendation"],
+            project_id=project_id,
+        )
+        validation = handoff_message.get("contract_validation") if isinstance(handoff_message.get("contract_validation"), dict) else validation
+
+    contract_valid = bool(validation.get("valid"))
+    blocked_reasons = list(validation.get("reasons") or [])
+    warnings = list(validation.get("warnings") or []) + list(recommendation.get("warnings") or [])
+
+    if not next_agent_id or not contract:
+        execution_status = "blocked"
+        can_execute_next_agent = False
+        if not contract:
+            blocked_reasons.append("Next agent contract was not found.")
+    elif not contract_valid:
+        execution_status = "blocked"
+        can_execute_next_agent = False
+    elif waiting_action or user_action_required:
+        execution_status = "ready_with_optional_user_input" if optional_user_input else "waiting_for_user"
+        can_execute_next_agent = False
+    else:
+        execution_status = "ready"
+        can_execute_next_agent = True
+
+    planned_steps = [
+        _runner_plan_step(
+            "inspect_project_state",
+            "state_check",
+            "planner_agent",
+            "complete",
+            "Read project state and Supervisor Planner recommendation.",
+        ),
+        _runner_plan_step(
+            "validate_contract_handoff",
+            "contract_validation",
+            "planner_agent",
+            "complete" if contract_valid else "failed",
+            "Validate the planner-to-next-agent handoff against Agent Contract Registry.",
+        ),
+    ]
+
+    if execution_status == "ready":
+        planned_steps.append(
+            _runner_plan_step(
+                "execute_next_agent",
+                "agent_execution",
+                next_agent_id,
+                "pending",
+                "Runner may execute the next deterministic agent step.",
+            )
+        )
+    elif execution_status in {"waiting_for_user", "ready_with_optional_user_input"}:
+        planned_steps.append(
+            _runner_plan_step(
+                "wait_for_user_input",
+                "user_gate",
+                next_agent_id,
+                "waiting_for_user",
+                "User action or manual confirmation is needed before this graph path continues.",
+                requires_user_action=True,
+            )
+        )
+    else:
+        planned_steps.append(
+            _runner_plan_step(
+                "block_next_agent",
+                "blocked",
+                next_agent_id,
+                "failed",
+                "Runner cannot execute the next agent until contract or project-state issues are fixed.",
+            )
+        )
+
+    return {
+        "runner_plan_version": AGENT_RUNNER_PLAN_VERSION,
+        "project_id": project_id,
+        "registry_version": AGENT_CONTRACT_REGISTRY_VERSION,
+        "graph_version": GRAPH_VERSION,
+        "execution_mode": GRAPH_EXECUTION_MODE,
+        "autonomy_level": AUTONOMY_LEVEL,
+        "overall_status": overall_status,
+        "next_action_type": next_action_type,
+        "next_agent_id": next_agent_id,
+        "execution_status": execution_status,
+        "can_execute_next_agent": can_execute_next_agent,
+        "requires_user_action": execution_status == "waiting_for_user",
+        "optional_user_input": optional_user_input,
+        "blocked_reasons": list(dict.fromkeys(str(item) for item in blocked_reasons if str(item or ""))),
+        "warnings": list(dict.fromkeys(str(item) for item in warnings if str(item or ""))),
+        "next_agent_contract": deepcopy(contract),
+        "contract_validation": deepcopy(validation),
+        "handoff_message": deepcopy(handoff_message),
+        "planned_steps": planned_steps,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_plan_summary(plan: dict[str, Any]) -> dict[str, Any]:
+    safe_plan = plan if isinstance(plan, dict) else {}
+    steps = safe_plan.get("planned_steps") if isinstance(safe_plan.get("planned_steps"), list) else []
+    return {
+        "summary_version": "agent_runner_plan_summary_v1",
+        "runner_plan_version": str(safe_plan.get("runner_plan_version") or AGENT_RUNNER_PLAN_VERSION),
+        "project_id": str(safe_plan.get("project_id") or "demo_project_default"),
+        "execution_status": str(safe_plan.get("execution_status") or "blocked"),
+        "next_agent_id": str(safe_plan.get("next_agent_id") or ""),
+        "next_action_type": str(safe_plan.get("next_action_type") or ""),
+        "can_execute_next_agent": bool(safe_plan.get("can_execute_next_agent")),
+        "requires_user_action": bool(safe_plan.get("requires_user_action")),
+        "optional_user_input": bool(safe_plan.get("optional_user_input")),
+        "planned_step_count": len(steps),
+        "blocked_reason_count": len(safe_plan.get("blocked_reasons") or []),
+        "warning_count": len(safe_plan.get("warnings") or []),
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 
 
 def build_product_asset_lock_v2(

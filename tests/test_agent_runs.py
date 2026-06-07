@@ -1029,3 +1029,133 @@ class AgentContractRegistryTests(unittest.TestCase):
         self.assertEqual(message["project_id"], "project_contract_demo")
         self.assertFalse(message["safety_boundaries"]["external_api_called"])
 
+
+class AgentRunnerPlanBuilderTests(unittest.TestCase):
+    def test_agent_runner_plan_ready_for_agent_run(self):
+        from agent_runs import (
+            build_agent_runner_plan,
+            build_agent_runner_plan_summary,
+            build_supervisor_planner_recommendation,
+        )
+
+        recommendation = build_supervisor_planner_recommendation(
+            project={"project_id": "project_runner_ready"},
+            source={
+                "project_id": "project_runner_ready",
+                "source_type": "pasted_reviews",
+                "source_summary": {"review_count": 3},
+                "source_confidence": 0.9,
+            },
+            source_quality_gate={
+                "project_id": "project_runner_ready",
+                "status": "passed",
+                "allows_agent_run": True,
+            },
+            source_evidence_artifact={
+                "project_id": "project_runner_ready",
+                "evidence_quotes": ["Review-backed evidence."],
+                "source_confidence": 0.9,
+            },
+            artifact_registry={
+                "project_id": "project_runner_ready",
+                "registry_version": "artifact_registry_v2",
+                "artifacts": [
+                    {
+                        "artifact_id": "asset_runner_ready",
+                        "artifact_type": "uploaded_product_asset",
+                    }
+                ],
+            },
+        )
+        self.assertEqual(recommendation["overall_status"], "ready_for_agent_run")
+
+        plan = build_agent_runner_plan(
+            recommendation,
+            project={"project_id": "project_runner_ready"},
+        )
+        summary = build_agent_runner_plan_summary(plan)
+
+        self.assertEqual(plan["runner_plan_version"], "agent_runner_plan_v1")
+        self.assertEqual(plan["execution_status"], "ready")
+        self.assertTrue(plan["can_execute_next_agent"], plan)
+        self.assertFalse(plan["requires_user_action"])
+        self.assertEqual(plan["next_agent_id"], "planner_agent")
+        self.assertTrue(plan["handoff_message"]["handoff_valid"], plan["handoff_message"])
+        self.assertEqual(plan["contract_validation"]["source_agent_id"], "planner_agent")
+        self.assertEqual(plan["contract_validation"]["target_agent_id"], "planner_agent")
+        self.assertEqual(plan["planned_steps"][-1]["step_id"], "execute_next_agent")
+        self.assertEqual(summary["summary_version"], "agent_runner_plan_summary_v1")
+        self.assertTrue(summary["can_execute_next_agent"])
+        self.assertFalse(summary["safety_boundaries"]["external_api_called"])
+
+    def test_agent_runner_plan_waits_for_user_when_source_missing(self):
+        from agent_runs import build_agent_runner_plan, build_supervisor_planner_recommendation
+
+        recommendation = build_supervisor_planner_recommendation(
+            project={"project_id": "project_runner_needs_source"}
+        )
+        self.assertEqual(recommendation["overall_status"], "needs_source")
+        self.assertEqual(recommendation["next_agent_id"], "source_adapter_agent")
+
+        plan = build_agent_runner_plan(
+            recommendation,
+            project={"project_id": "project_runner_needs_source"},
+        )
+
+        self.assertEqual(plan["execution_status"], "waiting_for_user")
+        self.assertFalse(plan["can_execute_next_agent"])
+        self.assertTrue(plan["requires_user_action"])
+        self.assertEqual(plan["planned_steps"][-1]["step_id"], "wait_for_user_input")
+        self.assertEqual(plan["planned_steps"][-1]["status"], "waiting_for_user")
+        self.assertTrue(plan["handoff_message"]["handoff_valid"], plan["handoff_message"])
+
+    def test_agent_runner_plan_supports_source_quality_planner_route(self):
+        from agent_runs import build_agent_runner_plan, build_supervisor_planner_recommendation
+
+        recommendation = build_supervisor_planner_recommendation(
+            project={"project_id": "project_runner_reviews"},
+            source={
+                "project_id": "project_runner_reviews",
+                "source_type": "amazon_url",
+                "source_summary": {"review_count": 0},
+                "warnings": ["manual_reviews_recommended"],
+            },
+            source_quality_gate={
+                "project_id": "project_runner_reviews",
+                "status": "warning",
+                "allows_agent_run": False,
+                "warnings": ["manual_reviews_recommended"],
+            },
+        )
+        self.assertEqual(recommendation["overall_status"], "needs_reviews")
+        self.assertEqual(recommendation["next_agent_id"], "source_quality_agent")
+
+        plan = build_agent_runner_plan(
+            recommendation,
+            project={"project_id": "project_runner_reviews"},
+        )
+
+        self.assertEqual(plan["execution_status"], "waiting_for_user")
+        self.assertFalse(plan["can_execute_next_agent"])
+        self.assertTrue(plan["handoff_message"]["handoff_valid"], plan["handoff_message"])
+        self.assertEqual(plan["contract_validation"]["target_stage"], "source_quality")
+
+    def test_agent_runner_plan_blocks_unknown_next_agent(self):
+        from agent_runs import build_agent_runner_plan
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_runner_unknown",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+
+        self.assertEqual(plan["execution_status"], "blocked")
+        self.assertFalse(plan["can_execute_next_agent"])
+        self.assertIn("Next agent contract was not found.", plan["blocked_reasons"])
+        self.assertEqual(plan["planned_steps"][-1]["step_id"], "block_next_agent")
+        self.assertFalse(plan["safety_boundaries"]["external_api_called"])
+
