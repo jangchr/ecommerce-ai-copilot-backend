@@ -1310,6 +1310,307 @@ def _graph_safety_boundaries() -> dict[str, bool]:
     }
 
 
+AGENT_CONTRACT_REGISTRY_VERSION = "agent_contract_registry_v1"
+
+
+def build_agent_contract_registry() -> dict[str, Any]:
+    """Build deterministic role/input/output contracts for graph agents.
+
+    The registry is intentionally rule-driven. It describes how agents are
+    allowed to hand off work without enabling autonomous LLM decisions.
+    """
+
+    contracts = [
+        {
+            "agent_id": "source_adapter_agent",
+            "display_name": "Source Adapter Agent",
+            "stage": "source_intake",
+            "role": "Normalize product links, pasted reviews, or user-provided source inputs into project source records.",
+            "input_contract": ["project_id", "source_type", "raw_source_payload"],
+            "output_contract": ["project_source", "source_summary", "source_confidence"],
+            "handoff_artifact_types": ["project_source", "source_snapshot"],
+            "allowed_next_agent_ids": ["source_quality_agent", "planner_agent"],
+            "failure_outputs": ["low_source_confidence", "source_unavailable", "source_parse_failed"],
+        },
+        {
+            "agent_id": "source_quality_agent",
+            "display_name": "Source Quality Agent",
+            "stage": "source_quality",
+            "role": "Check whether source evidence is strong enough for grounded generation.",
+            "input_contract": ["project_source", "source_summary", "source_confidence"],
+            "output_contract": ["source_quality_gate", "source_evidence_artifact"],
+            "handoff_artifact_types": ["source_quality_gate", "source_evidence_artifact"],
+            "allowed_next_agent_ids": ["planner_agent", "evidence_agent", "source_adapter_agent"],
+            "failure_outputs": ["needs_reviews", "source_quality_gate_blocked", "manual_reviews_recommended"],
+        },
+        {
+            "agent_id": "evidence_agent",
+            "display_name": "Evidence Agent",
+            "stage": "evidence",
+            "role": "Extract review-backed evidence, objections, user language, and source-grounded signals.",
+            "input_contract": ["source_evidence_artifact", "project_source"],
+            "output_contract": ["evidence_quotes", "customer_feedback_signals", "positive_signals"],
+            "handoff_artifact_types": ["evidence_brief", "source_evidence_artifact"],
+            "allowed_next_agent_ids": ["strategy_agent", "planner_agent"],
+            "failure_outputs": ["no_evidence_alignment", "insufficient_evidence_quotes"],
+        },
+        {
+            "agent_id": "planner_agent",
+            "display_name": "Supervisor Planner Agent",
+            "stage": "planning",
+            "role": "Recommend the next best project action from source, run, job, artifact, approval, and provider state.",
+            "input_contract": ["project_state", "source_quality_gate", "artifact_registry", "latest_run", "latest_job"],
+            "output_contract": ["supervisor_planner_recommendation", "next_best_action", "next_agent_id"],
+            "handoff_artifact_types": ["supervisor_planner_recommendation"],
+            "allowed_next_agent_ids": ["source_adapter_agent", "asset_lock_agent", "strategy_agent", "provider_job_agent", "human_approval_agent", "finalizer_agent"],
+            "failure_outputs": ["needs_source", "blocked", "waiting_for_approval"],
+        },
+        {
+            "agent_id": "asset_lock_agent",
+            "display_name": "Asset Lock Agent",
+            "stage": "identity_lock",
+            "role": "Lock product identity, uploaded asset references, and visual consistency constraints.",
+            "input_contract": ["project", "generation_data", "uploaded_assets"],
+            "output_contract": ["product_asset_lock_v2", "identity_constraints"],
+            "handoff_artifact_types": ["product_asset_lock_v2", "uploaded_product_asset"],
+            "allowed_next_agent_ids": ["keyframe_agent", "storyboard_agent", "planner_agent"],
+            "failure_outputs": ["missing_product_identity", "asset_recommended"],
+        },
+        {
+            "agent_id": "strategy_agent",
+            "display_name": "Creative Strategy Agent",
+            "stage": "creative_strategy",
+            "role": "Convert source evidence into hook strategy, audience angle, CTA logic, and buyer-objection framing.",
+            "input_contract": ["evidence_brief", "source_evidence_artifact", "project_context"],
+            "output_contract": ["creative_strategy", "hook_candidates", "cta_logic"],
+            "handoff_artifact_types": ["creative_strategy"],
+            "allowed_next_agent_ids": ["storyboard_agent", "risk_agent"],
+            "failure_outputs": ["weak_hook", "no_evidence_alignment", "reward_hacking"],
+        },
+        {
+            "agent_id": "storyboard_agent",
+            "display_name": "Storyboard Agent",
+            "stage": "storyboard",
+            "role": "Generate or revise scene sequence, narration, overlays, and evidence-linked visual direction.",
+            "input_contract": ["creative_strategy", "evidence_brief", "product_asset_lock_v2"],
+            "output_contract": ["storyboard", "video_generation_packet"],
+            "handoff_artifact_types": ["storyboard", "video_generation_packet"],
+            "allowed_next_agent_ids": ["risk_agent", "keyframe_agent", "prompt_handoff_agent"],
+            "failure_outputs": ["weak_visual", "risky_storyboard", "no_evidence_alignment"],
+        },
+        {
+            "agent_id": "risk_agent",
+            "display_name": "Risk Agent",
+            "stage": "quality_safety",
+            "role": "Detect unsupported claims, risky wording, and evidence-safety issues before handoff.",
+            "input_contract": ["storyboard", "video_generation_packet", "evaluation"],
+            "output_contract": ["risk_validation", "storyboard_rework_request"],
+            "handoff_artifact_types": ["risk_validation", "storyboard_rework_summary"],
+            "allowed_next_agent_ids": ["storyboard_agent", "graph_router_agent", "finalizer_agent"],
+            "failure_outputs": ["reward_hacking", "unsupported_claim", "high_risk"],
+        },
+        {
+            "agent_id": "keyframe_agent",
+            "display_name": "Keyframe Agent",
+            "stage": "visual_planning",
+            "role": "Turn storyboard scenes and asset locks into keyframe-level visual constraints.",
+            "input_contract": ["storyboard", "product_asset_lock_v2", "experiment_feedback"],
+            "output_contract": ["keyframe_plan", "revised_keyframe_plan"],
+            "handoff_artifact_types": ["keyframe_plan", "revised_keyframe_plan"],
+            "allowed_next_agent_ids": ["prompt_handoff_agent", "asset_lock_agent", "graph_router_agent"],
+            "failure_outputs": ["product_consistency", "weak_visual", "missing_reference"],
+        },
+        {
+            "agent_id": "prompt_handoff_agent",
+            "display_name": "Prompt Handoff Agent",
+            "stage": "external_handoff",
+            "role": "Package keyframes, storyboard, and constraints into copy-ready external video tool prompts.",
+            "input_contract": ["keyframe_plan", "storyboard", "product_asset_lock_v2"],
+            "output_contract": ["external_video_tool_handoff", "revised_external_video_handoff"],
+            "handoff_artifact_types": ["external_video_tool_handoff", "revised_external_video_handoff"],
+            "allowed_next_agent_ids": ["provider_job_agent", "experiment_agent", "human_approval_agent"],
+            "failure_outputs": ["prompt_handoff_incomplete", "visual_quality"],
+        },
+        {
+            "agent_id": "provider_job_agent",
+            "display_name": "Provider Job Agent",
+            "stage": "provider_or_manual_test",
+            "role": "Create controlled manual/provider video jobs after handoff and approval checks.",
+            "input_contract": ["external_video_tool_handoff", "human_approval_gate"],
+            "output_contract": ["video_job", "provider_runtime"],
+            "handoff_artifact_types": ["video_job", "provider_runtime"],
+            "allowed_next_agent_ids": ["human_approval_agent", "experiment_agent", "finalizer_agent"],
+            "failure_outputs": ["waiting_for_approval", "provider_blocked", "provider_result_missing"],
+        },
+        {
+            "agent_id": "human_approval_agent",
+            "display_name": "Human Approval Agent",
+            "stage": "approval_gate",
+            "role": "Represent explicit human approval before provider submit, paid generation, or scale-up.",
+            "input_contract": ["controlled_provider_checklist", "experiment_comparison_decision_gate"],
+            "output_contract": ["human_approval_gate", "approval_status"],
+            "handoff_artifact_types": ["human_approval_gate"],
+            "allowed_next_agent_ids": ["provider_job_agent", "planner_agent", "finalizer_agent"],
+            "failure_outputs": ["pending_approval", "approval_rejected", "changes_requested"],
+        },
+        {
+            "agent_id": "experiment_agent",
+            "display_name": "Experiment Agent",
+            "stage": "feedback_loop",
+            "role": "Record external/manual experiment results and decide whether graph rework is needed.",
+            "input_contract": ["video_job", "external_result", "score_snapshot"],
+            "output_contract": ["experiment_feedback_decision", "second_experiment_comparison"],
+            "handoff_artifact_types": ["experiment_feedback_decision", "second_experiment_comparison"],
+            "allowed_next_agent_ids": ["graph_router_agent", "keyframe_agent", "prompt_handoff_agent", "human_approval_agent"],
+            "failure_outputs": ["product_consistency", "storyboard_following", "ad_readiness", "visual_quality", "cost_value"],
+        },
+        {
+            "agent_id": "graph_router_agent",
+            "display_name": "Graph Router Agent",
+            "stage": "routing",
+            "role": "Select the next deterministic graph route after risk validation, feedback, or comparison gates.",
+            "input_contract": ["route_context", "latest_job", "latest_run"],
+            "output_contract": ["graph_router_decision", "selected_edge"],
+            "handoff_artifact_types": ["graph_router_decision"],
+            "allowed_next_agent_ids": ["storyboard_agent", "keyframe_agent", "prompt_handoff_agent", "provider_job_agent", "human_approval_agent", "finalizer_agent"],
+            "failure_outputs": ["no_supported_route", "manual_review_required"],
+        },
+        {
+            "agent_id": "cost_agent",
+            "display_name": "Cost Agent",
+            "stage": "cost_review",
+            "role": "Review cost/value feedback and prefer safe manual or low-cost routes.",
+            "input_contract": ["experiment_feedback_decision", "score_snapshot"],
+            "output_contract": ["cost_review", "route_cost_recommendation"],
+            "handoff_artifact_types": ["cost_review"],
+            "allowed_next_agent_ids": ["route_selector_agent", "planner_agent"],
+            "failure_outputs": ["poor_cost_value", "manual_route_recommended"],
+        },
+        {
+            "agent_id": "route_selector_agent",
+            "display_name": "Route Selector Agent",
+            "stage": "route_selection",
+            "role": "Choose between rework, manual test, provider test, or stop routes based on deterministic gates.",
+            "input_contract": ["cost_review", "planner_recommendation", "graph_router_decision"],
+            "output_contract": ["route_selection_decision"],
+            "handoff_artifact_types": ["route_selection_decision"],
+            "allowed_next_agent_ids": ["planner_agent", "provider_job_agent", "finalizer_agent"],
+            "failure_outputs": ["manual_review_required", "stop_or_revise_reference"],
+        },
+        {
+            "agent_id": "finalizer_agent",
+            "display_name": "Finalizer Agent",
+            "stage": "final_report",
+            "role": "Summarize graph state, export reports, and close the current workflow iteration.",
+            "input_contract": ["artifact_registry", "graph_state_snapshot", "project_history"],
+            "output_contract": ["run_report", "job_markdown_report", "project_workspace_export"],
+            "handoff_artifact_types": ["run_report", "job_markdown_report", "project_workspace_export"],
+            "allowed_next_agent_ids": ["planner_agent"],
+            "failure_outputs": ["report_export_failed"],
+        },
+    ]
+
+    contract_by_agent_id = {item["agent_id"]: deepcopy(item) for item in contracts}
+    edge_catalog = []
+    for item in contracts:
+        for next_agent_id in item["allowed_next_agent_ids"]:
+            edge_catalog.append(
+                {
+                    "from_agent_id": item["agent_id"],
+                    "to_agent_id": next_agent_id,
+                    "edge_id": f"{item['agent_id']}__to__{next_agent_id}",
+                    "edge_type": "allowed_handoff",
+                }
+            )
+
+    return {
+        "registry_version": AGENT_CONTRACT_REGISTRY_VERSION,
+        "graph_version": GRAPH_VERSION,
+        "execution_mode": GRAPH_EXECUTION_MODE,
+        "autonomy_level": AUTONOMY_LEVEL,
+        "contract_count": len(contracts),
+        "edge_count": len(edge_catalog),
+        "contracts": contracts,
+        "contract_by_agent_id": contract_by_agent_id,
+        "edge_catalog": edge_catalog,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def get_agent_contract(agent_id: str, registry: dict[str, Any] | None = None) -> dict[str, Any]:
+    safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
+    by_id = safe_registry.get("contract_by_agent_id") if isinstance(safe_registry.get("contract_by_agent_id"), dict) else {}
+    return deepcopy(by_id.get(str(agent_id or ""), {}))
+
+
+def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
+    safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
+    contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
+    stages: dict[str, int] = {}
+    for contract in contracts:
+        if not isinstance(contract, dict):
+            continue
+        stage = str(contract.get("stage") or "unknown")
+        stages[stage] = stages.get(stage, 0) + 1
+
+    return {
+        "summary_version": "agent_contract_summary_v1",
+        "registry_version": str(safe_registry.get("registry_version") or AGENT_CONTRACT_REGISTRY_VERSION),
+        "agent_count": len(contracts),
+        "edge_count": int(safe_registry.get("edge_count") or 0),
+        "stages": stages,
+        "autonomy_level": str(safe_registry.get("autonomy_level") or AUTONOMY_LEVEL),
+        "execution_mode": str(safe_registry.get("execution_mode") or GRAPH_EXECUTION_MODE),
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def validate_agent_contract_handoff(
+    source_agent_id: str,
+    target_agent_id: str,
+    artifact_types: list[str] | None = None,
+    registry: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
+    source = get_agent_contract(source_agent_id, safe_registry)
+    target = get_agent_contract(target_agent_id, safe_registry)
+    safe_artifacts = [str(value) for value in (artifact_types or []) if str(value or "")]
+    reasons: list[str] = []
+    warnings: list[str] = []
+
+    if not source:
+        reasons.append("Unknown source agent contract.")
+    if not target:
+        reasons.append("Unknown target agent contract.")
+
+    allowed_next = list(source.get("allowed_next_agent_ids") or []) if source else []
+    if source and target and str(target_agent_id or "") not in allowed_next:
+        reasons.append("Target agent is not in source agent allowed_next_agent_ids.")
+
+    source_outputs = set(str(value) for value in (source.get("handoff_artifact_types") or []))
+    if safe_artifacts:
+        unsupported = [value for value in safe_artifacts if value not in source_outputs]
+        if unsupported:
+            warnings.append(f"Artifact types are not declared by source contract: {', '.join(unsupported)}.")
+
+    return {
+        "validation_version": "agent_contract_handoff_validation_v1",
+        "registry_version": str(safe_registry.get("registry_version") or AGENT_CONTRACT_REGISTRY_VERSION),
+        "valid": not reasons,
+        "source_agent_id": str(source_agent_id or ""),
+        "target_agent_id": str(target_agent_id or ""),
+        "artifact_types": safe_artifacts,
+        "allowed_next_agent_ids": allowed_next,
+        "reasons": reasons,
+        "warnings": warnings,
+        "source_stage": str(source.get("stage") or ""),
+        "target_stage": str(target.get("stage") or ""),
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_agent_message(
     message_type: str,
     source_agent_id: str,
@@ -1347,6 +1648,42 @@ def build_agent_message(
         "created_at": utc_now_iso(),
         "safety_boundaries": _graph_safety_boundaries(),
     }
+
+
+
+def build_agent_contract_handoff_message(
+    source_agent_id: str,
+    target_agent_id: str,
+    payload: dict[str, Any],
+    run_id: str | None = None,
+    job_id: str | None = None,
+    artifact_ids: list[str] | None = None,
+    artifact_types: list[str] | None = None,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    """Build a structured handoff message with contract validation metadata."""
+
+    validation = validate_agent_contract_handoff(
+        source_agent_id=source_agent_id,
+        target_agent_id=target_agent_id,
+        artifact_types=artifact_types,
+    )
+    safe_payload = deepcopy(payload) if isinstance(payload, dict) else {}
+    safe_payload["contract_validation"] = validation
+    message = build_agent_message(
+        message_type="contract_handoff",
+        source_agent_id=source_agent_id,
+        target_agent_id=target_agent_id,
+        payload=safe_payload,
+        run_id=run_id,
+        job_id=job_id,
+        artifact_ids=artifact_ids,
+        project_id=project_id,
+    )
+    message["contract_registry_version"] = AGENT_CONTRACT_REGISTRY_VERSION
+    message["contract_validation"] = validation
+    message["handoff_valid"] = validation["valid"]
+    return message
 
 
 def build_product_asset_lock_v2(

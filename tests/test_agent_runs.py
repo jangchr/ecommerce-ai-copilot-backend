@@ -949,3 +949,83 @@ class AgentRunsEndpointTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AgentContractRegistryTests(unittest.TestCase):
+    def test_agent_contract_registry_contains_core_agents(self):
+        from agent_runs import build_agent_contract_registry, build_agent_contract_summary
+
+        registry = build_agent_contract_registry()
+        summary = build_agent_contract_summary(registry)
+        self.assertEqual(registry["registry_version"], "agent_contract_registry_v1")
+        self.assertEqual(registry["graph_version"], "agent_graph_runtime_v1")
+        self.assertEqual(registry["execution_mode"], "rule_driven_agent_graph")
+        self.assertEqual(registry["autonomy_level"], "rule_driven_v1")
+        self.assertGreaterEqual(registry["contract_count"], 12)
+        self.assertGreaterEqual(registry["edge_count"], registry["contract_count"])
+        self.assertIn("source_adapter_agent", registry["contract_by_agent_id"])
+        self.assertIn("planner_agent", registry["contract_by_agent_id"])
+        self.assertIn("storyboard_agent", registry["contract_by_agent_id"])
+        self.assertIn("risk_agent", registry["contract_by_agent_id"])
+        self.assertIn("graph_router_agent", registry["contract_by_agent_id"])
+        self.assertIn("finalizer_agent", registry["contract_by_agent_id"])
+        self.assertEqual(summary["summary_version"], "agent_contract_summary_v1")
+        self.assertGreaterEqual(summary["agent_count"], 12)
+        self.assertFalse(summary["safety_boundaries"]["external_api_called"])
+        self.assertFalse(summary["safety_boundaries"]["cost_incurred_by_crossgrowth"])
+        self.assertFalse(summary["safety_boundaries"]["llm_autonomous_decision_enabled"])
+
+    def test_agent_contract_handoff_validation_allows_known_edges(self):
+        from agent_runs import validate_agent_contract_handoff
+
+        validation = validate_agent_contract_handoff(
+            "source_adapter_agent",
+            "source_quality_agent",
+            artifact_types=["project_source", "source_snapshot"],
+        )
+        self.assertTrue(validation["valid"], validation)
+        self.assertEqual(validation["validation_version"], "agent_contract_handoff_validation_v1")
+        self.assertEqual(validation["source_stage"], "source_intake")
+        self.assertEqual(validation["target_stage"], "source_quality")
+        self.assertEqual(validation["reasons"], [])
+        self.assertFalse(validation["safety_boundaries"]["external_api_called"])
+
+    def test_agent_contract_handoff_validation_blocks_unknown_or_disallowed_edges(self):
+        from agent_runs import validate_agent_contract_handoff
+
+        unknown = validate_agent_contract_handoff("missing_agent", "planner_agent")
+        self.assertFalse(unknown["valid"])
+        self.assertIn("Unknown source agent contract.", unknown["reasons"])
+
+        disallowed = validate_agent_contract_handoff(
+            "source_adapter_agent",
+            "provider_job_agent",
+            artifact_types=["provider_runtime"],
+        )
+        self.assertFalse(disallowed["valid"])
+        self.assertIn("Target agent is not in source agent allowed_next_agent_ids.", disallowed["reasons"])
+        self.assertTrue(disallowed["warnings"])
+
+    def test_agent_contract_handoff_message_embeds_validation(self):
+        from agent_runs import build_agent_contract_handoff_message
+
+        message = build_agent_contract_handoff_message(
+            source_agent_id="planner_agent",
+            target_agent_id="asset_lock_agent",
+            payload={"next_best_action": "Upload a product image."},
+            run_id="run_contract_demo",
+            job_id="job_contract_demo",
+            artifact_ids=["artifact_contract_demo"],
+            artifact_types=["supervisor_planner_recommendation"],
+            project_id="project_contract_demo",
+        )
+
+        self.assertEqual(message["message_type"], "contract_handoff")
+        self.assertEqual(message["contract_registry_version"], "agent_contract_registry_v1")
+        self.assertTrue(message["handoff_valid"], message)
+        self.assertEqual(message["contract_validation"]["source_agent_id"], "planner_agent")
+        self.assertEqual(message["contract_validation"]["target_agent_id"], "asset_lock_agent")
+        self.assertEqual(message["payload"]["contract_validation"]["valid"], True)
+        self.assertEqual(message["project_id"], "project_contract_demo")
+        self.assertFalse(message["safety_boundaries"]["external_api_called"])
+
