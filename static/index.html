@@ -11204,19 +11204,140 @@
         }
 
 
+
+        const PROJECT_WORKSPACE_REPORT_READER_BUNDLE_MARKER = 'Project Workspace report reader bundle';
+
+        function projectWorkspaceHistoryReadableJson(value = {}) {
+            try {
+                return JSON.stringify(value || {}, null, 2);
+            } catch (error) {
+                return String(value || '');
+            }
+        }
+
+        function projectWorkspaceReportPreviewText(item = {}) {
+            const report = item.report || {};
+            const summary = report.summary || {};
+            const markdown = item.markdown_report || report.markdown_report || '';
+            const lines = [
+                t('projectReportReaderTitle'),
+                item.report_id ? `${t('projectHistoryReportId')}: ${item.report_id}` : '',
+                item.export_id ? `${t('projectHistoryActionId')}: ${item.export_id}` : '',
+                item.export_type ? `${t('projectHistoryReportType')}: ${item.export_type}` : '',
+                item.format ? `${t('projectHistoryReportFormat')}: ${item.format}` : '',
+                summary.run_id ? `${t('projectHistoryRunId')}: ${summary.run_id}` : '',
+                summary.job_id ? `${t('projectHistoryActionJob')}: ${summary.job_id}` : '',
+                markdown ? `${t('projectReportMarkdownPreview')}:\n${String(markdown).slice(0, 900)}` : '',
+                `${t('projectHistoryActionHint')}: ${projectWorkspaceHistoryActionHint(item, 'reports')}`
+            ];
+            return lines.filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceArtifactPreviewText(item = {}) {
+            const metadata = item.metadata || item.payload || item.artifact || {};
+            const lines = [
+                t('projectArtifactReaderTitle'),
+                item.artifact_id ? `${t('projectHistoryArtifactId')}: ${item.artifact_id}` : '',
+                item.artifact_type ? `${t('projectHistoryArtifactType')}: ${item.artifact_type}` : '',
+                item.source_id ? `${t('projectHistorySourceId')}: ${item.source_id}` : '',
+                item.run_id ? `${t('projectHistoryRunId')}: ${item.run_id}` : '',
+                `${t('projectArtifactMetadataPreview')}:\n${projectWorkspaceHistoryReadableJson(metadata).slice(0, 900)}`,
+                `${t('projectHistoryActionHint')}: ${projectWorkspaceHistoryActionHint(item, 'artifacts')}`
+            ];
+            return lines.filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceJobPreviewText(item = {}) {
+            const lines = [
+                t('projectJobReaderTitle'),
+                item.job_id ? `${t('projectHistoryActionId')}: ${item.job_id}` : '',
+                item.status ? `${t('projectHistoryJobStatus')}: ${item.status}` : '',
+                item.approval_status ? `${t('projectHistoryApprovalStatus')}: ${item.approval_status}` : '',
+                item.provider_status ? `${t('projectHistoryProviderStatus')}: ${item.provider_status}` : '',
+                item.result_url ? `${t('projectHistoryJobHasResult')}: ${item.result_url}` : '',
+                `${t('projectHistoryActionHint')}: ${projectWorkspaceHistoryActionHint(item, 'jobs')}`
+            ];
+            return lines.filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceRunPreviewText(item = {}) {
+            const lines = [
+                t('projectRunReaderTitle'),
+                item.run_id ? `${t('projectHistoryRunId')}: ${item.run_id}` : '',
+                item.project_id ? `${t('projectId')}: ${item.project_id}` : '',
+                item.source_id ? `${t('projectHistorySourceId')}: ${item.source_id}` : '',
+                item.status ? `${t('projectHistoryRunStatus')}: ${item.status}` : '',
+                item.created_at ? `${t('projectHistoryCreatedAt')}: ${item.created_at}` : '',
+                `${t('projectHistoryActionHint')}: ${projectWorkspaceHistoryActionHint(item, 'runs')}`
+            ];
+            return lines.filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceHistoryReaderText(item = {}, kind = '') {
+            if (kind === 'reports') return projectWorkspaceReportPreviewText(item);
+            if (kind === 'artifacts') return projectWorkspaceArtifactPreviewText(item);
+            if (kind === 'jobs') return projectWorkspaceJobPreviewText(item);
+            if (kind === 'runs') return projectWorkspaceRunPreviewText(item);
+            return projectWorkspaceHistoryItemDetailText(item, kind);
+        }
+
+        function renderProjectWorkspaceHistoryReaderPreview(item = {}, kind = '', index = 0) {
+            const preview = projectWorkspaceHistoryReaderText(item, kind);
+            return `
+                <details class="graph-os-card" data-project-history-reader-marker="Project Workspace report reader bundle" data-project-history-reader-kind="${escapeHTML(kind)}">
+                    <summary>${escapeHTML(t('viewProjectHistoryReaderPreview'))}</summary>
+                    <pre class="debug" data-project-history-reader-preview="${escapeHTML(kind)}">${escapeHTML(preview)}</pre>
+                </details>
+            `;
+        }
+
+        async function copyProjectWorkspaceHistoryReaderPack(kind, index) {
+            const status = document.getElementById('projectWorkspaceHistoryStatus');
+            try {
+                const key = projectWorkspaceHistoryKindKey(kind);
+                const items = projectWorkspaceHistoryArray(latestProjectWorkspace, key);
+                const item = items[Number(index)] || {};
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceHistoryReaderText(item, kind));
+                if (status) status.textContent = t('projectHistoryReaderCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('projectHistoryReaderCopyFailed');
+            }
+        }
+
+        function locateProjectWorkspaceHistoryItem(kind, index) {
+            const status = document.getElementById('projectWorkspaceHistoryStatus');
+            const selector = `[data-project-history-kind="${CSS.escape(String(kind || ''))}"][data-project-history-item-index="${Number(index)}"]`;
+            const target = document.querySelector(selector);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.setAttribute('data-project-history-located', 'true');
+                if (status) status.textContent = t('projectHistoryItemLocated');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'workspace_summary');
+            } else if (status) {
+                status.textContent = t('projectHistoryItemLocateFailed');
+            }
+        }
+
+
         function renderProjectWorkspaceHistoryItem(item = {}, kind = '', index = 0) {
             const id = projectWorkspaceHistoryItemId(item, kind);
             const meta = projectWorkspaceHistoryItemMeta(item, kind);
             const label = item.title || item.filename || item.product_name || item.project_name || id;
             const actionHint = projectWorkspaceHistoryActionHint(item, kind);
             return `
-                <div class="artifact-timeline-row" data-project-history-kind="${escapeHTML(kind)}" data-project-history-action-marker="Project Workspace action links bundle">
+                <div class="artifact-timeline-row" data-project-history-kind="${escapeHTML(kind)}" data-project-history-item-index="${Number(index)}" data-project-history-action-marker="Project Workspace action links bundle" data-project-history-report-reader-item="Project Workspace report reader bundle">
                     <strong>${escapeHTML(label || id)}</strong>
                     <div>${escapeHTML(meta || t('projectHistoryNoMetadata'))}</div>
                     <div class="field-helper" data-project-history-action-hint="${escapeHTML(kind)}">${escapeHTML(actionHint)}</div>
                     <div class="field-helper">${escapeHTML(id || t('none'))}</div>
+                    ${renderProjectWorkspaceHistoryReaderPreview(item, kind, index)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" type="button" data-project-history-copy-action="${escapeHTML(kind)}" onclick="copyProjectWorkspaceHistoryItemDetail('${escapeHTML(kind)}', ${Number(index)})">${escapeHTML(t('copyProjectHistoryItemDetail'))}</button>
+                        <button class="btn-secondary" type="button" data-project-history-copy-reader-pack="${escapeHTML(kind)}" onclick="copyProjectWorkspaceHistoryReaderPack('${escapeHTML(kind)}', ${Number(index)})">${escapeHTML(t('copyProjectHistoryReaderPack'))}</button>
+                        <button class="btn-secondary" type="button" data-project-history-locate-action="${escapeHTML(kind)}" onclick="locateProjectWorkspaceHistoryItem('${escapeHTML(kind)}', ${Number(index)})">${escapeHTML(t('locateProjectHistoryItem'))}</button>
                     </div>
                 </div>
             `;
@@ -12878,6 +12999,43 @@
             copyProjectHistoryItemDetail: '\u590d\u5236\u8be6\u60c5',
             projectHistoryItemCopied: '\u9879\u76ee\u5386\u53f2\u6761\u76ee\u8be6\u60c5\u5df2\u590d\u5236\u3002',
             projectHistoryItemCopyFailed: '\u590d\u5236\u9879\u76ee\u5386\u53f2\u6761\u76ee\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceReportReaderBundleMarker: 'Project Workspace report reader bundle',
+            projectReportReaderTitle: 'Project report reader',
+            projectArtifactReaderTitle: 'Project artifact reader',
+            projectJobReaderTitle: 'Project job reader',
+            projectRunReaderTitle: 'Project run reader',
+            projectReportMarkdownPreview: 'Markdown preview',
+            projectArtifactMetadataPreview: 'Metadata preview',
+            projectHistoryCreatedAt: 'Created at',
+            viewProjectHistoryReaderPreview: 'View reader preview',
+            copyProjectHistoryReaderPack: 'Copy reader pack',
+            locateProjectHistoryItem: 'Locate item',
+            projectHistoryReaderCopied: 'Project history reader pack copied.',
+            projectHistoryReaderCopyFailed: 'Could not copy project history reader pack.',
+            projectHistoryItemLocated: 'Project history item located.',
+            projectHistoryItemLocateFailed: 'Could not locate project history item.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceReportReaderBundleMarker: 'Project Workspace report reader bundle',
+            projectReportReaderTitle: '\u9879\u76ee report reader',
+            projectArtifactReaderTitle: '\u9879\u76ee artifact reader',
+            projectJobReaderTitle: '\u9879\u76ee job reader',
+            projectRunReaderTitle: '\u9879\u76ee run reader',
+            projectReportMarkdownPreview: 'Markdown \u9884\u89c8',
+            projectArtifactMetadataPreview: 'Metadata \u9884\u89c8',
+            projectHistoryCreatedAt: '\u521b\u5efa\u65f6\u95f4',
+            viewProjectHistoryReaderPreview: '\u67e5\u770b reader \u9884\u89c8',
+            copyProjectHistoryReaderPack: '\u590d\u5236 reader pack',
+            locateProjectHistoryItem: '\u5b9a\u4f4d\u6761\u76ee',
+            projectHistoryReaderCopied: '\u9879\u76ee\u5386\u53f2 reader pack \u5df2\u590d\u5236\u3002',
+            projectHistoryReaderCopyFailed: '\u590d\u5236\u9879\u76ee\u5386\u53f2 reader pack \u5931\u8d25\u3002',
+            projectHistoryItemLocated: '\u5df2\u5b9a\u4f4d\u9879\u76ee\u5386\u53f2\u6761\u76ee\u3002',
+            projectHistoryItemLocateFailed: '\u672a\u80fd\u5b9a\u4f4d\u9879\u76ee\u5386\u53f2\u6761\u76ee\u3002'
         });
 
 

@@ -52,6 +52,7 @@ Add-Check "visible_ui_cleanup_bundle_marker" ($page.Content -match "Visible UI c
 Add-Check "frontend_copy_guard_hardening_marker" ($page.Content -match "Frontend copy guard hardening bundle")
 Add-Check "project_workspace_history_ux_bundle_marker" ($page.Content -match "Project Workspace history UX bundle")
 Add-Check "project_workspace_action_links_bundle_marker" ($page.Content -match "Project Workspace action links bundle")
+Add-Check "project_workspace_report_reader_bundle_marker" ($page.Content -match "Project Workspace report reader bundle")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
 Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")
