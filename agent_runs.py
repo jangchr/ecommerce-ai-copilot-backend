@@ -1904,6 +1904,135 @@ def build_agent_runner_plan_summary(plan: dict[str, Any]) -> dict[str, Any]:
 
 
 
+AGENT_RUNNER_DISPATCH_TICKET_VERSION = "agent_runner_dispatch_ticket_v1"
+
+
+def _runner_dispatch_preflight_check(
+    check_id: str,
+    status: str,
+    message: str,
+    blocking: bool = False,
+) -> dict[str, Any]:
+    return {
+        "check_id": str(check_id or ""),
+        "status": str(status or "unknown"),
+        "message": str(message or ""),
+        "blocking": bool(blocking),
+    }
+
+
+def build_agent_runner_dispatch_ticket(
+    runner_plan: dict[str, Any],
+    requested_by: str = "runner_plan_api",
+) -> dict[str, Any]:
+    """Build a safe dispatch ticket from a runner plan.
+
+    The ticket is still dry-run only. It does not execute agents, call providers,
+    spend money, or enable autonomous LLM routing.
+    """
+
+    plan = runner_plan if isinstance(runner_plan, dict) else {}
+    execution_status = str(plan.get("execution_status") or "blocked")
+    next_agent_id = str(plan.get("next_agent_id") or "")
+    next_action_type = str(plan.get("next_action_type") or "")
+    contract_validation = plan.get("contract_validation") if isinstance(plan.get("contract_validation"), dict) else {}
+    safety_boundaries = _graph_safety_boundaries()
+
+    preflight_checks = [
+        _runner_dispatch_preflight_check(
+            "runner_plan_shape",
+            "passed" if plan.get("runner_plan_version") == AGENT_RUNNER_PLAN_VERSION else "failed",
+            "Runner plan version is recognized." if plan.get("runner_plan_version") == AGENT_RUNNER_PLAN_VERSION else "Runner plan version is missing or unsupported.",
+            blocking=plan.get("runner_plan_version") != AGENT_RUNNER_PLAN_VERSION,
+        ),
+        _runner_dispatch_preflight_check(
+            "contract_validation",
+            "passed" if bool(contract_validation.get("valid")) else "failed",
+            "Agent contract handoff is valid." if bool(contract_validation.get("valid")) else "Agent contract handoff is invalid.",
+            blocking=not bool(contract_validation.get("valid")),
+        ),
+        _runner_dispatch_preflight_check(
+            "user_gate",
+            "waiting" if bool(plan.get("requires_user_action")) else "passed",
+            "User action is required before dispatch." if bool(plan.get("requires_user_action")) else "No required user gate blocks dispatch.",
+            blocking=bool(plan.get("requires_user_action")),
+        ),
+        _runner_dispatch_preflight_check(
+            "execution_status",
+            "passed" if execution_status == "ready" else execution_status,
+            f"Runner plan execution_status is {execution_status}.",
+            blocking=execution_status != "ready",
+        ),
+        _runner_dispatch_preflight_check(
+            "external_provider_guard",
+            "passed",
+            "Dry-run dispatch ticket does not call external providers or incur cost.",
+            blocking=False,
+        ),
+    ]
+
+    blocking_checks = [item for item in preflight_checks if item.get("blocking")]
+    dispatch_allowed = bool(plan.get("can_execute_next_agent")) and not blocking_checks and bool(next_agent_id)
+
+    if dispatch_allowed:
+        dispatch_status = "ready_to_dispatch"
+        recommended_command = "execute_next_agent_dry_run"
+    elif bool(plan.get("requires_user_action")):
+        dispatch_status = "waiting_for_user"
+        recommended_command = "collect_required_user_input"
+    else:
+        dispatch_status = "blocked"
+        recommended_command = "fix_runner_plan_blockers"
+
+    return {
+        "dispatch_ticket_version": AGENT_RUNNER_DISPATCH_TICKET_VERSION,
+        "runner_plan_version": str(plan.get("runner_plan_version") or ""),
+        "registry_version": str(plan.get("registry_version") or AGENT_CONTRACT_REGISTRY_VERSION),
+        "graph_version": GRAPH_VERSION,
+        "execution_mode": GRAPH_EXECUTION_MODE,
+        "autonomy_level": AUTONOMY_LEVEL,
+        "project_id": str(plan.get("project_id") or "demo_project_default"),
+        "requested_by": str(requested_by or "runner_plan_api"),
+        "dry_run": True,
+        "dispatch_allowed": dispatch_allowed,
+        "dispatch_status": dispatch_status,
+        "recommended_command": recommended_command,
+        "next_agent_id": next_agent_id,
+        "next_action_type": next_action_type,
+        "handoff_message": deepcopy(plan.get("handoff_message") or {}),
+        "contract_validation": deepcopy(contract_validation),
+        "preflight_checks": preflight_checks,
+        "blocking_check_ids": [str(item.get("check_id") or "") for item in blocking_checks],
+        "planned_steps": deepcopy(plan.get("planned_steps") or []),
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "safety_boundaries": safety_boundaries,
+    }
+
+
+def build_agent_runner_dispatch_summary(ticket: dict[str, Any]) -> dict[str, Any]:
+    safe_ticket = ticket if isinstance(ticket, dict) else {}
+    checks = safe_ticket.get("preflight_checks") if isinstance(safe_ticket.get("preflight_checks"), list) else []
+    return {
+        "summary_version": "agent_runner_dispatch_summary_v1",
+        "dispatch_ticket_version": str(safe_ticket.get("dispatch_ticket_version") or AGENT_RUNNER_DISPATCH_TICKET_VERSION),
+        "project_id": str(safe_ticket.get("project_id") or "demo_project_default"),
+        "dispatch_status": str(safe_ticket.get("dispatch_status") or "blocked"),
+        "dispatch_allowed": bool(safe_ticket.get("dispatch_allowed")),
+        "next_agent_id": str(safe_ticket.get("next_agent_id") or ""),
+        "next_action_type": str(safe_ticket.get("next_action_type") or ""),
+        "recommended_command": str(safe_ticket.get("recommended_command") or ""),
+        "preflight_check_count": len(checks),
+        "blocking_check_count": len(safe_ticket.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

@@ -491,3 +491,28 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertIn("planned_steps", plan)
         self.assertGreaterEqual(len(plan["planned_steps"]), 2)
         self.assertFalse(plan["safety_boundaries"]["external_api_called"])
+
+    def test_project_runner_plan_endpoint_includes_dispatch_ticket(self):
+        project = self._create_project()
+        response = self.client.get(
+            f"/api/v1/projects/{project['project_id']}/runner/plan"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("runner_dispatch_ticket", payload)
+        self.assertIn("runner_dispatch_summary", payload)
+
+        ticket = payload["runner_dispatch_ticket"]
+        summary = payload["runner_dispatch_summary"]
+        self.assertEqual(ticket["dispatch_ticket_version"], "agent_runner_dispatch_ticket_v1")
+        self.assertTrue(ticket["dry_run"])
+        self.assertFalse(ticket["external_api_called"])
+        self.assertFalse(ticket["cost_incurred_by_crossgrowth"])
+        self.assertEqual(summary["summary_version"], "agent_runner_dispatch_summary_v1")
+        self.assertEqual(summary["dispatch_status"], ticket["dispatch_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_dispatch_status"],
+            ticket["dispatch_status"],
+        )
+

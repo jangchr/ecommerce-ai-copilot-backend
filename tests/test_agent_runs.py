@@ -1159,3 +1159,83 @@ class AgentRunnerPlanBuilderTests(unittest.TestCase):
         self.assertEqual(plan["planned_steps"][-1]["step_id"], "block_next_agent")
         self.assertFalse(plan["safety_boundaries"]["external_api_called"])
 
+
+class AgentRunnerDispatchTicketTests(unittest.TestCase):
+    def test_dispatch_ticket_ready_plan_allows_dry_run_dispatch(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_summary,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_plan,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_dispatch_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_dispatch_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan, requested_by="unit_test")
+        summary = build_agent_runner_dispatch_summary(ticket)
+
+        self.assertEqual(ticket["dispatch_ticket_version"], "agent_runner_dispatch_ticket_v1")
+        self.assertEqual(ticket["dispatch_status"], "ready_to_dispatch")
+        self.assertTrue(ticket["dispatch_allowed"], ticket)
+        self.assertTrue(ticket["dry_run"])
+        self.assertEqual(ticket["recommended_command"], "execute_next_agent_dry_run")
+        self.assertEqual(ticket["next_agent_id"], "planner_agent")
+        self.assertEqual(ticket["blocking_check_ids"], [])
+        self.assertFalse(ticket["external_api_called"])
+        self.assertFalse(ticket["cost_incurred_by_crossgrowth"])
+        self.assertFalse(ticket["safety_boundaries"]["llm_autonomous_decision_enabled"])
+        self.assertEqual(summary["summary_version"], "agent_runner_dispatch_summary_v1")
+        self.assertTrue(summary["dispatch_allowed"])
+        self.assertEqual(summary["blocking_check_count"], 0)
+
+    def test_dispatch_ticket_waits_when_user_gate_required(self):
+        from agent_runs import build_agent_runner_dispatch_ticket, build_agent_runner_plan
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_dispatch_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_dispatch_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+
+        self.assertEqual(ticket["dispatch_status"], "waiting_for_user")
+        self.assertFalse(ticket["dispatch_allowed"])
+        self.assertIn("user_gate", ticket["blocking_check_ids"])
+        self.assertIn("execution_status", ticket["blocking_check_ids"])
+        self.assertEqual(ticket["recommended_command"], "collect_required_user_input")
+        self.assertTrue(ticket["dry_run"])
+
+    def test_dispatch_ticket_blocks_invalid_contract(self):
+        from agent_runs import build_agent_runner_dispatch_ticket, build_agent_runner_plan
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_dispatch_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+
+        self.assertEqual(ticket["dispatch_status"], "blocked")
+        self.assertFalse(ticket["dispatch_allowed"])
+        self.assertIn("contract_validation", ticket["blocking_check_ids"])
+        self.assertIn("execution_status", ticket["blocking_check_ids"])
+        self.assertEqual(ticket["recommended_command"], "fix_runner_plan_blockers")
+        self.assertFalse(ticket["safety_boundaries"]["external_api_called"])
+
