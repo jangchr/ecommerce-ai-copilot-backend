@@ -3703,3 +3703,58 @@ class LiveAgentGraphBoardProbeTests(unittest.TestCase):
             timeline_source.index("${renderLiveAgentGraphBoard(run, events)}"),
             timeline_source.index("${renderAgentGraphMap(run)}"),
         )
+
+
+
+class SupervisorPlannerFrontendProbeTests(unittest.TestCase):
+    def test_supervisor_planner_frontend_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Planner Recommendation",
+            "Current project status",
+            "Next best action",
+            "Why this action",
+            "Missing inputs",
+            "Human action required",
+            "Can start Agent Run",
+            "Can create Video Job",
+            "Can record experiment",
+            "Can submit provider",
+            "Planner details",
+            "Source is missing",
+            "Reviews are missing",
+            "Product image recommended",
+            "Ready for Agent Run",
+            "Ready for Video Job",
+            "Waiting for experiment",
+            "Rework recommended",
+            "Waiting for approval",
+            "Provider simulation ready",
+            "Export graph report",
+            "Blocked reason",
+            "function renderPlannerRecommendationPanel(",
+            "function refreshProjectPlannerRecommendation(",
+            "plannerRecommendationPanel",
+            "refreshPlannerRecommendationBtn",
+            "plannerRecommendationStatus",
+            "/planner/recommendation/refresh",
+            "${renderPlannerRecommendationPanel(planner, summary)}",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_supervisor_planner_public_smoke_markers(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for marker in [
+            "planner_recommendation_marker",
+            "planner_empty_project_needs_source",
+            "planner_source_ready",
+            "planner_can_start_agent_run",
+            "planner_project_summary_success",
+            "planner_safety_boundaries_false",
+            "/planner/recommendation",
+            "/planner/recommendation/refresh",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, script)

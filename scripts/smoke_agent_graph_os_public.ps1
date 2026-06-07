@@ -42,6 +42,7 @@ Add-Check "graph_board_marker" ($page.Content -match "Live Agent Graph Board")
 Add-Check "project_workspace_marker" ($page.Content -match "Project Workspace")
 Add-Check "project_sources_marker" ($page.Content -match "Project Sources")
 Add-Check "source_quality_marker" ($page.Content -match "Source quality gate")
+Add-Check "planner_recommendation_marker" ($page.Content -match "Planner Recommendation")
 Add-Check "no_garbled_marker" (-not ($page.Content -match "\?\?\?\?"))
 
 $projectCreated = Invoke-CgJson "POST" "/api/v1/projects" @{
@@ -57,6 +58,9 @@ $projectAssets = Invoke-CgJson "GET" "/api/v1/projects/$projectId/assets" $null
 Add-Check "project_readable" ($projectRead.project.project_id -eq $projectId)
 Add-Check "project_assets_list" ($null -ne $projectAssets.assets)
 Write-Host "Asset upload skipped in public smoke; upload is covered by local multipart tests." -ForegroundColor Yellow
+
+$plannerEmpty = Invoke-CgJson "GET" "/api/v1/projects/$projectId/planner/recommendation" $null
+Add-Check "planner_empty_project_needs_source" ($plannerEmpty.planner_recommendation.overall_status -eq "needs_source")
 
 $sourceCreated = Invoke-CgJson "POST" "/api/v1/projects/$projectId/sources" @{
     source_type = "manual"
@@ -85,6 +89,10 @@ Add-Check "source_history_readable" ($sourceHistory.sources.source_id -contains 
 Add-Check "source_artifact_history_readable" ($sourceArtifactHistory.source_artifacts.source_id -contains $sourceId)
 Add-Check "source_gate_history_readable" ($sourceGateHistory.source_quality_gates.source_id -contains $sourceId)
 Add-Check "source_snapshot_history_readable" ($sourceSnapshotHistory.source_snapshots.source_id -contains $sourceId)
+
+$plannerSource = Invoke-CgJson "POST" "/api/v1/projects/$projectId/planner/recommendation/refresh" $null
+Add-Check "planner_source_ready" ($plannerSource.planner_recommendation.overall_status -in @("asset_recommended", "ready_for_agent_run"))
+Add-Check "planner_can_start_agent_run" ($plannerSource.planner_recommendation.can_start_agent_run -eq $true)
 
 $reviewRequest = @{
     project_id = $projectId
@@ -203,6 +211,8 @@ $projectArtifactHistory = Invoke-CgJson "GET" "/api/v1/projects/$projectId/histo
 $projectReportHistory = Invoke-CgJson "GET" "/api/v1/projects/$projectId/history/reports" $null
 Add-Check "project_graph_summary_success" ($projectSummary.status -eq "success")
 Add-Check "project_source_summary_success" ($projectSummary.project.graph_summary.source_count -gt 0)
+Add-Check "planner_project_summary_success" ($projectSummary.planner_recommendation.planner_version -eq "supervisor_planner_v2")
+Add-Check "planner_safety_boundaries_false" ($projectSummary.planner_recommendation.safety_boundaries.external_api_called -eq $false -and $projectSummary.planner_recommendation.safety_boundaries.cost_incurred_by_crossgrowth -eq $false -and $projectSummary.planner_recommendation.safety_boundaries.llm_autonomous_decision_enabled -eq $false)
 Add-Check "project_run_history_success" ($null -ne $projectRunHistory.runs)
 Add-Check "project_job_history_success" ($projectJobHistory.jobs.job_id -contains $jobId)
 Add-Check "project_artifact_history_success" ($projectArtifactHistory.artifacts.Count -gt 0)
