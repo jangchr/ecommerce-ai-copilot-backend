@@ -3813,3 +3813,29 @@ class SupervisorPlannerQuickActionFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("planner_quick_action_marker", script)
         self.assertIn("Go to recommended action", script)
+
+
+
+class GeneratedWorkspaceSyncFrontendTests(unittest.TestCase):
+    def test_generated_result_syncs_project_workspace_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "function syncProjectWorkspaceAfterGeneration(",
+            "function queueProjectWorkspaceSyncAfterGeneration(",
+            "queueProjectWorkspaceSyncAfterGeneration('generation')",
+            "await syncProjectWorkspaceAfterGeneration('video_job')",
+            "Syncing Project Workspace with the latest generated result",
+            "Project Workspace synced with the latest generated result.",
+            "Project Workspace synced with the latest Video Job.",
+            "Workspace sync after generation",
+            "latestProjectWorkspace = await getProjectWorkspaceSummary(latestProjectId)",
+            "panel.outerHTML = renderProjectWorkspacePanel(latestProjectWorkspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_generated_workspace_sync_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("workspace_sync_after_generation_marker", script)
+        self.assertIn("Workspace sync after generation", script)

@@ -5537,6 +5537,11 @@
 
         Object.assign(LANGUAGE_COPY.en, {
             projectWorkspace: 'Project Workspace',
+            workspaceSyncingAfterGeneration: 'Syncing Project Workspace with the latest generated result...',
+            workspaceSyncedAfterGeneration: 'Project Workspace synced with the latest generated result.',
+            workspaceSyncedAfterVideoJob: 'Project Workspace synced with the latest Video Job.',
+            workspaceSyncAfterGenerationFailed: 'Could not sync Project Workspace after generation.',
+            workspaceSyncAfterGenerationMarker: 'Workspace sync after generation',
             plannerRecommendation: 'Planner Recommendation',
             plannerActionWiring: 'Planner action wiring',
             plannerQuickAction: 'Go to recommended action',
@@ -10949,6 +10954,38 @@
             }
         }
 
+
+        async function syncProjectWorkspaceAfterGeneration(reason = 'generation') {
+            if (!latestProjectId) {
+                latestProjectId = latestProductData?.project_id || 'demo_project_default';
+            }
+            const status = document.getElementById('projectWorkspaceStatus');
+            if (status) status.textContent = t('workspaceSyncingAfterGeneration');
+            try {
+                latestProjectWorkspace = await getProjectWorkspaceSummary(latestProjectId);
+                const panel = document.getElementById('projectWorkspacePanel');
+                if (panel) panel.outerHTML = renderProjectWorkspacePanel(latestProjectWorkspace);
+                const refreshedStatus = document.getElementById('projectWorkspaceStatus');
+                if (refreshedStatus) {
+                    refreshedStatus.textContent = reason === 'video_job'
+                        ? t('workspaceSyncedAfterVideoJob')
+                        : t('workspaceSyncedAfterGeneration');
+                }
+            } catch (error) {
+                const refreshedStatus = document.getElementById('projectWorkspaceStatus');
+                if (refreshedStatus) {
+                    refreshedStatus.textContent = error.message || t('workspaceSyncAfterGenerationFailed');
+                }
+            }
+        }
+
+        function queueProjectWorkspaceSyncAfterGeneration(reason = 'generation') {
+            window.setTimeout(() => {
+                syncProjectWorkspaceAfterGeneration(reason);
+            }, 0);
+        }
+
+
         async function refreshProjectWorkspaceSummary() {
             const btn = document.getElementById('refreshProjectSummaryBtn');
             const status = document.getElementById('projectWorkspaceStatus');
@@ -11412,6 +11449,7 @@
                 if (status) status.textContent = t('videoJobCreated');
                 if (result) result.innerHTML = renderVideoJobResult(latestVideoGenerationJob);
                 await refreshRecentVideoJobs();
+                await syncProjectWorkspaceAfterGeneration('video_job');
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoJobFailed');
             } finally {
@@ -11426,6 +11464,7 @@
             }
             latestProductData = data;
             latestProjectId = data?.project_id || latestProjectId || 'demo_project_default';
+            queueProjectWorkspaceSyncAfterGeneration('generation');
             latestInputSlug = options.inputSlug ?? (document.getElementById('urlInput').value || '').trim();
             latestGeneratedAt = options.generatedAt ?? new Date().toISOString();
             setCopyButtonsEnabled(true);
