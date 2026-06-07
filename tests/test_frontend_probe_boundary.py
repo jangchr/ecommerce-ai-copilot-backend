@@ -4152,3 +4152,46 @@ class WorkspaceLastSyncTimestampFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("workspace_last_sync_timestamp_marker", script)
         self.assertIn("Workspace last sync timestamp", script)
+
+
+class WorkspaceSyncUxBundleFrontendTests(unittest.TestCase):
+    def test_workspace_sync_ux_bundle_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Workspace sync UX bundle",
+            "WORKSPACE_SYNC_UX_BUNDLE_MARKER",
+            "function workspaceSyncReasonLabel(",
+            "function setWorkspaceSyncStatus(",
+            "function markPlannerRecommendationStale(",
+            "data-workspace-sync-status",
+            "data-planner-stale-reason",
+            "workspaceSyncReasonLabel",
+            "workspaceSyncReasonGeneration",
+            "workspaceSyncReasonVideoJob",
+            "workspaceSyncReasonHumanApproval",
+            "workspaceSyncReasonDownstreamAction",
+            "workspaceSyncReasonManualRefresh",
+            "workspaceSyncReasonWorkspaceSummary",
+            "workspaceSyncReasonPlannerRefresh",
+            "workspaceSyncStatusRefreshing",
+            "workspaceSyncStatusSynced",
+            "workspaceSyncStatusFailed",
+            "plannerMayNeedRefresh",
+            "setWorkspaceSyncStatus('refreshing', reason);",
+            "setWorkspaceSyncStatus('failed', reason);",
+            "setWorkspaceSyncStatus('refreshing', 'manual_refresh');",
+            "setWorkspaceSyncStatus('failed', 'manual_refresh');",
+            "markPlannerRecommendationStale('workspace_summary');",
+            "updateWorkspaceLastSyncTimestamp('workspace_summary');",
+            "updateWorkspaceLastSyncTimestamp('planner_refresh');",
+            "${t('workspaceSyncReasonLabel')} ${reasonLabel}",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_workspace_sync_ux_bundle_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("workspace_sync_ux_bundle_marker", script)
+        self.assertIn("Workspace sync UX bundle", script)
+
