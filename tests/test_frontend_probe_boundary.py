@@ -4596,3 +4596,48 @@ class ProjectWorkspaceDispatchDryRunActionFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace dispatch dry-run action bundle", script)
         self.assertIn("project_workspace_dispatch_dry_run_action_marker", script)
 
+
+class ProjectWorkspaceExecutionReceiptPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_execution_receipt_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace execution receipt panel bundle",
+            "PROJECT_WORKSPACE_EXECUTION_RECEIPT_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceExecutionReceiptPanel(",
+            "function projectWorkspaceExecutionReceiptFromWorkspace(",
+            "function projectWorkspaceExecutionReceiptStatusLabel(",
+            "function projectWorkspaceExecutionReceiptCopyText(",
+            "async function copyProjectWorkspaceExecutionReceipt(",
+            "async function dryRunProjectWorkspaceExecution(",
+            "/runner/execute/dry-run",
+            "latestProjectRunnerExecutionReceipt",
+            "runner_execution_receipt: latestProjectRunnerExecutionReceipt",
+            "runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {}",
+            "projectWorkspaceExecutionReceiptPanel",
+            "projectWorkspaceExecutionReceiptStatus",
+            "dryRunProjectWorkspaceExecutionBtn",
+            "copyProjectWorkspaceExecutionReceiptBtn",
+            "data-project-execution-receipt-panel-marker",
+            "data-project-execution-dry-run-action",
+            "data-execution-receipt-status",
+            "data-execution-receipt-target-agent",
+            "data-execution-receipt-allowed",
+            "data-execution-receipt-audit-preview",
+            "executionReceiptPanelTitle",
+            "executionReceiptDryRunHelper",
+            "renderProjectWorkspaceExecutionReceiptPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_execution_receipt_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_execution_receipt_panel_marker", script)
+        self.assertIn("Project Workspace execution receipt panel bundle", script)
+
+    def test_project_workspace_execution_receipt_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace execution receipt panel bundle", script)
+        self.assertIn("project_workspace_execution_receipt_panel_marker", script)
+

@@ -2143,6 +2143,128 @@ def build_agent_runner_dispatch_event_summary(event: dict[str, Any]) -> dict[str
 
 
 
+AGENT_RUNNER_EXECUTION_RECEIPT_VERSION = "agent_runner_execution_receipt_v1"
+
+
+def _execution_receipt_status_from_dispatch(
+    dispatch_ticket: dict[str, Any],
+    dispatch_event: dict[str, Any],
+) -> str:
+    ticket = dispatch_ticket if isinstance(dispatch_ticket, dict) else {}
+    event = dispatch_event if isinstance(dispatch_event, dict) else {}
+
+    if bool(ticket.get("dispatch_allowed")) and str(event.get("event_status") or "") == "dispatch_ready":
+        return "execution_ready_dry_run"
+    if str(ticket.get("dispatch_status") or "") == "waiting_for_user" or str(event.get("event_status") or "") == "dispatch_waiting_for_user":
+        return "execution_waiting_for_user"
+    return "execution_blocked"
+
+
+def build_agent_runner_execution_receipt(
+    dispatch_ticket: dict[str, Any],
+    dispatch_event: dict[str, Any],
+    requested_by: str = "runner_execute_dry_run_api",
+) -> dict[str, Any]:
+    """Build a safe dry-run execution receipt from a dispatch ticket/event.
+
+    This does not execute agents, call providers, spend money, or enable
+    autonomous LLM routing. It only records what would happen next.
+    """
+
+    ticket = dispatch_ticket if isinstance(dispatch_ticket, dict) else {}
+    event = dispatch_event if isinstance(dispatch_event, dict) else {}
+
+    project_id = str(ticket.get("project_id") or event.get("project_id") or "demo_project_default")
+    target_agent_id = str(ticket.get("next_agent_id") or event.get("target_agent_id") or "")
+    receipt_status = _execution_receipt_status_from_dispatch(ticket, event)
+    execution_allowed = receipt_status == "execution_ready_dry_run"
+
+    blocking_check_ids = [
+        str(item)
+        for item in (ticket.get("blocking_check_ids") or event.get("blocking_check_ids") or [])
+        if str(item or "")
+    ]
+
+    if execution_allowed:
+        recommended_next_state = "ready_for_explicit_real_execution"
+        execution_message = "Dry-run passed. Real agent execution is still disabled until an explicit execution mode is implemented."
+    elif receipt_status == "execution_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        execution_message = "Execution dry-run is waiting for required user action."
+    else:
+        recommended_next_state = "fix_execution_blockers"
+        execution_message = "Execution dry-run is blocked by dispatch preflight or contract validation."
+
+    execution_payload = {
+        "receipt_status": receipt_status,
+        "target_agent_id": target_agent_id,
+        "dispatch_event_id": event.get("event_id"),
+        "dispatch_status": ticket.get("dispatch_status"),
+        "dispatch_allowed": bool(ticket.get("dispatch_allowed")),
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "execution_performed": False,
+    }
+
+    execution_message_record = build_agent_message(
+        message_type="runner_execution_dry_run_receipt",
+        source_agent_id="runner_executor",
+        target_agent_id=target_agent_id,
+        payload=execution_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "execution_receipt_version": AGENT_RUNNER_EXECUTION_RECEIPT_VERSION,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_execute_dry_run_api"),
+        "receipt_status": receipt_status,
+        "target_agent_id": target_agent_id,
+        "dispatch_ticket_version": str(ticket.get("dispatch_ticket_version") or ""),
+        "dispatch_event_version": str(event.get("dispatch_event_version") or ""),
+        "dispatch_event_id": str(event.get("event_id") or ""),
+        "dispatch_allowed": bool(ticket.get("dispatch_allowed")),
+        "execution_allowed": execution_allowed,
+        "execution_performed": False,
+        "dry_run": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "blocking_check_ids": blocking_check_ids,
+        "recommended_next_state": recommended_next_state,
+        "execution_message": execution_message,
+        "execution_message_record": execution_message_record,
+        "handoff_message": deepcopy(ticket.get("handoff_message") or event.get("handoff_message") or {}),
+        "contract_validation": deepcopy(ticket.get("contract_validation") or event.get("contract_validation") or {}),
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_execution_receipt_summary(receipt: dict[str, Any]) -> dict[str, Any]:
+    safe_receipt = receipt if isinstance(receipt, dict) else {}
+    return {
+        "summary_version": "agent_runner_execution_receipt_summary_v1",
+        "execution_receipt_version": str(safe_receipt.get("execution_receipt_version") or AGENT_RUNNER_EXECUTION_RECEIPT_VERSION),
+        "project_id": str(safe_receipt.get("project_id") or "demo_project_default"),
+        "receipt_status": str(safe_receipt.get("receipt_status") or "execution_blocked"),
+        "target_agent_id": str(safe_receipt.get("target_agent_id") or ""),
+        "execution_allowed": bool(safe_receipt.get("execution_allowed")),
+        "execution_performed": False,
+        "dry_run": True,
+        "blocking_check_count": len(safe_receipt.get("blocking_check_ids") or []),
+        "recommended_next_state": str(safe_receipt.get("recommended_next_state") or ""),
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

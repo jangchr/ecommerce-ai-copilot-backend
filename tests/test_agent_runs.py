@@ -1330,3 +1330,99 @@ class AgentRunnerDispatchEventTests(unittest.TestCase):
         self.assertEqual(event["target_agent_id"], "missing_agent")
         self.assertFalse(event["safety_boundaries"]["external_api_called"])
 
+
+class AgentRunnerExecutionReceiptTests(unittest.TestCase):
+    def test_execution_receipt_records_ready_dry_run_without_execution(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_execution_receipt_summary,
+            build_agent_runner_plan,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_execution_receipt_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_execution_receipt_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        summary = build_agent_runner_execution_receipt_summary(receipt)
+
+        self.assertEqual(receipt["execution_receipt_version"], "agent_runner_execution_receipt_v1")
+        self.assertEqual(receipt["receipt_status"], "execution_ready_dry_run")
+        self.assertTrue(receipt["execution_allowed"])
+        self.assertFalse(receipt["execution_performed"])
+        self.assertTrue(receipt["dry_run"])
+        self.assertFalse(receipt["external_api_called"])
+        self.assertFalse(receipt["cost_incurred_by_crossgrowth"])
+        self.assertFalse(receipt["llm_autonomous_decision_enabled"])
+        self.assertEqual(receipt["target_agent_id"], "planner_agent")
+        self.assertEqual(receipt["execution_message_record"]["message_type"], "runner_execution_dry_run_receipt")
+        self.assertEqual(summary["summary_version"], "agent_runner_execution_receipt_summary_v1")
+        self.assertEqual(summary["receipt_status"], "execution_ready_dry_run")
+        self.assertFalse(summary["execution_performed"])
+
+    def test_execution_receipt_waits_for_user(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_execution_receipt_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_execution_receipt_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+
+        self.assertEqual(receipt["receipt_status"], "execution_waiting_for_user")
+        self.assertFalse(receipt["execution_allowed"])
+        self.assertFalse(receipt["execution_performed"])
+        self.assertIn("user_gate", receipt["blocking_check_ids"])
+        self.assertEqual(receipt["recommended_next_state"], "collect_required_user_input")
+
+    def test_execution_receipt_blocks_invalid_contract(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_execution_receipt_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+
+        self.assertEqual(receipt["receipt_status"], "execution_blocked")
+        self.assertFalse(receipt["execution_allowed"])
+        self.assertFalse(receipt["execution_performed"])
+        self.assertIn("contract_validation", receipt["blocking_check_ids"])
+        self.assertEqual(receipt["recommended_next_state"], "fix_execution_blockers")
+

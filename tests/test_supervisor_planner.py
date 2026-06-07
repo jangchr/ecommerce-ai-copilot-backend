@@ -574,3 +574,33 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             event["event_status"],
         )
 
+    def test_project_runner_execute_dry_run_endpoint_returns_execution_receipt(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/execute/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_execution_receipt", payload)
+        self.assertIn("runner_execution_receipt_summary", payload)
+
+        receipt = payload["runner_execution_receipt"]
+        summary = payload["runner_execution_receipt_summary"]
+        self.assertEqual(receipt["execution_receipt_version"], "agent_runner_execution_receipt_v1")
+        self.assertFalse(receipt["execution_performed"])
+        self.assertTrue(receipt["dry_run"])
+        self.assertFalse(receipt["external_api_called"])
+        self.assertFalse(receipt["cost_incurred_by_crossgrowth"])
+        self.assertEqual(summary["summary_version"], "agent_runner_execution_receipt_summary_v1")
+        self.assertEqual(summary["receipt_status"], receipt["receipt_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_execution_receipt_status"],
+            receipt["receipt_status"],
+        )
+

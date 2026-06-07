@@ -11739,6 +11739,151 @@
         }
 
 
+
+        const PROJECT_WORKSPACE_EXECUTION_RECEIPT_PANEL_BUNDLE_MARKER = 'Project Workspace execution receipt panel bundle';
+        let latestProjectRunnerExecutionReceipt = {};
+
+        function projectWorkspaceExecutionReceiptFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerExecutionReceipt && Object.keys(latestProjectRunnerExecutionReceipt).length
+                ? latestProjectRunnerExecutionReceipt
+                : workspace?.runner_execution_receipt || {};
+        }
+
+        function projectWorkspaceExecutionReceiptStatusLabel(receipt = {}) {
+            const status = String(receipt.receipt_status || 'not_refreshed');
+            const labels = {
+                execution_ready_dry_run: t('executionReceiptStatusReadyDryRun'),
+                execution_waiting_for_user: t('executionReceiptStatusWaitingForUser'),
+                execution_blocked: t('executionReceiptStatusBlocked'),
+                not_refreshed: t('executionReceiptStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceExecutionReceiptCopyText(receipt = projectWorkspaceExecutionReceiptFromWorkspace()) {
+            return [
+                t('executionReceiptCopyTitle'),
+                `${t('projectId')}: ${receipt.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('executionReceiptStatus')}: ${receipt.receipt_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${receipt.target_agent_id || t('none')}`,
+                `${t('executionAllowed')}: ${Boolean(receipt.execution_allowed)}`,
+                `${t('executionPerformed')}: ${Boolean(receipt.execution_performed)}`,
+                `${t('dispatchDryRun')}: ${Boolean(receipt.dry_run)}`,
+                `${t('executionRecommendedNextState')}: ${receipt.recommended_next_state || t('none')}`,
+                '',
+                JSON.stringify(receipt || {}, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceExecutionReceipt() {
+            const status = document.getElementById('projectWorkspaceExecutionReceiptStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceExecutionReceiptCopyText());
+                if (status) status.textContent = t('executionReceiptCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('executionReceiptCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceExecution(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceExecutionReceiptStatus')
+                || document.getElementById('projectWorkspaceDispatchEventStatus')
+                || document.getElementById('projectWorkspaceDispatchTicketStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('executionDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_execution_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/execute/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('executionDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_execution_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_execution_dry_run');
+                if (status) status.textContent = t('executionDryRunComplete');
+
+                const runnerPanel = document.getElementById('projectWorkspaceRunnerPlanPanel');
+                if (runnerPanel) runnerPanel.outerHTML = renderProjectWorkspaceRunnerPlanPanel(latestProjectWorkspace);
+                const ticketPanel = document.getElementById('projectWorkspaceDispatchTicketPanel');
+                if (ticketPanel) ticketPanel.outerHTML = renderProjectWorkspaceDispatchTicketPanel(latestProjectWorkspace);
+                const eventPanel = document.getElementById('projectWorkspaceDispatchEventPanel');
+                if (eventPanel) eventPanel.outerHTML = renderProjectWorkspaceDispatchEventPanel(latestProjectWorkspace);
+                const receiptPanel = document.getElementById('projectWorkspaceExecutionReceiptPanel');
+                if (receiptPanel) receiptPanel.outerHTML = renderProjectWorkspaceExecutionReceiptPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_execution_dry_run');
+                if (status) status.textContent = error.message || t('executionDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceExecutionReceiptPanel(workspace = latestProjectWorkspace) {
+            const receipt = projectWorkspaceExecutionReceiptFromWorkspace(workspace);
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            const statusLabel = projectWorkspaceExecutionReceiptStatusLabel(receipt);
+            return `
+                <div class="section-block" id="projectWorkspaceExecutionReceiptPanel" data-project-execution-receipt-panel-marker="Project Workspace execution receipt panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('executionReceiptPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('executionReceiptPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceExecutionBtn" type="button" data-project-execution-dry-run-action="Project Workspace execution receipt panel bundle" onclick="dryRunProjectWorkspaceExecution()">${escapeHTML(t('dryRunExecution'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceExecutionReceiptBtn" type="button" onclick="copyProjectWorkspaceExecutionReceipt()">${escapeHTML(t('copyExecutionReceipt'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('executionReceiptStatus'))}</div>
+                            <strong data-execution-receipt-status="${escapeHTML(receipt.receipt_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('executionReceiptDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerPlanNextAgent'))}</div>
+                            <strong data-execution-receipt-target-agent="${escapeHTML(receipt.target_agent_id || '')}">${escapeHTML(receipt.target_agent_id || t('runnerPlanNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('executionRecommendedNextState'))}: ${escapeHTML(receipt.recommended_next_state || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('executionAllowed'))}</div>
+                            <strong data-execution-receipt-allowed="${escapeHTML(String(Boolean(receipt.execution_allowed)))}">${escapeHTML(String(Boolean(receipt.execution_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('executionPerformed'))}: ${escapeHTML(String(Boolean(receipt.execution_performed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('executionReceiptAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-execution-receipt-audit-preview="Project Workspace execution receipt panel bundle">${escapeHTML(projectWorkspaceExecutionReceiptCopyText(receipt))}</pre>` : `<div class="recent-empty">${escapeHTML(t('executionReceiptNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceExecutionReceiptStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceDispatchEventPanel(workspace = latestProjectWorkspace) {
             const event = projectWorkspaceDispatchEventFromWorkspace(workspace);
             const hasEvent = Boolean(event && Object.keys(event).length);
@@ -11929,6 +12074,7 @@
                     ${renderProjectWorkspaceRunnerPlanPanel(workspace)}
                     ${renderProjectWorkspaceDispatchTicketPanel(workspace)}
                     ${renderProjectWorkspaceDispatchEventPanel(workspace)}
+                    ${renderProjectWorkspaceExecutionReceiptPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -13724,6 +13870,57 @@
             dispatchDryRunRunning: '\u6b63\u5728\u8fdb\u884c dry-run \u6d3e\u5de5...',
             dispatchDryRunComplete: 'Dry-run \u6d3e\u5de5\u5b8c\u6210\u3002',
             dispatchDryRunFailed: 'Dry-run \u6d3e\u5de5\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceExecutionReceiptPanelBundleMarker: 'Project Workspace execution receipt panel bundle',
+            executionReceiptPanelTitle: 'Execution dry-run receipt',
+            executionReceiptPanelHelper: 'Safe execution receipt for the next Agent. This simulates execution and records why it is ready, waiting, or blocked.',
+            dryRunExecution: 'Dry-run execution',
+            copyExecutionReceipt: 'Copy execution receipt',
+            executionReceiptCopyTitle: 'Project execution dry-run receipt',
+            executionReceiptStatus: 'Execution receipt status',
+            executionAllowed: 'Execution allowed',
+            executionPerformed: 'Execution performed',
+            executionRecommendedNextState: 'Recommended next state',
+            executionReceiptAuditPreview: 'Execution audit preview',
+            executionReceiptStatusReadyDryRun: 'Execution ready dry-run',
+            executionReceiptStatusWaitingForUser: 'Execution waiting for user',
+            executionReceiptStatusBlocked: 'Execution blocked',
+            executionReceiptStatusNotRefreshed: 'Not refreshed',
+            executionReceiptNotRefreshedYet: 'Execution receipt has not been refreshed yet.',
+            executionReceiptDryRunHelper: 'Dry run only: no Agent execution, provider call, cost, or autonomous LLM decision.',
+            executionDryRunRunning: 'Running execution dry-run...',
+            executionDryRunComplete: 'Execution dry-run complete.',
+            executionDryRunFailed: 'Execution dry-run failed.',
+            executionReceiptCopied: 'Execution receipt copied.',
+            executionReceiptCopyFailed: 'Could not copy execution receipt.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceExecutionReceiptPanelBundleMarker: 'Project Workspace execution receipt panel bundle',
+            executionReceiptPanelTitle: '\u6267\u884c dry-run \u56de\u6267',
+            executionReceiptPanelHelper: '\u4e0b\u4e00\u4e2a Agent \u7684\u5b89\u5168\u6267\u884c\u56de\u6267\u3002\u5b83\u53ea\u6a21\u62df\u6267\u884c\uff0c\u8bb0\u5f55\u4e3a\u4ec0\u4e48\u5df2\u5c31\u7eea\u3001\u7b49\u5f85\u6216\u963b\u585e\u3002',
+            dryRunExecution: 'Dry-run \u6267\u884c',
+            copyExecutionReceipt: '\u590d\u5236\u6267\u884c\u56de\u6267',
+            executionReceiptCopyTitle: '\u9879\u76ee\u6267\u884c dry-run \u56de\u6267',
+            executionReceiptStatus: '\u6267\u884c\u56de\u6267\u72b6\u6001',
+            executionAllowed: '\u662f\u5426\u5141\u8bb8\u6267\u884c',
+            executionPerformed: '\u662f\u5426\u5df2\u771f\u6b63\u6267\u884c',
+            executionRecommendedNextState: '\u5efa\u8bae\u4e0b\u4e00\u72b6\u6001',
+            executionReceiptAuditPreview: '\u6267\u884c\u5ba1\u8ba1\u9884\u89c8',
+            executionReceiptStatusReadyDryRun: '\u6267\u884c dry-run \u5df2\u5c31\u7eea',
+            executionReceiptStatusWaitingForUser: '\u6267\u884c\u7b49\u5f85\u7528\u6237',
+            executionReceiptStatusBlocked: '\u6267\u884c\u5df2\u963b\u585e',
+            executionReceiptStatusNotRefreshed: '\u672a\u5237\u65b0',
+            executionReceiptNotRefreshedYet: '\u6267\u884c\u56de\u6267\u5c1a\u672a\u5237\u65b0\u3002',
+            executionReceiptDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u6267\u884c Agent\uff0c\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\uff0c\u4e0d\u542f\u7528 LLM \u81ea\u4e3b\u51b3\u7b56\u3002',
+            executionDryRunRunning: '\u6b63\u5728\u8fdb\u884c execution dry-run...',
+            executionDryRunComplete: 'Execution dry-run \u5b8c\u6210\u3002',
+            executionDryRunFailed: 'Execution dry-run \u5931\u8d25\u3002',
+            executionReceiptCopied: '\u6267\u884c\u56de\u6267\u5df2\u590d\u5236\u3002',
+            executionReceiptCopyFailed: '\u590d\u5236\u6267\u884c\u56de\u6267\u5931\u8d25\u3002'
         });
 
 
