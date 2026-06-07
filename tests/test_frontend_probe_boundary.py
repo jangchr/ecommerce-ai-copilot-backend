@@ -3902,3 +3902,26 @@ class DownstreamWorkspaceSyncFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("downstream_workspace_sync_marker", script)
         self.assertIn("Downstream action workspace sync", script)
+
+
+
+class PlannerCleanZhOverrideFrontendTests(unittest.TestCase):
+    def test_planner_workspace_clean_zh_override_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Planner clean zh override marker",
+            "plannerCleanZhOverrideMarker",
+            "plannerRecommendation: '\\u89c4\\u5212 Agent \\u5efa\\u8bae'",
+            "plannerButtonState: 'Planner \\u6309\\u94ae\\u72b6\\u6001'",
+            "plannerQuickAction: '\\u53bb\\u505a\\u63a8\\u8350\\u52a8\\u4f5c'",
+            "workspaceSyncedAfterDownstreamAction: 'Project Workspace \\u5df2\\u540c\\u6b65\\u6700\\u65b0\\u4e0b\\u6e38\\u52a8\\u4f5c\\u3002'",
+            "plannerAction_submit_provider_simulation: '\\u63d0\\u4ea4\\u6a21\\u62df Provider Job'",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_planner_clean_zh_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("zh_planner_clean_override_marker", script)
+        self.assertIn("Planner clean zh override marker", script)
