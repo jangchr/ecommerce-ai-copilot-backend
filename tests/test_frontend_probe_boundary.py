@@ -4098,3 +4098,30 @@ class FrontendMojibakeGuardTests(unittest.TestCase):
     def test_mojibake_guard_marker_exists(self):
         html = FRONTEND_PATH.read_text(encoding="utf-8")
         self.assertNotIn("????", html)
+
+
+
+class WorkspaceRefreshShortcutFrontendTests(unittest.TestCase):
+    def test_workspace_refresh_shortcut_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Workspace refresh shortcut",
+            "workspaceRefreshShortcutMarker",
+            "refreshProjectWorkspaceAndPlannerBtn",
+            "refreshProjectWorkspaceAndPlannerShortcut",
+            "refreshWorkspaceAndPlanner",
+            "workspacePlannerRefreshWorking",
+            "workspacePlannerRefreshDone",
+            "workspacePlannerRefreshFailed",
+            "await refreshProjectWorkspaceSummary();",
+            "await refreshProjectPlannerRecommendation();",
+            "Refresh Workspace + Planner",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_workspace_refresh_shortcut_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("workspace_refresh_shortcut_marker", script)
+        self.assertIn("Workspace refresh shortcut", script)

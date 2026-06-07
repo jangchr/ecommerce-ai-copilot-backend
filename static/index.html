@@ -11111,6 +11111,7 @@
                     </div>
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
+                        <button class="btn-secondary" id="refreshProjectWorkspaceAndPlannerBtn" type="button" onclick="refreshProjectWorkspaceAndPlannerShortcut()">${escapeHTML(t('refreshWorkspaceAndPlanner'))}</button>
                     </div>
                     <div class="quick-use-copy-status" id="projectWorkspaceStatus"></div>
                     <details>
@@ -11210,6 +11211,37 @@
             window.setTimeout(() => {
                 syncProjectWorkspaceAfterGeneration(reason);
             }, 0);
+        }
+
+
+
+        async function refreshProjectWorkspaceAndPlannerShortcut() {
+            const btn = document.getElementById('refreshProjectWorkspaceAndPlannerBtn');
+            const workspaceStatus = document.getElementById('projectWorkspaceStatus');
+            const plannerStatus = document.getElementById('plannerRecommendationStatus');
+
+            if (btn) btn.disabled = true;
+            if (workspaceStatus) workspaceStatus.textContent = t('workspacePlannerRefreshWorking');
+            if (plannerStatus) plannerStatus.textContent = t('workspacePlannerRefreshWorking');
+
+            try {
+                await refreshProjectWorkspaceSummary();
+                await refreshProjectPlannerRecommendation();
+
+                const refreshedWorkspaceStatus = document.getElementById('projectWorkspaceStatus');
+                const refreshedPlannerStatus = document.getElementById('plannerRecommendationStatus');
+                if (refreshedWorkspaceStatus) refreshedWorkspaceStatus.textContent = t('workspacePlannerRefreshDone');
+                if (refreshedPlannerStatus) refreshedPlannerStatus.textContent = t('workspacePlannerRefreshDone');
+            } catch (error) {
+                const refreshedWorkspaceStatus = document.getElementById('projectWorkspaceStatus');
+                const refreshedPlannerStatus = document.getElementById('plannerRecommendationStatus');
+                const message = error.message || t('workspacePlannerRefreshFailed');
+                if (refreshedWorkspaceStatus) refreshedWorkspaceStatus.textContent = message;
+                if (refreshedPlannerStatus) refreshedPlannerStatus.textContent = message;
+            } finally {
+                const refreshedBtn = document.getElementById('refreshProjectWorkspaceAndPlannerBtn');
+                if (refreshedBtn) refreshedBtn.disabled = false;
+            }
         }
 
 
@@ -12371,6 +12403,23 @@
             createUpdateVideoJobAction: '\u521b\u5efa\u6216\u66f4\u65b0 Video Job\u3002',
             pasteExternalResultAction: '\u7c98\u8d34\u5916\u90e8\u89c6\u9891\u7ed3\u679c\u5e76\u8bc4\u5206\u5b9e\u9a8c\u3002',
             reviewAgentDecisionAction: '\u5bfc\u51fa\u524d\u68c0\u67e5\u8fd9\u4e2a Agent \u5224\u65ad\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            workspaceRefreshShortcutMarker: 'Workspace refresh shortcut',
+            refreshWorkspaceAndPlanner: 'Refresh Workspace + Planner',
+            workspacePlannerRefreshWorking: 'Refreshing Project Workspace and Planner...',
+            workspacePlannerRefreshDone: 'Project Workspace and Planner refreshed.',
+            workspacePlannerRefreshFailed: 'Could not refresh Project Workspace and Planner.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            workspaceRefreshShortcutMarker: 'Workspace refresh shortcut',
+            refreshWorkspaceAndPlanner: '\u5237\u65b0 Workspace + Planner',
+            workspacePlannerRefreshWorking: '\u6b63\u5728\u5237\u65b0 Project Workspace \u548c Planner...',
+            workspacePlannerRefreshDone: 'Project Workspace \u548c Planner \u5df2\u5237\u65b0\u3002',
+            workspacePlannerRefreshFailed: '\u5237\u65b0 Project Workspace \u548c Planner \u5931\u8d25\u3002'
         });
 
 
