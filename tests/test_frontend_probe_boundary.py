@@ -4005,3 +4005,63 @@ class AgentGraphZhOverrideFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("agent_graph_zh_override_marker", script)
         self.assertIn("Agent graph zh override marker", script)
+
+
+
+class CopyReadyScriptZhLabelFrontendTests(unittest.TestCase):
+    def test_copy_ready_script_zh_labels_are_clean(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        start = html.index("function copyReadyScriptText(data)")
+        end = html.index("function renderHookHighlightCard(script)", start)
+        segment = html[start:end]
+
+        for marker in [
+            "Copy-ready script zh label marker",
+            "COPY_READY_SCRIPT_ZH_MARKER",
+            "hook: 'Hook\\uff1a'",
+            "scene: (index) => `\\u573a\\u666f ${index}\\uff1a`",
+            "visual: (value) => `\\u753b\\u9762\\uff1a${value}`",
+            "narration: (value) => `\\u65c1\\u767d\\uff1a${value}`",
+            "cta: 'CTA\\uff1a'",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, segment)
+
+        for bad_marker in [
+            "Hook锛",
+            "CTA锛",
+            "鍦烘櫙",
+            "鐢婚潰",
+            "鏃佺櫧",
+        ]:
+            with self.subTest(bad_marker=bad_marker):
+                self.assertNotIn(bad_marker, segment)
+
+    def test_result_summary_zh_copy_is_clean(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        start = html.index("function resultCreativeSummary(data, sourceLabel)")
+        end = html.index("function renderResultSummaryCard(data, evidence, evalData, score)", start)
+        segment = html[start:end]
+
+        for marker in [
+            "\\u8fd9\\u6b21\\u521b\\u610f\\u57fa\\u4e8e ${sourceLabel} \\u751f\\u6210\\u3002",
+            "\\u4e3b Hook\\uff1a${hook}",
+            "\\u76ee\\u6807\\u53d7\\u4f17\\uff1a${audience}",
+            "\\u98ce\\u9669\\u7b49\\u7ea7\\uff1a${riskLevel}",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, segment)
+
+        for bad_marker in [
+            "杩欐",
+            "涓?Hook",
+            "鐩爣",
+            "椋庨櫓",
+        ]:
+            with self.subTest(bad_marker=bad_marker):
+                self.assertNotIn(bad_marker, segment)
+
+    def test_copy_ready_script_zh_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("copy_ready_script_zh_marker", script)
+        self.assertIn("Copy-ready script zh label marker", script)

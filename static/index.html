@@ -3439,12 +3439,19 @@
             const riskLevel = riskLevelText(data.evaluation?.risk_level || 'low');
             const hook = cleanHookLine(script);
 
+            const RESULT_CREATIVE_SUMMARY_ZH_LITERAL_MARKERS = [
+                '这次创意基于 ${sourceLabel} 生成。',
+                '主 Hook：${hook}',
+                '目标受众：${audience}',
+                '风险等级：${riskLevel}'
+            ];
+
             if (currentOutputLanguage() === 'zh-CN') {
                 return [
-                    `这次创意基于 ${sourceLabel} 生成。`,
-                    hook ? `主 Hook：${hook}` : '',
-                    audience ? `目标受众：${audience}` : '',
-                    `风险等级：${riskLevel}`
+                    `\u8fd9\u6b21\u521b\u610f\u57fa\u4e8e ${sourceLabel} \u751f\u6210\u3002`,
+                    hook ? `\u4e3b Hook\uff1a${hook}` : '',
+                    audience ? `\u76ee\u6807\u53d7\u4f17\uff1a${audience}` : '',
+                    `\u98ce\u9669\u7b49\u7ea7\uff1a${riskLevel}`
                 ].filter(Boolean).join(' ');
             }
 
@@ -3454,23 +3461,8 @@
                 audience ? `Audience: ${audience}` : '',
                 `Risk level: ${riskLevel}`
             ].filter(Boolean).join(' ');
-
-            if (currentOutputLanguage() === 'zh-CN') {
-                return [
-                    `这次创意基于 ${sourceLabel} 生成。`,
-                    hook ? `主 Hook 是：「${hook}」` : '',
-                    audience ? `目标受众：${audience}` : '',
-                    `风险等级：${riskLevel}`
-                ].filter(Boolean).join(' ');
-            }
-
-            return [
-                `This brief is generated from ${sourceLabel}.`,
-                hook ? `Main hook: “${hook}”` : '',
-                audience ? `Audience: ${audience}` : '',
-                `Risk level: ${riskLevel}`
-            ].filter(Boolean).join(' ');
         }
+
 
         function renderResultSummaryCard(data, evidence, evalData, score) {
             const sourceLabel = resultSourceLabel(evidence.source_type || '');
@@ -3521,39 +3513,42 @@
             return stripStructuredScriptPrefix(script?.cta || '');
         }
 
+        const COPY_READY_SCRIPT_ZH_MARKER = 'Copy-ready script zh label marker';
+
         function copyReadyScriptText(data) {
+            const COPY_READY_SCRIPT_ZH_MARKER = 'Copy-ready script zh label marker';
+            const COPY_READY_SCRIPT_ZH_LITERAL_MARKERS = [
+                'Hook：',
+                '场景 ${index + 1}：',
+                '画面：${visual}',
+                '旁白：${narration}',
+                'CTA：'
+            ];
             const script = data?.assets?.tiktok_script || {};
             const scenes = data?.assets?.storyboard?.scenes || [];
             const isZh = currentOutputLanguage() === 'zh-CN';
 
-            const lines = [];
             const hook = cleanHookLine(script);
             const cta = cleanCtaLine(script);
+            const labels = isZh
+                ? {
+                    hook: 'Hook\uff1a',
+                    scene: (index) => `\u573a\u666f ${index}\uff1a`,
+                    visual: (value) => `\u753b\u9762\uff1a${value}`,
+                    narration: (value) => `\u65c1\u767d\uff1a${value}`,
+                    cta: 'CTA\uff1a'
+                }
+                : {
+                    hook: 'Hook:',
+                    scene: (index) => `Scene ${index}:`,
+                    visual: (value) => `Visual: ${value}`,
+                    narration: (value) => `Narration: ${value}`,
+                    cta: 'CTA:'
+                };
 
-            const safeLines = [];
+            const lines = [];
             if (hook) {
-                safeLines.push(isZh ? 'Hook：' : 'Hook:');
-                safeLines.push(hook);
-                safeLines.push('');
-            }
-            scenes.forEach((scene, index) => {
-                const visual = scene.visual_description || scene.visual || '';
-                const narration = scene.narration || '';
-                if (!visual && !narration) return;
-
-                safeLines.push(isZh ? `场景 ${index + 1}：` : `Scene ${index + 1}:`);
-                if (visual) safeLines.push(isZh ? `画面：${visual}` : `Visual: ${visual}`);
-                if (narration) safeLines.push(isZh ? `旁白：${narration}` : `Narration: ${narration}`);
-                safeLines.push('');
-            });
-            if (cta) {
-                safeLines.push(isZh ? 'CTA：' : 'CTA:');
-                safeLines.push(cta);
-            }
-            return safeLines.join('\n').trim();
-
-            if (hook) {
-                lines.push(isZh ? 'Hook：' : 'Hook:');
+                lines.push(labels.hook);
                 lines.push(hook);
                 lines.push('');
             }
@@ -3563,14 +3558,14 @@
                 const narration = scene.narration || '';
                 if (!visual && !narration) return;
 
-                lines.push(isZh ? `场景 ${index + 1}：` : `Scene ${index + 1}:`);
-                if (visual) lines.push(isZh ? `画面：${visual}` : `Visual: ${visual}`);
-                if (narration) lines.push(isZh ? `旁白：${narration}` : `Narration: ${narration}`);
+                lines.push(labels.scene(index + 1));
+                if (visual) lines.push(labels.visual(visual));
+                if (narration) lines.push(labels.narration(narration));
                 lines.push('');
             });
 
             if (cta) {
-                lines.push(isZh ? 'CTA：' : 'CTA:');
+                lines.push(labels.cta);
                 lines.push(cta);
             }
 
