@@ -12324,6 +12324,61 @@
         });
 
 
+        // Clean zh-CN overrides for Agent Graph / Status Board UI.
+        // Keep values as unicode escapes to avoid terminal encoding corruption.
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            agentGraphZhOverrideMarker: 'Agent graph zh override marker',
+
+            agentStatusBoard: 'Agent \u72b6\u6001\u770b\u677f',
+            agentStatusBoardHint: '\u5feb\u901f\u67e5\u770b\u54ea\u4e9b Agent \u5df2\u5b8c\u6210\u3001\u8fd0\u884c\u4e2d\u3001\u7b49\u5f85\u3001\u963b\u65ad\u6216\u9700\u8981\u4eba\u5de5\u5ba1\u6838\u3002\u8be6\u7ec6\u5185\u5bb9\u9ed8\u8ba4\u6298\u53e0\uff0c\u9700\u8981\u65f6\u518d\u6253\u5f00\u3002',
+            agentStatusDone: '\u5df2\u5b8c\u6210',
+            agentStatusActive: '\u8fd0\u884c\u4e2d',
+            agentStatusWaiting: '\u7b49\u5f85\u4e2d',
+            agentStatusBlocked: '\u5df2\u963b\u65ad',
+            agentStatusNeedsReview: '\u9700\u8981\u5ba1\u6838',
+            agentStatusIdle: '\u7a7a\u95f2',
+            detailedAgentCards: '\u8be6\u7ec6 Agent \u5361\u7247',
+            agentDetailsCollapsedNote: '\u76ee\u6807\u3001\u51b3\u7b56\u3001\u4ea7\u7269\u3001\u8b66\u544a\u548c Debug \u8f93\u51fa\u90fd\u4fdd\u7559\u5728\u8fd9\u91cc\uff0c\u4f46\u9ed8\u8ba4\u6298\u53e0\u3002',
+            recommendedUserAction: '\u5efa\u8bae\u7528\u6237\u64cd\u4f5c',
+            debugKeyOutputs: 'Debug \u5173\u952e\u8f93\u51fa',
+
+            agentHandoffMap: 'Agent \u4ea4\u63a5\u5730\u56fe',
+            agentActionQueue: 'Agent \u884c\u52a8\u961f\u5217',
+            multiAgentWorkflowTitle: '\u4e1a\u52a1\u7ed1\u5b9a\u7684\u591a Agent \u534f\u4f5c\u6d41\u7a0b',
+            multiAgentWorkflowSubtitle: '\u4ece\u771f\u5b9e\u4e1a\u52a1\u4ea7\u7269\u7ec4\u7ec7\u51fa\u6765\u7684 Agent \u534f\u4f5c\u89c6\u56fe\uff1a\u8bc4\u8bba\u8bc1\u636e\u3001\u5206\u955c\u3001\u89c6\u9891\u4ea4\u4ed8\u5305\u3001\u6210\u672c\u8fb9\u754c\u3001Provider \u4efb\u52a1\u548c\u5b9e\u9a8c\u8bb0\u5f55\u3002',
+            multiAgentNotAutomationNote: '\u4e0d\u662f\u666e\u901a\u81ea\u52a8\u5316\uff1a\u6bcf\u4e2a Agent \u90fd\u6709\u76ee\u6807\u3001\u5224\u65ad\u3001\u4ea7\u7269\u3001\u4ea4\u63a5\u3001\u98ce\u9669\u548c\u4e1a\u52a1\u5f71\u54cd\u3002',
+            agentWorkflowExecutionMode: '\u6267\u884c\u6a21\u5f0f',
+            agentWorkflowPlainAutomation: '\u666e\u901a\u81ea\u52a8\u5316',
+            agentWorkflowRealExecution: '\u771f\u5b9e\u591a Agent \u6267\u884c',
+            agentWorkflowOrder: 'Agent \u987a\u5e8f',
+            agentWorkflowDifferentiator: '\u4e3a\u4ec0\u4e48\u8fd9\u4f53\u73b0 Agent \u80fd\u529b',
+            agentWorkflowBusinessGoal: '\u4e1a\u52a1\u76ee\u6807',
+            agentWorkflowNextAction: '\u4e0b\u4e00\u6b65\u5efa\u8bae',
+            agentWorkflowArtifactIndex: '\u4e1a\u52a1\u4ea7\u7269',
+            agentWorkflowStatus: 'Agent \u72b6\u6001',
+            agentWorkflowConfidence: '\u7f6e\u4fe1\u5ea6',
+            agentWorkflowHumanReview: '\u9700\u8981\u4eba\u5de5\u590d\u6838',
+            agentWorkflowGoal: 'Agent \u76ee\u6807',
+            agentWorkflowDecision: '\u5224\u65ad\u6458\u8981',
+            agentWorkflowBusinessImpact: '\u4e1a\u52a1\u5f71\u54cd',
+            agentWorkflowInputArtifacts: '\u8f93\u5165\u4ea7\u7269',
+            agentWorkflowOutputArtifacts: '\u8f93\u51fa\u4ea7\u7269',
+            agentWorkflowHandoffTo: '\u4ea4\u63a5\u7ed9',
+
+            reviewEvidenceWarningsAction: '\u4f7f\u7528\u4efb\u4f55\u5356\u70b9\u524d\uff0c\u5148\u68c0\u67e5\u8bc1\u636e\u98ce\u9669\u63d0\u793a\u3002',
+            confirmCreativeAngleAction: '\u786e\u8ba4\u5df2\u9009\u5b9a\u7684\u521b\u610f\u89d2\u5ea6\u3002',
+            reviewHookCtaScenesAction: '\u68c0\u67e5 Hook\u3001CTA \u548c\u5206\u955c\u3002',
+            confirmProductIdentityAction: '\u786e\u8ba4\u4ea7\u54c1\u8eab\u4efd\u548c\u56fe\u50cf\u5f15\u7528\u89c4\u5219\u3002',
+            generateShortClipAction: '\u5148\u751f\u6210\u4e00\u6bb5\u77ed\u7247\uff0c\u68c0\u67e5\u4ea7\u54c1\u4e00\u81f4\u6027\u3002',
+            copyGeminiDoubaoAction: '\u590d\u5236 Gemini / \u8c46\u5305\u63d0\u793a\u8bcd\u505a\u624b\u52a8\u6d4b\u8bd5\u3002',
+            reviewPricingAction: '\u4ed8\u8d39\u751f\u6210\u524d\u68c0\u67e5\u9884\u4f30\u4ef7\u683c\u3002',
+            reviewUnsupportedClaimsAction: '\u68c0\u67e5\u672a\u652f\u6301\u5356\u70b9\u98ce\u9669\u3002',
+            createUpdateVideoJobAction: '\u521b\u5efa\u6216\u66f4\u65b0 Video Job\u3002',
+            pasteExternalResultAction: '\u7c98\u8d34\u5916\u90e8\u89c6\u9891\u7ed3\u679c\u5e76\u8bc4\u5206\u5b9e\u9a8c\u3002',
+            reviewAgentDecisionAction: '\u5bfc\u51fa\u524d\u68c0\u67e5\u8fd9\u4e2a Agent \u5224\u65ad\u3002'
+        });
+
+
         applyLanguageCopy();
         mountUserTaskFlow();
         document.getElementById('projectWorkspaceRoot').innerHTML = renderProjectWorkspacePanel();

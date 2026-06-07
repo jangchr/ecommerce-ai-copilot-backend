@@ -3978,3 +3978,30 @@ class HumanApprovalWorkspaceSyncFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("human_approval_workspace_sync_marker", script)
         self.assertIn("Human approval workspace sync", script)
+
+
+
+class AgentGraphZhOverrideFrontendTests(unittest.TestCase):
+    def test_agent_graph_zh_override_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Agent graph zh override marker",
+            "agentGraphZhOverrideMarker",
+            "agentStatusBoard: 'Agent \\u72b6\\u6001\\u770b\\u677f'",
+            "agentStatusDone: '\\u5df2\\u5b8c\\u6210'",
+            "agentStatusActive: '\\u8fd0\\u884c\\u4e2d'",
+            "agentStatusWaiting: '\\u7b49\\u5f85\\u4e2d'",
+            "agentStatusBlocked: '\\u5df2\\u963b\\u65ad'",
+            "detailedAgentCards: '\\u8be6\\u7ec6 Agent \\u5361\\u7247'",
+            "agentDetailsCollapsedNote: '\\u76ee\\u6807",
+            "multiAgentWorkflowTitle: '\\u4e1a\\u52a1\\u7ed1\\u5b9a\\u7684\\u591a Agent",
+            "agentWorkflowBusinessGoal: '\\u4e1a\\u52a1\\u76ee\\u6807'",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_agent_graph_zh_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("agent_graph_zh_override_marker", script)
+        self.assertIn("Agent graph zh override marker", script)
