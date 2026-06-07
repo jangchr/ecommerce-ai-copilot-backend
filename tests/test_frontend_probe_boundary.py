@@ -4237,3 +4237,45 @@ class VisibleUiCleanupBundleFrontendTests(unittest.TestCase):
         self.assertIn("visible_ui_cleanup_bundle_marker", script)
         self.assertIn("Visible UI cleanup bundle", script)
 
+
+class FrontendCopyGuardHardeningBundleTests(unittest.TestCase):
+    def test_frontend_copy_guard_hardening_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Frontend copy guard hardening bundle",
+            "frontendCopyGuardHardeningMarker",
+            "function normalizeStoryboardSceneGoal(goal, storyboard)",
+            ".replace(/\\u8bc4\\u8bba\\u4e2d\\u7684\\u75db\\u70b9/g, '\\u8bc4\\u8bba\\u4e2d\\u7684\\u6838\\u5fc3\\u4fe1\\u53f7')",
+            ".replace(/\\u75db\\u70b9/g, '\\u8bc4\\u8bba\\u4fe1\\u53f7')",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+    def test_static_index_has_no_extended_mojibake_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        bad_markers = [
+            "鐢ㄦ埛",
+            "鐘硅鲍",
+            "璐拱",
+            "闈欐",
+            "璇佹",
+            "鎽樿",
+            "鐩爣",
+            "鍙椾紬",
+            "绛夊緟",
+            "鎵ц",
+            "杩欐",
+            "涓?Hook",
+            "椋庨櫓",
+            "鐥涚偣",
+            "鏍稿績",
+            "淇″彿",
+        ]
+        for marker in bad_markers:
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, html)
+
+    def test_frontend_copy_guard_hardening_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("frontend_copy_guard_hardening_marker", script)
+        self.assertIn("Frontend copy guard hardening bundle", script)

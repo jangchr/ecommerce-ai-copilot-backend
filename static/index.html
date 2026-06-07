@@ -3032,8 +3032,8 @@
                 .replace(/pasted review pain point/gi, 'pasted review signal')
                 .replace(/review pain point/gi, 'review signal')
                 .replace(/customer complaint/gi, 'customer review signal')
-                .replace(/评论中的痛点/g, '评论中的核心信号')
-                .replace(/痛点/g, '评论信号');
+                .replace(/\u8bc4\u8bba\u4e2d\u7684\u75db\u70b9/g, '\u8bc4\u8bba\u4e2d\u7684\u6838\u5fc3\u4fe1\u53f7')
+                .replace(/\u75db\u70b9/g, '\u8bc4\u8bba\u4fe1\u53f7');
         }
 
         function renderStoryboardBrief(storyboard) {
@@ -12546,6 +12546,15 @@
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             visibleUiCleanupBundleMarker: 'Visible UI cleanup bundle'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            frontendCopyGuardHardeningMarker: 'Frontend copy guard hardening bundle'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            frontendCopyGuardHardeningMarker: 'Frontend copy guard hardening bundle'
         });
 
 
