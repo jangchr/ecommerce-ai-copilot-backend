@@ -48,3 +48,42 @@ class PreRenderLocalCheckScriptTests(unittest.TestCase):
         self.assertIn("Pre-render local readiness bundle", result.stdout)
         self.assertIn("latest_commit", result.stdout)
         self.assertIn("render_deploy_required", result.stdout)
+
+class CgRunnerPreRenderCommandTests(unittest.TestCase):
+    def test_cg_runner_has_pre_render_commands(self):
+        text = (ROOT / "scripts" / "cg.ps1").read_text(encoding="utf-8")
+        for marker in [
+            "function PreRender([bool]$RunFastSuite = $false)",
+            '"pre-render" { PreRender $false }',
+            '"pre-render-fast" { PreRender $true }',
+            ".\\scripts\\cg.ps1 pre-render",
+            ".\\scripts\\cg.ps1 pre-render-fast",
+            "Run frontend quality guard",
+            "Run fast regression suite",
+            "Fast suite skipped. Run .\\scripts\\cg.ps1 pre-render-fast before a real Render batch.",
+            "Pre-render local readiness bundle",
+            "render_deploy_required: false",
+            "Pre-render local readiness PASS.",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
+    def test_cg_runner_help_lists_pre_render_commands(self):
+        result = subprocess.run(
+            [
+                "powershell",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "cg.ps1"),
+                "help",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(".\\scripts\\cg.ps1 pre-render", result.stdout)
+        self.assertIn(".\\scripts\\cg.ps1 pre-render-fast", result.stdout)

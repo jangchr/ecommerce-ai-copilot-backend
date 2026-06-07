@@ -654,6 +654,45 @@ function MergeMain() {
 }
 
 
+
+function PreRender([bool]$RunFastSuite = $false) {
+  Run "Run frontend quality guard" {
+    .\l8\Scripts\python.exe .\scripts\frontend_quality_guard.py --json
+  }
+
+  Gate
+
+  if ($RunFastSuite) {
+    Run "Run fast regression suite" {
+      .\l8\Scripts\python.exe .\scripts\run_all_tests.py --fast
+    }
+  } else {
+    WriteCgFeedbackLine ""
+    WriteCgFeedbackLine "Fast suite skipped. Run .\scripts\cg.ps1 pre-render-fast before a real Render batch."
+  }
+
+  Run "Show pre-render local readiness summary" {
+    $latestCommit = git log -1 --oneline
+    $finalStatus = git status --short
+    $finalClean = [string]::IsNullOrWhiteSpace($finalStatus)
+
+    Write-Host "Pre-render local readiness bundle"
+    Write-Host "latest_commit: $latestCommit"
+    Write-Host "git_clean: $finalClean"
+    Write-Host "render_deploy_required: false"
+    Write-Host "recommendation: Keep batching locally; render later when ready."
+
+    if (-not $finalClean) {
+      Write-Host ""
+      Write-Host "Changed files:"
+      Write-Host $finalStatus
+      throw "Working tree is not clean after pre-render check."
+    }
+
+    Write-Host "Pre-render local readiness PASS."
+  }
+}
+
 function PushOnly() {
   Run "Push branch" {
     PushCurrentBranch
@@ -675,6 +714,8 @@ try {
     "commit-tools" { CommitTools }
     "push" { PushOnly }
   "merge-main" { MergeMain }
+    "pre-render" { PreRender $false }
+    "pre-render-fast" { PreRender $true }
     "feedback" { Feedback }
     "inspect-workspace-copy" { InspectWorkspaceCopy }
     "help" {
@@ -691,6 +732,8 @@ try {
       Write-Host "  .\scripts\cg.ps1 commit-tools `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 push"
     Write-Host "  .\scripts\cg.ps1 merge-main"
+      Write-Host "  .\scripts\cg.ps1 pre-render"
+      Write-Host "  .\scripts\cg.ps1 pre-render-fast"
       Write-Host "  .\scripts\cg.ps1 feedback"
       Write-Host "  .\scripts\cg.ps1 inspect-workspace-copy"
       Write-Host ""
