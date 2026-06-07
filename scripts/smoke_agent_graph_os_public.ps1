@@ -48,6 +48,7 @@ Add-Check "planner_quick_action_marker" ($page.Content -match "Go to recommended
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
 Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")
+Add-Check "human_approval_workspace_sync_marker" ($page.Content -match "Human approval workspace sync")
 Add-Check "zh_planner_clean_override_marker" ($page.Content -match "Planner clean zh override marker")
 Add-Check "critical_main_zh_override_marker" ($page.Content -match "Critical main zh override marker")
 Add-Check "no_garbled_marker" (-not ($page.Content -match "\?\?\?\?"))

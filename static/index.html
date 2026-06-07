@@ -5554,6 +5554,8 @@
             workspaceSyncedAfterDownstreamAction: '\u0050\u0072\u006f\u006a\u0065\u0063\u0074\u0020\u0057\u006f\u0072\u006b\u0073\u0070\u0061\u0063\u0065 \u5df2\u540c\u6b65\u6700\u65b0\u4e0b\u6e38\u52a8\u4f5c\u3002',
             downstreamWorkspaceSyncMarker: '\u4e0b\u6e38\u52a8\u4f5c\u540c\u6b65\u0057\u006f\u0072\u006b\u0073\u0070\u0061\u0063\u0065',
             workspaceSyncedAfterDownstreamAction: 'Project Workspace synced with the latest downstream action.',
+            workspaceSyncedAfterHumanApproval: 'Project Workspace synced with the latest human approval decision.',
+            humanApprovalWorkspaceSyncMarker: 'Human approval workspace sync',
             downstreamWorkspaceSyncMarker: 'Downstream action workspace sync',
             workspaceSyncAfterGenerationFailed: 'Could not sync Project Workspace after generation.',
             workspaceSyncAfterGenerationMarker: 'Workspace sync after generation',
@@ -11185,9 +11187,11 @@
                 if (refreshedStatus) {
                     refreshedStatus.textContent = reason === 'video_job'
                         ? t('workspaceSyncedAfterVideoJob')
-                        : (reason === 'downstream_action'
-                            ? t('workspaceSyncedAfterDownstreamAction')
-                            : t('workspaceSyncedAfterGeneration'));
+                        : (reason === 'human_approval'
+                            ? t('workspaceSyncedAfterHumanApproval')
+                            : (reason === 'downstream_action'
+                                ? t('workspaceSyncedAfterDownstreamAction')
+                                : t('workspaceSyncedAfterGeneration')));
                 }
             } catch (error) {
                 const refreshedStatus = document.getElementById('projectWorkspaceStatus');
@@ -11452,6 +11456,7 @@
                 const nextStatus = document.getElementById('humanApprovalGateStatus') || currentVideoJobStatusTarget();
                 if (nextStatus) nextStatus.textContent = humanApprovalDecisionMessage(decision);
                 await refreshRecentVideoJobs();
+                await syncProjectWorkspaceAfterDownstreamAction('human_approval');
             } catch (error) {
                 if (status) status.textContent = error.message || t('approvalUpdateFailed');
                 buttons.forEach((button) => { button.disabled = false; });

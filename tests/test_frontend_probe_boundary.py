@@ -3955,3 +3955,26 @@ class CriticalMainZhOverrideFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("critical_main_zh_override_marker", script)
         self.assertIn("Critical main zh override marker", script)
+
+
+
+class HumanApprovalWorkspaceSyncFrontendTests(unittest.TestCase):
+    def test_human_approval_syncs_project_workspace_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Human approval workspace sync",
+            "workspaceSyncedAfterHumanApproval",
+            "Project Workspace synced with the latest human approval decision.",
+            "await syncProjectWorkspaceAfterDownstreamAction('human_approval')",
+            "reason === 'human_approval'",
+            "updateHumanApprovalGate(decision)",
+            "humanApprovalWorkspaceSyncMarker",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_human_approval_workspace_sync_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("human_approval_workspace_sync_marker", script)
+        self.assertIn("Human approval workspace sync", script)
