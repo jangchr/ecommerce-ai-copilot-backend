@@ -44,6 +44,7 @@ FAST_COMMANDS = [
         "tests.test_source_probe_endpoint",
         "tests.test_frontend_probe_boundary",
         "tests.test_frontend_quality_guard",
+        "tests.test_pre_render_local_check",
         "tests.test_browser_extension_contract",
         "tests.test_health_endpoint",
         "tests.test_startup_preflight",
