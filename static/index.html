@@ -11387,6 +11387,81 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_EXPORT_PACK_BUNDLE_MARKER = 'Project Workspace export pack bundle';
+
+        function projectWorkspaceExportPackMarkdownText(workspace = latestProjectWorkspace) {
+            const project = workspace?.project || {};
+            const summary = project.graph_summary || {};
+            const section = (title, items, kind) => {
+                const rows = (Array.isArray(items) ? items : []).slice(0, 5);
+                if (!rows.length) return `## ${title}\n${t('projectWorkspaceExportNoItems')}`;
+                return [
+                    `## ${title}`,
+                    ...rows.map((item, index) => [
+                        `### ${index + 1}. ${projectWorkspaceHistoryItemId(item, kind) || kind}`,
+                        projectWorkspaceHistoryReaderText(item, kind)
+                    ].join('\n'))
+                ].join('\n\n');
+            };
+
+            return [
+                `# ${t('projectWorkspaceExportMarkdownTitle')}`,
+                `${t('projectId')}: ${project.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('projectWorkspaceExportGeneratedAt')}: ${new Date().toISOString()}`,
+                '',
+                '## Summary',
+                `${t('recentProjectRuns')}: ${summary.run_count || projectWorkspaceHistoryArray(workspace, 'recent_runs').length}`,
+                `${t('recentProjectJobs')}: ${summary.job_count || projectWorkspaceHistoryArray(workspace, 'recent_jobs').length}`,
+                `${t('recentProjectArtifacts')}: ${summary.artifact_count || projectWorkspaceHistoryArray(workspace, 'recent_artifacts').length}`,
+                `${t('recentGraphReports')}: ${summary.report_count || projectWorkspaceHistoryArray(workspace, 'recent_reports').length}`,
+                `${t('recentProjectSources')}: ${summary.source_count || projectWorkspaceHistoryArray(workspace, 'recent_sources').length}`,
+                `${t('recentProjectAssets')}: ${summary.asset_count || projectWorkspaceHistoryArray(workspace, 'recent_assets').length}`,
+                '',
+                section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
+                section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
+                section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
+                section(t('recentGraphReportsQuickLink'), workspace?.recent_reports, 'reports')
+            ].filter(Boolean).join('\n\n');
+        }
+
+        function projectWorkspaceExportPackJsonText(workspace = latestProjectWorkspace) {
+            return JSON.stringify({
+                marker: 'Project Workspace export pack bundle',
+                generated_at: new Date().toISOString(),
+                project_id: workspace?.project?.project_id || latestProjectId || 'demo_project_default',
+                graph_summary: workspace?.project?.graph_summary || {},
+                recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
+                recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
+                recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
+                recent_reports: projectWorkspaceHistoryArray(workspace, 'recent_reports'),
+                recent_sources: projectWorkspaceHistoryArray(workspace, 'recent_sources'),
+                recent_assets: projectWorkspaceHistoryArray(workspace, 'recent_assets')
+            }, null, 2);
+        }
+
+        async function copyProjectWorkspaceExportPack(format = 'markdown') {
+            const status = document.getElementById('projectWorkspaceHistoryStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                const text = format === 'json'
+                    ? projectWorkspaceExportPackJsonText(latestProjectWorkspace)
+                    : projectWorkspaceExportPackMarkdownText(latestProjectWorkspace);
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = format === 'json'
+                    ? t('projectWorkspaceExportJsonCopied')
+                    : t('projectWorkspaceExportMarkdownCopied');
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') {
+                    updateWorkspaceLastSyncTimestamp('workspace_summary');
+                }
+            } catch (error) {
+                if (status) status.textContent = error.message || t('projectWorkspaceExportCopyFailed');
+            }
+        }
+
+
         function renderProjectWorkspaceHistoryQuickPanel(workspace = latestProjectWorkspace) {
             return `
                 <div class="section-block" id="projectWorkspaceHistoryPanel" data-project-history-ux-marker="Project Workspace history UX bundle">
@@ -11396,6 +11471,8 @@
                             <div class="field-helper">${escapeHTML(t('projectHistoryQuickLinksHelper'))}</div>
                         </div>
                         <button class="btn-secondary" id="copyProjectWorkspaceHistoryBtn" type="button" onclick="copyProjectWorkspaceHistorySummary()">${escapeHTML(t('copyProjectHistorySummary'))}</button>
+                        <button class="btn-secondary" id="copyProjectWorkspaceMarkdownPackBtn" type="button" data-project-workspace-export-pack="markdown" onclick="copyProjectWorkspaceExportPack('markdown')">${escapeHTML(t('copyProjectWorkspaceMarkdownPack'))}</button>
+                        <button class="btn-secondary" id="copyProjectWorkspaceJsonPackBtn" type="button" data-project-workspace-export-pack="json" onclick="copyProjectWorkspaceExportPack('json')">${escapeHTML(t('copyProjectWorkspaceJsonPack'))}</button>
                     </div>
                     <div class="graph-os-compact-grid">
                         ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_runs', 'recentProjectRunsQuickLink', 'projectHistoryNoRuns', 'runs')}
@@ -13036,6 +13113,31 @@
             projectHistoryReaderCopyFailed: '\u590d\u5236\u9879\u76ee\u5386\u53f2 reader pack \u5931\u8d25\u3002',
             projectHistoryItemLocated: '\u5df2\u5b9a\u4f4d\u9879\u76ee\u5386\u53f2\u6761\u76ee\u3002',
             projectHistoryItemLocateFailed: '\u672a\u80fd\u5b9a\u4f4d\u9879\u76ee\u5386\u53f2\u6761\u76ee\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceExportPackBundleMarker: 'Project Workspace export pack bundle',
+            projectWorkspaceExportMarkdownTitle: 'Project Workspace export pack',
+            projectWorkspaceExportGeneratedAt: 'Generated at',
+            projectWorkspaceExportNoItems: 'No items yet.',
+            copyProjectWorkspaceMarkdownPack: 'Copy Markdown pack',
+            copyProjectWorkspaceJsonPack: 'Copy JSON pack',
+            projectWorkspaceExportMarkdownCopied: 'Workspace Markdown pack copied.',
+            projectWorkspaceExportJsonCopied: 'Workspace JSON pack copied.',
+            projectWorkspaceExportCopyFailed: 'Could not copy Workspace export pack.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceExportPackBundleMarker: 'Project Workspace export pack bundle',
+            projectWorkspaceExportMarkdownTitle: 'Project Workspace \u5bfc\u51fa\u5305',
+            projectWorkspaceExportGeneratedAt: '\u751f\u6210\u65f6\u95f4',
+            projectWorkspaceExportNoItems: '\u6682\u65e0\u6761\u76ee\u3002',
+            copyProjectWorkspaceMarkdownPack: '\u590d\u5236 Markdown \u5305',
+            copyProjectWorkspaceJsonPack: '\u590d\u5236 JSON \u5305',
+            projectWorkspaceExportMarkdownCopied: 'Workspace Markdown \u5305\u5df2\u590d\u5236\u3002',
+            projectWorkspaceExportJsonCopied: 'Workspace JSON \u5305\u5df2\u590d\u5236\u3002',
+            projectWorkspaceExportCopyFailed: '\u590d\u5236 Workspace \u5bfc\u51fa\u5305\u5931\u8d25\u3002'
         });
 
 
