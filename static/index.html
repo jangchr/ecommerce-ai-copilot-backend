@@ -5551,6 +5551,10 @@
             workspaceSyncingAfterGeneration: 'Syncing Project Workspace with the latest generated result...',
             workspaceSyncedAfterGeneration: 'Project Workspace synced with the latest generated result.',
             workspaceSyncedAfterVideoJob: 'Project Workspace synced with the latest Video Job.',
+            workspaceSyncedAfterDownstreamAction: '\u0050\u0072\u006f\u006a\u0065\u0063\u0074\u0020\u0057\u006f\u0072\u006b\u0073\u0070\u0061\u0063\u0065 \u5df2\u540c\u6b65\u6700\u65b0\u4e0b\u6e38\u52a8\u4f5c\u3002',
+            downstreamWorkspaceSyncMarker: '\u4e0b\u6e38\u52a8\u4f5c\u540c\u6b65\u0057\u006f\u0072\u006b\u0073\u0070\u0061\u0063\u0065',
+            workspaceSyncedAfterDownstreamAction: 'Project Workspace synced with the latest downstream action.',
+            downstreamWorkspaceSyncMarker: 'Downstream action workspace sync',
             workspaceSyncAfterGenerationFailed: 'Could not sync Project Workspace after generation.',
             workspaceSyncAfterGenerationMarker: 'Workspace sync after generation',
             plannerRecommendation: 'Planner Recommendation',
@@ -11080,7 +11084,9 @@
                 if (refreshedStatus) {
                     refreshedStatus.textContent = reason === 'video_job'
                         ? t('workspaceSyncedAfterVideoJob')
-                        : t('workspaceSyncedAfterGeneration');
+                        : (reason === 'downstream_action'
+                            ? t('workspaceSyncedAfterDownstreamAction')
+                            : t('workspaceSyncedAfterGeneration'));
                 }
             } catch (error) {
                 const refreshedStatus = document.getElementById('projectWorkspaceStatus');
@@ -11089,6 +11095,16 @@
                 }
             }
         }
+
+
+        async function syncProjectWorkspaceAfterDownstreamAction(reason = 'downstream_action') {
+            latestProjectId = latestVideoGenerationJob?.project_id
+                || latestProductData?.project_id
+                || latestProjectId
+                || 'demo_project_default';
+            await syncProjectWorkspaceAfterGeneration(reason);
+        }
+
 
         function queueProjectWorkspaceSyncAfterGeneration(reason = 'generation') {
             window.setTimeout(() => {
@@ -11365,6 +11381,7 @@
                         : t('providerJobSubmitted');
                 }
                 await refreshRecentVideoJobs();
+                await syncProjectWorkspaceAfterDownstreamAction('downstream_action');
             } catch (error) {
                 if (status) status.textContent = error.message || t('providerJobSubmitFailed');
                 if (btn) btn.disabled = false;
@@ -11386,6 +11403,7 @@
                 setCurrentVideoJob(response.job || {});
                 if (status) status.textContent = t('providerStatusRefreshed');
                 await refreshRecentVideoJobs();
+                await syncProjectWorkspaceAfterDownstreamAction('downstream_action');
             } catch (error) {
                 if (status) status.textContent = error.message || t('providerStatusRefreshFailed');
                 if (btn) btn.disabled = false;
@@ -11453,6 +11471,7 @@
                 setCurrentVideoJob(response.job || {});
                 if (status) status.textContent = t('videoResultSaved');
                 await refreshRecentVideoJobs();
+                await syncProjectWorkspaceAfterDownstreamAction('downstream_action');
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoResultSaveFailed');
             } finally {
@@ -11496,6 +11515,7 @@
                 setCurrentVideoJob(response.job || {});
                 if (status) status.textContent = t('externalExperimentSaved');
                 await refreshRecentVideoJobs();
+                await syncProjectWorkspaceAfterDownstreamAction('downstream_action');
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoExperimentSaveFailed');
             } finally {
@@ -11529,6 +11549,8 @@
             try {
                 const response = await getVideoGenerationJob(jobId);
                 setCurrentVideoJob(response.job || {});
+                latestProjectId = response.job?.project_id || latestProjectId || 'demo_project_default';
+                await syncProjectWorkspaceAfterDownstreamAction('downstream_action');
                 if (status) status.textContent = t('videoJobStatusRefreshed');
             } catch (error) {
                 if (status) status.textContent = error.message || t('videoJobRefreshFailed');

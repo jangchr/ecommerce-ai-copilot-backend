@@ -47,6 +47,7 @@ Add-Check "planner_action_wiring_marker" ($page.Content -match "Planner action w
 Add-Check "planner_quick_action_marker" ($page.Content -match "Go to recommended action")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
+Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")
 Add-Check "no_garbled_marker" (-not ($page.Content -match "\?\?\?\?"))
 
 $projectCreated = Invoke-CgJson "POST" "/api/v1/projects" @{

@@ -3875,3 +3875,30 @@ class PlannerButtonStateFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("planner_button_state_marker", script)
         self.assertIn("Planner button state", script)
+
+
+
+class DownstreamWorkspaceSyncFrontendTests(unittest.TestCase):
+    def test_downstream_actions_sync_project_workspace_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "function syncProjectWorkspaceAfterDownstreamAction(",
+            "workspaceSyncedAfterDownstreamAction",
+            "Downstream action workspace sync",
+            "await syncProjectWorkspaceAfterDownstreamAction('downstream_action')",
+            "latestProjectId = latestVideoGenerationJob?.project_id",
+            "latestProjectId = response.job?.project_id",
+            "Project Workspace synced with the latest downstream action.",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertGreaterEqual(
+            html.count("await syncProjectWorkspaceAfterDownstreamAction('downstream_action')"),
+            5,
+        )
+        self.assertNotIn("????", html)
+
+    def test_downstream_workspace_sync_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("downstream_workspace_sync_marker", script)
+        self.assertIn("Downstream action workspace sync", script)
