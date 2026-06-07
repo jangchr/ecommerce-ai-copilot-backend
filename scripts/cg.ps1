@@ -260,6 +260,30 @@ function Gate() {
   PrintCgPassSummary
 }
 
+
+function BatchGate() {
+  Run "Run super-batch frontend quality guard" {
+    .\l8\Scripts\python.exe .\scripts\frontend_quality_guard.py --json
+  }
+
+  Run "Run super-batch focused unit tests" {
+    .\l8\Scripts\python.exe -m unittest tests.test_agent_runs tests.test_supervisor_planner tests.test_frontend_probe_boundary tests.test_frontend_quality_guard tests.test_pre_render_local_check
+  }
+
+  Run "Check whitespace / diff errors" {
+    git diff --check
+  }
+
+  Run "Show git status" {
+    git status -sb
+  }
+
+  PrintCgPassSummary
+  WriteCgFeedbackLine ""
+  WriteCgFeedbackLine "Fast suite intentionally skipped for local super-batch; run .\scripts\cg.ps1 pre-render-fast before Render."
+}
+
+
 function ShowStatus() {
   Run "Git status" {
     git status -sb
@@ -706,6 +730,7 @@ $cgCommandFailed = $false
 try {
   switch ($Command) {
     "gate" { Gate }
+    "batch-gate" { BatchGate }
     "status" { ShowStatus }
     "commit-extension" { CommitExtension }
     "commit-frontend" { CommitFrontend }
@@ -724,6 +749,7 @@ try {
       Write-Host ""
       Write-Host "Usage:"
       Write-Host "  .\scripts\cg.ps1 gate"
+      Write-Host "  .\scripts\cg.ps1 batch-gate"
       Write-Host "  .\scripts\cg.ps1 status"
       Write-Host "  .\scripts\cg.ps1 commit-extension `"Commit message`""
       Write-Host "  .\scripts\cg.ps1 commit-frontend `"Commit message`""

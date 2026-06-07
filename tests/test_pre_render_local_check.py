@@ -87,3 +87,42 @@ class CgRunnerPreRenderCommandTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn(".\\scripts\\cg.ps1 pre-render", result.stdout)
         self.assertIn(".\\scripts\\cg.ps1 pre-render-fast", result.stdout)
+
+
+class CgRunnerBatchGateCommandTests(unittest.TestCase):
+    def test_cg_runner_has_batch_gate_command(self):
+        text = (ROOT / "scripts" / "cg.ps1").read_text(encoding="utf-8")
+        for marker in [
+            "function BatchGate()",
+            '"batch-gate" { BatchGate }',
+            ".\\scripts\\cg.ps1 batch-gate",
+            "Run super-batch frontend quality guard",
+            "Run super-batch focused unit tests",
+            "tests.test_agent_runs",
+            "tests.test_supervisor_planner",
+            "tests.test_frontend_probe_boundary",
+            "tests.test_frontend_quality_guard",
+            "tests.test_pre_render_local_check",
+            "Fast suite intentionally skipped for local super-batch; run .\\scripts\\cg.ps1 pre-render-fast before Render.",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
+    def test_cg_runner_help_lists_batch_gate_command(self):
+        result = subprocess.run(
+            [
+                "powershell",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "cg.ps1"),
+                "help",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(".\\scripts\\cg.ps1 batch-gate", result.stdout)
