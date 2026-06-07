@@ -4065,3 +4065,36 @@ class CopyReadyScriptZhLabelFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("copy_ready_script_zh_marker", script)
         self.assertIn("Copy-ready script zh label marker", script)
+
+
+class FrontendMojibakeGuardTests(unittest.TestCase):
+    def test_static_index_has_no_common_mojibake_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        mojibake_markers = [
+            "锛",
+            "鍦",
+            "鐢",
+            "鏃",
+            "璇",
+            "绮",
+            "浜",
+            "鎻",
+            "鍙",
+            "鐩",
+            "椋",
+            "瑙",
+            "鏍",
+            "绛",
+            "€?",
+            "鈥",
+            "俙",
+            "歖",
+        ]
+
+        for marker in mojibake_markers:
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, html)
+
+    def test_mojibake_guard_marker_exists(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        self.assertNotIn("????", html)
