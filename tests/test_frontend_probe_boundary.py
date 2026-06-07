@@ -4125,3 +4125,30 @@ class WorkspaceRefreshShortcutFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("workspace_refresh_shortcut_marker", script)
         self.assertIn("Workspace refresh shortcut", script)
+
+
+
+class WorkspaceLastSyncTimestampFrontendTests(unittest.TestCase):
+    def test_workspace_last_sync_timestamp_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Workspace last sync timestamp",
+            "workspaceLastSyncTimestampMarker",
+            "projectWorkspaceLastSyncStatus",
+            "data-workspace-last-sync-marker",
+            "data-workspace-last-sync-reason",
+            "function workspaceLastSyncTimeLabel(",
+            "function updateWorkspaceLastSyncTimestamp(",
+            "updateWorkspaceLastSyncTimestamp(reason);",
+            "updateWorkspaceLastSyncTimestamp('manual_refresh');",
+            "workspaceLastSyncedAt",
+            "Last synced:",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_workspace_last_sync_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("workspace_last_sync_timestamp_marker", script)
+        self.assertIn("Workspace last sync timestamp", script)

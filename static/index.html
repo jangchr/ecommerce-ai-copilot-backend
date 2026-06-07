@@ -11189,6 +11189,7 @@
                                 ? t('workspaceSyncedAfterDownstreamAction')
                                 : t('workspaceSyncedAfterGeneration')));
                 }
+                updateWorkspaceLastSyncTimestamp(reason);
             } catch (error) {
                 const refreshedStatus = document.getElementById('projectWorkspaceStatus');
                 if (refreshedStatus) {
@@ -11215,6 +11216,24 @@
 
 
 
+
+        function workspaceLastSyncTimeLabel(date = new Date()) {
+            try {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            } catch (error) {
+                return date.toTimeString().slice(0, 8);
+            }
+        }
+
+        function updateWorkspaceLastSyncTimestamp(reason = 'manual') {
+            const status = document.getElementById('projectWorkspaceLastSyncStatus');
+            if (!status) return;
+            status.textContent = `${t('workspaceLastSyncedAt')} ${workspaceLastSyncTimeLabel()}`;
+            status.setAttribute('data-workspace-last-sync-marker', 'Workspace last sync timestamp');
+            status.setAttribute('data-workspace-last-sync-reason', reason);
+        }
+
+
         async function refreshProjectWorkspaceAndPlannerShortcut() {
             const btn = document.getElementById('refreshProjectWorkspaceAndPlannerBtn');
             const workspaceStatus = document.getElementById('projectWorkspaceStatus');
@@ -11232,6 +11251,7 @@
                 const refreshedPlannerStatus = document.getElementById('plannerRecommendationStatus');
                 if (refreshedWorkspaceStatus) refreshedWorkspaceStatus.textContent = t('workspacePlannerRefreshDone');
                 if (refreshedPlannerStatus) refreshedPlannerStatus.textContent = t('workspacePlannerRefreshDone');
+                updateWorkspaceLastSyncTimestamp('manual_refresh');
             } catch (error) {
                 const refreshedWorkspaceStatus = document.getElementById('projectWorkspaceStatus');
                 const refreshedPlannerStatus = document.getElementById('plannerRecommendationStatus');
@@ -12420,6 +12440,17 @@
             workspacePlannerRefreshWorking: '\u6b63\u5728\u5237\u65b0 Project Workspace \u548c Planner...',
             workspacePlannerRefreshDone: 'Project Workspace \u548c Planner \u5df2\u5237\u65b0\u3002',
             workspacePlannerRefreshFailed: '\u5237\u65b0 Project Workspace \u548c Planner \u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            workspaceLastSyncTimestampMarker: 'Workspace last sync timestamp',
+            workspaceLastSyncedAt: 'Last synced:'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            workspaceLastSyncTimestampMarker: 'Workspace last sync timestamp',
+            workspaceLastSyncedAt: '\u6700\u540e\u540c\u6b65\uff1a'
         });
 
 

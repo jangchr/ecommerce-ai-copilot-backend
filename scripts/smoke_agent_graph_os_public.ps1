@@ -46,6 +46,7 @@ Add-Check "planner_recommendation_marker" ($page.Content -match "Planner Recomme
 Add-Check "planner_action_wiring_marker" ($page.Content -match "Planner action wiring")
 Add-Check "planner_quick_action_marker" ($page.Content -match "Go to recommended action")
 Add-Check "workspace_refresh_shortcut_marker" ($page.Content -match "Workspace refresh shortcut")
+Add-Check "workspace_last_sync_timestamp_marker" ($page.Content -match "Workspace last sync timestamp")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
 Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")
