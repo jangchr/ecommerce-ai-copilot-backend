@@ -1239,3 +1239,94 @@ class AgentRunnerDispatchTicketTests(unittest.TestCase):
         self.assertEqual(ticket["recommended_command"], "fix_runner_plan_blockers")
         self.assertFalse(ticket["safety_boundaries"]["external_api_called"])
 
+
+class AgentRunnerDispatchEventTests(unittest.TestCase):
+    def test_dispatch_event_records_ready_ticket_without_execution(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_event_summary,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_plan,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_dispatch_event_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_dispatch_event_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        summary = build_agent_runner_dispatch_event_summary(event)
+
+        self.assertEqual(event["dispatch_event_version"], "agent_runner_dispatch_event_v1")
+        self.assertEqual(event["event_type"], "runner_dispatch_dry_run")
+        self.assertEqual(event["event_status"], "dispatch_ready")
+        self.assertTrue(event["dispatch_allowed"], event)
+        self.assertTrue(event["dry_run"])
+        self.assertFalse(event["external_api_called"])
+        self.assertFalse(event["cost_incurred_by_crossgrowth"])
+        self.assertEqual(event["target_agent_id"], "planner_agent")
+        self.assertEqual(event["dispatch_message"]["message_type"], "runner_dispatch_event")
+        self.assertEqual(event["dispatch_message"]["target_agent_id"], "planner_agent")
+        self.assertFalse(event["safety_boundaries"]["llm_autonomous_decision_enabled"])
+        self.assertEqual(summary["summary_version"], "agent_runner_dispatch_event_summary_v1")
+        self.assertEqual(summary["event_status"], "dispatch_ready")
+        self.assertTrue(summary["dispatch_allowed"])
+
+    def test_dispatch_event_records_waiting_ticket(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_plan,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_dispatch_event_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_dispatch_event_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+
+        self.assertEqual(event["event_status"], "dispatch_waiting_for_user")
+        self.assertFalse(event["dispatch_allowed"])
+        self.assertIn("user_gate", event["blocking_check_ids"])
+        self.assertEqual(event["target_agent_id"], "source_adapter_agent")
+        self.assertTrue(event["dry_run"])
+
+    def test_dispatch_event_records_blocked_ticket(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_plan,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_dispatch_event_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+
+        self.assertEqual(event["event_status"], "dispatch_blocked")
+        self.assertFalse(event["dispatch_allowed"])
+        self.assertIn("contract_validation", event["blocking_check_ids"])
+        self.assertEqual(event["target_agent_id"], "missing_agent")
+        self.assertFalse(event["safety_boundaries"]["external_api_called"])
+

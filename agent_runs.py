@@ -2033,6 +2033,116 @@ def build_agent_runner_dispatch_summary(ticket: dict[str, Any]) -> dict[str, Any
 
 
 
+AGENT_RUNNER_DISPATCH_EVENT_VERSION = "agent_runner_dispatch_event_v1"
+
+
+def _dispatch_event_status_from_ticket(ticket: dict[str, Any]) -> str:
+    dispatch_status = str(ticket.get("dispatch_status") or "blocked")
+    if bool(ticket.get("dispatch_allowed")):
+        return "dispatch_ready"
+    if dispatch_status == "waiting_for_user":
+        return "dispatch_waiting_for_user"
+    return "dispatch_blocked"
+
+
+def build_agent_runner_dispatch_event(
+    dispatch_ticket: dict[str, Any],
+    event_id: str | None = None,
+) -> dict[str, Any]:
+    """Build a dry-run dispatch event for auditability.
+
+    This records a proposed dispatch. It does not execute agents, call
+    providers, spend money, or enable autonomous LLM decisions.
+    """
+
+    ticket = dispatch_ticket if isinstance(dispatch_ticket, dict) else {}
+    project_id = str(ticket.get("project_id") or "demo_project_default")
+    next_agent_id = str(ticket.get("next_agent_id") or "")
+    dispatch_status = str(ticket.get("dispatch_status") or "blocked")
+    safe_event_id = str(
+        event_id
+        or f"dispatch_event_{project_id}_{next_agent_id or 'none'}_{dispatch_status}"
+    ).replace(" ", "_")
+
+    preflight_checks = ticket.get("preflight_checks") if isinstance(ticket.get("preflight_checks"), list) else []
+    preflight_check_ids = [
+        str(item.get("check_id") or "")
+        for item in preflight_checks
+        if isinstance(item, dict) and str(item.get("check_id") or "")
+    ]
+    blocking_check_ids = [
+        str(item)
+        for item in (ticket.get("blocking_check_ids") or [])
+        if str(item or "")
+    ]
+
+    event_status = _dispatch_event_status_from_ticket(ticket)
+    message = build_agent_message(
+        message_type="runner_dispatch_event",
+        source_agent_id="runner_dispatcher",
+        target_agent_id=next_agent_id,
+        payload={
+            "dispatch_ticket_version": ticket.get("dispatch_ticket_version"),
+            "dispatch_status": dispatch_status,
+            "dispatch_allowed": bool(ticket.get("dispatch_allowed")),
+            "recommended_command": ticket.get("recommended_command"),
+            "preflight_check_ids": preflight_check_ids,
+            "blocking_check_ids": blocking_check_ids,
+            "dry_run": True,
+        },
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "dispatch_event_version": AGENT_RUNNER_DISPATCH_EVENT_VERSION,
+        "event_id": safe_event_id,
+        "event_type": "runner_dispatch_dry_run",
+        "event_status": event_status,
+        "project_id": project_id,
+        "source_agent_id": "runner_dispatcher",
+        "target_agent_id": next_agent_id,
+        "dispatch_ticket_version": str(ticket.get("dispatch_ticket_version") or ""),
+        "dispatch_status": dispatch_status,
+        "dispatch_allowed": bool(ticket.get("dispatch_allowed")),
+        "recommended_command": str(ticket.get("recommended_command") or ""),
+        "next_action_type": str(ticket.get("next_action_type") or ""),
+        "dry_run": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "preflight_check_ids": preflight_check_ids,
+        "blocking_check_ids": blocking_check_ids,
+        "handoff_message": deepcopy(ticket.get("handoff_message") or {}),
+        "contract_validation": deepcopy(ticket.get("contract_validation") or {}),
+        "dispatch_message": message,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_dispatch_event_summary(event: dict[str, Any]) -> dict[str, Any]:
+    safe_event = event if isinstance(event, dict) else {}
+    return {
+        "summary_version": "agent_runner_dispatch_event_summary_v1",
+        "dispatch_event_version": str(safe_event.get("dispatch_event_version") or AGENT_RUNNER_DISPATCH_EVENT_VERSION),
+        "event_id": str(safe_event.get("event_id") or ""),
+        "event_status": str(safe_event.get("event_status") or "dispatch_blocked"),
+        "event_type": str(safe_event.get("event_type") or "runner_dispatch_dry_run"),
+        "project_id": str(safe_event.get("project_id") or "demo_project_default"),
+        "target_agent_id": str(safe_event.get("target_agent_id") or ""),
+        "dispatch_allowed": bool(safe_event.get("dispatch_allowed")),
+        "blocking_check_count": len(safe_event.get("blocking_check_ids") or []),
+        "preflight_check_count": len(safe_event.get("preflight_check_ids") or []),
+        "dry_run": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

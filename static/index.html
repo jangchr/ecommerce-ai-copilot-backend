@@ -11550,6 +11550,7 @@
                 const payload = await response.json();
                 latestProjectRunnerPlan = payload.runner_plan || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     project: payload.project || latestProjectWorkspace?.project || {},
@@ -11557,7 +11558,9 @@
                     runner_plan: latestProjectRunnerPlan,
                     runner_plan_summary: payload.runner_plan_summary || {},
                     runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
-                    runner_dispatch_summary: payload.runner_dispatch_summary || {}
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {}
                 };
                 if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_plan');
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_plan');
@@ -11634,6 +11637,97 @@
                 if (status) status.textContent = error.message || t('dispatchTicketCopyFailed');
             }
         }
+
+
+        const PROJECT_WORKSPACE_DISPATCH_EVENT_PANEL_BUNDLE_MARKER = 'Project Workspace dispatch event panel bundle';
+        let latestProjectRunnerDispatchEvent = {};
+
+        function projectWorkspaceDispatchEventFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerDispatchEvent && Object.keys(latestProjectRunnerDispatchEvent).length
+                ? latestProjectRunnerDispatchEvent
+                : workspace?.runner_dispatch_event || {};
+        }
+
+        function projectWorkspaceDispatchEventStatusLabel(event = {}) {
+            const status = String(event.event_status || 'not_refreshed');
+            const labels = {
+                dispatch_ready: t('dispatchEventStatusReady'),
+                dispatch_waiting_for_user: t('dispatchEventStatusWaitingForUser'),
+                dispatch_blocked: t('dispatchEventStatusBlocked'),
+                not_refreshed: t('dispatchEventStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceDispatchEventCopyText(event = projectWorkspaceDispatchEventFromWorkspace()) {
+            return [
+                t('dispatchEventCopyTitle'),
+                `${t('projectId')}: ${event.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('dispatchEventId')}: ${event.event_id || t('none')}`,
+                `${t('dispatchEventStatus')}: ${event.event_status || 'not_refreshed'}`,
+                `${t('dispatchEventType')}: ${event.event_type || t('none')}`,
+                `${t('runnerPlanNextAgent')}: ${event.target_agent_id || t('none')}`,
+                `${t('dispatchAllowed')}: ${Boolean(event.dispatch_allowed)}`,
+                `${t('dispatchDryRun')}: ${Boolean(event.dry_run)}`,
+                '',
+                JSON.stringify(event || {}, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceDispatchEvent() {
+            const status = document.getElementById('projectWorkspaceDispatchEventStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceDispatchEventCopyText());
+                if (status) status.textContent = t('dispatchEventCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('dispatchEventCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceDispatchEventPanel(workspace = latestProjectWorkspace) {
+            const event = projectWorkspaceDispatchEventFromWorkspace(workspace);
+            const hasEvent = Boolean(event && Object.keys(event).length);
+            const statusLabel = projectWorkspaceDispatchEventStatusLabel(event);
+            return `
+                <div class="section-block" id="projectWorkspaceDispatchEventPanel" data-project-dispatch-event-panel-marker="Project Workspace dispatch event panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('dispatchEventPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('dispatchEventPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceDispatchEventBtn" type="button" onclick="copyProjectWorkspaceDispatchEvent()">${escapeHTML(t('copyDispatchEvent'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('dispatchEventStatus'))}</div>
+                            <strong data-dispatch-event-status="${escapeHTML(event.event_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('dispatchEventDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('dispatchEventId'))}</div>
+                            <strong data-dispatch-event-id="${escapeHTML(event.event_id || '')}">${escapeHTML(event.event_id || t('dispatchEventNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('dispatchEventType'))}: ${escapeHTML(event.event_type || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerPlanNextAgent'))}</div>
+                            <strong data-dispatch-event-target-agent="${escapeHTML(event.target_agent_id || '')}">${escapeHTML(event.target_agent_id || t('runnerPlanNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('dispatchAllowed'))}: ${escapeHTML(String(Boolean(event.dispatch_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('dispatchEventAuditTrail'))}</div>
+                        ${hasEvent ? `<pre class="debug" data-dispatch-event-audit-preview="Project Workspace dispatch event panel bundle">${escapeHTML(projectWorkspaceDispatchEventCopyText(event))}</pre>` : `<div class="recent-empty">${escapeHTML(t('dispatchEventNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceDispatchEventStatus"></div>
+                </div>
+            `;
+        }
+
 
         function renderProjectWorkspaceDispatchTicketPanel(workspace = latestProjectWorkspace) {
             const ticket = projectWorkspaceDispatchTicketFromWorkspace(workspace);
@@ -11781,6 +11875,7 @@
                     </div>
                     ${renderProjectWorkspaceRunnerPlanPanel(workspace)}
                     ${renderProjectWorkspaceDispatchTicketPanel(workspace)}
+                    ${renderProjectWorkspaceDispatchEventPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -13518,6 +13613,47 @@
             dispatchDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u6267\u884c Agent\uff0c\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\u3002',
             dispatchTicketCopied: '\u6d3e\u5de5\u5355\u5df2\u590d\u5236\u3002',
             dispatchTicketCopyFailed: '\u590d\u5236\u6d3e\u5de5\u5355\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceDispatchEventPanelBundleMarker: 'Project Workspace dispatch event panel bundle',
+            dispatchEventPanelTitle: 'Dispatch event ledger',
+            dispatchEventPanelHelper: 'Dry-run audit event created from the dispatch ticket. This records the proposed handoff without executing the agent.',
+            copyDispatchEvent: 'Copy dispatch event',
+            dispatchEventCopyTitle: 'Project dispatch event',
+            dispatchEventId: 'Dispatch event ID',
+            dispatchEventStatus: 'Dispatch event status',
+            dispatchEventType: 'Dispatch event type',
+            dispatchEventAuditTrail: 'Audit trail preview',
+            dispatchEventStatusReady: 'Dispatch ready',
+            dispatchEventStatusWaitingForUser: 'Dispatch waiting for user',
+            dispatchEventStatusBlocked: 'Dispatch blocked',
+            dispatchEventStatusNotRefreshed: 'Not refreshed',
+            dispatchEventNotRefreshedYet: 'Dispatch event has not been refreshed yet.',
+            dispatchEventDryRunHelper: 'Audit only: no agent execution, provider call, or cost.',
+            dispatchEventCopied: 'Dispatch event copied.',
+            dispatchEventCopyFailed: 'Could not copy dispatch event.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceDispatchEventPanelBundleMarker: 'Project Workspace dispatch event panel bundle',
+            dispatchEventPanelTitle: '\u6d3e\u5de5\u4e8b\u4ef6\u8d26\u672c',
+            dispatchEventPanelHelper: '\u6765\u81ea\u6d3e\u5de5\u5355\u7684 dry-run \u5ba1\u8ba1\u4e8b\u4ef6\u3002\u5b83\u53ea\u8bb0\u5f55\u62df\u4ea4\u63a5\u52a8\u4f5c\uff0c\u4e0d\u4f1a\u771f\u6b63\u6267\u884c Agent\u3002',
+            copyDispatchEvent: '\u590d\u5236\u6d3e\u5de5\u4e8b\u4ef6',
+            dispatchEventCopyTitle: '\u9879\u76ee\u6d3e\u5de5\u4e8b\u4ef6',
+            dispatchEventId: '\u6d3e\u5de5\u4e8b\u4ef6 ID',
+            dispatchEventStatus: '\u6d3e\u5de5\u4e8b\u4ef6\u72b6\u6001',
+            dispatchEventType: '\u6d3e\u5de5\u4e8b\u4ef6\u7c7b\u578b',
+            dispatchEventAuditTrail: '\u5ba1\u8ba1\u8f68\u8ff9\u9884\u89c8',
+            dispatchEventStatusReady: '\u6d3e\u5de5\u5df2\u5c31\u7eea',
+            dispatchEventStatusWaitingForUser: '\u6d3e\u5de5\u7b49\u5f85\u7528\u6237',
+            dispatchEventStatusBlocked: '\u6d3e\u5de5\u5df2\u963b\u585e',
+            dispatchEventStatusNotRefreshed: '\u672a\u5237\u65b0',
+            dispatchEventNotRefreshedYet: '\u6d3e\u5de5\u4e8b\u4ef6\u5c1a\u672a\u5237\u65b0\u3002',
+            dispatchEventDryRunHelper: '\u4ec5\u5ba1\u8ba1\uff1a\u4e0d\u6267\u884c Agent\uff0c\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\u3002',
+            dispatchEventCopied: '\u6d3e\u5de5\u4e8b\u4ef6\u5df2\u590d\u5236\u3002',
+            dispatchEventCopyFailed: '\u590d\u5236\u6d3e\u5de5\u4e8b\u4ef6\u5931\u8d25\u3002'
         });
 
 

@@ -63,6 +63,8 @@ from agent_runs import (
     build_agent_runner_plan_summary,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
+    build_agent_runner_dispatch_event,
+    build_agent_runner_dispatch_event_summary,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
@@ -6122,6 +6124,8 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         requested_by="project_runner_plan_api",
     )
     runner_dispatch_summary = build_agent_runner_dispatch_summary(runner_dispatch_ticket)
+    runner_dispatch_event = build_agent_runner_dispatch_event(runner_dispatch_ticket)
+    runner_dispatch_event_summary = build_agent_runner_dispatch_event_summary(runner_dispatch_event)
 
     graph_summary = dict(project.get("graph_summary") or {})
     graph_summary.update(
@@ -6133,6 +6137,8 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
             "latest_runner_requires_user_action": bool(runner_plan.get("requires_user_action")),
             "latest_runner_dispatch_status": runner_dispatch_ticket.get("dispatch_status", ""),
             "latest_runner_dispatch_allowed": bool(runner_dispatch_ticket.get("dispatch_allowed")),
+            "latest_runner_dispatch_event_status": runner_dispatch_event.get("event_status", ""),
+            "latest_runner_dispatch_event_id": runner_dispatch_event.get("event_id", ""),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6148,6 +6154,8 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "runner_plan_summary": runner_plan_summary,
         "runner_dispatch_ticket": runner_dispatch_ticket,
         "runner_dispatch_summary": runner_dispatch_summary,
+        "runner_dispatch_event": runner_dispatch_event,
+        "runner_dispatch_event_summary": runner_dispatch_event_summary,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

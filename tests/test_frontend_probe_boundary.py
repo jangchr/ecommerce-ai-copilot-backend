@@ -4520,3 +4520,45 @@ class ProjectWorkspaceDispatchTicketPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace dispatch ticket panel bundle", script)
         self.assertIn("project_workspace_dispatch_ticket_panel_marker", script)
 
+
+class ProjectWorkspaceDispatchEventPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_dispatch_event_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace dispatch event panel bundle",
+            "PROJECT_WORKSPACE_DISPATCH_EVENT_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceDispatchEventPanel(",
+            "function projectWorkspaceDispatchEventFromWorkspace(",
+            "function projectWorkspaceDispatchEventStatusLabel(",
+            "function projectWorkspaceDispatchEventCopyText(",
+            "async function copyProjectWorkspaceDispatchEvent(",
+            "latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};",
+            "runner_dispatch_event: latestProjectRunnerDispatchEvent",
+            "runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {}",
+            "projectWorkspaceDispatchEventPanel",
+            "projectWorkspaceDispatchEventStatus",
+            "copyProjectWorkspaceDispatchEventBtn",
+            "data-project-dispatch-event-panel-marker",
+            "data-dispatch-event-status",
+            "data-dispatch-event-id",
+            "data-dispatch-event-target-agent",
+            "data-dispatch-event-audit-preview",
+            "dispatchEventPanelTitle",
+            "dispatchEventDryRunHelper",
+            "dispatchEventStatusReady",
+            "renderProjectWorkspaceDispatchEventPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_dispatch_event_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_dispatch_event_panel_marker", script)
+        self.assertIn("Project Workspace dispatch event panel bundle", script)
+
+    def test_project_workspace_dispatch_event_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace dispatch event panel bundle", script)
+        self.assertIn("project_workspace_dispatch_event_panel_marker", script)
+
