@@ -59,6 +59,8 @@ from agent_runs import (
     apply_human_approval_decision,
     apply_evidence_safe_storyboard_rework,
     build_agent_message,
+    build_agent_runner_plan,
+    build_agent_runner_plan_summary,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
@@ -6097,6 +6099,69 @@ def _project_with_planner_summary(project_id: str) -> tuple[dict, dict]:
     except Exception:
         pass
     return project, recommendation
+
+
+
+def _build_project_runner_plan_payload(project_id: str) -> dict:
+    safe_id = _safe_project_id(project_id)
+    project, planner_recommendation = _project_with_planner_summary(safe_id)
+    context = _latest_project_planner_context(safe_id)
+
+    runner_plan = build_agent_runner_plan(
+        planner_recommendation=planner_recommendation,
+        project=project,
+        artifact_registry=context["latest_artifact_registry"],
+        latest_run=context["latest_run"],
+        latest_job=context["latest_job"],
+    )
+    runner_plan_summary = build_agent_runner_plan_summary(runner_plan)
+
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update(
+        {
+            "latest_runner_plan_status": runner_plan.get("execution_status", ""),
+            "latest_runner_next_agent_id": runner_plan.get("next_agent_id", ""),
+            "latest_runner_next_action_type": runner_plan.get("next_action_type", ""),
+            "latest_runner_can_execute_next_agent": bool(runner_plan.get("can_execute_next_agent")),
+            "latest_runner_requires_user_action": bool(runner_plan.get("requires_user_action")),
+        }
+    )
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        "project": project,
+        "planner_recommendation": planner_recommendation,
+        "runner_plan": runner_plan,
+        "runner_plan_summary": runner_plan_summary,
+        "dry_run": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+    }
+
+
+@app.get("/api/v1/projects/{project_id}/runner/plan")
+async def get_project_agent_runner_plan(project_id: str, http_request: Request):
+    payload = _build_project_runner_plan_payload(project_id)
+    return {
+        "status": "success",
+        **payload,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/plan/refresh")
+async def refresh_project_agent_runner_plan(project_id: str, http_request: Request):
+    payload = _build_project_runner_plan_payload(project_id)
+    return {
+        "status": "success",
+        **payload,
+        "request_id": http_request.state.request_id,
+    }
+
 
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)

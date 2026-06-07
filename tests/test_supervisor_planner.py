@@ -387,3 +387,107 @@ class SupervisorPlannerEndpointTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AgentRunnerPlanEndpointTests(unittest.TestCase):
+    def setUp(self):
+        self.client = TestClient(app)
+
+    def _create_project(self):
+        response = self.client.post(
+            "/api/v1/projects",
+            json={
+                "project_name": f"Runner Plan Endpoint {uuid4().hex[:8]}",
+                "product_name": "Travel Blender",
+                "product_category": "kitchen_appliance",
+                "source_type": "manual",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        return response.json()["project"]
+
+    def test_project_runner_plan_endpoint_empty_project_waits_for_user(self):
+        project = self._create_project()
+        response = self.client.get(
+            f"/api/v1/projects/{project['project_id']}/runner/plan"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+
+        plan = payload["runner_plan"]
+        summary = payload["runner_plan_summary"]
+        self.assertEqual(plan["runner_plan_version"], "agent_runner_plan_v1")
+        self.assertEqual(plan["execution_status"], "waiting_for_user")
+        self.assertFalse(plan["can_execute_next_agent"])
+        self.assertTrue(plan["requires_user_action"])
+        self.assertEqual(plan["next_agent_id"], "source_adapter_agent")
+        self.assertEqual(plan["next_action_type"], "add_source")
+        self.assertTrue(plan["handoff_message"]["handoff_valid"], plan["handoff_message"])
+        self.assertEqual(summary["summary_version"], "agent_runner_plan_summary_v1")
+        self.assertEqual(summary["execution_status"], plan["execution_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_plan_status"],
+            plan["execution_status"],
+        )
+        self.assertFalse(plan["safety_boundaries"]["external_api_called"])
+        self.assertFalse(plan["safety_boundaries"]["cost_incurred_by_crossgrowth"])
+        self.assertFalse(plan["safety_boundaries"]["llm_autonomous_decision_enabled"])
+
+    def test_project_runner_plan_refresh_endpoint_matches_plan_shape(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/plan/refresh"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertIn("planner_recommendation", payload)
+        self.assertIn("runner_plan", payload)
+        self.assertIn("runner_plan_summary", payload)
+        self.assertTrue(payload["dry_run"])
+        self.assertEqual(
+            payload["runner_plan"]["runner_plan_version"],
+            "agent_runner_plan_v1",
+        )
+        self.assertEqual(
+            payload["runner_plan_summary"]["runner_plan_version"],
+            "agent_runner_plan_v1",
+        )
+
+    def test_project_runner_plan_after_source_keeps_contract_validation(self):
+        project = self._create_project()
+        source_response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/sources",
+            json={
+                "source_type": "pasted_reviews",
+                "product_name": "Travel Blender",
+                "product_category": "kitchen_appliance",
+                "raw_text": "Great for office smoothies. Small enough for travel. Cup can leak in my bag.",
+                "source_url": "",
+                "metadata": {"test_case": "runner_plan_after_source"},
+            },
+        )
+        self.assertEqual(source_response.status_code, 200)
+
+        response = self.client.get(
+            f"/api/v1/projects/{project['project_id']}/runner/plan"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        plan = payload["runner_plan"]
+
+        self.assertEqual(plan["runner_plan_version"], "agent_runner_plan_v1")
+        self.assertIn(
+            plan["execution_status"],
+            {"ready", "ready_with_optional_user_input", "waiting_for_user", "blocked"},
+        )
+        self.assertIn("contract_validation", plan)
+        self.assertIn("planned_steps", plan)
+        self.assertGreaterEqual(len(plan["planned_steps"]), 2)
+        self.assertFalse(plan["safety_boundaries"]["external_api_called"])
