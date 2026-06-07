@@ -1,5 +1,9 @@
 import unittest
+from uuid import uuid4
 
+from fastapi.testclient import TestClient
+
+from main import app
 from agent_runs import build_lightweight_artifact_registry, build_supervisor_planner_recommendation
 
 
@@ -298,6 +302,87 @@ class SupervisorPlannerRecommendationTests(unittest.TestCase):
         self.assertEqual(recommendation["overall_status"], "blocked")
         self.assertEqual(recommendation["next_action_type"], "review_blocker")
         self.assertTrue(recommendation["user_action_required"])
+
+
+
+class SupervisorPlannerEndpointTests(unittest.TestCase):
+    def setUp(self):
+        self.client = TestClient(app)
+
+    def _create_project(self):
+        response = self.client.post(
+            "/api/v1/projects",
+            json={
+                "project_name": f"Planner Endpoint {uuid4().hex[:8]}",
+                "product_name": "Travel Blender",
+                "product_category": "kitchen_appliance",
+                "source_type": "manual",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        return response.json()["project"]
+
+    def test_project_planner_endpoint_empty_project(self):
+        project = self._create_project()
+        response = self.client.get(
+            f"/api/v1/projects/{project['project_id']}/planner/recommendation"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        recommendation = payload["planner_recommendation"]
+        self.assertEqual(recommendation["planner_version"], "supervisor_planner_v2")
+        self.assertEqual(recommendation["overall_status"], "needs_source")
+        self.assertEqual(recommendation["next_action_type"], "add_source")
+        self.assertFalse(recommendation["can_start_agent_run"])
+
+    def test_project_graph_summary_includes_planner_recommendation(self):
+        project = self._create_project()
+        response = self.client.get(f"/api/v1/projects/{project['project_id']}/graph-summary")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertIn("planner_recommendation", payload)
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_planner_status"],
+            payload["planner_recommendation"]["overall_status"],
+        )
+
+    def test_project_source_updates_planner_recommendation(self):
+        project = self._create_project()
+        source_response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/sources",
+            json={
+                "source_type": "pasted_reviews",
+                "product_name": "Travel Blender",
+                "product_category": "kitchen_appliance",
+                "product_description": "A compact blender for travel smoothies.",
+                "pasted_reviews": (
+                    "Hard to clean after one smoothie.\n"
+                    "Too loud for early mornings.\n"
+                    "Small enough for travel but the cup sometimes leaks in my bag.\n"
+                    "Blends soft fruit well, but ice takes longer."
+                ),
+            },
+        )
+        self.assertEqual(source_response.status_code, 200)
+
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/planner/recommendation/refresh"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["refreshed"])
+        recommendation = payload["planner_recommendation"]
+        self.assertIn(
+            recommendation["overall_status"],
+            {"asset_recommended", "ready_for_agent_run"},
+        )
+        self.assertTrue(recommendation["can_start_agent_run"])
+        self.assertEqual(
+            recommendation["safety_boundaries"]["external_api_called"],
+            False,
+        )
 
 
 if __name__ == "__main__":

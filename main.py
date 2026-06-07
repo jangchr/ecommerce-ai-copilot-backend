@@ -72,6 +72,7 @@ from agent_runs import (
     build_product_asset_lock_v2,
     build_lightweight_artifact_lineage,
     build_second_experiment_comparison,
+    build_supervisor_planner_recommendation,
     detect_storyboard_rework_need,
     trigger_experiment_rework_run,
 )
@@ -5988,12 +5989,122 @@ def _graph_report_response(report: dict, report_format: str) -> dict:
     return payload
 
 
-def _project_history_payload(project_id: str) -> dict:
+
+def _latest_project_planner_context(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project = update_project_summary(safe_id)
+
+    sources = list_project_sources(safe_id, 30)
+    source_gates = list_source_quality_gates(safe_id, 30)
+    source_artifacts = list_source_evidence_artifacts(safe_id, 30)
+    runs = list_project_records("runs", safe_id, 20)
+    jobs = list_project_records("jobs", safe_id, 20)
+    artifact_records = list_project_records("artifacts", safe_id, 30)
+    assets = list_project_assets(safe_id, 30)
+
+    latest_source = sources[0] if sources else {}
+    latest_gate = source_gates[0] if source_gates else {}
+    latest_source_artifact = source_artifacts[0] if source_artifacts else {}
+    latest_run = runs[0] if runs else {}
+    latest_job = jobs[0] if jobs else {}
+
+    if not latest_gate and latest_source:
+        loaded_gate = load_source_quality_gate(
+            safe_id,
+            str(latest_source.get("source_id") or ""),
+        )
+        latest_gate = loaded_gate if isinstance(loaded_gate, dict) else {}
+
+    if not latest_source_artifact and latest_source:
+        loaded_artifact = load_source_evidence_artifact(
+            safe_id,
+            str(latest_source.get("source_id") or ""),
+        )
+        latest_source_artifact = loaded_artifact if isinstance(loaded_artifact, dict) else {}
+
+    artifact_registry = {}
+    if isinstance(latest_job, dict):
+        artifact_registry = latest_job.get("latest_artifact_registry") or {}
+    if not artifact_registry and isinstance(latest_run, dict):
+        artifact_registry = latest_run.get("artifact_registry") or {}
+    if not artifact_registry:
+        for record in artifact_records:
+            if isinstance(record, dict) and record.get("registry_version"):
+                artifact_registry = record
+                break
+
+    experiments = []
+    if isinstance(latest_job, dict):
+        experiments = list(latest_job.get("external_video_experiments") or [])
+    latest_experiment = experiments[-1] if experiments else {}
+
+    approval_gate = {}
+    if isinstance(latest_job, dict):
+        approval_gate = latest_job.get("latest_human_approval_gate") or {}
+
+    return {
+        "project": project,
+        "latest_source": latest_source if isinstance(latest_source, dict) else {},
+        "latest_source_quality_gate": latest_gate if isinstance(latest_gate, dict) else {},
+        "latest_source_evidence_artifact": latest_source_artifact if isinstance(latest_source_artifact, dict) else {},
+        "latest_artifact_registry": artifact_registry if isinstance(artifact_registry, dict) else {},
+        "latest_run": latest_run if isinstance(latest_run, dict) else {},
+        "latest_job": latest_job if isinstance(latest_job, dict) else {},
+        "latest_experiment": latest_experiment if isinstance(latest_experiment, dict) else {},
+        "latest_approval_gate": approval_gate if isinstance(approval_gate, dict) else {},
+        "uploaded_assets": assets,
+    }
+
+
+def _build_project_planner_recommendation(project_id: str) -> dict:
+    context = _latest_project_planner_context(project_id)
+    recommendation = build_supervisor_planner_recommendation(
+        project=context["project"],
+        source=context["latest_source"],
+        source_quality_gate=context["latest_source_quality_gate"],
+        source_evidence_artifact=context["latest_source_evidence_artifact"],
+        artifact_registry=context["latest_artifact_registry"],
+        latest_run=context["latest_run"],
+        latest_job=context["latest_job"],
+        latest_experiment=context["latest_experiment"],
+        approval_gate=context["latest_approval_gate"],
+    )
+    recommendation["uploaded_asset_count"] = len(context.get("uploaded_assets") or [])
+    return recommendation
+
+
+def _project_with_planner_summary(project_id: str) -> tuple[dict, dict]:
+    safe_id = _safe_project_id(project_id)
+    project = update_project_summary(safe_id)
+    recommendation = _build_project_planner_recommendation(safe_id)
+
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update(
+        {
+            "latest_planner_status": recommendation.get("overall_status", ""),
+            "latest_next_action_type": recommendation.get("next_action_type", ""),
+            "latest_next_best_action": recommendation.get("next_best_action", ""),
+            "can_start_agent_run": bool(recommendation.get("can_start_agent_run")),
+            "can_create_video_job": bool(recommendation.get("can_create_video_job")),
+            "can_record_experiment": bool(recommendation.get("can_record_experiment")),
+            "can_request_approval": bool(recommendation.get("can_request_approval")),
+            "can_submit_provider": bool(recommendation.get("can_submit_provider")),
+        }
+    )
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+    return project, recommendation
+
+def _project_history_payload(project_id: str) -> dict:
+    safe_id = _safe_project_id(project_id)
+    project, planner_recommendation = _project_with_planner_summary(safe_id)
     return {
         "status": "success",
         "project": project,
+        "planner_recommendation": planner_recommendation,
         "recent_runs": list_project_records("runs", safe_id, 20),
         "recent_jobs": list_project_records("jobs", safe_id, 20),
         "recent_artifacts": list_project_records("artifacts", safe_id, 30),
@@ -6054,6 +6165,43 @@ async def get_project(project_id: str):
         )
     return {"status": "success", "project": update_project_summary(project["project_id"])}
 
+
+
+@app.get("/api/v1/projects/{project_id}/planner/recommendation")
+async def get_project_planner_recommendation(project_id: str):
+    safe_id = _safe_project_id(project_id)
+    project = load_project(safe_id)
+    if not project:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "project not found"},
+        )
+    project, recommendation = _project_with_planner_summary(safe_id)
+    return {
+        "status": "success",
+        "project_id": safe_id,
+        "project": project,
+        "planner_recommendation": recommendation,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/planner/recommendation/refresh")
+async def refresh_project_planner_recommendation(project_id: str):
+    safe_id = _safe_project_id(project_id)
+    project = load_project(safe_id)
+    if not project:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "error": "project not found"},
+        )
+    project, recommendation = _project_with_planner_summary(safe_id)
+    return {
+        "status": "success",
+        "project_id": safe_id,
+        "project": project,
+        "planner_recommendation": recommendation,
+        "refreshed": True,
+    }
 
 @app.get("/api/v1/projects/{project_id}/graph-summary")
 async def get_project_graph_summary(project_id: str):
