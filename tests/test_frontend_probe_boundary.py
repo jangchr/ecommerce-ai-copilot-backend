@@ -4195,3 +4195,45 @@ class WorkspaceSyncUxBundleFrontendTests(unittest.TestCase):
         self.assertIn("workspace_sync_ux_bundle_marker", script)
         self.assertIn("Workspace sync UX bundle", script)
 
+
+class VisibleUiCleanupBundleFrontendTests(unittest.TestCase):
+    def test_visible_ui_cleanup_bundle_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Visible UI cleanup bundle",
+            "visibleUiCleanupBundleMarker",
+            "reasons people hesitate to buy",
+            "Static examples, no API call",
+            "1. Evidence Snapshot / &#35777;&#25454;&#25688;&#35201;",
+            "2. Target Audience & Creative Strategy / &#30446;&#26631;&#21463;&#20247;&#19982;&#21019;&#24847;&#31574;&#30053;",
+            "&#31561;&#24453;&#25191;&#34892;...",
+            "这次创意基于 ${sourceLabel} 生成。",
+            "主 Hook：${hook}",
+            "目标受众：${audience}",
+            "风险等级：${riskLevel}",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+    def test_visible_ui_cleanup_removes_known_mojibake(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        bad_markers = [
+            "鐢ㄦ埛鐘硅鲍",
+            "闈欐€佺ず渚嬶紝",
+            "璇佹嵁鎽樿",
+            "鐩爣鍙椾紬",
+            "绛夊緟鎵ц",
+            "杩欐",
+            "涓?Hook",
+            "鐩爣",
+            "椋庨櫓",
+        ]
+        for marker in bad_markers:
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, html)
+
+    def test_visible_ui_cleanup_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("visible_ui_cleanup_bundle_marker", script)
+        self.assertIn("Visible UI cleanup bundle", script)
+

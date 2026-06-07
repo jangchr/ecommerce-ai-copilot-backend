@@ -2637,7 +2637,7 @@
                         <li data-i18n="goodReviewInputSnippets">review snippets</li>
                         <li data-i18n="goodReviewInputObjections">buyer objections</li>
                         <li data-i18n="goodReviewInputFrustrations">use-case frustrations</li>
-                        <li data-i18n="goodReviewInputHesitation">用户犹豫购买的原因</li>
+                        <li data-i18n="goodReviewInputHesitation">reasons people hesitate to buy</li>
                     </ul>
                 </div>
                 <div class="description-actions">
@@ -2660,7 +2660,7 @@
                         <h3 data-i18n="exampleGallery">Example Gallery</h3>
                         <p data-i18n="exampleGalleryIntro">Static example briefs for stable Product Mode slugs. Click Try This Product to fill the input only; it will not run the workflow or enable Debug Mode.</p>
                     </div>
-                    <span class="source-badge" data-i18n="exampleGallerySourceBadge">静态示例，不调用 API</span>
+                    <span class="source-badge" data-i18n="exampleGallerySourceBadge">Static examples, no API call</span>
                 </div>
                 <div class="example-grid">
                     <article class="example-card">
@@ -2733,12 +2733,12 @@
                 <div class="section-kicker" data-i18n="productResult">Product Result</div>
                 <div class="dashboard-grid">
                     <div class="card">
-                        <h3 style="color:var(--accent-blue);">1. Evidence Snapshot / 证据摘要</h3>
-                        <div id="res-insights" style="opacity: 0.5;">等待执行...</div>
+                        <h3 style="color:var(--accent-blue);">1. Evidence Snapshot / &#35777;&#25454;&#25688;&#35201;</h3>
+                        <div id="res-insights" style="opacity: 0.5;">&#31561;&#24453;&#25191;&#34892;...</div>
                     </div>
                     <div class="card">
-                        <h3 style="color:var(--accent-purple);">2. Target Audience & Creative Strategy / 目标受众与创意策略</h3>
-                        <div id="res-strategy" style="opacity: 0.5;">等待执行...</div>
+                        <h3 style="color:var(--accent-purple);">2. Target Audience & Creative Strategy / &#30446;&#26631;&#21463;&#20247;&#19982;&#21019;&#24847;&#31574;&#30053;</h3>
+                        <div id="res-strategy" style="opacity: 0.5;">&#31561;&#24453;&#25191;&#34892;...</div>
                     </div>
                     <div class="card">
                         <h3>3. Hook / Storyboard / 开场 Hook 与分镜脚本</h3>
@@ -3438,13 +3438,13 @@
             const audience = data.audience?.primary || '';
             const riskLevel = riskLevelText(data.evaluation?.risk_level || 'low');
             const hook = cleanHookLine(script);
-
             const RESULT_CREATIVE_SUMMARY_ZH_LITERAL_MARKERS = [
                 '这次创意基于 ${sourceLabel} 生成。',
                 '主 Hook：${hook}',
                 '目标受众：${audience}',
                 '风险等级：${riskLevel}'
             ];
+
 
             if (currentOutputLanguage() === 'zh-CN') {
                 return [
@@ -12537,6 +12537,15 @@
             workspaceSyncStatusSynced: '\u5df2\u540c\u6b65',
             workspaceSyncStatusFailed: '\u540c\u6b65\u5931\u8d25',
             plannerMayNeedRefresh: 'Workspace \u5df2\u66f4\u65b0\uff0c\u5efa\u8bae\u5237\u65b0 Planner \u786e\u8ba4\u4e0b\u4e00\u6b65\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            visibleUiCleanupBundleMarker: 'Visible UI cleanup bundle'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            visibleUiCleanupBundleMarker: 'Visible UI cleanup bundle'
         });
 
 
