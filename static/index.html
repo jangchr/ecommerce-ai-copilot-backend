@@ -2745,8 +2745,8 @@
                         <div id="res-assets" style="opacity: 0.5;">等待执行...</div>
                     </div>
                     <div class="card">
-                        <h3 style="color:var(--accent-green);">4. Evaluation / 评估</h3>
-                        <div id="res-evaluation" style="opacity: 0.5;">等待评估...</div>
+                        <h3 style="color:var(--accent-green);">4. Evaluation / &#35780;&#20272;</h3>
+                        <div id="res-evaluation" style="opacity: 0.5;">&#31561;&#24453;&#35780;&#20272;...</div>
                     </div>
                 </div>
             </div>
@@ -12191,6 +12191,134 @@
                 <pre class="debug">${escapeHTML(JSON.stringify(trace, null, 2))}</pre>
             `;
         }
+        // Clean zh-CN overrides for critical main workflow UI.
+        // Keep values as unicode escapes to avoid terminal encoding corruption.
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            criticalMainZhOverrideMarker: 'Critical main zh override marker',
+
+            heroTitle: '\u628a\u7535\u5546\u4ea7\u54c1\u53d8\u6210 TikTok \u521b\u610f\u7b56\u7565\u3001Hook \u548c\u5206\u955c\u811a\u672c',
+            heroSubtitle: '\u516c\u5f00 Demo \u652f\u6301\u7a33\u5b9a\u672c\u5730\u793a\u4f8b\u54c1\u7c7b\u3002\u5efa\u8bae\u5148\u8bd5\u7528\u793a\u4f8b\u4ea7\u54c1\u3002',
+            inputGuide: 'Product Mode \u652f\u6301\u672c\u5730 grounded slug\u3002\u9009\u62e9\u4e00\u4e2a\u540e\u8fd0\u884c workflow\uff0c\u751f\u6210 TikTok Hook\u3001\u521b\u610f\u7b56\u7565\u548c\u5206\u955c\u3002',
+
+            productDescriptionMode: '\u4ea7\u54c1\u63cf\u8ff0\u6a21\u5f0f',
+            pastedReviewsMode: '\u7c98\u8d34\u8bc4\u8bba\u6a21\u5f0f',
+            productDescriptionBestFor: '\u9002\u5408\u4f60\u6709\u4e00\u4e2a\u4ea7\u54c1\u60f3\u6cd5\uff0c\u4f46\u8fd8\u6ca1\u6709\u7528\u6237\u8bc4\u8bba\u7684\u60c5\u51b5\u3002',
+            pastedReviewsBestFor: '\u9002\u5408\u4f60\u5df2\u7ecf\u6709\u8bc4\u8bba\u3001\u5dee\u8bc4\u3001\u8d2d\u4e70\u987e\u8651\u6216\u4e70\u5bb6\u53cd\u9988\u7684\u60c5\u51b5\u3002',
+
+            productName: '\u4ea7\u54c1\u540d\u79f0',
+            productCategory: '\u4ea7\u54c1\u7c7b\u76ee',
+            productDescription: '\u4ea7\u54c1\u63cf\u8ff0',
+            customerPainPoints: '\u7528\u6237\u75db\u70b9',
+            pastedReviews: '\u7c98\u8d34\u8bc4\u8bba',
+            targetPlatform: '\u76ee\u6807\u5e73\u53f0',
+            goal: '\u751f\u6210\u76ee\u6807',
+            productDescriptionHelper: '\u5199\u6e05\u695a\u4ea7\u54c1\u662f\u4ec0\u4e48\u3001\u7ed9\u8c01\u7528\u3001\u89e3\u51b3\u4ec0\u4e48\u95ee\u9898\u3002',
+            customerPainPointsHelper: '\u7c98\u8d34\u7528\u6237\u62b1\u6028\u3001\u8bc4\u8bba\u7247\u6bb5\u3001\u8d2d\u4e70\u987e\u8651\uff0c\u6216\u8005\u76ee\u6807\u7528\u6237\u6700\u5728\u610f\u7684\u95ee\u9898\u3002',
+
+            goodInputsInclude: '\u597d\u7684\u8f93\u5165\u5e94\u8be5\u5305\u542b',
+            goodInputProduct: '\u4ea7\u54c1\u662f\u4ec0\u4e48',
+            goodInputAudience: '\u7ed9\u8c01\u7528',
+            goodInputProblem: '\u89e3\u51b3\u4ec0\u4e48\u95ee\u9898',
+            goodInputComplaints: '\u7528\u6237\u62b1\u6028\u4ec0\u4e48',
+            goodInputDifference: '\u4ea7\u54c1\u6709\u4ec0\u4e48\u4e0d\u540c',
+            goodReviewInputsInclude: '\u6709\u7528\u7684\u7528\u6237\u53cd\u9988\u901a\u5e38\u5305\u542b',
+
+            useSampleProduct: '\u4f7f\u7528\u793a\u4f8b\u4ea7\u54c1',
+            generateFromDescription: '\u6839\u636e\u4ea7\u54c1\u63cf\u8ff0\u751f\u6210',
+            useSampleReviews: '\u4f7f\u7528\u793a\u4f8b\u8bc4\u8bba',
+            generateFromReviews: '\u6839\u636e\u8bc4\u8bba\u751f\u6210',
+            exampleGallery: '\u793a\u4f8b\u5e93',
+            tryThisProduct: '\u8bd5\u8bd5\u8fd9\u4e2a\u4ea7\u54c1',
+
+            pastedReviewsIntro: '\u7c98\u8d34\u771f\u5b9e\u7528\u6237\u539f\u8bdd\u3002\u7cfb\u7edf\u4f1a\u6839\u636e\u8fd9\u4e9b\u8bc4\u8bba\u548c\u53cd\u9988\uff0c\u6574\u7406\u51fa Hook\u3001\u521b\u610f\u6458\u8981\u548c\u5206\u955c\u811a\u672c\u3002',
+            pastedReviewsHelper: '\u7c98\u8d34\u771f\u5b9e\u7528\u6237\u539f\u8bdd\uff1a\u8bc4\u8bba\u3001\u5dee\u8bc4\u3001\u8d2d\u4e70\u987e\u8651\u3001\u793e\u5a92\u7559\u8a00\u6216\u4e70\u5bb6\u95ee\u9898\u3002',
+
+            feedback: '\u53cd\u9988',
+            giveFeedback: '\u63d0\u4ea4\u53cd\u9988',
+            resultFollowupFeedback: '\u63d0\u4ea4\u53cd\u9988',
+            resultFollowupWaitlist: '\u52a0\u5165\u8bd5\u7528\u540d\u5355',
+            joinWaitlist: '\u52a0\u5165 waitlist',
+            recentGenerations: '\u6700\u8fd1\u751f\u6210\u8bb0\u5f55',
+            clearRecentGenerations: '\u6e05\u7a7a\u6700\u8fd1\u751f\u6210\u8bb0\u5f55',
+            recentView: '\u67e5\u770b',
+            recentCopyMarkdown: '\u590d\u5236 Markdown',
+            recentDelete: '\u5220\u9664',
+
+            copyActions: '\u590d\u5236 / \u4e0b\u8f7d / \u7ffb\u8bd1',
+            copyHook: '\u590d\u5236 Hook',
+            copyStoryboard: '\u590d\u5236\u5206\u955c',
+            copyFullMarkdown: '\u590d\u5236\u5b8c\u6574 Markdown',
+            downloadMarkdown: '\u4e0b\u8f7d Markdown',
+            downloadJson: '\u4e0b\u8f7d JSON',
+            translateChineseButton: '\u7ffb\u8bd1\u6210\u4e2d\u6587',
+            copyChineseTranslationButton: '\u590d\u5236\u4e2d\u6587\u7ffb\u8bd1',
+
+            evidenceSnapshot: '\u8bc1\u636e\u6458\u8981',
+            targetAudienceStrategy: '\u76ee\u6807\u53d7\u4f17\u4e0e\u521b\u610f\u7b56\u7565',
+            targetAudience: '\u76ee\u6807\u53d7\u4f17',
+            creativeStrategy: '\u521b\u610f\u7b56\u7565',
+            hook: '\u5f00\u573a Hook',
+            cta: 'CTA',
+            storyboard: '\u5206\u955c\u811a\u672c',
+            evaluation: '\u8bc4\u4f30',
+            feedbackLabel: '\u6539\u8fdb\u5efa\u8bae',
+            evidenceQuotes: '\u7528\u6237\u8bc4\u8bba\u7247\u6bb5',
+            evidenceQuoteLabel: '\u8bc1\u636e\u7247\u6bb5',
+            linkedPainPointLabel: '\u5173\u8054\u8bc4\u8bba\u4fe1\u53f7',
+            qualityRationale: '\u8d28\u91cf\u5224\u65ad',
+            sourceUnknown: '\u672a\u77e5\u6765\u6e90',
+
+            sourceLabel: '\u6765\u6e90',
+            evidenceSourceTitle: '\u8bc1\u636e\u6765\u6e90',
+            sourceTypeLabel: '\u6765\u6e90\u7c7b\u578b',
+            sourceConfidenceLabel: '\u6765\u6e90\u7f6e\u4fe1\u5ea6',
+            reviewCountLabel: '\u8bc4\u8bba\u6570\u91cf',
+            dataWarningsLabel: '\u6570\u636e\u63d0\u9192',
+            sourcePastedReviews: '\u7c98\u8d34\u7684\u7528\u6237\u8bc4\u8bba',
+            sourceProductDescription: '\u4ea7\u54c1\u63cf\u8ff0',
+            sourceStableDemo: '\u7a33\u5b9a\u793a\u4f8b\u4ea7\u54c1',
+            sourceLocalDataset: '\u672c\u5730\u8bc4\u8bba\u6570\u636e',
+            sourceMock: 'mock \u8d8b\u52bf\u8865\u5145',
+
+            projectSources: '\u9879\u76ee\u6765\u6e90',
+            addProductSource: '\u6dfb\u52a0\u4ea7\u54c1\u6765\u6e90',
+            previewSource: '\u9884\u89c8\u6765\u6e90',
+            fetchSource: '\u83b7\u53d6\u6765\u6e90',
+            generateFromSource: '\u6839\u636e\u6765\u6e90\u751f\u6210',
+            sourceQualityGate: '\u6765\u6e90\u8d28\u91cf\u95e8',
+            sourceEvidenceArtifact: '\u6765\u6e90\u8bc1\u636e\u4ea7\u7269',
+            recentProjectSources: '\u6700\u8fd1\u9879\u76ee\u6765\u6e90',
+            sourceHistory: '\u6765\u6e90\u5386\u53f2',
+            sourceSnapshots: '\u6765\u6e90\u5feb\u7167',
+
+            recordExternalVideoResult: '\u8bb0\u5f55\u5916\u90e8\u89c6\u9891\u7ed3\u679c',
+            saveVideoResult: '\u4fdd\u5b58\u89c6\u9891\u7ed3\u679c',
+            saveExternalExperimentWorking: '\u6b63\u5728\u4fdd\u5b58\u5916\u90e8\u5b9e\u9a8c...',
+            externalExperimentSaved: '\u5916\u90e8\u5b9e\u9a8c\u5df2\u4fdd\u5b58',
+            videoExperimentSaveFailed: '\u89c6\u9891\u5b9e\u9a8c\u4fdd\u5b58\u5931\u8d25',
+            submitProviderJob: '\u63d0\u4ea4 Provider Job',
+            pollProviderStatus: '\u5237\u65b0 Provider \u72b6\u6001',
+            completeSimulatedProviderResult: '\u5b8c\u6210\u6a21\u62df Provider \u7ed3\u679c',
+            providerJobSubmitted: 'Provider Job \u5df2\u63d0\u4ea4',
+            providerJobSubmitFailed: 'Provider Job \u63d0\u4ea4\u5931\u8d25',
+            providerStatusRefreshing: '\u6b63\u5728\u5237\u65b0 Provider \u72b6\u6001...',
+            providerStatusRefreshed: 'Provider \u72b6\u6001\u5df2\u5237\u65b0',
+            providerStatusRefreshFailed: 'Provider \u72b6\u6001\u5237\u65b0\u5931\u8d25',
+            providerResultCompleted: 'Provider \u7ed3\u679c\u5df2\u5b8c\u6210',
+            saveVideoResultWorking: '\u6b63\u5728\u4fdd\u5b58\u89c6\u9891\u7ed3\u679c...',
+            videoResultSaved: '\u89c6\u9891\u7ed3\u679c\u5df2\u4fdd\u5b58',
+            videoResultSaveFailed: '\u89c6\u9891\u7ed3\u679c\u4fdd\u5b58\u5931\u8d25',
+
+            approvalChecklist: '\u5ba1\u6279\u68c0\u67e5\u6e05\u5355',
+            approvalDecisionHistory: '\u5ba1\u6279\u51b3\u7b56\u5386\u53f2',
+            approvalNotes: '\u5ba1\u6279\u5907\u6ce8',
+            approveControlledTest: '\u6279\u51c6\u53d7\u63a7\u6d4b\u8bd5',
+            requestChanges: '\u8981\u6c42\u4fee\u6539',
+            rejectApproval: '\u62d2\u7edd\u5ba1\u6279',
+            cancelApproval: '\u53d6\u6d88\u5ba1\u6279'
+        });
+
+
         applyLanguageCopy();
         mountUserTaskFlow();
         document.getElementById('projectWorkspaceRoot').innerHTML = renderProjectWorkspacePanel();

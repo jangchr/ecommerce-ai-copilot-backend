@@ -3925,3 +3925,33 @@ class PlannerCleanZhOverrideFrontendTests(unittest.TestCase):
         script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
         self.assertIn("zh_planner_clean_override_marker", script)
         self.assertIn("Planner clean zh override marker", script)
+
+
+
+class CriticalMainZhOverrideFrontendTests(unittest.TestCase):
+    def test_critical_main_zh_override_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Critical main zh override marker",
+            "criticalMainZhOverrideMarker",
+            "productDescriptionMode: '\\u4ea7\\u54c1\\u63cf\\u8ff0\\u6a21\\u5f0f'",
+            "pastedReviewsMode: '\\u7c98\\u8d34\\u8bc4\\u8bba\\u6a21\\u5f0f'",
+            "generateFromReviews: '\\u6839\\u636e\\u8bc4\\u8bba\\u751f\\u6210'",
+            "copyFullMarkdown: '\\u590d\\u5236\\u5b8c\\u6574 Markdown'",
+            "evidenceSnapshot: '\\u8bc1\\u636e\\u6458\\u8981'",
+            "storyboard: '\\u5206\\u955c\\u811a\\u672c'",
+            "evaluation: '\\u8bc4\\u4f30'",
+            "sourceQualityGate: '\\u6765\\u6e90\\u8d28\\u91cf\\u95e8'",
+            "submitProviderJob: '\\u63d0\\u4ea4 Provider Job'",
+            "approveControlledTest: '\\u6279\\u51c6\\u53d7\\u63a7\\u6d4b\\u8bd5'",
+            "4. Evaluation / &#35780;&#20272;",
+            "&#31561;&#24453;&#35780;&#20272;...",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_critical_main_zh_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("critical_main_zh_override_marker", script)
+        self.assertIn("Critical main zh override marker", script)
