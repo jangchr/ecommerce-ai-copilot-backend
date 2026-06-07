@@ -55,6 +55,7 @@ Add-Check "project_workspace_action_links_bundle_marker" ($page.Content -match "
 Add-Check "project_workspace_report_reader_bundle_marker" ($page.Content -match "Project Workspace report reader bundle")
 Add-Check "project_workspace_export_pack_bundle_marker" ($page.Content -match "Project Workspace export pack bundle")
 Add-Check "project_workspace_runner_plan_panel_marker" ($page.Content -match "Project Workspace runner plan panel bundle")
+Add-Check "project_workspace_dispatch_ticket_panel_marker" ($page.Content -match "Project Workspace dispatch ticket panel bundle")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
 Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")
