@@ -5083,6 +5083,12 @@
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             plannerRecommendation: '规划 Agent 建议',
             plannerActionWiring: 'Planner 动作联动',
+            plannerQuickAction: '去做推荐动作',
+            plannerQuickActionSafeNote: '只会滚动到推荐区域，不会提交 Provider，也不会调用外部 API。',
+            plannerQuickActionMoved: '已跳转到推荐动作',
+            plannerQuickActionTargetMissing: '当前页面暂时找不到推荐区域。',
+            plannerQuickActionPanel: 'Planner 快捷动作',
+            plannerQuickActionButton: '去做推荐动作按钮',
             plannerRecommendedAction: '推荐动作',
             plannerButtonReason: '按钮原因',
             plannerButtonAvailability: '按钮可用性',
@@ -5533,6 +5539,12 @@
             projectWorkspace: 'Project Workspace',
             plannerRecommendation: 'Planner Recommendation',
             plannerActionWiring: 'Planner action wiring',
+            plannerQuickAction: 'Go to recommended action',
+            plannerQuickActionSafeNote: 'Scrolls to the recommended area only. It will not submit provider jobs or call external APIs.',
+            plannerQuickActionMoved: 'Moved to recommended action',
+            plannerQuickActionTargetMissing: 'Could not find the recommended area on this page yet.',
+            plannerQuickActionPanel: 'Planner quick action',
+            plannerQuickActionButton: 'Go to recommended action button',
             plannerRecommendedAction: 'Recommended action',
             plannerButtonReason: 'Button reason',
             plannerButtonAvailability: 'Button availability',
@@ -10780,6 +10792,10 @@
                         <strong>${escapeHTML(t('plannerButtonReason'))}:</strong>
                         ${escapeHTML(reasonText)}
                     </div>
+                    <div class="quick-use-pack-actions" id="plannerQuickActionPanel">
+                        <button class="btn-primary" id="plannerQuickActionBtn" type="button" onclick="handlePlannerQuickAction()">${escapeHTML(t('plannerQuickAction'))}</button>
+                        <span class="quick-use-copy-status" id="plannerQuickActionStatus">${escapeHTML(t('plannerQuickActionSafeNote'))}</span>
+                    </div>
                     <details>
                         <summary>${escapeHTML(t('plannerButtonAvailability'))}</summary>
                         <div class="storyboard-grid" id="plannerButtonAvailabilityList">
@@ -10789,6 +10805,62 @@
                 </div>
             `;
         }
+
+
+        function plannerQuickActionTargets(actionType) {
+            const fallback = ['#plannerRecommendationPanel', '#projectWorkspacePanel'];
+            const map = {
+                add_source: ['#projectSourceType', '#projectSourcesPanel', '#projectWorkspacePanel'],
+                paste_reviews: ['#reviewsPastedReviews', '#pastedReviewsMode', '#customerFeedbackWorkspace'],
+                upload_asset: ['#projectAssetUploadProduct', '#projectWorkspacePanel'],
+                start_agent_run: ['#liveAgentRunBtn', '#agentLiveRunTimeline', '#pastedReviewsMode'],
+                create_video_job: ['#videoJobCreateButton', '#externalVideoToolHandoffPanel', '#videoDraftPanel', '#productResultSection'],
+                record_experiment: ['#externalVideoExperimentsPanel', '#externalVideoExperiments', '#videoJobPanel'],
+                use_revised_handoff: ['#revisedExternalVideoHandoffPanel', '#externalVideoExperimentsPanel', '#videoJobPanel'],
+                approve_controlled_test: ['#humanApprovalGatePanel', '#humanApprovalPanel', '#providerProgressPanel'],
+                submit_provider_simulation: ['#providerJobSubmitBtn', '#submitProviderJobBtn', '#providerProgressPanel'],
+                export_report: ['#copyActionsSection', '#downloadMarkdownBtn', '#downloadJsonBtn'],
+                review_blocker: ['#plannerRecommendationPanel', '#projectWorkspacePanel']
+            };
+            return map[actionType] || fallback;
+        }
+
+        function firstAvailablePlannerTarget(selectors) {
+            for (const selector of selectors) {
+                const target = document.querySelector(selector);
+                if (target) return target;
+            }
+            return null;
+        }
+
+        function focusPlannerQuickActionTarget(target) {
+            if (!target) return;
+            const focusable = target.matches('button,input,textarea,select,a[href]')
+                ? target
+                : target.querySelector('button,input,textarea,select,a[href]');
+            if (focusable && typeof focusable.focus === 'function') {
+                setTimeout(() => focusable.focus({ preventScroll: true }), 250);
+            }
+        }
+
+        function handlePlannerQuickAction() {
+            const panel = document.getElementById('plannerActionWiringPanel');
+            const actionType = panel?.getAttribute('data-planner-action')
+                || latestProjectWorkspace?.planner_recommendation?.next_action_type
+                || '';
+            const status = document.getElementById('plannerQuickActionStatus');
+            const target = firstAvailablePlannerTarget(plannerQuickActionTargets(actionType));
+            if (!target) {
+                if (status) status.textContent = t('plannerQuickActionTargetMissing');
+                return;
+            }
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            focusPlannerQuickActionTarget(target);
+            if (status) {
+                status.textContent = `${t('plannerQuickActionMoved')}: ${plannerLabelFor('plannerAction_', actionType, actionType || t('none'))}`;
+            }
+        }
+
 
         function renderProjectWorkspacePanel(workspace = latestProjectWorkspace) {
             const project = workspace?.project || {

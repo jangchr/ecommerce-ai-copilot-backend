@@ -3782,3 +3782,34 @@ class SupervisorPlannerFrontendProbeTests(unittest.TestCase):
         ]:
             with self.subTest(marker=marker):
                 self.assertIn(marker, script)
+
+
+
+class SupervisorPlannerQuickActionFrontendTests(unittest.TestCase):
+    def test_supervisor_planner_quick_action_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Go to recommended action",
+            "Scrolls to the recommended area only",
+            "It will not submit provider jobs or call external APIs",
+            "Planner quick action",
+            "function handlePlannerQuickAction()",
+            "function plannerQuickActionTargets(",
+            "function firstAvailablePlannerTarget(",
+            "function focusPlannerQuickActionTarget(",
+            "plannerQuickActionPanel",
+            "plannerQuickActionBtn",
+            "plannerQuickActionStatus",
+            "plannerQuickActionTargetMissing",
+            "plannerQuickActionMoved",
+            "submit_provider_simulation",
+            "export_report",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_supervisor_planner_quick_action_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("planner_quick_action_marker", script)
+        self.assertIn("Go to recommended action", script)
