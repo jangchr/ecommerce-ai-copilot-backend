@@ -11078,6 +11078,113 @@
         }
 
 
+
+        const PROJECT_WORKSPACE_HISTORY_UX_BUNDLE_MARKER = 'Project Workspace history UX bundle';
+
+        function projectWorkspaceHistoryArray(workspace, key) {
+            const value = workspace?.[key];
+            return Array.isArray(value) ? value : [];
+        }
+
+        function projectWorkspaceHistoryItemId(item = {}, kind = '') {
+            return item.run_id
+                || item.job_id
+                || item.artifact_id
+                || item.export_id
+                || item.report_id
+                || item.source_id
+                || item.asset_id
+                || item.id
+                || item.created_at
+                || kind;
+        }
+
+        function projectWorkspaceHistoryItemMeta(item = {}, kind = '') {
+            const created = item.created_at || item.updated_at || '';
+            const status = item.status || item.approval_status || item.provider_status || item.artifact_status || item.format || '';
+            const type = item.artifact_type || item.export_type || item.job_type || item.source_type || kind;
+            return [type, status, created].filter(Boolean).join(' · ');
+        }
+
+        function renderProjectWorkspaceHistoryItem(item = {}, kind = '') {
+            const id = projectWorkspaceHistoryItemId(item, kind);
+            const meta = projectWorkspaceHistoryItemMeta(item, kind);
+            const label = item.title || item.filename || item.product_name || item.project_name || id;
+            return `
+                <div class="artifact-timeline-row" data-project-history-kind="${escapeHTML(kind)}">
+                    <strong>${escapeHTML(label || id)}</strong>
+                    <div>${escapeHTML(meta || t('projectHistoryNoMetadata'))}</div>
+                    <div class="field-helper">${escapeHTML(id || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceHistoryGroup(workspace, key, titleKey, emptyKey, kind) {
+            const items = projectWorkspaceHistoryArray(workspace, key).slice(0, 3);
+            const count = projectWorkspaceHistoryArray(workspace, key).length;
+            const body = items.length
+                ? items.map((item) => renderProjectWorkspaceHistoryItem(item, kind)).join('')
+                : `<div class="recent-empty">${escapeHTML(t(emptyKey))}</div>`;
+
+            return `
+                <div class="graph-os-card" data-project-history-group="${escapeHTML(kind)}">
+                    <div class="json-key">${escapeHTML(t(titleKey))} · ${count}</div>
+                    ${body}
+                </div>
+            `;
+        }
+
+        function projectWorkspaceHistorySummaryText(workspace = latestProjectWorkspace) {
+            const project = workspace?.project || {};
+            const summary = project.graph_summary || {};
+            const lines = [
+                t('projectHistoryCopyTitle'),
+                `${t('projectId')}: ${project.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('recentProjectRuns')}: ${summary.run_count || projectWorkspaceHistoryArray(workspace, 'recent_runs').length}`,
+                `${t('recentProjectJobs')}: ${summary.job_count || projectWorkspaceHistoryArray(workspace, 'recent_jobs').length}`,
+                `${t('recentProjectArtifacts')}: ${summary.artifact_count || projectWorkspaceHistoryArray(workspace, 'recent_artifacts').length}`,
+                `${t('recentGraphReports')}: ${summary.report_count || projectWorkspaceHistoryArray(workspace, 'recent_reports').length}`,
+                `${t('recentProjectSources')}: ${summary.source_count || projectWorkspaceHistoryArray(workspace, 'recent_sources').length}`,
+                `${t('recentProjectAssets')}: ${summary.asset_count || projectWorkspaceHistoryArray(workspace, 'recent_assets').length}`
+            ];
+            return lines.join('\n');
+        }
+
+        async function copyProjectWorkspaceHistorySummary() {
+            const status = document.getElementById('projectWorkspaceHistoryStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceHistorySummaryText(latestProjectWorkspace));
+                if (status) status.textContent = t('projectHistoryCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('projectHistoryCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceHistoryQuickPanel(workspace = latestProjectWorkspace) {
+            return `
+                <div class="section-block" id="projectWorkspaceHistoryPanel" data-project-history-ux-marker="Project Workspace history UX bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('projectHistoryQuickLinks'))}</div>
+                            <div class="field-helper">${escapeHTML(t('projectHistoryQuickLinksHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" id="copyProjectWorkspaceHistoryBtn" type="button" onclick="copyProjectWorkspaceHistorySummary()">${escapeHTML(t('copyProjectHistorySummary'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_runs', 'recentProjectRunsQuickLink', 'projectHistoryNoRuns', 'runs')}
+                        ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_jobs', 'recentProjectJobsQuickLink', 'projectHistoryNoJobs', 'jobs')}
+                        ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_artifacts', 'recentProjectArtifactsQuickLink', 'projectHistoryNoArtifacts', 'artifacts')}
+                        ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_reports', 'recentGraphReportsQuickLink', 'projectHistoryNoReports', 'reports')}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceHistoryStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspacePanel(workspace = latestProjectWorkspace) {
             const project = workspace?.project || {
                 project_id: latestProjectId || 'demo_project_default',
@@ -11109,6 +11216,7 @@
                         ${metricPill(t('recentProjectAssets'), String(summary.asset_count || 0))}
                         ${metricPill(t('recentGraphReports'), String(summary.report_count || 0))}
                     </div>
+                    ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
                         <button class="btn-secondary" id="refreshProjectWorkspaceAndPlannerBtn" type="button" onclick="refreshProjectWorkspaceAndPlannerShortcut()">${escapeHTML(t('refreshWorkspaceAndPlanner'))}</button>
@@ -12555,6 +12663,47 @@
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             frontendCopyGuardHardeningMarker: 'Frontend copy guard hardening bundle'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceHistoryUxBundleMarker: 'Project Workspace history UX bundle',
+            projectHistoryQuickLinks: 'Project history quick links',
+            projectHistoryQuickLinksHelper: 'Recent runs, jobs, artifacts, and reports for this project. These are local workspace records; opening this panel does not call external providers.',
+            recentProjectRunsQuickLink: 'Recent runs',
+            recentProjectJobsQuickLink: 'Recent jobs',
+            recentProjectArtifactsQuickLink: 'Recent artifacts',
+            recentGraphReportsQuickLink: 'Recent reports',
+            projectHistoryNoRuns: 'No project runs yet.',
+            projectHistoryNoJobs: 'No video jobs yet.',
+            projectHistoryNoArtifacts: 'No artifacts yet.',
+            projectHistoryNoReports: 'No graph reports yet.',
+            projectHistoryNoMetadata: 'No metadata available',
+            projectHistoryCopyTitle: 'Project Workspace history summary',
+            copyProjectHistorySummary: 'Copy history summary',
+            projectHistoryCopied: 'Project history summary copied.',
+            projectHistoryCopyFailed: 'Could not copy project history summary.',
+            projectHistoryCopyUnavailable: 'Clipboard is unavailable in this browser.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceHistoryUxBundleMarker: 'Project Workspace history UX bundle',
+            projectHistoryQuickLinks: '\u9879\u76ee\u5386\u53f2\u5feb\u901f\u5165\u53e3',
+            projectHistoryQuickLinksHelper: '\u8fd9\u4e2a\u9879\u76ee\u7684\u6700\u8fd1 runs\u3001jobs\u3001artifacts \u548c reports\u3002\u6253\u5f00\u8fd9\u4e2a\u9762\u677f\u4e0d\u4f1a\u8c03\u7528\u5916\u90e8 provider\u3002',
+            recentProjectRunsQuickLink: '\u6700\u8fd1 Runs',
+            recentProjectJobsQuickLink: '\u6700\u8fd1 Jobs',
+            recentProjectArtifactsQuickLink: '\u6700\u8fd1 Artifacts',
+            recentGraphReportsQuickLink: '\u6700\u8fd1 Reports',
+            projectHistoryNoRuns: '\u6682\u65e0\u9879\u76ee run\u3002',
+            projectHistoryNoJobs: '\u6682\u65e0 video job\u3002',
+            projectHistoryNoArtifacts: '\u6682\u65e0 artifact\u3002',
+            projectHistoryNoReports: '\u6682\u65e0 graph report\u3002',
+            projectHistoryNoMetadata: '\u6682\u65e0\u5143\u6570\u636e',
+            projectHistoryCopyTitle: 'Project Workspace \u5386\u53f2\u6458\u8981',
+            copyProjectHistorySummary: '\u590d\u5236\u5386\u53f2\u6458\u8981',
+            projectHistoryCopied: '\u9879\u76ee\u5386\u53f2\u6458\u8981\u5df2\u590d\u5236\u3002',
+            projectHistoryCopyFailed: '\u590d\u5236\u9879\u76ee\u5386\u53f2\u6458\u8981\u5931\u8d25\u3002',
+            projectHistoryCopyUnavailable: '\u5f53\u524d\u6d4f\u89c8\u5668\u4e0d\u652f\u6301\u526a\u8d34\u677f\u3002'
         });
 
 
