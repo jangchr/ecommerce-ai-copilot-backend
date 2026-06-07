@@ -4322,3 +4322,43 @@ class ProjectWorkspaceHistoryUxBundleFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace history UX bundle", script)
         self.assertIn("project_workspace_history_ux_bundle_marker", script)
 
+
+class ProjectWorkspaceActionLinksBundleFrontendTests(unittest.TestCase):
+    def test_project_workspace_action_links_bundle_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace action links bundle",
+            "PROJECT_WORKSPACE_ACTION_LINKS_BUNDLE_MARKER",
+            "function projectWorkspaceHistoryKindKey(",
+            "function projectWorkspaceHistoryActionLabel(",
+            "function projectWorkspaceHistoryActionHint(",
+            "function projectWorkspaceHistoryItemDetailText(",
+            "async function copyProjectWorkspaceHistoryItemDetail(",
+            "data-project-history-action-marker",
+            "data-project-history-action-hint",
+            "data-project-history-copy-action",
+            "copyProjectHistoryItemDetail",
+            "projectHistoryItemCopied",
+            "projectHistoryJobStatus",
+            "projectHistoryApprovalStatus",
+            "projectHistoryProviderStatus",
+            "projectHistoryJobHasResult",
+            "projectHistoryRunHint",
+            "projectHistoryArtifactHint",
+            "projectHistoryReportHint",
+            "items.map((item, index) => renderProjectWorkspaceHistoryItem(item, kind, index)).join('')",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_action_links_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_action_links_bundle_marker", script)
+        self.assertIn("Project Workspace action links bundle", script)
+
+    def test_project_workspace_action_links_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace action links bundle", script)
+        self.assertIn("project_workspace_action_links_bundle_marker", script)
+

@@ -11106,15 +11106,118 @@
             return [type, status, created].filter(Boolean).join(' · ');
         }
 
-        function renderProjectWorkspaceHistoryItem(item = {}, kind = '') {
+
+        const PROJECT_WORKSPACE_ACTION_LINKS_BUNDLE_MARKER = 'Project Workspace action links bundle';
+
+        function projectWorkspaceHistoryKindKey(kind = '') {
+            const map = {
+                runs: 'recent_runs',
+                jobs: 'recent_jobs',
+                artifacts: 'recent_artifacts',
+                reports: 'recent_reports',
+                sources: 'recent_sources',
+                assets: 'recent_assets'
+            };
+            return map[kind] || kind;
+        }
+
+        function projectWorkspaceHistoryActionLabel(kind = '') {
+            const map = {
+                runs: 'projectHistoryActionRun',
+                jobs: 'projectHistoryActionJob',
+                artifacts: 'projectHistoryActionArtifact',
+                reports: 'projectHistoryActionReport',
+                sources: 'projectHistoryActionSource',
+                assets: 'projectHistoryActionAsset'
+            };
+            return t(map[kind] || 'projectHistoryActionDefault');
+        }
+
+        function projectWorkspaceHistoryActionHint(item = {}, kind = '') {
+            if (kind === 'jobs') {
+                const parts = [
+                    item.status ? `${t('projectHistoryJobStatus')}: ${item.status}` : '',
+                    item.approval_status ? `${t('projectHistoryApprovalStatus')}: ${item.approval_status}` : '',
+                    item.provider_status ? `${t('projectHistoryProviderStatus')}: ${item.provider_status}` : '',
+                    item.result_url ? t('projectHistoryJobHasResult') : ''
+                ].filter(Boolean);
+                return parts.join(' · ') || t('projectHistoryJobHint');
+            }
+
+            if (kind === 'runs') {
+                const parts = [
+                    item.run_id ? `${t('projectHistoryRunId')}: ${item.run_id}` : '',
+                    item.source_id ? `${t('projectHistorySourceId')}: ${item.source_id}` : '',
+                    item.project_id ? `${t('projectId')}: ${item.project_id}` : '',
+                    item.status ? `${t('projectHistoryRunStatus')}: ${item.status}` : ''
+                ].filter(Boolean);
+                return parts.join(' · ') || t('projectHistoryRunHint');
+            }
+
+            if (kind === 'artifacts') {
+                const parts = [
+                    item.artifact_type ? `${t('projectHistoryArtifactType')}: ${item.artifact_type}` : '',
+                    item.artifact_id ? `${t('projectHistoryArtifactId')}: ${item.artifact_id}` : '',
+                    item.source_id ? `${t('projectHistorySourceId')}: ${item.source_id}` : ''
+                ].filter(Boolean);
+                return parts.join(' · ') || t('projectHistoryArtifactHint');
+            }
+
+            if (kind === 'reports') {
+                const parts = [
+                    item.report_id ? `${t('projectHistoryReportId')}: ${item.report_id}` : '',
+                    item.export_type ? `${t('projectHistoryReportType')}: ${item.export_type}` : '',
+                    item.format ? `${t('projectHistoryReportFormat')}: ${item.format}` : ''
+                ].filter(Boolean);
+                return parts.join(' · ') || t('projectHistoryReportHint');
+            }
+
+            return t('projectHistoryActionHintDefault');
+        }
+
+        function projectWorkspaceHistoryItemDetailText(item = {}, kind = '') {
+            const lines = [
+                `${t('projectHistoryActionDetailTitle')} ${projectWorkspaceHistoryActionLabel(kind)}`,
+                `${t('projectHistoryActionKind')}: ${kind || t('none')}`,
+                `${t('projectHistoryActionId')}: ${projectWorkspaceHistoryItemId(item, kind) || t('none')}`,
+                `${t('projectHistoryActionHint')}: ${projectWorkspaceHistoryActionHint(item, kind)}`,
+                '',
+                JSON.stringify(item || {}, null, 2)
+            ];
+            return lines.join('\n');
+        }
+
+        async function copyProjectWorkspaceHistoryItemDetail(kind, index) {
+            const status = document.getElementById('projectWorkspaceHistoryStatus');
+            try {
+                const key = projectWorkspaceHistoryKindKey(kind);
+                const items = projectWorkspaceHistoryArray(latestProjectWorkspace, key);
+                const item = items[Number(index)] || {};
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceHistoryItemDetailText(item, kind));
+                if (status) status.textContent = t('projectHistoryItemCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('projectHistoryItemCopyFailed');
+            }
+        }
+
+
+        function renderProjectWorkspaceHistoryItem(item = {}, kind = '', index = 0) {
             const id = projectWorkspaceHistoryItemId(item, kind);
             const meta = projectWorkspaceHistoryItemMeta(item, kind);
             const label = item.title || item.filename || item.product_name || item.project_name || id;
+            const actionHint = projectWorkspaceHistoryActionHint(item, kind);
             return `
-                <div class="artifact-timeline-row" data-project-history-kind="${escapeHTML(kind)}">
+                <div class="artifact-timeline-row" data-project-history-kind="${escapeHTML(kind)}" data-project-history-action-marker="Project Workspace action links bundle">
                     <strong>${escapeHTML(label || id)}</strong>
                     <div>${escapeHTML(meta || t('projectHistoryNoMetadata'))}</div>
+                    <div class="field-helper" data-project-history-action-hint="${escapeHTML(kind)}">${escapeHTML(actionHint)}</div>
                     <div class="field-helper">${escapeHTML(id || t('none'))}</div>
+                    <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" type="button" data-project-history-copy-action="${escapeHTML(kind)}" onclick="copyProjectWorkspaceHistoryItemDetail('${escapeHTML(kind)}', ${Number(index)})">${escapeHTML(t('copyProjectHistoryItemDetail'))}</button>
+                    </div>
                 </div>
             `;
         }
@@ -11123,7 +11226,7 @@
             const items = projectWorkspaceHistoryArray(workspace, key).slice(0, 3);
             const count = projectWorkspaceHistoryArray(workspace, key).length;
             const body = items.length
-                ? items.map((item) => renderProjectWorkspaceHistoryItem(item, kind)).join('')
+                ? items.map((item, index) => renderProjectWorkspaceHistoryItem(item, kind, index)).join('')
                 : `<div class="recent-empty">${escapeHTML(t(emptyKey))}</div>`;
 
             return `
@@ -12704,6 +12807,77 @@
             projectHistoryCopied: '\u9879\u76ee\u5386\u53f2\u6458\u8981\u5df2\u590d\u5236\u3002',
             projectHistoryCopyFailed: '\u590d\u5236\u9879\u76ee\u5386\u53f2\u6458\u8981\u5931\u8d25\u3002',
             projectHistoryCopyUnavailable: '\u5f53\u524d\u6d4f\u89c8\u5668\u4e0d\u652f\u6301\u526a\u8d34\u677f\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceActionLinksBundleMarker: 'Project Workspace action links bundle',
+            projectHistoryActionRun: 'run detail',
+            projectHistoryActionJob: 'job detail',
+            projectHistoryActionArtifact: 'artifact detail',
+            projectHistoryActionReport: 'report detail',
+            projectHistoryActionSource: 'source detail',
+            projectHistoryActionAsset: 'asset detail',
+            projectHistoryActionDefault: 'history detail',
+            projectHistoryActionDetailTitle: 'Project history detail:',
+            projectHistoryActionKind: 'Kind',
+            projectHistoryActionId: 'ID',
+            projectHistoryActionHint: 'Hint',
+            projectHistoryRunId: 'Run ID',
+            projectHistoryRunStatus: 'Run status',
+            projectHistorySourceId: 'Source ID',
+            projectHistoryJobStatus: 'Job status',
+            projectHistoryApprovalStatus: 'Approval',
+            projectHistoryProviderStatus: 'Provider',
+            projectHistoryJobHasResult: 'Provider result is available',
+            projectHistoryArtifactType: 'Artifact type',
+            projectHistoryArtifactId: 'Artifact ID',
+            projectHistoryReportId: 'Report ID',
+            projectHistoryReportType: 'Report type',
+            projectHistoryReportFormat: 'Report format',
+            projectHistoryRunHint: 'Run lineage links project, source, and generation output.',
+            projectHistoryJobHint: 'Job status shows approval, provider, and result readiness.',
+            projectHistoryArtifactHint: 'Artifact detail helps trace source evidence and generated outputs.',
+            projectHistoryReportHint: 'Report detail helps reopen or copy recent project reports.',
+            projectHistoryActionHintDefault: 'Copy this detail to inspect the project history record.',
+            copyProjectHistoryItemDetail: 'Copy detail',
+            projectHistoryItemCopied: 'Project history item detail copied.',
+            projectHistoryItemCopyFailed: 'Could not copy project history item detail.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceActionLinksBundleMarker: 'Project Workspace action links bundle',
+            projectHistoryActionRun: 'Run \u8be6\u60c5',
+            projectHistoryActionJob: 'Job \u8be6\u60c5',
+            projectHistoryActionArtifact: 'Artifact \u8be6\u60c5',
+            projectHistoryActionReport: 'Report \u8be6\u60c5',
+            projectHistoryActionSource: 'Source \u8be6\u60c5',
+            projectHistoryActionAsset: 'Asset \u8be6\u60c5',
+            projectHistoryActionDefault: '\u5386\u53f2\u8be6\u60c5',
+            projectHistoryActionDetailTitle: '\u9879\u76ee\u5386\u53f2\u8be6\u60c5\uff1a',
+            projectHistoryActionKind: '\u7c7b\u578b',
+            projectHistoryActionId: 'ID',
+            projectHistoryActionHint: '\u63d0\u793a',
+            projectHistoryRunId: 'Run ID',
+            projectHistoryRunStatus: 'Run \u72b6\u6001',
+            projectHistorySourceId: 'Source ID',
+            projectHistoryJobStatus: 'Job \u72b6\u6001',
+            projectHistoryApprovalStatus: '\u5ba1\u6279',
+            projectHistoryProviderStatus: 'Provider',
+            projectHistoryJobHasResult: 'Provider \u7ed3\u679c\u5df2\u53ef\u7528',
+            projectHistoryArtifactType: 'Artifact \u7c7b\u578b',
+            projectHistoryArtifactId: 'Artifact ID',
+            projectHistoryReportId: 'Report ID',
+            projectHistoryReportType: 'Report \u7c7b\u578b',
+            projectHistoryReportFormat: 'Report \u683c\u5f0f',
+            projectHistoryRunHint: 'Run lineage \u7528\u4e8e\u4e32\u8054\u9879\u76ee\u3001\u6765\u6e90\u548c\u751f\u6210\u7ed3\u679c\u3002',
+            projectHistoryJobHint: 'Job \u72b6\u6001\u663e\u793a\u5ba1\u6279\u3001provider \u548c\u7ed3\u679c\u662f\u5426\u5c31\u7eea\u3002',
+            projectHistoryArtifactHint: 'Artifact \u8be6\u60c5\u7528\u4e8e\u8ffd\u8e2a\u6765\u6e90\u8bc1\u636e\u548c\u751f\u6210\u4ea7\u7269\u3002',
+            projectHistoryReportHint: 'Report \u8be6\u60c5\u7528\u4e8e\u91cd\u65b0\u67e5\u770b\u6216\u590d\u5236\u6700\u8fd1\u9879\u76ee\u62a5\u544a\u3002',
+            projectHistoryActionHintDefault: '\u590d\u5236\u8be6\u60c5\u4ee5\u68c0\u67e5\u9879\u76ee\u5386\u53f2\u8bb0\u5f55\u3002',
+            copyProjectHistoryItemDetail: '\u590d\u5236\u8be6\u60c5',
+            projectHistoryItemCopied: '\u9879\u76ee\u5386\u53f2\u6761\u76ee\u8be6\u60c5\u5df2\u590d\u5236\u3002',
+            projectHistoryItemCopyFailed: '\u590d\u5236\u9879\u76ee\u5386\u53f2\u6761\u76ee\u5931\u8d25\u3002'
         });
 
 
