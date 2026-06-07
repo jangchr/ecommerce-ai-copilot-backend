@@ -390,6 +390,348 @@ def build_experiment_feedback_decision(
     }
 
 
+
+def _planner_safe_bool(value: Any) -> bool:
+    return bool(value) and value not in ("", [], {}, None)
+
+
+def _planner_artifact_types(artifact_registry: dict[str, Any] | None) -> set[str]:
+    registry = artifact_registry if isinstance(artifact_registry, dict) else {}
+    artifacts = registry.get("artifacts") if isinstance(registry.get("artifacts"), list) else []
+    return {
+        str(item.get("artifact_type") or "")
+        for item in artifacts
+        if isinstance(item, dict) and item.get("artifact_type")
+    }
+
+
+def _planner_latest_experiments(job: dict[str, Any]) -> list[dict[str, Any]]:
+    experiments = job.get("external_video_experiments")
+    if isinstance(experiments, list):
+        return [item for item in experiments if isinstance(item, dict)]
+    experiments = job.get("external_experiments")
+    if isinstance(experiments, list):
+        return [item for item in experiments if isinstance(item, dict)]
+    return []
+
+
+def _planner_gate_status(source_quality_gate: dict[str, Any]) -> str:
+    return str(source_quality_gate.get("status") or "").strip().lower()
+
+
+def _planner_source_review_count(source: dict[str, Any], evidence_artifact: dict[str, Any]) -> int:
+    summary = source.get("source_summary") if isinstance(source.get("source_summary"), dict) else {}
+    for key in ("unique_review_count", "review_count"):
+        try:
+            value = int(summary.get(key) or 0)
+        except (TypeError, ValueError):
+            value = 0
+        if value > 0:
+            return value
+    snippets = evidence_artifact.get("review_snippets")
+    if isinstance(snippets, list):
+        return len([item for item in snippets if str(item or "").strip()])
+    quotes = evidence_artifact.get("evidence_quotes")
+    if isinstance(quotes, list):
+        return len([item for item in quotes if str(item or "").strip()])
+    return 0
+
+
+def _planner_has_uploaded_asset(
+    artifact_registry: dict[str, Any],
+    source_evidence_artifact: dict[str, Any],
+    latest_job: dict[str, Any],
+) -> bool:
+    registry = artifact_registry if isinstance(artifact_registry, dict) else {}
+    artifacts = registry.get("artifacts") if isinstance(registry.get("artifacts"), list) else []
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        artifact_type = str(artifact.get("artifact_type") or "")
+        if artifact_type in {"uploaded_product_asset", "uploaded_reference_asset"}:
+            return True
+        if artifact_type == "product_asset_lock_v2":
+            metadata = artifact.get("metadata") if isinstance(artifact.get("metadata"), dict) else {}
+            if metadata.get("primary_asset_id"):
+                return True
+
+    asset_refs = source_evidence_artifact.get("asset_refs")
+    if isinstance(asset_refs, list) and asset_refs:
+        return True
+
+    lock_v2 = latest_job.get("product_asset_lock_v2")
+    if isinstance(lock_v2, dict) and lock_v2.get("primary_asset_id"):
+        return True
+
+    return False
+
+
+def _planner_registry_has(
+    artifact_registry: dict[str, Any],
+    artifact_type: str,
+) -> bool:
+    return artifact_type in _planner_artifact_types(artifact_registry)
+
+
+def build_supervisor_planner_recommendation(
+    project: dict[str, Any] | None = None,
+    source: dict[str, Any] | None = None,
+    source_quality_gate: dict[str, Any] | None = None,
+    source_evidence_artifact: dict[str, Any] | None = None,
+    artifact_registry: dict[str, Any] | None = None,
+    latest_run: dict[str, Any] | None = None,
+    latest_job: dict[str, Any] | None = None,
+    latest_experiment: dict[str, Any] | None = None,
+    approval_gate: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build one deterministic project-level next-best-action recommendation.
+
+    Supervisor / Planner Agent v2 is project-level planning. It does not replace
+    Graph Router Agent, does not call external APIs, and does not enable LLM
+    autonomous decisions.
+    """
+
+    safe_project = project if isinstance(project, dict) else {}
+    safe_source = source if isinstance(source, dict) else {}
+    safe_gate = source_quality_gate if isinstance(source_quality_gate, dict) else {}
+    safe_evidence = source_evidence_artifact if isinstance(source_evidence_artifact, dict) else {}
+    safe_registry = artifact_registry if isinstance(artifact_registry, dict) else {}
+    safe_run = latest_run if isinstance(latest_run, dict) else {}
+    safe_job = latest_job if isinstance(latest_job, dict) else {}
+    safe_experiment = latest_experiment if isinstance(latest_experiment, dict) else {}
+    safe_approval = approval_gate if isinstance(approval_gate, dict) else {}
+
+    project_id = str(
+        safe_project.get("project_id")
+        or safe_source.get("project_id")
+        or safe_gate.get("project_id")
+        or safe_evidence.get("project_id")
+        or safe_registry.get("project_id")
+        or safe_run.get("project_id")
+        or safe_job.get("project_id")
+        or "demo_project_default"
+    )
+
+    source_type = str(safe_source.get("source_type") or "").strip()
+    gate_status = _planner_gate_status(safe_gate)
+    gate_allows_agent_run = safe_gate.get("allows_agent_run") is True
+    evidence_readiness = str(safe_gate.get("evidence_readiness") or "").strip()
+    source_confidence = safe_source.get("source_confidence")
+    if source_confidence is None:
+        source_confidence = safe_evidence.get("source_confidence")
+    try:
+        source_confidence_value = float(source_confidence or 0)
+    except (TypeError, ValueError):
+        source_confidence_value = 0.0
+
+    review_count = _planner_source_review_count(safe_source, safe_evidence)
+    source_warnings = list(safe_source.get("warnings") or []) + list(safe_gate.get("warnings") or []) + list(safe_evidence.get("warnings") or [])
+    source_missing = not safe_source and not safe_evidence
+    source_ready = bool(safe_evidence) and gate_status in {"passed", "warning"} and (
+        gate_allows_agent_run or review_count > 0
+    )
+    source_needs_reviews = (
+        source_type in {"amazon_url", "shopify_url"}
+        and review_count <= 0
+        and (
+            gate_status in {"warning", "fallback_required", "partial", ""}
+            or "manual_reviews_recommended" in source_warnings
+        )
+    )
+    source_blocked = gate_status in {"blocked", "failed"} or safe_gate.get("allows_agent_run") is False and gate_status == "blocked"
+
+    has_uploaded_asset = _planner_has_uploaded_asset(safe_registry, safe_evidence, safe_job)
+    run_completed = str(safe_run.get("status") or "").lower() == "completed"
+    has_generation_packet = _planner_registry_has(safe_registry, "video_generation_packet") or bool(
+        safe_run.get("result", {}).get("video_generation_packet")
+        if isinstance(safe_run.get("result"), dict)
+        else False
+    )
+    has_handoff = _planner_registry_has(safe_registry, "external_video_tool_handoff") or bool(
+        safe_run.get("result", {}).get("external_video_tool_handoff")
+        if isinstance(safe_run.get("result"), dict)
+        else False
+    )
+    has_job = bool(safe_job.get("job_id"))
+    experiments = _planner_latest_experiments(safe_job)
+    if safe_experiment:
+        experiments.append(safe_experiment)
+    experiment_count = len(experiments)
+
+    has_revised_artifact = bool(
+        safe_job.get("latest_rework_artifact_type")
+        or safe_job.get("latest_rework_next_artifact_type")
+        or _planner_registry_has(safe_registry, "revised_keyframe_plan")
+        or _planner_registry_has(safe_registry, "revised_external_video_handoff")
+    )
+    comparison_gate = safe_job.get("latest_experiment_comparison_decision_gate")
+    if not isinstance(comparison_gate, dict):
+        comparison_gate = safe_job.get("experiment_comparison_decision_gate")
+    comparison_gate = comparison_gate if isinstance(comparison_gate, dict) else {}
+    gate_decision_type = str(comparison_gate.get("decision_type") or "").strip()
+
+    approval = safe_approval
+    if not approval and isinstance(safe_job.get("latest_human_approval_gate"), dict):
+        approval = safe_job.get("latest_human_approval_gate")
+    approval = approval if isinstance(approval, dict) else {}
+    approval_status = str(approval.get("status") or "").strip().lower()
+    provider_runtime = safe_job.get("provider_runtime") if isinstance(safe_job.get("provider_runtime"), dict) else {}
+    provider_status = str(provider_runtime.get("provider_status") or safe_job.get("provider_status") or safe_job.get("status") or "").strip().lower()
+    provider_ready_result = provider_status in {"external_result_ready", "manual_export_completed", "provider_result_ready"} or _planner_registry_has(safe_registry, "provider_result")
+
+    overall_status = "needs_source"
+    next_action_type = "add_source"
+    next_agent_id = "source_adapter_agent"
+    next_best_action = "Add a product source or paste customer feedback."
+    user_action_required = True
+    can_start_agent_run = False
+    can_create_video_job = False
+    can_record_experiment = False
+    can_request_approval = False
+    can_submit_provider = False
+    missing_inputs: list[str] = []
+    warnings: list[str] = []
+    reasons: list[str] = []
+
+    if source_missing:
+        missing_inputs.append("project_source")
+        reasons.append("No project source or source evidence artifact is available yet.")
+    elif source_blocked:
+        overall_status = "blocked"
+        next_action_type = "review_blocker"
+        next_agent_id = "source_quality_agent"
+        next_best_action = "Review the blocker and provide the missing input or decision."
+        user_action_required = True
+        missing_inputs.append("valid_source_evidence")
+        warnings.extend(source_warnings or ["source_quality_gate_blocked"])
+        reasons.append("Source Quality Gate is blocked.")
+    elif source_needs_reviews:
+        overall_status = "needs_reviews"
+        next_action_type = "paste_reviews"
+        next_agent_id = "source_quality_agent"
+        next_best_action = "Paste customer reviews before starting review-grounded generation."
+        user_action_required = True
+        missing_inputs.append("customer_reviews")
+        warnings.extend(source_warnings or ["manual_reviews_recommended"])
+        reasons.append("Public source does not provide enough usable customer-review evidence.")
+    elif provider_ready_result:
+        overall_status = "completed"
+        next_action_type = "export_report"
+        next_agent_id = "finalizer_agent"
+        next_best_action = "Export the graph report or start another iteration."
+        user_action_required = False
+        reasons.append("Provider result is ready and graph report can be exported.")
+    elif approval_status == "approved":
+        overall_status = "provider_ready"
+        next_action_type = "submit_provider_simulation"
+        next_agent_id = "provider_job_agent"
+        next_best_action = "Submit simulated provider job."
+        user_action_required = True
+        can_submit_provider = True
+        reasons.append("Human Approval Gate approved the controlled manual/provider test.")
+    elif approval_status in {"pending_approval", "pending"} or approval.get("blocks_provider_submit") is True:
+        overall_status = "waiting_for_approval"
+        next_action_type = "approve_controlled_test"
+        next_agent_id = "human_approval_agent"
+        next_best_action = "Approve controlled test or request changes before provider submit."
+        user_action_required = True
+        can_request_approval = True
+        reasons.append("Provider submit is blocked until Human Approval Gate is decided.")
+    elif gate_decision_type == "proceed_to_controlled_test":
+        overall_status = "waiting_for_approval"
+        next_action_type = "approve_controlled_test"
+        next_agent_id = "human_approval_agent"
+        next_best_action = "Review the controlled provider checklist and approve or request changes."
+        user_action_required = True
+        can_request_approval = True
+        reasons.append("Second experiment improved and the decision gate selected a controlled provider test.")
+    elif experiment_count >= 1 and has_revised_artifact:
+        overall_status = "needs_rework"
+        next_action_type = "use_revised_handoff"
+        next_agent_id = "prompt_handoff_agent"
+        next_best_action = "Use the revised external video handoff for a second experiment."
+        user_action_required = True
+        reasons.append("Experiment feedback produced revised artifacts for another test.")
+    elif has_job and experiment_count <= 0:
+        overall_status = "waiting_for_experiment"
+        next_action_type = "record_experiment"
+        next_agent_id = "experiment_agent"
+        next_best_action = "Generate video manually in the external tool, then record experiment results."
+        user_action_required = True
+        can_record_experiment = True
+        reasons.append("Video Job exists but no external experiment has been recorded.")
+    elif run_completed and has_generation_packet and has_handoff and not has_job:
+        overall_status = "ready_for_video_job"
+        next_action_type = "create_video_job"
+        next_agent_id = "provider_job_agent"
+        next_best_action = "Create a Video Job from the handoff."
+        user_action_required = False
+        can_create_video_job = True
+        reasons.append("Agent Run completed and produced a video handoff.")
+    elif source_ready and has_uploaded_asset:
+        overall_status = "ready_for_agent_run"
+        next_action_type = "start_agent_run"
+        next_agent_id = "planner_agent"
+        next_best_action = "Start Agent Run."
+        user_action_required = False
+        can_start_agent_run = True
+        reasons.append("Source evidence and product identity assets are ready.")
+    elif source_ready:
+        overall_status = "asset_recommended"
+        next_action_type = "upload_asset"
+        next_agent_id = "asset_lock_agent"
+        next_best_action = "You can start the Agent Run, but uploading a product image is recommended for product consistency."
+        user_action_required = False
+        can_start_agent_run = True
+        missing_inputs.append("product_image_recommended")
+        reasons.append("Source evidence is ready, but product image upload would improve product consistency.")
+    else:
+        overall_status = "needs_source"
+        next_action_type = "add_source"
+        next_agent_id = "source_adapter_agent"
+        next_best_action = "Add a product source or paste customer feedback."
+        user_action_required = True
+        missing_inputs.append("usable_source_evidence")
+        warnings.extend(source_warnings)
+        reasons.append("Project does not yet have enough source evidence for planning.")
+
+    return {
+        "planner_version": "supervisor_planner_v2",
+        "project_id": project_id,
+        "overall_status": overall_status,
+        "next_best_action": next_best_action,
+        "next_action_type": next_action_type,
+        "next_agent_id": next_agent_id,
+        "user_action_required": user_action_required,
+        "can_start_agent_run": can_start_agent_run,
+        "can_create_video_job": can_create_video_job,
+        "can_record_experiment": can_record_experiment,
+        "can_request_approval": can_request_approval,
+        "can_submit_provider": can_submit_provider,
+        "missing_inputs": list(dict.fromkeys([item for item in missing_inputs if item])),
+        "warnings": list(dict.fromkeys([str(item) for item in warnings if str(item or "")])),
+        "reasons": list(dict.fromkeys([item for item in reasons if item])),
+        "evidence": {
+            "source_quality_gate_status": gate_status,
+            "source_confidence": source_confidence_value,
+            "artifact_registry_version": str(safe_registry.get("registry_version") or ""),
+            "latest_run_id": safe_run.get("run_id"),
+            "latest_job_id": safe_job.get("job_id"),
+            "latest_experiment_status": (
+                safe_experiment.get("status")
+                or (experiments[-1].get("status") if experiments else None)
+            ),
+            "review_count": review_count,
+            "approval_status": approval_status,
+            "provider_status": provider_status,
+        },
+        "safety_boundaries": {
+            "external_api_called": False,
+            "cost_incurred_by_crossgrowth": False,
+            "llm_autonomous_decision_enabled": False,
+        },
+    }
+
 def build_graph_router_decision(
     route_context: dict[str, Any],
     job: dict[str, Any] | None = None,

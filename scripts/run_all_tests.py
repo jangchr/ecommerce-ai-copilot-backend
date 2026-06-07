@@ -35,6 +35,7 @@ FAST_COMMANDS = [
         "tests.test_language_mode_backend",
         "tests.test_pasted_reviews_endpoint",
         "tests.test_project_sources",
+        "tests.test_supervisor_planner",
         "tests.test_agent_runs",
         "tests.test_agent_graph_storage",
         "tests.test_video_generation_jobs",
