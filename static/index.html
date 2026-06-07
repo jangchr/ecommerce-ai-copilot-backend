@@ -11687,6 +11687,58 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_DISPATCH_DRY_RUN_ACTION_BUNDLE_MARKER = 'Project Workspace dispatch dry-run action bundle';
+
+        async function dryRunProjectWorkspaceDispatch(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceDispatchEventStatus')
+                || document.getElementById('projectWorkspaceDispatchTicketStatus')
+                || document.getElementById('projectWorkspaceRunnerPlanStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('dispatchDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_dispatch_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/dispatch/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('dispatchDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_dispatch_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_dispatch_dry_run');
+                if (status) status.textContent = t('dispatchDryRunComplete');
+
+                const runnerPanel = document.getElementById('projectWorkspaceRunnerPlanPanel');
+                if (runnerPanel) runnerPanel.outerHTML = renderProjectWorkspaceRunnerPlanPanel(latestProjectWorkspace);
+                const ticketPanel = document.getElementById('projectWorkspaceDispatchTicketPanel');
+                if (ticketPanel) ticketPanel.outerHTML = renderProjectWorkspaceDispatchTicketPanel(latestProjectWorkspace);
+                const eventPanel = document.getElementById('projectWorkspaceDispatchEventPanel');
+                if (eventPanel) eventPanel.outerHTML = renderProjectWorkspaceDispatchEventPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_dispatch_dry_run');
+                if (status) status.textContent = error.message || t('dispatchDryRunFailed');
+                throw error;
+            }
+        }
+
+
         function renderProjectWorkspaceDispatchEventPanel(workspace = latestProjectWorkspace) {
             const event = projectWorkspaceDispatchEventFromWorkspace(workspace);
             const hasEvent = Boolean(event && Object.keys(event).length);
@@ -11742,6 +11794,7 @@
                         </div>
                         <div class="quick-use-pack-actions">
                             <button class="btn-secondary" id="copyProjectWorkspaceDispatchTicketBtn" type="button" onclick="copyProjectWorkspaceDispatchTicket()">${escapeHTML(t('copyDispatchTicket'))}</button>
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceDispatchBtn" type="button" data-project-dispatch-dry-run-action="Project Workspace dispatch dry-run action bundle" onclick="dryRunProjectWorkspaceDispatch()">${escapeHTML(t('dryRunDispatch'))}</button>
                         </div>
                     </div>
                     <div class="graph-os-compact-grid">
@@ -13654,6 +13707,23 @@
             dispatchEventDryRunHelper: '\u4ec5\u5ba1\u8ba1\uff1a\u4e0d\u6267\u884c Agent\uff0c\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\u3002',
             dispatchEventCopied: '\u6d3e\u5de5\u4e8b\u4ef6\u5df2\u590d\u5236\u3002',
             dispatchEventCopyFailed: '\u590d\u5236\u6d3e\u5de5\u4e8b\u4ef6\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceDispatchDryRunActionBundleMarker: 'Project Workspace dispatch dry-run action bundle',
+            dryRunDispatch: 'Dry-run dispatch',
+            dispatchDryRunRunning: 'Running dispatch dry-run...',
+            dispatchDryRunComplete: 'Dispatch dry-run complete.',
+            dispatchDryRunFailed: 'Dispatch dry-run failed.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceDispatchDryRunActionBundleMarker: 'Project Workspace dispatch dry-run action bundle',
+            dryRunDispatch: 'Dry-run \u6d3e\u5de5',
+            dispatchDryRunRunning: '\u6b63\u5728\u8fdb\u884c dry-run \u6d3e\u5de5...',
+            dispatchDryRunComplete: 'Dry-run \u6d3e\u5de5\u5b8c\u6210\u3002',
+            dispatchDryRunFailed: 'Dry-run \u6d3e\u5de5\u5931\u8d25\u3002'
         });
 
 

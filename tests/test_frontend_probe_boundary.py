@@ -4562,3 +4562,37 @@ class ProjectWorkspaceDispatchEventPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace dispatch event panel bundle", script)
         self.assertIn("project_workspace_dispatch_event_panel_marker", script)
 
+
+class ProjectWorkspaceDispatchDryRunActionFrontendTests(unittest.TestCase):
+    def test_project_workspace_dispatch_dry_run_action_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace dispatch dry-run action bundle",
+            "PROJECT_WORKSPACE_DISPATCH_DRY_RUN_ACTION_BUNDLE_MARKER",
+            "async function dryRunProjectWorkspaceDispatch(",
+            "/runner/dispatch/dry-run",
+            "dryRunProjectWorkspaceDispatchBtn",
+            "data-project-dispatch-dry-run-action",
+            "dryRunDispatch",
+            "dispatchDryRunRunning",
+            "dispatchDryRunComplete",
+            "dispatchDryRunFailed",
+            "runner_dispatch_ticket: latestProjectRunnerDispatchTicket",
+            "runner_dispatch_event: latestProjectRunnerDispatchEvent",
+            "renderProjectWorkspaceDispatchTicketPanel(latestProjectWorkspace)",
+            "renderProjectWorkspaceDispatchEventPanel(latestProjectWorkspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_dispatch_dry_run_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_dispatch_dry_run_action_marker", script)
+        self.assertIn("Project Workspace dispatch dry-run action bundle", script)
+
+    def test_project_workspace_dispatch_dry_run_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace dispatch dry-run action bundle", script)
+        self.assertIn("project_workspace_dispatch_dry_run_action_marker", script)
+
