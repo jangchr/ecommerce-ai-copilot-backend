@@ -4437,3 +4437,44 @@ class ProjectWorkspaceExportPackBundleFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace export pack bundle", script)
         self.assertIn("project_workspace_export_pack_bundle_marker", script)
 
+
+class ProjectWorkspaceRunnerPlanPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_runner_plan_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace runner plan panel bundle",
+            "PROJECT_WORKSPACE_RUNNER_PLAN_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceRunnerPlanPanel(",
+            "async function refreshProjectWorkspaceRunnerPlan(",
+            "async function copyProjectWorkspaceRunnerPlan(",
+            "function projectWorkspaceRunnerPlanCopyText(",
+            "function projectWorkspaceRunnerPlanStepRows(",
+            "function projectWorkspaceRunnerPlanWarnings(",
+            "/runner/plan/refresh",
+            "projectWorkspaceRunnerPlanPanel",
+            "projectWorkspaceRunnerPlanStatus",
+            "refreshProjectWorkspaceRunnerPlanBtn",
+            "copyProjectWorkspaceRunnerPlanBtn",
+            "data-project-runner-plan-panel-marker",
+            "data-runner-plan-execution-status",
+            "data-runner-plan-next-agent",
+            "runnerPlanPanelTitle",
+            "runnerPlanDryRunHelper",
+            "runnerPlanStatusWaitingForUser",
+            "runnerPlanStatusBlocked",
+            "renderProjectWorkspaceRunnerPlanPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_runner_plan_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_runner_plan_panel_marker", script)
+        self.assertIn("Project Workspace runner plan panel bundle", script)
+
+    def test_project_workspace_runner_plan_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace runner plan panel bundle", script)
+        self.assertIn("project_workspace_runner_plan_panel_marker", script)
+

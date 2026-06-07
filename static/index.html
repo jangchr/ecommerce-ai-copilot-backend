@@ -11462,6 +11462,160 @@
         }
 
 
+
+        const PROJECT_WORKSPACE_RUNNER_PLAN_PANEL_BUNDLE_MARKER = 'Project Workspace runner plan panel bundle';
+        let latestProjectRunnerPlan = {};
+
+        function projectWorkspaceRunnerPlanFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerPlan && Object.keys(latestProjectRunnerPlan).length
+                ? latestProjectRunnerPlan
+                : workspace?.runner_plan || {};
+        }
+
+        function projectWorkspaceRunnerPlanStatusLabel(plan = {}) {
+            const status = String(plan.execution_status || 'not_refreshed');
+            const labels = {
+                ready: t('runnerPlanStatusReady'),
+                waiting_for_user: t('runnerPlanStatusWaitingForUser'),
+                ready_with_optional_user_input: t('runnerPlanStatusOptionalUserInput'),
+                blocked: t('runnerPlanStatusBlocked'),
+                not_refreshed: t('runnerPlanStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceRunnerPlanStepRows(plan = {}) {
+            const steps = Array.isArray(plan.planned_steps) ? plan.planned_steps : [];
+            if (!steps.length) {
+                return `<div class="recent-empty">${escapeHTML(t('runnerPlanNoSteps'))}</div>`;
+            }
+            return steps.map((step) => `
+                <div class="artifact-timeline-row" data-runner-plan-step="${escapeHTML(step.step_id || '')}">
+                    <strong>${escapeHTML(step.step_id || t('none'))}</strong>
+                    <div>${escapeHTML(step.step_type || '')} · ${escapeHTML(step.status || '')} · ${escapeHTML(step.agent_id || '')}</div>
+                    <div class="field-helper">${escapeHTML(step.description || '')}</div>
+                </div>
+            `).join('');
+        }
+
+        function projectWorkspaceRunnerPlanWarnings(plan = {}) {
+            const warnings = Array.isArray(plan.warnings) ? plan.warnings : [];
+            const blocked = Array.isArray(plan.blocked_reasons) ? plan.blocked_reasons : [];
+            const items = [...blocked.map((item) => `${t('runnerPlanBlockedReason')}: ${item}`), ...warnings.map((item) => `${t('runnerPlanWarning')}: ${item}`)];
+            if (!items.length) {
+                return `<div class="field-helper">${escapeHTML(t('runnerPlanNoWarnings'))}</div>`;
+            }
+            return `<ul>${items.map((item) => `<li>${escapeHTML(item)}</li>`).join('')}</ul>`;
+        }
+
+        function projectWorkspaceRunnerPlanCopyText(plan = projectWorkspaceRunnerPlanFromWorkspace()) {
+            return [
+                t('runnerPlanCopyTitle'),
+                `${t('projectId')}: ${latestProjectWorkspace?.project?.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('runnerPlanExecutionStatus')}: ${plan.execution_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${plan.next_agent_id || t('none')}`,
+                `${t('runnerPlanNextAction')}: ${plan.next_action_type || t('none')}`,
+                `${t('runnerPlanCanExecute')}: ${Boolean(plan.can_execute_next_agent)}`,
+                `${t('runnerPlanRequiresUserAction')}: ${Boolean(plan.requires_user_action)}`,
+                '',
+                JSON.stringify(plan || {}, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRunnerPlan() {
+            const status = document.getElementById('projectWorkspaceRunnerPlanStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceRunnerPlanCopyText());
+                if (status) status.textContent = t('runnerPlanCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('runnerPlanCopyFailed');
+            }
+        }
+
+        async function refreshProjectWorkspaceRunnerPlan(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRunnerPlanStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('runnerPlanRefreshing');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_plan');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/plan/refresh`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('runnerPlanRefreshFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_plan');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_plan');
+                if (status) status.textContent = t('runnerPlanRefreshed');
+                const panel = document.getElementById('projectWorkspaceRunnerPlanPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRunnerPlanPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_plan');
+                if (status) status.textContent = error.message || t('runnerPlanRefreshFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRunnerPlanPanel(workspace = latestProjectWorkspace) {
+            const plan = projectWorkspaceRunnerPlanFromWorkspace(workspace);
+            const hasPlan = Boolean(plan && Object.keys(plan).length);
+            const statusLabel = projectWorkspaceRunnerPlanStatusLabel(plan);
+            return `
+                <div class="section-block" id="projectWorkspaceRunnerPlanPanel" data-project-runner-plan-panel-marker="Project Workspace runner plan panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runnerPlanPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="refreshProjectWorkspaceRunnerPlanBtn" type="button" onclick="refreshProjectWorkspaceRunnerPlan()">${escapeHTML(t('refreshRunnerPlan'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRunnerPlanBtn" type="button" onclick="copyProjectWorkspaceRunnerPlan()">${escapeHTML(t('copyRunnerPlan'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerPlanExecutionStatus'))}</div>
+                            <strong data-runner-plan-execution-status="${escapeHTML(plan.execution_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerPlanNextAgent'))}</div>
+                            <strong data-runner-plan-next-agent="${escapeHTML(plan.next_agent_id || '')}">${escapeHTML(plan.next_agent_id || t('runnerPlanNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanNextAction'))}: ${escapeHTML(plan.next_action_type || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerPlanCanExecute'))}</div>
+                            <strong>${escapeHTML(String(Boolean(plan.can_execute_next_agent)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanRequiresUserAction'))}: ${escapeHTML(String(Boolean(plan.requires_user_action)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('runnerPlanSteps'))}</div>
+                        ${hasPlan ? projectWorkspaceRunnerPlanStepRows(plan) : `<div class="recent-empty">${escapeHTML(t('runnerPlanNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('runnerPlanWarningsTitle'))}</div>
+                        ${hasPlan ? projectWorkspaceRunnerPlanWarnings(plan) : `<div class="field-helper">${escapeHTML(t('runnerPlanRefreshToInspect'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRunnerPlanStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceHistoryQuickPanel(workspace = latestProjectWorkspace) {
             return `
                 <div class="section-block" id="projectWorkspaceHistoryPanel" data-project-history-ux-marker="Project Workspace history UX bundle">
@@ -11517,6 +11671,7 @@
                         ${metricPill(t('recentProjectAssets'), String(summary.asset_count || 0))}
                         ${metricPill(t('recentGraphReports'), String(summary.report_count || 0))}
                     </div>
+                    ${renderProjectWorkspaceRunnerPlanPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -13138,6 +13293,73 @@
             projectWorkspaceExportMarkdownCopied: 'Workspace Markdown \u5305\u5df2\u590d\u5236\u3002',
             projectWorkspaceExportJsonCopied: 'Workspace JSON \u5305\u5df2\u590d\u5236\u3002',
             projectWorkspaceExportCopyFailed: '\u590d\u5236 Workspace \u5bfc\u51fa\u5305\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRunnerPlanPanelBundleMarker: 'Project Workspace runner plan panel bundle',
+            runnerPlanPanelTitle: 'Runner plan',
+            runnerPlanPanelHelper: 'Dry-run next-agent plan from Supervisor Planner and Agent Contract Registry. This does not execute agents or call external providers.',
+            refreshRunnerPlan: 'Refresh runner plan',
+            copyRunnerPlan: 'Copy runner plan',
+            runnerPlanExecutionStatus: 'Execution status',
+            runnerPlanNextAgent: 'Next agent',
+            runnerPlanNextAction: 'Next action',
+            runnerPlanCanExecute: 'Can execute next agent',
+            runnerPlanRequiresUserAction: 'Requires user action',
+            runnerPlanSteps: 'Planned steps',
+            runnerPlanWarningsTitle: 'Warnings and blockers',
+            runnerPlanNoSteps: 'No planned steps yet.',
+            runnerPlanNoWarnings: 'No warnings or blockers.',
+            runnerPlanBlockedReason: 'Blocked',
+            runnerPlanWarning: 'Warning',
+            runnerPlanStatusReady: 'Ready',
+            runnerPlanStatusWaitingForUser: 'Waiting for user',
+            runnerPlanStatusOptionalUserInput: 'Ready with optional user input',
+            runnerPlanStatusBlocked: 'Blocked',
+            runnerPlanStatusNotRefreshed: 'Not refreshed',
+            runnerPlanNotRefreshedYet: 'Runner plan has not been refreshed yet.',
+            runnerPlanRefreshToInspect: 'Refresh the runner plan to inspect blockers and warnings.',
+            runnerPlanDryRunHelper: 'Dry run only: no provider call, no cost, no autonomous LLM decision.',
+            runnerPlanRefreshing: 'Refreshing runner plan...',
+            runnerPlanRefreshed: 'Runner plan refreshed.',
+            runnerPlanRefreshFailed: 'Could not refresh runner plan.',
+            runnerPlanCopied: 'Runner plan copied.',
+            runnerPlanCopyFailed: 'Could not copy runner plan.',
+            runnerPlanCopyTitle: 'Project runner plan'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRunnerPlanPanelBundleMarker: 'Project Workspace runner plan panel bundle',
+            runnerPlanPanelTitle: 'Runner \u6267\u884c\u8ba1\u5212',
+            runnerPlanPanelHelper: '\u6765\u81ea Supervisor Planner \u548c Agent Contract Registry \u7684\u4e0b\u4e00\u4e2a Agent dry-run \u8ba1\u5212\u3002\u8fd9\u4e0d\u4f1a\u771f\u6b63\u6267\u884c Agent\uff0c\u4e5f\u4e0d\u4f1a\u8c03\u7528\u5916\u90e8 provider\u3002',
+            refreshRunnerPlan: '\u5237\u65b0 Runner Plan',
+            copyRunnerPlan: '\u590d\u5236 Runner Plan',
+            runnerPlanExecutionStatus: '\u6267\u884c\u72b6\u6001',
+            runnerPlanNextAgent: '\u4e0b\u4e00\u4e2a Agent',
+            runnerPlanNextAction: '\u4e0b\u4e00\u6b65\u52a8\u4f5c',
+            runnerPlanCanExecute: '\u80fd\u5426\u6267\u884c\u4e0b\u4e00\u4e2a Agent',
+            runnerPlanRequiresUserAction: '\u662f\u5426\u9700\u8981\u7528\u6237\u64cd\u4f5c',
+            runnerPlanSteps: '\u8ba1\u5212\u6b65\u9aa4',
+            runnerPlanWarningsTitle: '\u98ce\u9669\u548c\u963b\u585e',
+            runnerPlanNoSteps: '\u6682\u65e0\u8ba1\u5212\u6b65\u9aa4\u3002',
+            runnerPlanNoWarnings: '\u6682\u65e0\u98ce\u9669\u6216\u963b\u585e\u3002',
+            runnerPlanBlockedReason: '\u963b\u585e',
+            runnerPlanWarning: '\u63d0\u9192',
+            runnerPlanStatusReady: '\u5df2\u5c31\u7eea',
+            runnerPlanStatusWaitingForUser: '\u7b49\u5f85\u7528\u6237',
+            runnerPlanStatusOptionalUserInput: '\u5df2\u5c31\u7eea\uff0c\u53ef\u9009\u7528\u6237\u8f93\u5165',
+            runnerPlanStatusBlocked: '\u5df2\u963b\u585e',
+            runnerPlanStatusNotRefreshed: '\u672a\u5237\u65b0',
+            runnerPlanNotRefreshedYet: 'Runner Plan \u5c1a\u672a\u5237\u65b0\u3002',
+            runnerPlanRefreshToInspect: '\u5237\u65b0 Runner Plan \u4ee5\u68c0\u67e5\u963b\u585e\u548c\u98ce\u9669\u3002',
+            runnerPlanDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\uff0c\u4e0d\u542f\u7528 LLM \u81ea\u4e3b\u51b3\u7b56\u3002',
+            runnerPlanRefreshing: '\u6b63\u5728\u5237\u65b0 Runner Plan...',
+            runnerPlanRefreshed: 'Runner Plan \u5df2\u5237\u65b0\u3002',
+            runnerPlanRefreshFailed: '\u5237\u65b0 Runner Plan \u5931\u8d25\u3002',
+            runnerPlanCopied: 'Runner Plan \u5df2\u590d\u5236\u3002',
+            runnerPlanCopyFailed: '\u590d\u5236 Runner Plan \u5931\u8d25\u3002',
+            runnerPlanCopyTitle: '\u9879\u76ee Runner Plan'
         });
 
 
