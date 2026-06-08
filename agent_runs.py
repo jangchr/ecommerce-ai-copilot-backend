@@ -2538,6 +2538,144 @@ def build_agent_runner_queue_item_summary(queue_item: dict[str, Any]) -> dict[st
 
 
 
+AGENT_RUNNER_QUEUE_CLAIM_VERSION = "agent_runner_queue_claim_v1"
+
+
+def _claim_status_from_queue_item(queue_item: dict[str, Any]) -> str:
+    safe_item = queue_item if isinstance(queue_item, dict) else {}
+    status = str(safe_item.get("queue_status") or "queue_blocked")
+    if bool(safe_item.get("enqueue_allowed")) and status == "queue_ready_dry_run":
+        return "claim_ready_dry_run"
+    if status == "queue_waiting_for_user":
+        return "claim_waiting_for_user"
+    return "claim_blocked"
+
+
+def build_agent_runner_queue_claim(
+    queue_item: dict[str, Any],
+    worker_id: str = "runner_worker_dry_run",
+    requested_by: str = "runner_claim_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run worker claim for a queue item.
+
+    This does not persist a claim, acquire a real lock, execute the agent,
+    call providers, spend money, or enable autonomous LLM routing.
+    """
+
+    item = queue_item if isinstance(queue_item, dict) else {}
+    project_id = str(item.get("project_id") or "demo_project_default")
+    target_agent_id = str(item.get("target_agent_id") or "")
+    safe_worker_id = str(worker_id or "runner_worker_dry_run")
+    claim_status = _claim_status_from_queue_item(item)
+    claim_allowed = claim_status == "claim_ready_dry_run"
+    claim_id = f"claim_{project_id}_{target_agent_id or 'none'}_{safe_worker_id}_{claim_status}".replace(" ", "_")
+
+    blocking_check_ids = [
+        str(value)
+        for value in (item.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if claim_allowed:
+        recommended_next_state = "ready_for_explicit_worker_lease"
+        claim_message_text = "Dry-run worker claim is ready. Real queue lock acquisition is still disabled."
+    elif claim_status == "claim_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        claim_message_text = "Worker claim is waiting for required user action."
+    else:
+        recommended_next_state = "fix_claim_blockers"
+        claim_message_text = "Worker claim is blocked by queue item, work order, execution receipt, dispatch, or contract validation."
+
+    lease_payload = {
+        "claim_version": AGENT_RUNNER_QUEUE_CLAIM_VERSION,
+        "claim_status": claim_status,
+        "claim_allowed": claim_allowed,
+        "claim_id": claim_id,
+        "worker_id": safe_worker_id,
+        "queue_item_id": item.get("queue_item_id"),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": item.get("target_agent_stage"),
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "claim_persisted": False,
+        "lease_acquired": False,
+        "agent_execution_performed": False,
+    }
+
+    claim_message = build_agent_message(
+        message_type="runner_queue_claim_dry_run",
+        source_agent_id="runner_queue_worker",
+        target_agent_id=target_agent_id,
+        payload=lease_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "claim_version": AGENT_RUNNER_QUEUE_CLAIM_VERSION,
+        "claim_id": claim_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_claim_dry_run_api"),
+        "worker_id": safe_worker_id,
+        "claim_status": claim_status,
+        "claim_allowed": claim_allowed,
+        "queue_item_id": str(item.get("queue_item_id") or ""),
+        "queue_item_version": str(item.get("queue_item_version") or ""),
+        "queue_status": str(item.get("queue_status") or ""),
+        "enqueue_allowed": bool(item.get("enqueue_allowed")),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(item.get("target_agent_stage") or ""),
+        "priority": str(item.get("priority") or "normal"),
+        "recommended_next_state": recommended_next_state,
+        "claim_message_text": claim_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "queue_item_summary": build_agent_runner_queue_item_summary(item),
+        "work_order_summary": deepcopy(item.get("work_order_summary") or {}),
+        "required_inputs": deepcopy(item.get("required_inputs") or []),
+        "expected_outputs": deepcopy(item.get("expected_outputs") or []),
+        "work_payload": deepcopy(item.get("work_payload") or {}),
+        "queue_message": deepcopy(item.get("queue_message") or {}),
+        "claim_message": claim_message,
+        "dry_run": True,
+        "claim_persisted": False,
+        "lease_acquired": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_queue_claim_summary(queue_claim: dict[str, Any]) -> dict[str, Any]:
+    safe_claim = queue_claim if isinstance(queue_claim, dict) else {}
+    return {
+        "summary_version": "agent_runner_queue_claim_summary_v1",
+        "claim_version": str(safe_claim.get("claim_version") or AGENT_RUNNER_QUEUE_CLAIM_VERSION),
+        "claim_id": str(safe_claim.get("claim_id") or ""),
+        "project_id": str(safe_claim.get("project_id") or "demo_project_default"),
+        "worker_id": str(safe_claim.get("worker_id") or "runner_worker_dry_run"),
+        "claim_status": str(safe_claim.get("claim_status") or "claim_blocked"),
+        "claim_allowed": bool(safe_claim.get("claim_allowed")),
+        "target_agent_id": str(safe_claim.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_claim.get("target_agent_stage") or ""),
+        "queue_item_id": str(safe_claim.get("queue_item_id") or ""),
+        "blocking_check_count": len(safe_claim.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "claim_persisted": False,
+        "lease_acquired": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

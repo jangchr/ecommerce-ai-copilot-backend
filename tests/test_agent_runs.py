@@ -1639,3 +1639,120 @@ class AgentRunnerQueueItemTests(unittest.TestCase):
         self.assertIn("contract_validation", item["blocking_check_ids"])
         self.assertEqual(item["target_agent_id"], "missing_agent")
 
+
+class AgentRunnerQueueClaimTests(unittest.TestCase):
+    def test_queue_claim_records_ready_queue_item_without_locking(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_claim_summary,
+            build_agent_runner_queue_item,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_claim_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_claim_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item, worker_id="unit_worker")
+        summary = build_agent_runner_queue_claim_summary(claim)
+
+        self.assertEqual(claim["claim_version"], "agent_runner_queue_claim_v1")
+        self.assertEqual(claim["claim_status"], "claim_ready_dry_run")
+        self.assertTrue(claim["claim_allowed"])
+        self.assertTrue(claim["dry_run"])
+        self.assertFalse(claim["claim_persisted"])
+        self.assertFalse(claim["lease_acquired"])
+        self.assertFalse(claim["agent_execution_performed"])
+        self.assertFalse(claim["external_api_called"])
+        self.assertFalse(claim["cost_incurred_by_crossgrowth"])
+        self.assertFalse(claim["llm_autonomous_decision_enabled"])
+        self.assertEqual(claim["worker_id"], "unit_worker")
+        self.assertEqual(claim["target_agent_id"], "planner_agent")
+        self.assertEqual(claim["claim_message"]["message_type"], "runner_queue_claim_dry_run")
+        self.assertEqual(summary["summary_version"], "agent_runner_queue_claim_summary_v1")
+        self.assertTrue(summary["claim_allowed"])
+        self.assertFalse(summary["lease_acquired"])
+
+    def test_queue_claim_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_claim_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_claim_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+
+        self.assertEqual(claim["claim_status"], "claim_waiting_for_user")
+        self.assertFalse(claim["claim_allowed"])
+        self.assertFalse(claim["lease_acquired"])
+        self.assertIn("user_gate", claim["blocking_check_ids"])
+        self.assertEqual(claim["target_agent_id"], "source_adapter_agent")
+
+    def test_queue_claim_blocks_invalid_queue_item(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_claim_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+
+        self.assertEqual(claim["claim_status"], "claim_blocked")
+        self.assertFalse(claim["claim_allowed"])
+        self.assertFalse(claim["lease_acquired"])
+        self.assertIn("contract_validation", claim["blocking_check_ids"])
+        self.assertEqual(claim["target_agent_id"], "missing_agent")
+

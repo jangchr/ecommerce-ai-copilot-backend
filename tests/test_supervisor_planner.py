@@ -666,3 +666,37 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             item["queue_status"],
         )
 
+    def test_project_runner_claim_dry_run_endpoint_returns_queue_claim(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/claim/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["claim_persisted"])
+        self.assertFalse(payload["lease_acquired"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_queue_claim", payload)
+        self.assertIn("runner_queue_claim_summary", payload)
+
+        claim = payload["runner_queue_claim"]
+        summary = payload["runner_queue_claim_summary"]
+        self.assertEqual(claim["claim_version"], "agent_runner_queue_claim_v1")
+        self.assertTrue(claim["dry_run"])
+        self.assertFalse(claim["claim_persisted"])
+        self.assertFalse(claim["lease_acquired"])
+        self.assertFalse(claim["agent_execution_performed"])
+        self.assertFalse(claim["external_api_called"])
+        self.assertFalse(claim["cost_incurred_by_crossgrowth"])
+        self.assertEqual(summary["summary_version"], "agent_runner_queue_claim_summary_v1")
+        self.assertEqual(summary["claim_status"], claim["claim_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_claim_status"],
+            claim["claim_status"],
+        )
+

@@ -12068,6 +12068,156 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_QUEUE_CLAIM_PANEL_BUNDLE_MARKER = 'Project Workspace queue claim panel bundle';
+        let latestProjectRunnerQueueClaim = {};
+
+        function projectWorkspaceQueueClaimFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerQueueClaim && Object.keys(latestProjectRunnerQueueClaim).length
+                ? latestProjectRunnerQueueClaim
+                : workspace?.runner_queue_claim || {};
+        }
+
+        function projectWorkspaceQueueClaimStatusLabel(claim = {}) {
+            const status = String(claim.claim_status || 'not_refreshed');
+            const labels = {
+                claim_ready_dry_run: t('claimStatusReadyDryRun'),
+                claim_waiting_for_user: t('claimStatusWaitingForUser'),
+                claim_blocked: t('claimStatusBlocked'),
+                not_refreshed: t('claimStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceQueueClaimCopyText(claim = projectWorkspaceQueueClaimFromWorkspace()) {
+            return [
+                t('queueClaimCopyTitle'),
+                `${t('projectId')}: ${claim.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('queueClaimId')}: ${claim.claim_id || t('none')}`,
+                `${t('queueClaimWorkerId')}: ${claim.worker_id || t('none')}`,
+                `${t('queueClaimStatus')}: ${claim.claim_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${claim.target_agent_id || t('none')}`,
+                `${t('queueClaimAllowed')}: ${Boolean(claim.claim_allowed)}`,
+                `${t('queueLeaseAcquired')}: ${Boolean(claim.lease_acquired)}`,
+                '',
+                JSON.stringify(claim || {}, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceQueueClaim() {
+            const status = document.getElementById('projectWorkspaceQueueClaimStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceQueueClaimCopyText());
+                if (status) status.textContent = t('queueClaimCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('queueClaimCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceQueueClaim(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceQueueClaimStatus')
+                || document.getElementById('projectWorkspaceQueueItemStatus')
+                || document.getElementById('projectWorkspaceWorkOrderStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('queueClaimDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_claim_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/claim/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('queueClaimDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_claim_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_claim_dry_run');
+                if (status) status.textContent = t('queueClaimDryRunComplete');
+
+                const queuePanel = document.getElementById('projectWorkspaceQueueItemPanel');
+                if (queuePanel) queuePanel.outerHTML = renderProjectWorkspaceQueueItemPanel(latestProjectWorkspace);
+                const claimPanel = document.getElementById('projectWorkspaceQueueClaimPanel');
+                if (claimPanel) claimPanel.outerHTML = renderProjectWorkspaceQueueClaimPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_claim_dry_run');
+                if (status) status.textContent = error.message || t('queueClaimDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceQueueClaimPanel(workspace = latestProjectWorkspace) {
+            const claim = projectWorkspaceQueueClaimFromWorkspace(workspace);
+            const hasClaim = Boolean(claim && Object.keys(claim).length);
+            const statusLabel = projectWorkspaceQueueClaimStatusLabel(claim);
+            return `
+                <div class="section-block" id="projectWorkspaceQueueClaimPanel" data-project-queue-claim-panel-marker="Project Workspace queue claim panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('queueClaimPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('queueClaimPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceQueueClaimBtn" type="button" data-project-queue-claim-dry-run-action="Project Workspace queue claim panel bundle" onclick="dryRunProjectWorkspaceQueueClaim()">${escapeHTML(t('dryRunQueueClaim'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceQueueClaimBtn" type="button" onclick="copyProjectWorkspaceQueueClaim()">${escapeHTML(t('copyQueueClaim'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queueClaimStatus'))}</div>
+                            <strong data-queue-claim-status="${escapeHTML(claim.claim_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('queueClaimDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queueClaimId'))}</div>
+                            <strong data-queue-claim-id="${escapeHTML(claim.claim_id || '')}">${escapeHTML(claim.claim_id || t('queueClaimNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('queueClaimWorkerId'))}: ${escapeHTML(claim.worker_id || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queueClaimAllowed'))}</div>
+                            <strong data-queue-claim-allowed="${escapeHTML(String(Boolean(claim.claim_allowed)))}">${escapeHTML(String(Boolean(claim.claim_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('queueLeaseAcquired'))}: ${escapeHTML(String(Boolean(claim.lease_acquired)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('queueClaimAuditPreview'))}</div>
+                        ${hasClaim ? `<pre class="debug" data-queue-claim-audit-preview="Project Workspace queue claim panel bundle">${escapeHTML(projectWorkspaceQueueClaimCopyText(claim))}</pre>` : `<div class="recent-empty">${escapeHTML(t('queueClaimNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceQueueClaimStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceQueueItemPanel(workspace = latestProjectWorkspace) {
             const item = projectWorkspaceQueueItemFromWorkspace(workspace);
             const hasItem = Boolean(item && Object.keys(item).length);
@@ -12400,6 +12550,7 @@
                     ${renderProjectWorkspaceExecutionReceiptPanel(workspace)}
                     ${renderProjectWorkspaceWorkOrderPanel(workspace)}
                     ${renderProjectWorkspaceQueueItemPanel(workspace)}
+                    ${renderProjectWorkspaceQueueClaimPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -14352,6 +14503,59 @@
             queueItemDryRunFailed: 'Queue item dry-run \u5931\u8d25\u3002',
             queueItemCopied: '\u961f\u5217\u9879\u5df2\u590d\u5236\u3002',
             queueItemCopyFailed: '\u590d\u5236\u961f\u5217\u9879\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceQueueClaimPanelBundleMarker: 'Project Workspace queue claim panel bundle',
+            queueClaimPanelTitle: 'Queue claim / worker lease',
+            queueClaimPanelHelper: 'Dry-run worker claim for the next queue item. This prepares a lease without locking, persisting, or executing the Agent.',
+            dryRunQueueClaim: 'Dry-run claim',
+            copyQueueClaim: 'Copy claim',
+            queueClaimCopyTitle: 'Project queue claim',
+            queueClaimId: 'Claim ID',
+            queueClaimWorkerId: 'Worker ID',
+            queueClaimStatus: 'Claim status',
+            queueClaimAllowed: 'Claim allowed',
+            queueLeaseAcquired: 'Lease acquired',
+            queueClaimAuditPreview: 'Claim audit preview',
+            claimStatusReadyDryRun: 'Claim ready dry-run',
+            claimStatusWaitingForUser: 'Claim waiting for user',
+            claimStatusBlocked: 'Claim blocked',
+            claimStatusNotRefreshed: 'Not refreshed',
+            queueClaimNotRefreshedYet: 'Queue claim has not been refreshed yet.',
+            queueClaimDryRunHelper: 'Dry run only: claim is not persisted, lease is not acquired, Agent is not executed.',
+            queueClaimDryRunRunning: 'Building queue claim dry-run...',
+            queueClaimDryRunComplete: 'Queue claim dry-run complete.',
+            queueClaimDryRunFailed: 'Queue claim dry-run failed.',
+            queueClaimCopied: 'Queue claim copied.',
+            queueClaimCopyFailed: 'Could not copy queue claim.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceQueueClaimPanelBundleMarker: 'Project Workspace queue claim panel bundle',
+            queueClaimPanelTitle: '\u961f\u5217\u9886\u53d6 / Worker \u79df\u7ea6',
+            queueClaimPanelHelper: '\u4e0b\u4e00\u4e2a\u961f\u5217\u9879\u7684 dry-run worker \u9886\u53d6\u8bb0\u5f55\u3002\u5b83\u53ea\u51c6\u5907\u79df\u7ea6\uff0c\u4e0d\u771f\u6b63\u52a0\u9501\u3001\u6301\u4e45\u5316\u6216\u6267\u884c Agent\u3002',
+            dryRunQueueClaim: 'Dry-run \u9886\u53d6',
+            copyQueueClaim: '\u590d\u5236\u9886\u53d6\u8bb0\u5f55',
+            queueClaimCopyTitle: '\u9879\u76ee\u961f\u5217\u9886\u53d6\u8bb0\u5f55',
+            queueClaimId: '\u9886\u53d6 ID',
+            queueClaimWorkerId: 'Worker ID',
+            queueClaimStatus: '\u9886\u53d6\u72b6\u6001',
+            queueClaimAllowed: '\u662f\u5426\u5141\u8bb8\u9886\u53d6',
+            queueLeaseAcquired: '\u662f\u5426\u5df2\u771f\u6b63\u83b7\u5f97\u79df\u7ea6',
+            queueClaimAuditPreview: '\u9886\u53d6\u5ba1\u8ba1\u9884\u89c8',
+            claimStatusReadyDryRun: '\u9886\u53d6 dry-run \u5df2\u5c31\u7eea',
+            claimStatusWaitingForUser: '\u9886\u53d6\u7b49\u5f85\u7528\u6237',
+            claimStatusBlocked: '\u9886\u53d6\u5df2\u963b\u585e',
+            claimStatusNotRefreshed: '\u672a\u5237\u65b0',
+            queueClaimNotRefreshedYet: '\u961f\u5217\u9886\u53d6\u5c1a\u672a\u5237\u65b0\u3002',
+            queueClaimDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u771f\u6b63\u4fdd\u5b58\u9886\u53d6\uff0c\u4e0d\u83b7\u5f97\u79df\u7ea6\uff0c\u4e0d\u6267\u884c Agent\u3002',
+            queueClaimDryRunRunning: '\u6b63\u5728\u751f\u6210 queue claim dry-run...',
+            queueClaimDryRunComplete: 'Queue claim dry-run \u5b8c\u6210\u3002',
+            queueClaimDryRunFailed: 'Queue claim dry-run \u5931\u8d25\u3002',
+            queueClaimCopied: '\u961f\u5217\u9886\u53d6\u8bb0\u5f55\u5df2\u590d\u5236\u3002',
+            queueClaimCopyFailed: '\u590d\u5236\u961f\u5217\u9886\u53d6\u8bb0\u5f55\u5931\u8d25\u3002'
         });
 
 
