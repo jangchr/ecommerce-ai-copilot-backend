@@ -119,6 +119,18 @@ from agent_runs import (
     build_agent_runner_runtime_sandbox_summary,
     build_agent_runner_worker_bootstrap_plan,
     build_agent_runner_worker_bootstrap_plan_summary,
+    build_agent_runner_failure_receipt,
+    build_agent_runner_failure_receipt_summary,
+    build_agent_runner_recovery_summary,
+    build_agent_runner_recovery_summary_summary,
+    build_agent_runner_retry_plan,
+    build_agent_runner_retry_plan_summary,
+    build_agent_runner_worker_heartbeat,
+    build_agent_runner_worker_heartbeat_summary,
+    build_agent_runner_worker_loop_simulation,
+    build_agent_runner_worker_loop_simulation_summary,
+    build_agent_runner_worker_poll,
+    build_agent_runner_worker_poll_summary,
     build_agent_runner_authorization_preview,
     build_agent_runner_authorization_preview_summary,
     build_agent_runner_execution_manifest,
@@ -8244,6 +8256,101 @@ async def dry_run_project_agent_runtime_readiness(project_id: str, http_request:
         "worker_started": False,
         "worker_loop_started": False,
         "agent_execution_performed": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+
+@app.post("/api/v1/projects/{project_id}/runner/worker-loop/dry-run")
+async def dry_run_project_agent_worker_loop(project_id: str, http_request: Request):
+    runtime_payload = await dry_run_project_agent_runtime_readiness(project_id, http_request)
+
+    runner_worker_poll = build_agent_runner_worker_poll(
+        runtime_payload["runner_worker_bootstrap_plan"],
+        requested_by="project_runner_worker_loop_dry_run_api",
+    )
+    runner_worker_poll_summary = build_agent_runner_worker_poll_summary(runner_worker_poll)
+    runner_worker_heartbeat = build_agent_runner_worker_heartbeat(
+        runner_worker_poll,
+        requested_by="project_runner_worker_loop_dry_run_api",
+    )
+    runner_worker_heartbeat_summary = build_agent_runner_worker_heartbeat_summary(runner_worker_heartbeat)
+    runner_worker_loop_simulation = build_agent_runner_worker_loop_simulation(
+        runner_worker_heartbeat,
+        requested_by="project_runner_worker_loop_dry_run_api",
+    )
+    runner_worker_loop_simulation_summary = build_agent_runner_worker_loop_simulation_summary(runner_worker_loop_simulation)
+    runner_failure_receipt = build_agent_runner_failure_receipt(
+        runner_worker_loop_simulation,
+        requested_by="project_runner_worker_loop_dry_run_api",
+    )
+    runner_failure_receipt_summary = build_agent_runner_failure_receipt_summary(runner_failure_receipt)
+    runner_retry_plan = build_agent_runner_retry_plan(
+        runner_failure_receipt,
+        requested_by="project_runner_worker_loop_dry_run_api",
+    )
+    runner_retry_plan_summary = build_agent_runner_retry_plan_summary(runner_retry_plan)
+    runner_recovery_summary = build_agent_runner_recovery_summary(
+        runner_retry_plan,
+        requested_by="project_runner_worker_loop_dry_run_api",
+    )
+    runner_recovery_summary_summary = build_agent_runner_recovery_summary_summary(runner_recovery_summary)
+
+    project = runtime_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_worker_poll_status": runner_worker_poll.get("worker_poll_status", ""),
+        "latest_runner_worker_heartbeat_status": runner_worker_heartbeat.get("worker_heartbeat_status", ""),
+        "latest_runner_worker_loop_status": runner_worker_loop_simulation.get("worker_loop_status", ""),
+        "latest_runner_failure_receipt_status": runner_failure_receipt.get("failure_receipt_status", ""),
+        "latest_runner_retry_plan_status": runner_retry_plan.get("retry_plan_status", ""),
+        "latest_runner_recovery_status": runner_recovery_summary.get("recovery_status", ""),
+        "latest_runner_worker_loop_started": bool(runner_worker_loop_simulation.get("worker_loop_started")),
+        "latest_runner_retry_scheduled": bool(runner_retry_plan.get("retry_scheduled")),
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **runtime_payload,
+        "project": project,
+        "runner_worker_poll": runner_worker_poll,
+        "runner_worker_poll_summary": runner_worker_poll_summary,
+        "runner_worker_heartbeat": runner_worker_heartbeat,
+        "runner_worker_heartbeat_summary": runner_worker_heartbeat_summary,
+        "runner_worker_loop_simulation": runner_worker_loop_simulation,
+        "runner_worker_loop_simulation_summary": runner_worker_loop_simulation_summary,
+        "runner_failure_receipt": runner_failure_receipt,
+        "runner_failure_receipt_summary": runner_failure_receipt_summary,
+        "runner_retry_plan": runner_retry_plan,
+        "runner_retry_plan_summary": runner_retry_plan_summary,
+        "runner_recovery_summary": runner_recovery_summary,
+        "runner_recovery_summary_summary": runner_recovery_summary_summary,
+        "dry_run": True,
+        "queue_item_claimed": False,
+        "heartbeat_recorded": False,
+        "worker_alive": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "loop_simulation_recorded": False,
+        "failure_detected": False,
+        "failure_recorded": False,
+        "retry_allowed": False,
+        "retry_scheduled": False,
+        "retry_attempt_started": False,
+        "recovery_complete": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "agent_execution_performed": False,
+        "result_written": False,
         "write_authorized": False,
         "state_persisted": False,
         "project_snapshot_saved": False,

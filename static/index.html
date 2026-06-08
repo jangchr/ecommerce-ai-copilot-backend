@@ -13772,6 +13772,129 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_WORKER_LOOP_PANEL_BUNDLE_MARKER = 'Project Workspace worker loop panel bundle';
+        let latestProjectRunnerWorkerPoll = {};
+        let latestProjectRunnerWorkerHeartbeat = {};
+        let latestProjectRunnerWorkerLoopSimulation = {};
+        let latestProjectRunnerFailureReceipt = {};
+        let latestProjectRunnerRetryPlan = {};
+        let latestProjectRunnerRecoverySummary = {};
+
+        function projectWorkspaceWorkerLoopCopyText(workspace = latestProjectWorkspace) {
+            const poll = latestProjectRunnerWorkerPoll || workspace?.runner_worker_poll || {};
+            const heartbeat = latestProjectRunnerWorkerHeartbeat || workspace?.runner_worker_heartbeat || {};
+            const loop = latestProjectRunnerWorkerLoopSimulation || workspace?.runner_worker_loop_simulation || {};
+            const failure = latestProjectRunnerFailureReceipt || workspace?.runner_failure_receipt || {};
+            const retry = latestProjectRunnerRetryPlan || workspace?.runner_retry_plan || {};
+            const recovery = latestProjectRunnerRecoverySummary || workspace?.runner_recovery_summary || {};
+            return [
+                t('workerLoopCopyTitle'),
+                `${t('workerPollStatus')}: ${poll.worker_poll_status || 'not_refreshed'}`,
+                `${t('workerHeartbeatStatus')}: ${heartbeat.worker_heartbeat_status || 'not_refreshed'}`,
+                `${t('workerLoopStatus')}: ${loop.worker_loop_status || 'not_refreshed'}`,
+                `${t('failureReceiptStatus')}: ${failure.failure_receipt_status || 'not_refreshed'}`,
+                `${t('retryPlanStatus')}: ${retry.retry_plan_status || 'not_refreshed'}`,
+                `${t('recoveryStatus')}: ${recovery.recovery_status || 'not_refreshed'}`,
+                `${t('workerLoopStarted')}: ${Boolean(loop.worker_loop_started)}`,
+                `${t('retryScheduled')}: ${Boolean(retry.retry_scheduled)}`,
+                '',
+                JSON.stringify({ poll, heartbeat, loop, failure, retry, recovery }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceWorkerLoop() {
+            const status = document.getElementById('projectWorkspaceWorkerLoopStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceWorkerLoopCopyText());
+                if (status) status.textContent = t('workerLoopCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('workerLoopCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceWorkerLoop(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceWorkerLoopStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('workerLoopDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_worker_loop_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/worker-loop/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('workerLoopDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerWorkerPoll = payload.runner_worker_poll || {};
+                latestProjectRunnerWorkerHeartbeat = payload.runner_worker_heartbeat || {};
+                latestProjectRunnerWorkerLoopSimulation = payload.runner_worker_loop_simulation || {};
+                latestProjectRunnerFailureReceipt = payload.runner_failure_receipt || {};
+                latestProjectRunnerRetryPlan = payload.runner_retry_plan || {};
+                latestProjectRunnerRecoverySummary = payload.runner_recovery_summary || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_worker_loop_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_worker_loop_dry_run');
+                if (status) status.textContent = t('workerLoopDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceWorkerLoopPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceWorkerLoopPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_worker_loop_dry_run');
+                if (status) status.textContent = error.message || t('workerLoopDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceWorkerLoopPanel(workspace = latestProjectWorkspace) {
+            const poll = latestProjectRunnerWorkerPoll || workspace?.runner_worker_poll || {};
+            const heartbeat = latestProjectRunnerWorkerHeartbeat || workspace?.runner_worker_heartbeat || {};
+            const loop = latestProjectRunnerWorkerLoopSimulation || workspace?.runner_worker_loop_simulation || {};
+            const retry = latestProjectRunnerRetryPlan || workspace?.runner_retry_plan || {};
+            const recovery = latestProjectRunnerRecoverySummary || workspace?.runner_recovery_summary || {};
+            const hasRecovery = Boolean(recovery && Object.keys(recovery).length);
+            return `
+                <div class="section-block" id="projectWorkspaceWorkerLoopPanel" data-project-worker-loop-panel-marker="Project Workspace worker loop panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('workerLoopPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('workerLoopPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceWorkerLoopBtn" type="button" data-project-worker-loop-dry-run-action="Project Workspace worker loop panel bundle" onclick="dryRunProjectWorkspaceWorkerLoop()">${escapeHTML(t('dryRunWorkerLoop'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceWorkerLoopBtn" type="button" onclick="copyProjectWorkspaceWorkerLoop()">${escapeHTML(t('copyWorkerLoop'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workerPollStatus'))}</div>
+                            <strong data-worker-poll-status="${escapeHTML(poll.worker_poll_status || 'not_refreshed')}">${escapeHTML(poll.worker_poll_status || t('workerLoopNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workerLoopStatus'))}</div>
+                            <strong data-worker-loop-status="${escapeHTML(loop.worker_loop_status || 'not_refreshed')}">${escapeHTML(loop.worker_loop_status || t('workerLoopNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('workerHeartbeatStatus'))}: ${escapeHTML(heartbeat.worker_heartbeat_status || 'not_refreshed')}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('recoveryStatus'))}</div>
+                            <strong data-recovery-status="${escapeHTML(recovery.recovery_status || 'not_refreshed')}">${escapeHTML(recovery.recovery_status || t('workerLoopNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('retryScheduled'))}: ${escapeHTML(String(Boolean(retry.retry_scheduled)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('workerLoopAuditPreview'))}</div>
+                        ${hasRecovery ? `<pre class="debug" data-worker-loop-audit-preview="Project Workspace worker loop panel bundle">${escapeHTML(projectWorkspaceWorkerLoopCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('workerLoopNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceWorkerLoopStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceRuntimeReadinessPanel(workspace = latestProjectWorkspace) {
             const authorization = latestProjectRunnerAuthorizationPreview || workspace?.runner_authorization_preview || {};
             const manifest = latestProjectRunnerExecutionManifest || workspace?.runner_execution_manifest || {};
@@ -14598,6 +14721,7 @@
                     ${renderProjectWorkspacePersistGateAuditPanel(workspace)}
                     ${renderProjectWorkspaceApprovalPolicyPanel(workspace)}
                     ${renderProjectWorkspaceRuntimeReadinessPanel(workspace)}
+                    ${renderProjectWorkspaceWorkerLoopPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -17213,6 +17337,53 @@
             runtimeReadinessDryRunFailed: 'Runtime readiness dry-run \u5931\u8d25\u3002',
             runtimeReadinessCopied: '\u8fd0\u884c\u5c31\u7eea\u5df2\u590d\u5236\u3002',
             runtimeReadinessCopyFailed: '\u590d\u5236\u8fd0\u884c\u5c31\u7eea\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceWorkerLoopPanelBundleMarker: 'Project Workspace worker loop panel bundle',
+            workerLoopPanelTitle: 'Worker loop & retry safety',
+            workerLoopPanelHelper: 'Dry-run worker polling, heartbeat, loop simulation, failure receipt, retry plan, and recovery summary.',
+            dryRunWorkerLoop: 'Dry-run worker loop',
+            copyWorkerLoop: 'Copy worker loop',
+            workerLoopCopyTitle: 'Project worker loop dry-run',
+            workerPollStatus: 'Worker poll status',
+            workerHeartbeatStatus: 'Worker heartbeat status',
+            workerLoopStatus: 'Worker loop status',
+            failureReceiptStatus: 'Failure receipt status',
+            retryPlanStatus: 'Retry plan status',
+            recoveryStatus: 'Recovery status',
+            retryScheduled: 'Retry scheduled',
+            workerLoopAuditPreview: 'Worker loop audit preview',
+            workerLoopNotRefreshedYet: 'Worker loop has not been refreshed yet.',
+            workerLoopDryRunRunning: 'Building worker loop dry-run...',
+            workerLoopDryRunComplete: 'Worker loop dry-run complete.',
+            workerLoopDryRunFailed: 'Worker loop dry-run failed.',
+            workerLoopCopied: 'Worker loop copied.',
+            workerLoopCopyFailed: 'Could not copy worker loop.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceWorkerLoopPanelBundleMarker: 'Project Workspace worker loop panel bundle',
+            workerLoopPanelTitle: 'Worker \u5faa\u73af\u4e0e\u91cd\u8bd5\u5b89\u5168',
+            workerLoopPanelHelper: '\u5bf9 Worker \u8f6e\u8be2\u3001\u5fc3\u8df3\u3001\u5faa\u73af\u6a21\u62df\u3001\u5931\u8d25\u56de\u6267\u3001\u91cd\u8bd5\u8ba1\u5212\u548c\u6062\u590d\u6458\u8981\u505a dry-run\u3002',
+            dryRunWorkerLoop: 'Dry-run Worker \u5faa\u73af',
+            copyWorkerLoop: '\u590d\u5236 Worker \u5faa\u73af',
+            workerLoopCopyTitle: '\u9879\u76ee Worker \u5faa\u73af dry-run',
+            workerPollStatus: 'Worker \u8f6e\u8be2\u72b6\u6001',
+            workerHeartbeatStatus: 'Worker \u5fc3\u8df3\u72b6\u6001',
+            workerLoopStatus: 'Worker \u5faa\u73af\u72b6\u6001',
+            failureReceiptStatus: '\u5931\u8d25\u56de\u6267\u72b6\u6001',
+            retryPlanStatus: '\u91cd\u8bd5\u8ba1\u5212\u72b6\u6001',
+            recoveryStatus: '\u6062\u590d\u72b6\u6001',
+            retryScheduled: '\u662f\u5426\u5df2\u5b89\u6392\u91cd\u8bd5',
+            workerLoopAuditPreview: 'Worker \u5faa\u73af\u5ba1\u8ba1\u9884\u89c8',
+            workerLoopNotRefreshedYet: 'Worker \u5faa\u73af\u5c1a\u672a\u5237\u65b0\u3002',
+            workerLoopDryRunRunning: '\u6b63\u5728\u751f\u6210 worker loop dry-run...',
+            workerLoopDryRunComplete: 'Worker loop dry-run \u5b8c\u6210\u3002',
+            workerLoopDryRunFailed: 'Worker loop dry-run \u5931\u8d25\u3002',
+            workerLoopCopied: 'Worker \u5faa\u73af\u5df2\u590d\u5236\u3002',
+            workerLoopCopyFailed: '\u590d\u5236 Worker \u5faa\u73af\u5931\u8d25\u3002'
         });
 
 

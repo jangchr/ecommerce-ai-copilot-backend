@@ -1149,3 +1149,49 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             payload["runner_worker_bootstrap_plan"]["worker_bootstrap_status"],
         )
 
+    def test_project_runner_worker_loop_dry_run_endpoint_returns_recovery_summary(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/worker-loop/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_worker_poll",
+            "runner_worker_heartbeat",
+            "runner_worker_loop_simulation",
+            "runner_failure_receipt",
+            "runner_retry_plan",
+            "runner_recovery_summary",
+            "runner_recovery_summary_summary",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertFalse(payload["queue_item_claimed"])
+        self.assertFalse(payload["heartbeat_recorded"])
+        self.assertFalse(payload["worker_alive"])
+        self.assertFalse(payload["worker_started"])
+        self.assertFalse(payload["worker_loop_started"])
+        self.assertFalse(payload["loop_simulation_recorded"])
+        self.assertFalse(payload["failure_detected"])
+        self.assertFalse(payload["failure_recorded"])
+        self.assertFalse(payload["retry_allowed"])
+        self.assertFalse(payload["retry_scheduled"])
+        self.assertFalse(payload["recovery_complete"])
+        self.assertFalse(payload["safe_to_continue"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertEqual(
+            payload["runner_recovery_summary_summary"]["summary_version"],
+            "agent_runner_recovery_summary_summary_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_recovery_status"],
+            payload["runner_recovery_summary"]["recovery_status"],
+        )
+

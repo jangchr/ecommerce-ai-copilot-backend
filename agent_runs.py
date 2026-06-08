@@ -5907,6 +5907,478 @@ def build_agent_runner_worker_bootstrap_plan_summary(worker_bootstrap_plan: dict
 
 
 
+AGENT_RUNNER_WORKER_POLL_VERSION = "agent_runner_worker_poll_v1"
+AGENT_RUNNER_WORKER_HEARTBEAT_VERSION = "agent_runner_worker_heartbeat_v1"
+AGENT_RUNNER_WORKER_LOOP_SIMULATION_VERSION = "agent_runner_worker_loop_simulation_v1"
+AGENT_RUNNER_FAILURE_RECEIPT_VERSION = "agent_runner_failure_receipt_v1"
+AGENT_RUNNER_RETRY_PLAN_VERSION = "agent_runner_retry_plan_v1"
+AGENT_RUNNER_RECOVERY_SUMMARY_VERSION = "agent_runner_recovery_summary_v1"
+
+
+def _runner_worker_wait_status(upstream_status: str, prefix: str, default_blocked: str) -> str:
+    status = str(upstream_status or "")
+    if "waiting_for_real_agent_output" in status:
+        return f"{prefix}_waiting_for_real_agent_output"
+    if "waiting_for_user" in status:
+        return f"{prefix}_waiting_for_user"
+    if "waiting_for_explicit_review" in status or "review" in status:
+        return f"{prefix}_waiting_for_explicit_review"
+    if "blocked" in status:
+        return default_blocked
+    return default_blocked
+
+
+def build_agent_runner_worker_poll(
+    worker_bootstrap_plan: dict[str, Any],
+    requested_by: str = "runner_worker_loop_dry_run_api",
+) -> dict[str, Any]:
+    plan = worker_bootstrap_plan if isinstance(worker_bootstrap_plan, dict) else {}
+    project_id = str(plan.get("project_id") or "demo_project_default")
+    target_agent_id = str(plan.get("target_agent_id") or "")
+    status = _runner_worker_wait_status(
+        str(plan.get("worker_bootstrap_status") or ""),
+        "worker_poll",
+        "worker_poll_blocked",
+    )
+    poll_id = f"worker_poll_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    poll_items = [
+        {"poll_item_id": "queue_claim", "available": False, "reason": "dry_run_no_real_queue_claim"},
+        {"poll_item_id": "runtime_sandbox", "available": bool(plan.get("runtime_sandbox_id")), "reason": "sandbox_preview_only"},
+        {"poll_item_id": "worker_bootstrap", "available": bool(plan.get("worker_bootstrap_plan_id")), "reason": "bootstrap_preview_only"},
+    ]
+    payload = {
+        "worker_poll_version": AGENT_RUNNER_WORKER_POLL_VERSION,
+        "worker_poll_status": status,
+        "worker_poll_id": poll_id,
+        "worker_bootstrap_plan_id": plan.get("worker_bootstrap_plan_id"),
+        "target_agent_id": target_agent_id,
+        "poll_items": poll_items,
+        "poll_item_count": len(poll_items),
+        "dry_run": True,
+        "worker_poll_recorded": False,
+        "queue_item_claimed": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_loop_dry_run_api"),
+        "target_agent_stage": str(plan.get("target_agent_stage") or ""),
+        "worker_bootstrap_status": str(plan.get("worker_bootstrap_status") or ""),
+        "worker_bootstrap_plan_summary": build_agent_runner_worker_bootstrap_plan_summary(plan),
+        "poll_message": build_agent_message(
+            message_type="runner_worker_poll_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_poll_summary(worker_poll: dict[str, Any]) -> dict[str, Any]:
+    safe_poll = worker_poll if isinstance(worker_poll, dict) else {}
+    return {
+        "summary_version": "agent_runner_worker_poll_summary_v1",
+        "worker_poll_version": str(safe_poll.get("worker_poll_version") or AGENT_RUNNER_WORKER_POLL_VERSION),
+        "worker_poll_id": str(safe_poll.get("worker_poll_id") or ""),
+        "project_id": str(safe_poll.get("project_id") or "demo_project_default"),
+        "worker_poll_status": str(safe_poll.get("worker_poll_status") or "worker_poll_blocked"),
+        "poll_item_count": int(safe_poll.get("poll_item_count") or 0),
+        "queue_item_claimed": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_heartbeat(
+    worker_poll: dict[str, Any],
+    requested_by: str = "runner_worker_loop_dry_run_api",
+) -> dict[str, Any]:
+    poll = worker_poll if isinstance(worker_poll, dict) else {}
+    project_id = str(poll.get("project_id") or "demo_project_default")
+    target_agent_id = str(poll.get("target_agent_id") or "")
+    status = _runner_worker_wait_status(
+        str(poll.get("worker_poll_status") or ""),
+        "worker_heartbeat",
+        "worker_heartbeat_blocked",
+    )
+    heartbeat_id = f"worker_heartbeat_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    payload = {
+        "worker_heartbeat_version": AGENT_RUNNER_WORKER_HEARTBEAT_VERSION,
+        "worker_heartbeat_status": status,
+        "worker_heartbeat_id": heartbeat_id,
+        "worker_poll_id": poll.get("worker_poll_id"),
+        "target_agent_id": target_agent_id,
+        "heartbeat_interval_seconds": 30,
+        "heartbeat_recorded": False,
+        "worker_alive": False,
+        "dry_run": True,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_loop_dry_run_api"),
+        "target_agent_stage": str(poll.get("target_agent_stage") or ""),
+        "worker_poll_status": str(poll.get("worker_poll_status") or ""),
+        "worker_poll_summary": build_agent_runner_worker_poll_summary(poll),
+        "heartbeat_message": build_agent_message(
+            message_type="runner_worker_heartbeat_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_heartbeat_summary(worker_heartbeat: dict[str, Any]) -> dict[str, Any]:
+    safe_heartbeat = worker_heartbeat if isinstance(worker_heartbeat, dict) else {}
+    return {
+        "summary_version": "agent_runner_worker_heartbeat_summary_v1",
+        "worker_heartbeat_version": str(safe_heartbeat.get("worker_heartbeat_version") or AGENT_RUNNER_WORKER_HEARTBEAT_VERSION),
+        "worker_heartbeat_id": str(safe_heartbeat.get("worker_heartbeat_id") or ""),
+        "project_id": str(safe_heartbeat.get("project_id") or "demo_project_default"),
+        "worker_heartbeat_status": str(safe_heartbeat.get("worker_heartbeat_status") or "worker_heartbeat_blocked"),
+        "worker_alive": False,
+        "heartbeat_recorded": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_loop_simulation(
+    worker_heartbeat: dict[str, Any],
+    requested_by: str = "runner_worker_loop_dry_run_api",
+) -> dict[str, Any]:
+    heartbeat = worker_heartbeat if isinstance(worker_heartbeat, dict) else {}
+    project_id = str(heartbeat.get("project_id") or "demo_project_default")
+    target_agent_id = str(heartbeat.get("target_agent_id") or "")
+    status = _runner_worker_wait_status(
+        str(heartbeat.get("worker_heartbeat_status") or ""),
+        "worker_loop",
+        "worker_loop_blocked",
+    )
+    worker_loop_simulation_id = f"worker_loop_simulation_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    loop_steps = [
+        {"loop_step_id": "poll_queue", "simulated": True, "executed": False},
+        {"loop_step_id": "send_heartbeat", "simulated": True, "executed": False},
+        {"loop_step_id": "run_agent", "simulated": False, "executed": False},
+        {"loop_step_id": "write_result", "simulated": False, "executed": False},
+    ]
+    payload = {
+        "worker_loop_simulation_version": AGENT_RUNNER_WORKER_LOOP_SIMULATION_VERSION,
+        "worker_loop_status": status,
+        "worker_loop_simulation_id": worker_loop_simulation_id,
+        "worker_heartbeat_id": heartbeat.get("worker_heartbeat_id"),
+        "target_agent_id": target_agent_id,
+        "loop_steps": loop_steps,
+        "loop_step_count": len(loop_steps),
+        "dry_run": True,
+        "loop_simulation_recorded": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+        "result_written": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_loop_dry_run_api"),
+        "target_agent_stage": str(heartbeat.get("target_agent_stage") or ""),
+        "worker_heartbeat_status": str(heartbeat.get("worker_heartbeat_status") or ""),
+        "worker_heartbeat_summary": build_agent_runner_worker_heartbeat_summary(heartbeat),
+        "loop_message": build_agent_message(
+            message_type="runner_worker_loop_simulation_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_loop_simulation_summary(worker_loop_simulation: dict[str, Any]) -> dict[str, Any]:
+    safe_loop = worker_loop_simulation if isinstance(worker_loop_simulation, dict) else {}
+    return {
+        "summary_version": "agent_runner_worker_loop_simulation_summary_v1",
+        "worker_loop_simulation_version": str(safe_loop.get("worker_loop_simulation_version") or AGENT_RUNNER_WORKER_LOOP_SIMULATION_VERSION),
+        "worker_loop_simulation_id": str(safe_loop.get("worker_loop_simulation_id") or ""),
+        "project_id": str(safe_loop.get("project_id") or "demo_project_default"),
+        "worker_loop_status": str(safe_loop.get("worker_loop_status") or "worker_loop_blocked"),
+        "loop_step_count": int(safe_loop.get("loop_step_count") or 0),
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+        "result_written": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_failure_receipt(
+    worker_loop_simulation: dict[str, Any],
+    requested_by: str = "runner_worker_loop_dry_run_api",
+) -> dict[str, Any]:
+    loop = worker_loop_simulation if isinstance(worker_loop_simulation, dict) else {}
+    project_id = str(loop.get("project_id") or "demo_project_default")
+    target_agent_id = str(loop.get("target_agent_id") or "")
+    upstream_status = str(loop.get("worker_loop_status") or "")
+    if "waiting_for_real_agent_output" in upstream_status:
+        status = "failure_receipt_waiting_for_real_agent_output"
+    elif "waiting_for_user" in upstream_status:
+        status = "failure_receipt_waiting_for_user"
+    elif "waiting_for_explicit_review" in upstream_status:
+        status = "failure_receipt_waiting_for_explicit_review"
+    else:
+        status = "failure_receipt_blocked"
+    failure_receipt_id = f"failure_receipt_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    payload = {
+        "failure_receipt_version": AGENT_RUNNER_FAILURE_RECEIPT_VERSION,
+        "failure_receipt_status": status,
+        "failure_receipt_id": failure_receipt_id,
+        "worker_loop_simulation_id": loop.get("worker_loop_simulation_id"),
+        "target_agent_id": target_agent_id,
+        "failure_detected": False,
+        "failure_recorded": False,
+        "failure_type": "none_in_dry_run",
+        "retry_allowed": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_loop_dry_run_api"),
+        "target_agent_stage": str(loop.get("target_agent_stage") or ""),
+        "worker_loop_status": upstream_status,
+        "worker_loop_simulation_summary": build_agent_runner_worker_loop_simulation_summary(loop),
+        "failure_message": build_agent_message(
+            message_type="runner_failure_receipt_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_failure_receipt_summary(failure_receipt: dict[str, Any]) -> dict[str, Any]:
+    safe_receipt = failure_receipt if isinstance(failure_receipt, dict) else {}
+    return {
+        "summary_version": "agent_runner_failure_receipt_summary_v1",
+        "failure_receipt_version": str(safe_receipt.get("failure_receipt_version") or AGENT_RUNNER_FAILURE_RECEIPT_VERSION),
+        "failure_receipt_id": str(safe_receipt.get("failure_receipt_id") or ""),
+        "project_id": str(safe_receipt.get("project_id") or "demo_project_default"),
+        "failure_receipt_status": str(safe_receipt.get("failure_receipt_status") or "failure_receipt_blocked"),
+        "failure_detected": False,
+        "failure_recorded": False,
+        "retry_allowed": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_retry_plan(
+    failure_receipt: dict[str, Any],
+    requested_by: str = "runner_worker_loop_dry_run_api",
+) -> dict[str, Any]:
+    receipt = failure_receipt if isinstance(failure_receipt, dict) else {}
+    project_id = str(receipt.get("project_id") or "demo_project_default")
+    target_agent_id = str(receipt.get("target_agent_id") or "")
+    status = _runner_worker_wait_status(
+        str(receipt.get("failure_receipt_status") or ""),
+        "retry_plan",
+        "retry_plan_blocked",
+    )
+    retry_plan_id = f"retry_plan_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    retry_steps = [
+        {"retry_step_id": "inspect_failure", "ready": bool(receipt.get("failure_receipt_id"))},
+        {"retry_step_id": "verify_retry_policy", "ready": False},
+        {"retry_step_id": "schedule_retry", "ready": False},
+        {"retry_step_id": "record_retry_audit", "ready": False},
+    ]
+    payload = {
+        "retry_plan_version": AGENT_RUNNER_RETRY_PLAN_VERSION,
+        "retry_plan_status": status,
+        "retry_plan_id": retry_plan_id,
+        "failure_receipt_id": receipt.get("failure_receipt_id"),
+        "target_agent_id": target_agent_id,
+        "retry_steps": retry_steps,
+        "retry_step_count": len(retry_steps),
+        "retry_allowed": False,
+        "retry_scheduled": False,
+        "retry_attempt_started": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_loop_dry_run_api"),
+        "target_agent_stage": str(receipt.get("target_agent_stage") or ""),
+        "failure_receipt_status": str(receipt.get("failure_receipt_status") or ""),
+        "failure_receipt_summary": build_agent_runner_failure_receipt_summary(receipt),
+        "retry_message": build_agent_message(
+            message_type="runner_retry_plan_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_retry_plan_summary(retry_plan: dict[str, Any]) -> dict[str, Any]:
+    safe_plan = retry_plan if isinstance(retry_plan, dict) else {}
+    return {
+        "summary_version": "agent_runner_retry_plan_summary_v1",
+        "retry_plan_version": str(safe_plan.get("retry_plan_version") or AGENT_RUNNER_RETRY_PLAN_VERSION),
+        "retry_plan_id": str(safe_plan.get("retry_plan_id") or ""),
+        "project_id": str(safe_plan.get("project_id") or "demo_project_default"),
+        "retry_plan_status": str(safe_plan.get("retry_plan_status") or "retry_plan_blocked"),
+        "retry_step_count": int(safe_plan.get("retry_step_count") or 0),
+        "retry_allowed": False,
+        "retry_scheduled": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_recovery_summary(
+    retry_plan: dict[str, Any],
+    requested_by: str = "runner_worker_loop_dry_run_api",
+) -> dict[str, Any]:
+    plan = retry_plan if isinstance(retry_plan, dict) else {}
+    project_id = str(plan.get("project_id") or "demo_project_default")
+    target_agent_id = str(plan.get("target_agent_id") or "")
+    status = _runner_worker_wait_status(
+        str(plan.get("retry_plan_status") or ""),
+        "recovery",
+        "recovery_blocked",
+    )
+    recovery_summary_id = f"recovery_summary_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    payload = {
+        "recovery_summary_version": AGENT_RUNNER_RECOVERY_SUMMARY_VERSION,
+        "recovery_status": status,
+        "recovery_summary_id": recovery_summary_id,
+        "retry_plan_id": plan.get("retry_plan_id"),
+        "target_agent_id": target_agent_id,
+        "recovery_complete": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "dry_run": True,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+        "retry_scheduled": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_loop_dry_run_api"),
+        "target_agent_stage": str(plan.get("target_agent_stage") or ""),
+        "retry_plan_status": str(plan.get("retry_plan_status") or ""),
+        "retry_plan_summary": build_agent_runner_retry_plan_summary(plan),
+        "recovery_message": build_agent_message(
+            message_type="runner_recovery_summary_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_recovery_summary_summary(recovery_summary: dict[str, Any]) -> dict[str, Any]:
+    safe_summary = recovery_summary if isinstance(recovery_summary, dict) else {}
+    return {
+        "summary_version": "agent_runner_recovery_summary_summary_v1",
+        "recovery_summary_version": str(safe_summary.get("recovery_summary_version") or AGENT_RUNNER_RECOVERY_SUMMARY_VERSION),
+        "recovery_summary_id": str(safe_summary.get("recovery_summary_id") or ""),
+        "project_id": str(safe_summary.get("project_id") or "demo_project_default"),
+        "recovery_status": str(safe_summary.get("recovery_status") or "recovery_blocked"),
+        "recovery_complete": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+        "retry_scheduled": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

@@ -3691,3 +3691,83 @@ class AgentRunnerRuntimeReadinessTests(unittest.TestCase):
         self.assertIn("waiting_for_user", sandbox["runtime_sandbox_status"])
         self.assertIn("waiting_for_user", bootstrap["worker_bootstrap_status"])
 
+
+class AgentRunnerWorkerLoopRetryTests(unittest.TestCase):
+    def test_worker_loop_retry_chain_stays_dry_run(self):
+        from agent_runs import (
+            build_agent_runner_failure_receipt,
+            build_agent_runner_recovery_summary,
+            build_agent_runner_recovery_summary_summary,
+            build_agent_runner_retry_plan,
+            build_agent_runner_worker_heartbeat,
+            build_agent_runner_worker_loop_simulation,
+            build_agent_runner_worker_poll,
+        )
+
+        bootstrap = {
+            "project_id": "project_worker_loop_ready",
+            "target_agent_id": "planner_agent",
+            "target_agent_stage": "planning",
+            "worker_bootstrap_plan_id": "worker_bootstrap_plan_project_worker_loop_ready",
+            "worker_bootstrap_status": "worker_bootstrap_waiting_for_real_agent_output",
+            "runtime_sandbox_id": "runtime_sandbox_project_worker_loop_ready",
+            "dry_run": True,
+        }
+        poll = build_agent_runner_worker_poll(bootstrap)
+        heartbeat = build_agent_runner_worker_heartbeat(poll)
+        loop = build_agent_runner_worker_loop_simulation(heartbeat)
+        failure = build_agent_runner_failure_receipt(loop)
+        retry = build_agent_runner_retry_plan(failure)
+        recovery = build_agent_runner_recovery_summary(retry)
+        recovery_summary = build_agent_runner_recovery_summary_summary(recovery)
+
+        self.assertEqual(poll["worker_poll_version"], "agent_runner_worker_poll_v1")
+        self.assertEqual(heartbeat["worker_heartbeat_version"], "agent_runner_worker_heartbeat_v1")
+        self.assertEqual(loop["worker_loop_simulation_version"], "agent_runner_worker_loop_simulation_v1")
+        self.assertEqual(failure["failure_receipt_version"], "agent_runner_failure_receipt_v1")
+        self.assertEqual(retry["retry_plan_version"], "agent_runner_retry_plan_v1")
+        self.assertEqual(recovery["recovery_summary_version"], "agent_runner_recovery_summary_v1")
+        self.assertFalse(poll["queue_item_claimed"])
+        self.assertFalse(heartbeat["worker_alive"])
+        self.assertFalse(loop["worker_loop_started"])
+        self.assertFalse(loop["agent_execution_performed"])
+        self.assertFalse(failure["failure_detected"])
+        self.assertFalse(retry["retry_scheduled"])
+        self.assertFalse(recovery["safe_to_continue"])
+        self.assertTrue(recovery["manual_review_required"])
+        self.assertEqual(recovery_summary["summary_version"], "agent_runner_recovery_summary_summary_v1")
+
+    def test_worker_loop_retry_chain_waits_for_user(self):
+        from agent_runs import (
+            build_agent_runner_failure_receipt,
+            build_agent_runner_recovery_summary,
+            build_agent_runner_retry_plan,
+            build_agent_runner_worker_heartbeat,
+            build_agent_runner_worker_loop_simulation,
+            build_agent_runner_worker_poll,
+        )
+
+        bootstrap = {
+            "project_id": "project_worker_loop_waiting",
+            "target_agent_id": "source_adapter_agent",
+            "target_agent_stage": "source",
+            "worker_bootstrap_plan_id": "worker_bootstrap_plan_project_worker_loop_waiting",
+            "worker_bootstrap_status": "worker_bootstrap_waiting_for_user",
+            "runtime_sandbox_id": "runtime_sandbox_project_worker_loop_waiting",
+            "dry_run": True,
+        }
+        poll = build_agent_runner_worker_poll(bootstrap)
+        heartbeat = build_agent_runner_worker_heartbeat(poll)
+        loop = build_agent_runner_worker_loop_simulation(heartbeat)
+        failure = build_agent_runner_failure_receipt(loop)
+        retry = build_agent_runner_retry_plan(failure)
+        recovery = build_agent_runner_recovery_summary(retry)
+
+        self.assertIn("waiting_for_user", poll["worker_poll_status"])
+        self.assertIn("waiting_for_user", heartbeat["worker_heartbeat_status"])
+        self.assertIn("waiting_for_user", loop["worker_loop_status"])
+        self.assertIn("waiting_for_user", failure["failure_receipt_status"])
+        self.assertIn("waiting_for_user", retry["retry_plan_status"])
+        self.assertIn("waiting_for_user", recovery["recovery_status"])
+        self.assertFalse(recovery["recovery_complete"])
+

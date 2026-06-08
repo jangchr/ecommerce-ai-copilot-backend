@@ -5296,3 +5296,46 @@ class ProjectWorkspaceRuntimeReadinessPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace runtime readiness panel bundle", script)
         self.assertIn("project_workspace_runtime_readiness_panel_marker", script)
 
+
+class ProjectWorkspaceWorkerLoopPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_worker_loop_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace worker loop panel bundle",
+            "PROJECT_WORKSPACE_WORKER_LOOP_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceWorkerLoopPanel(",
+            "function projectWorkspaceWorkerLoopCopyText(",
+            "async function copyProjectWorkspaceWorkerLoop(",
+            "async function dryRunProjectWorkspaceWorkerLoop(",
+            "/runner/worker-loop/dry-run",
+            "latestProjectRunnerWorkerPoll",
+            "latestProjectRunnerWorkerHeartbeat",
+            "latestProjectRunnerWorkerLoopSimulation",
+            "latestProjectRunnerFailureReceipt",
+            "latestProjectRunnerRetryPlan",
+            "latestProjectRunnerRecoverySummary",
+            "projectWorkspaceWorkerLoopPanel",
+            "projectWorkspaceWorkerLoopStatus",
+            "dryRunProjectWorkspaceWorkerLoopBtn",
+            "copyProjectWorkspaceWorkerLoopBtn",
+            "data-project-worker-loop-panel-marker",
+            "data-project-worker-loop-dry-run-action",
+            "data-worker-loop-audit-preview",
+            "workerLoopPanelTitle",
+            "workerLoopPanelHelper",
+            "renderProjectWorkspaceWorkerLoopPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_worker_loop_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_worker_loop_panel_marker", script)
+        self.assertIn("Project Workspace worker loop panel bundle", script)
+
+    def test_project_workspace_worker_loop_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace worker loop panel bundle", script)
+        self.assertIn("project_workspace_worker_loop_panel_marker", script)
+
