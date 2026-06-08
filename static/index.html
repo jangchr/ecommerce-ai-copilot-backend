@@ -14006,6 +14006,125 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_ORCHESTRATION_READINESS_PANEL_BUNDLE_MARKER = 'Project Workspace orchestration readiness panel bundle';
+        let latestProjectRunnerCapabilityMatrix = [];
+        let latestProjectRunnerBlockerMap = [];
+        let latestProjectRunnerRealExecutionChecklist = [];
+        let latestProjectRunnerSafetyContractSnapshot = {};
+        let latestProjectRunnerMilestoneReport = {};
+
+        function projectWorkspaceOrchestrationReadinessCopyText(workspace = latestProjectWorkspace) {
+            const capabilityMatrix = latestProjectRunnerCapabilityMatrix.length ? latestProjectRunnerCapabilityMatrix : workspace?.runner_capability_matrix || [];
+            const blockerMap = latestProjectRunnerBlockerMap.length ? latestProjectRunnerBlockerMap : workspace?.runner_blocker_map || [];
+            const checklist = latestProjectRunnerRealExecutionChecklist.length ? latestProjectRunnerRealExecutionChecklist : workspace?.runner_real_execution_checklist || [];
+            const safety = Object.keys(latestProjectRunnerSafetyContractSnapshot || {}).length ? latestProjectRunnerSafetyContractSnapshot : workspace?.runner_safety_contract_snapshot || {};
+            const milestone = Object.keys(latestProjectRunnerMilestoneReport || {}).length ? latestProjectRunnerMilestoneReport : workspace?.runner_milestone_report || {};
+            return [
+                t('orchestrationReadinessCopyTitle'),
+                `${t('currentBigStage')}: ${milestone.current_big_stage || 'multi_agent_runner_engine'}`,
+                `${t('currentPart')}: ${milestone.current_part || 'orchestration_readiness_report'}`,
+                `${t('availableCapabilityCount')}: ${milestone.available_capability_count || 0}/${milestone.capability_count || 0}`,
+                `${t('realExecutionEnabled')}: ${Boolean(safety.real_execution_enabled)}`,
+                `${t('recommendedNextBuild')}: ${milestone.recommended_next_build || t('none')}`,
+                '',
+                JSON.stringify({ capabilityMatrix, blockerMap, checklist, safety, milestone }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceOrchestrationReadiness() {
+            const status = document.getElementById('projectWorkspaceOrchestrationReadinessStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceOrchestrationReadinessCopyText());
+                if (status) status.textContent = t('orchestrationReadinessCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('orchestrationReadinessCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceOrchestrationReadiness(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceOrchestrationReadinessStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('orchestrationReadinessDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_orchestration_readiness_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/orchestration-readiness/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('orchestrationReadinessDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerCapabilityMatrix = payload.runner_capability_matrix || [];
+                latestProjectRunnerBlockerMap = payload.runner_blocker_map || [];
+                latestProjectRunnerRealExecutionChecklist = payload.runner_real_execution_checklist || [];
+                latestProjectRunnerSafetyContractSnapshot = payload.runner_safety_contract_snapshot || {};
+                latestProjectRunnerMilestoneReport = payload.runner_milestone_report || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_orchestration_readiness_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_orchestration_readiness_dry_run');
+                if (status) status.textContent = t('orchestrationReadinessDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceOrchestrationReadinessPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceOrchestrationReadinessPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_orchestration_readiness_dry_run');
+                if (status) status.textContent = error.message || t('orchestrationReadinessDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceOrchestrationReadinessPanel(workspace = latestProjectWorkspace) {
+            const capabilityMatrix = latestProjectRunnerCapabilityMatrix.length ? latestProjectRunnerCapabilityMatrix : workspace?.runner_capability_matrix || [];
+            const blockerMap = latestProjectRunnerBlockerMap.length ? latestProjectRunnerBlockerMap : workspace?.runner_blocker_map || [];
+            const checklist = latestProjectRunnerRealExecutionChecklist.length ? latestProjectRunnerRealExecutionChecklist : workspace?.runner_real_execution_checklist || [];
+            const safety = Object.keys(latestProjectRunnerSafetyContractSnapshot || {}).length ? latestProjectRunnerSafetyContractSnapshot : workspace?.runner_safety_contract_snapshot || {};
+            const milestone = Object.keys(latestProjectRunnerMilestoneReport || {}).length ? latestProjectRunnerMilestoneReport : workspace?.runner_milestone_report || {};
+            const hasReport = Boolean(milestone && Object.keys(milestone).length);
+            const passedChecks = checklist.filter((item) => item && item.passed).length;
+            return `
+                <div class="section-block" id="projectWorkspaceOrchestrationReadinessPanel" data-project-orchestration-readiness-panel-marker="Project Workspace orchestration readiness panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('orchestrationReadinessPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('orchestrationReadinessPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceOrchestrationReadinessBtn" type="button" data-project-orchestration-readiness-dry-run-action="Project Workspace orchestration readiness panel bundle" onclick="dryRunProjectWorkspaceOrchestrationReadiness()">${escapeHTML(t('dryRunOrchestrationReadiness'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceOrchestrationReadinessBtn" type="button" onclick="copyProjectWorkspaceOrchestrationReadiness()">${escapeHTML(t('copyOrchestrationReadiness'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('availableCapabilityCount'))}</div>
+                            <strong data-capability-count="${escapeHTML(String(capabilityMatrix.length))}">${escapeHTML(String(milestone.available_capability_count || 0))} / ${escapeHTML(String(milestone.capability_count || capabilityMatrix.length || 0))}</strong>
+                            <div class="field-helper">${escapeHTML(t('dryRunCapabilityCount'))}: ${escapeHTML(String(milestone.dry_run_capability_count || 0))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionChecklist'))}</div>
+                            <strong data-real-execution-checks="${escapeHTML(String(checklist.length))}">${escapeHTML(String(passedChecks))} / ${escapeHTML(String(checklist.length))}</strong>
+                            <div class="field-helper">${escapeHTML(t('realExecutionEnabled'))}: ${escapeHTML(String(Boolean(safety.real_execution_enabled)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('blockerCount'))}</div>
+                            <strong data-blocker-count="${escapeHTML(String(blockerMap.length))}">${escapeHTML(String(blockerMap.length))}</strong>
+                            <div class="field-helper">${escapeHTML(t('currentPart'))}: ${escapeHTML(milestone.current_part || 'orchestration_readiness_report')}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('orchestrationReadinessAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-orchestration-readiness-audit-preview="Project Workspace orchestration readiness panel bundle">${escapeHTML(projectWorkspaceOrchestrationReadinessCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('orchestrationReadinessNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceOrchestrationReadinessStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceFinalizationPanel(workspace = latestProjectWorkspace) {
             const acceptance = latestProjectRunnerResultAcceptance || workspace?.runner_result_acceptance || {};
             const reviewPacket = latestProjectRunnerHumanReviewPacket || workspace?.runner_human_review_packet || {};
@@ -14966,6 +15085,7 @@
                     ${renderProjectWorkspaceWorkerLoopPanel(workspace)}
                     ${renderProjectWorkspaceWorkerCheckpointPanel(workspace)}
                     ${renderProjectWorkspaceFinalizationPanel(workspace)}
+                    ${renderProjectWorkspaceOrchestrationReadinessPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -17726,6 +17846,55 @@
             finalizationDryRunFailed: 'Finalization dry-run \u5931\u8d25\u3002',
             finalizationCopied: '\u6536\u53e3\u4fe1\u606f\u5df2\u590d\u5236\u3002',
             finalizationCopyFailed: '\u590d\u5236\u6536\u53e3\u4fe1\u606f\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceOrchestrationReadinessPanelBundleMarker: 'Project Workspace orchestration readiness panel bundle',
+            orchestrationReadinessPanelTitle: 'Multi-Agent orchestration readiness',
+            orchestrationReadinessPanelHelper: 'Dry-run capability matrix, blocker map, real execution checklist, safety contract, milestone report, and next build recommendation.',
+            dryRunOrchestrationReadiness: 'Dry-run readiness report',
+            copyOrchestrationReadiness: 'Copy readiness report',
+            orchestrationReadinessCopyTitle: 'Project orchestration readiness dry-run',
+            currentBigStage: 'Current big stage',
+            currentPart: 'Current part',
+            availableCapabilityCount: 'Available capabilities',
+            dryRunCapabilityCount: 'Dry-run capabilities',
+            realExecutionChecklist: 'Real execution checklist',
+            realExecutionEnabled: 'Real execution enabled',
+            blockerCount: 'Blockers',
+            recommendedNextBuild: 'Recommended next build',
+            orchestrationReadinessAuditPreview: 'Orchestration readiness audit preview',
+            orchestrationReadinessNotRefreshedYet: 'Orchestration readiness has not been refreshed yet.',
+            orchestrationReadinessDryRunRunning: 'Building orchestration readiness dry-run...',
+            orchestrationReadinessDryRunComplete: 'Orchestration readiness dry-run complete.',
+            orchestrationReadinessDryRunFailed: 'Orchestration readiness dry-run failed.',
+            orchestrationReadinessCopied: 'Orchestration readiness copied.',
+            orchestrationReadinessCopyFailed: 'Could not copy orchestration readiness.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceOrchestrationReadinessPanelBundleMarker: 'Project Workspace orchestration readiness panel bundle',
+            orchestrationReadinessPanelTitle: '\u591a Agent \u7f16\u6392\u5c31\u7eea\u62a5\u544a',
+            orchestrationReadinessPanelHelper: '\u751f\u6210 dry-run \u80fd\u529b\u77e9\u9635\u3001\u963b\u585e\u5730\u56fe\u3001\u771f\u5b9e\u6267\u884c\u68c0\u67e5\u6e05\u5355\u3001\u5b89\u5168\u5951\u7ea6\u3001\u9636\u6bb5\u62a5\u544a\u548c\u4e0b\u4e00\u6b65\u5efa\u8bae\u3002',
+            dryRunOrchestrationReadiness: 'Dry-run \u5c31\u7eea\u62a5\u544a',
+            copyOrchestrationReadiness: '\u590d\u5236\u5c31\u7eea\u62a5\u544a',
+            orchestrationReadinessCopyTitle: '\u9879\u76ee\u591a Agent \u7f16\u6392\u5c31\u7eea dry-run',
+            currentBigStage: '\u5f53\u524d\u5927\u9636\u6bb5',
+            currentPart: '\u5f53\u524d\u90e8\u5206',
+            availableCapabilityCount: '\u5df2\u5177\u5907\u80fd\u529b',
+            dryRunCapabilityCount: 'Dry-run \u80fd\u529b',
+            realExecutionChecklist: '\u771f\u5b9e\u6267\u884c\u68c0\u67e5\u6e05\u5355',
+            realExecutionEnabled: '\u662f\u5426\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            blockerCount: '\u963b\u585e\u9879',
+            recommendedNextBuild: '\u5efa\u8bae\u4e0b\u4e00\u6b65',
+            orchestrationReadinessAuditPreview: '\u7f16\u6392\u5c31\u7eea\u5ba1\u8ba1\u9884\u89c8',
+            orchestrationReadinessNotRefreshedYet: '\u7f16\u6392\u5c31\u7eea\u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            orchestrationReadinessDryRunRunning: '\u6b63\u5728\u751f\u6210 orchestration readiness dry-run...',
+            orchestrationReadinessDryRunComplete: 'Orchestration readiness dry-run \u5b8c\u6210\u3002',
+            orchestrationReadinessDryRunFailed: 'Orchestration readiness dry-run \u5931\u8d25\u3002',
+            orchestrationReadinessCopied: '\u7f16\u6392\u5c31\u7eea\u62a5\u544a\u5df2\u590d\u5236\u3002',
+            orchestrationReadinessCopyFailed: '\u590d\u5236\u7f16\u6392\u5c31\u7eea\u62a5\u544a\u5931\u8d25\u3002'
         });
 
 

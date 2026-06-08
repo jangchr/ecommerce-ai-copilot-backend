@@ -8575,6 +8575,239 @@ async def dry_run_project_agent_finalization(project_id: str, http_request: Requ
     }
 
 
+
+def _runner_orchestration_capability_matrix(finalization_payload: dict) -> list[dict]:
+    return [
+        {
+            "capability_id": "agent_contract_registry",
+            "label": "Agent contract registry",
+            "stage": "contract",
+            "status": "available",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+        {
+            "capability_id": "runner_plan_builder",
+            "label": "Runner plan builder",
+            "stage": "planning",
+            "status": "available",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+        {
+            "capability_id": "dispatch_ticket",
+            "label": "Dispatch ticket",
+            "stage": "dispatch",
+            "status": "available" if finalization_payload.get("runner_dispatch_ticket") else "missing",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+        {
+            "capability_id": "queue_claim",
+            "label": "Queue item and claim",
+            "stage": "queue",
+            "status": "available" if finalization_payload.get("runner_queue_claim") else "missing",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+        {
+            "capability_id": "runtime_readiness",
+            "label": "Runtime readiness",
+            "stage": "runtime",
+            "status": "available" if finalization_payload.get("runner_worker_bootstrap_plan") else "missing",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+        {
+            "capability_id": "worker_loop",
+            "label": "Worker loop simulation",
+            "stage": "worker",
+            "status": "available" if finalization_payload.get("runner_worker_loop_simulation") else "missing",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+        {
+            "capability_id": "checkpoint_bundle",
+            "label": "Worker checkpoint bundle",
+            "stage": "checkpoint",
+            "status": "available" if finalization_payload.get("runner_worker_checkpoint_bundle") else "missing",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+        {
+            "capability_id": "finalization_ledger",
+            "label": "Finalization and completion ledger",
+            "stage": "finalization",
+            "status": "available" if finalization_payload.get("runner_completion_ledger") else "missing",
+            "real_execution_enabled": False,
+            "dry_run_enabled": True,
+        },
+    ]
+
+
+def _runner_orchestration_blocker_map(finalization_payload: dict) -> list[dict]:
+    return [
+        {
+            "blocker_id": "real_agent_execution_disabled",
+            "severity": "expected",
+            "message": "Real Agent execution is still disabled. Current chain is dry-run only.",
+            "next_action": "Add explicit real execution adapter after approval gates are stable.",
+            "resolved": False,
+        },
+        {
+            "blocker_id": "human_approval_required",
+            "severity": "expected",
+            "message": "Human approval is still required before any real write or execution.",
+            "next_action": "Keep human review packet visible and add approval capture later.",
+            "resolved": False,
+        },
+        {
+            "blocker_id": "state_persistence_disabled",
+            "severity": "expected",
+            "message": "Runner state persistence remains blocked for real execution.",
+            "next_action": "Add persistence adapter only after rollback and audit rules are finalized.",
+            "resolved": False,
+        },
+        {
+            "blocker_id": "external_provider_calls_disabled",
+            "severity": "expected",
+            "message": "External model/provider calls are disabled to avoid cost and unsafe side effects.",
+            "next_action": "Introduce provider sandbox and quota policy later.",
+            "resolved": False,
+        },
+    ]
+
+
+def _runner_real_execution_checklist(finalization_payload: dict) -> list[dict]:
+    return [
+        {
+            "check_id": "contract_registry_ready",
+            "label": "Agent contracts are registered",
+            "passed": bool(finalization_payload.get("runner_plan")),
+        },
+        {
+            "check_id": "dispatch_chain_ready",
+            "label": "Dispatch, queue, and worker dry-run chain exists",
+            "passed": bool(finalization_payload.get("runner_worker_loop_simulation")),
+        },
+        {
+            "check_id": "checkpoint_chain_ready",
+            "label": "Output checkpoint and validation dry-run chain exists",
+            "passed": bool(finalization_payload.get("runner_worker_checkpoint_bundle")),
+        },
+        {
+            "check_id": "finalization_chain_ready",
+            "label": "Finalization and completion ledger dry-run chain exists",
+            "passed": bool(finalization_payload.get("runner_completion_ledger")),
+        },
+        {
+            "check_id": "human_approval_captured",
+            "label": "Human approval is captured",
+            "passed": False,
+        },
+        {
+            "check_id": "real_execution_adapter_enabled",
+            "label": "Real execution adapter is enabled",
+            "passed": False,
+        },
+        {
+            "check_id": "provider_quota_policy_enabled",
+            "label": "Provider quota and cost policy are enabled",
+            "passed": False,
+        },
+        {
+            "check_id": "persistent_runner_state_enabled",
+            "label": "Persistent runner state is enabled",
+            "passed": False,
+        },
+    ]
+
+
+def _runner_safety_contract_snapshot(finalization_payload: dict) -> dict:
+    return {
+        "snapshot_version": "runner_safety_contract_snapshot_v1",
+        "dry_run": True,
+        "real_execution_enabled": False,
+        "agent_execution_performed": bool(finalization_payload.get("agent_execution_performed")),
+        "external_api_called": bool(finalization_payload.get("external_api_called")),
+        "cost_incurred_by_crossgrowth": bool(finalization_payload.get("cost_incurred_by_crossgrowth")),
+        "write_authorized": bool(finalization_payload.get("write_authorized")),
+        "state_persisted": bool(finalization_payload.get("state_persisted")),
+        "project_snapshot_saved": bool(finalization_payload.get("project_snapshot_saved")),
+        "manual_review_required": bool(finalization_payload.get("manual_review_required", True)),
+        "safe_to_continue": bool(finalization_payload.get("safe_to_continue")),
+    }
+
+
+def _runner_milestone_report(finalization_payload: dict) -> dict:
+    capability_matrix = _runner_orchestration_capability_matrix(finalization_payload)
+    checklist = _runner_real_execution_checklist(finalization_payload)
+    dry_run_available = sum(1 for item in capability_matrix if item.get("dry_run_enabled"))
+    available_capabilities = sum(1 for item in capability_matrix if item.get("status") == "available")
+    passed_checks = sum(1 for item in checklist if item.get("passed"))
+    return {
+        "milestone_report_version": "runner_orchestration_milestone_report_v1",
+        "current_big_stage": "multi_agent_runner_engine",
+        "current_part": "orchestration_readiness_report",
+        "plain_language_status": "The dry-run multi-agent runner engine is structurally connected, but real execution remains intentionally disabled.",
+        "available_capability_count": available_capabilities,
+        "capability_count": len(capability_matrix),
+        "dry_run_capability_count": dry_run_available,
+        "real_execution_capability_count": 0,
+        "passed_real_execution_check_count": passed_checks,
+        "real_execution_check_count": len(checklist),
+        "estimated_progress_label": "non_commercial_multi_agent_dry_run_engine_late_stage",
+        "recommended_next_build": "Add operator control center and human approval capture before enabling any real execution.",
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/orchestration-readiness/dry-run")
+async def dry_run_project_agent_orchestration_readiness(project_id: str, http_request: Request):
+    finalization_payload = await dry_run_project_agent_finalization(project_id, http_request)
+    capability_matrix = _runner_orchestration_capability_matrix(finalization_payload)
+    blocker_map = _runner_orchestration_blocker_map(finalization_payload)
+    real_execution_checklist = _runner_real_execution_checklist(finalization_payload)
+    safety_contract_snapshot = _runner_safety_contract_snapshot(finalization_payload)
+    milestone_report = _runner_milestone_report(finalization_payload)
+
+    project = finalization_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_orchestration_readiness_status": "orchestration_readiness_dry_run_complete",
+        "latest_runner_available_capability_count": milestone_report["available_capability_count"],
+        "latest_runner_capability_count": milestone_report["capability_count"],
+        "latest_runner_real_execution_enabled": False,
+        "latest_runner_recommended_next_build": milestone_report["recommended_next_build"],
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **finalization_payload,
+        "project": project,
+        "runner_orchestration_readiness_status": "orchestration_readiness_dry_run_complete",
+        "runner_capability_matrix": capability_matrix,
+        "runner_blocker_map": blocker_map,
+        "runner_real_execution_checklist": real_execution_checklist,
+        "runner_safety_contract_snapshot": safety_contract_snapshot,
+        "runner_milestone_report": milestone_report,
+        "dry_run": True,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

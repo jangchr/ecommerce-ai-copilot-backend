@@ -1286,3 +1286,48 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             payload["runner_completion_ledger"]["completion_ledger_status"],
         )
 
+    def test_project_runner_orchestration_readiness_dry_run_endpoint_returns_report(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/orchestration-readiness/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertFalse(payload["write_authorized"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        for key in [
+            "runner_capability_matrix",
+            "runner_blocker_map",
+            "runner_real_execution_checklist",
+            "runner_safety_contract_snapshot",
+            "runner_milestone_report",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertGreaterEqual(len(payload["runner_capability_matrix"]), 8)
+        self.assertGreaterEqual(len(payload["runner_blocker_map"]), 4)
+        self.assertGreaterEqual(len(payload["runner_real_execution_checklist"]), 8)
+        self.assertEqual(
+            payload["runner_safety_contract_snapshot"]["snapshot_version"],
+            "runner_safety_contract_snapshot_v1",
+        )
+        self.assertEqual(
+            payload["runner_milestone_report"]["milestone_report_version"],
+            "runner_orchestration_milestone_report_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_orchestration_readiness_status"],
+            "orchestration_readiness_dry_run_complete",
+        )
+
