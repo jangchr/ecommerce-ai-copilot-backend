@@ -1701,3 +1701,50 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             True,
         )
 
+    def test_project_runner_capability_binding_dry_run_endpoint_returns_tool_binding_matrix(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/capability-binding/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_agent_capability_catalog_preview",
+            "runner_agent_tool_binding_matrix_preview",
+            "runner_capability_policy_gate_preview",
+            "runner_tool_invocation_contract_preview",
+            "runner_capability_handoff_plan_preview",
+            "runner_capability_binding_receipt_preview",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertTrue(payload["least_privilege_required"])
+        self.assertTrue(payload["all_bindings_least_privilege"])
+        self.assertFalse(payload["all_required_policy_checks_passed"])
+        self.assertFalse(payload["contract_complete"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["handoff_ready"])
+        self.assertFalse(payload["real_handoff_performed"])
+        self.assertFalse(payload["capability_binding_receipt_recorded"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertEqual(
+            payload["runner_agent_capability_catalog_preview"]["agent_capability_catalog_version"],
+            "runner_agent_capability_catalog_preview_v1",
+        )
+        self.assertEqual(
+            payload["runner_capability_binding_receipt_preview"]["capability_binding_receipt_version"],
+            "runner_capability_binding_receipt_preview_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_tool_invocation_allowed"],
+            False,
+        )
+

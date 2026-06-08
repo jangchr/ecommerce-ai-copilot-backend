@@ -5933,3 +5933,46 @@ class ProjectWorkspaceProviderObservabilityPanelFrontendTests(unittest.TestCase)
         self.assertIn("Project Workspace provider observability panel bundle", script)
         self.assertIn("project_workspace_provider_observability_panel_marker", script)
 
+
+class ProjectWorkspaceCapabilityBindingPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_capability_binding_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace capability binding panel bundle",
+            "PROJECT_WORKSPACE_CAPABILITY_BINDING_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceCapabilityBindingPanel(",
+            "function projectWorkspaceCapabilityBindingCopyText(",
+            "async function copyProjectWorkspaceCapabilityBinding(",
+            "async function dryRunProjectWorkspaceCapabilityBinding(",
+            "/runner/capability-binding/dry-run",
+            "latestProjectRunnerAgentCapabilityCatalogPreview",
+            "latestProjectRunnerAgentToolBindingMatrixPreview",
+            "latestProjectRunnerCapabilityPolicyGatePreview",
+            "latestProjectRunnerToolInvocationContractPreview",
+            "latestProjectRunnerCapabilityHandoffPlanPreview",
+            "latestProjectRunnerCapabilityBindingReceiptPreview",
+            "projectWorkspaceCapabilityBindingPanel",
+            "projectWorkspaceCapabilityBindingStatus",
+            "dryRunProjectWorkspaceCapabilityBindingBtn",
+            "copyProjectWorkspaceCapabilityBindingBtn",
+            "data-project-capability-binding-panel-marker",
+            "data-project-capability-binding-dry-run-action",
+            "data-capability-binding-audit-preview",
+            "capabilityBindingPanelTitle",
+            "capabilityBindingPanelHelper",
+            "renderProjectWorkspaceCapabilityBindingPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_capability_binding_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_capability_binding_panel_marker", script)
+        self.assertIn("Project Workspace capability binding panel bundle", script)
+
+    def test_project_workspace_capability_binding_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace capability binding panel bundle", script)
+        self.assertIn("project_workspace_capability_binding_panel_marker", script)
+

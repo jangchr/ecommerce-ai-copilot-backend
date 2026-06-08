@@ -14689,6 +14689,126 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_CAPABILITY_BINDING_PANEL_BUNDLE_MARKER = 'Project Workspace capability binding panel bundle';
+        let latestProjectRunnerAgentCapabilityCatalogPreview = {};
+        let latestProjectRunnerAgentToolBindingMatrixPreview = {};
+        let latestProjectRunnerCapabilityPolicyGatePreview = {};
+        let latestProjectRunnerToolInvocationContractPreview = {};
+        let latestProjectRunnerCapabilityHandoffPlanPreview = {};
+        let latestProjectRunnerCapabilityBindingReceiptPreview = {};
+
+        function projectWorkspaceCapabilityBindingCopyText(workspace = latestProjectWorkspace) {
+            const catalog = Object.keys(latestProjectRunnerAgentCapabilityCatalogPreview || {}).length ? latestProjectRunnerAgentCapabilityCatalogPreview : workspace?.runner_agent_capability_catalog_preview || {};
+            const matrix = Object.keys(latestProjectRunnerAgentToolBindingMatrixPreview || {}).length ? latestProjectRunnerAgentToolBindingMatrixPreview : workspace?.runner_agent_tool_binding_matrix_preview || {};
+            const gate = Object.keys(latestProjectRunnerCapabilityPolicyGatePreview || {}).length ? latestProjectRunnerCapabilityPolicyGatePreview : workspace?.runner_capability_policy_gate_preview || {};
+            const contract = Object.keys(latestProjectRunnerToolInvocationContractPreview || {}).length ? latestProjectRunnerToolInvocationContractPreview : workspace?.runner_tool_invocation_contract_preview || {};
+            const handoff = Object.keys(latestProjectRunnerCapabilityHandoffPlanPreview || {}).length ? latestProjectRunnerCapabilityHandoffPlanPreview : workspace?.runner_capability_handoff_plan_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityBindingReceiptPreview || {}).length ? latestProjectRunnerCapabilityBindingReceiptPreview : workspace?.runner_capability_binding_receipt_preview || {};
+            return [
+                t('capabilityBindingCopyTitle'),
+                `${t('agentCapabilityCatalogStatus')}: ${catalog.agent_capability_catalog_status || 'not_refreshed'}`,
+                `${t('agentToolBindingMatrixStatus')}: ${matrix.agent_tool_binding_matrix_status || 'not_refreshed'}`,
+                `${t('capabilityPolicyGateStatus')}: ${gate.capability_policy_gate_status || 'not_refreshed'}`,
+                `${t('toolInvocationContractStatus')}: ${contract.tool_invocation_contract_status || 'not_refreshed'}`,
+                `${t('capabilityHandoffPlanStatus')}: ${handoff.capability_handoff_plan_status || 'not_refreshed'}`,
+                `${t('capabilityBindingReceiptStatus')}: ${receipt.capability_binding_receipt_status || 'not_refreshed'}`,
+                `${t('toolInvocationAllowed')}: ${Boolean(receipt.tool_invocation_allowed)}`,
+                '',
+                JSON.stringify({ catalog, matrix, gate, contract, handoff, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCapabilityBinding() {
+            const status = document.getElementById('projectWorkspaceCapabilityBindingStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceCapabilityBindingCopyText());
+                if (status) status.textContent = t('capabilityBindingCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('capabilityBindingCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceCapabilityBinding(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceCapabilityBindingStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('capabilityBindingDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_capability_binding_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/capability-binding/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('capabilityBindingDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerAgentCapabilityCatalogPreview = payload.runner_agent_capability_catalog_preview || {};
+                latestProjectRunnerAgentToolBindingMatrixPreview = payload.runner_agent_tool_binding_matrix_preview || {};
+                latestProjectRunnerCapabilityPolicyGatePreview = payload.runner_capability_policy_gate_preview || {};
+                latestProjectRunnerToolInvocationContractPreview = payload.runner_tool_invocation_contract_preview || {};
+                latestProjectRunnerCapabilityHandoffPlanPreview = payload.runner_capability_handoff_plan_preview || {};
+                latestProjectRunnerCapabilityBindingReceiptPreview = payload.runner_capability_binding_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_capability_binding_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_capability_binding_dry_run');
+                if (status) status.textContent = t('capabilityBindingDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceCapabilityBindingPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceCapabilityBindingPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_capability_binding_dry_run');
+                if (status) status.textContent = error.message || t('capabilityBindingDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceCapabilityBindingPanel(workspace = latestProjectWorkspace) {
+            const catalog = Object.keys(latestProjectRunnerAgentCapabilityCatalogPreview || {}).length ? latestProjectRunnerAgentCapabilityCatalogPreview : workspace?.runner_agent_capability_catalog_preview || {};
+            const matrix = Object.keys(latestProjectRunnerAgentToolBindingMatrixPreview || {}).length ? latestProjectRunnerAgentToolBindingMatrixPreview : workspace?.runner_agent_tool_binding_matrix_preview || {};
+            const gate = Object.keys(latestProjectRunnerCapabilityPolicyGatePreview || {}).length ? latestProjectRunnerCapabilityPolicyGatePreview : workspace?.runner_capability_policy_gate_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityBindingReceiptPreview || {}).length ? latestProjectRunnerCapabilityBindingReceiptPreview : workspace?.runner_capability_binding_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceCapabilityBindingPanel" data-project-capability-binding-panel-marker="Project Workspace capability binding panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('capabilityBindingPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('capabilityBindingPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceCapabilityBindingBtn" type="button" data-project-capability-binding-dry-run-action="Project Workspace capability binding panel bundle" onclick="dryRunProjectWorkspaceCapabilityBinding()">${escapeHTML(t('dryRunCapabilityBinding'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceCapabilityBindingBtn" type="button" onclick="copyProjectWorkspaceCapabilityBinding()">${escapeHTML(t('copyCapabilityBinding'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('agentCapabilityCatalogStatus'))}</div>
+                            <strong data-agent-capability-catalog-status="${escapeHTML(catalog.agent_capability_catalog_status || 'not_refreshed')}">${escapeHTML(catalog.agent_capability_catalog_status || t('capabilityBindingNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('agentToolBindingMatrixStatus'))}</div>
+                            <strong data-agent-tool-binding-matrix-status="${escapeHTML(matrix.agent_tool_binding_matrix_status || 'not_refreshed')}">${escapeHTML(matrix.agent_tool_binding_matrix_status || t('capabilityBindingNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityPolicyGateStatus'))}</div>
+                            <strong data-capability-policy-gate-status="${escapeHTML(gate.capability_policy_gate_status || 'not_refreshed')}">${escapeHTML(gate.capability_policy_gate_status || t('capabilityBindingNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('toolInvocationAllowed'))}: ${escapeHTML(String(Boolean(receipt.tool_invocation_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('capabilityBindingAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-capability-binding-audit-preview="Project Workspace capability binding panel bundle">${escapeHTML(projectWorkspaceCapabilityBindingCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('capabilityBindingNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCapabilityBindingStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceProviderObservabilityPanel(workspace = latestProjectWorkspace) {
             const health = Object.keys(latestProjectRunnerProviderHealthSnapshotPreview || {}).length ? latestProjectRunnerProviderHealthSnapshotPreview : workspace?.runner_provider_health_snapshot_preview || {};
             const metrics = Object.keys(latestProjectRunnerProviderMetricRollupPreview || {}).length ? latestProjectRunnerProviderMetricRollupPreview : workspace?.runner_provider_metric_rollup_preview || {};
@@ -16049,6 +16169,7 @@
                     ${renderProjectWorkspaceProviderInvocationPanel(workspace)}
                     ${renderProjectWorkspaceProviderFailurePanel(workspace)}
                     ${renderProjectWorkspaceProviderObservabilityPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityBindingPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -19234,6 +19355,53 @@
             providerObservabilityDryRunFailed: 'Provider observability dry-run \u5931\u8d25\u3002',
             providerObservabilityCopied: '\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027\u5df2\u590d\u5236\u3002',
             providerObservabilityCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCapabilityBindingPanelBundleMarker: 'Project Workspace capability binding panel bundle',
+            capabilityBindingPanelTitle: 'Agent capability binding',
+            capabilityBindingPanelHelper: 'Dry-run agent capability catalog, tool binding matrix, policy gate, invocation contract, handoff plan, and binding receipt.',
+            dryRunCapabilityBinding: 'Dry-run capability binding',
+            copyCapabilityBinding: 'Copy capability binding',
+            capabilityBindingCopyTitle: 'Project agent capability binding dry-run',
+            agentCapabilityCatalogStatus: 'Agent capability catalog status',
+            agentToolBindingMatrixStatus: 'Agent tool binding matrix status',
+            capabilityPolicyGateStatus: 'Capability policy gate status',
+            toolInvocationContractStatus: 'Tool invocation contract status',
+            capabilityHandoffPlanStatus: 'Capability handoff plan status',
+            capabilityBindingReceiptStatus: 'Capability binding receipt status',
+            toolInvocationAllowed: 'Tool invocation allowed',
+            capabilityBindingAuditPreview: 'Capability binding audit preview',
+            capabilityBindingNotRefreshedYet: 'Capability binding has not been refreshed yet.',
+            capabilityBindingDryRunRunning: 'Building capability binding dry-run...',
+            capabilityBindingDryRunComplete: 'Capability binding dry-run complete.',
+            capabilityBindingDryRunFailed: 'Capability binding dry-run failed.',
+            capabilityBindingCopied: 'Capability binding copied.',
+            capabilityBindingCopyFailed: 'Could not copy capability binding.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCapabilityBindingPanelBundleMarker: 'Project Workspace capability binding panel bundle',
+            capabilityBindingPanelTitle: 'Agent \u80fd\u529b\u7ed1\u5b9a',
+            capabilityBindingPanelHelper: '\u5bf9 Agent \u80fd\u529b\u76ee\u5f55\u3001\u5de5\u5177\u7ed1\u5b9a\u77e9\u9635\u3001\u7b56\u7565\u95f8\u95e8\u3001\u8c03\u7528\u5951\u7ea6\u3001\u4ea4\u63a5\u8ba1\u5212\u548c\u7ed1\u5b9a\u56de\u6267\u505a dry-run\u3002',
+            dryRunCapabilityBinding: 'Dry-run Agent \u80fd\u529b\u7ed1\u5b9a',
+            copyCapabilityBinding: '\u590d\u5236 Agent \u80fd\u529b\u7ed1\u5b9a',
+            capabilityBindingCopyTitle: '\u9879\u76ee Agent \u80fd\u529b\u7ed1\u5b9a dry-run',
+            agentCapabilityCatalogStatus: 'Agent \u80fd\u529b\u76ee\u5f55\u72b6\u6001',
+            agentToolBindingMatrixStatus: 'Agent \u5de5\u5177\u7ed1\u5b9a\u77e9\u9635\u72b6\u6001',
+            capabilityPolicyGateStatus: '\u80fd\u529b\u7b56\u7565\u95f8\u95e8\u72b6\u6001',
+            toolInvocationContractStatus: '\u5de5\u5177\u8c03\u7528\u5951\u7ea6\u72b6\u6001',
+            capabilityHandoffPlanStatus: '\u80fd\u529b\u4ea4\u63a5\u8ba1\u5212\u72b6\u6001',
+            capabilityBindingReceiptStatus: '\u80fd\u529b\u7ed1\u5b9a\u56de\u6267\u72b6\u6001',
+            toolInvocationAllowed: '\u662f\u5426\u5141\u8bb8\u5de5\u5177\u8c03\u7528',
+            capabilityBindingAuditPreview: '\u80fd\u529b\u7ed1\u5b9a\u5ba1\u8ba1\u9884\u89c8',
+            capabilityBindingNotRefreshedYet: 'Agent \u80fd\u529b\u7ed1\u5b9a\u5c1a\u672a\u5237\u65b0\u3002',
+            capabilityBindingDryRunRunning: '\u6b63\u5728\u751f\u6210 capability binding dry-run...',
+            capabilityBindingDryRunComplete: 'Capability binding dry-run \u5b8c\u6210\u3002',
+            capabilityBindingDryRunFailed: 'Capability binding dry-run \u5931\u8d25\u3002',
+            capabilityBindingCopied: 'Agent \u80fd\u529b\u7ed1\u5b9a\u5df2\u590d\u5236\u3002',
+            capabilityBindingCopyFailed: '\u590d\u5236 Agent \u80fd\u529b\u7ed1\u5b9a\u5931\u8d25\u3002'
         });
 
 

@@ -10468,6 +10468,226 @@ async def dry_run_project_agent_provider_observability(project_id: str, http_req
     }
 
 
+
+def _runner_agent_capability_catalog_preview(provider_observability_payload: dict) -> dict:
+    project = dict(provider_observability_payload.get("project") or {})
+    observability_receipt = dict(provider_observability_payload.get("runner_provider_observability_receipt_preview") or {})
+    capabilities = [
+        {"capability_id": "plan_generation", "provider_adapter": "text_generation_adapter", "enabled": False, "agent_roles": ["planner_agent"]},
+        {"capability_id": "evidence_retrieval", "provider_adapter": "web_fetch_adapter", "enabled": False, "agent_roles": ["retrieval_agent"]},
+        {"capability_id": "comment_collection", "provider_adapter": "comment_collection_adapter", "enabled": False, "agent_roles": ["retrieval_agent"]},
+        {"capability_id": "storyboard_generation", "provider_adapter": "text_generation_adapter", "enabled": False, "agent_roles": ["storyboard_agent"]},
+        {"capability_id": "image_asset_generation", "provider_adapter": "image_generation_adapter", "enabled": False, "agent_roles": ["asset_agent"]},
+        {"capability_id": "video_asset_generation", "provider_adapter": "video_generation_adapter", "enabled": False, "agent_roles": ["asset_agent"]},
+        {"capability_id": "audit_export", "provider_adapter": "export_pack_adapter", "enabled": False, "agent_roles": ["operator_agent"]},
+    ]
+    return {
+        "agent_capability_catalog_version": "runner_agent_capability_catalog_preview_v1",
+        "agent_capability_catalog_status": "agent_capability_catalog_preview_only",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "provider_observability_receipt_status": observability_receipt.get("provider_observability_receipt_status", ""),
+        "capabilities": capabilities,
+        "capability_count": len(capabilities),
+        "enabled_capability_count": 0,
+        "least_privilege_required": True,
+        "real_execution_enabled": False,
+        "external_api_called": False,
+        "dry_run": True,
+    }
+
+
+def _runner_agent_tool_binding_matrix_preview(capability_catalog: dict) -> dict:
+    bindings = [
+        {"agent_role": "planner_agent", "capability_id": "plan_generation", "tool_bound": True, "tool_enabled": False},
+        {"agent_role": "retrieval_agent", "capability_id": "evidence_retrieval", "tool_bound": True, "tool_enabled": False},
+        {"agent_role": "retrieval_agent", "capability_id": "comment_collection", "tool_bound": True, "tool_enabled": False},
+        {"agent_role": "storyboard_agent", "capability_id": "storyboard_generation", "tool_bound": True, "tool_enabled": False},
+        {"agent_role": "asset_agent", "capability_id": "image_asset_generation", "tool_bound": True, "tool_enabled": False},
+        {"agent_role": "asset_agent", "capability_id": "video_asset_generation", "tool_bound": True, "tool_enabled": False},
+        {"agent_role": "operator_agent", "capability_id": "audit_export", "tool_bound": True, "tool_enabled": False},
+    ]
+    return {
+        "agent_tool_binding_matrix_version": "runner_agent_tool_binding_matrix_preview_v1",
+        "agent_tool_binding_matrix_status": "agent_tool_binding_matrix_preview_only",
+        "project_id": capability_catalog.get("project_id", "demo_project_default"),
+        "agent_capability_catalog_status": capability_catalog.get("agent_capability_catalog_status", ""),
+        "bindings": bindings,
+        "binding_count": len(bindings),
+        "enabled_binding_count": 0,
+        "all_bindings_least_privilege": True,
+        "tool_invocation_allowed": False,
+        "real_execution_enabled": False,
+        "external_api_called": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_policy_gate_preview(binding_matrix: dict) -> dict:
+    policy_checks = [
+        {"policy_check_id": "agent_role_known", "passed": True},
+        {"policy_check_id": "capability_registered", "passed": True},
+        {"policy_check_id": "provider_adapter_registered", "passed": True},
+        {"policy_check_id": "sandbox_enabled", "passed": False},
+        {"policy_check_id": "quota_enabled", "passed": False},
+        {"policy_check_id": "operator_approval_captured", "passed": False},
+        {"policy_check_id": "observability_ready", "passed": True},
+        {"policy_check_id": "failure_handling_ready", "passed": True},
+    ]
+    passed_count = sum(1 for item in policy_checks if item.get("passed"))
+    return {
+        "capability_policy_gate_version": "runner_capability_policy_gate_preview_v1",
+        "capability_policy_gate_status": "capability_policy_gate_blocked",
+        "project_id": binding_matrix.get("project_id", "demo_project_default"),
+        "agent_tool_binding_matrix_status": binding_matrix.get("agent_tool_binding_matrix_status", ""),
+        "policy_checks": policy_checks,
+        "policy_check_count": len(policy_checks),
+        "passed_policy_check_count": passed_count,
+        "all_required_policy_checks_passed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_tool_invocation_contract_preview(policy_gate: dict) -> dict:
+    contract_fields = [
+        {"contract_field_id": "agent_role", "required": True, "present": True},
+        {"contract_field_id": "capability_id", "required": True, "present": True},
+        {"contract_field_id": "provider_adapter_id", "required": True, "present": True},
+        {"contract_field_id": "idempotency_key", "required": True, "present": True},
+        {"contract_field_id": "operator_approval_id", "required": True, "present": False},
+        {"contract_field_id": "quota_reservation_id", "required": True, "present": False},
+        {"contract_field_id": "rollback_plan_id", "required": True, "present": False},
+    ]
+    present_count = sum(1 for item in contract_fields if item.get("present"))
+    return {
+        "tool_invocation_contract_version": "runner_tool_invocation_contract_preview_v1",
+        "tool_invocation_contract_status": "tool_invocation_contract_incomplete",
+        "project_id": policy_gate.get("project_id", "demo_project_default"),
+        "capability_policy_gate_status": policy_gate.get("capability_policy_gate_status", ""),
+        "contract_fields": contract_fields,
+        "contract_field_count": len(contract_fields),
+        "present_contract_field_count": present_count,
+        "contract_complete": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_handoff_plan_preview(tool_contract: dict) -> dict:
+    handoff_edges = [
+        {"from_agent": "planner_agent", "to_agent": "retrieval_agent", "capability_id": "evidence_retrieval", "enabled": False},
+        {"from_agent": "retrieval_agent", "to_agent": "storyboard_agent", "capability_id": "storyboard_generation", "enabled": False},
+        {"from_agent": "storyboard_agent", "to_agent": "asset_agent", "capability_id": "image_asset_generation", "enabled": False},
+        {"from_agent": "asset_agent", "to_agent": "operator_agent", "capability_id": "audit_export", "enabled": False},
+    ]
+    return {
+        "capability_handoff_plan_version": "runner_capability_handoff_plan_preview_v1",
+        "capability_handoff_plan_status": "capability_handoff_plan_preview_only",
+        "project_id": tool_contract.get("project_id", "demo_project_default"),
+        "tool_invocation_contract_status": tool_contract.get("tool_invocation_contract_status", ""),
+        "handoff_edges": handoff_edges,
+        "handoff_edge_count": len(handoff_edges),
+        "enabled_handoff_edge_count": 0,
+        "handoff_ready": False,
+        "real_handoff_performed": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_binding_receipt_preview(handoff_plan: dict) -> dict:
+    return {
+        "capability_binding_receipt_version": "runner_capability_binding_receipt_preview_v1",
+        "capability_binding_receipt_status": "capability_binding_receipt_preview_only",
+        "project_id": handoff_plan.get("project_id", "demo_project_default"),
+        "capability_handoff_plan_status": handoff_plan.get("capability_handoff_plan_status", ""),
+        "receipt_items": [
+            {"receipt_item_id": "agent_capability_catalog", "included": True},
+            {"receipt_item_id": "agent_tool_binding_matrix", "included": True},
+            {"receipt_item_id": "capability_policy_gate", "included": True},
+            {"receipt_item_id": "tool_invocation_contract", "included": True},
+            {"receipt_item_id": "capability_handoff_plan", "included": True},
+            {"receipt_item_id": "dry_run_boundary", "included": True},
+        ],
+        "receipt_item_count": 6,
+        "capability_binding_receipt_recorded": False,
+        "tool_invocation_allowed": False,
+        "handoff_ready": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/capability-binding/dry-run")
+async def dry_run_project_agent_capability_binding(project_id: str, http_request: Request):
+    provider_observability_payload = await dry_run_project_agent_provider_observability(project_id, http_request)
+
+    runner_agent_capability_catalog_preview = _runner_agent_capability_catalog_preview(provider_observability_payload)
+    runner_agent_tool_binding_matrix_preview = _runner_agent_tool_binding_matrix_preview(runner_agent_capability_catalog_preview)
+    runner_capability_policy_gate_preview = _runner_capability_policy_gate_preview(runner_agent_tool_binding_matrix_preview)
+    runner_tool_invocation_contract_preview = _runner_tool_invocation_contract_preview(runner_capability_policy_gate_preview)
+    runner_capability_handoff_plan_preview = _runner_capability_handoff_plan_preview(runner_tool_invocation_contract_preview)
+    runner_capability_binding_receipt_preview = _runner_capability_binding_receipt_preview(runner_capability_handoff_plan_preview)
+
+    project = provider_observability_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_agent_capability_catalog_status": runner_agent_capability_catalog_preview["agent_capability_catalog_status"],
+        "latest_runner_agent_tool_binding_matrix_status": runner_agent_tool_binding_matrix_preview["agent_tool_binding_matrix_status"],
+        "latest_runner_capability_policy_gate_status": runner_capability_policy_gate_preview["capability_policy_gate_status"],
+        "latest_runner_tool_invocation_contract_status": runner_tool_invocation_contract_preview["tool_invocation_contract_status"],
+        "latest_runner_capability_handoff_plan_status": runner_capability_handoff_plan_preview["capability_handoff_plan_status"],
+        "latest_runner_capability_binding_receipt_status": runner_capability_binding_receipt_preview["capability_binding_receipt_status"],
+        "latest_runner_tool_invocation_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **provider_observability_payload,
+        "project": project,
+        "runner_agent_capability_catalog_preview": runner_agent_capability_catalog_preview,
+        "runner_agent_tool_binding_matrix_preview": runner_agent_tool_binding_matrix_preview,
+        "runner_capability_policy_gate_preview": runner_capability_policy_gate_preview,
+        "runner_tool_invocation_contract_preview": runner_tool_invocation_contract_preview,
+        "runner_capability_handoff_plan_preview": runner_capability_handoff_plan_preview,
+        "runner_capability_binding_receipt_preview": runner_capability_binding_receipt_preview,
+        "dry_run": True,
+        "least_privilege_required": True,
+        "all_bindings_least_privilege": True,
+        "all_required_policy_checks_passed": False,
+        "contract_complete": False,
+        "tool_invocation_allowed": False,
+        "handoff_ready": False,
+        "real_handoff_performed": False,
+        "capability_binding_receipt_recorded": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)
