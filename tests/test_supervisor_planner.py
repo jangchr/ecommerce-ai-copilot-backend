@@ -844,3 +844,43 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             unlock["unlock_status"],
         )
 
+    def test_project_runner_transition_dry_run_endpoint_returns_transition_projection(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/transition/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["graph_transition_persisted"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertFalse(payload["next_agent_unlocked"])
+        self.assertFalse(payload["handoff_complete"])
+        self.assertFalse(payload["agent_output_generated"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_graph_transition_proposal", payload)
+        self.assertIn("runner_state_projection", payload)
+        self.assertIn("runner_state_projection_summary", payload)
+
+        proposal = payload["runner_graph_transition_proposal"]
+        projection = payload["runner_state_projection"]
+        summary = payload["runner_state_projection_summary"]
+        self.assertEqual(proposal["graph_transition_proposal_version"], "agent_runner_graph_transition_proposal_v1")
+        self.assertEqual(projection["state_projection_version"], "agent_runner_state_projection_v1")
+        self.assertTrue(projection["dry_run"])
+        self.assertFalse(projection["state_persisted"])
+        self.assertFalse(projection["project_snapshot_saved"])
+        self.assertFalse(projection["agent_execution_performed"])
+        self.assertEqual(summary["summary_version"], "agent_runner_state_projection_summary_v1")
+        self.assertEqual(summary["projection_status"], projection["projection_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_transition_status"],
+            proposal["transition_status"],
+        )
+

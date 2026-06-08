@@ -66,6 +66,7 @@ Add-Check "project_workspace_worker_lease_panel_marker" ($page.Content -match "P
 Add-Check "project_workspace_invocation_panel_marker" ($page.Content -match "Project Workspace invocation panel bundle")
 Add-Check "project_workspace_result_completion_panel_marker" ($page.Content -match "Project Workspace result completion panel bundle")
 Add-Check "project_workspace_handoff_checkpoint_panel_marker" ($page.Content -match "Project Workspace handoff checkpoint panel bundle")
+Add-Check "project_workspace_transition_projection_panel_marker" ($page.Content -match "Project Workspace transition projection panel bundle")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
 Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")

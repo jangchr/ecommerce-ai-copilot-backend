@@ -4965,3 +4965,51 @@ class ProjectWorkspaceHandoffCheckpointPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace handoff checkpoint panel bundle", script)
         self.assertIn("project_workspace_handoff_checkpoint_panel_marker", script)
 
+
+class ProjectWorkspaceTransitionProjectionPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_transition_projection_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace transition projection panel bundle",
+            "PROJECT_WORKSPACE_TRANSITION_PROJECTION_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceTransitionProjectionPanel(",
+            "function projectWorkspaceGraphTransitionFromWorkspace(",
+            "function projectWorkspaceStateProjectionFromWorkspace(",
+            "function projectWorkspaceTransitionStatusLabel(",
+            "function projectWorkspaceTransitionProjectionCopyText(",
+            "async function copyProjectWorkspaceTransitionProjection(",
+            "async function dryRunProjectWorkspaceTransitionProjection(",
+            "/runner/transition/dry-run",
+            "latestProjectRunnerGraphTransitionProposal",
+            "latestProjectRunnerStateProjection",
+            "runner_graph_transition_proposal: latestProjectRunnerGraphTransitionProposal",
+            "runner_state_projection: latestProjectRunnerStateProjection",
+            "runner_state_projection_summary: payload.runner_state_projection_summary || {}",
+            "projectWorkspaceTransitionProjectionPanel",
+            "projectWorkspaceTransitionProjectionStatus",
+            "dryRunProjectWorkspaceTransitionProjectionBtn",
+            "copyProjectWorkspaceTransitionProjectionBtn",
+            "data-project-transition-projection-panel-marker",
+            "data-project-transition-projection-dry-run-action",
+            "data-graph-transition-status",
+            "data-state-projection-id",
+            "data-state-projection-persisted",
+            "data-transition-projection-audit-preview",
+            "transitionProjectionPanelTitle",
+            "transitionProjectionDryRunHelper",
+            "renderProjectWorkspaceTransitionProjectionPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_transition_projection_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_transition_projection_panel_marker", script)
+        self.assertIn("Project Workspace transition projection panel bundle", script)
+
+    def test_project_workspace_transition_projection_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace transition projection panel bundle", script)
+        self.assertIn("project_workspace_transition_projection_panel_marker", script)
+

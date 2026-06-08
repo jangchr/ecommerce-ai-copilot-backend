@@ -2337,3 +2337,179 @@ class AgentRunnerHandoffCheckpointUnlockTests(unittest.TestCase):
         self.assertFalse(unlock["next_agent_unlocked"])
         self.assertIn("contract_validation", checkpoint["blocking_check_ids"])
 
+
+class AgentRunnerGraphTransitionProjectionTests(unittest.TestCase):
+    def test_transition_projection_waits_for_real_output_without_persisting(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_graph_transition_proposal_summary,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_state_projection,
+            build_agent_runner_state_projection_summary,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        project = {
+            "project_id": "project_transition_ready",
+            "graph_summary": {"existing_state": "kept"},
+        }
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_transition_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project=project,
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        proposal_summary = build_agent_runner_graph_transition_proposal_summary(proposal)
+        projection = build_agent_runner_state_projection(proposal, project=project)
+        projection_summary = build_agent_runner_state_projection_summary(projection)
+
+        self.assertEqual(proposal["graph_transition_proposal_version"], "agent_runner_graph_transition_proposal_v1")
+        self.assertEqual(proposal["transition_status"], "transition_waiting_for_real_agent_output")
+        self.assertEqual(proposal["proposed_graph_state"], "waiting_for_real_agent_output")
+        self.assertFalse(proposal["next_agent_unlocked"])
+        self.assertFalse(proposal["graph_transition_persisted"])
+        self.assertFalse(proposal["agent_execution_performed"])
+        self.assertEqual(proposal["transition_message"]["message_type"], "runner_graph_transition_proposal_dry_run")
+        self.assertEqual(proposal_summary["summary_version"], "agent_runner_graph_transition_proposal_summary_v1")
+
+        self.assertEqual(projection["state_projection_version"], "agent_runner_state_projection_v1")
+        self.assertEqual(projection["projection_status"], "projection_waiting_for_real_agent_output")
+        self.assertFalse(projection["state_persisted"])
+        self.assertFalse(projection["project_snapshot_saved"])
+        self.assertEqual(projection["current_graph_summary"]["existing_state"], "kept")
+        self.assertEqual(projection["projected_graph_summary"]["projected_runner_graph_state"], "waiting_for_real_agent_output")
+        self.assertEqual(projection["projection_message"]["message_type"], "runner_state_projection_dry_run")
+        self.assertEqual(projection_summary["summary_version"], "agent_runner_state_projection_summary_v1")
+
+    def test_transition_projection_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_state_projection,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_transition_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_transition_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+
+        self.assertEqual(proposal["transition_status"], "transition_waiting_for_user")
+        self.assertEqual(projection["projection_status"], "projection_waiting_for_user")
+        self.assertFalse(projection["state_persisted"])
+        self.assertIn("user_gate", proposal["blocking_check_ids"])
+
+    def test_transition_projection_blocks_invalid_target(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_state_projection,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_transition_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+
+        self.assertEqual(proposal["transition_status"], "transition_blocked")
+        self.assertEqual(projection["projection_status"], "projection_blocked")
+        self.assertFalse(projection["state_persisted"])
+        self.assertIn("contract_validation", proposal["blocking_check_ids"])
+

@@ -3656,6 +3656,266 @@ def build_agent_runner_next_agent_unlock_summary(next_agent_unlock: dict[str, An
 
 
 
+AGENT_RUNNER_GRAPH_TRANSITION_PROPOSAL_VERSION = "agent_runner_graph_transition_proposal_v1"
+AGENT_RUNNER_STATE_PROJECTION_VERSION = "agent_runner_state_projection_v1"
+
+
+def _graph_transition_status_from_unlock(next_agent_unlock: dict[str, Any]) -> str:
+    safe_unlock = next_agent_unlock if isinstance(next_agent_unlock, dict) else {}
+    status = str(safe_unlock.get("unlock_status") or "unlock_blocked")
+    if bool(safe_unlock.get("next_agent_unlocked")) and status == "unlock_ready":
+        return "transition_ready"
+    if status == "unlock_waiting_for_real_agent_output":
+        return "transition_waiting_for_real_agent_output"
+    if status == "unlock_waiting_for_user":
+        return "transition_waiting_for_user"
+    return "transition_blocked"
+
+
+def build_agent_runner_graph_transition_proposal(
+    next_agent_unlock: dict[str, Any],
+    requested_by: str = "runner_transition_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run graph transition proposal from the unlock decision.
+
+    This previews the next graph state. It does not mutate the graph, unlock
+    the next Agent, call providers, spend money, or enable autonomous routing.
+    """
+
+    unlock = next_agent_unlock if isinstance(next_agent_unlock, dict) else {}
+    project_id = str(unlock.get("project_id") or "demo_project_default")
+    target_agent_id = str(unlock.get("target_agent_id") or "")
+    transition_status = _graph_transition_status_from_unlock(unlock)
+    transition_id = f"graph_transition_{project_id}_{target_agent_id or 'none'}_{transition_status}".replace(" ", "_")
+
+    blocking_check_ids = [
+        str(value)
+        for value in (unlock.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if transition_status == "transition_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_then_rebuild_transition"
+        transition_message_text = "Graph transition is only a dry-run preview and waits for real Agent output."
+        proposed_graph_state = "waiting_for_real_agent_output"
+    elif transition_status == "transition_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        transition_message_text = "Graph transition is waiting for required user action."
+        proposed_graph_state = "waiting_for_user"
+    elif transition_status == "transition_ready":
+        recommended_next_state = "persist_graph_transition_under_explicit_gate"
+        transition_message_text = "Graph transition is ready, but persistence requires an explicit gate."
+        proposed_graph_state = "next_agent_ready"
+    else:
+        recommended_next_state = "fix_graph_transition_blockers"
+        transition_message_text = "Graph transition is blocked by next-Agent unlock or upstream safety checks."
+        proposed_graph_state = "blocked"
+
+    transition_payload = {
+        "graph_transition_proposal_version": AGENT_RUNNER_GRAPH_TRANSITION_PROPOSAL_VERSION,
+        "transition_status": transition_status,
+        "transition_id": transition_id,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": unlock.get("target_agent_stage"),
+        "checkpoint_id": unlock.get("checkpoint_id"),
+        "unlock_id": unlock.get("unlock_id"),
+        "proposed_graph_state": proposed_graph_state,
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "graph_transition_persisted": False,
+        "next_agent_unlocked": False,
+        "agent_execution_performed": False,
+    }
+
+    transition_message = build_agent_message(
+        message_type="runner_graph_transition_proposal_dry_run",
+        source_agent_id="runner_transition_manager",
+        target_agent_id=target_agent_id,
+        payload=transition_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "graph_transition_proposal_version": AGENT_RUNNER_GRAPH_TRANSITION_PROPOSAL_VERSION,
+        "transition_id": transition_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_transition_dry_run_api"),
+        "transition_status": transition_status,
+        "proposed_graph_state": proposed_graph_state,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(unlock.get("target_agent_stage") or ""),
+        "unlock_id": str(unlock.get("unlock_id") or ""),
+        "unlock_status": str(unlock.get("unlock_status") or ""),
+        "checkpoint_id": str(unlock.get("checkpoint_id") or ""),
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "graph_transition_persisted": False,
+        "recommended_next_state": recommended_next_state,
+        "transition_message_text": transition_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "next_agent_unlock_summary": build_agent_runner_next_agent_unlock_summary(unlock),
+        "handoff_checkpoint_summary": deepcopy(unlock.get("handoff_checkpoint_summary") or {}),
+        "output_contract_check": deepcopy(unlock.get("output_contract_check") or {}),
+        "unlock_message": deepcopy(unlock.get("unlock_message") or {}),
+        "transition_payload": transition_payload,
+        "transition_message": transition_message,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_graph_transition_proposal_summary(proposal: dict[str, Any]) -> dict[str, Any]:
+    safe_proposal = proposal if isinstance(proposal, dict) else {}
+    return {
+        "summary_version": "agent_runner_graph_transition_proposal_summary_v1",
+        "graph_transition_proposal_version": str(safe_proposal.get("graph_transition_proposal_version") or AGENT_RUNNER_GRAPH_TRANSITION_PROPOSAL_VERSION),
+        "transition_id": str(safe_proposal.get("transition_id") or ""),
+        "project_id": str(safe_proposal.get("project_id") or "demo_project_default"),
+        "transition_status": str(safe_proposal.get("transition_status") or "transition_blocked"),
+        "proposed_graph_state": str(safe_proposal.get("proposed_graph_state") or "blocked"),
+        "target_agent_id": str(safe_proposal.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_proposal.get("target_agent_stage") or ""),
+        "unlock_id": str(safe_proposal.get("unlock_id") or ""),
+        "checkpoint_id": str(safe_proposal.get("checkpoint_id") or ""),
+        "next_agent_unlocked": False,
+        "graph_transition_persisted": False,
+        "blocking_check_count": len(safe_proposal.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_state_projection(
+    graph_transition_proposal: dict[str, Any],
+    project: dict[str, Any] | None = None,
+    requested_by: str = "runner_transition_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run state projection from a graph transition proposal.
+
+    This previews the project graph summary after a possible transition. It
+    does not persist state or trigger any Agent.
+    """
+
+    proposal = graph_transition_proposal if isinstance(graph_transition_proposal, dict) else {}
+    safe_project = project if isinstance(project, dict) else {}
+    project_id = str(proposal.get("project_id") or safe_project.get("project_id") or "demo_project_default")
+    target_agent_id = str(proposal.get("target_agent_id") or "")
+    projection_status = str(proposal.get("transition_status") or "transition_blocked").replace("transition_", "projection_")
+    projection_id = f"state_projection_{project_id}_{target_agent_id or 'none'}_{projection_status}".replace(" ", "_")
+
+    current_graph_summary = deepcopy(safe_project.get("graph_summary") or {})
+    projected_graph_summary = deepcopy(current_graph_summary)
+    projected_graph_summary.update(
+        {
+            "projected_runner_transition_status": proposal.get("transition_status", ""),
+            "projected_runner_graph_state": proposal.get("proposed_graph_state", ""),
+            "projected_runner_target_agent_id": target_agent_id,
+            "projected_next_agent_unlocked": False,
+            "projected_handoff_complete": False,
+            "projected_agent_execution_performed": False,
+        }
+    )
+
+    projection_payload = {
+        "state_projection_version": AGENT_RUNNER_STATE_PROJECTION_VERSION,
+        "projection_status": projection_status,
+        "projection_id": projection_id,
+        "transition_id": proposal.get("transition_id"),
+        "current_graph_summary": current_graph_summary,
+        "projected_graph_summary": projected_graph_summary,
+        "dry_run": True,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "agent_execution_performed": False,
+    }
+
+    projection_message = build_agent_message(
+        message_type="runner_state_projection_dry_run",
+        source_agent_id="runner_transition_manager",
+        target_agent_id=target_agent_id,
+        payload=projection_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "state_projection_version": AGENT_RUNNER_STATE_PROJECTION_VERSION,
+        "projection_id": projection_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_transition_dry_run_api"),
+        "projection_status": projection_status,
+        "transition_id": str(proposal.get("transition_id") or ""),
+        "transition_status": str(proposal.get("transition_status") or ""),
+        "proposed_graph_state": str(proposal.get("proposed_graph_state") or "blocked"),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(proposal.get("target_agent_stage") or ""),
+        "current_graph_summary": current_graph_summary,
+        "projected_graph_summary": projected_graph_summary,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "graph_transition_proposal_summary": build_agent_runner_graph_transition_proposal_summary(proposal),
+        "transition_message": deepcopy(proposal.get("transition_message") or {}),
+        "projection_payload": projection_payload,
+        "projection_message": projection_message,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_state_projection_summary(state_projection: dict[str, Any]) -> dict[str, Any]:
+    safe_projection = state_projection if isinstance(state_projection, dict) else {}
+    return {
+        "summary_version": "agent_runner_state_projection_summary_v1",
+        "state_projection_version": str(safe_projection.get("state_projection_version") or AGENT_RUNNER_STATE_PROJECTION_VERSION),
+        "projection_id": str(safe_projection.get("projection_id") or ""),
+        "project_id": str(safe_projection.get("project_id") or "demo_project_default"),
+        "projection_status": str(safe_projection.get("projection_status") or "projection_blocked"),
+        "transition_status": str(safe_projection.get("transition_status") or "transition_blocked"),
+        "proposed_graph_state": str(safe_projection.get("proposed_graph_state") or "blocked"),
+        "target_agent_id": str(safe_projection.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_projection.get("target_agent_stage") or ""),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

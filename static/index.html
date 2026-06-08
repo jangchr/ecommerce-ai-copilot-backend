@@ -12683,6 +12683,196 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_TRANSITION_PROJECTION_PANEL_BUNDLE_MARKER = 'Project Workspace transition projection panel bundle';
+        let latestProjectRunnerGraphTransitionProposal = {};
+        let latestProjectRunnerStateProjection = {};
+
+        function projectWorkspaceGraphTransitionFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerGraphTransitionProposal && Object.keys(latestProjectRunnerGraphTransitionProposal).length
+                ? latestProjectRunnerGraphTransitionProposal
+                : workspace?.runner_graph_transition_proposal || {};
+        }
+
+        function projectWorkspaceStateProjectionFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerStateProjection && Object.keys(latestProjectRunnerStateProjection).length
+                ? latestProjectRunnerStateProjection
+                : workspace?.runner_state_projection || {};
+        }
+
+        function projectWorkspaceTransitionStatusLabel(proposal = {}) {
+            const status = String(proposal.transition_status || 'not_refreshed');
+            const labels = {
+                transition_waiting_for_real_agent_output: t('transitionStatusWaitingForRealOutput'),
+                transition_waiting_for_user: t('transitionStatusWaitingForUser'),
+                transition_blocked: t('transitionStatusBlocked'),
+                transition_ready: t('transitionStatusReady'),
+                not_refreshed: t('transitionStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceTransitionProjectionCopyText(
+            proposal = projectWorkspaceGraphTransitionFromWorkspace(),
+            projection = projectWorkspaceStateProjectionFromWorkspace()
+        ) {
+            return [
+                t('transitionProjectionCopyTitle'),
+                `${t('projectId')}: ${projection.project_id || proposal.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('graphTransitionId')}: ${proposal.transition_id || t('none')}`,
+                `${t('stateProjectionId')}: ${projection.projection_id || t('none')}`,
+                `${t('graphTransitionStatus')}: ${proposal.transition_status || 'not_refreshed'}`,
+                `${t('projectedGraphState')}: ${projection.proposed_graph_state || proposal.proposed_graph_state || 'blocked'}`,
+                `${t('runnerPlanNextAgent')}: ${projection.target_agent_id || proposal.target_agent_id || t('none')}`,
+                `${t('statePersisted')}: ${Boolean(projection.state_persisted)}`,
+                `${t('graphTransitionPersisted')}: ${Boolean(proposal.graph_transition_persisted)}`,
+                '',
+                JSON.stringify({ proposal, projection }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceTransitionProjection() {
+            const status = document.getElementById('projectWorkspaceTransitionProjectionStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceTransitionProjectionCopyText());
+                if (status) status.textContent = t('transitionProjectionCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('transitionProjectionCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceTransitionProjection(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceTransitionProjectionStatus')
+                || document.getElementById('projectWorkspaceHandoffCheckpointStatus')
+                || document.getElementById('projectWorkspaceResultCompletionStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('transitionProjectionDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_transition_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/transition/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('transitionProjectionDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectRunnerHandoffCheckpoint = payload.runner_handoff_checkpoint || {};
+                latestProjectRunnerNextAgentUnlock = payload.runner_next_agent_unlock || {};
+                latestProjectRunnerGraphTransitionProposal = payload.runner_graph_transition_proposal || {};
+                latestProjectRunnerStateProjection = payload.runner_state_projection || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {},
+                    runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint,
+                    runner_handoff_checkpoint_summary: payload.runner_handoff_checkpoint_summary || {},
+                    runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock,
+                    runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {},
+                    runner_graph_transition_proposal: latestProjectRunnerGraphTransitionProposal,
+                    runner_graph_transition_proposal_summary: payload.runner_graph_transition_proposal_summary || {},
+                    runner_state_projection: latestProjectRunnerStateProjection,
+                    runner_state_projection_summary: payload.runner_state_projection_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_transition_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_transition_dry_run');
+                if (status) status.textContent = t('transitionProjectionDryRunComplete');
+
+                const checkpointPanel = document.getElementById('projectWorkspaceHandoffCheckpointPanel');
+                if (checkpointPanel) checkpointPanel.outerHTML = renderProjectWorkspaceHandoffCheckpointPanel(latestProjectWorkspace);
+                const transitionPanel = document.getElementById('projectWorkspaceTransitionProjectionPanel');
+                if (transitionPanel) transitionPanel.outerHTML = renderProjectWorkspaceTransitionProjectionPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_transition_dry_run');
+                if (status) status.textContent = error.message || t('transitionProjectionDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceTransitionProjectionPanel(workspace = latestProjectWorkspace) {
+            const proposal = projectWorkspaceGraphTransitionFromWorkspace(workspace);
+            const projection = projectWorkspaceStateProjectionFromWorkspace(workspace);
+            const hasProjection = Boolean(projection && Object.keys(projection).length);
+            const statusLabel = projectWorkspaceTransitionStatusLabel(proposal);
+            return `
+                <div class="section-block" id="projectWorkspaceTransitionProjectionPanel" data-project-transition-projection-panel-marker="Project Workspace transition projection panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('transitionProjectionPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('transitionProjectionPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceTransitionProjectionBtn" type="button" data-project-transition-projection-dry-run-action="Project Workspace transition projection panel bundle" onclick="dryRunProjectWorkspaceTransitionProjection()">${escapeHTML(t('dryRunTransitionProjection'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceTransitionProjectionBtn" type="button" onclick="copyProjectWorkspaceTransitionProjection()">${escapeHTML(t('copyTransitionProjection'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('graphTransitionStatus'))}</div>
+                            <strong data-graph-transition-status="${escapeHTML(proposal.transition_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('transitionProjectionDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('stateProjectionId'))}</div>
+                            <strong data-state-projection-id="${escapeHTML(projection.projection_id || '')}">${escapeHTML(projection.projection_id || t('transitionProjectionNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('projectedGraphState'))}: ${escapeHTML(projection.proposed_graph_state || proposal.proposed_graph_state || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('statePersisted'))}</div>
+                            <strong data-state-projection-persisted="${escapeHTML(String(Boolean(projection.state_persisted)))}">${escapeHTML(String(Boolean(projection.state_persisted)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('graphTransitionPersisted'))}: ${escapeHTML(String(Boolean(proposal.graph_transition_persisted)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('transitionProjectionAuditPreview'))}</div>
+                        ${hasProjection ? `<pre class="debug" data-transition-projection-audit-preview="Project Workspace transition projection panel bundle">${escapeHTML(projectWorkspaceTransitionProjectionCopyText(proposal, projection))}</pre>` : `<div class="recent-empty">${escapeHTML(t('transitionProjectionNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceTransitionProjectionStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceHandoffCheckpointPanel(workspace = latestProjectWorkspace) {
             const checkpoint = projectWorkspaceHandoffCheckpointFromWorkspace(workspace);
             const unlock = projectWorkspaceNextAgentUnlockFromWorkspace(workspace);
@@ -13238,6 +13428,7 @@
                     ${renderProjectWorkspaceInvocationPanel(workspace)}
                     ${renderProjectWorkspaceResultCompletionPanel(workspace)}
                     ${renderProjectWorkspaceHandoffCheckpointPanel(workspace)}
+                    ${renderProjectWorkspaceTransitionProjectionPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -15453,6 +15644,63 @@
             handoffCheckpointDryRunFailed: 'Handoff checkpoint dry-run \u5931\u8d25\u3002',
             handoffCheckpointCopied: '\u4ea4\u63a5\u68c0\u67e5\u70b9\u5df2\u590d\u5236\u3002',
             handoffCheckpointCopyFailed: '\u590d\u5236\u4ea4\u63a5\u68c0\u67e5\u70b9\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceTransitionProjectionPanelBundleMarker: 'Project Workspace transition projection panel bundle',
+            transitionProjectionPanelTitle: 'Graph transition & state projection',
+            transitionProjectionPanelHelper: 'Dry-run graph transition proposal and project state projection. This previews the next graph state without persisting it.',
+            dryRunTransitionProjection: 'Dry-run transition',
+            copyTransitionProjection: 'Copy transition',
+            transitionProjectionCopyTitle: 'Project graph transition and state projection',
+            graphTransitionId: 'Graph transition ID',
+            stateProjectionId: 'State projection ID',
+            graphTransitionStatus: 'Graph transition status',
+            projectedGraphState: 'Projected graph state',
+            statePersisted: 'State persisted',
+            graphTransitionPersisted: 'Graph transition persisted',
+            transitionProjectionAuditPreview: 'Transition projection audit preview',
+            transitionStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            transitionStatusWaitingForUser: 'Transition waiting for user',
+            transitionStatusBlocked: 'Transition blocked',
+            transitionStatusReady: 'Transition ready',
+            transitionStatusNotRefreshed: 'Not refreshed',
+            transitionProjectionNotRefreshedYet: 'Transition projection has not been refreshed yet.',
+            transitionProjectionDryRunHelper: 'Dry run only: graph transition is not persisted and no state is saved.',
+            transitionProjectionDryRunRunning: 'Building transition projection dry-run...',
+            transitionProjectionDryRunComplete: 'Transition projection dry-run complete.',
+            transitionProjectionDryRunFailed: 'Transition projection dry-run failed.',
+            transitionProjectionCopied: 'Transition projection copied.',
+            transitionProjectionCopyFailed: 'Could not copy transition projection.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceTransitionProjectionPanelBundleMarker: 'Project Workspace transition projection panel bundle',
+            transitionProjectionPanelTitle: '\u56fe\u72b6\u6001\u5207\u6362\u4e0e\u72b6\u6001\u6295\u5f71',
+            transitionProjectionPanelHelper: '\u56fe\u72b6\u6001\u5207\u6362\u63d0\u6848\u548c\u9879\u76ee\u72b6\u6001\u6295\u5f71\u7684 dry-run\u3002\u5b83\u53ea\u9884\u89c8\u4e0b\u4e00\u4e2a\u56fe\u72b6\u6001\uff0c\u4e0d\u771f\u6b63\u4fdd\u5b58\u3002',
+            dryRunTransitionProjection: 'Dry-run \u5207\u6362',
+            copyTransitionProjection: '\u590d\u5236\u5207\u6362\u6295\u5f71',
+            transitionProjectionCopyTitle: '\u9879\u76ee\u56fe\u72b6\u6001\u5207\u6362\u4e0e\u72b6\u6001\u6295\u5f71',
+            graphTransitionId: '\u56fe\u72b6\u6001\u5207\u6362 ID',
+            stateProjectionId: '\u72b6\u6001\u6295\u5f71 ID',
+            graphTransitionStatus: '\u56fe\u72b6\u6001\u5207\u6362\u72b6\u6001',
+            projectedGraphState: '\u9884\u89c8\u56fe\u72b6\u6001',
+            statePersisted: '\u72b6\u6001\u662f\u5426\u5df2\u4fdd\u5b58',
+            graphTransitionPersisted: '\u56fe\u5207\u6362\u662f\u5426\u5df2\u4fdd\u5b58',
+            transitionProjectionAuditPreview: '\u5207\u6362\u6295\u5f71\u5ba1\u8ba1\u9884\u89c8',
+            transitionStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            transitionStatusWaitingForUser: '\u5207\u6362\u7b49\u5f85\u7528\u6237',
+            transitionStatusBlocked: '\u5207\u6362\u5df2\u963b\u585e',
+            transitionStatusReady: '\u5207\u6362\u5df2\u5c31\u7eea',
+            transitionStatusNotRefreshed: '\u672a\u5237\u65b0',
+            transitionProjectionNotRefreshedYet: '\u5207\u6362\u6295\u5f71\u5c1a\u672a\u5237\u65b0\u3002',
+            transitionProjectionDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u771f\u6b63\u4fdd\u5b58\u56fe\u5207\u6362\uff0c\u4e0d\u4fdd\u5b58\u72b6\u6001\u3002',
+            transitionProjectionDryRunRunning: '\u6b63\u5728\u751f\u6210 transition projection dry-run...',
+            transitionProjectionDryRunComplete: 'Transition projection dry-run \u5b8c\u6210\u3002',
+            transitionProjectionDryRunFailed: 'Transition projection dry-run \u5931\u8d25\u3002',
+            transitionProjectionCopied: '\u5207\u6362\u6295\u5f71\u5df2\u590d\u5236\u3002',
+            transitionProjectionCopyFailed: '\u590d\u5236\u5207\u6362\u6295\u5f71\u5931\u8d25\u3002'
         });
 
 
