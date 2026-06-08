@@ -74,6 +74,7 @@ Add-Check "project_workspace_approval_policy_panel_marker" ($page.Content -match
 Add-Check "project_workspace_runtime_readiness_panel_marker" ($page.Content -match "Project Workspace runtime readiness panel bundle")
 Add-Check "project_workspace_worker_loop_panel_marker" ($page.Content -match "Project Workspace worker loop panel bundle")
 Add-Check "project_workspace_worker_checkpoint_panel_marker" ($page.Content -match "Project Workspace worker checkpoint panel bundle")
+Add-Check "project_workspace_finalization_panel_marker" ($page.Content -match "Project Workspace finalization panel bundle")
 Add-Check "project_workspace_authorization_manifest_panel_marker" ($page.Content -match "Project Workspace authorization manifest panel bundle")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")

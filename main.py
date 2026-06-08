@@ -143,6 +143,18 @@ from agent_runs import (
     build_agent_runner_resume_cursor_summary,
     build_agent_runner_worker_checkpoint_bundle,
     build_agent_runner_worker_checkpoint_bundle_summary,
+    build_agent_runner_completion_ledger,
+    build_agent_runner_completion_ledger_summary,
+    build_agent_runner_downstream_handoff,
+    build_agent_runner_downstream_handoff_summary,
+    build_agent_runner_human_review_packet,
+    build_agent_runner_human_review_packet_summary,
+    build_agent_runner_project_merge_preview,
+    build_agent_runner_project_merge_preview_summary,
+    build_agent_runner_result_acceptance,
+    build_agent_runner_result_acceptance_summary,
+    build_agent_runner_run_finalization,
+    build_agent_runner_run_finalization_summary,
     build_agent_runner_authorization_preview,
     build_agent_runner_authorization_preview_summary,
     build_agent_runner_execution_manifest,
@@ -8454,6 +8466,102 @@ async def dry_run_project_agent_worker_checkpoint(project_id: str, http_request:
         "dead_letter_required": False,
         "dead_letter_recorded": False,
         "checkpoint_recorded": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "agent_execution_performed": False,
+        "result_written": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+
+@app.post("/api/v1/projects/{project_id}/runner/finalization/dry-run")
+async def dry_run_project_agent_finalization(project_id: str, http_request: Request):
+    checkpoint_payload = await dry_run_project_agent_worker_checkpoint(project_id, http_request)
+
+    runner_result_acceptance = build_agent_runner_result_acceptance(
+        checkpoint_payload["runner_worker_checkpoint_bundle"],
+        requested_by="project_runner_finalization_dry_run_api",
+    )
+    runner_result_acceptance_summary = build_agent_runner_result_acceptance_summary(runner_result_acceptance)
+    runner_project_merge_preview = build_agent_runner_project_merge_preview(
+        runner_result_acceptance,
+        requested_by="project_runner_finalization_dry_run_api",
+    )
+    runner_project_merge_preview_summary = build_agent_runner_project_merge_preview_summary(runner_project_merge_preview)
+    runner_downstream_handoff = build_agent_runner_downstream_handoff(
+        runner_project_merge_preview,
+        requested_by="project_runner_finalization_dry_run_api",
+    )
+    runner_downstream_handoff_summary = build_agent_runner_downstream_handoff_summary(runner_downstream_handoff)
+    runner_human_review_packet = build_agent_runner_human_review_packet(
+        runner_downstream_handoff,
+        requested_by="project_runner_finalization_dry_run_api",
+    )
+    runner_human_review_packet_summary = build_agent_runner_human_review_packet_summary(runner_human_review_packet)
+    runner_run_finalization = build_agent_runner_run_finalization(
+        runner_human_review_packet,
+        requested_by="project_runner_finalization_dry_run_api",
+    )
+    runner_run_finalization_summary = build_agent_runner_run_finalization_summary(runner_run_finalization)
+    runner_completion_ledger = build_agent_runner_completion_ledger(
+        runner_run_finalization,
+        requested_by="project_runner_finalization_dry_run_api",
+    )
+    runner_completion_ledger_summary = build_agent_runner_completion_ledger_summary(runner_completion_ledger)
+
+    project = checkpoint_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_result_acceptance_status": runner_result_acceptance.get("result_acceptance_status", ""),
+        "latest_runner_project_merge_preview_status": runner_project_merge_preview.get("project_merge_preview_status", ""),
+        "latest_runner_downstream_handoff_status": runner_downstream_handoff.get("downstream_handoff_status", ""),
+        "latest_runner_human_review_packet_status": runner_human_review_packet.get("human_review_packet_status", ""),
+        "latest_runner_run_finalization_status": runner_run_finalization.get("run_finalization_status", ""),
+        "latest_runner_completion_ledger_status": runner_completion_ledger.get("completion_ledger_status", ""),
+        "latest_runner_run_finalized": bool(runner_run_finalization.get("run_finalized")),
+        "latest_runner_completion_ledger_recorded": bool(runner_completion_ledger.get("completion_ledger_recorded")),
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **checkpoint_payload,
+        "project": project,
+        "runner_result_acceptance": runner_result_acceptance,
+        "runner_result_acceptance_summary": runner_result_acceptance_summary,
+        "runner_project_merge_preview": runner_project_merge_preview,
+        "runner_project_merge_preview_summary": runner_project_merge_preview_summary,
+        "runner_downstream_handoff": runner_downstream_handoff,
+        "runner_downstream_handoff_summary": runner_downstream_handoff_summary,
+        "runner_human_review_packet": runner_human_review_packet,
+        "runner_human_review_packet_summary": runner_human_review_packet_summary,
+        "runner_run_finalization": runner_run_finalization,
+        "runner_run_finalization_summary": runner_run_finalization_summary,
+        "runner_completion_ledger": runner_completion_ledger,
+        "runner_completion_ledger_summary": runner_completion_ledger_summary,
+        "dry_run": True,
+        "result_accepted": False,
+        "acceptance_recorded": False,
+        "merge_applied": False,
+        "merge_preview_recorded": False,
+        "handoff_ready": False,
+        "handoff_recorded": False,
+        "next_agent_unlocked": False,
+        "human_review_required": True,
+        "human_review_recorded": False,
+        "approved_by_human": False,
+        "run_finalized": False,
+        "finalization_recorded": False,
+        "completion_ledger_recorded": False,
         "safe_to_continue": False,
         "manual_review_required": True,
         "agent_execution_performed": False,

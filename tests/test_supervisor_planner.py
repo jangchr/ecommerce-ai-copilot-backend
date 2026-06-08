@@ -1242,3 +1242,47 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             payload["runner_worker_checkpoint_bundle"]["worker_checkpoint_bundle_status"],
         )
 
+    def test_project_runner_finalization_dry_run_endpoint_returns_completion_ledger(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/finalization/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_result_acceptance",
+            "runner_project_merge_preview",
+            "runner_downstream_handoff",
+            "runner_human_review_packet",
+            "runner_run_finalization",
+            "runner_completion_ledger",
+            "runner_completion_ledger_summary",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertFalse(payload["result_accepted"])
+        self.assertFalse(payload["acceptance_recorded"])
+        self.assertFalse(payload["merge_applied"])
+        self.assertFalse(payload["handoff_ready"])
+        self.assertFalse(payload["next_agent_unlocked"])
+        self.assertTrue(payload["human_review_required"])
+        self.assertFalse(payload["approved_by_human"])
+        self.assertFalse(payload["run_finalized"])
+        self.assertFalse(payload["completion_ledger_recorded"])
+        self.assertFalse(payload["safe_to_continue"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertEqual(
+            payload["runner_completion_ledger_summary"]["summary_version"],
+            "agent_runner_completion_ledger_summary_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_completion_ledger_status"],
+            payload["runner_completion_ledger"]["completion_ledger_status"],
+        )
+

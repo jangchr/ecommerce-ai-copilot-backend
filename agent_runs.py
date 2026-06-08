@@ -6847,6 +6847,488 @@ def build_agent_runner_worker_checkpoint_bundle_summary(worker_checkpoint_bundle
 
 
 
+AGENT_RUNNER_RESULT_ACCEPTANCE_VERSION = "agent_runner_result_acceptance_v1"
+AGENT_RUNNER_PROJECT_MERGE_PREVIEW_VERSION = "agent_runner_project_merge_preview_v1"
+AGENT_RUNNER_DOWNSTREAM_HANDOFF_VERSION = "agent_runner_downstream_handoff_v1"
+AGENT_RUNNER_HUMAN_REVIEW_PACKET_VERSION = "agent_runner_human_review_packet_v1"
+AGENT_RUNNER_RUN_FINALIZATION_VERSION = "agent_runner_run_finalization_v1"
+AGENT_RUNNER_COMPLETION_LEDGER_VERSION = "agent_runner_completion_ledger_v1"
+
+
+def _runner_finalization_wait_status(upstream_status: str, prefix: str, default_blocked: str) -> str:
+    status = str(upstream_status or "")
+    if "waiting_for_real_agent_output" in status:
+        return f"{prefix}_waiting_for_real_agent_output"
+    if "waiting_for_user" in status:
+        return f"{prefix}_waiting_for_user"
+    if "waiting_for_explicit_review" in status or "review" in status:
+        return f"{prefix}_waiting_for_explicit_review"
+    if "blocked" in status:
+        return default_blocked
+    return default_blocked
+
+
+def build_agent_runner_result_acceptance(
+    worker_checkpoint_bundle: dict[str, Any],
+    requested_by: str = "runner_finalization_dry_run_api",
+) -> dict[str, Any]:
+    bundle = worker_checkpoint_bundle if isinstance(worker_checkpoint_bundle, dict) else {}
+    project_id = str(bundle.get("project_id") or "demo_project_default")
+    target_agent_id = str(bundle.get("target_agent_id") or "")
+    status = _runner_finalization_wait_status(
+        str(bundle.get("worker_checkpoint_bundle_status") or ""),
+        "result_acceptance",
+        "result_acceptance_blocked",
+    )
+    result_acceptance_id = f"result_acceptance_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    acceptance_checks = [
+        {"check_id": "checkpoint_present", "passed": bool(bundle.get("worker_checkpoint_bundle_id"))},
+        {"check_id": "result_validation_passed", "passed": False},
+        {"check_id": "manual_review_available", "passed": True},
+        {"check_id": "dry_run_write_blocked", "passed": True},
+    ]
+    payload = {
+        "result_acceptance_version": AGENT_RUNNER_RESULT_ACCEPTANCE_VERSION,
+        "result_acceptance_status": status,
+        "result_acceptance_id": result_acceptance_id,
+        "worker_checkpoint_bundle_id": bundle.get("worker_checkpoint_bundle_id"),
+        "target_agent_id": target_agent_id,
+        "acceptance_checks": acceptance_checks,
+        "acceptance_check_count": len(acceptance_checks),
+        "result_accepted": False,
+        "acceptance_recorded": False,
+        "manual_review_required": True,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_finalization_dry_run_api"),
+        "target_agent_stage": str(bundle.get("target_agent_stage") or ""),
+        "worker_checkpoint_bundle_status": str(bundle.get("worker_checkpoint_bundle_status") or ""),
+        "worker_checkpoint_bundle_summary": build_agent_runner_worker_checkpoint_bundle_summary(bundle),
+        "result_acceptance_message": build_agent_message(
+            message_type="runner_result_acceptance_dry_run",
+            source_agent_id="runner_finalization_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_result_acceptance_summary(result_acceptance: dict[str, Any]) -> dict[str, Any]:
+    safe_acceptance = result_acceptance if isinstance(result_acceptance, dict) else {}
+    return {
+        "summary_version": "agent_runner_result_acceptance_summary_v1",
+        "result_acceptance_version": str(safe_acceptance.get("result_acceptance_version") or AGENT_RUNNER_RESULT_ACCEPTANCE_VERSION),
+        "result_acceptance_id": str(safe_acceptance.get("result_acceptance_id") or ""),
+        "project_id": str(safe_acceptance.get("project_id") or "demo_project_default"),
+        "result_acceptance_status": str(safe_acceptance.get("result_acceptance_status") or "result_acceptance_blocked"),
+        "acceptance_check_count": int(safe_acceptance.get("acceptance_check_count") or 0),
+        "result_accepted": False,
+        "acceptance_recorded": False,
+        "manual_review_required": True,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_project_merge_preview(
+    result_acceptance: dict[str, Any],
+    requested_by: str = "runner_finalization_dry_run_api",
+) -> dict[str, Any]:
+    acceptance = result_acceptance if isinstance(result_acceptance, dict) else {}
+    project_id = str(acceptance.get("project_id") or "demo_project_default")
+    target_agent_id = str(acceptance.get("target_agent_id") or "")
+    status = _runner_finalization_wait_status(
+        str(acceptance.get("result_acceptance_status") or ""),
+        "project_merge_preview",
+        "project_merge_preview_blocked",
+    )
+    merge_preview_id = f"project_merge_preview_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    merge_items = [
+        {"merge_item_id": "graph_summary_update", "planned": True, "applied": False},
+        {"merge_item_id": "latest_agent_result_ref", "planned": True, "applied": False},
+        {"merge_item_id": "workspace_audit_preview", "planned": True, "applied": False},
+    ]
+    payload = {
+        "project_merge_preview_version": AGENT_RUNNER_PROJECT_MERGE_PREVIEW_VERSION,
+        "project_merge_preview_status": status,
+        "project_merge_preview_id": merge_preview_id,
+        "result_acceptance_id": acceptance.get("result_acceptance_id"),
+        "target_agent_id": target_agent_id,
+        "merge_items": merge_items,
+        "merge_item_count": len(merge_items),
+        "merge_applied": False,
+        "merge_preview_recorded": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_finalization_dry_run_api"),
+        "target_agent_stage": str(acceptance.get("target_agent_stage") or ""),
+        "result_acceptance_status": str(acceptance.get("result_acceptance_status") or ""),
+        "result_acceptance_summary": build_agent_runner_result_acceptance_summary(acceptance),
+        "project_merge_preview_message": build_agent_message(
+            message_type="runner_project_merge_preview_dry_run",
+            source_agent_id="runner_finalization_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_project_merge_preview_summary(project_merge_preview: dict[str, Any]) -> dict[str, Any]:
+    safe_preview = project_merge_preview if isinstance(project_merge_preview, dict) else {}
+    return {
+        "summary_version": "agent_runner_project_merge_preview_summary_v1",
+        "project_merge_preview_version": str(safe_preview.get("project_merge_preview_version") or AGENT_RUNNER_PROJECT_MERGE_PREVIEW_VERSION),
+        "project_merge_preview_id": str(safe_preview.get("project_merge_preview_id") or ""),
+        "project_id": str(safe_preview.get("project_id") or "demo_project_default"),
+        "project_merge_preview_status": str(safe_preview.get("project_merge_preview_status") or "project_merge_preview_blocked"),
+        "merge_item_count": int(safe_preview.get("merge_item_count") or 0),
+        "merge_applied": False,
+        "merge_preview_recorded": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_downstream_handoff(
+    project_merge_preview: dict[str, Any],
+    requested_by: str = "runner_finalization_dry_run_api",
+) -> dict[str, Any]:
+    preview = project_merge_preview if isinstance(project_merge_preview, dict) else {}
+    project_id = str(preview.get("project_id") or "demo_project_default")
+    target_agent_id = str(preview.get("target_agent_id") or "")
+    status = _runner_finalization_wait_status(
+        str(preview.get("project_merge_preview_status") or ""),
+        "downstream_handoff",
+        "downstream_handoff_blocked",
+    )
+    downstream_handoff_id = f"downstream_handoff_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    handoff_targets = [
+        {"handoff_target_id": "planner_agent", "ready": False},
+        {"handoff_target_id": "storyboard_agent", "ready": False},
+        {"handoff_target_id": "workspace_review", "ready": True},
+    ]
+    payload = {
+        "downstream_handoff_version": AGENT_RUNNER_DOWNSTREAM_HANDOFF_VERSION,
+        "downstream_handoff_status": status,
+        "downstream_handoff_id": downstream_handoff_id,
+        "project_merge_preview_id": preview.get("project_merge_preview_id"),
+        "target_agent_id": target_agent_id,
+        "handoff_targets": handoff_targets,
+        "handoff_target_count": len(handoff_targets),
+        "handoff_ready": False,
+        "handoff_recorded": False,
+        "next_agent_unlocked": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_finalization_dry_run_api"),
+        "target_agent_stage": str(preview.get("target_agent_stage") or ""),
+        "project_merge_preview_status": str(preview.get("project_merge_preview_status") or ""),
+        "project_merge_preview_summary": build_agent_runner_project_merge_preview_summary(preview),
+        "downstream_handoff_message": build_agent_message(
+            message_type="runner_downstream_handoff_dry_run",
+            source_agent_id="runner_finalization_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_downstream_handoff_summary(downstream_handoff: dict[str, Any]) -> dict[str, Any]:
+    safe_handoff = downstream_handoff if isinstance(downstream_handoff, dict) else {}
+    return {
+        "summary_version": "agent_runner_downstream_handoff_summary_v1",
+        "downstream_handoff_version": str(safe_handoff.get("downstream_handoff_version") or AGENT_RUNNER_DOWNSTREAM_HANDOFF_VERSION),
+        "downstream_handoff_id": str(safe_handoff.get("downstream_handoff_id") or ""),
+        "project_id": str(safe_handoff.get("project_id") or "demo_project_default"),
+        "downstream_handoff_status": str(safe_handoff.get("downstream_handoff_status") or "downstream_handoff_blocked"),
+        "handoff_target_count": int(safe_handoff.get("handoff_target_count") or 0),
+        "handoff_ready": False,
+        "handoff_recorded": False,
+        "next_agent_unlocked": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_human_review_packet(
+    downstream_handoff: dict[str, Any],
+    requested_by: str = "runner_finalization_dry_run_api",
+) -> dict[str, Any]:
+    handoff = downstream_handoff if isinstance(downstream_handoff, dict) else {}
+    project_id = str(handoff.get("project_id") or "demo_project_default")
+    target_agent_id = str(handoff.get("target_agent_id") or "")
+    status = _runner_finalization_wait_status(
+        str(handoff.get("downstream_handoff_status") or ""),
+        "human_review_packet",
+        "human_review_packet_blocked",
+    )
+    human_review_packet_id = f"human_review_packet_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    review_items = [
+        {"review_item_id": "dry_run_boundary", "required": True, "ready": True},
+        {"review_item_id": "result_acceptance", "required": True, "ready": False},
+        {"review_item_id": "merge_preview", "required": True, "ready": False},
+        {"review_item_id": "handoff_plan", "required": True, "ready": False},
+    ]
+    payload = {
+        "human_review_packet_version": AGENT_RUNNER_HUMAN_REVIEW_PACKET_VERSION,
+        "human_review_packet_status": status,
+        "human_review_packet_id": human_review_packet_id,
+        "downstream_handoff_id": handoff.get("downstream_handoff_id"),
+        "target_agent_id": target_agent_id,
+        "review_items": review_items,
+        "review_item_count": len(review_items),
+        "human_review_required": True,
+        "human_review_recorded": False,
+        "approved_by_human": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_finalization_dry_run_api"),
+        "target_agent_stage": str(handoff.get("target_agent_stage") or ""),
+        "downstream_handoff_status": str(handoff.get("downstream_handoff_status") or ""),
+        "downstream_handoff_summary": build_agent_runner_downstream_handoff_summary(handoff),
+        "human_review_packet_message": build_agent_message(
+            message_type="runner_human_review_packet_dry_run",
+            source_agent_id="runner_finalization_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_human_review_packet_summary(human_review_packet: dict[str, Any]) -> dict[str, Any]:
+    safe_packet = human_review_packet if isinstance(human_review_packet, dict) else {}
+    return {
+        "summary_version": "agent_runner_human_review_packet_summary_v1",
+        "human_review_packet_version": str(safe_packet.get("human_review_packet_version") or AGENT_RUNNER_HUMAN_REVIEW_PACKET_VERSION),
+        "human_review_packet_id": str(safe_packet.get("human_review_packet_id") or ""),
+        "project_id": str(safe_packet.get("project_id") or "demo_project_default"),
+        "human_review_packet_status": str(safe_packet.get("human_review_packet_status") or "human_review_packet_blocked"),
+        "review_item_count": int(safe_packet.get("review_item_count") or 0),
+        "human_review_required": True,
+        "human_review_recorded": False,
+        "approved_by_human": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_run_finalization(
+    human_review_packet: dict[str, Any],
+    requested_by: str = "runner_finalization_dry_run_api",
+) -> dict[str, Any]:
+    packet = human_review_packet if isinstance(human_review_packet, dict) else {}
+    project_id = str(packet.get("project_id") or "demo_project_default")
+    target_agent_id = str(packet.get("target_agent_id") or "")
+    status = _runner_finalization_wait_status(
+        str(packet.get("human_review_packet_status") or ""),
+        "run_finalization",
+        "run_finalization_blocked",
+    )
+    run_finalization_id = f"run_finalization_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    finalization_items = [
+        {"finalization_item_id": "no_write_confirmed", "complete": True},
+        {"finalization_item_id": "no_cost_confirmed", "complete": True},
+        {"finalization_item_id": "manual_review_pending", "complete": False},
+        {"finalization_item_id": "next_real_execution_blocked", "complete": True},
+    ]
+    payload = {
+        "run_finalization_version": AGENT_RUNNER_RUN_FINALIZATION_VERSION,
+        "run_finalization_status": status,
+        "run_finalization_id": run_finalization_id,
+        "human_review_packet_id": packet.get("human_review_packet_id"),
+        "target_agent_id": target_agent_id,
+        "finalization_items": finalization_items,
+        "finalization_item_count": len(finalization_items),
+        "run_finalized": False,
+        "finalization_recorded": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_finalization_dry_run_api"),
+        "target_agent_stage": str(packet.get("target_agent_stage") or ""),
+        "human_review_packet_status": str(packet.get("human_review_packet_status") or ""),
+        "human_review_packet_summary": build_agent_runner_human_review_packet_summary(packet),
+        "run_finalization_message": build_agent_message(
+            message_type="runner_run_finalization_dry_run",
+            source_agent_id="runner_finalization_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_run_finalization_summary(run_finalization: dict[str, Any]) -> dict[str, Any]:
+    safe_finalization = run_finalization if isinstance(run_finalization, dict) else {}
+    return {
+        "summary_version": "agent_runner_run_finalization_summary_v1",
+        "run_finalization_version": str(safe_finalization.get("run_finalization_version") or AGENT_RUNNER_RUN_FINALIZATION_VERSION),
+        "run_finalization_id": str(safe_finalization.get("run_finalization_id") or ""),
+        "project_id": str(safe_finalization.get("project_id") or "demo_project_default"),
+        "run_finalization_status": str(safe_finalization.get("run_finalization_status") or "run_finalization_blocked"),
+        "finalization_item_count": int(safe_finalization.get("finalization_item_count") or 0),
+        "run_finalized": False,
+        "finalization_recorded": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_completion_ledger(
+    run_finalization: dict[str, Any],
+    requested_by: str = "runner_finalization_dry_run_api",
+) -> dict[str, Any]:
+    finalization = run_finalization if isinstance(run_finalization, dict) else {}
+    project_id = str(finalization.get("project_id") or "demo_project_default")
+    target_agent_id = str(finalization.get("target_agent_id") or "")
+    status = _runner_finalization_wait_status(
+        str(finalization.get("run_finalization_status") or ""),
+        "completion_ledger",
+        "completion_ledger_blocked",
+    )
+    completion_ledger_id = f"completion_ledger_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    ledger_entries = [
+        {"ledger_entry_id": "result_acceptance_preview", "recorded": False},
+        {"ledger_entry_id": "merge_preview", "recorded": False},
+        {"ledger_entry_id": "downstream_handoff_preview", "recorded": False},
+        {"ledger_entry_id": "human_review_packet", "recorded": False},
+        {"ledger_entry_id": "finalization_preview", "recorded": False},
+    ]
+    payload = {
+        "completion_ledger_version": AGENT_RUNNER_COMPLETION_LEDGER_VERSION,
+        "completion_ledger_status": status,
+        "completion_ledger_id": completion_ledger_id,
+        "run_finalization_id": finalization.get("run_finalization_id"),
+        "target_agent_id": target_agent_id,
+        "ledger_entries": ledger_entries,
+        "ledger_entry_count": len(ledger_entries),
+        "completion_ledger_recorded": False,
+        "run_finalized": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_finalization_dry_run_api"),
+        "target_agent_stage": str(finalization.get("target_agent_stage") or ""),
+        "run_finalization_status": str(finalization.get("run_finalization_status") or ""),
+        "run_finalization_summary": build_agent_runner_run_finalization_summary(finalization),
+        "completion_ledger_message": build_agent_message(
+            message_type="runner_completion_ledger_dry_run",
+            source_agent_id="runner_finalization_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_completion_ledger_summary(completion_ledger: dict[str, Any]) -> dict[str, Any]:
+    safe_ledger = completion_ledger if isinstance(completion_ledger, dict) else {}
+    return {
+        "summary_version": "agent_runner_completion_ledger_summary_v1",
+        "completion_ledger_version": str(safe_ledger.get("completion_ledger_version") or AGENT_RUNNER_COMPLETION_LEDGER_VERSION),
+        "completion_ledger_id": str(safe_ledger.get("completion_ledger_id") or ""),
+        "project_id": str(safe_ledger.get("project_id") or "demo_project_default"),
+        "completion_ledger_status": str(safe_ledger.get("completion_ledger_status") or "completion_ledger_blocked"),
+        "ledger_entry_count": int(safe_ledger.get("ledger_entry_count") or 0),
+        "completion_ledger_recorded": False,
+        "run_finalized": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

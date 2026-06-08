@@ -5382,3 +5382,46 @@ class ProjectWorkspaceWorkerCheckpointPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace worker checkpoint panel bundle", script)
         self.assertIn("project_workspace_worker_checkpoint_panel_marker", script)
 
+
+class ProjectWorkspaceFinalizationPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_finalization_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace finalization panel bundle",
+            "PROJECT_WORKSPACE_FINALIZATION_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceFinalizationPanel(",
+            "function projectWorkspaceFinalizationCopyText(",
+            "async function copyProjectWorkspaceFinalization(",
+            "async function dryRunProjectWorkspaceFinalization(",
+            "/runner/finalization/dry-run",
+            "latestProjectRunnerResultAcceptance",
+            "latestProjectRunnerProjectMergePreview",
+            "latestProjectRunnerDownstreamHandoff",
+            "latestProjectRunnerHumanReviewPacket",
+            "latestProjectRunnerRunFinalization",
+            "latestProjectRunnerCompletionLedger",
+            "projectWorkspaceFinalizationPanel",
+            "projectWorkspaceFinalizationStatus",
+            "dryRunProjectWorkspaceFinalizationBtn",
+            "copyProjectWorkspaceFinalizationBtn",
+            "data-project-finalization-panel-marker",
+            "data-project-finalization-dry-run-action",
+            "data-finalization-audit-preview",
+            "finalizationPanelTitle",
+            "finalizationPanelHelper",
+            "renderProjectWorkspaceFinalizationPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_finalization_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_finalization_panel_marker", script)
+        self.assertIn("Project Workspace finalization panel bundle", script)
+
+    def test_project_workspace_finalization_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace finalization panel bundle", script)
+        self.assertIn("project_workspace_finalization_panel_marker", script)
+

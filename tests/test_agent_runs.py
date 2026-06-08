@@ -3849,3 +3849,79 @@ class AgentRunnerWorkerOutputCheckpointTests(unittest.TestCase):
         self.assertIn("waiting_for_user", dead_letter_policy["dead_letter_policy_status"])
         self.assertIn("waiting_for_user", checkpoint_bundle["worker_checkpoint_bundle_status"])
 
+
+class AgentRunnerFinalizationTests(unittest.TestCase):
+    def test_finalization_chain_stays_dry_run(self):
+        from agent_runs import (
+            build_agent_runner_completion_ledger,
+            build_agent_runner_completion_ledger_summary,
+            build_agent_runner_downstream_handoff,
+            build_agent_runner_human_review_packet,
+            build_agent_runner_project_merge_preview,
+            build_agent_runner_result_acceptance,
+            build_agent_runner_run_finalization,
+        )
+
+        checkpoint = {
+            "project_id": "project_finalization_ready",
+            "target_agent_id": "planner_agent",
+            "target_agent_stage": "planning",
+            "worker_checkpoint_bundle_id": "worker_checkpoint_bundle_project_finalization_ready",
+            "worker_checkpoint_bundle_status": "worker_checkpoint_bundle_waiting_for_real_agent_output",
+            "dry_run": True,
+        }
+        acceptance = build_agent_runner_result_acceptance(checkpoint)
+        merge_preview = build_agent_runner_project_merge_preview(acceptance)
+        handoff = build_agent_runner_downstream_handoff(merge_preview)
+        review_packet = build_agent_runner_human_review_packet(handoff)
+        finalization = build_agent_runner_run_finalization(review_packet)
+        completion_ledger = build_agent_runner_completion_ledger(finalization)
+        completion_summary = build_agent_runner_completion_ledger_summary(completion_ledger)
+
+        self.assertEqual(acceptance["result_acceptance_version"], "agent_runner_result_acceptance_v1")
+        self.assertEqual(merge_preview["project_merge_preview_version"], "agent_runner_project_merge_preview_v1")
+        self.assertEqual(handoff["downstream_handoff_version"], "agent_runner_downstream_handoff_v1")
+        self.assertEqual(review_packet["human_review_packet_version"], "agent_runner_human_review_packet_v1")
+        self.assertEqual(finalization["run_finalization_version"], "agent_runner_run_finalization_v1")
+        self.assertEqual(completion_ledger["completion_ledger_version"], "agent_runner_completion_ledger_v1")
+        self.assertFalse(acceptance["result_accepted"])
+        self.assertFalse(merge_preview["merge_applied"])
+        self.assertFalse(handoff["handoff_ready"])
+        self.assertTrue(review_packet["human_review_required"])
+        self.assertFalse(finalization["run_finalized"])
+        self.assertFalse(completion_ledger["completion_ledger_recorded"])
+        self.assertTrue(completion_ledger["manual_review_required"])
+        self.assertEqual(completion_summary["summary_version"], "agent_runner_completion_ledger_summary_v1")
+
+    def test_finalization_chain_waits_for_user(self):
+        from agent_runs import (
+            build_agent_runner_completion_ledger,
+            build_agent_runner_downstream_handoff,
+            build_agent_runner_human_review_packet,
+            build_agent_runner_project_merge_preview,
+            build_agent_runner_result_acceptance,
+            build_agent_runner_run_finalization,
+        )
+
+        checkpoint = {
+            "project_id": "project_finalization_waiting",
+            "target_agent_id": "source_adapter_agent",
+            "target_agent_stage": "source",
+            "worker_checkpoint_bundle_id": "worker_checkpoint_bundle_project_finalization_waiting",
+            "worker_checkpoint_bundle_status": "worker_checkpoint_bundle_waiting_for_user",
+            "dry_run": True,
+        }
+        acceptance = build_agent_runner_result_acceptance(checkpoint)
+        merge_preview = build_agent_runner_project_merge_preview(acceptance)
+        handoff = build_agent_runner_downstream_handoff(merge_preview)
+        review_packet = build_agent_runner_human_review_packet(handoff)
+        finalization = build_agent_runner_run_finalization(review_packet)
+        completion_ledger = build_agent_runner_completion_ledger(finalization)
+
+        self.assertIn("waiting_for_user", acceptance["result_acceptance_status"])
+        self.assertIn("waiting_for_user", merge_preview["project_merge_preview_status"])
+        self.assertIn("waiting_for_user", handoff["downstream_handoff_status"])
+        self.assertIn("waiting_for_user", review_packet["human_review_packet_status"])
+        self.assertIn("waiting_for_user", finalization["run_finalization_status"])
+        self.assertIn("waiting_for_user", completion_ledger["completion_ledger_status"])
+

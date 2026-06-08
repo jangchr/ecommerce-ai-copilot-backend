@@ -13928,6 +13928,127 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_FINALIZATION_PANEL_BUNDLE_MARKER = 'Project Workspace finalization panel bundle';
+        let latestProjectRunnerResultAcceptance = {};
+        let latestProjectRunnerProjectMergePreview = {};
+        let latestProjectRunnerDownstreamHandoff = {};
+        let latestProjectRunnerHumanReviewPacket = {};
+        let latestProjectRunnerRunFinalization = {};
+        let latestProjectRunnerCompletionLedger = {};
+
+        function projectWorkspaceFinalizationCopyText(workspace = latestProjectWorkspace) {
+            const acceptance = latestProjectRunnerResultAcceptance || workspace?.runner_result_acceptance || {};
+            const mergePreview = latestProjectRunnerProjectMergePreview || workspace?.runner_project_merge_preview || {};
+            const handoff = latestProjectRunnerDownstreamHandoff || workspace?.runner_downstream_handoff || {};
+            const reviewPacket = latestProjectRunnerHumanReviewPacket || workspace?.runner_human_review_packet || {};
+            const finalization = latestProjectRunnerRunFinalization || workspace?.runner_run_finalization || {};
+            const ledger = latestProjectRunnerCompletionLedger || workspace?.runner_completion_ledger || {};
+            return [
+                t('finalizationCopyTitle'),
+                `${t('resultAcceptanceStatus')}: ${acceptance.result_acceptance_status || 'not_refreshed'}`,
+                `${t('projectMergePreviewStatus')}: ${mergePreview.project_merge_preview_status || 'not_refreshed'}`,
+                `${t('downstreamHandoffStatus')}: ${handoff.downstream_handoff_status || 'not_refreshed'}`,
+                `${t('humanReviewPacketStatus')}: ${reviewPacket.human_review_packet_status || 'not_refreshed'}`,
+                `${t('runFinalizationStatus')}: ${finalization.run_finalization_status || 'not_refreshed'}`,
+                `${t('completionLedgerStatus')}: ${ledger.completion_ledger_status || 'not_refreshed'}`,
+                `${t('runFinalized')}: ${Boolean(finalization.run_finalized)}`,
+                `${t('completionLedgerRecorded')}: ${Boolean(ledger.completion_ledger_recorded)}`,
+                '',
+                JSON.stringify({ acceptance, mergePreview, handoff, reviewPacket, finalization, ledger }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceFinalization() {
+            const status = document.getElementById('projectWorkspaceFinalizationStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceFinalizationCopyText());
+                if (status) status.textContent = t('finalizationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('finalizationCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceFinalization(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceFinalizationStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('finalizationDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_finalization_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/finalization/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('finalizationDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerResultAcceptance = payload.runner_result_acceptance || {};
+                latestProjectRunnerProjectMergePreview = payload.runner_project_merge_preview || {};
+                latestProjectRunnerDownstreamHandoff = payload.runner_downstream_handoff || {};
+                latestProjectRunnerHumanReviewPacket = payload.runner_human_review_packet || {};
+                latestProjectRunnerRunFinalization = payload.runner_run_finalization || {};
+                latestProjectRunnerCompletionLedger = payload.runner_completion_ledger || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_finalization_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_finalization_dry_run');
+                if (status) status.textContent = t('finalizationDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceFinalizationPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceFinalizationPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_finalization_dry_run');
+                if (status) status.textContent = error.message || t('finalizationDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceFinalizationPanel(workspace = latestProjectWorkspace) {
+            const acceptance = latestProjectRunnerResultAcceptance || workspace?.runner_result_acceptance || {};
+            const reviewPacket = latestProjectRunnerHumanReviewPacket || workspace?.runner_human_review_packet || {};
+            const finalization = latestProjectRunnerRunFinalization || workspace?.runner_run_finalization || {};
+            const ledger = latestProjectRunnerCompletionLedger || workspace?.runner_completion_ledger || {};
+            const hasLedger = Boolean(ledger && Object.keys(ledger).length);
+            return `
+                <div class="section-block" id="projectWorkspaceFinalizationPanel" data-project-finalization-panel-marker="Project Workspace finalization panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('finalizationPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('finalizationPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceFinalizationBtn" type="button" data-project-finalization-dry-run-action="Project Workspace finalization panel bundle" onclick="dryRunProjectWorkspaceFinalization()">${escapeHTML(t('dryRunFinalization'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceFinalizationBtn" type="button" onclick="copyProjectWorkspaceFinalization()">${escapeHTML(t('copyFinalization'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('resultAcceptanceStatus'))}</div>
+                            <strong data-result-acceptance-status="${escapeHTML(acceptance.result_acceptance_status || 'not_refreshed')}">${escapeHTML(acceptance.result_acceptance_status || t('finalizationNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('humanReviewPacketStatus'))}</div>
+                            <strong data-human-review-packet-status="${escapeHTML(reviewPacket.human_review_packet_status || 'not_refreshed')}">${escapeHTML(reviewPacket.human_review_packet_status || t('finalizationNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('completionLedgerStatus'))}</div>
+                            <strong data-completion-ledger-status="${escapeHTML(ledger.completion_ledger_status || 'not_refreshed')}">${escapeHTML(ledger.completion_ledger_status || t('finalizationNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runFinalizationStatus'))}: ${escapeHTML(finalization.run_finalization_status || 'not_refreshed')}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('finalizationAuditPreview'))}</div>
+                        ${hasLedger ? `<pre class="debug" data-finalization-audit-preview="Project Workspace finalization panel bundle">${escapeHTML(projectWorkspaceFinalizationCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('finalizationNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceFinalizationStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceWorkerCheckpointPanel(workspace = latestProjectWorkspace) {
             const outputBuffer = latestProjectRunnerOutputBuffer || workspace?.runner_output_buffer || {};
             const validationGate = latestProjectRunnerResultValidationGate || workspace?.runner_result_validation_gate || {};
@@ -14844,6 +14965,7 @@
                     ${renderProjectWorkspaceRuntimeReadinessPanel(workspace)}
                     ${renderProjectWorkspaceWorkerLoopPanel(workspace)}
                     ${renderProjectWorkspaceWorkerCheckpointPanel(workspace)}
+                    ${renderProjectWorkspaceFinalizationPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -17555,6 +17677,55 @@
             workerCheckpointDryRunFailed: 'Worker checkpoint dry-run \u5931\u8d25\u3002',
             workerCheckpointCopied: 'Worker \u68c0\u67e5\u70b9\u5df2\u590d\u5236\u3002',
             workerCheckpointCopyFailed: '\u590d\u5236 Worker \u68c0\u67e5\u70b9\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceFinalizationPanelBundleMarker: 'Project Workspace finalization panel bundle',
+            finalizationPanelTitle: 'Result acceptance & finalization',
+            finalizationPanelHelper: 'Dry-run result acceptance, merge preview, downstream handoff, human review packet, run finalization, and completion ledger.',
+            dryRunFinalization: 'Dry-run finalization',
+            copyFinalization: 'Copy finalization',
+            finalizationCopyTitle: 'Project finalization dry-run',
+            resultAcceptanceStatus: 'Result acceptance status',
+            projectMergePreviewStatus: 'Project merge preview status',
+            downstreamHandoffStatus: 'Downstream handoff status',
+            humanReviewPacketStatus: 'Human review packet status',
+            runFinalizationStatus: 'Run finalization status',
+            completionLedgerStatus: 'Completion ledger status',
+            runFinalized: 'Run finalized',
+            completionLedgerRecorded: 'Completion ledger recorded',
+            finalizationAuditPreview: 'Finalization audit preview',
+            finalizationNotRefreshedYet: 'Finalization has not been refreshed yet.',
+            finalizationDryRunRunning: 'Building finalization dry-run...',
+            finalizationDryRunComplete: 'Finalization dry-run complete.',
+            finalizationDryRunFailed: 'Finalization dry-run failed.',
+            finalizationCopied: 'Finalization copied.',
+            finalizationCopyFailed: 'Could not copy finalization.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceFinalizationPanelBundleMarker: 'Project Workspace finalization panel bundle',
+            finalizationPanelTitle: '\u7ed3\u679c\u63a5\u6536\u4e0e\u8fd0\u884c\u6536\u53e3',
+            finalizationPanelHelper: '\u5bf9\u7ed3\u679c\u63a5\u6536\u3001\u9879\u76ee\u5408\u5e76\u9884\u89c8\u3001\u4e0b\u6e38\u4ea4\u63a5\u3001\u4eba\u5de5\u5ba1\u6838\u5305\u3001\u8fd0\u884c\u6536\u53e3\u548c\u5b8c\u6210\u8d26\u672c\u505a dry-run\u3002',
+            dryRunFinalization: 'Dry-run \u6536\u53e3',
+            copyFinalization: '\u590d\u5236\u6536\u53e3\u4fe1\u606f',
+            finalizationCopyTitle: '\u9879\u76ee\u6536\u53e3 dry-run',
+            resultAcceptanceStatus: '\u7ed3\u679c\u63a5\u6536\u72b6\u6001',
+            projectMergePreviewStatus: '\u9879\u76ee\u5408\u5e76\u9884\u89c8\u72b6\u6001',
+            downstreamHandoffStatus: '\u4e0b\u6e38\u4ea4\u63a5\u72b6\u6001',
+            humanReviewPacketStatus: '\u4eba\u5de5\u5ba1\u6838\u5305\u72b6\u6001',
+            runFinalizationStatus: '\u8fd0\u884c\u6536\u53e3\u72b6\u6001',
+            completionLedgerStatus: '\u5b8c\u6210\u8d26\u672c\u72b6\u6001',
+            runFinalized: '\u8fd0\u884c\u662f\u5426\u5df2\u6536\u53e3',
+            completionLedgerRecorded: '\u5b8c\u6210\u8d26\u672c\u662f\u5426\u5df2\u8bb0\u5f55',
+            finalizationAuditPreview: '\u6536\u53e3\u5ba1\u8ba1\u9884\u89c8',
+            finalizationNotRefreshedYet: '\u6536\u53e3\u4fe1\u606f\u5c1a\u672a\u5237\u65b0\u3002',
+            finalizationDryRunRunning: '\u6b63\u5728\u751f\u6210 finalization dry-run...',
+            finalizationDryRunComplete: 'Finalization dry-run \u5b8c\u6210\u3002',
+            finalizationDryRunFailed: 'Finalization dry-run \u5931\u8d25\u3002',
+            finalizationCopied: '\u6536\u53e3\u4fe1\u606f\u5df2\u590d\u5236\u3002',
+            finalizationCopyFailed: '\u590d\u5236\u6536\u53e3\u4fe1\u606f\u5931\u8d25\u3002'
         });
 
 
