@@ -5510,3 +5510,127 @@ class ProjectWorkspaceOperatorControlPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace operator control panel bundle", script)
         self.assertIn("project_workspace_operator_control_panel_marker", script)
 
+
+class FrontendInteractionRecoveryTests(unittest.TestCase):
+    def test_frontend_interaction_recovery_script_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Frontend interaction recovery bundle",
+            "frontend-interaction-recovery-script",
+            "FRONTEND_INTERACTION_RECOVERY_BUNDLE_MARKER",
+            "installFrontendInteractionRecovery",
+            "frontendInteractionRecoveryHealth",
+            "__crossgrowthFrontendInteractionRecoveryInstalled",
+            "fallbackLanguageSwitch",
+            "fallbackModuleSwitch",
+            "looksLikeLanguageControl",
+            "looksLikeModuleControl",
+            "data-frontend-interaction-recovery-marker",
+            "document.addEventListener('click'",
+            "document.addEventListener('change'",
+            "setLanguage",
+            "switchLanguage",
+            "changeLanguage",
+            "applyLanguage",
+            "data-language",
+            "data-lang",
+            "data-target",
+            "data-tab-target",
+            "data-module-target",
+            "aria-controls",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_frontend_interaction_recovery_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("frontend_interaction_recovery_marker", script)
+        self.assertIn("Frontend interaction recovery bundle", script)
+
+    def test_frontend_interaction_recovery_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Frontend interaction recovery bundle", script)
+        self.assertIn("frontend_interaction_recovery_marker", script)
+
+
+class FrontendInteractionBindingRepairTests(unittest.TestCase):
+    def test_no_duplicate_runner_authorization_let_declarations(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        self.assertEqual(html.count("let latestProjectRunnerAuthorizationPreview = {};"), 1)
+        self.assertEqual(html.count("let latestProjectRunnerExecutionManifest = {};"), 1)
+        self.assertIn("Reuse latestProjectRunnerAuthorizationPreview and latestProjectRunnerExecutionManifest", html)
+
+    def test_frontend_interaction_binding_repair_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Frontend interaction binding repair bundle",
+            "frontend-interaction-binding-repair-script",
+            "FRONTEND_INTERACTION_BINDING_REPAIR_MARKER",
+            "installDirectBindingRepair",
+            "frontendInteractionBindingRepairHealth",
+            "__crossgrowthFrontendBindingRepairInstalled",
+            "__crossgrowthOriginalSetLanguageMode",
+            "__crossgrowthOriginalSetActiveWorkspace",
+            "repairLanguageSwitch",
+            "repairWorkspaceSwitch",
+            "setWorkspaceDomState",
+            "WORKSPACE_MAP",
+            "languageEnglishBtn",
+            "languageChineseBtn",
+            "pathAmazonProductCard",
+            "pathProductIdeaCard",
+            "pathCustomerFeedbackCard",
+            "pathSampleProductCard",
+            "amazonProductWorkspace",
+            "productIdeaWorkspace",
+            "customerFeedbackWorkspace",
+            "sampleProductWorkspace",
+            "crossgrowth_active_workspace",
+            "data-frontend-interaction-binding-repair-marker",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_frontend_script_blocks_are_syntax_checked_when_node_is_available(self):
+        import re
+        import shutil
+        import subprocess
+        import tempfile
+
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node is not installed; duplicate declaration guard covers known failure")
+
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        scripts = re.findall(r"<script[^>]*>(.*?)</script>", html, flags=re.S | re.I)
+        self.assertGreaterEqual(len(scripts), 1)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for index, script in enumerate(scripts):
+                script_path = Path(tmpdir) / f"frontend_script_{index}.js"
+                script_path.write_text(script, encoding="utf-8")
+                result = subprocess.run(
+                    [node, "--check", str(script_path)],
+                    cwd=ROOT,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(
+                    result.returncode,
+                    0,
+                    f"script {index} failed node --check\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                )
+
+    def test_frontend_interaction_binding_repair_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("frontend_interaction_binding_repair_marker", script)
+        self.assertIn("Frontend interaction binding repair bundle", script)
+
+    def test_frontend_interaction_binding_repair_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Frontend interaction binding repair bundle", script)
+        self.assertIn("frontend_interaction_binding_repair_marker", script)
+

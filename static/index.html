@@ -13696,8 +13696,7 @@
 
 
         const PROJECT_WORKSPACE_RUNTIME_READINESS_PANEL_BUNDLE_MARKER = 'Project Workspace runtime readiness panel bundle';
-        let latestProjectRunnerAuthorizationPreview = {};
-        let latestProjectRunnerExecutionManifest = {};
+        // Reuse latestProjectRunnerAuthorizationPreview and latestProjectRunnerExecutionManifest from the authorization manifest panel.
         let latestProjectRunnerExecutionSession = {};
         let latestProjectRunnerPreflightCertificate = {};
         let latestProjectRunnerRuntimeSandbox = {};
@@ -19486,6 +19485,442 @@ async function analyzeExtensionWorkspace() {
   window.addEventListener("crossgrowth-extension-workspace-ready", renderExtensionWorkspacePayload);
   document.addEventListener("DOMContentLoaded", maybeRenderExtensionWorkspace);
   document.addEventListener("DOMContentLoaded", refreshAmazonImportPathStatus);
+})();
+</script>
+
+
+<script id="frontend-interaction-recovery-script" data-frontend-interaction-recovery-marker="Frontend interaction recovery bundle">
+(function () {
+    const FRONTEND_INTERACTION_RECOVERY_BUNDLE_MARKER = 'Frontend interaction recovery bundle';
+
+    function asArray(value) {
+        return Array.prototype.slice.call(value || []);
+    }
+
+    function normalizeLang(value) {
+        const raw = String(value || '').trim().toLowerCase();
+        if (!raw) return '';
+        if (raw === 'zh' || raw === 'zh-cn' || raw === 'cn' || raw.includes('中文') || raw.includes('chinese')) return 'zh-CN';
+        if (raw === 'en' || raw === 'en-us' || raw === 'english' || raw.includes('英文')) return 'en';
+        return '';
+    }
+
+    function findLanguageFromElement(element) {
+        if (!element) return '';
+        const candidates = [
+            element.getAttribute('data-language'),
+            element.getAttribute('data-lang'),
+            element.getAttribute('lang'),
+            element.value,
+            element.id,
+            element.name,
+            element.textContent
+        ];
+        for (const candidate of candidates) {
+            const lang = normalizeLang(candidate);
+            if (lang) return lang;
+        }
+        return '';
+    }
+
+    function callExistingLanguageHandlers(lang) {
+        const handlerNames = [
+            'setLanguage',
+            'switchLanguage',
+            'changeLanguage',
+            'applyLanguage',
+            'selectLanguage',
+            'setCurrentLanguage'
+        ];
+        let called = false;
+        for (const name of handlerNames) {
+            try {
+                if (typeof window[name] === 'function') {
+                    window[name](lang);
+                    called = true;
+                }
+            } catch (error) {
+                console.warn('Language handler failed:', name, error);
+            }
+        }
+        return called;
+    }
+
+    function fallbackLanguageSwitch(lang) {
+        try {
+            document.documentElement.lang = lang;
+            localStorage.setItem('cg_language', lang);
+            localStorage.setItem('language', lang);
+            localStorage.setItem('preferredLanguage', lang);
+            window.currentLanguage = lang;
+            window.selectedLanguage = lang;
+
+            asArray(document.querySelectorAll('[data-language], [data-lang], .language-toggle button, .lang-toggle button, button')).forEach((button) => {
+                const buttonLang = findLanguageFromElement(button);
+                if (!buttonLang) return;
+                const isActive = buttonLang === lang;
+                button.classList.toggle('active', isActive);
+                button.classList.toggle('selected', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+
+            if (typeof window.applyLanguageCopy === 'function') window.applyLanguageCopy();
+            if (typeof window.renderProjectWorkspace === 'function' && window.latestProjectWorkspace) {
+                try { window.renderProjectWorkspace(window.latestProjectWorkspace); } catch (error) {}
+            }
+        } catch (error) {
+            console.warn('Fallback language switch failed:', error);
+        }
+    }
+
+    function looksLikeLanguageControl(element) {
+        if (!element) return false;
+        const text = String(element.textContent || '').trim().toLowerCase();
+        const id = String(element.id || '').toLowerCase();
+        const classes = String(element.className || '').toLowerCase();
+        return Boolean(
+            element.hasAttribute('data-language') ||
+            element.hasAttribute('data-lang') ||
+            id.includes('language') ||
+            id.includes('lang') ||
+            classes.includes('language') ||
+            classes.includes('lang') ||
+            text === '中文' ||
+            text === 'english' ||
+            text === 'en' ||
+            text === 'zh' ||
+            text === '中'
+        );
+    }
+
+    function getPanelIdFromElement(element) {
+        if (!element) return '';
+        const raw = element.getAttribute('data-target') ||
+            element.getAttribute('data-panel-target') ||
+            element.getAttribute('data-tab-target') ||
+            element.getAttribute('data-module-target') ||
+            element.getAttribute('aria-controls') ||
+            element.getAttribute('href') ||
+            '';
+        return String(raw).replace(/^#/, '').trim();
+    }
+
+    function looksLikeModuleControl(element) {
+        if (!element) return false;
+        const role = String(element.getAttribute('role') || '').toLowerCase();
+        const classes = String(element.className || '').toLowerCase();
+        return Boolean(
+            role === 'tab' ||
+            element.hasAttribute('data-target') ||
+            element.hasAttribute('data-panel-target') ||
+            element.hasAttribute('data-tab-target') ||
+            element.hasAttribute('data-module-target') ||
+            classes.includes('tab') ||
+            classes.includes('module') ||
+            classes.includes('segment') ||
+            classes.includes('nav')
+        );
+    }
+
+    function fallbackModuleSwitch(trigger) {
+        const panelId = getPanelIdFromElement(trigger);
+        if (!panelId) return false;
+
+        const panel = document.getElementById(panelId) ||
+            document.querySelector(`[data-panel="${CSS.escape(panelId)}"]`) ||
+            document.querySelector(`[data-module-panel="${CSS.escape(panelId)}"]`);
+
+        if (!panel) return false;
+
+        const panelParent = panel.parentElement;
+        const controlParent = trigger.closest('[role="tablist"], .tabs, .tab-list, .module-tabs, .nav, .toolbar') || trigger.parentElement;
+
+        if (panelParent) {
+            const peers = asArray(panelParent.children).filter((child) => child !== panel);
+            peers.forEach((peer) => {
+                const sharesPanelClass = peer.className && panel.className && String(peer.className) === String(panel.className);
+                const isPanelLike = peer.getAttribute('role') === 'tabpanel' ||
+                    peer.hasAttribute('data-panel') ||
+                    peer.hasAttribute('data-module-panel') ||
+                    String(peer.className || '').toLowerCase().includes('panel') ||
+                    sharesPanelClass;
+                if (!isPanelLike) return;
+                peer.hidden = true;
+                peer.classList.remove('active', 'selected', 'is-active');
+                peer.setAttribute('aria-hidden', 'true');
+            });
+        }
+
+        panel.hidden = false;
+        panel.style.display = '';
+        panel.classList.add('active', 'selected', 'is-active');
+        panel.setAttribute('aria-hidden', 'false');
+
+        if (controlParent) {
+            asArray(controlParent.querySelectorAll('button, [role="tab"], a')).forEach((control) => {
+                const active = control === trigger;
+                control.classList.toggle('active', active);
+                control.classList.toggle('selected', active);
+                control.classList.toggle('is-active', active);
+                control.setAttribute('aria-selected', String(active));
+                control.setAttribute('aria-pressed', String(active));
+            });
+        }
+
+        return true;
+    }
+
+    function installFrontendInteractionRecovery() {
+        if (window.__crossgrowthFrontendInteractionRecoveryInstalled) return;
+        window.__crossgrowthFrontendInteractionRecoveryInstalled = true;
+
+        document.addEventListener('click', function (event) {
+            const target = event.target && event.target.closest
+                ? event.target.closest('button, [role="tab"], [data-language], [data-lang], [data-target], [data-panel-target], [data-tab-target], [data-module-target], a[href^="#"]')
+                : null;
+            if (!target) return;
+
+            if (looksLikeLanguageControl(target)) {
+                const lang = findLanguageFromElement(target);
+                if (lang) {
+                    const called = callExistingLanguageHandlers(lang);
+                    fallbackLanguageSwitch(lang);
+                    if (!called) event.preventDefault();
+                    return;
+                }
+            }
+
+            if (looksLikeModuleControl(target)) {
+                const switched = fallbackModuleSwitch(target);
+                if (switched) event.preventDefault();
+            }
+        }, true);
+
+        document.addEventListener('change', function (event) {
+            const target = event.target;
+            if (!target || !looksLikeLanguageControl(target)) return;
+            const lang = findLanguageFromElement(target);
+            if (!lang) return;
+            callExistingLanguageHandlers(lang);
+            fallbackLanguageSwitch(lang);
+        }, true);
+    }
+
+    window.installFrontendInteractionRecovery = installFrontendInteractionRecovery;
+    window.frontendInteractionRecoveryHealth = function () {
+        return {
+            marker: FRONTEND_INTERACTION_RECOVERY_BUNDLE_MARKER,
+            installed: Boolean(window.__crossgrowthFrontendInteractionRecoveryInstalled),
+            languageRecovery: true,
+            moduleRecovery: true,
+            dryRun: true
+        };
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', installFrontendInteractionRecovery);
+    } else {
+        installFrontendInteractionRecovery();
+    }
+})();
+</script>
+
+
+<script id="frontend-interaction-binding-repair-script" data-frontend-interaction-binding-repair-marker="Frontend interaction binding repair bundle">
+(function () {
+    const FRONTEND_INTERACTION_BINDING_REPAIR_MARKER = 'Frontend interaction binding repair bundle';
+
+    function normalizeLanguageMode(value) {
+        const raw = String(value || '').trim().toLowerCase();
+        if (raw === 'zh' || raw === 'zh-cn' || raw === 'cn' || raw.includes('中文') || raw.includes('chinese')) return 'zh-CN';
+        if (raw === 'en' || raw === 'en-us' || raw.includes('english') || raw.includes('英文')) return 'en';
+        return 'en';
+    }
+
+    function setLanguageButtonState(lang) {
+        const normalized = normalizeLanguageMode(lang);
+        document.documentElement.lang = normalized;
+        document.body.classList.toggle('zh-mode', normalized === 'zh-CN');
+        document.body.classList.toggle('en-mode', normalized === 'en');
+
+        const englishBtn = document.getElementById('languageEnglishBtn');
+        const chineseBtn = document.getElementById('languageChineseBtn');
+        if (englishBtn) {
+            englishBtn.classList.toggle('active', normalized === 'en');
+            englishBtn.setAttribute('aria-pressed', String(normalized === 'en'));
+        }
+        if (chineseBtn) {
+            chineseBtn.classList.toggle('active', normalized === 'zh-CN');
+            chineseBtn.setAttribute('aria-pressed', String(normalized === 'zh-CN'));
+        }
+
+        try {
+            localStorage.setItem('crossgrowth_output_language', normalized);
+            localStorage.setItem('cg_language', normalized);
+            localStorage.setItem('language', normalized);
+        } catch (error) {}
+
+        try {
+            if (typeof window.applyLanguageCopy === 'function') window.applyLanguageCopy();
+        } catch (error) {
+            console.warn('applyLanguageCopy failed during binding repair:', error);
+        }
+    }
+
+    function repairLanguageSwitch(lang) {
+        const normalized = normalizeLanguageMode(lang);
+        const original = window.__crossgrowthOriginalSetLanguageMode;
+        let result;
+        if (typeof original === 'function' && original !== repairLanguageSwitch) {
+            try {
+                result = original(normalized);
+            } catch (error) {
+                console.warn('Original setLanguageMode failed; applying repair fallback:', error);
+            }
+        }
+        setLanguageButtonState(normalized);
+        return result;
+    }
+
+    const WORKSPACE_MAP = {
+        amazonProduct: {
+            cardId: 'pathAmazonProductCard',
+            panelId: 'amazonProductWorkspace'
+        },
+        productIdea: {
+            cardId: 'pathProductIdeaCard',
+            panelId: 'productIdeaWorkspace'
+        },
+        customerFeedback: {
+            cardId: 'pathCustomerFeedbackCard',
+            panelId: 'customerFeedbackWorkspace'
+        },
+        sampleProduct: {
+            cardId: 'pathSampleProductCard',
+            panelId: 'sampleProductWorkspace'
+        }
+    };
+
+    function normalizeWorkspaceMode(mode) {
+        const raw = String(mode || '').trim();
+        return WORKSPACE_MAP[raw] ? raw : 'amazonProduct';
+    }
+
+    function setWorkspaceDomState(mode) {
+        const normalized = normalizeWorkspaceMode(mode);
+        Object.entries(WORKSPACE_MAP).forEach(([key, config]) => {
+            const card = document.getElementById(config.cardId);
+            const panel = document.getElementById(config.panelId);
+            const active = key === normalized;
+
+            if (card) {
+                card.classList.toggle('active', active);
+                card.classList.toggle('selected', active);
+                card.setAttribute('aria-pressed', String(active));
+                card.setAttribute('aria-selected', String(active));
+            }
+
+            if (panel) {
+                panel.hidden = !active;
+                panel.classList.toggle('active', active);
+                panel.classList.toggle('selected', active);
+                panel.setAttribute('aria-hidden', String(!active));
+                if (active) panel.style.removeProperty('display');
+            }
+        });
+
+        try {
+            localStorage.setItem('crossgrowth_active_workspace', normalized);
+        } catch (error) {}
+
+        window.latestActiveWorkspaceMode = normalized;
+        return normalized;
+    }
+
+    function repairWorkspaceSwitch(mode) {
+        const normalized = normalizeWorkspaceMode(mode);
+        const original = window.__crossgrowthOriginalSetActiveWorkspace;
+        let result;
+        if (typeof original === 'function' && original !== repairWorkspaceSwitch) {
+            try {
+                result = original(normalized);
+            } catch (error) {
+                console.warn('Original setActiveWorkspace failed; applying repair fallback:', error);
+            }
+        }
+        setWorkspaceDomState(normalized);
+        return result;
+    }
+
+    function installDirectBindingRepair() {
+        if (window.__crossgrowthFrontendBindingRepairInstalled) return;
+        window.__crossgrowthFrontendBindingRepairInstalled = true;
+
+        if (!window.__crossgrowthOriginalSetLanguageMode && typeof window.setLanguageMode === 'function') {
+            window.__crossgrowthOriginalSetLanguageMode = window.setLanguageMode;
+        }
+        if (!window.__crossgrowthOriginalSetActiveWorkspace && typeof window.setActiveWorkspace === 'function') {
+            window.__crossgrowthOriginalSetActiveWorkspace = window.setActiveWorkspace;
+        }
+
+        window.setLanguageMode = repairLanguageSwitch;
+        window.setActiveWorkspace = repairWorkspaceSwitch;
+
+        const englishBtn = document.getElementById('languageEnglishBtn');
+        const chineseBtn = document.getElementById('languageChineseBtn');
+        if (englishBtn) englishBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            repairLanguageSwitch('en');
+        });
+        if (chineseBtn) chineseBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            repairLanguageSwitch('zh-CN');
+        });
+
+        Object.entries(WORKSPACE_MAP).forEach(([mode, config]) => {
+            const card = document.getElementById(config.cardId);
+            if (!card) return;
+            card.addEventListener('click', function (event) {
+                event.preventDefault();
+                repairWorkspaceSwitch(mode);
+            });
+        });
+
+        const savedWorkspace = (() => {
+            try { return localStorage.getItem('crossgrowth_active_workspace') || ''; } catch (error) { return ''; }
+        })();
+        setWorkspaceDomState(savedWorkspace || 'amazonProduct');
+
+        const savedLanguage = (() => {
+            try {
+                return localStorage.getItem('crossgrowth_output_language') ||
+                    localStorage.getItem('cg_language') ||
+                    localStorage.getItem('language') ||
+                    '';
+            } catch (error) {
+                return '';
+            }
+        })();
+        setLanguageButtonState(savedLanguage || document.documentElement.lang || 'en');
+    }
+
+    window.installDirectBindingRepair = installDirectBindingRepair;
+    window.frontendInteractionBindingRepairHealth = function () {
+        return {
+            marker: FRONTEND_INTERACTION_BINDING_REPAIR_MARKER,
+            installed: Boolean(window.__crossgrowthFrontendBindingRepairInstalled),
+            languageSwitchRepair: true,
+            workspaceSwitchRepair: true,
+            duplicateLetGuard: true,
+            dryRun: true
+        };
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', installDirectBindingRepair);
+    } else {
+        installDirectBindingRepair();
+    }
 })();
 </script>
 

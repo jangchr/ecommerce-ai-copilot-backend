@@ -77,6 +77,8 @@ Add-Check "project_workspace_worker_checkpoint_panel_marker" ($page.Content -mat
 Add-Check "project_workspace_finalization_panel_marker" ($page.Content -match "Project Workspace finalization panel bundle")
 Add-Check "project_workspace_orchestration_readiness_panel_marker" ($page.Content -match "Project Workspace orchestration readiness panel bundle")
 Add-Check "project_workspace_operator_control_panel_marker" ($page.Content -match "Project Workspace operator control panel bundle")
+Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
+Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
 Add-Check "project_workspace_authorization_manifest_panel_marker" ($page.Content -match "Project Workspace authorization manifest panel bundle")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
