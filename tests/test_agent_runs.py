@@ -1530,3 +1530,112 @@ class AgentRunnerWorkOrderTests(unittest.TestCase):
         self.assertIn("contract_validation", order["blocking_check_ids"])
         self.assertFalse(order["safety_boundaries"]["external_api_called"])
 
+
+class AgentRunnerQueueItemTests(unittest.TestCase):
+    def test_queue_item_records_ready_work_order_without_persistence(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_queue_item,
+            build_agent_runner_queue_item_summary,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_queue_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_queue_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        item = build_agent_runner_queue_item(order)
+        summary = build_agent_runner_queue_item_summary(item)
+
+        self.assertEqual(item["queue_item_version"], "agent_runner_queue_item_v1")
+        self.assertEqual(item["queue_status"], "queue_ready_dry_run")
+        self.assertTrue(item["enqueue_allowed"])
+        self.assertTrue(item["dry_run"])
+        self.assertFalse(item["queue_persisted"])
+        self.assertFalse(item["agent_execution_performed"])
+        self.assertFalse(item["external_api_called"])
+        self.assertFalse(item["cost_incurred_by_crossgrowth"])
+        self.assertFalse(item["llm_autonomous_decision_enabled"])
+        self.assertEqual(item["target_agent_id"], "planner_agent")
+        self.assertEqual(item["queue_message"]["message_type"], "runner_queue_item_dry_run")
+        self.assertEqual(summary["summary_version"], "agent_runner_queue_item_summary_v1")
+        self.assertTrue(summary["enqueue_allowed"])
+        self.assertFalse(summary["queue_persisted"])
+
+    def test_queue_item_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_queue_item,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_queue_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_queue_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        item = build_agent_runner_queue_item(order)
+
+        self.assertEqual(item["queue_status"], "queue_waiting_for_user")
+        self.assertFalse(item["enqueue_allowed"])
+        self.assertFalse(item["queue_persisted"])
+        self.assertIn("user_gate", item["blocking_check_ids"])
+        self.assertEqual(item["target_agent_id"], "source_adapter_agent")
+
+    def test_queue_item_blocks_invalid_work_order(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_queue_item,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_queue_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        item = build_agent_runner_queue_item(order)
+
+        self.assertEqual(item["queue_status"], "queue_blocked")
+        self.assertFalse(item["enqueue_allowed"])
+        self.assertFalse(item["queue_persisted"])
+        self.assertIn("contract_validation", item["blocking_check_ids"])
+        self.assertEqual(item["target_agent_id"], "missing_agent")
+

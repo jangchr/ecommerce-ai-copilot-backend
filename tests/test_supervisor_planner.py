@@ -634,3 +634,35 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             order["work_order_status"],
         )
 
+    def test_project_runner_queue_dry_run_endpoint_returns_queue_item(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/queue/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["queue_persisted"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_queue_item", payload)
+        self.assertIn("runner_queue_item_summary", payload)
+
+        item = payload["runner_queue_item"]
+        summary = payload["runner_queue_item_summary"]
+        self.assertEqual(item["queue_item_version"], "agent_runner_queue_item_v1")
+        self.assertTrue(item["dry_run"])
+        self.assertFalse(item["queue_persisted"])
+        self.assertFalse(item["agent_execution_performed"])
+        self.assertFalse(item["external_api_called"])
+        self.assertFalse(item["cost_incurred_by_crossgrowth"])
+        self.assertEqual(summary["summary_version"], "agent_runner_queue_item_summary_v1")
+        self.assertEqual(summary["queue_status"], item["queue_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_queue_status"],
+            item["queue_status"],
+        )
+

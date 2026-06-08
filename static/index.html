@@ -11956,6 +11956,161 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_QUEUE_ITEM_PANEL_BUNDLE_MARKER = 'Project Workspace queue item panel bundle';
+        let latestProjectRunnerQueueItem = {};
+
+        function projectWorkspaceQueueItemFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerQueueItem && Object.keys(latestProjectRunnerQueueItem).length
+                ? latestProjectRunnerQueueItem
+                : workspace?.runner_queue_item || {};
+        }
+
+        function projectWorkspaceQueueItemStatusLabel(item = {}) {
+            const status = String(item.queue_status || 'not_refreshed');
+            const labels = {
+                queue_ready_dry_run: t('queueStatusReadyDryRun'),
+                queue_waiting_for_user: t('queueStatusWaitingForUser'),
+                queue_blocked: t('queueStatusBlocked'),
+                not_refreshed: t('queueStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceQueueItemCopyText(item = projectWorkspaceQueueItemFromWorkspace()) {
+            return [
+                t('queueItemCopyTitle'),
+                `${t('projectId')}: ${item.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('queueItemId')}: ${item.queue_item_id || t('none')}`,
+                `${t('queueStatus')}: ${item.queue_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${item.target_agent_id || t('none')}`,
+                `${t('queueEnqueueAllowed')}: ${Boolean(item.enqueue_allowed)}`,
+                `${t('queuePersisted')}: ${Boolean(item.queue_persisted)}`,
+                `${t('executionPerformed')}: ${Boolean(item.agent_execution_performed)}`,
+                '',
+                JSON.stringify(item || {}, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceQueueItem() {
+            const status = document.getElementById('projectWorkspaceQueueItemStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceQueueItemCopyText());
+                if (status) status.textContent = t('queueItemCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('queueItemCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceQueueItem(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceQueueItemStatus')
+                || document.getElementById('projectWorkspaceWorkOrderStatus')
+                || document.getElementById('projectWorkspaceExecutionReceiptStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('queueItemDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_queue_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/queue/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('queueItemDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_queue_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_queue_dry_run');
+                if (status) status.textContent = t('queueItemDryRunComplete');
+
+                const runnerPanel = document.getElementById('projectWorkspaceRunnerPlanPanel');
+                if (runnerPanel) runnerPanel.outerHTML = renderProjectWorkspaceRunnerPlanPanel(latestProjectWorkspace);
+                const ticketPanel = document.getElementById('projectWorkspaceDispatchTicketPanel');
+                if (ticketPanel) ticketPanel.outerHTML = renderProjectWorkspaceDispatchTicketPanel(latestProjectWorkspace);
+                const eventPanel = document.getElementById('projectWorkspaceDispatchEventPanel');
+                if (eventPanel) eventPanel.outerHTML = renderProjectWorkspaceDispatchEventPanel(latestProjectWorkspace);
+                const receiptPanel = document.getElementById('projectWorkspaceExecutionReceiptPanel');
+                if (receiptPanel) receiptPanel.outerHTML = renderProjectWorkspaceExecutionReceiptPanel(latestProjectWorkspace);
+                const orderPanel = document.getElementById('projectWorkspaceWorkOrderPanel');
+                if (orderPanel) orderPanel.outerHTML = renderProjectWorkspaceWorkOrderPanel(latestProjectWorkspace);
+                const queuePanel = document.getElementById('projectWorkspaceQueueItemPanel');
+                if (queuePanel) queuePanel.outerHTML = renderProjectWorkspaceQueueItemPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_queue_dry_run');
+                if (status) status.textContent = error.message || t('queueItemDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceQueueItemPanel(workspace = latestProjectWorkspace) {
+            const item = projectWorkspaceQueueItemFromWorkspace(workspace);
+            const hasItem = Boolean(item && Object.keys(item).length);
+            const statusLabel = projectWorkspaceQueueItemStatusLabel(item);
+            return `
+                <div class="section-block" id="projectWorkspaceQueueItemPanel" data-project-queue-item-panel-marker="Project Workspace queue item panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('queueItemPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('queueItemPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceQueueItemBtn" type="button" data-project-queue-item-dry-run-action="Project Workspace queue item panel bundle" onclick="dryRunProjectWorkspaceQueueItem()">${escapeHTML(t('dryRunQueueItem'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceQueueItemBtn" type="button" onclick="copyProjectWorkspaceQueueItem()">${escapeHTML(t('copyQueueItem'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queueStatus'))}</div>
+                            <strong data-queue-item-status="${escapeHTML(item.queue_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('queueDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queueItemId'))}</div>
+                            <strong data-queue-item-id="${escapeHTML(item.queue_item_id || '')}">${escapeHTML(item.queue_item_id || t('queueItemNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanNextAgent'))}: ${escapeHTML(item.target_agent_id || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queueEnqueueAllowed'))}</div>
+                            <strong data-queue-item-enqueue-allowed="${escapeHTML(String(Boolean(item.enqueue_allowed)))}">${escapeHTML(String(Boolean(item.enqueue_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('queuePersisted'))}: ${escapeHTML(String(Boolean(item.queue_persisted)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('queueItemAuditPreview'))}</div>
+                        ${hasItem ? `<pre class="debug" data-queue-item-audit-preview="Project Workspace queue item panel bundle">${escapeHTML(projectWorkspaceQueueItemCopyText(item))}</pre>` : `<div class="recent-empty">${escapeHTML(t('queueItemNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceQueueItemStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceWorkOrderPanel(workspace = latestProjectWorkspace) {
             const order = projectWorkspaceWorkOrderFromWorkspace(workspace);
             const hasOrder = Boolean(order && Object.keys(order).length);
@@ -12244,6 +12399,7 @@
                     ${renderProjectWorkspaceDispatchEventPanel(workspace)}
                     ${renderProjectWorkspaceExecutionReceiptPanel(workspace)}
                     ${renderProjectWorkspaceWorkOrderPanel(workspace)}
+                    ${renderProjectWorkspaceQueueItemPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -14145,6 +14301,57 @@
             workOrderDryRunFailed: 'Work order dry-run \u5931\u8d25\u3002',
             workOrderCopied: '\u4efb\u52a1\u5355\u5df2\u590d\u5236\u3002',
             workOrderCopyFailed: '\u590d\u5236\u4efb\u52a1\u5355\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceQueueItemPanelBundleMarker: 'Project Workspace queue item panel bundle',
+            queueItemPanelTitle: 'Execution queue item',
+            queueItemPanelHelper: 'Dry-run queue record for the next Agent work order. This prepares a queue item without persisting or executing it.',
+            dryRunQueueItem: 'Dry-run queue item',
+            copyQueueItem: 'Copy queue item',
+            queueItemCopyTitle: 'Project execution queue item',
+            queueItemId: 'Queue item ID',
+            queueStatus: 'Queue status',
+            queueEnqueueAllowed: 'Enqueue allowed',
+            queuePersisted: 'Queue persisted',
+            queueItemAuditPreview: 'Queue item audit preview',
+            queueStatusReadyDryRun: 'Queue ready dry-run',
+            queueStatusWaitingForUser: 'Queue waiting for user',
+            queueStatusBlocked: 'Queue blocked',
+            queueStatusNotRefreshed: 'Not refreshed',
+            queueItemNotRefreshedYet: 'Queue item has not been refreshed yet.',
+            queueDryRunHelper: 'Dry run only: queue is not persisted, Agent is not executed, and no provider is called.',
+            queueItemDryRunRunning: 'Building queue item dry-run...',
+            queueItemDryRunComplete: 'Queue item dry-run complete.',
+            queueItemDryRunFailed: 'Queue item dry-run failed.',
+            queueItemCopied: 'Queue item copied.',
+            queueItemCopyFailed: 'Could not copy queue item.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceQueueItemPanelBundleMarker: 'Project Workspace queue item panel bundle',
+            queueItemPanelTitle: '\u6267\u884c\u961f\u5217\u9879',
+            queueItemPanelHelper: '\u4e0b\u4e00\u4e2a Agent \u4efb\u52a1\u5355\u7684 dry-run \u961f\u5217\u8bb0\u5f55\u3002\u5b83\u53ea\u51c6\u5907\u961f\u5217\u9879\uff0c\u4e0d\u771f\u6b63\u5165\u961f\u6216\u6267\u884c\u3002',
+            dryRunQueueItem: 'Dry-run \u961f\u5217\u9879',
+            copyQueueItem: '\u590d\u5236\u961f\u5217\u9879',
+            queueItemCopyTitle: '\u9879\u76ee\u6267\u884c\u961f\u5217\u9879',
+            queueItemId: '\u961f\u5217\u9879 ID',
+            queueStatus: '\u961f\u5217\u72b6\u6001',
+            queueEnqueueAllowed: '\u662f\u5426\u5141\u8bb8\u5165\u961f',
+            queuePersisted: '\u662f\u5426\u5df2\u771f\u6b63\u5165\u961f',
+            queueItemAuditPreview: '\u961f\u5217\u9879\u5ba1\u8ba1\u9884\u89c8',
+            queueStatusReadyDryRun: '\u961f\u5217 dry-run \u5df2\u5c31\u7eea',
+            queueStatusWaitingForUser: '\u961f\u5217\u7b49\u5f85\u7528\u6237',
+            queueStatusBlocked: '\u961f\u5217\u5df2\u963b\u585e',
+            queueStatusNotRefreshed: '\u672a\u5237\u65b0',
+            queueItemNotRefreshedYet: '\u961f\u5217\u9879\u5c1a\u672a\u5237\u65b0\u3002',
+            queueDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u771f\u6b63\u5165\u961f\uff0c\u4e0d\u6267\u884c Agent\uff0c\u4e0d\u8c03 provider\u3002',
+            queueItemDryRunRunning: '\u6b63\u5728\u751f\u6210 queue item dry-run...',
+            queueItemDryRunComplete: 'Queue item dry-run \u5b8c\u6210\u3002',
+            queueItemDryRunFailed: 'Queue item dry-run \u5931\u8d25\u3002',
+            queueItemCopied: '\u961f\u5217\u9879\u5df2\u590d\u5236\u3002',
+            queueItemCopyFailed: '\u590d\u5236\u961f\u5217\u9879\u5931\u8d25\u3002'
         });
 
 

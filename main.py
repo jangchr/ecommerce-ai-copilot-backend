@@ -69,6 +69,8 @@ from agent_runs import (
     build_agent_runner_execution_receipt_summary,
     build_agent_runner_work_order,
     build_agent_runner_work_order_summary,
+    build_agent_runner_queue_item,
+    build_agent_runner_queue_item_summary,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
@@ -6330,6 +6332,73 @@ async def dry_run_project_agent_work_order(project_id: str, http_request: Reques
         "runner_work_order": runner_work_order,
         "runner_work_order_summary": runner_work_order_summary,
         "dry_run": True,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+
+@app.post("/api/v1/projects/{project_id}/runner/queue/dry-run")
+async def dry_run_project_agent_queue_item(project_id: str, http_request: Request):
+    payload = _build_project_runner_plan_payload(project_id)
+    runner_execution_receipt = build_agent_runner_execution_receipt(
+        payload["runner_dispatch_ticket"],
+        payload["runner_dispatch_event"],
+        requested_by="project_runner_queue_dry_run_api",
+    )
+    runner_execution_receipt_summary = build_agent_runner_execution_receipt_summary(
+        runner_execution_receipt
+    )
+    runner_work_order = build_agent_runner_work_order(
+        payload["runner_plan"],
+        payload["runner_dispatch_ticket"],
+        payload["runner_dispatch_event"],
+        runner_execution_receipt,
+        requested_by="project_runner_queue_dry_run_api",
+    )
+    runner_work_order_summary = build_agent_runner_work_order_summary(runner_work_order)
+    runner_queue_item = build_agent_runner_queue_item(
+        runner_work_order,
+        requested_by="project_runner_queue_dry_run_api",
+    )
+    runner_queue_item_summary = build_agent_runner_queue_item_summary(runner_queue_item)
+
+    project = payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update(
+        {
+            "latest_runner_queue_status": runner_queue_item.get("queue_status", ""),
+            "latest_runner_enqueue_allowed": bool(runner_queue_item.get("enqueue_allowed")),
+            "latest_runner_queue_item_id": runner_queue_item.get("queue_item_id", ""),
+            "latest_runner_queue_target_agent_id": runner_queue_item.get("target_agent_id", ""),
+        }
+    )
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        "status": "success",
+        "project": project,
+        "planner_recommendation": payload["planner_recommendation"],
+        "runner_plan": payload["runner_plan"],
+        "runner_plan_summary": payload["runner_plan_summary"],
+        "runner_dispatch_ticket": payload["runner_dispatch_ticket"],
+        "runner_dispatch_summary": payload["runner_dispatch_summary"],
+        "runner_dispatch_event": payload["runner_dispatch_event"],
+        "runner_dispatch_event_summary": payload["runner_dispatch_event_summary"],
+        "runner_execution_receipt": runner_execution_receipt,
+        "runner_execution_receipt_summary": runner_execution_receipt_summary,
+        "runner_work_order": runner_work_order,
+        "runner_work_order_summary": runner_work_order_summary,
+        "runner_queue_item": runner_queue_item,
+        "runner_queue_item_summary": runner_queue_item_summary,
+        "dry_run": True,
+        "queue_persisted": False,
         "agent_execution_performed": False,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

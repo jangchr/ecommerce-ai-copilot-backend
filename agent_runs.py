@@ -2409,6 +2409,135 @@ def build_agent_runner_work_order_summary(work_order: dict[str, Any]) -> dict[st
 
 
 
+AGENT_RUNNER_QUEUE_ITEM_VERSION = "agent_runner_queue_item_v1"
+
+
+def _queue_status_from_work_order(work_order: dict[str, Any]) -> str:
+    safe_order = work_order if isinstance(work_order, dict) else {}
+    status = str(safe_order.get("work_order_status") or "work_order_blocked")
+    if bool(safe_order.get("work_order_allowed")) and status == "work_order_ready_dry_run":
+        return "queue_ready_dry_run"
+    if status == "work_order_waiting_for_user":
+        return "queue_waiting_for_user"
+    return "queue_blocked"
+
+
+def build_agent_runner_queue_item(
+    work_order: dict[str, Any],
+    requested_by: str = "runner_queue_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run queue item from an Agent work order.
+
+    This does not persist a queue record, execute the agent, call providers,
+    spend money, or enable autonomous LLM routing.
+    """
+
+    order = work_order if isinstance(work_order, dict) else {}
+    project_id = str(order.get("project_id") or "demo_project_default")
+    target_agent_id = str(order.get("target_agent_id") or "")
+    queue_status = _queue_status_from_work_order(order)
+    enqueue_allowed = queue_status == "queue_ready_dry_run"
+    queue_item_id = f"queue_item_{project_id}_{target_agent_id or 'none'}_{queue_status}".replace(" ", "_")
+
+    blocking_check_ids = [
+        str(item)
+        for item in (order.get("blocking_check_ids") or [])
+        if str(item or "")
+    ]
+
+    if enqueue_allowed:
+        recommended_next_state = "ready_for_explicit_queue_persistence"
+        queue_message_text = "Dry-run queue item is ready. Real queue persistence is still disabled until explicit execution mode is implemented."
+    elif queue_status == "queue_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        queue_message_text = "Queue item is waiting for required user action."
+    else:
+        recommended_next_state = "fix_queue_blockers"
+        queue_message_text = "Queue item is blocked by work order, execution receipt, dispatch, or contract validation."
+
+    queue_payload = {
+        "queue_item_version": AGENT_RUNNER_QUEUE_ITEM_VERSION,
+        "queue_status": queue_status,
+        "enqueue_allowed": enqueue_allowed,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": order.get("target_agent_stage"),
+        "work_order_version": order.get("work_order_version"),
+        "work_order_status": order.get("work_order_status"),
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "queue_persisted": False,
+        "agent_execution_performed": False,
+    }
+
+    queue_message = build_agent_message(
+        message_type="runner_queue_item_dry_run",
+        source_agent_id="runner_queue_manager",
+        target_agent_id=target_agent_id,
+        payload=queue_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "queue_item_version": AGENT_RUNNER_QUEUE_ITEM_VERSION,
+        "queue_item_id": queue_item_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_queue_dry_run_api"),
+        "queue_status": queue_status,
+        "enqueue_allowed": enqueue_allowed,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(order.get("target_agent_stage") or ""),
+        "target_agent_display_name": str(order.get("target_agent_display_name") or target_agent_id),
+        "priority": "normal",
+        "recommended_next_state": recommended_next_state,
+        "queue_message_text": queue_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "work_order_version": str(order.get("work_order_version") or ""),
+        "work_order_status": str(order.get("work_order_status") or ""),
+        "work_order_allowed": bool(order.get("work_order_allowed")),
+        "work_order_summary": build_agent_runner_work_order_summary(order),
+        "required_inputs": deepcopy(order.get("required_inputs") or []),
+        "expected_outputs": deepcopy(order.get("expected_outputs") or []),
+        "work_payload": deepcopy(order.get("work_payload") or {}),
+        "work_order_message": deepcopy(order.get("work_order_message") or {}),
+        "queue_message": queue_message,
+        "dry_run": True,
+        "queue_persisted": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_queue_item_summary(queue_item: dict[str, Any]) -> dict[str, Any]:
+    safe_item = queue_item if isinstance(queue_item, dict) else {}
+    return {
+        "summary_version": "agent_runner_queue_item_summary_v1",
+        "queue_item_version": str(safe_item.get("queue_item_version") or AGENT_RUNNER_QUEUE_ITEM_VERSION),
+        "queue_item_id": str(safe_item.get("queue_item_id") or ""),
+        "project_id": str(safe_item.get("project_id") or "demo_project_default"),
+        "queue_status": str(safe_item.get("queue_status") or "queue_blocked"),
+        "enqueue_allowed": bool(safe_item.get("enqueue_allowed")),
+        "target_agent_id": str(safe_item.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_item.get("target_agent_stage") or ""),
+        "priority": str(safe_item.get("priority") or "normal"),
+        "blocking_check_count": len(safe_item.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "queue_persisted": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

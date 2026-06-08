@@ -4686,3 +4686,48 @@ class ProjectWorkspaceWorkOrderPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace work order panel bundle", script)
         self.assertIn("project_workspace_work_order_panel_marker", script)
 
+
+class ProjectWorkspaceQueueItemPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_queue_item_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace queue item panel bundle",
+            "PROJECT_WORKSPACE_QUEUE_ITEM_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceQueueItemPanel(",
+            "function projectWorkspaceQueueItemFromWorkspace(",
+            "function projectWorkspaceQueueItemStatusLabel(",
+            "function projectWorkspaceQueueItemCopyText(",
+            "async function copyProjectWorkspaceQueueItem(",
+            "async function dryRunProjectWorkspaceQueueItem(",
+            "/runner/queue/dry-run",
+            "latestProjectRunnerQueueItem",
+            "runner_queue_item: latestProjectRunnerQueueItem",
+            "runner_queue_item_summary: payload.runner_queue_item_summary || {}",
+            "projectWorkspaceQueueItemPanel",
+            "projectWorkspaceQueueItemStatus",
+            "dryRunProjectWorkspaceQueueItemBtn",
+            "copyProjectWorkspaceQueueItemBtn",
+            "data-project-queue-item-panel-marker",
+            "data-project-queue-item-dry-run-action",
+            "data-queue-item-status",
+            "data-queue-item-id",
+            "data-queue-item-enqueue-allowed",
+            "data-queue-item-audit-preview",
+            "queueItemPanelTitle",
+            "queueDryRunHelper",
+            "renderProjectWorkspaceQueueItemPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_queue_item_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_queue_item_panel_marker", script)
+        self.assertIn("Project Workspace queue item panel bundle", script)
+
+    def test_project_workspace_queue_item_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace queue item panel bundle", script)
+        self.assertIn("project_workspace_queue_item_panel_marker", script)
+

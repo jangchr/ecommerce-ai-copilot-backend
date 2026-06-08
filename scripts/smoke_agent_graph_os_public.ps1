@@ -60,6 +60,7 @@ Add-Check "project_workspace_dispatch_event_panel_marker" ($page.Content -match 
 Add-Check "project_workspace_dispatch_dry_run_action_marker" ($page.Content -match "Project Workspace dispatch dry-run action bundle")
 Add-Check "project_workspace_execution_receipt_panel_marker" ($page.Content -match "Project Workspace execution receipt panel bundle")
 Add-Check "project_workspace_work_order_panel_marker" ($page.Content -match "Project Workspace work order panel bundle")
+Add-Check "project_workspace_queue_item_panel_marker" ($page.Content -match "Project Workspace queue item panel bundle")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
 Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")
