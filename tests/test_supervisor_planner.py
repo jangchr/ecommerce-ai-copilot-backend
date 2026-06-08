@@ -976,3 +976,46 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             persist_request["persist_request_status"],
         )
 
+    def test_project_runner_persist_gate_dry_run_endpoint_returns_audit_ledger(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/persist-gate/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["persist_gate_recorded"])
+        self.assertFalse(payload["audit_ledger_recorded"])
+        self.assertFalse(payload["explicit_approval_present"])
+        self.assertFalse(payload["write_authorized"])
+        self.assertFalse(payload["rollback_available"])
+        self.assertFalse(payload["rollback_applied"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertFalse(payload["agent_output_generated"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_persist_gate", payload)
+        self.assertIn("runner_audit_ledger", payload)
+        self.assertIn("runner_audit_ledger_summary", payload)
+
+        persist_gate = payload["runner_persist_gate"]
+        audit_ledger = payload["runner_audit_ledger"]
+        summary = payload["runner_audit_ledger_summary"]
+        self.assertEqual(persist_gate["persist_gate_version"], "agent_runner_persist_gate_v1")
+        self.assertEqual(audit_ledger["audit_ledger_version"], "agent_runner_audit_ledger_v1")
+        self.assertTrue(audit_ledger["dry_run"])
+        self.assertFalse(audit_ledger["audit_ledger_recorded"])
+        self.assertFalse(audit_ledger["write_authorized"])
+        self.assertFalse(audit_ledger["state_persisted"])
+        self.assertEqual(summary["summary_version"], "agent_runner_audit_ledger_summary_v1")
+        self.assertEqual(summary["audit_ledger_status"], audit_ledger["audit_ledger_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_persist_gate_status"],
+            persist_gate["persist_gate_status"],
+        )
+

@@ -69,6 +69,7 @@ Add-Check "project_workspace_handoff_checkpoint_panel_marker" ($page.Content -ma
 Add-Check "project_workspace_transition_projection_panel_marker" ($page.Content -match "Project Workspace transition projection panel bundle")
 Add-Check "project_workspace_commit_plan_guard_panel_marker" ($page.Content -match "Project Workspace commit plan guard panel bundle")
 Add-Check "project_workspace_persist_request_rollback_panel_marker" ($page.Content -match "Project Workspace persist request rollback panel bundle")
+Add-Check "project_workspace_persist_gate_audit_panel_marker" ($page.Content -match "Project Workspace persist gate audit panel bundle")
 Add-Check "planner_button_state_marker" ($page.Content -match "Planner button state")
 Add-Check "workspace_sync_after_generation_marker" ($page.Content -match "Workspace sync after generation")
 Add-Check "downstream_workspace_sync_marker" ($page.Content -match "Downstream action workspace sync")

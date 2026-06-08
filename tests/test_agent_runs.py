@@ -2900,3 +2900,215 @@ class AgentRunnerTransitionPersistRequestRollbackTests(unittest.TestCase):
         self.assertFalse(persist_request["write_authorized"])
         self.assertFalse(rollback_plan["rollback_available"])
 
+
+class AgentRunnerPersistGateAuditLedgerTests(unittest.TestCase):
+    def test_persist_gate_and_audit_ledger_wait_for_real_output(self):
+        from agent_runs import (
+            build_agent_runner_audit_ledger,
+            build_agent_runner_audit_ledger_summary,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_persist_gate_summary,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        project = {
+            "project_id": "project_persist_gate_ready",
+            "graph_summary": {"existing_state": "kept"},
+        }
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_persist_gate_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project=project,
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal, project=project)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        gate_summary = build_agent_runner_persist_gate_summary(persist_gate)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        audit_summary = build_agent_runner_audit_ledger_summary(audit_ledger)
+
+        self.assertEqual(persist_gate["persist_gate_version"], "agent_runner_persist_gate_v1")
+        self.assertEqual(persist_gate["persist_gate_status"], "persist_gate_waiting_for_real_agent_output")
+        self.assertFalse(persist_gate["explicit_approval_present"])
+        self.assertFalse(persist_gate["write_authorized"])
+        self.assertFalse(persist_gate["persist_gate_recorded"])
+        self.assertFalse(persist_gate["state_persisted"])
+        self.assertEqual(persist_gate["gate_message"]["message_type"], "runner_persist_gate_dry_run")
+        self.assertEqual(gate_summary["summary_version"], "agent_runner_persist_gate_summary_v1")
+
+        self.assertEqual(audit_ledger["audit_ledger_version"], "agent_runner_audit_ledger_v1")
+        self.assertEqual(audit_ledger["audit_ledger_status"], "audit_ledger_waiting_for_real_agent_output")
+        self.assertEqual(audit_ledger["audit_entry_count"], 3)
+        self.assertFalse(audit_ledger["audit_ledger_recorded"])
+        self.assertFalse(audit_ledger["write_authorized"])
+        self.assertFalse(audit_ledger["state_persisted"])
+        self.assertEqual(audit_ledger["audit_message"]["message_type"], "runner_audit_ledger_dry_run")
+        self.assertEqual(audit_summary["summary_version"], "agent_runner_audit_ledger_summary_v1")
+
+    def test_persist_gate_audit_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_audit_ledger,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_persist_gate_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_persist_gate_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+
+        self.assertEqual(persist_gate["persist_gate_status"], "persist_gate_waiting_for_user")
+        self.assertEqual(audit_ledger["audit_ledger_status"], "audit_ledger_waiting_for_user")
+        self.assertFalse(persist_gate["write_authorized"])
+        self.assertFalse(audit_ledger["audit_ledger_recorded"])
+
+    def test_persist_gate_audit_blocks_invalid_target(self):
+        from agent_runs import (
+            build_agent_runner_audit_ledger,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_persist_gate_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+
+        self.assertEqual(persist_gate["persist_gate_status"], "persist_gate_blocked")
+        self.assertEqual(audit_ledger["audit_ledger_status"], "audit_ledger_blocked")
+        self.assertFalse(persist_gate["write_authorized"])
+        self.assertFalse(audit_ledger["audit_ledger_recorded"])
+

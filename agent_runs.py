@@ -4548,6 +4548,342 @@ def build_agent_runner_rollback_plan_summary(rollback_plan: dict[str, Any]) -> d
 
 
 
+AGENT_RUNNER_PERSIST_GATE_VERSION = "agent_runner_persist_gate_v1"
+AGENT_RUNNER_AUDIT_LEDGER_VERSION = "agent_runner_audit_ledger_v1"
+
+
+def _persist_gate_status_from_request(persist_request: dict[str, Any]) -> str:
+    safe_request = persist_request if isinstance(persist_request, dict) else {}
+    status = str(safe_request.get("persist_request_status") or "persist_request_blocked")
+    if status == "persist_request_waiting_for_real_agent_output":
+        return "persist_gate_waiting_for_real_agent_output"
+    if status == "persist_request_waiting_for_user":
+        return "persist_gate_waiting_for_user"
+    if status == "persist_request_waiting_for_explicit_gate":
+        return "persist_gate_waiting_for_explicit_approval"
+    return "persist_gate_blocked"
+
+
+def build_agent_runner_persist_gate(
+    transition_persist_request: dict[str, Any],
+    rollback_plan: dict[str, Any] | None = None,
+    requested_by: str = "runner_persist_gate_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run explicit persist gate.
+
+    This is the last pre-write gate. In dry-run mode it never authorizes a
+    write, persists state, applies rollback, or executes an Agent.
+    """
+
+    request = transition_persist_request if isinstance(transition_persist_request, dict) else {}
+    rollback = rollback_plan if isinstance(rollback_plan, dict) else {}
+    project_id = str(request.get("project_id") or rollback.get("project_id") or "demo_project_default")
+    target_agent_id = str(request.get("target_agent_id") or rollback.get("target_agent_id") or "")
+    gate_status = _persist_gate_status_from_request(request)
+    gate_id = f"persist_gate_{project_id}_{target_agent_id or 'none'}_{gate_status}".replace(" ", "_")
+
+    gate_checks = [
+        {
+            "check_id": "dry_run_only",
+            "passed": True,
+            "message": "Persist gate is dry-run only.",
+        },
+        {
+            "check_id": "write_authorized",
+            "passed": False,
+            "message": "Write authorization is disabled until a future explicit approval flow exists.",
+        },
+        {
+            "check_id": "rollback_available",
+            "passed": bool(rollback.get("rollback_available")),
+            "message": "Rollback must be available before a real write.",
+        },
+        {
+            "check_id": "real_agent_output_required",
+            "passed": gate_status not in {"persist_gate_waiting_for_real_agent_output"},
+            "message": "Real Agent output is required before persistent state changes.",
+        },
+    ]
+
+    if gate_status == "persist_gate_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_persist_gate"
+        gate_message_text = "Persist gate is waiting for real Agent output."
+    elif gate_status == "persist_gate_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        gate_message_text = "Persist gate is waiting for required user action."
+    elif gate_status == "persist_gate_waiting_for_explicit_approval":
+        recommended_next_state = "add_explicit_human_or_policy_approval"
+        gate_message_text = "Persist gate is structurally ready, but explicit approval is not implemented."
+    else:
+        recommended_next_state = "fix_persist_gate_blockers"
+        gate_message_text = "Persist gate is blocked by persist request, rollback plan, or upstream checks."
+
+    gate_payload = {
+        "persist_gate_version": AGENT_RUNNER_PERSIST_GATE_VERSION,
+        "persist_gate_status": gate_status,
+        "persist_gate_id": gate_id,
+        "persist_request_id": request.get("persist_request_id"),
+        "rollback_plan_id": rollback.get("rollback_plan_id"),
+        "target_agent_id": target_agent_id,
+        "gate_checks": gate_checks,
+        "gate_check_count": len(gate_checks),
+        "dry_run": True,
+        "explicit_approval_present": False,
+        "write_authorized": False,
+        "persist_gate_recorded": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+    }
+
+    gate_message = build_agent_message(
+        message_type="runner_persist_gate_dry_run",
+        source_agent_id="runner_persistence_manager",
+        target_agent_id=target_agent_id,
+        payload=gate_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "persist_gate_version": AGENT_RUNNER_PERSIST_GATE_VERSION,
+        "persist_gate_id": gate_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_persist_gate_dry_run_api"),
+        "persist_gate_status": gate_status,
+        "explicit_approval_present": False,
+        "write_authorized": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(request.get("target_agent_stage") or rollback.get("target_agent_stage") or ""),
+        "persist_request_id": str(request.get("persist_request_id") or ""),
+        "persist_request_status": str(request.get("persist_request_status") or ""),
+        "rollback_plan_id": str(rollback.get("rollback_plan_id") or ""),
+        "rollback_plan_status": str(rollback.get("rollback_plan_status") or ""),
+        "rollback_available": False,
+        "rollback_applied": False,
+        "gate_checks": gate_checks,
+        "gate_check_count": len(gate_checks),
+        "recommended_next_state": recommended_next_state,
+        "gate_message_text": gate_message_text,
+        "transition_persist_request_summary": build_agent_runner_transition_persist_request_summary(request),
+        "rollback_plan_summary": build_agent_runner_rollback_plan_summary(rollback),
+        "persist_message": deepcopy(request.get("persist_message") or {}),
+        "rollback_message": deepcopy(rollback.get("rollback_message") or {}),
+        "gate_payload": gate_payload,
+        "gate_message": gate_message,
+        "dry_run": True,
+        "persist_gate_recorded": False,
+        "persist_request_recorded": False,
+        "rollback_plan_recorded": False,
+        "commit_plan_persisted": False,
+        "mutation_guard_recorded": False,
+        "graph_transition_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_persist_gate_summary(persist_gate: dict[str, Any]) -> dict[str, Any]:
+    safe_gate = persist_gate if isinstance(persist_gate, dict) else {}
+    return {
+        "summary_version": "agent_runner_persist_gate_summary_v1",
+        "persist_gate_version": str(safe_gate.get("persist_gate_version") or AGENT_RUNNER_PERSIST_GATE_VERSION),
+        "persist_gate_id": str(safe_gate.get("persist_gate_id") or ""),
+        "project_id": str(safe_gate.get("project_id") or "demo_project_default"),
+        "persist_gate_status": str(safe_gate.get("persist_gate_status") or "persist_gate_blocked"),
+        "explicit_approval_present": False,
+        "write_authorized": False,
+        "target_agent_id": str(safe_gate.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_gate.get("target_agent_stage") or ""),
+        "persist_request_id": str(safe_gate.get("persist_request_id") or ""),
+        "rollback_plan_id": str(safe_gate.get("rollback_plan_id") or ""),
+        "gate_check_count": int(safe_gate.get("gate_check_count") or 0),
+        "persist_gate_recorded": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _audit_ledger_status_from_gate(persist_gate: dict[str, Any]) -> str:
+    safe_gate = persist_gate if isinstance(persist_gate, dict) else {}
+    status = str(safe_gate.get("persist_gate_status") or "persist_gate_blocked")
+    if status == "persist_gate_waiting_for_real_agent_output":
+        return "audit_ledger_waiting_for_real_agent_output"
+    if status == "persist_gate_waiting_for_user":
+        return "audit_ledger_waiting_for_user"
+    if status == "persist_gate_waiting_for_explicit_approval":
+        return "audit_ledger_waiting_for_explicit_approval"
+    return "audit_ledger_blocked"
+
+
+def build_agent_runner_audit_ledger(
+    persist_gate: dict[str, Any],
+    requested_by: str = "runner_persist_gate_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run audit ledger for the runner chain.
+
+    This records a compact audit view of the dry-run chain without persisting
+    the ledger or mutating project state.
+    """
+
+    gate = persist_gate if isinstance(persist_gate, dict) else {}
+    project_id = str(gate.get("project_id") or "demo_project_default")
+    target_agent_id = str(gate.get("target_agent_id") or "")
+    audit_status = _audit_ledger_status_from_gate(gate)
+    audit_ledger_id = f"audit_ledger_{project_id}_{target_agent_id or 'none'}_{audit_status}".replace(" ", "_")
+
+    audit_entries = [
+        {
+            "step": "persist_request",
+            "id": gate.get("persist_request_id"),
+            "status": gate.get("persist_request_status"),
+            "persisted": False,
+        },
+        {
+            "step": "rollback_plan",
+            "id": gate.get("rollback_plan_id"),
+            "status": gate.get("rollback_plan_status"),
+            "persisted": False,
+        },
+        {
+            "step": "persist_gate",
+            "id": gate.get("persist_gate_id"),
+            "status": gate.get("persist_gate_status"),
+            "persisted": False,
+        },
+    ]
+
+    if audit_status == "audit_ledger_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_audit_ledger_persistence"
+        audit_message_text = "Audit ledger is waiting for real Agent output."
+    elif audit_status == "audit_ledger_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        audit_message_text = "Audit ledger is waiting for required user action."
+    elif audit_status == "audit_ledger_waiting_for_explicit_approval":
+        recommended_next_state = "add_explicit_persist_gate_and_audit_storage"
+        audit_message_text = "Audit ledger is structurally available, but persistence is disabled in dry-run."
+    else:
+        recommended_next_state = "fix_audit_ledger_blockers"
+        audit_message_text = "Audit ledger is blocked by persist gate or upstream checks."
+
+    audit_payload = {
+        "audit_ledger_version": AGENT_RUNNER_AUDIT_LEDGER_VERSION,
+        "audit_ledger_status": audit_status,
+        "audit_ledger_id": audit_ledger_id,
+        "persist_gate_id": gate.get("persist_gate_id"),
+        "target_agent_id": target_agent_id,
+        "audit_entries": audit_entries,
+        "audit_entry_count": len(audit_entries),
+        "dry_run": True,
+        "audit_ledger_recorded": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "agent_execution_performed": False,
+    }
+
+    audit_message = build_agent_message(
+        message_type="runner_audit_ledger_dry_run",
+        source_agent_id="runner_persistence_manager",
+        target_agent_id=target_agent_id,
+        payload=audit_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "audit_ledger_version": AGENT_RUNNER_AUDIT_LEDGER_VERSION,
+        "audit_ledger_id": audit_ledger_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_persist_gate_dry_run_api"),
+        "audit_ledger_status": audit_status,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(gate.get("target_agent_stage") or ""),
+        "persist_gate_id": str(gate.get("persist_gate_id") or ""),
+        "persist_gate_status": str(gate.get("persist_gate_status") or ""),
+        "persist_request_id": str(gate.get("persist_request_id") or ""),
+        "rollback_plan_id": str(gate.get("rollback_plan_id") or ""),
+        "audit_entries": audit_entries,
+        "audit_entry_count": len(audit_entries),
+        "recommended_next_state": recommended_next_state,
+        "audit_message_text": audit_message_text,
+        "persist_gate_summary": build_agent_runner_persist_gate_summary(gate),
+        "transition_persist_request_summary": deepcopy(gate.get("transition_persist_request_summary") or {}),
+        "rollback_plan_summary": deepcopy(gate.get("rollback_plan_summary") or {}),
+        "gate_message": deepcopy(gate.get("gate_message") or {}),
+        "audit_payload": audit_payload,
+        "audit_message": audit_message,
+        "dry_run": True,
+        "audit_ledger_recorded": False,
+        "persist_gate_recorded": False,
+        "write_authorized": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_audit_ledger_summary(audit_ledger: dict[str, Any]) -> dict[str, Any]:
+    safe_ledger = audit_ledger if isinstance(audit_ledger, dict) else {}
+    return {
+        "summary_version": "agent_runner_audit_ledger_summary_v1",
+        "audit_ledger_version": str(safe_ledger.get("audit_ledger_version") or AGENT_RUNNER_AUDIT_LEDGER_VERSION),
+        "audit_ledger_id": str(safe_ledger.get("audit_ledger_id") or ""),
+        "project_id": str(safe_ledger.get("project_id") or "demo_project_default"),
+        "audit_ledger_status": str(safe_ledger.get("audit_ledger_status") or "audit_ledger_blocked"),
+        "target_agent_id": str(safe_ledger.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_ledger.get("target_agent_stage") or ""),
+        "persist_gate_id": str(safe_ledger.get("persist_gate_id") or ""),
+        "audit_entry_count": int(safe_ledger.get("audit_entry_count") or 0),
+        "audit_ledger_recorded": False,
+        "persist_gate_recorded": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

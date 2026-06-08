@@ -13139,6 +13139,214 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_PERSIST_GATE_AUDIT_PANEL_BUNDLE_MARKER = 'Project Workspace persist gate audit panel bundle';
+        let latestProjectRunnerPersistGate = {};
+        let latestProjectRunnerAuditLedger = {};
+
+        function projectWorkspacePersistGateFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerPersistGate && Object.keys(latestProjectRunnerPersistGate).length
+                ? latestProjectRunnerPersistGate
+                : workspace?.runner_persist_gate || {};
+        }
+
+        function projectWorkspaceAuditLedgerFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerAuditLedger && Object.keys(latestProjectRunnerAuditLedger).length
+                ? latestProjectRunnerAuditLedger
+                : workspace?.runner_audit_ledger || {};
+        }
+
+        function projectWorkspacePersistGateStatusLabel(gate = {}) {
+            const status = String(gate.persist_gate_status || 'not_refreshed');
+            const labels = {
+                persist_gate_waiting_for_real_agent_output: t('persistGateStatusWaitingForRealOutput'),
+                persist_gate_waiting_for_user: t('persistGateStatusWaitingForUser'),
+                persist_gate_waiting_for_explicit_approval: t('persistGateStatusWaitingForExplicitApproval'),
+                persist_gate_blocked: t('persistGateStatusBlocked'),
+                not_refreshed: t('persistGateStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspacePersistGateAuditCopyText(
+            persistGate = projectWorkspacePersistGateFromWorkspace(),
+            auditLedger = projectWorkspaceAuditLedgerFromWorkspace()
+        ) {
+            return [
+                t('persistGateAuditCopyTitle'),
+                `${t('projectId')}: ${auditLedger.project_id || persistGate.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('persistGateId')}: ${persistGate.persist_gate_id || t('none')}`,
+                `${t('auditLedgerId')}: ${auditLedger.audit_ledger_id || t('none')}`,
+                `${t('persistGateStatus')}: ${persistGate.persist_gate_status || 'not_refreshed'}`,
+                `${t('auditLedgerStatus')}: ${auditLedger.audit_ledger_status || 'not_refreshed'}`,
+                `${t('explicitApprovalPresent')}: ${Boolean(persistGate.explicit_approval_present)}`,
+                `${t('writeAuthorized')}: ${Boolean(persistGate.write_authorized)}`,
+                `${t('auditEntryCount')}: ${auditLedger.audit_entry_count || 0}`,
+                '',
+                JSON.stringify({ persistGate, auditLedger }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspacePersistGateAudit() {
+            const status = document.getElementById('projectWorkspacePersistGateAuditStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspacePersistGateAuditCopyText());
+                if (status) status.textContent = t('persistGateAuditCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('persistGateAuditCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspacePersistGateAudit(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspacePersistGateAuditStatus')
+                || document.getElementById('projectWorkspacePersistRequestRollbackStatus')
+                || document.getElementById('projectWorkspaceCommitPlanGuardStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('persistGateAuditDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_persist_gate_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/persist-gate/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('persistGateAuditDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectRunnerHandoffCheckpoint = payload.runner_handoff_checkpoint || {};
+                latestProjectRunnerNextAgentUnlock = payload.runner_next_agent_unlock || {};
+                latestProjectRunnerGraphTransitionProposal = payload.runner_graph_transition_proposal || {};
+                latestProjectRunnerStateProjection = payload.runner_state_projection || {};
+                latestProjectRunnerTransitionCommitPlan = payload.runner_transition_commit_plan || {};
+                latestProjectRunnerMutationGuard = payload.runner_mutation_guard || {};
+                latestProjectRunnerTransitionPersistRequest = payload.runner_transition_persist_request || {};
+                latestProjectRunnerRollbackPlan = payload.runner_rollback_plan || {};
+                latestProjectRunnerPersistGate = payload.runner_persist_gate || {};
+                latestProjectRunnerAuditLedger = payload.runner_audit_ledger || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {},
+                    runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint,
+                    runner_handoff_checkpoint_summary: payload.runner_handoff_checkpoint_summary || {},
+                    runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock,
+                    runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {},
+                    runner_graph_transition_proposal: latestProjectRunnerGraphTransitionProposal,
+                    runner_graph_transition_proposal_summary: payload.runner_graph_transition_proposal_summary || {},
+                    runner_state_projection: latestProjectRunnerStateProjection,
+                    runner_state_projection_summary: payload.runner_state_projection_summary || {},
+                    runner_transition_commit_plan: latestProjectRunnerTransitionCommitPlan,
+                    runner_transition_commit_plan_summary: payload.runner_transition_commit_plan_summary || {},
+                    runner_mutation_guard: latestProjectRunnerMutationGuard,
+                    runner_mutation_guard_summary: payload.runner_mutation_guard_summary || {},
+                    runner_transition_persist_request: latestProjectRunnerTransitionPersistRequest,
+                    runner_transition_persist_request_summary: payload.runner_transition_persist_request_summary || {},
+                    runner_rollback_plan: latestProjectRunnerRollbackPlan,
+                    runner_rollback_plan_summary: payload.runner_rollback_plan_summary || {},
+                    runner_persist_gate: latestProjectRunnerPersistGate,
+                    runner_persist_gate_summary: payload.runner_persist_gate_summary || {},
+                    runner_audit_ledger: latestProjectRunnerAuditLedger,
+                    runner_audit_ledger_summary: payload.runner_audit_ledger_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_persist_gate_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_persist_gate_dry_run');
+                if (status) status.textContent = t('persistGateAuditDryRunComplete');
+
+                const persistPanel = document.getElementById('projectWorkspacePersistRequestRollbackPanel');
+                if (persistPanel) persistPanel.outerHTML = renderProjectWorkspacePersistRequestRollbackPanel(latestProjectWorkspace);
+                const gatePanel = document.getElementById('projectWorkspacePersistGateAuditPanel');
+                if (gatePanel) gatePanel.outerHTML = renderProjectWorkspacePersistGateAuditPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_persist_gate_dry_run');
+                if (status) status.textContent = error.message || t('persistGateAuditDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspacePersistGateAuditPanel(workspace = latestProjectWorkspace) {
+            const persistGate = projectWorkspacePersistGateFromWorkspace(workspace);
+            const auditLedger = projectWorkspaceAuditLedgerFromWorkspace(workspace);
+            const hasAuditLedger = Boolean(auditLedger && Object.keys(auditLedger).length);
+            const statusLabel = projectWorkspacePersistGateStatusLabel(persistGate);
+            return `
+                <div class="section-block" id="projectWorkspacePersistGateAuditPanel" data-project-persist-gate-audit-panel-marker="Project Workspace persist gate audit panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('persistGateAuditPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('persistGateAuditPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspacePersistGateAuditBtn" type="button" data-project-persist-gate-audit-dry-run-action="Project Workspace persist gate audit panel bundle" onclick="dryRunProjectWorkspacePersistGateAudit()">${escapeHTML(t('dryRunPersistGateAudit'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspacePersistGateAuditBtn" type="button" onclick="copyProjectWorkspacePersistGateAudit()">${escapeHTML(t('copyPersistGateAudit'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('persistGateStatus'))}</div>
+                            <strong data-persist-gate-status="${escapeHTML(persistGate.persist_gate_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('persistGateAuditDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('persistGateId'))}</div>
+                            <strong data-persist-gate-id="${escapeHTML(persistGate.persist_gate_id || '')}">${escapeHTML(persistGate.persist_gate_id || t('persistGateAuditNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('explicitApprovalPresent'))}: ${escapeHTML(String(Boolean(persistGate.explicit_approval_present)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('auditEntryCount'))}</div>
+                            <strong data-audit-entry-count="${escapeHTML(String(auditLedger.audit_entry_count || 0))}">${escapeHTML(String(auditLedger.audit_entry_count || 0))}</strong>
+                            <div class="field-helper">${escapeHTML(t('writeAuthorized'))}: ${escapeHTML(String(Boolean(persistGate.write_authorized)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('persistGateAuditAuditPreview'))}</div>
+                        ${hasAuditLedger ? `<pre class="debug" data-persist-gate-audit-preview="Project Workspace persist gate audit panel bundle">${escapeHTML(projectWorkspacePersistGateAuditCopyText(persistGate, auditLedger))}</pre>` : `<div class="recent-empty">${escapeHTML(t('persistGateAuditNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspacePersistGateAuditStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspacePersistRequestRollbackPanel(workspace = latestProjectWorkspace) {
             const persistRequest = projectWorkspaceTransitionPersistRequestFromWorkspace(workspace);
             const rollbackPlan = projectWorkspaceRollbackPlanFromWorkspace(workspace);
@@ -13829,6 +14037,7 @@
                     ${renderProjectWorkspaceTransitionProjectionPanel(workspace)}
                     ${renderProjectWorkspaceCommitPlanGuardPanel(workspace)}
                     ${renderProjectWorkspacePersistRequestRollbackPanel(workspace)}
+                    ${renderProjectWorkspacePersistGateAuditPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -16217,6 +16426,63 @@
             persistRequestRollbackDryRunFailed: 'Persist request rollback dry-run \u5931\u8d25\u3002',
             persistRequestRollbackCopied: '\u5199\u5165\u7533\u8bf7\u56de\u6eda\u8bb0\u5f55\u5df2\u590d\u5236\u3002',
             persistRequestRollbackCopyFailed: '\u590d\u5236\u5199\u5165\u7533\u8bf7\u56de\u6eda\u8bb0\u5f55\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspacePersistGateAuditPanelBundleMarker: 'Project Workspace persist gate audit panel bundle',
+            persistGateAuditPanelTitle: 'Persist gate & audit ledger',
+            persistGateAuditPanelHelper: 'Dry-run explicit persist gate and audit ledger. This checks the final pre-write gate without saving state.',
+            dryRunPersistGateAudit: 'Dry-run persist gate',
+            copyPersistGateAudit: 'Copy persist gate',
+            persistGateAuditCopyTitle: 'Project persist gate and audit ledger',
+            persistGateId: 'Persist gate ID',
+            auditLedgerId: 'Audit ledger ID',
+            persistGateStatus: 'Persist gate status',
+            auditLedgerStatus: 'Audit ledger status',
+            explicitApprovalPresent: 'Explicit approval present',
+            auditEntryCount: 'Audit entry count',
+            persistGateAuditAuditPreview: 'Persist gate audit preview',
+            persistGateStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            persistGateStatusWaitingForUser: 'Persist gate waiting for user',
+            persistGateStatusWaitingForExplicitApproval: 'Waiting for explicit approval',
+            persistGateStatusBlocked: 'Persist gate blocked',
+            persistGateStatusNotRefreshed: 'Not refreshed',
+            persistGateAuditNotRefreshedYet: 'Persist gate audit has not been refreshed yet.',
+            persistGateAuditDryRunHelper: 'Dry run only: no explicit approval, no write authorization, no audit ledger persistence.',
+            persistGateAuditDryRunRunning: 'Building persist gate audit dry-run...',
+            persistGateAuditDryRunComplete: 'Persist gate audit dry-run complete.',
+            persistGateAuditDryRunFailed: 'Persist gate audit dry-run failed.',
+            persistGateAuditCopied: 'Persist gate audit copied.',
+            persistGateAuditCopyFailed: 'Could not copy persist gate audit.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspacePersistGateAuditPanelBundleMarker: 'Project Workspace persist gate audit panel bundle',
+            persistGateAuditPanelTitle: '\u5199\u5165\u95f8\u95e8\u4e0e\u5ba1\u8ba1\u8d26\u672c',
+            persistGateAuditPanelHelper: '\u663e\u5f0f\u5199\u5165\u95f8\u95e8\u548c\u5ba1\u8ba1\u8d26\u672c\u7684 dry-run\u3002\u5b83\u68c0\u67e5\u6700\u540e\u4e00\u9053\u5199\u5165\u524d\u95f8\u95e8\uff0c\u4f46\u4e0d\u4fdd\u5b58\u72b6\u6001\u3002',
+            dryRunPersistGateAudit: 'Dry-run \u5199\u5165\u95f8\u95e8',
+            copyPersistGateAudit: '\u590d\u5236\u5199\u5165\u95f8\u95e8',
+            persistGateAuditCopyTitle: '\u9879\u76ee\u5199\u5165\u95f8\u95e8\u4e0e\u5ba1\u8ba1\u8d26\u672c',
+            persistGateId: '\u5199\u5165\u95f8\u95e8 ID',
+            auditLedgerId: '\u5ba1\u8ba1\u8d26\u672c ID',
+            persistGateStatus: '\u5199\u5165\u95f8\u95e8\u72b6\u6001',
+            auditLedgerStatus: '\u5ba1\u8ba1\u8d26\u672c\u72b6\u6001',
+            explicitApprovalPresent: '\u662f\u5426\u6709\u663e\u5f0f\u6279\u51c6',
+            auditEntryCount: '\u5ba1\u8ba1\u6761\u76ee\u6570',
+            persistGateAuditAuditPreview: '\u5199\u5165\u95f8\u95e8\u5ba1\u8ba1\u9884\u89c8',
+            persistGateStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            persistGateStatusWaitingForUser: '\u5199\u5165\u95f8\u95e8\u7b49\u5f85\u7528\u6237',
+            persistGateStatusWaitingForExplicitApproval: '\u7b49\u5f85\u663e\u5f0f\u6279\u51c6',
+            persistGateStatusBlocked: '\u5199\u5165\u95f8\u95e8\u5df2\u963b\u585e',
+            persistGateStatusNotRefreshed: '\u672a\u5237\u65b0',
+            persistGateAuditNotRefreshedYet: '\u5199\u5165\u95f8\u95e8\u5ba1\u8ba1\u5c1a\u672a\u5237\u65b0\u3002',
+            persistGateAuditDryRunHelper: '\u4ec5 dry run\uff1a\u6ca1\u6709\u663e\u5f0f\u6279\u51c6\uff0c\u4e0d\u6388\u6743\u5199\u5165\uff0c\u4e0d\u4fdd\u5b58\u5ba1\u8ba1\u8d26\u672c\u3002',
+            persistGateAuditDryRunRunning: '\u6b63\u5728\u751f\u6210 persist gate audit dry-run...',
+            persistGateAuditDryRunComplete: 'Persist gate audit dry-run \u5b8c\u6210\u3002',
+            persistGateAuditDryRunFailed: 'Persist gate audit dry-run \u5931\u8d25\u3002',
+            persistGateAuditCopied: '\u5199\u5165\u95f8\u95e8\u5ba1\u8ba1\u5df2\u590d\u5236\u3002',
+            persistGateAuditCopyFailed: '\u590d\u5236\u5199\u5165\u95f8\u95e8\u5ba1\u8ba1\u5931\u8d25\u3002'
         });
 
 
