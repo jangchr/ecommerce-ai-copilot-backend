@@ -2513,3 +2513,189 @@ class AgentRunnerGraphTransitionProjectionTests(unittest.TestCase):
         self.assertFalse(projection["state_persisted"])
         self.assertIn("contract_validation", proposal["blocking_check_ids"])
 
+
+class AgentRunnerTransitionCommitPlanGuardTests(unittest.TestCase):
+    def test_commit_plan_and_mutation_guard_wait_for_real_output(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_mutation_guard_summary,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_commit_plan_summary,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        project = {
+            "project_id": "project_commit_plan_ready",
+            "graph_summary": {"existing_state": "kept"},
+        }
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_commit_plan_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project=project,
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal, project=project)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        commit_summary = build_agent_runner_transition_commit_plan_summary(commit_plan)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        guard_summary = build_agent_runner_mutation_guard_summary(guard)
+
+        self.assertEqual(commit_plan["transition_commit_plan_version"], "agent_runner_transition_commit_plan_v1")
+        self.assertEqual(commit_plan["commit_plan_status"], "commit_plan_waiting_for_real_agent_output")
+        self.assertEqual(commit_plan["planned_mutation_count"], 4)
+        self.assertFalse(commit_plan["commit_plan_persisted"])
+        self.assertFalse(commit_plan["state_persisted"])
+        self.assertFalse(commit_plan["project_snapshot_saved"])
+        self.assertEqual(commit_plan["commit_message"]["message_type"], "runner_transition_commit_plan_dry_run")
+        self.assertEqual(commit_summary["summary_version"], "agent_runner_transition_commit_plan_summary_v1")
+
+        self.assertEqual(guard["mutation_guard_version"], "agent_runner_mutation_guard_v1")
+        self.assertEqual(guard["mutation_guard_status"], "mutation_guard_waiting_for_real_agent_output")
+        self.assertFalse(guard["mutation_allowed"])
+        self.assertFalse(guard["mutation_guard_recorded"])
+        self.assertFalse(guard["state_persisted"])
+        self.assertFalse(guard["project_snapshot_saved"])
+        self.assertEqual(guard["guard_message"]["message_type"], "runner_mutation_guard_dry_run")
+        self.assertEqual(guard_summary["summary_version"], "agent_runner_mutation_guard_summary_v1")
+
+    def test_commit_plan_guard_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_commit_plan_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_commit_plan_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+
+        self.assertEqual(commit_plan["commit_plan_status"], "commit_plan_waiting_for_user")
+        self.assertEqual(guard["mutation_guard_status"], "mutation_guard_waiting_for_user")
+        self.assertFalse(guard["mutation_allowed"])
+
+    def test_commit_plan_guard_blocks_invalid_target(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_commit_plan_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+
+        self.assertEqual(commit_plan["commit_plan_status"], "commit_plan_blocked")
+        self.assertEqual(guard["mutation_guard_status"], "mutation_guard_blocked")
+        self.assertFalse(guard["mutation_allowed"])
+

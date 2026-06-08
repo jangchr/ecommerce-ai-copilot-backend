@@ -12829,6 +12829,202 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_COMMIT_PLAN_GUARD_PANEL_BUNDLE_MARKER = 'Project Workspace commit plan guard panel bundle';
+        let latestProjectRunnerTransitionCommitPlan = {};
+        let latestProjectRunnerMutationGuard = {};
+
+        function projectWorkspaceTransitionCommitPlanFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerTransitionCommitPlan && Object.keys(latestProjectRunnerTransitionCommitPlan).length
+                ? latestProjectRunnerTransitionCommitPlan
+                : workspace?.runner_transition_commit_plan || {};
+        }
+
+        function projectWorkspaceMutationGuardFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerMutationGuard && Object.keys(latestProjectRunnerMutationGuard).length
+                ? latestProjectRunnerMutationGuard
+                : workspace?.runner_mutation_guard || {};
+        }
+
+        function projectWorkspaceMutationGuardStatusLabel(guard = {}) {
+            const status = String(guard.mutation_guard_status || 'not_refreshed');
+            const labels = {
+                mutation_guard_waiting_for_real_agent_output: t('mutationGuardStatusWaitingForRealOutput'),
+                mutation_guard_waiting_for_user: t('mutationGuardStatusWaitingForUser'),
+                mutation_guard_blocked: t('mutationGuardStatusBlocked'),
+                mutation_guard_ready: t('mutationGuardStatusReady'),
+                not_refreshed: t('mutationGuardStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceCommitPlanGuardCopyText(
+            commitPlan = projectWorkspaceTransitionCommitPlanFromWorkspace(),
+            guard = projectWorkspaceMutationGuardFromWorkspace()
+        ) {
+            return [
+                t('commitPlanGuardCopyTitle'),
+                `${t('projectId')}: ${guard.project_id || commitPlan.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('transitionCommitPlanId')}: ${commitPlan.commit_plan_id || t('none')}`,
+                `${t('mutationGuardId')}: ${guard.mutation_guard_id || t('none')}`,
+                `${t('transitionCommitPlanStatus')}: ${commitPlan.commit_plan_status || 'not_refreshed'}`,
+                `${t('mutationGuardStatus')}: ${guard.mutation_guard_status || 'not_refreshed'}`,
+                `${t('plannedMutationCount')}: ${commitPlan.planned_mutation_count || 0}`,
+                `${t('mutationAllowed')}: ${Boolean(guard.mutation_allowed)}`,
+                `${t('statePersisted')}: ${Boolean(guard.state_persisted)}`,
+                '',
+                JSON.stringify({ commitPlan, guard }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCommitPlanGuard() {
+            const status = document.getElementById('projectWorkspaceCommitPlanGuardStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceCommitPlanGuardCopyText());
+                if (status) status.textContent = t('commitPlanGuardCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('commitPlanGuardCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceCommitPlanGuard(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceCommitPlanGuardStatus')
+                || document.getElementById('projectWorkspaceTransitionProjectionStatus')
+                || document.getElementById('projectWorkspaceHandoffCheckpointStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('commitPlanGuardDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_commit_plan_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/commit-plan/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('commitPlanGuardDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectRunnerHandoffCheckpoint = payload.runner_handoff_checkpoint || {};
+                latestProjectRunnerNextAgentUnlock = payload.runner_next_agent_unlock || {};
+                latestProjectRunnerGraphTransitionProposal = payload.runner_graph_transition_proposal || {};
+                latestProjectRunnerStateProjection = payload.runner_state_projection || {};
+                latestProjectRunnerTransitionCommitPlan = payload.runner_transition_commit_plan || {};
+                latestProjectRunnerMutationGuard = payload.runner_mutation_guard || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {},
+                    runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint,
+                    runner_handoff_checkpoint_summary: payload.runner_handoff_checkpoint_summary || {},
+                    runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock,
+                    runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {},
+                    runner_graph_transition_proposal: latestProjectRunnerGraphTransitionProposal,
+                    runner_graph_transition_proposal_summary: payload.runner_graph_transition_proposal_summary || {},
+                    runner_state_projection: latestProjectRunnerStateProjection,
+                    runner_state_projection_summary: payload.runner_state_projection_summary || {},
+                    runner_transition_commit_plan: latestProjectRunnerTransitionCommitPlan,
+                    runner_transition_commit_plan_summary: payload.runner_transition_commit_plan_summary || {},
+                    runner_mutation_guard: latestProjectRunnerMutationGuard,
+                    runner_mutation_guard_summary: payload.runner_mutation_guard_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_commit_plan_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_commit_plan_dry_run');
+                if (status) status.textContent = t('commitPlanGuardDryRunComplete');
+
+                const transitionPanel = document.getElementById('projectWorkspaceTransitionProjectionPanel');
+                if (transitionPanel) transitionPanel.outerHTML = renderProjectWorkspaceTransitionProjectionPanel(latestProjectWorkspace);
+                const commitPanel = document.getElementById('projectWorkspaceCommitPlanGuardPanel');
+                if (commitPanel) commitPanel.outerHTML = renderProjectWorkspaceCommitPlanGuardPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_commit_plan_dry_run');
+                if (status) status.textContent = error.message || t('commitPlanGuardDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceCommitPlanGuardPanel(workspace = latestProjectWorkspace) {
+            const commitPlan = projectWorkspaceTransitionCommitPlanFromWorkspace(workspace);
+            const guard = projectWorkspaceMutationGuardFromWorkspace(workspace);
+            const hasGuard = Boolean(guard && Object.keys(guard).length);
+            const statusLabel = projectWorkspaceMutationGuardStatusLabel(guard);
+            return `
+                <div class="section-block" id="projectWorkspaceCommitPlanGuardPanel" data-project-commit-plan-guard-panel-marker="Project Workspace commit plan guard panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('commitPlanGuardPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('commitPlanGuardPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceCommitPlanGuardBtn" type="button" data-project-commit-plan-guard-dry-run-action="Project Workspace commit plan guard panel bundle" onclick="dryRunProjectWorkspaceCommitPlanGuard()">${escapeHTML(t('dryRunCommitPlanGuard'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceCommitPlanGuardBtn" type="button" onclick="copyProjectWorkspaceCommitPlanGuard()">${escapeHTML(t('copyCommitPlanGuard'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('mutationGuardStatus'))}</div>
+                            <strong data-mutation-guard-status="${escapeHTML(guard.mutation_guard_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('commitPlanGuardDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('transitionCommitPlanId'))}</div>
+                            <strong data-transition-commit-plan-id="${escapeHTML(commitPlan.commit_plan_id || '')}">${escapeHTML(commitPlan.commit_plan_id || t('commitPlanGuardNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('plannedMutationCount'))}: ${escapeHTML(String(commitPlan.planned_mutation_count || 0))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('mutationAllowed'))}</div>
+                            <strong data-mutation-allowed="${escapeHTML(String(Boolean(guard.mutation_allowed)))}">${escapeHTML(String(Boolean(guard.mutation_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('statePersisted'))}: ${escapeHTML(String(Boolean(guard.state_persisted)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('commitPlanGuardAuditPreview'))}</div>
+                        ${hasGuard ? `<pre class="debug" data-commit-plan-guard-audit-preview="Project Workspace commit plan guard panel bundle">${escapeHTML(projectWorkspaceCommitPlanGuardCopyText(commitPlan, guard))}</pre>` : `<div class="recent-empty">${escapeHTML(t('commitPlanGuardNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCommitPlanGuardStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceTransitionProjectionPanel(workspace = latestProjectWorkspace) {
             const proposal = projectWorkspaceGraphTransitionFromWorkspace(workspace);
             const projection = projectWorkspaceStateProjectionFromWorkspace(workspace);
@@ -13429,6 +13625,7 @@
                     ${renderProjectWorkspaceResultCompletionPanel(workspace)}
                     ${renderProjectWorkspaceHandoffCheckpointPanel(workspace)}
                     ${renderProjectWorkspaceTransitionProjectionPanel(workspace)}
+                    ${renderProjectWorkspaceCommitPlanGuardPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -15701,6 +15898,63 @@
             transitionProjectionDryRunFailed: 'Transition projection dry-run \u5931\u8d25\u3002',
             transitionProjectionCopied: '\u5207\u6362\u6295\u5f71\u5df2\u590d\u5236\u3002',
             transitionProjectionCopyFailed: '\u590d\u5236\u5207\u6362\u6295\u5f71\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCommitPlanGuardPanelBundleMarker: 'Project Workspace commit plan guard panel bundle',
+            commitPlanGuardPanelTitle: 'Transition commit plan & mutation guard',
+            commitPlanGuardPanelHelper: 'Dry-run commit plan and mutation guard. This previews state mutations without persisting them.',
+            dryRunCommitPlanGuard: 'Dry-run commit plan',
+            copyCommitPlanGuard: 'Copy commit plan',
+            commitPlanGuardCopyTitle: 'Project transition commit plan and mutation guard',
+            transitionCommitPlanId: 'Transition commit plan ID',
+            mutationGuardId: 'Mutation guard ID',
+            transitionCommitPlanStatus: 'Commit plan status',
+            mutationGuardStatus: 'Mutation guard status',
+            plannedMutationCount: 'Planned mutation count',
+            mutationAllowed: 'Mutation allowed',
+            commitPlanGuardAuditPreview: 'Commit plan guard audit preview',
+            mutationGuardStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            mutationGuardStatusWaitingForUser: 'Mutation guard waiting for user',
+            mutationGuardStatusBlocked: 'Mutation guard blocked',
+            mutationGuardStatusReady: 'Mutation guard ready',
+            mutationGuardStatusNotRefreshed: 'Not refreshed',
+            commitPlanGuardNotRefreshedYet: 'Commit plan guard has not been refreshed yet.',
+            commitPlanGuardDryRunHelper: 'Dry run only: no commit plan, mutation, graph transition, or state is persisted.',
+            commitPlanGuardDryRunRunning: 'Building commit plan guard dry-run...',
+            commitPlanGuardDryRunComplete: 'Commit plan guard dry-run complete.',
+            commitPlanGuardDryRunFailed: 'Commit plan guard dry-run failed.',
+            commitPlanGuardCopied: 'Commit plan guard copied.',
+            commitPlanGuardCopyFailed: 'Could not copy commit plan guard.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCommitPlanGuardPanelBundleMarker: 'Project Workspace commit plan guard panel bundle',
+            commitPlanGuardPanelTitle: '\u5207\u6362\u63d0\u4ea4\u8ba1\u5212\u4e0e\u72b6\u6001\u53d8\u66f4\u4fdd\u62a4',
+            commitPlanGuardPanelHelper: '\u63d0\u4ea4\u8ba1\u5212\u548c mutation guard \u7684 dry-run\u3002\u5b83\u53ea\u9884\u89c8\u72b6\u6001\u53d8\u66f4\uff0c\u4e0d\u771f\u6b63\u4fdd\u5b58\u3002',
+            dryRunCommitPlanGuard: 'Dry-run \u63d0\u4ea4\u8ba1\u5212',
+            copyCommitPlanGuard: '\u590d\u5236\u63d0\u4ea4\u8ba1\u5212',
+            commitPlanGuardCopyTitle: '\u9879\u76ee\u5207\u6362\u63d0\u4ea4\u8ba1\u5212\u4e0e\u72b6\u6001\u53d8\u66f4\u4fdd\u62a4',
+            transitionCommitPlanId: '\u5207\u6362\u63d0\u4ea4\u8ba1\u5212 ID',
+            mutationGuardId: '\u72b6\u6001\u53d8\u66f4\u4fdd\u62a4 ID',
+            transitionCommitPlanStatus: '\u63d0\u4ea4\u8ba1\u5212\u72b6\u6001',
+            mutationGuardStatus: '\u72b6\u6001\u53d8\u66f4\u4fdd\u62a4\u72b6\u6001',
+            plannedMutationCount: '\u9884\u8ba1\u72b6\u6001\u53d8\u66f4\u6570',
+            mutationAllowed: '\u662f\u5426\u5141\u8bb8\u53d8\u66f4',
+            commitPlanGuardAuditPreview: '\u63d0\u4ea4\u8ba1\u5212\u4fdd\u62a4\u5ba1\u8ba1\u9884\u89c8',
+            mutationGuardStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            mutationGuardStatusWaitingForUser: '\u72b6\u6001\u53d8\u66f4\u4fdd\u62a4\u7b49\u5f85\u7528\u6237',
+            mutationGuardStatusBlocked: '\u72b6\u6001\u53d8\u66f4\u4fdd\u62a4\u5df2\u963b\u585e',
+            mutationGuardStatusReady: '\u72b6\u6001\u53d8\u66f4\u4fdd\u62a4\u5df2\u5c31\u7eea',
+            mutationGuardStatusNotRefreshed: '\u672a\u5237\u65b0',
+            commitPlanGuardNotRefreshedYet: '\u63d0\u4ea4\u8ba1\u5212\u4fdd\u62a4\u5c1a\u672a\u5237\u65b0\u3002',
+            commitPlanGuardDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u771f\u6b63\u4fdd\u5b58\u63d0\u4ea4\u8ba1\u5212\u3001\u72b6\u6001\u53d8\u66f4\u3001\u56fe\u5207\u6362\u6216\u9879\u76ee\u72b6\u6001\u3002',
+            commitPlanGuardDryRunRunning: '\u6b63\u5728\u751f\u6210 commit plan guard dry-run...',
+            commitPlanGuardDryRunComplete: 'Commit plan guard dry-run \u5b8c\u6210\u3002',
+            commitPlanGuardDryRunFailed: 'Commit plan guard dry-run \u5931\u8d25\u3002',
+            commitPlanGuardCopied: '\u63d0\u4ea4\u8ba1\u5212\u4fdd\u62a4\u5df2\u590d\u5236\u3002',
+            commitPlanGuardCopyFailed: '\u590d\u5236\u63d0\u4ea4\u8ba1\u5212\u4fdd\u62a4\u5931\u8d25\u3002'
         });
 
 

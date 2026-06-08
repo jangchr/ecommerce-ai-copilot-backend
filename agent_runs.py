@@ -3916,6 +3916,331 @@ def build_agent_runner_state_projection_summary(state_projection: dict[str, Any]
 
 
 
+AGENT_RUNNER_TRANSITION_COMMIT_PLAN_VERSION = "agent_runner_transition_commit_plan_v1"
+AGENT_RUNNER_MUTATION_GUARD_VERSION = "agent_runner_mutation_guard_v1"
+
+
+def _transition_commit_plan_status_from_projection(state_projection: dict[str, Any]) -> str:
+    safe_projection = state_projection if isinstance(state_projection, dict) else {}
+    status = str(safe_projection.get("projection_status") or "projection_blocked")
+    if status == "projection_waiting_for_real_agent_output":
+        return "commit_plan_waiting_for_real_agent_output"
+    if status == "projection_waiting_for_user":
+        return "commit_plan_waiting_for_user"
+    if status == "projection_ready":
+        return "commit_plan_ready"
+    return "commit_plan_blocked"
+
+
+def build_agent_runner_transition_commit_plan(
+    state_projection: dict[str, Any],
+    requested_by: str = "runner_commit_plan_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run transition commit plan from a state projection.
+
+    This previews which graph state changes would be persisted later. It does
+    not persist project state, mutate the graph, unlock an Agent, or execute.
+    """
+
+    projection = state_projection if isinstance(state_projection, dict) else {}
+    project_id = str(projection.get("project_id") or "demo_project_default")
+    target_agent_id = str(projection.get("target_agent_id") or "")
+    commit_plan_status = _transition_commit_plan_status_from_projection(projection)
+    commit_plan_id = f"transition_commit_plan_{project_id}_{target_agent_id or 'none'}_{commit_plan_status}".replace(" ", "_")
+
+    projected_graph_summary = deepcopy(projection.get("projected_graph_summary") or {})
+    current_graph_summary = deepcopy(projection.get("current_graph_summary") or {})
+    planned_mutations = [
+        {
+            "path": "project.graph_summary.latest_runner_transition_status",
+            "current_value": current_graph_summary.get("latest_runner_transition_status"),
+            "projected_value": projected_graph_summary.get("projected_runner_transition_status"),
+        },
+        {
+            "path": "project.graph_summary.latest_runner_projected_graph_state",
+            "current_value": current_graph_summary.get("latest_runner_projected_graph_state"),
+            "projected_value": projected_graph_summary.get("projected_runner_graph_state"),
+        },
+        {
+            "path": "project.graph_summary.latest_runner_target_agent_id",
+            "current_value": current_graph_summary.get("latest_runner_target_agent_id"),
+            "projected_value": projected_graph_summary.get("projected_runner_target_agent_id"),
+        },
+        {
+            "path": "project.graph_summary.latest_runner_state_projection_status",
+            "current_value": current_graph_summary.get("latest_runner_state_projection_status"),
+            "projected_value": projection.get("projection_status"),
+        },
+    ]
+
+    if commit_plan_status == "commit_plan_waiting_for_real_agent_output":
+        recommended_next_state = "wait_for_real_agent_output_before_commit"
+        commit_plan_message_text = "Commit plan is only a dry-run preview and waits for real Agent output."
+    elif commit_plan_status == "commit_plan_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        commit_plan_message_text = "Commit plan is waiting for required user action."
+    elif commit_plan_status == "commit_plan_ready":
+        recommended_next_state = "run_mutation_guard_before_persist"
+        commit_plan_message_text = "Commit plan is ready, but mutation persistence still requires an explicit guard."
+    else:
+        recommended_next_state = "fix_commit_plan_blockers"
+        commit_plan_message_text = "Commit plan is blocked by state projection, transition proposal, or upstream safety checks."
+
+    commit_payload = {
+        "transition_commit_plan_version": AGENT_RUNNER_TRANSITION_COMMIT_PLAN_VERSION,
+        "commit_plan_status": commit_plan_status,
+        "commit_plan_id": commit_plan_id,
+        "projection_id": projection.get("projection_id"),
+        "transition_id": projection.get("transition_id"),
+        "target_agent_id": target_agent_id,
+        "planned_mutations": planned_mutations,
+        "planned_mutation_count": len(planned_mutations),
+        "dry_run": True,
+        "commit_plan_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "agent_execution_performed": False,
+    }
+
+    commit_message = build_agent_message(
+        message_type="runner_transition_commit_plan_dry_run",
+        source_agent_id="runner_transition_manager",
+        target_agent_id=target_agent_id,
+        payload=commit_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "transition_commit_plan_version": AGENT_RUNNER_TRANSITION_COMMIT_PLAN_VERSION,
+        "commit_plan_id": commit_plan_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_commit_plan_dry_run_api"),
+        "commit_plan_status": commit_plan_status,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(projection.get("target_agent_stage") or ""),
+        "projection_id": str(projection.get("projection_id") or ""),
+        "projection_status": str(projection.get("projection_status") or ""),
+        "transition_id": str(projection.get("transition_id") or ""),
+        "transition_status": str(projection.get("transition_status") or ""),
+        "proposed_graph_state": str(projection.get("proposed_graph_state") or "blocked"),
+        "planned_mutations": planned_mutations,
+        "planned_mutation_count": len(planned_mutations),
+        "recommended_next_state": recommended_next_state,
+        "commit_plan_message_text": commit_plan_message_text,
+        "current_graph_summary": current_graph_summary,
+        "projected_graph_summary": projected_graph_summary,
+        "state_projection_summary": build_agent_runner_state_projection_summary(projection),
+        "graph_transition_proposal_summary": deepcopy(projection.get("graph_transition_proposal_summary") or {}),
+        "projection_message": deepcopy(projection.get("projection_message") or {}),
+        "commit_payload": commit_payload,
+        "commit_message": commit_message,
+        "dry_run": True,
+        "commit_plan_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_transition_commit_plan_summary(commit_plan: dict[str, Any]) -> dict[str, Any]:
+    safe_plan = commit_plan if isinstance(commit_plan, dict) else {}
+    return {
+        "summary_version": "agent_runner_transition_commit_plan_summary_v1",
+        "transition_commit_plan_version": str(safe_plan.get("transition_commit_plan_version") or AGENT_RUNNER_TRANSITION_COMMIT_PLAN_VERSION),
+        "commit_plan_id": str(safe_plan.get("commit_plan_id") or ""),
+        "project_id": str(safe_plan.get("project_id") or "demo_project_default"),
+        "commit_plan_status": str(safe_plan.get("commit_plan_status") or "commit_plan_blocked"),
+        "target_agent_id": str(safe_plan.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_plan.get("target_agent_stage") or ""),
+        "projection_id": str(safe_plan.get("projection_id") or ""),
+        "transition_id": str(safe_plan.get("transition_id") or ""),
+        "planned_mutation_count": int(safe_plan.get("planned_mutation_count") or 0),
+        "commit_plan_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _mutation_guard_status_from_commit_plan(commit_plan: dict[str, Any]) -> str:
+    safe_plan = commit_plan if isinstance(commit_plan, dict) else {}
+    status = str(safe_plan.get("commit_plan_status") or "commit_plan_blocked")
+    if status == "commit_plan_waiting_for_real_agent_output":
+        return "mutation_guard_waiting_for_real_agent_output"
+    if status == "commit_plan_waiting_for_user":
+        return "mutation_guard_waiting_for_user"
+    if status == "commit_plan_ready":
+        return "mutation_guard_ready"
+    return "mutation_guard_blocked"
+
+
+def build_agent_runner_mutation_guard(
+    transition_commit_plan: dict[str, Any],
+    requested_by: str = "runner_commit_plan_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run mutation guard from a transition commit plan.
+
+    This checks whether a state mutation could be allowed later. In dry-run
+    mode it never persists state or marks the mutation as applied.
+    """
+
+    plan = transition_commit_plan if isinstance(transition_commit_plan, dict) else {}
+    project_id = str(plan.get("project_id") or "demo_project_default")
+    target_agent_id = str(plan.get("target_agent_id") or "")
+    guard_status = _mutation_guard_status_from_commit_plan(plan)
+    guard_id = f"mutation_guard_{project_id}_{target_agent_id or 'none'}_{guard_status}".replace(" ", "_")
+
+    planned_mutations = deepcopy(plan.get("planned_mutations") or [])
+    guard_checks = [
+        {
+            "check_id": "dry_run_only",
+            "passed": True,
+            "message": "Mutation is dry-run only and will not be persisted.",
+        },
+        {
+            "check_id": "real_agent_output_required",
+            "passed": guard_status not in {"mutation_guard_waiting_for_real_agent_output"},
+            "message": "Real Agent output is required before a persistent graph transition.",
+        },
+        {
+            "check_id": "explicit_persist_gate_required",
+            "passed": False,
+            "message": "Persistent mutation requires a future explicit persist gate.",
+        },
+    ]
+
+    mutation_allowed = guard_status == "mutation_guard_ready" and all(item["passed"] for item in guard_checks)
+
+    if guard_status == "mutation_guard_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_mutation"
+        guard_message_text = "Mutation guard is waiting for real Agent output."
+    elif guard_status == "mutation_guard_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        guard_message_text = "Mutation guard is waiting for required user action."
+    elif guard_status == "mutation_guard_ready":
+        recommended_next_state = "add_explicit_persist_gate"
+        guard_message_text = "Mutation guard is structurally ready, but persistent mutation is still disabled."
+    else:
+        recommended_next_state = "fix_mutation_guard_blockers"
+        guard_message_text = "Mutation guard is blocked by commit plan, projection, transition, or upstream checks."
+
+    guard_payload = {
+        "mutation_guard_version": AGENT_RUNNER_MUTATION_GUARD_VERSION,
+        "mutation_guard_status": guard_status,
+        "mutation_guard_id": guard_id,
+        "commit_plan_id": plan.get("commit_plan_id"),
+        "projection_id": plan.get("projection_id"),
+        "target_agent_id": target_agent_id,
+        "planned_mutation_count": len(planned_mutations),
+        "guard_checks": guard_checks,
+        "mutation_allowed": mutation_allowed,
+        "dry_run": True,
+        "mutation_guard_recorded": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "agent_execution_performed": False,
+    }
+
+    guard_message = build_agent_message(
+        message_type="runner_mutation_guard_dry_run",
+        source_agent_id="runner_transition_manager",
+        target_agent_id=target_agent_id,
+        payload=guard_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "mutation_guard_version": AGENT_RUNNER_MUTATION_GUARD_VERSION,
+        "mutation_guard_id": guard_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_commit_plan_dry_run_api"),
+        "mutation_guard_status": guard_status,
+        "mutation_allowed": mutation_allowed,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(plan.get("target_agent_stage") or ""),
+        "commit_plan_id": str(plan.get("commit_plan_id") or ""),
+        "commit_plan_status": str(plan.get("commit_plan_status") or ""),
+        "projection_id": str(plan.get("projection_id") or ""),
+        "transition_id": str(plan.get("transition_id") or ""),
+        "planned_mutations": planned_mutations,
+        "planned_mutation_count": len(planned_mutations),
+        "guard_checks": guard_checks,
+        "recommended_next_state": recommended_next_state,
+        "guard_message_text": guard_message_text,
+        "transition_commit_plan_summary": build_agent_runner_transition_commit_plan_summary(plan),
+        "state_projection_summary": deepcopy(plan.get("state_projection_summary") or {}),
+        "commit_message": deepcopy(plan.get("commit_message") or {}),
+        "guard_payload": guard_payload,
+        "guard_message": guard_message,
+        "dry_run": True,
+        "mutation_guard_recorded": False,
+        "commit_plan_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_mutation_guard_summary(mutation_guard: dict[str, Any]) -> dict[str, Any]:
+    safe_guard = mutation_guard if isinstance(mutation_guard, dict) else {}
+    return {
+        "summary_version": "agent_runner_mutation_guard_summary_v1",
+        "mutation_guard_version": str(safe_guard.get("mutation_guard_version") or AGENT_RUNNER_MUTATION_GUARD_VERSION),
+        "mutation_guard_id": str(safe_guard.get("mutation_guard_id") or ""),
+        "project_id": str(safe_guard.get("project_id") or "demo_project_default"),
+        "mutation_guard_status": str(safe_guard.get("mutation_guard_status") or "mutation_guard_blocked"),
+        "mutation_allowed": bool(safe_guard.get("mutation_allowed")),
+        "target_agent_id": str(safe_guard.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_guard.get("target_agent_stage") or ""),
+        "commit_plan_id": str(safe_guard.get("commit_plan_id") or ""),
+        "projection_id": str(safe_guard.get("projection_id") or ""),
+        "planned_mutation_count": int(safe_guard.get("planned_mutation_count") or 0),
+        "mutation_guard_recorded": False,
+        "commit_plan_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

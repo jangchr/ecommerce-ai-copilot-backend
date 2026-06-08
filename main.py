@@ -91,6 +91,10 @@ from agent_runs import (
     build_agent_runner_graph_transition_proposal_summary,
     build_agent_runner_state_projection,
     build_agent_runner_state_projection_summary,
+    build_agent_runner_transition_commit_plan,
+    build_agent_runner_transition_commit_plan_summary,
+    build_agent_runner_mutation_guard,
+    build_agent_runner_mutation_guard_summary,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
@@ -7097,6 +7101,189 @@ async def dry_run_project_agent_graph_transition(project_id: str, http_request: 
         "runner_state_projection": runner_state_projection,
         "runner_state_projection_summary": runner_state_projection_summary,
         "dry_run": True,
+        "graph_transition_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+
+@app.post("/api/v1/projects/{project_id}/runner/commit-plan/dry-run")
+async def dry_run_project_agent_transition_commit_plan(project_id: str, http_request: Request):
+    payload = _build_project_runner_plan_payload(project_id)
+    runner_execution_receipt = build_agent_runner_execution_receipt(
+        payload["runner_dispatch_ticket"],
+        payload["runner_dispatch_event"],
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_execution_receipt_summary = build_agent_runner_execution_receipt_summary(
+        runner_execution_receipt
+    )
+    runner_work_order = build_agent_runner_work_order(
+        payload["runner_plan"],
+        payload["runner_dispatch_ticket"],
+        payload["runner_dispatch_event"],
+        runner_execution_receipt,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_work_order_summary = build_agent_runner_work_order_summary(runner_work_order)
+    runner_queue_item = build_agent_runner_queue_item(
+        runner_work_order,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_queue_item_summary = build_agent_runner_queue_item_summary(runner_queue_item)
+    runner_queue_claim = build_agent_runner_queue_claim(
+        runner_queue_item,
+        worker_id="project_workspace_runner_worker",
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_queue_claim_summary = build_agent_runner_queue_claim_summary(runner_queue_claim)
+    runner_worker_lease = build_agent_runner_worker_lease(
+        runner_queue_claim,
+        lease_seconds=300,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_worker_lease_summary = build_agent_runner_worker_lease_summary(runner_worker_lease)
+    runner_invocation_envelope = build_agent_runner_invocation_envelope(
+        runner_worker_lease,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_invocation_envelope_summary = build_agent_runner_invocation_envelope_summary(
+        runner_invocation_envelope
+    )
+    runner_invocation_attempt = build_agent_runner_invocation_attempt(
+        runner_invocation_envelope,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_invocation_attempt_summary = build_agent_runner_invocation_attempt_summary(
+        runner_invocation_attempt
+    )
+    runner_invocation_result = build_agent_runner_invocation_result(
+        runner_invocation_attempt,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_invocation_result_summary = build_agent_runner_invocation_result_summary(
+        runner_invocation_result
+    )
+    runner_completion_receipt = build_agent_runner_completion_receipt(
+        runner_invocation_result,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_completion_receipt_summary = build_agent_runner_completion_receipt_summary(
+        runner_completion_receipt
+    )
+    runner_handoff_checkpoint = build_agent_runner_handoff_checkpoint(
+        runner_completion_receipt,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_handoff_checkpoint_summary = build_agent_runner_handoff_checkpoint_summary(
+        runner_handoff_checkpoint
+    )
+    runner_next_agent_unlock = build_agent_runner_next_agent_unlock(
+        runner_handoff_checkpoint,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_next_agent_unlock_summary = build_agent_runner_next_agent_unlock_summary(
+        runner_next_agent_unlock
+    )
+    runner_graph_transition_proposal = build_agent_runner_graph_transition_proposal(
+        runner_next_agent_unlock,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_graph_transition_proposal_summary = build_agent_runner_graph_transition_proposal_summary(
+        runner_graph_transition_proposal
+    )
+    runner_state_projection = build_agent_runner_state_projection(
+        runner_graph_transition_proposal,
+        project=payload["project"],
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_state_projection_summary = build_agent_runner_state_projection_summary(
+        runner_state_projection
+    )
+    runner_transition_commit_plan = build_agent_runner_transition_commit_plan(
+        runner_state_projection,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_transition_commit_plan_summary = build_agent_runner_transition_commit_plan_summary(
+        runner_transition_commit_plan
+    )
+    runner_mutation_guard = build_agent_runner_mutation_guard(
+        runner_transition_commit_plan,
+        requested_by="project_runner_commit_plan_dry_run_api",
+    )
+    runner_mutation_guard_summary = build_agent_runner_mutation_guard_summary(
+        runner_mutation_guard
+    )
+
+    project = payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update(
+        {
+            "latest_runner_commit_plan_status": runner_transition_commit_plan.get("commit_plan_status", ""),
+            "latest_runner_mutation_guard_status": runner_mutation_guard.get("mutation_guard_status", ""),
+            "latest_runner_mutation_allowed": bool(runner_mutation_guard.get("mutation_allowed")),
+            "latest_runner_planned_mutation_count": int(runner_transition_commit_plan.get("planned_mutation_count") or 0),
+        }
+    )
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        "status": "success",
+        "project": project,
+        "planner_recommendation": payload["planner_recommendation"],
+        "runner_plan": payload["runner_plan"],
+        "runner_plan_summary": payload["runner_plan_summary"],
+        "runner_dispatch_ticket": payload["runner_dispatch_ticket"],
+        "runner_dispatch_summary": payload["runner_dispatch_summary"],
+        "runner_dispatch_event": payload["runner_dispatch_event"],
+        "runner_dispatch_event_summary": payload["runner_dispatch_event_summary"],
+        "runner_execution_receipt": runner_execution_receipt,
+        "runner_execution_receipt_summary": runner_execution_receipt_summary,
+        "runner_work_order": runner_work_order,
+        "runner_work_order_summary": runner_work_order_summary,
+        "runner_queue_item": runner_queue_item,
+        "runner_queue_item_summary": runner_queue_item_summary,
+        "runner_queue_claim": runner_queue_claim,
+        "runner_queue_claim_summary": runner_queue_claim_summary,
+        "runner_worker_lease": runner_worker_lease,
+        "runner_worker_lease_summary": runner_worker_lease_summary,
+        "runner_invocation_envelope": runner_invocation_envelope,
+        "runner_invocation_envelope_summary": runner_invocation_envelope_summary,
+        "runner_invocation_attempt": runner_invocation_attempt,
+        "runner_invocation_attempt_summary": runner_invocation_attempt_summary,
+        "runner_invocation_result": runner_invocation_result,
+        "runner_invocation_result_summary": runner_invocation_result_summary,
+        "runner_completion_receipt": runner_completion_receipt,
+        "runner_completion_receipt_summary": runner_completion_receipt_summary,
+        "runner_handoff_checkpoint": runner_handoff_checkpoint,
+        "runner_handoff_checkpoint_summary": runner_handoff_checkpoint_summary,
+        "runner_next_agent_unlock": runner_next_agent_unlock,
+        "runner_next_agent_unlock_summary": runner_next_agent_unlock_summary,
+        "runner_graph_transition_proposal": runner_graph_transition_proposal,
+        "runner_graph_transition_proposal_summary": runner_graph_transition_proposal_summary,
+        "runner_state_projection": runner_state_projection,
+        "runner_state_projection_summary": runner_state_projection_summary,
+        "runner_transition_commit_plan": runner_transition_commit_plan,
+        "runner_transition_commit_plan_summary": runner_transition_commit_plan_summary,
+        "runner_mutation_guard": runner_mutation_guard,
+        "runner_mutation_guard_summary": runner_mutation_guard_summary,
+        "dry_run": True,
+        "commit_plan_persisted": False,
+        "mutation_guard_recorded": False,
+        "mutation_allowed": False,
         "graph_transition_persisted": False,
         "state_persisted": False,
         "project_snapshot_saved": False,

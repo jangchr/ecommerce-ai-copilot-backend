@@ -884,3 +884,47 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             proposal["transition_status"],
         )
 
+    def test_project_runner_commit_plan_dry_run_endpoint_returns_guard(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/commit-plan/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["commit_plan_persisted"])
+        self.assertFalse(payload["mutation_guard_recorded"])
+        self.assertFalse(payload["mutation_allowed"])
+        self.assertFalse(payload["graph_transition_persisted"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertFalse(payload["next_agent_unlocked"])
+        self.assertFalse(payload["handoff_complete"])
+        self.assertFalse(payload["agent_output_generated"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_transition_commit_plan", payload)
+        self.assertIn("runner_mutation_guard", payload)
+        self.assertIn("runner_mutation_guard_summary", payload)
+
+        commit_plan = payload["runner_transition_commit_plan"]
+        guard = payload["runner_mutation_guard"]
+        summary = payload["runner_mutation_guard_summary"]
+        self.assertEqual(commit_plan["transition_commit_plan_version"], "agent_runner_transition_commit_plan_v1")
+        self.assertEqual(guard["mutation_guard_version"], "agent_runner_mutation_guard_v1")
+        self.assertTrue(guard["dry_run"])
+        self.assertFalse(guard["mutation_allowed"])
+        self.assertFalse(guard["mutation_guard_recorded"])
+        self.assertFalse(guard["state_persisted"])
+        self.assertFalse(guard["project_snapshot_saved"])
+        self.assertEqual(summary["summary_version"], "agent_runner_mutation_guard_summary_v1")
+        self.assertEqual(summary["mutation_guard_status"], guard["mutation_guard_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_commit_plan_status"],
+            commit_plan["commit_plan_status"],
+        )
+
