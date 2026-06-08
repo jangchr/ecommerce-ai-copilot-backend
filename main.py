@@ -9634,6 +9634,186 @@ async def dry_run_project_agent_execution_sandbox(project_id: str, http_request:
     }
 
 
+
+def _runner_provider_adapter_registry_preview(sandbox_payload: dict) -> dict:
+    project = dict(sandbox_payload.get("project") or {})
+    sandbox_receipt = dict(sandbox_payload.get("runner_execution_sandbox_receipt_preview") or {})
+    adapters = [
+        {"adapter_id": "text_generation_adapter", "provider_category": "llm_text_generation", "registered": True, "enabled": False, "requires_quota": True, "requires_approval": True},
+        {"adapter_id": "image_generation_adapter", "provider_category": "image_generation", "registered": True, "enabled": False, "requires_quota": True, "requires_approval": True},
+        {"adapter_id": "video_generation_adapter", "provider_category": "video_generation", "registered": True, "enabled": False, "requires_quota": True, "requires_approval": True},
+        {"adapter_id": "comment_collection_adapter", "provider_category": "comment_collection", "registered": True, "enabled": False, "requires_quota": True, "requires_approval": True},
+        {"adapter_id": "web_fetch_adapter", "provider_category": "external_web_fetch", "registered": True, "enabled": False, "requires_quota": True, "requires_approval": True},
+        {"adapter_id": "export_pack_adapter", "provider_category": "local_export", "registered": True, "enabled": False, "requires_quota": False, "requires_approval": True},
+    ]
+    return {
+        "provider_adapter_registry_version": "runner_provider_adapter_registry_preview_v1",
+        "provider_adapter_registry_status": "provider_adapter_registry_preview_only",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "execution_sandbox_receipt_status": sandbox_receipt.get("execution_sandbox_receipt_status", ""),
+        "adapters": adapters,
+        "adapter_count": len(adapters),
+        "enabled_adapter_count": 0,
+        "registered_adapter_count": len(adapters),
+        "provider_calls_enabled": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_adapter_handshake_preview(adapter_registry: dict) -> dict:
+    handshake_items = [
+        {"handshake_item_id": "adapter_registered", "passed": True},
+        {"handshake_item_id": "sandbox_ready", "passed": False},
+        {"handshake_item_id": "quota_available", "passed": False},
+        {"handshake_item_id": "secret_boundary_ready", "passed": True},
+        {"handshake_item_id": "operator_approval_captured", "passed": False},
+        {"handshake_item_id": "real_execution_adapter_enabled", "passed": False},
+    ]
+    passed_count = sum(1 for item in handshake_items if item.get("passed"))
+    return {
+        "provider_adapter_handshake_version": "runner_provider_adapter_handshake_preview_v1",
+        "provider_adapter_handshake_status": "provider_adapter_handshake_blocked",
+        "project_id": adapter_registry.get("project_id", "demo_project_default"),
+        "provider_adapter_registry_status": adapter_registry.get("provider_adapter_registry_status", ""),
+        "handshake_items": handshake_items,
+        "handshake_item_count": len(handshake_items),
+        "passed_handshake_item_count": passed_count,
+        "handshake_passed": False,
+        "provider_calls_enabled": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_invocation_envelope_preview(adapter_handshake: dict) -> dict:
+    return {
+        "invocation_envelope_version": "runner_invocation_envelope_preview_v1",
+        "invocation_envelope_status": "invocation_envelope_preview_only",
+        "project_id": adapter_handshake.get("project_id", "demo_project_default"),
+        "provider_adapter_handshake_status": adapter_handshake.get("provider_adapter_handshake_status", ""),
+        "invocation_id": f"provider_invocation_{adapter_handshake.get('project_id', 'demo_project_default')}_dry_run",
+        "requested_adapter_id": "text_generation_adapter",
+        "requested_provider_category": "llm_text_generation",
+        "payload_redacted": True,
+        "secrets_included": False,
+        "quota_reserved": False,
+        "operator_approval_attached": False,
+        "invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_policy_matrix_preview(invocation_envelope: dict) -> dict:
+    policy_rows = [
+        {"policy_id": "approval_required", "required": True, "satisfied": False},
+        {"policy_id": "quota_required", "required": True, "satisfied": False},
+        {"policy_id": "secret_redaction_required", "required": True, "satisfied": True},
+        {"policy_id": "sandbox_required", "required": True, "satisfied": False},
+        {"policy_id": "audit_receipt_required", "required": True, "satisfied": True},
+        {"policy_id": "rollback_plan_required", "required": True, "satisfied": False},
+    ]
+    satisfied_count = sum(1 for row in policy_rows if row.get("satisfied"))
+    return {
+        "provider_policy_matrix_version": "runner_provider_policy_matrix_preview_v1",
+        "provider_policy_matrix_status": "provider_policy_matrix_blocking_invocation",
+        "project_id": invocation_envelope.get("project_id", "demo_project_default"),
+        "invocation_envelope_status": invocation_envelope.get("invocation_envelope_status", ""),
+        "policy_rows": policy_rows,
+        "policy_row_count": len(policy_rows),
+        "satisfied_policy_count": satisfied_count,
+        "all_required_policies_satisfied": False,
+        "invocation_allowed": False,
+        "provider_calls_enabled": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_adapter_invocation_receipt_preview(policy_matrix: dict) -> dict:
+    return {
+        "adapter_invocation_receipt_version": "runner_adapter_invocation_receipt_preview_v1",
+        "adapter_invocation_receipt_status": "adapter_invocation_receipt_preview_only",
+        "project_id": policy_matrix.get("project_id", "demo_project_default"),
+        "provider_policy_matrix_status": policy_matrix.get("provider_policy_matrix_status", ""),
+        "receipt_items": [
+            {"receipt_item_id": "adapter_registry", "included": True},
+            {"receipt_item_id": "adapter_handshake", "included": True},
+            {"receipt_item_id": "invocation_envelope", "included": True},
+            {"receipt_item_id": "provider_policy_matrix", "included": True},
+            {"receipt_item_id": "dry_run_boundary", "included": True},
+        ],
+        "receipt_item_count": 5,
+        "receipt_recorded": False,
+        "invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/provider-adapter/dry-run")
+async def dry_run_project_agent_provider_adapter(project_id: str, http_request: Request):
+    sandbox_payload = await dry_run_project_agent_execution_sandbox(project_id, http_request)
+
+    runner_provider_adapter_registry_preview = _runner_provider_adapter_registry_preview(sandbox_payload)
+    runner_provider_adapter_handshake_preview = _runner_provider_adapter_handshake_preview(runner_provider_adapter_registry_preview)
+    runner_invocation_envelope_preview = _runner_invocation_envelope_preview(runner_provider_adapter_handshake_preview)
+    runner_provider_policy_matrix_preview = _runner_provider_policy_matrix_preview(runner_invocation_envelope_preview)
+    runner_adapter_invocation_receipt_preview = _runner_adapter_invocation_receipt_preview(runner_provider_policy_matrix_preview)
+
+    project = sandbox_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_provider_adapter_registry_status": runner_provider_adapter_registry_preview["provider_adapter_registry_status"],
+        "latest_runner_provider_adapter_handshake_status": runner_provider_adapter_handshake_preview["provider_adapter_handshake_status"],
+        "latest_runner_invocation_envelope_status": runner_invocation_envelope_preview["invocation_envelope_status"],
+        "latest_runner_provider_policy_matrix_status": runner_provider_policy_matrix_preview["provider_policy_matrix_status"],
+        "latest_runner_adapter_invocation_receipt_status": runner_adapter_invocation_receipt_preview["adapter_invocation_receipt_status"],
+        "latest_runner_provider_invocation_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **sandbox_payload,
+        "project": project,
+        "runner_provider_adapter_registry_preview": runner_provider_adapter_registry_preview,
+        "runner_provider_adapter_handshake_preview": runner_provider_adapter_handshake_preview,
+        "runner_invocation_envelope_preview": runner_invocation_envelope_preview,
+        "runner_provider_policy_matrix_preview": runner_provider_policy_matrix_preview,
+        "runner_adapter_invocation_receipt_preview": runner_adapter_invocation_receipt_preview,
+        "dry_run": True,
+        "provider_calls_enabled": False,
+        "handshake_passed": False,
+        "quota_reserved": False,
+        "operator_approval_attached": False,
+        "invocation_allowed": False,
+        "provider_call_performed": False,
+        "receipt_recorded": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

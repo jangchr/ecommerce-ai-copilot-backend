@@ -14384,6 +14384,123 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_PROVIDER_ADAPTER_PANEL_BUNDLE_MARKER = 'Project Workspace provider adapter panel bundle';
+        let latestProjectRunnerProviderAdapterRegistryPreview = {};
+        let latestProjectRunnerProviderAdapterHandshakePreview = {};
+        let latestProjectRunnerInvocationEnvelopePreview = {};
+        let latestProjectRunnerProviderPolicyMatrixPreview = {};
+        let latestProjectRunnerAdapterInvocationReceiptPreview = {};
+
+        function projectWorkspaceProviderAdapterCopyText(workspace = latestProjectWorkspace) {
+            const registry = Object.keys(latestProjectRunnerProviderAdapterRegistryPreview || {}).length ? latestProjectRunnerProviderAdapterRegistryPreview : workspace?.runner_provider_adapter_registry_preview || {};
+            const handshake = Object.keys(latestProjectRunnerProviderAdapterHandshakePreview || {}).length ? latestProjectRunnerProviderAdapterHandshakePreview : workspace?.runner_provider_adapter_handshake_preview || {};
+            const envelope = Object.keys(latestProjectRunnerInvocationEnvelopePreview || {}).length ? latestProjectRunnerInvocationEnvelopePreview : workspace?.runner_invocation_envelope_preview || {};
+            const policy = Object.keys(latestProjectRunnerProviderPolicyMatrixPreview || {}).length ? latestProjectRunnerProviderPolicyMatrixPreview : workspace?.runner_provider_policy_matrix_preview || {};
+            const receipt = Object.keys(latestProjectRunnerAdapterInvocationReceiptPreview || {}).length ? latestProjectRunnerAdapterInvocationReceiptPreview : workspace?.runner_adapter_invocation_receipt_preview || {};
+            return [
+                t('providerAdapterCopyTitle'),
+                `${t('providerAdapterRegistryStatus')}: ${registry.provider_adapter_registry_status || 'not_refreshed'}`,
+                `${t('providerAdapterHandshakeStatus')}: ${handshake.provider_adapter_handshake_status || 'not_refreshed'}`,
+                `${t('invocationEnvelopeStatus')}: ${envelope.invocation_envelope_status || 'not_refreshed'}`,
+                `${t('providerPolicyMatrixStatus')}: ${policy.provider_policy_matrix_status || 'not_refreshed'}`,
+                `${t('adapterInvocationReceiptStatus')}: ${receipt.adapter_invocation_receipt_status || 'not_refreshed'}`,
+                `${t('invocationAllowed')}: ${Boolean(receipt.invocation_allowed)}`,
+                `${t('providerCallsEnabled')}: ${Boolean(registry.provider_calls_enabled)}`,
+                '',
+                JSON.stringify({ registry, handshake, envelope, policy, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderAdapter() {
+            const status = document.getElementById('projectWorkspaceProviderAdapterStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderAdapterCopyText());
+                if (status) status.textContent = t('providerAdapterCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerAdapterCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceProviderAdapter(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceProviderAdapterStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('providerAdapterDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_provider_adapter_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/provider-adapter/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('providerAdapterDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerProviderAdapterRegistryPreview = payload.runner_provider_adapter_registry_preview || {};
+                latestProjectRunnerProviderAdapterHandshakePreview = payload.runner_provider_adapter_handshake_preview || {};
+                latestProjectRunnerInvocationEnvelopePreview = payload.runner_invocation_envelope_preview || {};
+                latestProjectRunnerProviderPolicyMatrixPreview = payload.runner_provider_policy_matrix_preview || {};
+                latestProjectRunnerAdapterInvocationReceiptPreview = payload.runner_adapter_invocation_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_provider_adapter_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_provider_adapter_dry_run');
+                if (status) status.textContent = t('providerAdapterDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceProviderAdapterPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceProviderAdapterPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_provider_adapter_dry_run');
+                if (status) status.textContent = error.message || t('providerAdapterDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceProviderAdapterPanel(workspace = latestProjectWorkspace) {
+            const registry = Object.keys(latestProjectRunnerProviderAdapterRegistryPreview || {}).length ? latestProjectRunnerProviderAdapterRegistryPreview : workspace?.runner_provider_adapter_registry_preview || {};
+            const handshake = Object.keys(latestProjectRunnerProviderAdapterHandshakePreview || {}).length ? latestProjectRunnerProviderAdapterHandshakePreview : workspace?.runner_provider_adapter_handshake_preview || {};
+            const policy = Object.keys(latestProjectRunnerProviderPolicyMatrixPreview || {}).length ? latestProjectRunnerProviderPolicyMatrixPreview : workspace?.runner_provider_policy_matrix_preview || {};
+            const receipt = Object.keys(latestProjectRunnerAdapterInvocationReceiptPreview || {}).length ? latestProjectRunnerAdapterInvocationReceiptPreview : workspace?.runner_adapter_invocation_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderAdapterPanel" data-project-provider-adapter-panel-marker="Project Workspace provider adapter panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerAdapterPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerAdapterPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceProviderAdapterBtn" type="button" data-project-provider-adapter-dry-run-action="Project Workspace provider adapter panel bundle" onclick="dryRunProjectWorkspaceProviderAdapter()">${escapeHTML(t('dryRunProviderAdapter'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderAdapterBtn" type="button" onclick="copyProjectWorkspaceProviderAdapter()">${escapeHTML(t('copyProviderAdapter'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerAdapterRegistryStatus'))}</div>
+                            <strong data-provider-adapter-registry-status="${escapeHTML(registry.provider_adapter_registry_status || 'not_refreshed')}">${escapeHTML(registry.provider_adapter_registry_status || t('providerAdapterNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerAdapterHandshakeStatus'))}</div>
+                            <strong data-provider-adapter-handshake-status="${escapeHTML(handshake.provider_adapter_handshake_status || 'not_refreshed')}">${escapeHTML(handshake.provider_adapter_handshake_status || t('providerAdapterNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerPolicyMatrixStatus'))}</div>
+                            <strong data-provider-policy-matrix-status="${escapeHTML(policy.provider_policy_matrix_status || 'not_refreshed')}">${escapeHTML(policy.provider_policy_matrix_status || t('providerAdapterNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('invocationAllowed'))}: ${escapeHTML(String(Boolean(receipt.invocation_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerAdapterAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-provider-adapter-audit-preview="Project Workspace provider adapter panel bundle">${escapeHTML(projectWorkspaceProviderAdapterCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerAdapterNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderAdapterStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceExecutionSandboxPanel(workspace = latestProjectWorkspace) {
             const sandbox = Object.keys(latestProjectRunnerExecutionSandboxContract || {}).length ? latestProjectRunnerExecutionSandboxContract : workspace?.runner_execution_sandbox_contract || {};
             const provider = Object.keys(latestProjectRunnerProviderBoundaryPreview || {}).length ? latestProjectRunnerProviderBoundaryPreview : workspace?.runner_provider_boundary_preview || {};
@@ -15568,6 +15685,7 @@
                     ${renderProjectWorkspaceOperatorApprovalPanel(workspace)}
                     ${renderProjectWorkspaceApprovalDecisionPanel(workspace)}
                     ${renderProjectWorkspaceExecutionSandboxPanel(workspace)}
+                    ${renderProjectWorkspaceProviderAdapterPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -18565,6 +18683,53 @@
             executionSandboxDryRunFailed: 'Execution sandbox dry-run \u5931\u8d25\u3002',
             executionSandboxCopied: '\u6267\u884c\u6c99\u76d2\u5df2\u590d\u5236\u3002',
             executionSandboxCopyFailed: '\u590d\u5236\u6267\u884c\u6c99\u76d2\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderAdapterPanelBundleMarker: 'Project Workspace provider adapter panel bundle',
+            providerAdapterPanelTitle: 'Provider adapter registry & invocation policy',
+            providerAdapterPanelHelper: 'Dry-run adapter registry, adapter handshake, invocation envelope, provider policy matrix, and adapter invocation receipt.',
+            dryRunProviderAdapter: 'Dry-run provider adapter',
+            copyProviderAdapter: 'Copy provider adapter',
+            providerAdapterCopyTitle: 'Project provider adapter dry-run',
+            providerAdapterRegistryStatus: 'Provider adapter registry status',
+            providerAdapterHandshakeStatus: 'Provider adapter handshake status',
+            invocationEnvelopeStatus: 'Invocation envelope status',
+            providerPolicyMatrixStatus: 'Provider policy matrix status',
+            adapterInvocationReceiptStatus: 'Adapter invocation receipt status',
+            invocationAllowed: 'Invocation allowed',
+            providerCallsEnabled: 'Provider calls enabled',
+            providerAdapterAuditPreview: 'Provider adapter audit preview',
+            providerAdapterNotRefreshedYet: 'Provider adapter has not been refreshed yet.',
+            providerAdapterDryRunRunning: 'Building provider adapter dry-run...',
+            providerAdapterDryRunComplete: 'Provider adapter dry-run complete.',
+            providerAdapterDryRunFailed: 'Provider adapter dry-run failed.',
+            providerAdapterCopied: 'Provider adapter copied.',
+            providerAdapterCopyFailed: 'Could not copy provider adapter.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderAdapterPanelBundleMarker: 'Project Workspace provider adapter panel bundle',
+            providerAdapterPanelTitle: '\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668\u6ce8\u518c\u8868\u4e0e\u8c03\u7528\u7b56\u7565',
+            providerAdapterPanelHelper: '\u5bf9\u9002\u914d\u5668\u6ce8\u518c\u8868\u3001\u9002\u914d\u5668\u63e1\u624b\u3001\u8c03\u7528\u4fe1\u5c01\u3001\u5916\u90e8\u670d\u52a1\u7b56\u7565\u77e9\u9635\u548c\u8c03\u7528\u56de\u6267\u505a dry-run\u3002',
+            dryRunProviderAdapter: 'Dry-run \u5916\u90e8\u670d\u52a1\u9002\u914d\u5668',
+            copyProviderAdapter: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668',
+            providerAdapterCopyTitle: '\u9879\u76ee\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668 dry-run',
+            providerAdapterRegistryStatus: '\u9002\u914d\u5668\u6ce8\u518c\u8868\u72b6\u6001',
+            providerAdapterHandshakeStatus: '\u9002\u914d\u5668\u63e1\u624b\u72b6\u6001',
+            invocationEnvelopeStatus: '\u8c03\u7528\u4fe1\u5c01\u72b6\u6001',
+            providerPolicyMatrixStatus: '\u5916\u90e8\u670d\u52a1\u7b56\u7565\u77e9\u9635\u72b6\u6001',
+            adapterInvocationReceiptStatus: '\u9002\u914d\u5668\u8c03\u7528\u56de\u6267\u72b6\u6001',
+            invocationAllowed: '\u662f\u5426\u5141\u8bb8\u8c03\u7528',
+            providerCallsEnabled: '\u662f\u5426\u5141\u8bb8\u5916\u90e8\u670d\u52a1\u8c03\u7528',
+            providerAdapterAuditPreview: '\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668\u5ba1\u8ba1\u9884\u89c8',
+            providerAdapterNotRefreshedYet: '\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668\u5c1a\u672a\u5237\u65b0\u3002',
+            providerAdapterDryRunRunning: '\u6b63\u5728\u751f\u6210 provider adapter dry-run...',
+            providerAdapterDryRunComplete: 'Provider adapter dry-run \u5b8c\u6210\u3002',
+            providerAdapterDryRunFailed: 'Provider adapter dry-run \u5931\u8d25\u3002',
+            providerAdapterCopied: '\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668\u5df2\u590d\u5236\u3002',
+            providerAdapterCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668\u5931\u8d25\u3002'
         });
 
 
