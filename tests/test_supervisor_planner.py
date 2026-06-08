@@ -1101,3 +1101,51 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             authorization["authorization_status"],
         )
 
+    def test_project_runner_runtime_readiness_dry_run_endpoint_returns_bootstrap_plan(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/runtime-readiness/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_authorization_preview",
+            "runner_execution_manifest",
+            "runner_execution_session",
+            "runner_preflight_certificate",
+            "runner_runtime_sandbox",
+            "runner_worker_bootstrap_plan",
+            "runner_worker_bootstrap_plan_summary",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertFalse(payload["authorization_granted"])
+        self.assertFalse(payload["authorization_token_issued"])
+        self.assertFalse(payload["execution_started"])
+        self.assertFalse(payload["session_started"])
+        self.assertFalse(payload["preflight_clearance_granted"])
+        self.assertFalse(payload["sandbox_active"])
+        self.assertFalse(payload["worker_started"])
+        self.assertFalse(payload["worker_loop_started"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["write_authorized"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertEqual(
+            payload["runner_worker_bootstrap_plan"]["worker_bootstrap_plan_version"],
+            "agent_runner_worker_bootstrap_plan_v1",
+        )
+        self.assertEqual(
+            payload["runner_worker_bootstrap_plan_summary"]["summary_version"],
+            "agent_runner_worker_bootstrap_plan_summary_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_worker_bootstrap_status"],
+            payload["runner_worker_bootstrap_plan"]["worker_bootstrap_status"],
+        )
+

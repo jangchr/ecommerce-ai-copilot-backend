@@ -3569,3 +3569,125 @@ class AgentRunnerAuthorizationManifestTests(unittest.TestCase):
         self.assertFalse(authorization_preview["authorization_granted"])
         self.assertFalse(execution_manifest["execution_started"])
 
+
+class AgentRunnerRuntimeReadinessTests(unittest.TestCase):
+    def _build_policy_decision(self, project_id="project_runtime_ready", user_action_required=False, next_agent_id="planner_agent"):
+        from agent_runs import (
+            build_agent_runner_approval_request,
+            build_agent_runner_audit_ledger,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_policy_decision,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+        plan = build_agent_runner_plan(
+            {
+                "project_id": project_id,
+                "overall_status": "needs_source" if user_action_required else "ready_for_agent_run",
+                "next_action_type": "add_source" if user_action_required else "start_agent_run",
+                "next_agent_id": next_agent_id,
+                "can_start_agent_run": not user_action_required,
+                "user_action_required": user_action_required,
+            },
+            project={"project_id": project_id},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal, project={"project_id": project_id})
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        approval_request = build_agent_runner_approval_request(persist_gate, audit_ledger)
+        return build_agent_runner_policy_decision(approval_request)
+
+    def test_runtime_readiness_chain_waits_for_real_output(self):
+        from agent_runs import (
+            build_agent_runner_authorization_preview,
+            build_agent_runner_execution_manifest,
+            build_agent_runner_execution_session,
+            build_agent_runner_preflight_certificate,
+            build_agent_runner_runtime_sandbox,
+            build_agent_runner_worker_bootstrap_plan,
+            build_agent_runner_worker_bootstrap_plan_summary,
+        )
+        policy = self._build_policy_decision()
+        authorization = build_agent_runner_authorization_preview(policy)
+        manifest = build_agent_runner_execution_manifest(authorization)
+        session = build_agent_runner_execution_session(manifest)
+        preflight = build_agent_runner_preflight_certificate(session)
+        sandbox = build_agent_runner_runtime_sandbox(preflight)
+        bootstrap = build_agent_runner_worker_bootstrap_plan(sandbox)
+        summary = build_agent_runner_worker_bootstrap_plan_summary(bootstrap)
+
+        self.assertEqual(authorization["authorization_preview_version"], "agent_runner_authorization_preview_v1")
+        self.assertEqual(manifest["execution_manifest_version"], "agent_runner_execution_manifest_v1")
+        self.assertEqual(session["execution_session_version"], "agent_runner_execution_session_v1")
+        self.assertEqual(preflight["preflight_certificate_version"], "agent_runner_preflight_certificate_v1")
+        self.assertEqual(sandbox["runtime_sandbox_version"], "agent_runner_runtime_sandbox_v1")
+        self.assertEqual(bootstrap["worker_bootstrap_plan_version"], "agent_runner_worker_bootstrap_plan_v1")
+        self.assertFalse(authorization["authorization_granted"])
+        self.assertFalse(manifest["execution_started"])
+        self.assertFalse(session["session_started"])
+        self.assertFalse(preflight["preflight_clearance_granted"])
+        self.assertFalse(sandbox["sandbox_active"])
+        self.assertFalse(bootstrap["worker_started"])
+        self.assertFalse(bootstrap["worker_loop_started"])
+        self.assertEqual(summary["summary_version"], "agent_runner_worker_bootstrap_plan_summary_v1")
+
+    def test_runtime_readiness_chain_waits_for_user(self):
+        from agent_runs import (
+            build_agent_runner_authorization_preview,
+            build_agent_runner_execution_manifest,
+            build_agent_runner_execution_session,
+            build_agent_runner_preflight_certificate,
+            build_agent_runner_runtime_sandbox,
+            build_agent_runner_worker_bootstrap_plan,
+        )
+        policy = self._build_policy_decision(project_id="project_runtime_waiting", user_action_required=True, next_agent_id="source_adapter_agent")
+        authorization = build_agent_runner_authorization_preview(policy)
+        manifest = build_agent_runner_execution_manifest(authorization)
+        session = build_agent_runner_execution_session(manifest)
+        preflight = build_agent_runner_preflight_certificate(session)
+        sandbox = build_agent_runner_runtime_sandbox(preflight)
+        bootstrap = build_agent_runner_worker_bootstrap_plan(sandbox)
+
+        self.assertIn("waiting_for_user", authorization["authorization_status"])
+        self.assertIn("waiting_for_user", manifest["execution_manifest_status"])
+        self.assertIn("waiting_for_user", session["execution_session_status"])
+        self.assertIn("waiting_for_user", preflight["preflight_status"])
+        self.assertIn("waiting_for_user", sandbox["runtime_sandbox_status"])
+        self.assertIn("waiting_for_user", bootstrap["worker_bootstrap_status"])
+

@@ -5571,6 +5571,342 @@ def build_agent_runner_execution_manifest_summary(execution_manifest: dict[str, 
 
 
 
+
+if "AGENT_RUNNER_EXECUTION_SESSION_VERSION" not in globals():
+    AGENT_RUNNER_EXECUTION_SESSION_VERSION = "agent_runner_execution_session_v1"
+if "AGENT_RUNNER_PREFLIGHT_CERTIFICATE_VERSION" not in globals():
+    AGENT_RUNNER_PREFLIGHT_CERTIFICATE_VERSION = "agent_runner_preflight_certificate_v1"
+if "AGENT_RUNNER_RUNTIME_SANDBOX_VERSION" not in globals():
+    AGENT_RUNNER_RUNTIME_SANDBOX_VERSION = "agent_runner_runtime_sandbox_v1"
+if "AGENT_RUNNER_WORKER_BOOTSTRAP_PLAN_VERSION" not in globals():
+    AGENT_RUNNER_WORKER_BOOTSTRAP_PLAN_VERSION = "agent_runner_worker_bootstrap_plan_v1"
+
+
+def _runner_wait_status(upstream_status: str, prefix: str, default_blocked: str) -> str:
+    status = str(upstream_status or "")
+    if "waiting_for_real_agent_output" in status:
+        return f"{prefix}_waiting_for_real_agent_output"
+    if "waiting_for_user" in status:
+        return f"{prefix}_waiting_for_user"
+    if "review" in status or "approval" in status:
+        return f"{prefix}_waiting_for_explicit_review"
+    if "ready" in status:
+        return f"{prefix}_waiting_for_explicit_review"
+    return default_blocked
+
+
+def build_agent_runner_execution_session(
+    execution_manifest: dict[str, Any],
+    requested_by: str = "runner_runtime_readiness_dry_run_api",
+) -> dict[str, Any]:
+    manifest = execution_manifest if isinstance(execution_manifest, dict) else {}
+    project_id = str(manifest.get("project_id") or "demo_project_default")
+    target_agent_id = str(manifest.get("target_agent_id") or "")
+    status = _runner_wait_status(
+        str(manifest.get("execution_manifest_status") or ""),
+        "execution_session",
+        "execution_session_blocked",
+    )
+    execution_session_id = f"execution_session_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    steps = [
+        {"step_id": "load_manifest", "status": "previewed", "ready": bool(manifest.get("execution_manifest_id"))},
+        {"step_id": "confirm_authorization", "status": "blocked_in_dry_run", "ready": False},
+        {"step_id": "start_worker", "status": "blocked_in_dry_run", "ready": False},
+        {"step_id": "record_audit", "status": "previewed", "ready": True},
+    ]
+    payload = {
+        "execution_session_version": AGENT_RUNNER_EXECUTION_SESSION_VERSION,
+        "execution_session_status": status,
+        "execution_session_id": execution_session_id,
+        "execution_manifest_id": manifest.get("execution_manifest_id"),
+        "target_agent_id": target_agent_id,
+        "session_steps": steps,
+        "session_step_count": len(steps),
+        "dry_run": True,
+        "execution_session_recorded": False,
+        "session_started": False,
+        "worker_started": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_runtime_readiness_dry_run_api"),
+        "target_agent_stage": str(manifest.get("target_agent_stage") or ""),
+        "execution_manifest_status": str(manifest.get("execution_manifest_status") or ""),
+        "authorization_preview_id": str(manifest.get("authorization_preview_id") or ""),
+        "execution_manifest_summary": build_agent_runner_execution_manifest_summary(manifest),
+        "session_message": build_agent_message(
+            message_type="runner_execution_session_dry_run",
+            source_agent_id="runner_execution_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "agent_execution_authorized": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_execution_session_summary(execution_session: dict[str, Any]) -> dict[str, Any]:
+    safe_session = execution_session if isinstance(execution_session, dict) else {}
+    return {
+        "summary_version": "agent_runner_execution_session_summary_v1",
+        "execution_session_version": str(safe_session.get("execution_session_version") or AGENT_RUNNER_EXECUTION_SESSION_VERSION),
+        "execution_session_id": str(safe_session.get("execution_session_id") or ""),
+        "project_id": str(safe_session.get("project_id") or "demo_project_default"),
+        "execution_session_status": str(safe_session.get("execution_session_status") or "execution_session_blocked"),
+        "session_step_count": int(safe_session.get("session_step_count") or 0),
+        "session_started": False,
+        "worker_started": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_preflight_certificate(
+    execution_session: dict[str, Any],
+    requested_by: str = "runner_runtime_readiness_dry_run_api",
+) -> dict[str, Any]:
+    session = execution_session if isinstance(execution_session, dict) else {}
+    project_id = str(session.get("project_id") or "demo_project_default")
+    target_agent_id = str(session.get("target_agent_id") or "")
+    status = _runner_wait_status(
+        str(session.get("execution_session_status") or ""),
+        "preflight",
+        "preflight_blocked",
+    )
+    preflight_certificate_id = f"preflight_certificate_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    checks = [
+        {"check_id": "session_exists", "passed": bool(session.get("execution_session_id"))},
+        {"check_id": "execution_not_started", "passed": not bool(session.get("session_started"))},
+        {"check_id": "worker_not_started", "passed": not bool(session.get("worker_started"))},
+        {"check_id": "no_external_cost", "passed": not bool(session.get("cost_incurred_by_crossgrowth"))},
+    ]
+    payload = {
+        "preflight_certificate_version": AGENT_RUNNER_PREFLIGHT_CERTIFICATE_VERSION,
+        "preflight_status": status,
+        "preflight_certificate_id": preflight_certificate_id,
+        "execution_session_id": session.get("execution_session_id"),
+        "target_agent_id": target_agent_id,
+        "preflight_checks": checks,
+        "preflight_check_count": len(checks),
+        "dry_run": True,
+        "preflight_certificate_recorded": False,
+        "preflight_clearance_granted": False,
+        "session_started": False,
+        "worker_started": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_runtime_readiness_dry_run_api"),
+        "target_agent_stage": str(session.get("target_agent_stage") or ""),
+        "execution_session_status": str(session.get("execution_session_status") or ""),
+        "execution_manifest_id": str(session.get("execution_manifest_id") or ""),
+        "execution_session_summary": build_agent_runner_execution_session_summary(session),
+        "certificate_message": build_agent_message(
+            message_type="runner_preflight_certificate_dry_run",
+            source_agent_id="runner_execution_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "agent_execution_authorized": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_preflight_certificate_summary(preflight_certificate: dict[str, Any]) -> dict[str, Any]:
+    safe_certificate = preflight_certificate if isinstance(preflight_certificate, dict) else {}
+    return {
+        "summary_version": "agent_runner_preflight_certificate_summary_v1",
+        "preflight_certificate_version": str(safe_certificate.get("preflight_certificate_version") or AGENT_RUNNER_PREFLIGHT_CERTIFICATE_VERSION),
+        "preflight_certificate_id": str(safe_certificate.get("preflight_certificate_id") or ""),
+        "project_id": str(safe_certificate.get("project_id") or "demo_project_default"),
+        "preflight_status": str(safe_certificate.get("preflight_status") or "preflight_blocked"),
+        "preflight_check_count": int(safe_certificate.get("preflight_check_count") or 0),
+        "preflight_clearance_granted": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_runtime_sandbox(
+    preflight_certificate: dict[str, Any],
+    requested_by: str = "runner_runtime_readiness_dry_run_api",
+) -> dict[str, Any]:
+    certificate = preflight_certificate if isinstance(preflight_certificate, dict) else {}
+    project_id = str(certificate.get("project_id") or "demo_project_default")
+    target_agent_id = str(certificate.get("target_agent_id") or "")
+    status = _runner_wait_status(
+        str(certificate.get("preflight_status") or ""),
+        "runtime_sandbox",
+        "runtime_sandbox_blocked",
+    )
+    runtime_sandbox_id = f"runtime_sandbox_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    restrictions = [
+        {"restriction_id": "no_state_write", "enforced": True},
+        {"restriction_id": "no_external_provider_call", "enforced": True},
+        {"restriction_id": "no_crossgrowth_cost", "enforced": True},
+        {"restriction_id": "no_autonomous_llm_routing", "enforced": True},
+    ]
+    payload = {
+        "runtime_sandbox_version": AGENT_RUNNER_RUNTIME_SANDBOX_VERSION,
+        "runtime_sandbox_status": status,
+        "runtime_sandbox_id": runtime_sandbox_id,
+        "preflight_certificate_id": certificate.get("preflight_certificate_id"),
+        "target_agent_id": target_agent_id,
+        "sandbox_restrictions": restrictions,
+        "sandbox_restriction_count": len(restrictions),
+        "dry_run": True,
+        "runtime_sandbox_recorded": False,
+        "sandbox_active": False,
+        "worker_started": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_runtime_readiness_dry_run_api"),
+        "target_agent_stage": str(certificate.get("target_agent_stage") or ""),
+        "preflight_status": str(certificate.get("preflight_status") or ""),
+        "preflight_certificate_summary": build_agent_runner_preflight_certificate_summary(certificate),
+        "sandbox_message": build_agent_message(
+            message_type="runner_runtime_sandbox_dry_run",
+            source_agent_id="runner_execution_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_runtime_sandbox_summary(runtime_sandbox: dict[str, Any]) -> dict[str, Any]:
+    safe_sandbox = runtime_sandbox if isinstance(runtime_sandbox, dict) else {}
+    return {
+        "summary_version": "agent_runner_runtime_sandbox_summary_v1",
+        "runtime_sandbox_version": str(safe_sandbox.get("runtime_sandbox_version") or AGENT_RUNNER_RUNTIME_SANDBOX_VERSION),
+        "runtime_sandbox_id": str(safe_sandbox.get("runtime_sandbox_id") or ""),
+        "project_id": str(safe_sandbox.get("project_id") or "demo_project_default"),
+        "runtime_sandbox_status": str(safe_sandbox.get("runtime_sandbox_status") or "runtime_sandbox_blocked"),
+        "sandbox_restriction_count": int(safe_sandbox.get("sandbox_restriction_count") or 0),
+        "sandbox_active": False,
+        "worker_started": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_bootstrap_plan(
+    runtime_sandbox: dict[str, Any],
+    requested_by: str = "runner_runtime_readiness_dry_run_api",
+) -> dict[str, Any]:
+    sandbox = runtime_sandbox if isinstance(runtime_sandbox, dict) else {}
+    project_id = str(sandbox.get("project_id") or "demo_project_default")
+    target_agent_id = str(sandbox.get("target_agent_id") or "")
+    status = _runner_wait_status(
+        str(sandbox.get("runtime_sandbox_status") or ""),
+        "worker_bootstrap",
+        "worker_bootstrap_blocked",
+    )
+    worker_bootstrap_plan_id = f"worker_bootstrap_plan_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    bootstrap_steps = [
+        {"step_id": "load_runtime_sandbox", "ready": bool(sandbox.get("runtime_sandbox_id"))},
+        {"step_id": "prepare_worker_context", "ready": False},
+        {"step_id": "bind_queue_claim", "ready": False},
+        {"step_id": "start_worker_loop", "ready": False},
+    ]
+    payload = {
+        "worker_bootstrap_plan_version": AGENT_RUNNER_WORKER_BOOTSTRAP_PLAN_VERSION,
+        "worker_bootstrap_status": status,
+        "worker_bootstrap_plan_id": worker_bootstrap_plan_id,
+        "runtime_sandbox_id": sandbox.get("runtime_sandbox_id"),
+        "target_agent_id": target_agent_id,
+        "bootstrap_steps": bootstrap_steps,
+        "bootstrap_step_count": len(bootstrap_steps),
+        "dry_run": True,
+        "worker_bootstrap_recorded": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_runtime_readiness_dry_run_api"),
+        "target_agent_stage": str(sandbox.get("target_agent_stage") or ""),
+        "runtime_sandbox_status": str(sandbox.get("runtime_sandbox_status") or ""),
+        "runtime_sandbox_summary": build_agent_runner_runtime_sandbox_summary(sandbox),
+        "bootstrap_message": build_agent_message(
+            message_type="runner_worker_bootstrap_plan_dry_run",
+            source_agent_id="runner_execution_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "sandbox_active": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_bootstrap_plan_summary(worker_bootstrap_plan: dict[str, Any]) -> dict[str, Any]:
+    safe_plan = worker_bootstrap_plan if isinstance(worker_bootstrap_plan, dict) else {}
+    return {
+        "summary_version": "agent_runner_worker_bootstrap_plan_summary_v1",
+        "worker_bootstrap_plan_version": str(safe_plan.get("worker_bootstrap_plan_version") or AGENT_RUNNER_WORKER_BOOTSTRAP_PLAN_VERSION),
+        "worker_bootstrap_plan_id": str(safe_plan.get("worker_bootstrap_plan_id") or ""),
+        "project_id": str(safe_plan.get("project_id") or "demo_project_default"),
+        "worker_bootstrap_status": str(safe_plan.get("worker_bootstrap_status") or "worker_bootstrap_blocked"),
+        "bootstrap_step_count": int(safe_plan.get("bootstrap_step_count") or 0),
+        "worker_started": False,
+        "worker_loop_started": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

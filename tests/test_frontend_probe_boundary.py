@@ -5253,3 +5253,46 @@ class ProjectWorkspaceAuthorizationManifestPanelFrontendTests(unittest.TestCase)
         self.assertIn("Project Workspace authorization manifest panel bundle", script)
         self.assertIn("project_workspace_authorization_manifest_panel_marker", script)
 
+
+class ProjectWorkspaceRuntimeReadinessPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_runtime_readiness_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace runtime readiness panel bundle",
+            "PROJECT_WORKSPACE_RUNTIME_READINESS_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceRuntimeReadinessPanel(",
+            "function projectWorkspaceRuntimeReadinessCopyText(",
+            "async function copyProjectWorkspaceRuntimeReadiness(",
+            "async function dryRunProjectWorkspaceRuntimeReadiness(",
+            "/runner/runtime-readiness/dry-run",
+            "latestProjectRunnerAuthorizationPreview",
+            "latestProjectRunnerExecutionManifest",
+            "latestProjectRunnerExecutionSession",
+            "latestProjectRunnerPreflightCertificate",
+            "latestProjectRunnerRuntimeSandbox",
+            "latestProjectRunnerWorkerBootstrapPlan",
+            "projectWorkspaceRuntimeReadinessPanel",
+            "projectWorkspaceRuntimeReadinessStatus",
+            "dryRunProjectWorkspaceRuntimeReadinessBtn",
+            "copyProjectWorkspaceRuntimeReadinessBtn",
+            "data-project-runtime-readiness-panel-marker",
+            "data-project-runtime-readiness-dry-run-action",
+            "data-runtime-readiness-audit-preview",
+            "runtimeReadinessPanelTitle",
+            "runtimeReadinessPanelHelper",
+            "renderProjectWorkspaceRuntimeReadinessPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_runtime_readiness_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_runtime_readiness_panel_marker", script)
+        self.assertIn("Project Workspace runtime readiness panel bundle", script)
+
+    def test_project_workspace_runtime_readiness_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace runtime readiness panel bundle", script)
+        self.assertIn("project_workspace_runtime_readiness_panel_marker", script)
+

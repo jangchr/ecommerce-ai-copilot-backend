@@ -13694,6 +13694,129 @@
         }
 
 
+
+        const PROJECT_WORKSPACE_RUNTIME_READINESS_PANEL_BUNDLE_MARKER = 'Project Workspace runtime readiness panel bundle';
+        let latestProjectRunnerAuthorizationPreview = {};
+        let latestProjectRunnerExecutionManifest = {};
+        let latestProjectRunnerExecutionSession = {};
+        let latestProjectRunnerPreflightCertificate = {};
+        let latestProjectRunnerRuntimeSandbox = {};
+        let latestProjectRunnerWorkerBootstrapPlan = {};
+
+        function projectWorkspaceRuntimeReadinessCopyText(workspace = latestProjectWorkspace) {
+            const authorization = latestProjectRunnerAuthorizationPreview || workspace?.runner_authorization_preview || {};
+            const manifest = latestProjectRunnerExecutionManifest || workspace?.runner_execution_manifest || {};
+            const session = latestProjectRunnerExecutionSession || workspace?.runner_execution_session || {};
+            const preflight = latestProjectRunnerPreflightCertificate || workspace?.runner_preflight_certificate || {};
+            const sandbox = latestProjectRunnerRuntimeSandbox || workspace?.runner_runtime_sandbox || {};
+            const bootstrap = latestProjectRunnerWorkerBootstrapPlan || workspace?.runner_worker_bootstrap_plan || {};
+            return [
+                t('runtimeReadinessCopyTitle'),
+                `${t('authorizationStatus')}: ${authorization.authorization_status || 'not_refreshed'}`,
+                `${t('executionManifestStatus')}: ${manifest.execution_manifest_status || 'not_refreshed'}`,
+                `${t('executionSessionStatus')}: ${session.execution_session_status || 'not_refreshed'}`,
+                `${t('preflightStatus')}: ${preflight.preflight_status || 'not_refreshed'}`,
+                `${t('runtimeSandboxStatus')}: ${sandbox.runtime_sandbox_status || 'not_refreshed'}`,
+                `${t('workerBootstrapStatus')}: ${bootstrap.worker_bootstrap_status || 'not_refreshed'}`,
+                `${t('workerStarted')}: ${Boolean(bootstrap.worker_started)}`,
+                `${t('workerLoopStarted')}: ${Boolean(bootstrap.worker_loop_started)}`,
+                '',
+                JSON.stringify({ authorization, manifest, session, preflight, sandbox, bootstrap }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRuntimeReadiness() {
+            const status = document.getElementById('projectWorkspaceRuntimeReadinessStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRuntimeReadinessCopyText());
+                if (status) status.textContent = t('runtimeReadinessCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('runtimeReadinessCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceRuntimeReadiness(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRuntimeReadinessStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('runtimeReadinessDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_runtime_readiness_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/runtime-readiness/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('runtimeReadinessDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerAuthorizationPreview = payload.runner_authorization_preview || {};
+                latestProjectRunnerExecutionManifest = payload.runner_execution_manifest || {};
+                latestProjectRunnerExecutionSession = payload.runner_execution_session || {};
+                latestProjectRunnerPreflightCertificate = payload.runner_preflight_certificate || {};
+                latestProjectRunnerRuntimeSandbox = payload.runner_runtime_sandbox || {};
+                latestProjectRunnerWorkerBootstrapPlan = payload.runner_worker_bootstrap_plan || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_runtime_readiness_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_runtime_readiness_dry_run');
+                if (status) status.textContent = t('runtimeReadinessDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceRuntimeReadinessPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRuntimeReadinessPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_runtime_readiness_dry_run');
+                if (status) status.textContent = error.message || t('runtimeReadinessDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRuntimeReadinessPanel(workspace = latestProjectWorkspace) {
+            const authorization = latestProjectRunnerAuthorizationPreview || workspace?.runner_authorization_preview || {};
+            const manifest = latestProjectRunnerExecutionManifest || workspace?.runner_execution_manifest || {};
+            const session = latestProjectRunnerExecutionSession || workspace?.runner_execution_session || {};
+            const preflight = latestProjectRunnerPreflightCertificate || workspace?.runner_preflight_certificate || {};
+            const sandbox = latestProjectRunnerRuntimeSandbox || workspace?.runner_runtime_sandbox || {};
+            const bootstrap = latestProjectRunnerWorkerBootstrapPlan || workspace?.runner_worker_bootstrap_plan || {};
+            const hasBootstrap = Boolean(bootstrap && Object.keys(bootstrap).length);
+            return `
+                <div class="section-block" id="projectWorkspaceRuntimeReadinessPanel" data-project-runtime-readiness-panel-marker="Project Workspace runtime readiness panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runtimeReadinessPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runtimeReadinessPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceRuntimeReadinessBtn" type="button" data-project-runtime-readiness-dry-run-action="Project Workspace runtime readiness panel bundle" onclick="dryRunProjectWorkspaceRuntimeReadiness()">${escapeHTML(t('dryRunRuntimeReadiness'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRuntimeReadinessBtn" type="button" onclick="copyProjectWorkspaceRuntimeReadiness()">${escapeHTML(t('copyRuntimeReadiness'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('authorizationStatus'))}</div>
+                            <strong data-authorization-status="${escapeHTML(authorization.authorization_status || 'not_refreshed')}">${escapeHTML(authorization.authorization_status || t('runtimeReadinessNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('preflightStatus'))}</div>
+                            <strong data-preflight-status="${escapeHTML(preflight.preflight_status || 'not_refreshed')}">${escapeHTML(preflight.preflight_status || t('runtimeReadinessNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workerBootstrapStatus'))}</div>
+                            <strong data-worker-bootstrap-status="${escapeHTML(bootstrap.worker_bootstrap_status || 'not_refreshed')}">${escapeHTML(bootstrap.worker_bootstrap_status || t('runtimeReadinessNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('workerStarted'))}: ${escapeHTML(String(Boolean(bootstrap.worker_started)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('runtimeReadinessAuditPreview'))}</div>
+                        ${hasBootstrap ? `<pre class="debug" data-runtime-readiness-audit-preview="Project Workspace runtime readiness panel bundle">${escapeHTML(projectWorkspaceRuntimeReadinessCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('runtimeReadinessNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRuntimeReadinessStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceApprovalPolicyPanel(workspace = latestProjectWorkspace) {
             const approvalRequest = projectWorkspaceApprovalRequestFromWorkspace(workspace);
             const policyDecision = projectWorkspacePolicyDecisionFromWorkspace(workspace);
@@ -14474,6 +14597,7 @@
                     ${renderProjectWorkspacePersistRequestRollbackPanel(workspace)}
                     ${renderProjectWorkspacePersistGateAuditPanel(workspace)}
                     ${renderProjectWorkspaceApprovalPolicyPanel(workspace)}
+                    ${renderProjectWorkspaceRuntimeReadinessPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -17040,6 +17164,55 @@
             authorizationManifestDryRunFailed: 'Authorization manifest dry-run \u5931\u8d25\u3002',
             authorizationManifestCopied: '\u6388\u6743\u6267\u884c\u6e05\u5355\u5df2\u590d\u5236\u3002',
             authorizationManifestCopyFailed: '\u590d\u5236\u6388\u6743\u6267\u884c\u6e05\u5355\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRuntimeReadinessPanelBundleMarker: 'Project Workspace runtime readiness panel bundle',
+            runtimeReadinessPanelTitle: 'Runtime readiness super-batch',
+            runtimeReadinessPanelHelper: 'Dry-run authorization, manifest, session, preflight, sandbox, and worker bootstrap without starting execution.',
+            dryRunRuntimeReadiness: 'Dry-run runtime readiness',
+            copyRuntimeReadiness: 'Copy runtime readiness',
+            runtimeReadinessCopyTitle: 'Project runtime readiness dry-run',
+            authorizationStatus: 'Authorization status',
+            executionManifestStatus: 'Execution manifest status',
+            executionSessionStatus: 'Execution session status',
+            preflightStatus: 'Preflight status',
+            runtimeSandboxStatus: 'Runtime sandbox status',
+            workerBootstrapStatus: 'Worker bootstrap status',
+            workerStarted: 'Worker started',
+            workerLoopStarted: 'Worker loop started',
+            runtimeReadinessAuditPreview: 'Runtime readiness audit preview',
+            runtimeReadinessNotRefreshedYet: 'Runtime readiness has not been refreshed yet.',
+            runtimeReadinessDryRunRunning: 'Building runtime readiness dry-run...',
+            runtimeReadinessDryRunComplete: 'Runtime readiness dry-run complete.',
+            runtimeReadinessDryRunFailed: 'Runtime readiness dry-run failed.',
+            runtimeReadinessCopied: 'Runtime readiness copied.',
+            runtimeReadinessCopyFailed: 'Could not copy runtime readiness.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRuntimeReadinessPanelBundleMarker: 'Project Workspace runtime readiness panel bundle',
+            runtimeReadinessPanelTitle: '\u8fd0\u884c\u5c31\u7eea\u8d85\u5927\u6279\u6b21',
+            runtimeReadinessPanelHelper: '\u5bf9\u6388\u6743\u3001\u6267\u884c\u6e05\u5355\u3001\u6267\u884c\u4f1a\u8bdd\u3001\u8d77\u98de\u524d\u68c0\u67e5\u3001\u8fd0\u884c\u6c99\u76d2\u548c Worker \u542f\u52a8\u8ba1\u5212\u505a dry-run\uff0c\u4e0d\u771f\u6b63\u5f00\u59cb\u6267\u884c\u3002',
+            dryRunRuntimeReadiness: 'Dry-run \u8fd0\u884c\u5c31\u7eea',
+            copyRuntimeReadiness: '\u590d\u5236\u8fd0\u884c\u5c31\u7eea',
+            runtimeReadinessCopyTitle: '\u9879\u76ee\u8fd0\u884c\u5c31\u7eea dry-run',
+            authorizationStatus: '\u6388\u6743\u72b6\u6001',
+            executionManifestStatus: '\u6267\u884c\u6e05\u5355\u72b6\u6001',
+            executionSessionStatus: '\u6267\u884c\u4f1a\u8bdd\u72b6\u6001',
+            preflightStatus: '\u8d77\u98de\u524d\u68c0\u67e5\u72b6\u6001',
+            runtimeSandboxStatus: '\u8fd0\u884c\u6c99\u76d2\u72b6\u6001',
+            workerBootstrapStatus: 'Worker \u542f\u52a8\u72b6\u6001',
+            workerStarted: 'Worker \u662f\u5426\u5df2\u542f\u52a8',
+            workerLoopStarted: 'Worker loop \u662f\u5426\u5df2\u542f\u52a8',
+            runtimeReadinessAuditPreview: '\u8fd0\u884c\u5c31\u7eea\u5ba1\u8ba1\u9884\u89c8',
+            runtimeReadinessNotRefreshedYet: '\u8fd0\u884c\u5c31\u7eea\u5c1a\u672a\u5237\u65b0\u3002',
+            runtimeReadinessDryRunRunning: '\u6b63\u5728\u751f\u6210 runtime readiness dry-run...',
+            runtimeReadinessDryRunComplete: 'Runtime readiness dry-run \u5b8c\u6210\u3002',
+            runtimeReadinessDryRunFailed: 'Runtime readiness dry-run \u5931\u8d25\u3002',
+            runtimeReadinessCopied: '\u8fd0\u884c\u5c31\u7eea\u5df2\u590d\u5236\u3002',
+            runtimeReadinessCopyFailed: '\u590d\u5236\u8fd0\u884c\u5c31\u7eea\u5931\u8d25\u3002'
         });
 
 
