@@ -1880,3 +1880,146 @@ class AgentRunnerWorkerLeaseTests(unittest.TestCase):
         self.assertIn("contract_validation", lease["blocking_check_ids"])
         self.assertEqual(lease["target_agent_id"], "missing_agent")
 
+
+class AgentRunnerInvocationDryRunTests(unittest.TestCase):
+    def test_invocation_envelope_and_attempt_ready_without_agent_call(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_attempt_summary,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_envelope_summary,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_invocation_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_invocation_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item, worker_id="unit_worker")
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        envelope_summary = build_agent_runner_invocation_envelope_summary(envelope)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        attempt_summary = build_agent_runner_invocation_attempt_summary(attempt)
+
+        self.assertEqual(envelope["invocation_envelope_version"], "agent_runner_invocation_envelope_v1")
+        self.assertEqual(envelope["envelope_status"], "invocation_ready_dry_run")
+        self.assertTrue(envelope["invocation_allowed"])
+        self.assertFalse(envelope["agent_invoked"])
+        self.assertFalse(envelope["agent_execution_performed"])
+        self.assertFalse(envelope["external_api_called"])
+        self.assertFalse(envelope["cost_incurred_by_crossgrowth"])
+        self.assertFalse(envelope["llm_autonomous_decision_enabled"])
+        self.assertEqual(envelope["target_agent_id"], "planner_agent")
+        self.assertEqual(envelope["invocation_message"]["message_type"], "runner_invocation_envelope_dry_run")
+        self.assertEqual(envelope_summary["summary_version"], "agent_runner_invocation_envelope_summary_v1")
+
+        self.assertEqual(attempt["invocation_attempt_version"], "agent_runner_invocation_attempt_v1")
+        self.assertEqual(attempt["attempt_status"], "attempt_ready_dry_run")
+        self.assertTrue(attempt["attempt_allowed"])
+        self.assertFalse(attempt["agent_invoked"])
+        self.assertFalse(attempt["agent_execution_performed"])
+        self.assertFalse(attempt["external_api_called"])
+        self.assertFalse(attempt["cost_incurred_by_crossgrowth"])
+        self.assertEqual(attempt["target_agent_id"], "planner_agent")
+        self.assertEqual(attempt["attempt_message"]["message_type"], "runner_invocation_attempt_dry_run")
+        self.assertEqual(attempt_summary["summary_version"], "agent_runner_invocation_attempt_summary_v1")
+
+    def test_invocation_attempt_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_invocation_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_invocation_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+
+        self.assertEqual(envelope["envelope_status"], "invocation_waiting_for_user")
+        self.assertEqual(attempt["attempt_status"], "attempt_waiting_for_user")
+        self.assertFalse(attempt["attempt_allowed"])
+        self.assertFalse(attempt["agent_invoked"])
+        self.assertIn("user_gate", attempt["blocking_check_ids"])
+
+    def test_invocation_attempt_blocks_invalid_target(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_invocation_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+
+        self.assertEqual(envelope["envelope_status"], "invocation_blocked")
+        self.assertEqual(attempt["attempt_status"], "attempt_blocked")
+        self.assertFalse(attempt["attempt_allowed"])
+        self.assertFalse(attempt["agent_invoked"])
+        self.assertIn("contract_validation", attempt["blocking_check_ids"])
+

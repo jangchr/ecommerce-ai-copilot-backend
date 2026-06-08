@@ -2825,6 +2825,279 @@ def build_agent_runner_worker_lease_summary(worker_lease: dict[str, Any]) -> dic
 
 
 
+AGENT_RUNNER_INVOCATION_ENVELOPE_VERSION = "agent_runner_invocation_envelope_v1"
+AGENT_RUNNER_INVOCATION_ATTEMPT_VERSION = "agent_runner_invocation_attempt_v1"
+
+
+def _invocation_envelope_status_from_lease(worker_lease: dict[str, Any]) -> str:
+    safe_lease = worker_lease if isinstance(worker_lease, dict) else {}
+    status = str(safe_lease.get("lease_status") or "lease_blocked")
+    if bool(safe_lease.get("lease_allowed")) and status == "lease_ready_dry_run":
+        return "invocation_ready_dry_run"
+    if status == "lease_waiting_for_user":
+        return "invocation_waiting_for_user"
+    return "invocation_blocked"
+
+
+def build_agent_runner_invocation_envelope(
+    worker_lease: dict[str, Any],
+    requested_by: str = "runner_invoke_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run invocation envelope for the next Agent.
+
+    This packages the inputs for a future Agent call. It does not invoke the
+    Agent, call providers, spend money, or enable autonomous LLM routing.
+    """
+
+    lease = worker_lease if isinstance(worker_lease, dict) else {}
+    project_id = str(lease.get("project_id") or "demo_project_default")
+    target_agent_id = str(lease.get("target_agent_id") or "")
+    envelope_status = _invocation_envelope_status_from_lease(lease)
+    invocation_allowed = envelope_status == "invocation_ready_dry_run"
+    envelope_id = f"invocation_envelope_{project_id}_{target_agent_id or 'none'}_{envelope_status}".replace(" ", "_")
+    idempotency_key = f"dry_run_idempotency::{envelope_id}"
+
+    target_contract = get_agent_contract(target_agent_id)
+    blocking_check_ids = [
+        str(value)
+        for value in (lease.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if invocation_allowed:
+        recommended_next_state = "ready_for_explicit_agent_call_attempt"
+        envelope_message_text = "Dry-run invocation envelope is ready. Real Agent calls are still disabled."
+    elif envelope_status == "invocation_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        envelope_message_text = "Invocation envelope is waiting for required user action."
+    else:
+        recommended_next_state = "fix_invocation_blockers"
+        envelope_message_text = "Invocation envelope is blocked by lease, claim, queue, work order, execution receipt, dispatch, or contract validation."
+
+    invocation_payload = {
+        "invocation_envelope_version": AGENT_RUNNER_INVOCATION_ENVELOPE_VERSION,
+        "envelope_status": envelope_status,
+        "invocation_allowed": invocation_allowed,
+        "envelope_id": envelope_id,
+        "idempotency_key": idempotency_key,
+        "lease_id": lease.get("lease_id"),
+        "lease_token": lease.get("lease_token"),
+        "worker_id": lease.get("worker_id"),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": lease.get("target_agent_stage"),
+        "input_contract": deepcopy(target_contract.get("input_contract") or []),
+        "output_contract": deepcopy(target_contract.get("output_contract") or []),
+        "required_inputs": deepcopy(lease.get("required_inputs") or []),
+        "expected_outputs": deepcopy(lease.get("expected_outputs") or []),
+        "work_payload": deepcopy(lease.get("work_payload") or {}),
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+    }
+
+    envelope_message = build_agent_message(
+        message_type="runner_invocation_envelope_dry_run",
+        source_agent_id="runner_invocation_manager",
+        target_agent_id=target_agent_id,
+        payload=invocation_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "invocation_envelope_version": AGENT_RUNNER_INVOCATION_ENVELOPE_VERSION,
+        "envelope_id": envelope_id,
+        "idempotency_key": idempotency_key,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_invoke_dry_run_api"),
+        "envelope_status": envelope_status,
+        "invocation_allowed": invocation_allowed,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(lease.get("target_agent_stage") or ""),
+        "target_agent_display_name": str(target_contract.get("display_name") or lease.get("target_agent_display_name") or target_agent_id),
+        "worker_id": str(lease.get("worker_id") or "runner_worker_dry_run"),
+        "lease_id": str(lease.get("lease_id") or ""),
+        "lease_status": str(lease.get("lease_status") or ""),
+        "lease_allowed": bool(lease.get("lease_allowed")),
+        "claim_id": str(lease.get("claim_id") or ""),
+        "queue_item_id": str(lease.get("queue_item_id") or ""),
+        "recommended_next_state": recommended_next_state,
+        "envelope_message_text": envelope_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "input_contract": deepcopy(target_contract.get("input_contract") or []),
+        "output_contract": deepcopy(target_contract.get("output_contract") or []),
+        "required_inputs": deepcopy(lease.get("required_inputs") or []),
+        "expected_outputs": deepcopy(lease.get("expected_outputs") or []),
+        "work_payload": deepcopy(lease.get("work_payload") or {}),
+        "worker_lease_summary": build_agent_runner_worker_lease_summary(lease),
+        "queue_claim_summary": deepcopy(lease.get("queue_claim_summary") or {}),
+        "queue_item_summary": deepcopy(lease.get("queue_item_summary") or {}),
+        "work_order_summary": deepcopy(lease.get("work_order_summary") or {}),
+        "lease_message": deepcopy(lease.get("lease_message") or {}),
+        "invocation_payload": invocation_payload,
+        "invocation_message": envelope_message,
+        "dry_run": True,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_invocation_envelope_summary(envelope: dict[str, Any]) -> dict[str, Any]:
+    safe_envelope = envelope if isinstance(envelope, dict) else {}
+    return {
+        "summary_version": "agent_runner_invocation_envelope_summary_v1",
+        "invocation_envelope_version": str(safe_envelope.get("invocation_envelope_version") or AGENT_RUNNER_INVOCATION_ENVELOPE_VERSION),
+        "envelope_id": str(safe_envelope.get("envelope_id") or ""),
+        "project_id": str(safe_envelope.get("project_id") or "demo_project_default"),
+        "envelope_status": str(safe_envelope.get("envelope_status") or "invocation_blocked"),
+        "invocation_allowed": bool(safe_envelope.get("invocation_allowed")),
+        "target_agent_id": str(safe_envelope.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_envelope.get("target_agent_stage") or ""),
+        "worker_id": str(safe_envelope.get("worker_id") or "runner_worker_dry_run"),
+        "lease_id": str(safe_envelope.get("lease_id") or ""),
+        "blocking_check_count": len(safe_envelope.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _invocation_attempt_status_from_envelope(envelope: dict[str, Any]) -> str:
+    safe_envelope = envelope if isinstance(envelope, dict) else {}
+    status = str(safe_envelope.get("envelope_status") or "invocation_blocked")
+    if bool(safe_envelope.get("invocation_allowed")) and status == "invocation_ready_dry_run":
+        return "attempt_ready_dry_run"
+    if status == "invocation_waiting_for_user":
+        return "attempt_waiting_for_user"
+    return "attempt_blocked"
+
+
+def build_agent_runner_invocation_attempt(
+    invocation_envelope: dict[str, Any],
+    requested_by: str = "runner_invoke_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run invocation attempt.
+
+    This records the decision to prepare an Agent call. It does not call the
+    Agent, call external providers, spend money, or let an LLM route itself.
+    """
+
+    envelope = invocation_envelope if isinstance(invocation_envelope, dict) else {}
+    project_id = str(envelope.get("project_id") or "demo_project_default")
+    target_agent_id = str(envelope.get("target_agent_id") or "")
+    attempt_status = _invocation_attempt_status_from_envelope(envelope)
+    attempt_allowed = attempt_status == "attempt_ready_dry_run"
+    attempt_id = f"invocation_attempt_{project_id}_{target_agent_id or 'none'}_{attempt_status}".replace(" ", "_")
+
+    blocking_check_ids = [
+        str(value)
+        for value in (envelope.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if attempt_allowed:
+        recommended_next_state = "ready_for_real_agent_invocation_feature_flag"
+        attempt_message_text = "Dry-run invocation attempt is ready. Real Agent invocation still requires an explicit feature flag and implementation."
+    elif attempt_status == "attempt_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        attempt_message_text = "Invocation attempt is waiting for required user action."
+    else:
+        recommended_next_state = "fix_invocation_attempt_blockers"
+        attempt_message_text = "Invocation attempt is blocked by invocation envelope or upstream safety checks."
+
+    attempt_payload = {
+        "invocation_attempt_version": AGENT_RUNNER_INVOCATION_ATTEMPT_VERSION,
+        "attempt_status": attempt_status,
+        "attempt_allowed": attempt_allowed,
+        "attempt_id": attempt_id,
+        "envelope_id": envelope.get("envelope_id"),
+        "idempotency_key": envelope.get("idempotency_key"),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": envelope.get("target_agent_stage"),
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+    }
+
+    attempt_message = build_agent_message(
+        message_type="runner_invocation_attempt_dry_run",
+        source_agent_id="runner_invocation_manager",
+        target_agent_id=target_agent_id,
+        payload=attempt_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "invocation_attempt_version": AGENT_RUNNER_INVOCATION_ATTEMPT_VERSION,
+        "attempt_id": attempt_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_invoke_dry_run_api"),
+        "attempt_status": attempt_status,
+        "attempt_allowed": attempt_allowed,
+        "envelope_id": str(envelope.get("envelope_id") or ""),
+        "idempotency_key": str(envelope.get("idempotency_key") or ""),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(envelope.get("target_agent_stage") or ""),
+        "worker_id": str(envelope.get("worker_id") or "runner_worker_dry_run"),
+        "lease_id": str(envelope.get("lease_id") or ""),
+        "recommended_next_state": recommended_next_state,
+        "attempt_message_text": attempt_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "invocation_envelope_summary": build_agent_runner_invocation_envelope_summary(envelope),
+        "invocation_payload": deepcopy(envelope.get("invocation_payload") or {}),
+        "invocation_message": deepcopy(envelope.get("invocation_message") or {}),
+        "attempt_message": attempt_message,
+        "dry_run": True,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_invocation_attempt_summary(attempt: dict[str, Any]) -> dict[str, Any]:
+    safe_attempt = attempt if isinstance(attempt, dict) else {}
+    return {
+        "summary_version": "agent_runner_invocation_attempt_summary_v1",
+        "invocation_attempt_version": str(safe_attempt.get("invocation_attempt_version") or AGENT_RUNNER_INVOCATION_ATTEMPT_VERSION),
+        "attempt_id": str(safe_attempt.get("attempt_id") or ""),
+        "project_id": str(safe_attempt.get("project_id") or "demo_project_default"),
+        "attempt_status": str(safe_attempt.get("attempt_status") or "attempt_blocked"),
+        "attempt_allowed": bool(safe_attempt.get("attempt_allowed")),
+        "target_agent_id": str(safe_attempt.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_attempt.get("target_agent_stage") or ""),
+        "envelope_id": str(safe_attempt.get("envelope_id") or ""),
+        "worker_id": str(safe_attempt.get("worker_id") or "runner_worker_dry_run"),
+        "blocking_check_count": len(safe_attempt.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

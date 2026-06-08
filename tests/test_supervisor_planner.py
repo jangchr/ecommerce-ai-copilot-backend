@@ -734,3 +734,38 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             lease["lease_status"],
         )
 
+    def test_project_runner_invoke_dry_run_endpoint_returns_invocation_attempt(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/invoke/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_invocation_envelope", payload)
+        self.assertIn("runner_invocation_attempt", payload)
+        self.assertIn("runner_invocation_attempt_summary", payload)
+
+        envelope = payload["runner_invocation_envelope"]
+        attempt = payload["runner_invocation_attempt"]
+        summary = payload["runner_invocation_attempt_summary"]
+        self.assertEqual(envelope["invocation_envelope_version"], "agent_runner_invocation_envelope_v1")
+        self.assertEqual(attempt["invocation_attempt_version"], "agent_runner_invocation_attempt_v1")
+        self.assertTrue(attempt["dry_run"])
+        self.assertFalse(attempt["agent_invoked"])
+        self.assertFalse(attempt["agent_execution_performed"])
+        self.assertFalse(attempt["external_api_called"])
+        self.assertFalse(attempt["cost_incurred_by_crossgrowth"])
+        self.assertEqual(summary["summary_version"], "agent_runner_invocation_attempt_summary_v1")
+        self.assertEqual(summary["attempt_status"], attempt["attempt_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_invocation_attempt_status"],
+            attempt["attempt_status"],
+        )
+

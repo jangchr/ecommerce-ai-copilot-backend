@@ -4821,3 +4821,51 @@ class ProjectWorkspaceWorkerLeasePanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace worker lease panel bundle", script)
         self.assertIn("project_workspace_worker_lease_panel_marker", script)
 
+
+class ProjectWorkspaceInvocationPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_invocation_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace invocation panel bundle",
+            "PROJECT_WORKSPACE_INVOCATION_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceInvocationPanel(",
+            "function projectWorkspaceInvocationEnvelopeFromWorkspace(",
+            "function projectWorkspaceInvocationAttemptFromWorkspace(",
+            "function projectWorkspaceInvocationStatusLabel(",
+            "function projectWorkspaceInvocationCopyText(",
+            "async function copyProjectWorkspaceInvocation(",
+            "async function dryRunProjectWorkspaceInvocation(",
+            "/runner/invoke/dry-run",
+            "latestProjectRunnerInvocationEnvelope",
+            "latestProjectRunnerInvocationAttempt",
+            "runner_invocation_envelope: latestProjectRunnerInvocationEnvelope",
+            "runner_invocation_attempt: latestProjectRunnerInvocationAttempt",
+            "runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {}",
+            "projectWorkspaceInvocationPanel",
+            "projectWorkspaceInvocationStatus",
+            "dryRunProjectWorkspaceInvocationBtn",
+            "copyProjectWorkspaceInvocationBtn",
+            "data-project-invocation-panel-marker",
+            "data-project-invocation-dry-run-action",
+            "data-invocation-attempt-status",
+            "data-invocation-envelope-id",
+            "data-invocation-attempt-allowed",
+            "data-invocation-audit-preview",
+            "invocationPanelTitle",
+            "invocationDryRunHelper",
+            "renderProjectWorkspaceInvocationPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_invocation_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_invocation_panel_marker", script)
+        self.assertIn("Project Workspace invocation panel bundle", script)
+
+    def test_project_workspace_invocation_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace invocation panel bundle", script)
+        self.assertIn("project_workspace_invocation_panel_marker", script)
+

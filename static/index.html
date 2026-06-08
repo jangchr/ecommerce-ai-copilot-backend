@@ -12285,6 +12285,176 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_INVOCATION_PANEL_BUNDLE_MARKER = 'Project Workspace invocation panel bundle';
+        let latestProjectRunnerInvocationEnvelope = {};
+        let latestProjectRunnerInvocationAttempt = {};
+
+        function projectWorkspaceInvocationEnvelopeFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerInvocationEnvelope && Object.keys(latestProjectRunnerInvocationEnvelope).length
+                ? latestProjectRunnerInvocationEnvelope
+                : workspace?.runner_invocation_envelope || {};
+        }
+
+        function projectWorkspaceInvocationAttemptFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerInvocationAttempt && Object.keys(latestProjectRunnerInvocationAttempt).length
+                ? latestProjectRunnerInvocationAttempt
+                : workspace?.runner_invocation_attempt || {};
+        }
+
+        function projectWorkspaceInvocationStatusLabel(attempt = {}) {
+            const status = String(attempt.attempt_status || 'not_refreshed');
+            const labels = {
+                attempt_ready_dry_run: t('invocationStatusReadyDryRun'),
+                attempt_waiting_for_user: t('invocationStatusWaitingForUser'),
+                attempt_blocked: t('invocationStatusBlocked'),
+                not_refreshed: t('invocationStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceInvocationCopyText(
+            envelope = projectWorkspaceInvocationEnvelopeFromWorkspace(),
+            attempt = projectWorkspaceInvocationAttemptFromWorkspace()
+        ) {
+            return [
+                t('invocationCopyTitle'),
+                `${t('projectId')}: ${attempt.project_id || envelope.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('invocationEnvelopeId')}: ${envelope.envelope_id || t('none')}`,
+                `${t('invocationAttemptId')}: ${attempt.attempt_id || t('none')}`,
+                `${t('invocationAttemptStatus')}: ${attempt.attempt_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${attempt.target_agent_id || envelope.target_agent_id || t('none')}`,
+                `${t('invocationAllowed')}: ${Boolean(attempt.attempt_allowed)}`,
+                `${t('agentInvoked')}: ${Boolean(attempt.agent_invoked)}`,
+                '',
+                JSON.stringify({ envelope, attempt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceInvocation() {
+            const status = document.getElementById('projectWorkspaceInvocationStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceInvocationCopyText());
+                if (status) status.textContent = t('invocationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('invocationCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceInvocation(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceInvocationStatus')
+                || document.getElementById('projectWorkspaceWorkerLeaseStatus')
+                || document.getElementById('projectWorkspaceQueueClaimStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('invocationDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_invoke_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/invoke/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('invocationDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_invoke_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_invoke_dry_run');
+                if (status) status.textContent = t('invocationDryRunComplete');
+
+                const leasePanel = document.getElementById('projectWorkspaceWorkerLeasePanel');
+                if (leasePanel) leasePanel.outerHTML = renderProjectWorkspaceWorkerLeasePanel(latestProjectWorkspace);
+                const invocationPanel = document.getElementById('projectWorkspaceInvocationPanel');
+                if (invocationPanel) invocationPanel.outerHTML = renderProjectWorkspaceInvocationPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_invoke_dry_run');
+                if (status) status.textContent = error.message || t('invocationDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceInvocationPanel(workspace = latestProjectWorkspace) {
+            const envelope = projectWorkspaceInvocationEnvelopeFromWorkspace(workspace);
+            const attempt = projectWorkspaceInvocationAttemptFromWorkspace(workspace);
+            const hasAttempt = Boolean(attempt && Object.keys(attempt).length);
+            const statusLabel = projectWorkspaceInvocationStatusLabel(attempt);
+            return `
+                <div class="section-block" id="projectWorkspaceInvocationPanel" data-project-invocation-panel-marker="Project Workspace invocation panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('invocationPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('invocationPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceInvocationBtn" type="button" data-project-invocation-dry-run-action="Project Workspace invocation panel bundle" onclick="dryRunProjectWorkspaceInvocation()">${escapeHTML(t('dryRunInvocation'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceInvocationBtn" type="button" onclick="copyProjectWorkspaceInvocation()">${escapeHTML(t('copyInvocation'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('invocationAttemptStatus'))}</div>
+                            <strong data-invocation-attempt-status="${escapeHTML(attempt.attempt_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('invocationDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('invocationEnvelopeId'))}</div>
+                            <strong data-invocation-envelope-id="${escapeHTML(envelope.envelope_id || '')}">${escapeHTML(envelope.envelope_id || t('invocationNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanNextAgent'))}: ${escapeHTML(attempt.target_agent_id || envelope.target_agent_id || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('invocationAllowed'))}</div>
+                            <strong data-invocation-attempt-allowed="${escapeHTML(String(Boolean(attempt.attempt_allowed)))}">${escapeHTML(String(Boolean(attempt.attempt_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('agentInvoked'))}: ${escapeHTML(String(Boolean(attempt.agent_invoked)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('invocationAuditPreview'))}</div>
+                        ${hasAttempt ? `<pre class="debug" data-invocation-audit-preview="Project Workspace invocation panel bundle">${escapeHTML(projectWorkspaceInvocationCopyText(envelope, attempt))}</pre>` : `<div class="recent-empty">${escapeHTML(t('invocationNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceInvocationStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceWorkerLeasePanel(workspace = latestProjectWorkspace) {
             const lease = projectWorkspaceWorkerLeaseFromWorkspace(workspace);
             const hasLease = Boolean(lease && Object.keys(lease).length);
@@ -12705,6 +12875,7 @@
                     ${renderProjectWorkspaceQueueItemPanel(workspace)}
                     ${renderProjectWorkspaceQueueClaimPanel(workspace)}
                     ${renderProjectWorkspaceWorkerLeasePanel(workspace)}
+                    ${renderProjectWorkspaceInvocationPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -14759,6 +14930,59 @@
             workerLeaseDryRunFailed: 'Worker lease dry-run \u5931\u8d25\u3002',
             workerLeaseCopied: 'Worker \u79df\u7ea6\u5df2\u590d\u5236\u3002',
             workerLeaseCopyFailed: '\u590d\u5236 Worker \u79df\u7ea6\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceInvocationPanelBundleMarker: 'Project Workspace invocation panel bundle',
+            invocationPanelTitle: 'Agent invocation dry-run',
+            invocationPanelHelper: 'Dry-run invocation envelope and attempt. This prepares an Agent call package without invoking the Agent.',
+            dryRunInvocation: 'Dry-run invocation',
+            copyInvocation: 'Copy invocation',
+            invocationCopyTitle: 'Project Agent invocation dry-run',
+            invocationEnvelopeId: 'Invocation envelope ID',
+            invocationAttemptId: 'Invocation attempt ID',
+            invocationAttemptStatus: 'Invocation attempt status',
+            invocationAllowed: 'Invocation allowed',
+            agentInvoked: 'Agent invoked',
+            invocationAuditPreview: 'Invocation audit preview',
+            invocationStatusReadyDryRun: 'Invocation ready dry-run',
+            invocationStatusWaitingForUser: 'Invocation waiting for user',
+            invocationStatusBlocked: 'Invocation blocked',
+            invocationStatusNotRefreshed: 'Not refreshed',
+            invocationNotRefreshedYet: 'Invocation has not been refreshed yet.',
+            invocationDryRunHelper: 'Dry run only: Agent is not invoked, provider is not called, cost is not incurred.',
+            invocationDryRunRunning: 'Building invocation dry-run...',
+            invocationDryRunComplete: 'Invocation dry-run complete.',
+            invocationDryRunFailed: 'Invocation dry-run failed.',
+            invocationCopied: 'Invocation copied.',
+            invocationCopyFailed: 'Could not copy invocation.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceInvocationPanelBundleMarker: 'Project Workspace invocation panel bundle',
+            invocationPanelTitle: 'Agent \u8c03\u7528 dry-run',
+            invocationPanelHelper: '\u8c03\u7528\u4fe1\u5c01\u548c\u8c03\u7528\u5c1d\u8bd5\u7684 dry-run\u3002\u5b83\u53ea\u51c6\u5907 Agent \u8c03\u7528\u5305\uff0c\u4e0d\u771f\u6b63\u8c03\u7528 Agent\u3002',
+            dryRunInvocation: 'Dry-run \u8c03\u7528',
+            copyInvocation: '\u590d\u5236\u8c03\u7528\u8bb0\u5f55',
+            invocationCopyTitle: '\u9879\u76ee Agent \u8c03\u7528 dry-run',
+            invocationEnvelopeId: '\u8c03\u7528\u4fe1\u5c01 ID',
+            invocationAttemptId: '\u8c03\u7528\u5c1d\u8bd5 ID',
+            invocationAttemptStatus: '\u8c03\u7528\u5c1d\u8bd5\u72b6\u6001',
+            invocationAllowed: '\u662f\u5426\u5141\u8bb8\u8c03\u7528',
+            agentInvoked: '\u662f\u5426\u5df2\u771f\u6b63\u8c03\u7528 Agent',
+            invocationAuditPreview: '\u8c03\u7528\u5ba1\u8ba1\u9884\u89c8',
+            invocationStatusReadyDryRun: '\u8c03\u7528 dry-run \u5df2\u5c31\u7eea',
+            invocationStatusWaitingForUser: '\u8c03\u7528\u7b49\u5f85\u7528\u6237',
+            invocationStatusBlocked: '\u8c03\u7528\u5df2\u963b\u585e',
+            invocationStatusNotRefreshed: '\u672a\u5237\u65b0',
+            invocationNotRefreshedYet: '\u8c03\u7528\u8bb0\u5f55\u5c1a\u672a\u5237\u65b0\u3002',
+            invocationDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u771f\u6b63\u8c03\u7528 Agent\uff0c\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\u3002',
+            invocationDryRunRunning: '\u6b63\u5728\u751f\u6210 invocation dry-run...',
+            invocationDryRunComplete: 'Invocation dry-run \u5b8c\u6210\u3002',
+            invocationDryRunFailed: 'Invocation dry-run \u5931\u8d25\u3002',
+            invocationCopied: '\u8c03\u7528\u8bb0\u5f55\u5df2\u590d\u5236\u3002',
+            invocationCopyFailed: '\u590d\u5236\u8c03\u7528\u8bb0\u5f55\u5931\u8d25\u3002'
         });
 
 
