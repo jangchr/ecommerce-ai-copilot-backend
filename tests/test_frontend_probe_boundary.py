@@ -4869,3 +4869,51 @@ class ProjectWorkspaceInvocationPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace invocation panel bundle", script)
         self.assertIn("project_workspace_invocation_panel_marker", script)
 
+
+class ProjectWorkspaceResultCompletionPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_result_completion_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace result completion panel bundle",
+            "PROJECT_WORKSPACE_RESULT_COMPLETION_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceResultCompletionPanel(",
+            "function projectWorkspaceInvocationResultFromWorkspace(",
+            "function projectWorkspaceCompletionReceiptFromWorkspace(",
+            "function projectWorkspaceCompletionStatusLabel(",
+            "function projectWorkspaceResultCompletionCopyText(",
+            "async function copyProjectWorkspaceResultCompletion(",
+            "async function dryRunProjectWorkspaceResultCompletion(",
+            "/runner/result/dry-run",
+            "latestProjectRunnerInvocationResult",
+            "latestProjectRunnerCompletionReceipt",
+            "runner_invocation_result: latestProjectRunnerInvocationResult",
+            "runner_completion_receipt: latestProjectRunnerCompletionReceipt",
+            "runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {}",
+            "projectWorkspaceResultCompletionPanel",
+            "projectWorkspaceResultCompletionStatus",
+            "dryRunProjectWorkspaceResultCompletionBtn",
+            "copyProjectWorkspaceResultCompletionBtn",
+            "data-project-result-completion-panel-marker",
+            "data-project-result-completion-dry-run-action",
+            "data-completion-status",
+            "data-invocation-result-id",
+            "data-completion-handoff-complete",
+            "data-result-completion-audit-preview",
+            "resultCompletionPanelTitle",
+            "resultCompletionDryRunHelper",
+            "renderProjectWorkspaceResultCompletionPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_result_completion_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_result_completion_panel_marker", script)
+        self.assertIn("Project Workspace result completion panel bundle", script)
+
+    def test_project_workspace_result_completion_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace result completion panel bundle", script)
+        self.assertIn("project_workspace_result_completion_panel_marker", script)
+

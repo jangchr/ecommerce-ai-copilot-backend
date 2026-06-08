@@ -3098,6 +3098,292 @@ def build_agent_runner_invocation_attempt_summary(attempt: dict[str, Any]) -> di
 
 
 
+AGENT_RUNNER_INVOCATION_RESULT_VERSION = "agent_runner_invocation_result_v1"
+AGENT_RUNNER_COMPLETION_RECEIPT_VERSION = "agent_runner_completion_receipt_v1"
+
+
+def _invocation_result_status_from_attempt(invocation_attempt: dict[str, Any]) -> str:
+    safe_attempt = invocation_attempt if isinstance(invocation_attempt, dict) else {}
+    status = str(safe_attempt.get("attempt_status") or "attempt_blocked")
+    if bool(safe_attempt.get("attempt_allowed")) and status == "attempt_ready_dry_run":
+        return "result_ready_dry_run"
+    if status == "attempt_waiting_for_user":
+        return "result_waiting_for_user"
+    return "result_blocked"
+
+
+def build_agent_runner_invocation_result(
+    invocation_attempt: dict[str, Any],
+    requested_by: str = "runner_result_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run result receipt for an invocation attempt.
+
+    This does not invoke an Agent, generate Agent output, persist output,
+    call providers, spend money, or enable autonomous LLM routing.
+    """
+
+    attempt = invocation_attempt if isinstance(invocation_attempt, dict) else {}
+    project_id = str(attempt.get("project_id") or "demo_project_default")
+    target_agent_id = str(attempt.get("target_agent_id") or "")
+    result_status = _invocation_result_status_from_attempt(attempt)
+    result_allowed = result_status == "result_ready_dry_run"
+    result_id = f"invocation_result_{project_id}_{target_agent_id or 'none'}_{result_status}".replace(" ", "_")
+
+    target_contract = get_agent_contract(target_agent_id)
+    expected_outputs = deepcopy(target_contract.get("output_contract") or [])
+    blocking_check_ids = [
+        str(value)
+        for value in (attempt.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if result_allowed:
+        recommended_next_state = "wait_for_real_agent_output"
+        result_message_text = "Dry-run result shell is ready. Real Agent output is not generated in dry-run mode."
+    elif result_status == "result_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        result_message_text = "Invocation result is waiting for required user action."
+    else:
+        recommended_next_state = "fix_result_blockers"
+        result_message_text = "Invocation result is blocked by attempt, envelope, lease, claim, queue, work order, execution receipt, dispatch, or contract validation."
+
+    output_contract_check = {
+        "check_version": "agent_runner_output_contract_check_v1",
+        "target_agent_id": target_agent_id,
+        "expected_outputs": expected_outputs,
+        "expected_output_count": len(expected_outputs),
+        "agent_output_generated": False,
+        "actual_outputs": [],
+        "missing_outputs": expected_outputs,
+        "contract_satisfied": False,
+        "dry_run": True,
+    }
+
+    result_payload = {
+        "invocation_result_version": AGENT_RUNNER_INVOCATION_RESULT_VERSION,
+        "result_status": result_status,
+        "result_allowed": result_allowed,
+        "result_id": result_id,
+        "attempt_id": attempt.get("attempt_id"),
+        "envelope_id": attempt.get("envelope_id"),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": attempt.get("target_agent_stage"),
+        "output_contract_check": output_contract_check,
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "result_persisted": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+    }
+
+    result_message = build_agent_message(
+        message_type="runner_invocation_result_dry_run",
+        source_agent_id="runner_result_manager",
+        target_agent_id=target_agent_id,
+        payload=result_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "invocation_result_version": AGENT_RUNNER_INVOCATION_RESULT_VERSION,
+        "result_id": result_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_result_dry_run_api"),
+        "result_status": result_status,
+        "result_allowed": result_allowed,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(attempt.get("target_agent_stage") or ""),
+        "attempt_id": str(attempt.get("attempt_id") or ""),
+        "attempt_status": str(attempt.get("attempt_status") or ""),
+        "attempt_allowed": bool(attempt.get("attempt_allowed")),
+        "envelope_id": str(attempt.get("envelope_id") or ""),
+        "worker_id": str(attempt.get("worker_id") or "runner_worker_dry_run"),
+        "lease_id": str(attempt.get("lease_id") or ""),
+        "recommended_next_state": recommended_next_state,
+        "result_message_text": result_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "expected_outputs": expected_outputs,
+        "output_contract_check": output_contract_check,
+        "invocation_attempt_summary": build_agent_runner_invocation_attempt_summary(attempt),
+        "invocation_envelope_summary": deepcopy(attempt.get("invocation_envelope_summary") or {}),
+        "invocation_payload": deepcopy(attempt.get("invocation_payload") or {}),
+        "attempt_message": deepcopy(attempt.get("attempt_message") or {}),
+        "result_payload": result_payload,
+        "result_message": result_message,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "result_persisted": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_invocation_result_summary(invocation_result: dict[str, Any]) -> dict[str, Any]:
+    safe_result = invocation_result if isinstance(invocation_result, dict) else {}
+    output_check = safe_result.get("output_contract_check") if isinstance(safe_result.get("output_contract_check"), dict) else {}
+    return {
+        "summary_version": "agent_runner_invocation_result_summary_v1",
+        "invocation_result_version": str(safe_result.get("invocation_result_version") or AGENT_RUNNER_INVOCATION_RESULT_VERSION),
+        "result_id": str(safe_result.get("result_id") or ""),
+        "project_id": str(safe_result.get("project_id") or "demo_project_default"),
+        "result_status": str(safe_result.get("result_status") or "result_blocked"),
+        "result_allowed": bool(safe_result.get("result_allowed")),
+        "target_agent_id": str(safe_result.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_result.get("target_agent_stage") or ""),
+        "attempt_id": str(safe_result.get("attempt_id") or ""),
+        "expected_output_count": int(output_check.get("expected_output_count") or 0),
+        "contract_satisfied": bool(output_check.get("contract_satisfied")),
+        "blocking_check_count": len(safe_result.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "agent_output_generated": False,
+        "result_persisted": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _completion_status_from_result(invocation_result: dict[str, Any]) -> str:
+    safe_result = invocation_result if isinstance(invocation_result, dict) else {}
+    status = str(safe_result.get("result_status") or "result_blocked")
+    if status == "result_ready_dry_run":
+        return "completion_waiting_for_real_agent_output"
+    if status == "result_waiting_for_user":
+        return "completion_waiting_for_user"
+    return "completion_blocked"
+
+
+def build_agent_runner_completion_receipt(
+    invocation_result: dict[str, Any],
+    requested_by: str = "runner_completion_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run completion receipt from an invocation result.
+
+    In dry-run mode, no real Agent output exists, so a ready result still
+    becomes a completion receipt that waits for real Agent output.
+    """
+
+    result = invocation_result if isinstance(invocation_result, dict) else {}
+    project_id = str(result.get("project_id") or "demo_project_default")
+    target_agent_id = str(result.get("target_agent_id") or "")
+    completion_status = _completion_status_from_result(result)
+    completion_id = f"completion_receipt_{project_id}_{target_agent_id or 'none'}_{completion_status}".replace(" ", "_")
+
+    output_check = result.get("output_contract_check") if isinstance(result.get("output_contract_check"), dict) else {}
+    blocking_check_ids = [
+        str(value)
+        for value in (result.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if completion_status == "completion_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_under_feature_flag"
+        completion_message_text = "Dry-run chain is structurally ready, but completion requires real Agent output."
+    elif completion_status == "completion_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        completion_message_text = "Completion is waiting for required user action."
+    else:
+        recommended_next_state = "fix_completion_blockers"
+        completion_message_text = "Completion is blocked by result, attempt, envelope, lease, claim, queue, work order, execution receipt, dispatch, or contract validation."
+
+    completion_payload = {
+        "completion_receipt_version": AGENT_RUNNER_COMPLETION_RECEIPT_VERSION,
+        "completion_status": completion_status,
+        "completion_id": completion_id,
+        "target_agent_id": target_agent_id,
+        "result_id": result.get("result_id"),
+        "output_contract_check": output_check,
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "completion_recorded": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+    }
+
+    completion_message = build_agent_message(
+        message_type="runner_completion_receipt_dry_run",
+        source_agent_id="runner_completion_manager",
+        target_agent_id=target_agent_id,
+        payload=completion_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "completion_receipt_version": AGENT_RUNNER_COMPLETION_RECEIPT_VERSION,
+        "completion_id": completion_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_completion_dry_run_api"),
+        "completion_status": completion_status,
+        "completion_allowed": False,
+        "handoff_complete": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(result.get("target_agent_stage") or ""),
+        "result_id": str(result.get("result_id") or ""),
+        "result_status": str(result.get("result_status") or ""),
+        "result_allowed": bool(result.get("result_allowed")),
+        "attempt_id": str(result.get("attempt_id") or ""),
+        "recommended_next_state": recommended_next_state,
+        "completion_message_text": completion_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "output_contract_check": deepcopy(output_check),
+        "invocation_result_summary": build_agent_runner_invocation_result_summary(result),
+        "completion_payload": completion_payload,
+        "completion_message": completion_message,
+        "dry_run": True,
+        "completion_recorded": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_completion_receipt_summary(completion_receipt: dict[str, Any]) -> dict[str, Any]:
+    safe_receipt = completion_receipt if isinstance(completion_receipt, dict) else {}
+    return {
+        "summary_version": "agent_runner_completion_receipt_summary_v1",
+        "completion_receipt_version": str(safe_receipt.get("completion_receipt_version") or AGENT_RUNNER_COMPLETION_RECEIPT_VERSION),
+        "completion_id": str(safe_receipt.get("completion_id") or ""),
+        "project_id": str(safe_receipt.get("project_id") or "demo_project_default"),
+        "completion_status": str(safe_receipt.get("completion_status") or "completion_blocked"),
+        "completion_allowed": bool(safe_receipt.get("completion_allowed")),
+        "handoff_complete": bool(safe_receipt.get("handoff_complete")),
+        "target_agent_id": str(safe_receipt.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_receipt.get("target_agent_stage") or ""),
+        "result_id": str(safe_receipt.get("result_id") or ""),
+        "blocking_check_count": len(safe_receipt.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "completion_recorded": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

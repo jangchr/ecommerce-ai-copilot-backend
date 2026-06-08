@@ -12411,6 +12411,183 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_RESULT_COMPLETION_PANEL_BUNDLE_MARKER = 'Project Workspace result completion panel bundle';
+        let latestProjectRunnerInvocationResult = {};
+        let latestProjectRunnerCompletionReceipt = {};
+
+        function projectWorkspaceInvocationResultFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerInvocationResult && Object.keys(latestProjectRunnerInvocationResult).length
+                ? latestProjectRunnerInvocationResult
+                : workspace?.runner_invocation_result || {};
+        }
+
+        function projectWorkspaceCompletionReceiptFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerCompletionReceipt && Object.keys(latestProjectRunnerCompletionReceipt).length
+                ? latestProjectRunnerCompletionReceipt
+                : workspace?.runner_completion_receipt || {};
+        }
+
+        function projectWorkspaceCompletionStatusLabel(receipt = {}) {
+            const status = String(receipt.completion_status || 'not_refreshed');
+            const labels = {
+                completion_waiting_for_real_agent_output: t('completionStatusWaitingForRealOutput'),
+                completion_waiting_for_user: t('completionStatusWaitingForUser'),
+                completion_blocked: t('completionStatusBlocked'),
+                not_refreshed: t('completionStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceResultCompletionCopyText(
+            result = projectWorkspaceInvocationResultFromWorkspace(),
+            completion = projectWorkspaceCompletionReceiptFromWorkspace()
+        ) {
+            return [
+                t('resultCompletionCopyTitle'),
+                `${t('projectId')}: ${completion.project_id || result.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('invocationResultId')}: ${result.result_id || t('none')}`,
+                `${t('completionReceiptId')}: ${completion.completion_id || t('none')}`,
+                `${t('invocationResultStatus')}: ${result.result_status || 'not_refreshed'}`,
+                `${t('completionStatus')}: ${completion.completion_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${completion.target_agent_id || result.target_agent_id || t('none')}`,
+                `${t('agentOutputGenerated')}: ${Boolean(result.agent_output_generated)}`,
+                `${t('handoffComplete')}: ${Boolean(completion.handoff_complete)}`,
+                '',
+                JSON.stringify({ result, completion }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceResultCompletion() {
+            const status = document.getElementById('projectWorkspaceResultCompletionStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceResultCompletionCopyText());
+                if (status) status.textContent = t('resultCompletionCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('resultCompletionCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceResultCompletion(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceResultCompletionStatus')
+                || document.getElementById('projectWorkspaceInvocationStatus')
+                || document.getElementById('projectWorkspaceWorkerLeaseStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('resultCompletionDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_result_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/result/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('resultCompletionDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_result_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_result_dry_run');
+                if (status) status.textContent = t('resultCompletionDryRunComplete');
+
+                const invocationPanel = document.getElementById('projectWorkspaceInvocationPanel');
+                if (invocationPanel) invocationPanel.outerHTML = renderProjectWorkspaceInvocationPanel(latestProjectWorkspace);
+                const resultPanel = document.getElementById('projectWorkspaceResultCompletionPanel');
+                if (resultPanel) resultPanel.outerHTML = renderProjectWorkspaceResultCompletionPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_result_dry_run');
+                if (status) status.textContent = error.message || t('resultCompletionDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceResultCompletionPanel(workspace = latestProjectWorkspace) {
+            const result = projectWorkspaceInvocationResultFromWorkspace(workspace);
+            const completion = projectWorkspaceCompletionReceiptFromWorkspace(workspace);
+            const hasCompletion = Boolean(completion && Object.keys(completion).length);
+            const statusLabel = projectWorkspaceCompletionStatusLabel(completion);
+            return `
+                <div class="section-block" id="projectWorkspaceResultCompletionPanel" data-project-result-completion-panel-marker="Project Workspace result completion panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('resultCompletionPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('resultCompletionPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceResultCompletionBtn" type="button" data-project-result-completion-dry-run-action="Project Workspace result completion panel bundle" onclick="dryRunProjectWorkspaceResultCompletion()">${escapeHTML(t('dryRunResultCompletion'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceResultCompletionBtn" type="button" onclick="copyProjectWorkspaceResultCompletion()">${escapeHTML(t('copyResultCompletion'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('completionStatus'))}</div>
+                            <strong data-completion-status="${escapeHTML(completion.completion_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('resultCompletionDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('invocationResultId'))}</div>
+                            <strong data-invocation-result-id="${escapeHTML(result.result_id || '')}">${escapeHTML(result.result_id || t('resultCompletionNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanNextAgent'))}: ${escapeHTML(result.target_agent_id || completion.target_agent_id || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('handoffComplete'))}</div>
+                            <strong data-completion-handoff-complete="${escapeHTML(String(Boolean(completion.handoff_complete)))}">${escapeHTML(String(Boolean(completion.handoff_complete)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('agentOutputGenerated'))}: ${escapeHTML(String(Boolean(result.agent_output_generated)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('resultCompletionAuditPreview'))}</div>
+                        ${hasCompletion ? `<pre class="debug" data-result-completion-audit-preview="Project Workspace result completion panel bundle">${escapeHTML(projectWorkspaceResultCompletionCopyText(result, completion))}</pre>` : `<div class="recent-empty">${escapeHTML(t('resultCompletionNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceResultCompletionStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceInvocationPanel(workspace = latestProjectWorkspace) {
             const envelope = projectWorkspaceInvocationEnvelopeFromWorkspace(workspace);
             const attempt = projectWorkspaceInvocationAttemptFromWorkspace(workspace);
@@ -12876,6 +13053,7 @@
                     ${renderProjectWorkspaceQueueClaimPanel(workspace)}
                     ${renderProjectWorkspaceWorkerLeasePanel(workspace)}
                     ${renderProjectWorkspaceInvocationPanel(workspace)}
+                    ${renderProjectWorkspaceResultCompletionPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -14983,6 +15161,61 @@
             invocationDryRunFailed: 'Invocation dry-run \u5931\u8d25\u3002',
             invocationCopied: '\u8c03\u7528\u8bb0\u5f55\u5df2\u590d\u5236\u3002',
             invocationCopyFailed: '\u590d\u5236\u8c03\u7528\u8bb0\u5f55\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceResultCompletionPanelBundleMarker: 'Project Workspace result completion panel bundle',
+            resultCompletionPanelTitle: 'Invocation result & completion receipt',
+            resultCompletionPanelHelper: 'Dry-run result shell and completion receipt. This checks expected outputs without generating real Agent output.',
+            dryRunResultCompletion: 'Dry-run result',
+            copyResultCompletion: 'Copy result receipt',
+            resultCompletionCopyTitle: 'Project invocation result and completion receipt',
+            invocationResultId: 'Invocation result ID',
+            completionReceiptId: 'Completion receipt ID',
+            invocationResultStatus: 'Invocation result status',
+            completionStatus: 'Completion status',
+            agentOutputGenerated: 'Agent output generated',
+            handoffComplete: 'Handoff complete',
+            resultCompletionAuditPreview: 'Result completion audit preview',
+            completionStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            completionStatusWaitingForUser: 'Completion waiting for user',
+            completionStatusBlocked: 'Completion blocked',
+            completionStatusNotRefreshed: 'Not refreshed',
+            resultCompletionNotRefreshedYet: 'Result completion has not been refreshed yet.',
+            resultCompletionDryRunHelper: 'Dry run only: no Agent output, no completion record, no provider call, no cost.',
+            resultCompletionDryRunRunning: 'Building result completion dry-run...',
+            resultCompletionDryRunComplete: 'Result completion dry-run complete.',
+            resultCompletionDryRunFailed: 'Result completion dry-run failed.',
+            resultCompletionCopied: 'Result completion receipt copied.',
+            resultCompletionCopyFailed: 'Could not copy result completion receipt.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceResultCompletionPanelBundleMarker: 'Project Workspace result completion panel bundle',
+            resultCompletionPanelTitle: '\u8c03\u7528\u7ed3\u679c\u4e0e\u5b8c\u6210\u56de\u6267',
+            resultCompletionPanelHelper: '\u8c03\u7528\u7ed3\u679c\u5916\u58f3\u548c\u5b8c\u6210\u56de\u6267\u7684 dry-run\u3002\u5b83\u68c0\u67e5\u9884\u671f\u8f93\u51fa\uff0c\u4f46\u4e0d\u751f\u6210\u771f\u5b9e Agent \u8f93\u51fa\u3002',
+            dryRunResultCompletion: 'Dry-run \u7ed3\u679c',
+            copyResultCompletion: '\u590d\u5236\u7ed3\u679c\u56de\u6267',
+            resultCompletionCopyTitle: '\u9879\u76ee\u8c03\u7528\u7ed3\u679c\u4e0e\u5b8c\u6210\u56de\u6267',
+            invocationResultId: '\u8c03\u7528\u7ed3\u679c ID',
+            completionReceiptId: '\u5b8c\u6210\u56de\u6267 ID',
+            invocationResultStatus: '\u8c03\u7528\u7ed3\u679c\u72b6\u6001',
+            completionStatus: '\u5b8c\u6210\u72b6\u6001',
+            agentOutputGenerated: '\u662f\u5426\u5df2\u751f\u6210 Agent \u8f93\u51fa',
+            handoffComplete: '\u4ea4\u63a5\u662f\u5426\u5b8c\u6210',
+            resultCompletionAuditPreview: '\u7ed3\u679c\u5b8c\u6210\u5ba1\u8ba1\u9884\u89c8',
+            completionStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            completionStatusWaitingForUser: '\u5b8c\u6210\u7b49\u5f85\u7528\u6237',
+            completionStatusBlocked: '\u5b8c\u6210\u5df2\u963b\u585e',
+            completionStatusNotRefreshed: '\u672a\u5237\u65b0',
+            resultCompletionNotRefreshedYet: '\u7ed3\u679c\u5b8c\u6210\u56de\u6267\u5c1a\u672a\u5237\u65b0\u3002',
+            resultCompletionDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u751f\u6210 Agent \u8f93\u51fa\uff0c\u4e0d\u8bb0\u5f55\u771f\u5b9e\u5b8c\u6210\uff0c\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\u3002',
+            resultCompletionDryRunRunning: '\u6b63\u5728\u751f\u6210 result completion dry-run...',
+            resultCompletionDryRunComplete: 'Result completion dry-run \u5b8c\u6210\u3002',
+            resultCompletionDryRunFailed: 'Result completion dry-run \u5931\u8d25\u3002',
+            resultCompletionCopied: '\u7ed3\u679c\u5b8c\u6210\u56de\u6267\u5df2\u590d\u5236\u3002',
+            resultCompletionCopyFailed: '\u590d\u5236\u7ed3\u679c\u5b8c\u6210\u56de\u6267\u5931\u8d25\u3002'
         });
 
 

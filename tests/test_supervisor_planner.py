@@ -769,3 +769,40 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             attempt["attempt_status"],
         )
 
+    def test_project_runner_result_dry_run_endpoint_returns_result_and_completion(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/result/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["agent_output_generated"])
+        self.assertFalse(payload["completion_recorded"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_invocation_result", payload)
+        self.assertIn("runner_completion_receipt", payload)
+        self.assertIn("runner_completion_receipt_summary", payload)
+
+        result = payload["runner_invocation_result"]
+        completion = payload["runner_completion_receipt"]
+        summary = payload["runner_completion_receipt_summary"]
+        self.assertEqual(result["invocation_result_version"], "agent_runner_invocation_result_v1")
+        self.assertEqual(completion["completion_receipt_version"], "agent_runner_completion_receipt_v1")
+        self.assertTrue(completion["dry_run"])
+        self.assertFalse(completion["completion_recorded"])
+        self.assertFalse(completion["agent_output_generated"])
+        self.assertFalse(completion["agent_invoked"])
+        self.assertFalse(completion["agent_execution_performed"])
+        self.assertEqual(summary["summary_version"], "agent_runner_completion_receipt_summary_v1")
+        self.assertEqual(summary["completion_status"], completion["completion_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_completion_status"],
+            completion["completion_status"],
+        )
+
