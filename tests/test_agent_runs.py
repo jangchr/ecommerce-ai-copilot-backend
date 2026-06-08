@@ -1426,3 +1426,107 @@ class AgentRunnerExecutionReceiptTests(unittest.TestCase):
         self.assertIn("contract_validation", receipt["blocking_check_ids"])
         self.assertEqual(receipt["recommended_next_state"], "fix_execution_blockers")
 
+
+class AgentRunnerWorkOrderTests(unittest.TestCase):
+    def test_work_order_records_ready_agent_package_without_execution(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_work_order,
+            build_agent_runner_work_order_summary,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_work_order_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_work_order_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        summary = build_agent_runner_work_order_summary(order)
+
+        self.assertEqual(order["work_order_version"], "agent_runner_work_order_v1")
+        self.assertEqual(order["work_order_status"], "work_order_ready_dry_run")
+        self.assertTrue(order["work_order_allowed"])
+        self.assertTrue(order["dry_run"])
+        self.assertFalse(order["agent_execution_performed"])
+        self.assertFalse(order["external_api_called"])
+        self.assertFalse(order["cost_incurred_by_crossgrowth"])
+        self.assertFalse(order["llm_autonomous_decision_enabled"])
+        self.assertEqual(order["target_agent_id"], "planner_agent")
+        self.assertEqual(order["work_order_message"]["message_type"], "runner_work_order_dry_run")
+        self.assertIn("project_state", order["required_inputs"])
+        self.assertIn("supervisor_planner_recommendation", order["expected_outputs"])
+        self.assertEqual(summary["summary_version"], "agent_runner_work_order_summary_v1")
+        self.assertTrue(summary["work_order_allowed"])
+        self.assertFalse(summary["agent_execution_performed"])
+
+    def test_work_order_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_work_order_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_work_order_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+
+        self.assertEqual(order["work_order_status"], "work_order_waiting_for_user")
+        self.assertFalse(order["work_order_allowed"])
+        self.assertIn("user_gate", order["blocking_check_ids"])
+        self.assertEqual(order["target_agent_id"], "source_adapter_agent")
+        self.assertFalse(order["agent_execution_performed"])
+
+    def test_work_order_blocks_invalid_target_agent(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_plan,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_work_order_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+
+        self.assertEqual(order["work_order_status"], "work_order_blocked")
+        self.assertFalse(order["work_order_allowed"])
+        self.assertEqual(order["target_agent_id"], "missing_agent")
+        self.assertIn("contract_validation", order["blocking_check_ids"])
+        self.assertFalse(order["safety_boundaries"]["external_api_called"])
+

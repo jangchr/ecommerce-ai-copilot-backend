@@ -2265,6 +2265,150 @@ def build_agent_runner_execution_receipt_summary(receipt: dict[str, Any]) -> dic
 
 
 
+AGENT_RUNNER_WORK_ORDER_VERSION = "agent_runner_work_order_v1"
+
+
+def _work_order_status_from_execution_receipt(receipt: dict[str, Any]) -> str:
+    safe_receipt = receipt if isinstance(receipt, dict) else {}
+    receipt_status = str(safe_receipt.get("receipt_status") or "execution_blocked")
+    if bool(safe_receipt.get("execution_allowed")) and receipt_status == "execution_ready_dry_run":
+        return "work_order_ready_dry_run"
+    if receipt_status == "execution_waiting_for_user":
+        return "work_order_waiting_for_user"
+    return "work_order_blocked"
+
+
+def build_agent_runner_work_order(
+    runner_plan: dict[str, Any],
+    dispatch_ticket: dict[str, Any],
+    dispatch_event: dict[str, Any],
+    execution_receipt: dict[str, Any],
+    requested_by: str = "runner_work_order_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run work order for the next graph agent.
+
+    This is a structured task package. It does not execute the agent, call
+    providers, spend money, or enable autonomous LLM routing.
+    """
+
+    plan = runner_plan if isinstance(runner_plan, dict) else {}
+    ticket = dispatch_ticket if isinstance(dispatch_ticket, dict) else {}
+    event = dispatch_event if isinstance(dispatch_event, dict) else {}
+    receipt = execution_receipt if isinstance(execution_receipt, dict) else {}
+
+    project_id = str(
+        receipt.get("project_id")
+        or ticket.get("project_id")
+        or event.get("project_id")
+        or plan.get("project_id")
+        or "demo_project_default"
+    )
+    target_agent_id = str(
+        receipt.get("target_agent_id")
+        or ticket.get("next_agent_id")
+        or event.get("target_agent_id")
+        or plan.get("next_agent_id")
+        or ""
+    )
+    target_contract = get_agent_contract(target_agent_id)
+    work_order_status = _work_order_status_from_execution_receipt(receipt)
+    work_order_allowed = work_order_status == "work_order_ready_dry_run"
+    blocking_check_ids = [
+        str(item)
+        for item in (
+            receipt.get("blocking_check_ids")
+            or ticket.get("blocking_check_ids")
+            or event.get("blocking_check_ids")
+            or []
+        )
+        if str(item or "")
+    ]
+
+    handoff_message = ticket.get("handoff_message") if isinstance(ticket.get("handoff_message"), dict) else {}
+    handoff_payload = handoff_message.get("payload") if isinstance(handoff_message.get("payload"), dict) else {}
+
+    work_payload = {
+        "runner_plan_version": plan.get("runner_plan_version"),
+        "dispatch_ticket_version": ticket.get("dispatch_ticket_version"),
+        "dispatch_event_version": event.get("dispatch_event_version"),
+        "execution_receipt_version": receipt.get("execution_receipt_version"),
+        "target_agent_id": target_agent_id,
+        "next_action_type": str(plan.get("next_action_type") or ticket.get("next_action_type") or ""),
+        "handoff_payload": deepcopy(handoff_payload),
+        "contract_input_contract": deepcopy(target_contract.get("input_contract") or []),
+        "contract_output_contract": deepcopy(target_contract.get("output_contract") or []),
+        "dry_run": True,
+        "execution_performed": False,
+    }
+
+    work_order_message = build_agent_message(
+        message_type="runner_work_order_dry_run",
+        source_agent_id="runner_work_order_builder",
+        target_agent_id=target_agent_id,
+        payload=work_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "work_order_version": AGENT_RUNNER_WORK_ORDER_VERSION,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_work_order_dry_run_api"),
+        "work_order_status": work_order_status,
+        "work_order_allowed": work_order_allowed,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(target_contract.get("stage") or ""),
+        "target_agent_display_name": str(target_contract.get("display_name") or target_agent_id),
+        "next_action_type": str(plan.get("next_action_type") or ticket.get("next_action_type") or ""),
+        "recommended_next_state": str(receipt.get("recommended_next_state") or ""),
+        "required_inputs": deepcopy(target_contract.get("input_contract") or []),
+        "expected_outputs": deepcopy(target_contract.get("output_contract") or []),
+        "handoff_artifact_types": deepcopy(target_contract.get("handoff_artifact_types") or []),
+        "allowed_next_agent_ids": deepcopy(target_contract.get("allowed_next_agent_ids") or []),
+        "blocking_check_ids": blocking_check_ids,
+        "runner_plan_summary": build_agent_runner_plan_summary(plan),
+        "dispatch_summary": build_agent_runner_dispatch_summary(ticket),
+        "dispatch_event_summary": build_agent_runner_dispatch_event_summary(event),
+        "execution_receipt_summary": build_agent_runner_execution_receipt_summary(receipt),
+        "handoff_message": deepcopy(handoff_message),
+        "contract_validation": deepcopy(ticket.get("contract_validation") or event.get("contract_validation") or receipt.get("contract_validation") or {}),
+        "work_payload": work_payload,
+        "work_order_message": work_order_message,
+        "dry_run": True,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_work_order_summary(work_order: dict[str, Any]) -> dict[str, Any]:
+    safe_order = work_order if isinstance(work_order, dict) else {}
+    return {
+        "summary_version": "agent_runner_work_order_summary_v1",
+        "work_order_version": str(safe_order.get("work_order_version") or AGENT_RUNNER_WORK_ORDER_VERSION),
+        "project_id": str(safe_order.get("project_id") or "demo_project_default"),
+        "work_order_status": str(safe_order.get("work_order_status") or "work_order_blocked"),
+        "work_order_allowed": bool(safe_order.get("work_order_allowed")),
+        "target_agent_id": str(safe_order.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_order.get("target_agent_stage") or ""),
+        "required_input_count": len(safe_order.get("required_inputs") or []),
+        "expected_output_count": len(safe_order.get("expected_outputs") or []),
+        "blocking_check_count": len(safe_order.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

@@ -11841,6 +11841,174 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_WORK_ORDER_PANEL_BUNDLE_MARKER = 'Project Workspace work order panel bundle';
+        let latestProjectRunnerWorkOrder = {};
+
+        function projectWorkspaceWorkOrderFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerWorkOrder && Object.keys(latestProjectRunnerWorkOrder).length
+                ? latestProjectRunnerWorkOrder
+                : workspace?.runner_work_order || {};
+        }
+
+        function projectWorkspaceWorkOrderStatusLabel(order = {}) {
+            const status = String(order.work_order_status || 'not_refreshed');
+            const labels = {
+                work_order_ready_dry_run: t('workOrderStatusReadyDryRun'),
+                work_order_waiting_for_user: t('workOrderStatusWaitingForUser'),
+                work_order_blocked: t('workOrderStatusBlocked'),
+                not_refreshed: t('workOrderStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceWorkOrderList(items = []) {
+            const safeItems = Array.isArray(items) ? items : [];
+            if (!safeItems.length) {
+                return `<div class="recent-empty">${escapeHTML(t('workOrderNoItems'))}</div>`;
+            }
+            return `<ul>${safeItems.map((item) => `<li>${escapeHTML(item)}</li>`).join('')}</ul>`;
+        }
+
+        function projectWorkspaceWorkOrderCopyText(order = projectWorkspaceWorkOrderFromWorkspace()) {
+            return [
+                t('workOrderCopyTitle'),
+                `${t('projectId')}: ${order.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('workOrderStatus')}: ${order.work_order_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${order.target_agent_id || t('none')}`,
+                `${t('workOrderTargetStage')}: ${order.target_agent_stage || t('none')}`,
+                `${t('workOrderAllowed')}: ${Boolean(order.work_order_allowed)}`,
+                `${t('executionPerformed')}: ${Boolean(order.agent_execution_performed)}`,
+                `${t('dispatchDryRun')}: ${Boolean(order.dry_run)}`,
+                '',
+                JSON.stringify(order || {}, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceWorkOrder() {
+            const status = document.getElementById('projectWorkspaceWorkOrderStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceWorkOrderCopyText());
+                if (status) status.textContent = t('workOrderCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('workOrderCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceWorkOrder(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceWorkOrderStatus')
+                || document.getElementById('projectWorkspaceExecutionReceiptStatus')
+                || document.getElementById('projectWorkspaceDispatchEventStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('workOrderDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_work_order_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/work-order/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('workOrderDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_work_order_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_work_order_dry_run');
+                if (status) status.textContent = t('workOrderDryRunComplete');
+
+                const runnerPanel = document.getElementById('projectWorkspaceRunnerPlanPanel');
+                if (runnerPanel) runnerPanel.outerHTML = renderProjectWorkspaceRunnerPlanPanel(latestProjectWorkspace);
+                const ticketPanel = document.getElementById('projectWorkspaceDispatchTicketPanel');
+                if (ticketPanel) ticketPanel.outerHTML = renderProjectWorkspaceDispatchTicketPanel(latestProjectWorkspace);
+                const eventPanel = document.getElementById('projectWorkspaceDispatchEventPanel');
+                if (eventPanel) eventPanel.outerHTML = renderProjectWorkspaceDispatchEventPanel(latestProjectWorkspace);
+                const receiptPanel = document.getElementById('projectWorkspaceExecutionReceiptPanel');
+                if (receiptPanel) receiptPanel.outerHTML = renderProjectWorkspaceExecutionReceiptPanel(latestProjectWorkspace);
+                const orderPanel = document.getElementById('projectWorkspaceWorkOrderPanel');
+                if (orderPanel) orderPanel.outerHTML = renderProjectWorkspaceWorkOrderPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_work_order_dry_run');
+                if (status) status.textContent = error.message || t('workOrderDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceWorkOrderPanel(workspace = latestProjectWorkspace) {
+            const order = projectWorkspaceWorkOrderFromWorkspace(workspace);
+            const hasOrder = Boolean(order && Object.keys(order).length);
+            const statusLabel = projectWorkspaceWorkOrderStatusLabel(order);
+            return `
+                <div class="section-block" id="projectWorkspaceWorkOrderPanel" data-project-work-order-panel-marker="Project Workspace work order panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('workOrderPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('workOrderPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceWorkOrderBtn" type="button" data-project-work-order-dry-run-action="Project Workspace work order panel bundle" onclick="dryRunProjectWorkspaceWorkOrder()">${escapeHTML(t('dryRunWorkOrder'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceWorkOrderBtn" type="button" onclick="copyProjectWorkspaceWorkOrder()">${escapeHTML(t('copyWorkOrder'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workOrderStatus'))}</div>
+                            <strong data-work-order-status="${escapeHTML(order.work_order_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('workOrderDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerPlanNextAgent'))}</div>
+                            <strong data-work-order-target-agent="${escapeHTML(order.target_agent_id || '')}">${escapeHTML(order.target_agent_id || t('runnerPlanNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('workOrderTargetStage'))}: ${escapeHTML(order.target_agent_stage || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workOrderAllowed'))}</div>
+                            <strong data-work-order-allowed="${escapeHTML(String(Boolean(order.work_order_allowed)))}">${escapeHTML(String(Boolean(order.work_order_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('executionPerformed'))}: ${escapeHTML(String(Boolean(order.agent_execution_performed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workOrderRequiredInputs'))}</div>
+                            ${hasOrder ? projectWorkspaceWorkOrderList(order.required_inputs) : `<div class="recent-empty">${escapeHTML(t('workOrderNotRefreshedYet'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workOrderExpectedOutputs'))}</div>
+                            ${hasOrder ? projectWorkspaceWorkOrderList(order.expected_outputs) : `<div class="recent-empty">${escapeHTML(t('workOrderNotRefreshedYet'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('workOrderAuditPreview'))}</div>
+                        ${hasOrder ? `<pre class="debug" data-work-order-audit-preview="Project Workspace work order panel bundle">${escapeHTML(projectWorkspaceWorkOrderCopyText(order))}</pre>` : `<div class="recent-empty">${escapeHTML(t('workOrderNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceWorkOrderStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceExecutionReceiptPanel(workspace = latestProjectWorkspace) {
             const receipt = projectWorkspaceExecutionReceiptFromWorkspace(workspace);
             const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
@@ -12075,6 +12243,7 @@
                     ${renderProjectWorkspaceDispatchTicketPanel(workspace)}
                     ${renderProjectWorkspaceDispatchEventPanel(workspace)}
                     ${renderProjectWorkspaceExecutionReceiptPanel(workspace)}
+                    ${renderProjectWorkspaceWorkOrderPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -13921,6 +14090,61 @@
             executionDryRunFailed: 'Execution dry-run \u5931\u8d25\u3002',
             executionReceiptCopied: '\u6267\u884c\u56de\u6267\u5df2\u590d\u5236\u3002',
             executionReceiptCopyFailed: '\u590d\u5236\u6267\u884c\u56de\u6267\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceWorkOrderPanelBundleMarker: 'Project Workspace work order panel bundle',
+            workOrderPanelTitle: 'Agent work order',
+            workOrderPanelHelper: 'Dry-run task package for the next Agent. This turns the execution receipt into a structured handoff package without running the Agent.',
+            dryRunWorkOrder: 'Dry-run work order',
+            copyWorkOrder: 'Copy work order',
+            workOrderCopyTitle: 'Project Agent work order',
+            workOrderStatus: 'Work order status',
+            workOrderAllowed: 'Work order allowed',
+            workOrderTargetStage: 'Target stage',
+            workOrderRequiredInputs: 'Required inputs',
+            workOrderExpectedOutputs: 'Expected outputs',
+            workOrderAuditPreview: 'Work order audit preview',
+            workOrderNoItems: 'No items listed.',
+            workOrderStatusReadyDryRun: 'Work order ready dry-run',
+            workOrderStatusWaitingForUser: 'Work order waiting for user',
+            workOrderStatusBlocked: 'Work order blocked',
+            workOrderStatusNotRefreshed: 'Not refreshed',
+            workOrderNotRefreshedYet: 'Work order has not been refreshed yet.',
+            workOrderDryRunHelper: 'Dry run only: no Agent execution, provider call, cost, or autonomous LLM decision.',
+            workOrderDryRunRunning: 'Building work order dry-run...',
+            workOrderDryRunComplete: 'Work order dry-run complete.',
+            workOrderDryRunFailed: 'Work order dry-run failed.',
+            workOrderCopied: 'Work order copied.',
+            workOrderCopyFailed: 'Could not copy work order.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceWorkOrderPanelBundleMarker: 'Project Workspace work order panel bundle',
+            workOrderPanelTitle: 'Agent \u4efb\u52a1\u5355',
+            workOrderPanelHelper: '\u4e0b\u4e00\u4e2a Agent \u7684 dry-run \u4efb\u52a1\u5305\u3002\u5b83\u628a\u6267\u884c\u56de\u6267\u8f6c\u6210\u7ed3\u6784\u5316\u4ea4\u63a5\u5305\uff0c\u4f46\u4e0d\u771f\u6b63\u8fd0\u884c Agent\u3002',
+            dryRunWorkOrder: 'Dry-run \u4efb\u52a1\u5355',
+            copyWorkOrder: '\u590d\u5236\u4efb\u52a1\u5355',
+            workOrderCopyTitle: '\u9879\u76ee Agent \u4efb\u52a1\u5355',
+            workOrderStatus: '\u4efb\u52a1\u5355\u72b6\u6001',
+            workOrderAllowed: '\u662f\u5426\u5141\u8bb8\u4efb\u52a1\u5355',
+            workOrderTargetStage: '\u76ee\u6807\u9636\u6bb5',
+            workOrderRequiredInputs: '\u9700\u8981\u7684\u8f93\u5165',
+            workOrderExpectedOutputs: '\u9884\u671f\u8f93\u51fa',
+            workOrderAuditPreview: '\u4efb\u52a1\u5355\u5ba1\u8ba1\u9884\u89c8',
+            workOrderNoItems: '\u6682\u65e0\u6761\u76ee\u3002',
+            workOrderStatusReadyDryRun: '\u4efb\u52a1\u5355 dry-run \u5df2\u5c31\u7eea',
+            workOrderStatusWaitingForUser: '\u4efb\u52a1\u5355\u7b49\u5f85\u7528\u6237',
+            workOrderStatusBlocked: '\u4efb\u52a1\u5355\u5df2\u963b\u585e',
+            workOrderStatusNotRefreshed: '\u672a\u5237\u65b0',
+            workOrderNotRefreshedYet: '\u4efb\u52a1\u5355\u5c1a\u672a\u5237\u65b0\u3002',
+            workOrderDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u6267\u884c Agent\uff0c\u4e0d\u8c03 provider\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\uff0c\u4e0d\u542f\u7528 LLM \u81ea\u4e3b\u51b3\u7b56\u3002',
+            workOrderDryRunRunning: '\u6b63\u5728\u751f\u6210 work order dry-run...',
+            workOrderDryRunComplete: 'Work order dry-run \u5b8c\u6210\u3002',
+            workOrderDryRunFailed: 'Work order dry-run \u5931\u8d25\u3002',
+            workOrderCopied: '\u4efb\u52a1\u5355\u5df2\u590d\u5236\u3002',
+            workOrderCopyFailed: '\u590d\u5236\u4efb\u52a1\u5355\u5931\u8d25\u3002'
         });
 
 

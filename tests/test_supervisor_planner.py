@@ -604,3 +604,33 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             receipt["receipt_status"],
         )
 
+    def test_project_runner_work_order_dry_run_endpoint_returns_work_order(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/work-order/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_work_order", payload)
+        self.assertIn("runner_work_order_summary", payload)
+
+        order = payload["runner_work_order"]
+        summary = payload["runner_work_order_summary"]
+        self.assertEqual(order["work_order_version"], "agent_runner_work_order_v1")
+        self.assertTrue(order["dry_run"])
+        self.assertFalse(order["agent_execution_performed"])
+        self.assertFalse(order["external_api_called"])
+        self.assertFalse(order["cost_incurred_by_crossgrowth"])
+        self.assertEqual(summary["summary_version"], "agent_runner_work_order_summary_v1")
+        self.assertEqual(summary["work_order_status"], order["work_order_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_work_order_status"],
+            order["work_order_status"],
+        )
+

@@ -4641,3 +4641,48 @@ class ProjectWorkspaceExecutionReceiptPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace execution receipt panel bundle", script)
         self.assertIn("project_workspace_execution_receipt_panel_marker", script)
 
+
+class ProjectWorkspaceWorkOrderPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_work_order_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace work order panel bundle",
+            "PROJECT_WORKSPACE_WORK_ORDER_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceWorkOrderPanel(",
+            "function projectWorkspaceWorkOrderFromWorkspace(",
+            "function projectWorkspaceWorkOrderStatusLabel(",
+            "function projectWorkspaceWorkOrderCopyText(",
+            "async function copyProjectWorkspaceWorkOrder(",
+            "async function dryRunProjectWorkspaceWorkOrder(",
+            "/runner/work-order/dry-run",
+            "latestProjectRunnerWorkOrder",
+            "runner_work_order: latestProjectRunnerWorkOrder",
+            "runner_work_order_summary: payload.runner_work_order_summary || {}",
+            "projectWorkspaceWorkOrderPanel",
+            "projectWorkspaceWorkOrderStatus",
+            "dryRunProjectWorkspaceWorkOrderBtn",
+            "copyProjectWorkspaceWorkOrderBtn",
+            "data-project-work-order-panel-marker",
+            "data-project-work-order-dry-run-action",
+            "data-work-order-status",
+            "data-work-order-target-agent",
+            "data-work-order-allowed",
+            "data-work-order-audit-preview",
+            "workOrderPanelTitle",
+            "workOrderDryRunHelper",
+            "renderProjectWorkspaceWorkOrderPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_work_order_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_work_order_panel_marker", script)
+        self.assertIn("Project Workspace work order panel bundle", script)
+
+    def test_project_workspace_work_order_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace work order panel bundle", script)
+        self.assertIn("project_workspace_work_order_panel_marker", script)
+
