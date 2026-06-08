@@ -5339,3 +5339,46 @@ class ProjectWorkspaceWorkerLoopPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace worker loop panel bundle", script)
         self.assertIn("project_workspace_worker_loop_panel_marker", script)
 
+
+class ProjectWorkspaceWorkerCheckpointPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_worker_checkpoint_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace worker checkpoint panel bundle",
+            "PROJECT_WORKSPACE_WORKER_CHECKPOINT_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceWorkerCheckpointPanel(",
+            "function projectWorkspaceWorkerCheckpointCopyText(",
+            "async function copyProjectWorkspaceWorkerCheckpoint(",
+            "async function dryRunProjectWorkspaceWorkerCheckpoint(",
+            "/runner/worker-checkpoint/dry-run",
+            "latestProjectRunnerOutputBuffer",
+            "latestProjectRunnerArtifactManifest",
+            "latestProjectRunnerResultValidationGate",
+            "latestProjectRunnerResumeCursor",
+            "latestProjectRunnerDeadLetterPolicy",
+            "latestProjectRunnerWorkerCheckpointBundle",
+            "projectWorkspaceWorkerCheckpointPanel",
+            "projectWorkspaceWorkerCheckpointStatus",
+            "dryRunProjectWorkspaceWorkerCheckpointBtn",
+            "copyProjectWorkspaceWorkerCheckpointBtn",
+            "data-project-worker-checkpoint-panel-marker",
+            "data-project-worker-checkpoint-dry-run-action",
+            "data-worker-checkpoint-audit-preview",
+            "workerCheckpointPanelTitle",
+            "workerCheckpointPanelHelper",
+            "renderProjectWorkspaceWorkerCheckpointPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_worker_checkpoint_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_worker_checkpoint_panel_marker", script)
+        self.assertIn("Project Workspace worker checkpoint panel bundle", script)
+
+    def test_project_workspace_worker_checkpoint_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace worker checkpoint panel bundle", script)
+        self.assertIn("project_workspace_worker_checkpoint_panel_marker", script)
+

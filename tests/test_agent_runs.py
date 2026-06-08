@@ -3771,3 +3771,81 @@ class AgentRunnerWorkerLoopRetryTests(unittest.TestCase):
         self.assertIn("waiting_for_user", recovery["recovery_status"])
         self.assertFalse(recovery["recovery_complete"])
 
+
+class AgentRunnerWorkerOutputCheckpointTests(unittest.TestCase):
+    def test_worker_output_checkpoint_chain_stays_dry_run(self):
+        from agent_runs import (
+            build_agent_runner_artifact_manifest,
+            build_agent_runner_dead_letter_policy,
+            build_agent_runner_output_buffer,
+            build_agent_runner_result_validation_gate,
+            build_agent_runner_resume_cursor,
+            build_agent_runner_worker_checkpoint_bundle,
+            build_agent_runner_worker_checkpoint_bundle_summary,
+        )
+
+        recovery = {
+            "project_id": "project_worker_checkpoint_ready",
+            "target_agent_id": "planner_agent",
+            "target_agent_stage": "planning",
+            "recovery_summary_id": "recovery_summary_project_worker_checkpoint_ready",
+            "recovery_status": "recovery_waiting_for_real_agent_output",
+            "dry_run": True,
+        }
+        output_buffer = build_agent_runner_output_buffer(recovery)
+        artifact_manifest = build_agent_runner_artifact_manifest(output_buffer)
+        validation_gate = build_agent_runner_result_validation_gate(artifact_manifest)
+        resume_cursor = build_agent_runner_resume_cursor(validation_gate)
+        dead_letter_policy = build_agent_runner_dead_letter_policy(resume_cursor)
+        checkpoint_bundle = build_agent_runner_worker_checkpoint_bundle(dead_letter_policy)
+        checkpoint_summary = build_agent_runner_worker_checkpoint_bundle_summary(checkpoint_bundle)
+
+        self.assertEqual(output_buffer["output_buffer_version"], "agent_runner_output_buffer_v1")
+        self.assertEqual(artifact_manifest["artifact_manifest_version"], "agent_runner_artifact_manifest_v1")
+        self.assertEqual(validation_gate["result_validation_gate_version"], "agent_runner_result_validation_gate_v1")
+        self.assertEqual(resume_cursor["resume_cursor_version"], "agent_runner_resume_cursor_v1")
+        self.assertEqual(dead_letter_policy["dead_letter_policy_version"], "agent_runner_dead_letter_policy_v1")
+        self.assertEqual(checkpoint_bundle["worker_checkpoint_bundle_version"], "agent_runner_worker_checkpoint_bundle_v1")
+        self.assertFalse(output_buffer["output_written"])
+        self.assertFalse(artifact_manifest["artifact_created"])
+        self.assertFalse(validation_gate["validation_passed"])
+        self.assertFalse(validation_gate["result_accepted"])
+        self.assertFalse(resume_cursor["resume_allowed"])
+        self.assertFalse(dead_letter_policy["dead_letter_required"])
+        self.assertFalse(checkpoint_bundle["checkpoint_recorded"])
+        self.assertFalse(checkpoint_bundle["safe_to_continue"])
+        self.assertTrue(checkpoint_bundle["manual_review_required"])
+        self.assertEqual(checkpoint_summary["summary_version"], "agent_runner_worker_checkpoint_bundle_summary_v1")
+
+    def test_worker_output_checkpoint_chain_waits_for_user(self):
+        from agent_runs import (
+            build_agent_runner_artifact_manifest,
+            build_agent_runner_dead_letter_policy,
+            build_agent_runner_output_buffer,
+            build_agent_runner_result_validation_gate,
+            build_agent_runner_resume_cursor,
+            build_agent_runner_worker_checkpoint_bundle,
+        )
+
+        recovery = {
+            "project_id": "project_worker_checkpoint_waiting",
+            "target_agent_id": "source_adapter_agent",
+            "target_agent_stage": "source",
+            "recovery_summary_id": "recovery_summary_project_worker_checkpoint_waiting",
+            "recovery_status": "recovery_waiting_for_user",
+            "dry_run": True,
+        }
+        output_buffer = build_agent_runner_output_buffer(recovery)
+        artifact_manifest = build_agent_runner_artifact_manifest(output_buffer)
+        validation_gate = build_agent_runner_result_validation_gate(artifact_manifest)
+        resume_cursor = build_agent_runner_resume_cursor(validation_gate)
+        dead_letter_policy = build_agent_runner_dead_letter_policy(resume_cursor)
+        checkpoint_bundle = build_agent_runner_worker_checkpoint_bundle(dead_letter_policy)
+
+        self.assertIn("waiting_for_user", output_buffer["output_buffer_status"])
+        self.assertIn("waiting_for_user", artifact_manifest["artifact_manifest_status"])
+        self.assertIn("waiting_for_user", validation_gate["result_validation_gate_status"])
+        self.assertIn("waiting_for_user", resume_cursor["resume_cursor_status"])
+        self.assertIn("waiting_for_user", dead_letter_policy["dead_letter_policy_status"])
+        self.assertIn("waiting_for_user", checkpoint_bundle["worker_checkpoint_bundle_status"])
+

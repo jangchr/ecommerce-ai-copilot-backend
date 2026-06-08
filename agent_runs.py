@@ -6379,6 +6379,474 @@ def build_agent_runner_recovery_summary_summary(recovery_summary: dict[str, Any]
 
 
 
+AGENT_RUNNER_OUTPUT_BUFFER_VERSION = "agent_runner_output_buffer_v1"
+AGENT_RUNNER_ARTIFACT_MANIFEST_VERSION = "agent_runner_artifact_manifest_v1"
+AGENT_RUNNER_RESULT_VALIDATION_GATE_VERSION = "agent_runner_result_validation_gate_v1"
+AGENT_RUNNER_RESUME_CURSOR_VERSION = "agent_runner_resume_cursor_v1"
+AGENT_RUNNER_DEAD_LETTER_POLICY_VERSION = "agent_runner_dead_letter_policy_v1"
+AGENT_RUNNER_WORKER_CHECKPOINT_BUNDLE_VERSION = "agent_runner_worker_checkpoint_bundle_v1"
+
+
+def _runner_checkpoint_wait_status(upstream_status: str, prefix: str, default_blocked: str) -> str:
+    status = str(upstream_status or "")
+    if "waiting_for_real_agent_output" in status:
+        return f"{prefix}_waiting_for_real_agent_output"
+    if "waiting_for_user" in status:
+        return f"{prefix}_waiting_for_user"
+    if "waiting_for_explicit_review" in status or "review" in status:
+        return f"{prefix}_waiting_for_explicit_review"
+    if "blocked" in status:
+        return default_blocked
+    return default_blocked
+
+
+def build_agent_runner_output_buffer(
+    recovery_summary: dict[str, Any],
+    requested_by: str = "runner_worker_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    recovery = recovery_summary if isinstance(recovery_summary, dict) else {}
+    project_id = str(recovery.get("project_id") or "demo_project_default")
+    target_agent_id = str(recovery.get("target_agent_id") or "")
+    status = _runner_checkpoint_wait_status(
+        str(recovery.get("recovery_status") or ""),
+        "output_buffer",
+        "output_buffer_blocked",
+    )
+    output_buffer_id = f"output_buffer_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    buffer_slots = [
+        {"slot_id": "agent_text_output", "reserved": True, "written": False},
+        {"slot_id": "agent_structured_payload", "reserved": True, "written": False},
+        {"slot_id": "agent_artifact_refs", "reserved": True, "written": False},
+    ]
+    payload = {
+        "output_buffer_version": AGENT_RUNNER_OUTPUT_BUFFER_VERSION,
+        "output_buffer_status": status,
+        "output_buffer_id": output_buffer_id,
+        "recovery_summary_id": recovery.get("recovery_summary_id"),
+        "target_agent_id": target_agent_id,
+        "buffer_slots": buffer_slots,
+        "buffer_slot_count": len(buffer_slots),
+        "dry_run": True,
+        "output_buffer_recorded": False,
+        "output_written": False,
+        "result_written": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_checkpoint_dry_run_api"),
+        "target_agent_stage": str(recovery.get("target_agent_stage") or ""),
+        "recovery_status": str(recovery.get("recovery_status") or ""),
+        "recovery_summary_summary": build_agent_runner_recovery_summary_summary(recovery),
+        "output_buffer_message": build_agent_message(
+            message_type="runner_output_buffer_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_output_buffer_summary(output_buffer: dict[str, Any]) -> dict[str, Any]:
+    safe_buffer = output_buffer if isinstance(output_buffer, dict) else {}
+    return {
+        "summary_version": "agent_runner_output_buffer_summary_v1",
+        "output_buffer_version": str(safe_buffer.get("output_buffer_version") or AGENT_RUNNER_OUTPUT_BUFFER_VERSION),
+        "output_buffer_id": str(safe_buffer.get("output_buffer_id") or ""),
+        "project_id": str(safe_buffer.get("project_id") or "demo_project_default"),
+        "output_buffer_status": str(safe_buffer.get("output_buffer_status") or "output_buffer_blocked"),
+        "buffer_slot_count": int(safe_buffer.get("buffer_slot_count") or 0),
+        "output_written": False,
+        "result_written": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_artifact_manifest(
+    output_buffer: dict[str, Any],
+    requested_by: str = "runner_worker_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    buffer = output_buffer if isinstance(output_buffer, dict) else {}
+    project_id = str(buffer.get("project_id") or "demo_project_default")
+    target_agent_id = str(buffer.get("target_agent_id") or "")
+    status = _runner_checkpoint_wait_status(
+        str(buffer.get("output_buffer_status") or ""),
+        "artifact_manifest",
+        "artifact_manifest_blocked",
+    )
+    artifact_manifest_id = f"artifact_manifest_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    artifacts = [
+        {"artifact_id": "planned_text_output", "artifact_type": "text", "created": False},
+        {"artifact_id": "planned_json_payload", "artifact_type": "json", "created": False},
+        {"artifact_id": "planned_audit_trace", "artifact_type": "audit", "created": False},
+    ]
+    payload = {
+        "artifact_manifest_version": AGENT_RUNNER_ARTIFACT_MANIFEST_VERSION,
+        "artifact_manifest_status": status,
+        "artifact_manifest_id": artifact_manifest_id,
+        "output_buffer_id": buffer.get("output_buffer_id"),
+        "target_agent_id": target_agent_id,
+        "artifacts": artifacts,
+        "artifact_count": len(artifacts),
+        "dry_run": True,
+        "artifact_manifest_recorded": False,
+        "artifact_created": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_checkpoint_dry_run_api"),
+        "target_agent_stage": str(buffer.get("target_agent_stage") or ""),
+        "output_buffer_status": str(buffer.get("output_buffer_status") or ""),
+        "output_buffer_summary": build_agent_runner_output_buffer_summary(buffer),
+        "artifact_manifest_message": build_agent_message(
+            message_type="runner_artifact_manifest_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_artifact_manifest_summary(artifact_manifest: dict[str, Any]) -> dict[str, Any]:
+    safe_manifest = artifact_manifest if isinstance(artifact_manifest, dict) else {}
+    return {
+        "summary_version": "agent_runner_artifact_manifest_summary_v1",
+        "artifact_manifest_version": str(safe_manifest.get("artifact_manifest_version") or AGENT_RUNNER_ARTIFACT_MANIFEST_VERSION),
+        "artifact_manifest_id": str(safe_manifest.get("artifact_manifest_id") or ""),
+        "project_id": str(safe_manifest.get("project_id") or "demo_project_default"),
+        "artifact_manifest_status": str(safe_manifest.get("artifact_manifest_status") or "artifact_manifest_blocked"),
+        "artifact_count": int(safe_manifest.get("artifact_count") or 0),
+        "artifact_created": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_result_validation_gate(
+    artifact_manifest: dict[str, Any],
+    requested_by: str = "runner_worker_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    manifest = artifact_manifest if isinstance(artifact_manifest, dict) else {}
+    project_id = str(manifest.get("project_id") or "demo_project_default")
+    target_agent_id = str(manifest.get("target_agent_id") or "")
+    status = _runner_checkpoint_wait_status(
+        str(manifest.get("artifact_manifest_status") or ""),
+        "result_validation_gate",
+        "result_validation_gate_blocked",
+    )
+    validation_gate_id = f"result_validation_gate_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    validation_checks = [
+        {"check_id": "schema_shape", "passed": False, "reason": "no_real_agent_output"},
+        {"check_id": "evidence_boundary", "passed": False, "reason": "no_real_agent_output"},
+        {"check_id": "write_safety", "passed": True, "reason": "dry_run_no_write"},
+        {"check_id": "cost_safety", "passed": True, "reason": "dry_run_no_cost"},
+    ]
+    payload = {
+        "result_validation_gate_version": AGENT_RUNNER_RESULT_VALIDATION_GATE_VERSION,
+        "result_validation_gate_status": status,
+        "result_validation_gate_id": validation_gate_id,
+        "artifact_manifest_id": manifest.get("artifact_manifest_id"),
+        "target_agent_id": target_agent_id,
+        "validation_checks": validation_checks,
+        "validation_check_count": len(validation_checks),
+        "dry_run": True,
+        "validation_passed": False,
+        "validation_recorded": False,
+        "result_accepted": False,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_checkpoint_dry_run_api"),
+        "target_agent_stage": str(manifest.get("target_agent_stage") or ""),
+        "artifact_manifest_status": str(manifest.get("artifact_manifest_status") or ""),
+        "artifact_manifest_summary": build_agent_runner_artifact_manifest_summary(manifest),
+        "validation_gate_message": build_agent_message(
+            message_type="runner_result_validation_gate_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_result_validation_gate_summary(result_validation_gate: dict[str, Any]) -> dict[str, Any]:
+    safe_gate = result_validation_gate if isinstance(result_validation_gate, dict) else {}
+    return {
+        "summary_version": "agent_runner_result_validation_gate_summary_v1",
+        "result_validation_gate_version": str(safe_gate.get("result_validation_gate_version") or AGENT_RUNNER_RESULT_VALIDATION_GATE_VERSION),
+        "result_validation_gate_id": str(safe_gate.get("result_validation_gate_id") or ""),
+        "project_id": str(safe_gate.get("project_id") or "demo_project_default"),
+        "result_validation_gate_status": str(safe_gate.get("result_validation_gate_status") or "result_validation_gate_blocked"),
+        "validation_check_count": int(safe_gate.get("validation_check_count") or 0),
+        "validation_passed": False,
+        "result_accepted": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_resume_cursor(
+    result_validation_gate: dict[str, Any],
+    requested_by: str = "runner_worker_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    gate = result_validation_gate if isinstance(result_validation_gate, dict) else {}
+    project_id = str(gate.get("project_id") or "demo_project_default")
+    target_agent_id = str(gate.get("target_agent_id") or "")
+    status = _runner_checkpoint_wait_status(
+        str(gate.get("result_validation_gate_status") or ""),
+        "resume_cursor",
+        "resume_cursor_blocked",
+    )
+    resume_cursor_id = f"resume_cursor_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    payload = {
+        "resume_cursor_version": AGENT_RUNNER_RESUME_CURSOR_VERSION,
+        "resume_cursor_status": status,
+        "resume_cursor_id": resume_cursor_id,
+        "result_validation_gate_id": gate.get("result_validation_gate_id"),
+        "target_agent_id": target_agent_id,
+        "resume_position": "before_real_agent_execution",
+        "resume_allowed": False,
+        "resume_cursor_recorded": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_checkpoint_dry_run_api"),
+        "target_agent_stage": str(gate.get("target_agent_stage") or ""),
+        "result_validation_gate_status": str(gate.get("result_validation_gate_status") or ""),
+        "result_validation_gate_summary": build_agent_runner_result_validation_gate_summary(gate),
+        "resume_cursor_message": build_agent_message(
+            message_type="runner_resume_cursor_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_resume_cursor_summary(resume_cursor: dict[str, Any]) -> dict[str, Any]:
+    safe_cursor = resume_cursor if isinstance(resume_cursor, dict) else {}
+    return {
+        "summary_version": "agent_runner_resume_cursor_summary_v1",
+        "resume_cursor_version": str(safe_cursor.get("resume_cursor_version") or AGENT_RUNNER_RESUME_CURSOR_VERSION),
+        "resume_cursor_id": str(safe_cursor.get("resume_cursor_id") or ""),
+        "project_id": str(safe_cursor.get("project_id") or "demo_project_default"),
+        "resume_cursor_status": str(safe_cursor.get("resume_cursor_status") or "resume_cursor_blocked"),
+        "resume_position": str(safe_cursor.get("resume_position") or "before_real_agent_execution"),
+        "resume_allowed": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_dead_letter_policy(
+    resume_cursor: dict[str, Any],
+    requested_by: str = "runner_worker_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    cursor = resume_cursor if isinstance(resume_cursor, dict) else {}
+    project_id = str(cursor.get("project_id") or "demo_project_default")
+    target_agent_id = str(cursor.get("target_agent_id") or "")
+    status = _runner_checkpoint_wait_status(
+        str(cursor.get("resume_cursor_status") or ""),
+        "dead_letter_policy",
+        "dead_letter_policy_blocked",
+    )
+    dead_letter_policy_id = f"dead_letter_policy_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    policy_rules = [
+        {"rule_id": "max_retry_exceeded", "action": "quarantine", "enabled": True},
+        {"rule_id": "unsafe_write_detected", "action": "block_and_review", "enabled": True},
+        {"rule_id": "missing_evidence", "action": "return_to_planner", "enabled": True},
+    ]
+    payload = {
+        "dead_letter_policy_version": AGENT_RUNNER_DEAD_LETTER_POLICY_VERSION,
+        "dead_letter_policy_status": status,
+        "dead_letter_policy_id": dead_letter_policy_id,
+        "resume_cursor_id": cursor.get("resume_cursor_id"),
+        "target_agent_id": target_agent_id,
+        "policy_rules": policy_rules,
+        "policy_rule_count": len(policy_rules),
+        "dead_letter_required": False,
+        "dead_letter_recorded": False,
+        "manual_review_required": True,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_checkpoint_dry_run_api"),
+        "target_agent_stage": str(cursor.get("target_agent_stage") or ""),
+        "resume_cursor_status": str(cursor.get("resume_cursor_status") or ""),
+        "resume_cursor_summary": build_agent_runner_resume_cursor_summary(cursor),
+        "dead_letter_policy_message": build_agent_message(
+            message_type="runner_dead_letter_policy_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_dead_letter_policy_summary(dead_letter_policy: dict[str, Any]) -> dict[str, Any]:
+    safe_policy = dead_letter_policy if isinstance(dead_letter_policy, dict) else {}
+    return {
+        "summary_version": "agent_runner_dead_letter_policy_summary_v1",
+        "dead_letter_policy_version": str(safe_policy.get("dead_letter_policy_version") or AGENT_RUNNER_DEAD_LETTER_POLICY_VERSION),
+        "dead_letter_policy_id": str(safe_policy.get("dead_letter_policy_id") or ""),
+        "project_id": str(safe_policy.get("project_id") or "demo_project_default"),
+        "dead_letter_policy_status": str(safe_policy.get("dead_letter_policy_status") or "dead_letter_policy_blocked"),
+        "policy_rule_count": int(safe_policy.get("policy_rule_count") or 0),
+        "dead_letter_required": False,
+        "dead_letter_recorded": False,
+        "manual_review_required": True,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_checkpoint_bundle(
+    dead_letter_policy: dict[str, Any],
+    requested_by: str = "runner_worker_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    policy = dead_letter_policy if isinstance(dead_letter_policy, dict) else {}
+    project_id = str(policy.get("project_id") or "demo_project_default")
+    target_agent_id = str(policy.get("target_agent_id") or "")
+    status = _runner_checkpoint_wait_status(
+        str(policy.get("dead_letter_policy_status") or ""),
+        "worker_checkpoint_bundle",
+        "worker_checkpoint_bundle_blocked",
+    )
+    worker_checkpoint_bundle_id = f"worker_checkpoint_bundle_{project_id}_{target_agent_id or 'none'}_{status}".replace(" ", "_")
+    checkpoint_items = [
+        {"checkpoint_item_id": "output_buffer", "included": True},
+        {"checkpoint_item_id": "artifact_manifest", "included": True},
+        {"checkpoint_item_id": "result_validation_gate", "included": True},
+        {"checkpoint_item_id": "resume_cursor", "included": True},
+        {"checkpoint_item_id": "dead_letter_policy", "included": True},
+    ]
+    payload = {
+        "worker_checkpoint_bundle_version": AGENT_RUNNER_WORKER_CHECKPOINT_BUNDLE_VERSION,
+        "worker_checkpoint_bundle_status": status,
+        "worker_checkpoint_bundle_id": worker_checkpoint_bundle_id,
+        "dead_letter_policy_id": policy.get("dead_letter_policy_id"),
+        "target_agent_id": target_agent_id,
+        "checkpoint_items": checkpoint_items,
+        "checkpoint_item_count": len(checkpoint_items),
+        "checkpoint_recorded": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "dry_run": True,
+        "agent_execution_performed": False,
+    }
+    return {
+        **payload,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_worker_checkpoint_dry_run_api"),
+        "target_agent_stage": str(policy.get("target_agent_stage") or ""),
+        "dead_letter_policy_status": str(policy.get("dead_letter_policy_status") or ""),
+        "dead_letter_policy_summary": build_agent_runner_dead_letter_policy_summary(policy),
+        "worker_checkpoint_bundle_message": build_agent_message(
+            message_type="runner_worker_checkpoint_bundle_dry_run",
+            source_agent_id="runner_worker_manager",
+            target_agent_id=target_agent_id,
+            payload=payload,
+            run_id="",
+            job_id="",
+            artifact_ids=[],
+            project_id=project_id,
+        ),
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_checkpoint_bundle_summary(worker_checkpoint_bundle: dict[str, Any]) -> dict[str, Any]:
+    safe_bundle = worker_checkpoint_bundle if isinstance(worker_checkpoint_bundle, dict) else {}
+    return {
+        "summary_version": "agent_runner_worker_checkpoint_bundle_summary_v1",
+        "worker_checkpoint_bundle_version": str(safe_bundle.get("worker_checkpoint_bundle_version") or AGENT_RUNNER_WORKER_CHECKPOINT_BUNDLE_VERSION),
+        "worker_checkpoint_bundle_id": str(safe_bundle.get("worker_checkpoint_bundle_id") or ""),
+        "project_id": str(safe_bundle.get("project_id") or "demo_project_default"),
+        "worker_checkpoint_bundle_status": str(safe_bundle.get("worker_checkpoint_bundle_status") or "worker_checkpoint_bundle_blocked"),
+        "checkpoint_item_count": int(safe_bundle.get("checkpoint_item_count") or 0),
+        "checkpoint_recorded": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "agent_execution_performed": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

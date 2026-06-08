@@ -131,6 +131,18 @@ from agent_runs import (
     build_agent_runner_worker_loop_simulation_summary,
     build_agent_runner_worker_poll,
     build_agent_runner_worker_poll_summary,
+    build_agent_runner_artifact_manifest,
+    build_agent_runner_artifact_manifest_summary,
+    build_agent_runner_dead_letter_policy,
+    build_agent_runner_dead_letter_policy_summary,
+    build_agent_runner_output_buffer,
+    build_agent_runner_output_buffer_summary,
+    build_agent_runner_result_validation_gate,
+    build_agent_runner_result_validation_gate_summary,
+    build_agent_runner_resume_cursor,
+    build_agent_runner_resume_cursor_summary,
+    build_agent_runner_worker_checkpoint_bundle,
+    build_agent_runner_worker_checkpoint_bundle_summary,
     build_agent_runner_authorization_preview,
     build_agent_runner_authorization_preview_summary,
     build_agent_runner_execution_manifest,
@@ -8347,6 +8359,101 @@ async def dry_run_project_agent_worker_loop(project_id: str, http_request: Reque
         "retry_scheduled": False,
         "retry_attempt_started": False,
         "recovery_complete": False,
+        "safe_to_continue": False,
+        "manual_review_required": True,
+        "agent_execution_performed": False,
+        "result_written": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+
+@app.post("/api/v1/projects/{project_id}/runner/worker-checkpoint/dry-run")
+async def dry_run_project_agent_worker_checkpoint(project_id: str, http_request: Request):
+    worker_loop_payload = await dry_run_project_agent_worker_loop(project_id, http_request)
+
+    runner_output_buffer = build_agent_runner_output_buffer(
+        worker_loop_payload["runner_recovery_summary"],
+        requested_by="project_runner_worker_checkpoint_dry_run_api",
+    )
+    runner_output_buffer_summary = build_agent_runner_output_buffer_summary(runner_output_buffer)
+    runner_artifact_manifest = build_agent_runner_artifact_manifest(
+        runner_output_buffer,
+        requested_by="project_runner_worker_checkpoint_dry_run_api",
+    )
+    runner_artifact_manifest_summary = build_agent_runner_artifact_manifest_summary(runner_artifact_manifest)
+    runner_result_validation_gate = build_agent_runner_result_validation_gate(
+        runner_artifact_manifest,
+        requested_by="project_runner_worker_checkpoint_dry_run_api",
+    )
+    runner_result_validation_gate_summary = build_agent_runner_result_validation_gate_summary(runner_result_validation_gate)
+    runner_resume_cursor = build_agent_runner_resume_cursor(
+        runner_result_validation_gate,
+        requested_by="project_runner_worker_checkpoint_dry_run_api",
+    )
+    runner_resume_cursor_summary = build_agent_runner_resume_cursor_summary(runner_resume_cursor)
+    runner_dead_letter_policy = build_agent_runner_dead_letter_policy(
+        runner_resume_cursor,
+        requested_by="project_runner_worker_checkpoint_dry_run_api",
+    )
+    runner_dead_letter_policy_summary = build_agent_runner_dead_letter_policy_summary(runner_dead_letter_policy)
+    runner_worker_checkpoint_bundle = build_agent_runner_worker_checkpoint_bundle(
+        runner_dead_letter_policy,
+        requested_by="project_runner_worker_checkpoint_dry_run_api",
+    )
+    runner_worker_checkpoint_bundle_summary = build_agent_runner_worker_checkpoint_bundle_summary(runner_worker_checkpoint_bundle)
+
+    project = worker_loop_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_output_buffer_status": runner_output_buffer.get("output_buffer_status", ""),
+        "latest_runner_artifact_manifest_status": runner_artifact_manifest.get("artifact_manifest_status", ""),
+        "latest_runner_result_validation_gate_status": runner_result_validation_gate.get("result_validation_gate_status", ""),
+        "latest_runner_resume_cursor_status": runner_resume_cursor.get("resume_cursor_status", ""),
+        "latest_runner_dead_letter_policy_status": runner_dead_letter_policy.get("dead_letter_policy_status", ""),
+        "latest_runner_worker_checkpoint_bundle_status": runner_worker_checkpoint_bundle.get("worker_checkpoint_bundle_status", ""),
+        "latest_runner_checkpoint_recorded": bool(runner_worker_checkpoint_bundle.get("checkpoint_recorded")),
+        "latest_runner_result_accepted": bool(runner_result_validation_gate.get("result_accepted")),
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **worker_loop_payload,
+        "project": project,
+        "runner_output_buffer": runner_output_buffer,
+        "runner_output_buffer_summary": runner_output_buffer_summary,
+        "runner_artifact_manifest": runner_artifact_manifest,
+        "runner_artifact_manifest_summary": runner_artifact_manifest_summary,
+        "runner_result_validation_gate": runner_result_validation_gate,
+        "runner_result_validation_gate_summary": runner_result_validation_gate_summary,
+        "runner_resume_cursor": runner_resume_cursor,
+        "runner_resume_cursor_summary": runner_resume_cursor_summary,
+        "runner_dead_letter_policy": runner_dead_letter_policy,
+        "runner_dead_letter_policy_summary": runner_dead_letter_policy_summary,
+        "runner_worker_checkpoint_bundle": runner_worker_checkpoint_bundle,
+        "runner_worker_checkpoint_bundle_summary": runner_worker_checkpoint_bundle_summary,
+        "dry_run": True,
+        "output_buffer_recorded": False,
+        "output_written": False,
+        "artifact_manifest_recorded": False,
+        "artifact_created": False,
+        "validation_passed": False,
+        "validation_recorded": False,
+        "result_accepted": False,
+        "resume_allowed": False,
+        "resume_cursor_recorded": False,
+        "dead_letter_required": False,
+        "dead_letter_recorded": False,
+        "checkpoint_recorded": False,
         "safe_to_continue": False,
         "manual_review_required": True,
         "agent_execution_performed": False,
