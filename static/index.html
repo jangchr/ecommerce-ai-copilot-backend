@@ -12544,6 +12544,189 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_HANDOFF_CHECKPOINT_PANEL_BUNDLE_MARKER = 'Project Workspace handoff checkpoint panel bundle';
+        let latestProjectRunnerHandoffCheckpoint = {};
+        let latestProjectRunnerNextAgentUnlock = {};
+
+        function projectWorkspaceHandoffCheckpointFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerHandoffCheckpoint && Object.keys(latestProjectRunnerHandoffCheckpoint).length
+                ? latestProjectRunnerHandoffCheckpoint
+                : workspace?.runner_handoff_checkpoint || {};
+        }
+
+        function projectWorkspaceNextAgentUnlockFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerNextAgentUnlock && Object.keys(latestProjectRunnerNextAgentUnlock).length
+                ? latestProjectRunnerNextAgentUnlock
+                : workspace?.runner_next_agent_unlock || {};
+        }
+
+        function projectWorkspaceUnlockStatusLabel(unlock = {}) {
+            const status = String(unlock.unlock_status || 'not_refreshed');
+            const labels = {
+                unlock_waiting_for_real_agent_output: t('unlockStatusWaitingForRealOutput'),
+                unlock_waiting_for_user: t('unlockStatusWaitingForUser'),
+                unlock_blocked: t('unlockStatusBlocked'),
+                not_refreshed: t('unlockStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceHandoffCheckpointCopyText(
+            checkpoint = projectWorkspaceHandoffCheckpointFromWorkspace(),
+            unlock = projectWorkspaceNextAgentUnlockFromWorkspace()
+        ) {
+            return [
+                t('handoffCheckpointCopyTitle'),
+                `${t('projectId')}: ${unlock.project_id || checkpoint.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('handoffCheckpointId')}: ${checkpoint.checkpoint_id || t('none')}`,
+                `${t('nextAgentUnlockId')}: ${unlock.unlock_id || t('none')}`,
+                `${t('handoffCheckpointStatus')}: ${checkpoint.checkpoint_status || 'not_refreshed'}`,
+                `${t('nextAgentUnlockStatus')}: ${unlock.unlock_status || 'not_refreshed'}`,
+                `${t('runnerPlanNextAgent')}: ${unlock.target_agent_id || checkpoint.target_agent_id || t('none')}`,
+                `${t('handoffComplete')}: ${Boolean(unlock.handoff_complete)}`,
+                `${t('nextAgentUnlocked')}: ${Boolean(unlock.next_agent_unlocked)}`,
+                '',
+                JSON.stringify({ checkpoint, unlock }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceHandoffCheckpoint() {
+            const status = document.getElementById('projectWorkspaceHandoffCheckpointStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceHandoffCheckpointCopyText());
+                if (status) status.textContent = t('handoffCheckpointCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('handoffCheckpointCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceHandoffCheckpoint(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceHandoffCheckpointStatus')
+                || document.getElementById('projectWorkspaceResultCompletionStatus')
+                || document.getElementById('projectWorkspaceInvocationStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('handoffCheckpointDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_checkpoint_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/checkpoint/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('handoffCheckpointDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectRunnerHandoffCheckpoint = payload.runner_handoff_checkpoint || {};
+                latestProjectRunnerNextAgentUnlock = payload.runner_next_agent_unlock || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {},
+                    runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint,
+                    runner_handoff_checkpoint_summary: payload.runner_handoff_checkpoint_summary || {},
+                    runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock,
+                    runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_checkpoint_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_checkpoint_dry_run');
+                if (status) status.textContent = t('handoffCheckpointDryRunComplete');
+
+                const resultPanel = document.getElementById('projectWorkspaceResultCompletionPanel');
+                if (resultPanel) resultPanel.outerHTML = renderProjectWorkspaceResultCompletionPanel(latestProjectWorkspace);
+                const checkpointPanel = document.getElementById('projectWorkspaceHandoffCheckpointPanel');
+                if (checkpointPanel) checkpointPanel.outerHTML = renderProjectWorkspaceHandoffCheckpointPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_checkpoint_dry_run');
+                if (status) status.textContent = error.message || t('handoffCheckpointDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceHandoffCheckpointPanel(workspace = latestProjectWorkspace) {
+            const checkpoint = projectWorkspaceHandoffCheckpointFromWorkspace(workspace);
+            const unlock = projectWorkspaceNextAgentUnlockFromWorkspace(workspace);
+            const hasUnlock = Boolean(unlock && Object.keys(unlock).length);
+            const statusLabel = projectWorkspaceUnlockStatusLabel(unlock);
+            return `
+                <div class="section-block" id="projectWorkspaceHandoffCheckpointPanel" data-project-handoff-checkpoint-panel-marker="Project Workspace handoff checkpoint panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('handoffCheckpointPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('handoffCheckpointPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceHandoffCheckpointBtn" type="button" data-project-handoff-checkpoint-dry-run-action="Project Workspace handoff checkpoint panel bundle" onclick="dryRunProjectWorkspaceHandoffCheckpoint()">${escapeHTML(t('dryRunHandoffCheckpoint'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceHandoffCheckpointBtn" type="button" onclick="copyProjectWorkspaceHandoffCheckpoint()">${escapeHTML(t('copyHandoffCheckpoint'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('nextAgentUnlockStatus'))}</div>
+                            <strong data-next-agent-unlock-status="${escapeHTML(unlock.unlock_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('handoffCheckpointDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('handoffCheckpointId'))}</div>
+                            <strong data-handoff-checkpoint-id="${escapeHTML(checkpoint.checkpoint_id || '')}">${escapeHTML(checkpoint.checkpoint_id || t('handoffCheckpointNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerPlanNextAgent'))}: ${escapeHTML(unlock.target_agent_id || checkpoint.target_agent_id || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('nextAgentUnlocked'))}</div>
+                            <strong data-next-agent-unlocked="${escapeHTML(String(Boolean(unlock.next_agent_unlocked)))}">${escapeHTML(String(Boolean(unlock.next_agent_unlocked)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('handoffComplete'))}: ${escapeHTML(String(Boolean(unlock.handoff_complete)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('handoffCheckpointAuditPreview'))}</div>
+                        ${hasUnlock ? `<pre class="debug" data-handoff-checkpoint-audit-preview="Project Workspace handoff checkpoint panel bundle">${escapeHTML(projectWorkspaceHandoffCheckpointCopyText(checkpoint, unlock))}</pre>` : `<div class="recent-empty">${escapeHTML(t('handoffCheckpointNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceHandoffCheckpointStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceResultCompletionPanel(workspace = latestProjectWorkspace) {
             const result = projectWorkspaceInvocationResultFromWorkspace(workspace);
             const completion = projectWorkspaceCompletionReceiptFromWorkspace(workspace);
@@ -13054,6 +13237,7 @@
                     ${renderProjectWorkspaceWorkerLeasePanel(workspace)}
                     ${renderProjectWorkspaceInvocationPanel(workspace)}
                     ${renderProjectWorkspaceResultCompletionPanel(workspace)}
+                    ${renderProjectWorkspaceHandoffCheckpointPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -15216,6 +15400,59 @@
             resultCompletionDryRunFailed: 'Result completion dry-run \u5931\u8d25\u3002',
             resultCompletionCopied: '\u7ed3\u679c\u5b8c\u6210\u56de\u6267\u5df2\u590d\u5236\u3002',
             resultCompletionCopyFailed: '\u590d\u5236\u7ed3\u679c\u5b8c\u6210\u56de\u6267\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceHandoffCheckpointPanelBundleMarker: 'Project Workspace handoff checkpoint panel bundle',
+            handoffCheckpointPanelTitle: 'Handoff checkpoint & next Agent unlock',
+            handoffCheckpointPanelHelper: 'Dry-run handoff checkpoint and next Agent unlock decision. This confirms whether the graph can continue to the next Agent.',
+            dryRunHandoffCheckpoint: 'Dry-run checkpoint',
+            copyHandoffCheckpoint: 'Copy checkpoint',
+            handoffCheckpointCopyTitle: 'Project handoff checkpoint and next Agent unlock',
+            handoffCheckpointId: 'Handoff checkpoint ID',
+            nextAgentUnlockId: 'Next Agent unlock ID',
+            handoffCheckpointStatus: 'Handoff checkpoint status',
+            nextAgentUnlockStatus: 'Next Agent unlock status',
+            nextAgentUnlocked: 'Next Agent unlocked',
+            handoffCheckpointAuditPreview: 'Handoff checkpoint audit preview',
+            unlockStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            unlockStatusWaitingForUser: 'Unlock waiting for user',
+            unlockStatusBlocked: 'Unlock blocked',
+            unlockStatusNotRefreshed: 'Not refreshed',
+            handoffCheckpointNotRefreshedYet: 'Handoff checkpoint has not been refreshed yet.',
+            handoffCheckpointDryRunHelper: 'Dry run only: no handoff is completed and no next Agent is unlocked.',
+            handoffCheckpointDryRunRunning: 'Building handoff checkpoint dry-run...',
+            handoffCheckpointDryRunComplete: 'Handoff checkpoint dry-run complete.',
+            handoffCheckpointDryRunFailed: 'Handoff checkpoint dry-run failed.',
+            handoffCheckpointCopied: 'Handoff checkpoint copied.',
+            handoffCheckpointCopyFailed: 'Could not copy handoff checkpoint.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceHandoffCheckpointPanelBundleMarker: 'Project Workspace handoff checkpoint panel bundle',
+            handoffCheckpointPanelTitle: '\u4ea4\u63a5\u68c0\u67e5\u70b9\u4e0e\u4e0b\u4e00\u4e2a Agent \u89e3\u9501',
+            handoffCheckpointPanelHelper: '\u4ea4\u63a5\u68c0\u67e5\u70b9\u548c\u4e0b\u4e00\u4e2a Agent \u89e3\u9501\u51b3\u7b56\u7684 dry-run\u3002\u5b83\u786e\u8ba4\u56fe\u662f\u5426\u80fd\u7ee7\u7eed\u4ea4\u7ed9\u4e0b\u4e00\u4e2a Agent\u3002',
+            dryRunHandoffCheckpoint: 'Dry-run \u68c0\u67e5\u70b9',
+            copyHandoffCheckpoint: '\u590d\u5236\u68c0\u67e5\u70b9',
+            handoffCheckpointCopyTitle: '\u9879\u76ee\u4ea4\u63a5\u68c0\u67e5\u70b9\u4e0e\u4e0b\u4e00\u4e2a Agent \u89e3\u9501',
+            handoffCheckpointId: '\u4ea4\u63a5\u68c0\u67e5\u70b9 ID',
+            nextAgentUnlockId: '\u4e0b\u4e00 Agent \u89e3\u9501 ID',
+            handoffCheckpointStatus: '\u4ea4\u63a5\u68c0\u67e5\u70b9\u72b6\u6001',
+            nextAgentUnlockStatus: '\u4e0b\u4e00 Agent \u89e3\u9501\u72b6\u6001',
+            nextAgentUnlocked: '\u4e0b\u4e00 Agent \u662f\u5426\u5df2\u89e3\u9501',
+            handoffCheckpointAuditPreview: '\u4ea4\u63a5\u68c0\u67e5\u70b9\u5ba1\u8ba1\u9884\u89c8',
+            unlockStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            unlockStatusWaitingForUser: '\u89e3\u9501\u7b49\u5f85\u7528\u6237',
+            unlockStatusBlocked: '\u89e3\u9501\u5df2\u963b\u585e',
+            unlockStatusNotRefreshed: '\u672a\u5237\u65b0',
+            handoffCheckpointNotRefreshedYet: '\u4ea4\u63a5\u68c0\u67e5\u70b9\u5c1a\u672a\u5237\u65b0\u3002',
+            handoffCheckpointDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u771f\u6b63\u5b8c\u6210\u4ea4\u63a5\uff0c\u4e5f\u4e0d\u771f\u6b63\u89e3\u9501\u4e0b\u4e00\u4e2a Agent\u3002',
+            handoffCheckpointDryRunRunning: '\u6b63\u5728\u751f\u6210 handoff checkpoint dry-run...',
+            handoffCheckpointDryRunComplete: 'Handoff checkpoint dry-run \u5b8c\u6210\u3002',
+            handoffCheckpointDryRunFailed: 'Handoff checkpoint dry-run \u5931\u8d25\u3002',
+            handoffCheckpointCopied: '\u4ea4\u63a5\u68c0\u67e5\u70b9\u5df2\u590d\u5236\u3002',
+            handoffCheckpointCopyFailed: '\u590d\u5236\u4ea4\u63a5\u68c0\u67e5\u70b9\u5931\u8d25\u3002'
         });
 
 

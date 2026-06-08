@@ -83,6 +83,10 @@ from agent_runs import (
     build_agent_runner_invocation_result_summary,
     build_agent_runner_completion_receipt,
     build_agent_runner_completion_receipt_summary,
+    build_agent_runner_handoff_checkpoint,
+    build_agent_runner_handoff_checkpoint_summary,
+    build_agent_runner_next_agent_unlock,
+    build_agent_runner_next_agent_unlock_summary,
     build_agent_run,
     build_controlled_provider_handoff_checklist,
     build_demo_ready_run_summary,
@@ -6792,6 +6796,147 @@ async def dry_run_project_agent_result_completion(project_id: str, http_request:
         "dry_run": True,
         "agent_output_generated": False,
         "completion_recorded": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+
+@app.post("/api/v1/projects/{project_id}/runner/checkpoint/dry-run")
+async def dry_run_project_agent_handoff_checkpoint(project_id: str, http_request: Request):
+    payload = _build_project_runner_plan_payload(project_id)
+    runner_execution_receipt = build_agent_runner_execution_receipt(
+        payload["runner_dispatch_ticket"],
+        payload["runner_dispatch_event"],
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_execution_receipt_summary = build_agent_runner_execution_receipt_summary(
+        runner_execution_receipt
+    )
+    runner_work_order = build_agent_runner_work_order(
+        payload["runner_plan"],
+        payload["runner_dispatch_ticket"],
+        payload["runner_dispatch_event"],
+        runner_execution_receipt,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_work_order_summary = build_agent_runner_work_order_summary(runner_work_order)
+    runner_queue_item = build_agent_runner_queue_item(
+        runner_work_order,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_queue_item_summary = build_agent_runner_queue_item_summary(runner_queue_item)
+    runner_queue_claim = build_agent_runner_queue_claim(
+        runner_queue_item,
+        worker_id="project_workspace_runner_worker",
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_queue_claim_summary = build_agent_runner_queue_claim_summary(runner_queue_claim)
+    runner_worker_lease = build_agent_runner_worker_lease(
+        runner_queue_claim,
+        lease_seconds=300,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_worker_lease_summary = build_agent_runner_worker_lease_summary(runner_worker_lease)
+    runner_invocation_envelope = build_agent_runner_invocation_envelope(
+        runner_worker_lease,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_invocation_envelope_summary = build_agent_runner_invocation_envelope_summary(
+        runner_invocation_envelope
+    )
+    runner_invocation_attempt = build_agent_runner_invocation_attempt(
+        runner_invocation_envelope,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_invocation_attempt_summary = build_agent_runner_invocation_attempt_summary(
+        runner_invocation_attempt
+    )
+    runner_invocation_result = build_agent_runner_invocation_result(
+        runner_invocation_attempt,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_invocation_result_summary = build_agent_runner_invocation_result_summary(
+        runner_invocation_result
+    )
+    runner_completion_receipt = build_agent_runner_completion_receipt(
+        runner_invocation_result,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_completion_receipt_summary = build_agent_runner_completion_receipt_summary(
+        runner_completion_receipt
+    )
+    runner_handoff_checkpoint = build_agent_runner_handoff_checkpoint(
+        runner_completion_receipt,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_handoff_checkpoint_summary = build_agent_runner_handoff_checkpoint_summary(
+        runner_handoff_checkpoint
+    )
+    runner_next_agent_unlock = build_agent_runner_next_agent_unlock(
+        runner_handoff_checkpoint,
+        requested_by="project_runner_checkpoint_dry_run_api",
+    )
+    runner_next_agent_unlock_summary = build_agent_runner_next_agent_unlock_summary(
+        runner_next_agent_unlock
+    )
+
+    project = payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update(
+        {
+            "latest_runner_handoff_checkpoint_status": runner_handoff_checkpoint.get("checkpoint_status", ""),
+            "latest_runner_next_agent_unlock_status": runner_next_agent_unlock.get("unlock_status", ""),
+            "latest_runner_next_agent_unlocked": bool(runner_next_agent_unlock.get("next_agent_unlocked")),
+            "latest_runner_handoff_complete": bool(runner_handoff_checkpoint.get("handoff_complete")),
+        }
+    )
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        "status": "success",
+        "project": project,
+        "planner_recommendation": payload["planner_recommendation"],
+        "runner_plan": payload["runner_plan"],
+        "runner_plan_summary": payload["runner_plan_summary"],
+        "runner_dispatch_ticket": payload["runner_dispatch_ticket"],
+        "runner_dispatch_summary": payload["runner_dispatch_summary"],
+        "runner_dispatch_event": payload["runner_dispatch_event"],
+        "runner_dispatch_event_summary": payload["runner_dispatch_event_summary"],
+        "runner_execution_receipt": runner_execution_receipt,
+        "runner_execution_receipt_summary": runner_execution_receipt_summary,
+        "runner_work_order": runner_work_order,
+        "runner_work_order_summary": runner_work_order_summary,
+        "runner_queue_item": runner_queue_item,
+        "runner_queue_item_summary": runner_queue_item_summary,
+        "runner_queue_claim": runner_queue_claim,
+        "runner_queue_claim_summary": runner_queue_claim_summary,
+        "runner_worker_lease": runner_worker_lease,
+        "runner_worker_lease_summary": runner_worker_lease_summary,
+        "runner_invocation_envelope": runner_invocation_envelope,
+        "runner_invocation_envelope_summary": runner_invocation_envelope_summary,
+        "runner_invocation_attempt": runner_invocation_attempt,
+        "runner_invocation_attempt_summary": runner_invocation_attempt_summary,
+        "runner_invocation_result": runner_invocation_result,
+        "runner_invocation_result_summary": runner_invocation_result_summary,
+        "runner_completion_receipt": runner_completion_receipt,
+        "runner_completion_receipt_summary": runner_completion_receipt_summary,
+        "runner_handoff_checkpoint": runner_handoff_checkpoint,
+        "runner_handoff_checkpoint_summary": runner_handoff_checkpoint_summary,
+        "runner_next_agent_unlock": runner_next_agent_unlock,
+        "runner_next_agent_unlock_summary": runner_next_agent_unlock_summary,
+        "dry_run": True,
+        "handoff_checkpoint_recorded": False,
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "agent_output_generated": False,
         "agent_invoked": False,
         "agent_execution_performed": False,
         "external_api_called": False,

@@ -2175,3 +2175,165 @@ class AgentRunnerInvocationResultCompletionTests(unittest.TestCase):
         self.assertFalse(completion["handoff_complete"])
         self.assertIn("contract_validation", result["blocking_check_ids"])
 
+
+class AgentRunnerHandoffCheckpointUnlockTests(unittest.TestCase):
+    def test_checkpoint_and_unlock_wait_for_real_output(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_handoff_checkpoint_summary,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_next_agent_unlock_summary,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_checkpoint_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project={"project_id": "project_checkpoint_ready"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        checkpoint_summary = build_agent_runner_handoff_checkpoint_summary(checkpoint)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        unlock_summary = build_agent_runner_next_agent_unlock_summary(unlock)
+
+        self.assertEqual(checkpoint["handoff_checkpoint_version"], "agent_runner_handoff_checkpoint_v1")
+        self.assertEqual(checkpoint["checkpoint_status"], "checkpoint_waiting_for_real_agent_output")
+        self.assertFalse(checkpoint["handoff_complete"])
+        self.assertFalse(checkpoint["next_agent_unlocked"])
+        self.assertFalse(checkpoint["handoff_checkpoint_recorded"])
+        self.assertFalse(checkpoint["agent_output_generated"])
+        self.assertEqual(checkpoint["checkpoint_message"]["message_type"], "runner_handoff_checkpoint_dry_run")
+        self.assertEqual(checkpoint_summary["summary_version"], "agent_runner_handoff_checkpoint_summary_v1")
+
+        self.assertEqual(unlock["next_agent_unlock_version"], "agent_runner_next_agent_unlock_v1")
+        self.assertEqual(unlock["unlock_status"], "unlock_waiting_for_real_agent_output")
+        self.assertFalse(unlock["handoff_complete"])
+        self.assertFalse(unlock["next_agent_unlocked"])
+        self.assertFalse(unlock["unlock_recorded"])
+        self.assertFalse(unlock["agent_execution_performed"])
+        self.assertFalse(unlock["external_api_called"])
+        self.assertFalse(unlock["cost_incurred_by_crossgrowth"])
+        self.assertEqual(unlock["unlock_message"]["message_type"], "runner_next_agent_unlock_dry_run")
+        self.assertEqual(unlock_summary["summary_version"], "agent_runner_next_agent_unlock_summary_v1")
+
+    def test_checkpoint_unlock_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_checkpoint_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_checkpoint_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+
+        self.assertEqual(checkpoint["checkpoint_status"], "checkpoint_waiting_for_user")
+        self.assertEqual(unlock["unlock_status"], "unlock_waiting_for_user")
+        self.assertFalse(unlock["next_agent_unlocked"])
+        self.assertIn("user_gate", checkpoint["blocking_check_ids"])
+
+    def test_checkpoint_unlock_blocks_invalid_target(self):
+        from agent_runs import (
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_plan,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_checkpoint_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+
+        self.assertEqual(checkpoint["checkpoint_status"], "checkpoint_blocked")
+        self.assertEqual(unlock["unlock_status"], "unlock_blocked")
+        self.assertFalse(unlock["next_agent_unlocked"])
+        self.assertIn("contract_validation", checkpoint["blocking_check_ids"])
+

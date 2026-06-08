@@ -806,3 +806,41 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             completion["completion_status"],
         )
 
+    def test_project_runner_checkpoint_dry_run_endpoint_returns_checkpoint_and_unlock(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/checkpoint/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["handoff_checkpoint_recorded"])
+        self.assertFalse(payload["handoff_complete"])
+        self.assertFalse(payload["next_agent_unlocked"])
+        self.assertFalse(payload["agent_output_generated"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_handoff_checkpoint", payload)
+        self.assertIn("runner_next_agent_unlock", payload)
+        self.assertIn("runner_next_agent_unlock_summary", payload)
+
+        checkpoint = payload["runner_handoff_checkpoint"]
+        unlock = payload["runner_next_agent_unlock"]
+        summary = payload["runner_next_agent_unlock_summary"]
+        self.assertEqual(checkpoint["handoff_checkpoint_version"], "agent_runner_handoff_checkpoint_v1")
+        self.assertEqual(unlock["next_agent_unlock_version"], "agent_runner_next_agent_unlock_v1")
+        self.assertTrue(unlock["dry_run"])
+        self.assertFalse(unlock["handoff_complete"])
+        self.assertFalse(unlock["next_agent_unlocked"])
+        self.assertFalse(unlock["unlock_recorded"])
+        self.assertEqual(summary["summary_version"], "agent_runner_next_agent_unlock_summary_v1")
+        self.assertEqual(summary["unlock_status"], unlock["unlock_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_next_agent_unlock_status"],
+            unlock["unlock_status"],
+        )
+

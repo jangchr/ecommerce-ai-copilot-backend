@@ -4917,3 +4917,51 @@ class ProjectWorkspaceResultCompletionPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace result completion panel bundle", script)
         self.assertIn("project_workspace_result_completion_panel_marker", script)
 
+
+class ProjectWorkspaceHandoffCheckpointPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_handoff_checkpoint_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace handoff checkpoint panel bundle",
+            "PROJECT_WORKSPACE_HANDOFF_CHECKPOINT_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceHandoffCheckpointPanel(",
+            "function projectWorkspaceHandoffCheckpointFromWorkspace(",
+            "function projectWorkspaceNextAgentUnlockFromWorkspace(",
+            "function projectWorkspaceUnlockStatusLabel(",
+            "function projectWorkspaceHandoffCheckpointCopyText(",
+            "async function copyProjectWorkspaceHandoffCheckpoint(",
+            "async function dryRunProjectWorkspaceHandoffCheckpoint(",
+            "/runner/checkpoint/dry-run",
+            "latestProjectRunnerHandoffCheckpoint",
+            "latestProjectRunnerNextAgentUnlock",
+            "runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint",
+            "runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock",
+            "runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {}",
+            "projectWorkspaceHandoffCheckpointPanel",
+            "projectWorkspaceHandoffCheckpointStatus",
+            "dryRunProjectWorkspaceHandoffCheckpointBtn",
+            "copyProjectWorkspaceHandoffCheckpointBtn",
+            "data-project-handoff-checkpoint-panel-marker",
+            "data-project-handoff-checkpoint-dry-run-action",
+            "data-next-agent-unlock-status",
+            "data-handoff-checkpoint-id",
+            "data-next-agent-unlocked",
+            "data-handoff-checkpoint-audit-preview",
+            "handoffCheckpointPanelTitle",
+            "handoffCheckpointDryRunHelper",
+            "renderProjectWorkspaceHandoffCheckpointPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_handoff_checkpoint_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_handoff_checkpoint_panel_marker", script)
+        self.assertIn("Project Workspace handoff checkpoint panel bundle", script)
+
+    def test_project_workspace_handoff_checkpoint_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace handoff checkpoint panel bundle", script)
+        self.assertIn("project_workspace_handoff_checkpoint_panel_marker", script)
+

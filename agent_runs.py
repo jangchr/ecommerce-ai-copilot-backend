@@ -3384,6 +3384,278 @@ def build_agent_runner_completion_receipt_summary(completion_receipt: dict[str, 
 
 
 
+AGENT_RUNNER_HANDOFF_CHECKPOINT_VERSION = "agent_runner_handoff_checkpoint_v1"
+AGENT_RUNNER_NEXT_AGENT_UNLOCK_VERSION = "agent_runner_next_agent_unlock_v1"
+
+
+def _handoff_checkpoint_status_from_completion(completion_receipt: dict[str, Any]) -> str:
+    safe_receipt = completion_receipt if isinstance(completion_receipt, dict) else {}
+    status = str(safe_receipt.get("completion_status") or "completion_blocked")
+    if status == "completion_waiting_for_real_agent_output":
+        return "checkpoint_waiting_for_real_agent_output"
+    if status == "completion_waiting_for_user":
+        return "checkpoint_waiting_for_user"
+    return "checkpoint_blocked"
+
+
+def build_agent_runner_handoff_checkpoint(
+    completion_receipt: dict[str, Any],
+    requested_by: str = "runner_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run handoff checkpoint from a completion receipt.
+
+    This summarizes the graph handoff state. It does not mark the handoff
+    complete, unlock the next Agent, call providers, spend money, or enable
+    autonomous LLM routing.
+    """
+
+    receipt = completion_receipt if isinstance(completion_receipt, dict) else {}
+    project_id = str(receipt.get("project_id") or "demo_project_default")
+    target_agent_id = str(receipt.get("target_agent_id") or "")
+    checkpoint_status = _handoff_checkpoint_status_from_completion(receipt)
+    checkpoint_id = f"handoff_checkpoint_{project_id}_{target_agent_id or 'none'}_{checkpoint_status}".replace(" ", "_")
+
+    output_check = receipt.get("output_contract_check") if isinstance(receipt.get("output_contract_check"), dict) else {}
+    blocking_check_ids = [
+        str(value)
+        for value in (receipt.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if checkpoint_status == "checkpoint_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_handoff_unlock"
+        checkpoint_message_text = "Dry-run handoff checkpoint is structurally ready, but waits for real Agent output before unlock."
+    elif checkpoint_status == "checkpoint_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        checkpoint_message_text = "Handoff checkpoint is waiting for required user action."
+    else:
+        recommended_next_state = "fix_handoff_checkpoint_blockers"
+        checkpoint_message_text = "Handoff checkpoint is blocked by completion receipt or upstream safety checks."
+
+    checkpoint_payload = {
+        "handoff_checkpoint_version": AGENT_RUNNER_HANDOFF_CHECKPOINT_VERSION,
+        "checkpoint_status": checkpoint_status,
+        "checkpoint_id": checkpoint_id,
+        "target_agent_id": target_agent_id,
+        "completion_id": receipt.get("completion_id"),
+        "completion_status": receipt.get("completion_status"),
+        "result_id": receipt.get("result_id"),
+        "output_contract_check": output_check,
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "handoff_checkpoint_recorded": False,
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "agent_output_generated": False,
+        "agent_execution_performed": False,
+    }
+
+    checkpoint_message = build_agent_message(
+        message_type="runner_handoff_checkpoint_dry_run",
+        source_agent_id="runner_handoff_manager",
+        target_agent_id=target_agent_id,
+        payload=checkpoint_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "handoff_checkpoint_version": AGENT_RUNNER_HANDOFF_CHECKPOINT_VERSION,
+        "checkpoint_id": checkpoint_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_checkpoint_dry_run_api"),
+        "checkpoint_status": checkpoint_status,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(receipt.get("target_agent_stage") or ""),
+        "completion_id": str(receipt.get("completion_id") or ""),
+        "completion_status": str(receipt.get("completion_status") or ""),
+        "completion_allowed": bool(receipt.get("completion_allowed")),
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "result_id": str(receipt.get("result_id") or ""),
+        "attempt_id": str(receipt.get("attempt_id") or ""),
+        "recommended_next_state": recommended_next_state,
+        "checkpoint_message_text": checkpoint_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "output_contract_check": deepcopy(output_check),
+        "completion_receipt_summary": build_agent_runner_completion_receipt_summary(receipt),
+        "invocation_result_summary": deepcopy(receipt.get("invocation_result_summary") or {}),
+        "completion_payload": deepcopy(receipt.get("completion_payload") or {}),
+        "completion_message": deepcopy(receipt.get("completion_message") or {}),
+        "checkpoint_payload": checkpoint_payload,
+        "checkpoint_message": checkpoint_message,
+        "dry_run": True,
+        "handoff_checkpoint_recorded": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_handoff_checkpoint_summary(checkpoint: dict[str, Any]) -> dict[str, Any]:
+    safe_checkpoint = checkpoint if isinstance(checkpoint, dict) else {}
+    return {
+        "summary_version": "agent_runner_handoff_checkpoint_summary_v1",
+        "handoff_checkpoint_version": str(safe_checkpoint.get("handoff_checkpoint_version") or AGENT_RUNNER_HANDOFF_CHECKPOINT_VERSION),
+        "checkpoint_id": str(safe_checkpoint.get("checkpoint_id") or ""),
+        "project_id": str(safe_checkpoint.get("project_id") or "demo_project_default"),
+        "checkpoint_status": str(safe_checkpoint.get("checkpoint_status") or "checkpoint_blocked"),
+        "target_agent_id": str(safe_checkpoint.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_checkpoint.get("target_agent_stage") or ""),
+        "completion_id": str(safe_checkpoint.get("completion_id") or ""),
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "blocking_check_count": len(safe_checkpoint.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "handoff_checkpoint_recorded": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _next_agent_unlock_status_from_checkpoint(checkpoint: dict[str, Any]) -> str:
+    safe_checkpoint = checkpoint if isinstance(checkpoint, dict) else {}
+    status = str(safe_checkpoint.get("checkpoint_status") or "checkpoint_blocked")
+    if status == "checkpoint_waiting_for_real_agent_output":
+        return "unlock_waiting_for_real_agent_output"
+    if status == "checkpoint_waiting_for_user":
+        return "unlock_waiting_for_user"
+    return "unlock_blocked"
+
+
+def build_agent_runner_next_agent_unlock(
+    handoff_checkpoint: dict[str, Any],
+    requested_by: str = "runner_checkpoint_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run next-Agent unlock decision from a handoff checkpoint.
+
+    In dry-run mode, the next Agent is never truly unlocked because no real
+    Agent output has been generated.
+    """
+
+    checkpoint = handoff_checkpoint if isinstance(handoff_checkpoint, dict) else {}
+    project_id = str(checkpoint.get("project_id") or "demo_project_default")
+    target_agent_id = str(checkpoint.get("target_agent_id") or "")
+    unlock_status = _next_agent_unlock_status_from_checkpoint(checkpoint)
+    unlock_id = f"next_agent_unlock_{project_id}_{target_agent_id or 'none'}_{unlock_status}".replace(" ", "_")
+
+    blocking_check_ids = [
+        str(value)
+        for value in (checkpoint.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if unlock_status == "unlock_waiting_for_real_agent_output":
+        recommended_next_state = "execute_real_agent_then_recheck_unlock"
+        unlock_message_text = "Next Agent remains locked in dry-run mode until real Agent output satisfies the output contract."
+    elif unlock_status == "unlock_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        unlock_message_text = "Next Agent unlock is waiting for required user action."
+    else:
+        recommended_next_state = "fix_next_agent_unlock_blockers"
+        unlock_message_text = "Next Agent unlock is blocked by handoff checkpoint or upstream safety checks."
+
+    unlock_payload = {
+        "next_agent_unlock_version": AGENT_RUNNER_NEXT_AGENT_UNLOCK_VERSION,
+        "unlock_status": unlock_status,
+        "unlock_id": unlock_id,
+        "target_agent_id": target_agent_id,
+        "checkpoint_id": checkpoint.get("checkpoint_id"),
+        "completion_id": checkpoint.get("completion_id"),
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "unlock_recorded": False,
+        "agent_output_generated": False,
+        "agent_execution_performed": False,
+    }
+
+    unlock_message = build_agent_message(
+        message_type="runner_next_agent_unlock_dry_run",
+        source_agent_id="runner_handoff_manager",
+        target_agent_id=target_agent_id,
+        payload=unlock_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "next_agent_unlock_version": AGENT_RUNNER_NEXT_AGENT_UNLOCK_VERSION,
+        "unlock_id": unlock_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_checkpoint_dry_run_api"),
+        "unlock_status": unlock_status,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(checkpoint.get("target_agent_stage") or ""),
+        "checkpoint_id": str(checkpoint.get("checkpoint_id") or ""),
+        "checkpoint_status": str(checkpoint.get("checkpoint_status") or ""),
+        "completion_id": str(checkpoint.get("completion_id") or ""),
+        "result_id": str(checkpoint.get("result_id") or ""),
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "unlock_recorded": False,
+        "recommended_next_state": recommended_next_state,
+        "unlock_message_text": unlock_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "handoff_checkpoint_summary": build_agent_runner_handoff_checkpoint_summary(checkpoint),
+        "completion_receipt_summary": deepcopy(checkpoint.get("completion_receipt_summary") or {}),
+        "output_contract_check": deepcopy(checkpoint.get("output_contract_check") or {}),
+        "checkpoint_message": deepcopy(checkpoint.get("checkpoint_message") or {}),
+        "unlock_payload": unlock_payload,
+        "unlock_message": unlock_message,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_next_agent_unlock_summary(next_agent_unlock: dict[str, Any]) -> dict[str, Any]:
+    safe_unlock = next_agent_unlock if isinstance(next_agent_unlock, dict) else {}
+    return {
+        "summary_version": "agent_runner_next_agent_unlock_summary_v1",
+        "next_agent_unlock_version": str(safe_unlock.get("next_agent_unlock_version") or AGENT_RUNNER_NEXT_AGENT_UNLOCK_VERSION),
+        "unlock_id": str(safe_unlock.get("unlock_id") or ""),
+        "project_id": str(safe_unlock.get("project_id") or "demo_project_default"),
+        "unlock_status": str(safe_unlock.get("unlock_status") or "unlock_blocked"),
+        "target_agent_id": str(safe_unlock.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_unlock.get("target_agent_stage") or ""),
+        "checkpoint_id": str(safe_unlock.get("checkpoint_id") or ""),
+        "handoff_complete": False,
+        "next_agent_unlocked": False,
+        "unlock_recorded": False,
+        "blocking_check_count": len(safe_unlock.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,
