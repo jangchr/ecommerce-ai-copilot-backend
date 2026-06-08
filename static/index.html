@@ -14303,6 +14303,130 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_EXECUTION_SANDBOX_PANEL_BUNDLE_MARKER = 'Project Workspace execution sandbox panel bundle';
+        let latestProjectRunnerExecutionSandboxContract = {};
+        let latestProjectRunnerProviderBoundaryPreview = {};
+        let latestProjectRunnerSecretBoundaryPreview = {};
+        let latestProjectRunnerQuotaLedgerPreview = {};
+        let latestProjectRunnerCostSimulationPreview = {};
+        let latestProjectRunnerSandboxIncidentPlanPreview = {};
+        let latestProjectRunnerExecutionSandboxReceiptPreview = {};
+
+        function projectWorkspaceExecutionSandboxCopyText(workspace = latestProjectWorkspace) {
+            const sandbox = Object.keys(latestProjectRunnerExecutionSandboxContract || {}).length ? latestProjectRunnerExecutionSandboxContract : workspace?.runner_execution_sandbox_contract || {};
+            const provider = Object.keys(latestProjectRunnerProviderBoundaryPreview || {}).length ? latestProjectRunnerProviderBoundaryPreview : workspace?.runner_provider_boundary_preview || {};
+            const secret = Object.keys(latestProjectRunnerSecretBoundaryPreview || {}).length ? latestProjectRunnerSecretBoundaryPreview : workspace?.runner_secret_boundary_preview || {};
+            const quota = Object.keys(latestProjectRunnerQuotaLedgerPreview || {}).length ? latestProjectRunnerQuotaLedgerPreview : workspace?.runner_quota_ledger_preview || {};
+            const cost = Object.keys(latestProjectRunnerCostSimulationPreview || {}).length ? latestProjectRunnerCostSimulationPreview : workspace?.runner_cost_simulation_preview || {};
+            const incident = Object.keys(latestProjectRunnerSandboxIncidentPlanPreview || {}).length ? latestProjectRunnerSandboxIncidentPlanPreview : workspace?.runner_sandbox_incident_plan_preview || {};
+            const receipt = Object.keys(latestProjectRunnerExecutionSandboxReceiptPreview || {}).length ? latestProjectRunnerExecutionSandboxReceiptPreview : workspace?.runner_execution_sandbox_receipt_preview || {};
+            return [
+                t('executionSandboxCopyTitle'),
+                `${t('executionSandboxStatus')}: ${sandbox.execution_sandbox_status || 'not_refreshed'}`,
+                `${t('providerBoundaryStatus')}: ${provider.provider_boundary_status || 'not_refreshed'}`,
+                `${t('secretBoundaryStatus')}: ${secret.secret_boundary_status || 'not_refreshed'}`,
+                `${t('quotaLedgerStatus')}: ${quota.quota_ledger_status || 'not_refreshed'}`,
+                `${t('costSimulationStatus')}: ${cost.cost_simulation_status || 'not_refreshed'}`,
+                `${t('sandboxIncidentPlanStatus')}: ${incident.sandbox_incident_plan_status || 'not_refreshed'}`,
+                `${t('executionSandboxReceiptStatus')}: ${receipt.execution_sandbox_receipt_status || 'not_refreshed'}`,
+                `${t('sandboxReadyForRealExecution')}: ${Boolean(receipt.sandbox_ready_for_real_execution)}`,
+                '',
+                JSON.stringify({ sandbox, provider, secret, quota, cost, incident, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceExecutionSandbox() {
+            const status = document.getElementById('projectWorkspaceExecutionSandboxStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceExecutionSandboxCopyText());
+                if (status) status.textContent = t('executionSandboxCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('executionSandboxCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceExecutionSandbox(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceExecutionSandboxStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('executionSandboxDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_execution_sandbox_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/execution-sandbox/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('executionSandboxDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerExecutionSandboxContract = payload.runner_execution_sandbox_contract || {};
+                latestProjectRunnerProviderBoundaryPreview = payload.runner_provider_boundary_preview || {};
+                latestProjectRunnerSecretBoundaryPreview = payload.runner_secret_boundary_preview || {};
+                latestProjectRunnerQuotaLedgerPreview = payload.runner_quota_ledger_preview || {};
+                latestProjectRunnerCostSimulationPreview = payload.runner_cost_simulation_preview || {};
+                latestProjectRunnerSandboxIncidentPlanPreview = payload.runner_sandbox_incident_plan_preview || {};
+                latestProjectRunnerExecutionSandboxReceiptPreview = payload.runner_execution_sandbox_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_execution_sandbox_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_execution_sandbox_dry_run');
+                if (status) status.textContent = t('executionSandboxDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceExecutionSandboxPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceExecutionSandboxPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_execution_sandbox_dry_run');
+                if (status) status.textContent = error.message || t('executionSandboxDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceExecutionSandboxPanel(workspace = latestProjectWorkspace) {
+            const sandbox = Object.keys(latestProjectRunnerExecutionSandboxContract || {}).length ? latestProjectRunnerExecutionSandboxContract : workspace?.runner_execution_sandbox_contract || {};
+            const provider = Object.keys(latestProjectRunnerProviderBoundaryPreview || {}).length ? latestProjectRunnerProviderBoundaryPreview : workspace?.runner_provider_boundary_preview || {};
+            const quota = Object.keys(latestProjectRunnerQuotaLedgerPreview || {}).length ? latestProjectRunnerQuotaLedgerPreview : workspace?.runner_quota_ledger_preview || {};
+            const receipt = Object.keys(latestProjectRunnerExecutionSandboxReceiptPreview || {}).length ? latestProjectRunnerExecutionSandboxReceiptPreview : workspace?.runner_execution_sandbox_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceExecutionSandboxPanel" data-project-execution-sandbox-panel-marker="Project Workspace execution sandbox panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('executionSandboxPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('executionSandboxPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceExecutionSandboxBtn" type="button" data-project-execution-sandbox-dry-run-action="Project Workspace execution sandbox panel bundle" onclick="dryRunProjectWorkspaceExecutionSandbox()">${escapeHTML(t('dryRunExecutionSandbox'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceExecutionSandboxBtn" type="button" onclick="copyProjectWorkspaceExecutionSandbox()">${escapeHTML(t('copyExecutionSandbox'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('executionSandboxStatus'))}</div>
+                            <strong data-execution-sandbox-status="${escapeHTML(sandbox.execution_sandbox_status || 'not_refreshed')}">${escapeHTML(sandbox.execution_sandbox_status || t('executionSandboxNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerBoundaryStatus'))}</div>
+                            <strong data-provider-boundary-status="${escapeHTML(provider.provider_boundary_status || 'not_refreshed')}">${escapeHTML(provider.provider_boundary_status || t('executionSandboxNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('quotaLedgerStatus'))}</div>
+                            <strong data-quota-ledger-status="${escapeHTML(quota.quota_ledger_status || 'not_refreshed')}">${escapeHTML(quota.quota_ledger_status || t('executionSandboxNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('sandboxReadyForRealExecution'))}: ${escapeHTML(String(Boolean(receipt.sandbox_ready_for_real_execution)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('executionSandboxAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-execution-sandbox-audit-preview="Project Workspace execution sandbox panel bundle">${escapeHTML(projectWorkspaceExecutionSandboxCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('executionSandboxNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceExecutionSandboxStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceApprovalDecisionPanel(workspace = latestProjectWorkspace) {
             const simulator = Object.keys(latestProjectRunnerApprovalDecisionSimulator || {}).length ? latestProjectRunnerApprovalDecisionSimulator : workspace?.runner_approval_decision_simulator || {};
             const gate = Object.keys(latestProjectRunnerReleaseGateStatePreview || {}).length ? latestProjectRunnerReleaseGateStatePreview : workspace?.runner_release_gate_state_preview || {};
@@ -15443,6 +15567,7 @@
                     ${renderProjectWorkspaceOperatorControlPanel(workspace)}
                     ${renderProjectWorkspaceOperatorApprovalPanel(workspace)}
                     ${renderProjectWorkspaceApprovalDecisionPanel(workspace)}
+                    ${renderProjectWorkspaceExecutionSandboxPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -18391,6 +18516,55 @@
             approvalDecisionDryRunFailed: 'Approval decision dry-run \u5931\u8d25\u3002',
             approvalDecisionCopied: '\u6279\u51c6\u51b3\u7b56\u5df2\u590d\u5236\u3002',
             approvalDecisionCopyFailed: '\u590d\u5236\u6279\u51c6\u51b3\u7b56\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceExecutionSandboxPanelBundleMarker: 'Project Workspace execution sandbox panel bundle',
+            executionSandboxPanelTitle: 'Execution sandbox, quota & secret boundary',
+            executionSandboxPanelHelper: 'Dry-run sandbox contract, provider boundary, secret boundary, quota ledger, cost simulation, incident plan, and sandbox receipt.',
+            dryRunExecutionSandbox: 'Dry-run execution sandbox',
+            copyExecutionSandbox: 'Copy execution sandbox',
+            executionSandboxCopyTitle: 'Project execution sandbox dry-run',
+            executionSandboxStatus: 'Execution sandbox status',
+            providerBoundaryStatus: 'Provider boundary status',
+            secretBoundaryStatus: 'Secret boundary status',
+            quotaLedgerStatus: 'Quota ledger status',
+            costSimulationStatus: 'Cost simulation status',
+            sandboxIncidentPlanStatus: 'Sandbox incident plan status',
+            executionSandboxReceiptStatus: 'Execution sandbox receipt status',
+            sandboxReadyForRealExecution: 'Sandbox ready for real execution',
+            executionSandboxAuditPreview: 'Execution sandbox audit preview',
+            executionSandboxNotRefreshedYet: 'Execution sandbox has not been refreshed yet.',
+            executionSandboxDryRunRunning: 'Building execution sandbox dry-run...',
+            executionSandboxDryRunComplete: 'Execution sandbox dry-run complete.',
+            executionSandboxDryRunFailed: 'Execution sandbox dry-run failed.',
+            executionSandboxCopied: 'Execution sandbox copied.',
+            executionSandboxCopyFailed: 'Could not copy execution sandbox.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceExecutionSandboxPanelBundleMarker: 'Project Workspace execution sandbox panel bundle',
+            executionSandboxPanelTitle: '\u6267\u884c\u6c99\u76d2\u3001\u989d\u5ea6\u4e0e\u5bc6\u94a5\u8fb9\u754c',
+            executionSandboxPanelHelper: '\u5bf9\u6c99\u76d2\u5951\u7ea6\u3001\u5916\u90e8\u670d\u52a1\u8fb9\u754c\u3001\u5bc6\u94a5\u8fb9\u754c\u3001\u989d\u5ea6\u8d26\u672c\u3001\u6210\u672c\u6a21\u62df\u3001\u4e8b\u6545\u9884\u6848\u548c\u6c99\u76d2\u56de\u6267\u505a dry-run\u3002',
+            dryRunExecutionSandbox: 'Dry-run \u6267\u884c\u6c99\u76d2',
+            copyExecutionSandbox: '\u590d\u5236\u6267\u884c\u6c99\u76d2',
+            executionSandboxCopyTitle: '\u9879\u76ee\u6267\u884c\u6c99\u76d2 dry-run',
+            executionSandboxStatus: '\u6267\u884c\u6c99\u76d2\u72b6\u6001',
+            providerBoundaryStatus: '\u5916\u90e8\u670d\u52a1\u8fb9\u754c\u72b6\u6001',
+            secretBoundaryStatus: '\u5bc6\u94a5\u8fb9\u754c\u72b6\u6001',
+            quotaLedgerStatus: '\u989d\u5ea6\u8d26\u672c\u72b6\u6001',
+            costSimulationStatus: '\u6210\u672c\u6a21\u62df\u72b6\u6001',
+            sandboxIncidentPlanStatus: '\u6c99\u76d2\u4e8b\u6545\u9884\u6848\u72b6\u6001',
+            executionSandboxReceiptStatus: '\u6267\u884c\u6c99\u76d2\u56de\u6267\u72b6\u6001',
+            sandboxReadyForRealExecution: '\u6c99\u76d2\u662f\u5426\u53ef\u8fdb\u5165\u771f\u5b9e\u6267\u884c',
+            executionSandboxAuditPreview: '\u6267\u884c\u6c99\u76d2\u5ba1\u8ba1\u9884\u89c8',
+            executionSandboxNotRefreshedYet: '\u6267\u884c\u6c99\u76d2\u5c1a\u672a\u5237\u65b0\u3002',
+            executionSandboxDryRunRunning: '\u6b63\u5728\u751f\u6210 execution sandbox dry-run...',
+            executionSandboxDryRunComplete: 'Execution sandbox dry-run \u5b8c\u6210\u3002',
+            executionSandboxDryRunFailed: 'Execution sandbox dry-run \u5931\u8d25\u3002',
+            executionSandboxCopied: '\u6267\u884c\u6c99\u76d2\u5df2\u590d\u5236\u3002',
+            executionSandboxCopyFailed: '\u590d\u5236\u6267\u884c\u6c99\u76d2\u5931\u8d25\u3002'
         });
 
 

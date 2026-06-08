@@ -9403,6 +9403,237 @@ async def dry_run_project_agent_approval_decision(project_id: str, http_request:
     }
 
 
+
+def _runner_execution_sandbox_contract(decision_payload: dict) -> dict:
+    project = dict(decision_payload.get("project") or {})
+    gate = dict(decision_payload.get("runner_release_gate_state_preview") or {})
+    return {
+        "execution_sandbox_contract_version": "runner_execution_sandbox_contract_v1",
+        "execution_sandbox_status": "execution_sandbox_contract_preview_only",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "release_gate_status": gate.get("release_gate_status", "release_gate_paused"),
+        "sandbox_enabled": False,
+        "real_execution_enabled": False,
+        "contract_rules": [
+            {"rule_id": "no_unapproved_external_calls", "enforced": True},
+            {"rule_id": "no_secret_exfiltration", "enforced": True},
+            {"rule_id": "no_persistent_write_without_snapshot", "enforced": True},
+            {"rule_id": "no_cost_without_quota", "enforced": True},
+            {"rule_id": "operator_stop_always_available", "enforced": True},
+        ],
+        "contract_rule_count": 5,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_boundary_preview(sandbox_contract: dict) -> dict:
+    provider_boundaries = [
+        {"provider_id": "llm_text_generation", "enabled": False, "quota_required": True},
+        {"provider_id": "image_generation", "enabled": False, "quota_required": True},
+        {"provider_id": "video_generation", "enabled": False, "quota_required": True},
+        {"provider_id": "comment_collection", "enabled": False, "quota_required": True},
+        {"provider_id": "external_web_fetch", "enabled": False, "quota_required": True},
+    ]
+    return {
+        "provider_boundary_version": "runner_provider_boundary_preview_v1",
+        "provider_boundary_status": "provider_boundary_locked",
+        "project_id": sandbox_contract.get("project_id", "demo_project_default"),
+        "execution_sandbox_status": sandbox_contract.get("execution_sandbox_status", ""),
+        "provider_boundaries": provider_boundaries,
+        "provider_boundary_count": len(provider_boundaries),
+        "enabled_provider_count": 0,
+        "provider_calls_enabled": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_secret_boundary_preview(provider_boundary: dict) -> dict:
+    secret_rules = [
+        {"secret_rule_id": "no_secret_in_prompt", "enforced": True},
+        {"secret_rule_id": "no_secret_in_agent_output", "enforced": True},
+        {"secret_rule_id": "no_secret_in_export_pack", "enforced": True},
+        {"secret_rule_id": "secret_access_requires_named_adapter", "enforced": True},
+        {"secret_rule_id": "operator_redaction_required", "enforced": True},
+    ]
+    return {
+        "secret_boundary_version": "runner_secret_boundary_preview_v1",
+        "secret_boundary_status": "secret_boundary_locked",
+        "project_id": provider_boundary.get("project_id", "demo_project_default"),
+        "provider_boundary_status": provider_boundary.get("provider_boundary_status", ""),
+        "secret_rules": secret_rules,
+        "secret_rule_count": len(secret_rules),
+        "secret_access_enabled": False,
+        "secret_redaction_required": True,
+        "secret_exposure_detected": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_quota_ledger_preview(secret_boundary: dict) -> dict:
+    quota_lines = [
+        {"quota_line_id": "llm_text_generation_calls", "limit": 0, "used": 0, "unit": "calls"},
+        {"quota_line_id": "image_generation_calls", "limit": 0, "used": 0, "unit": "calls"},
+        {"quota_line_id": "video_generation_calls", "limit": 0, "used": 0, "unit": "calls"},
+        {"quota_line_id": "comment_collection_calls", "limit": 0, "used": 0, "unit": "calls"},
+        {"quota_line_id": "total_budget_cents", "limit": 0, "used": 0, "unit": "cents"},
+    ]
+    return {
+        "quota_ledger_version": "runner_quota_ledger_preview_v1",
+        "quota_ledger_status": "quota_ledger_zero_budget",
+        "project_id": secret_boundary.get("project_id", "demo_project_default"),
+        "secret_boundary_status": secret_boundary.get("secret_boundary_status", ""),
+        "quota_lines": quota_lines,
+        "quota_line_count": len(quota_lines),
+        "quota_ledger_recorded": False,
+        "quota_enabled": False,
+        "total_budget_cents": 0,
+        "total_used_cents": 0,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_cost_simulation_preview(quota_ledger: dict) -> dict:
+    scenario_items = [
+        {"scenario_id": "single_planner_run", "estimated_cost_cents": 0, "allowed": False},
+        {"scenario_id": "single_storyboard_run", "estimated_cost_cents": 0, "allowed": False},
+        {"scenario_id": "image_asset_generation", "estimated_cost_cents": 0, "allowed": False},
+        {"scenario_id": "video_asset_generation", "estimated_cost_cents": 0, "allowed": False},
+        {"scenario_id": "comment_collection_batch", "estimated_cost_cents": 0, "allowed": False},
+    ]
+    return {
+        "cost_simulation_version": "runner_cost_simulation_preview_v1",
+        "cost_simulation_status": "cost_simulation_blocked_by_zero_quota",
+        "project_id": quota_ledger.get("project_id", "demo_project_default"),
+        "quota_ledger_status": quota_ledger.get("quota_ledger_status", ""),
+        "scenario_items": scenario_items,
+        "scenario_item_count": len(scenario_items),
+        "estimated_total_cost_cents": 0,
+        "cost_limit_cents": 0,
+        "cost_simulation_allowed": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_sandbox_incident_plan_preview(cost_simulation: dict) -> dict:
+    incident_steps = [
+        {"incident_step_id": "stop_worker_loop", "ready": True, "executed": False},
+        {"incident_step_id": "freeze_queue_claims", "ready": True, "executed": False},
+        {"incident_step_id": "revoke_provider_adapter", "ready": True, "executed": False},
+        {"incident_step_id": "redact_sensitive_outputs", "ready": True, "executed": False},
+        {"incident_step_id": "write_operator_incident_report", "ready": False, "executed": False},
+    ]
+    return {
+        "sandbox_incident_plan_version": "runner_sandbox_incident_plan_preview_v1",
+        "sandbox_incident_plan_status": "sandbox_incident_plan_preview_only",
+        "project_id": cost_simulation.get("project_id", "demo_project_default"),
+        "cost_simulation_status": cost_simulation.get("cost_simulation_status", ""),
+        "incident_steps": incident_steps,
+        "incident_step_count": len(incident_steps),
+        "incident_plan_ready": False,
+        "incident_detected": False,
+        "incident_handled": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_execution_sandbox_receipt_preview(incident_plan: dict) -> dict:
+    return {
+        "execution_sandbox_receipt_version": "runner_execution_sandbox_receipt_preview_v1",
+        "execution_sandbox_receipt_status": "execution_sandbox_receipt_preview_only",
+        "project_id": incident_plan.get("project_id", "demo_project_default"),
+        "sandbox_incident_plan_status": incident_plan.get("sandbox_incident_plan_status", ""),
+        "receipt_items": [
+            {"receipt_item_id": "sandbox_contract", "included": True},
+            {"receipt_item_id": "provider_boundary", "included": True},
+            {"receipt_item_id": "secret_boundary", "included": True},
+            {"receipt_item_id": "quota_ledger", "included": True},
+            {"receipt_item_id": "cost_simulation", "included": True},
+            {"receipt_item_id": "incident_plan", "included": True},
+        ],
+        "receipt_item_count": 6,
+        "sandbox_ready_for_real_execution": False,
+        "receipt_recorded": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/execution-sandbox/dry-run")
+async def dry_run_project_agent_execution_sandbox(project_id: str, http_request: Request):
+    decision_payload = await dry_run_project_agent_approval_decision(project_id, http_request)
+
+    runner_execution_sandbox_contract = _runner_execution_sandbox_contract(decision_payload)
+    runner_provider_boundary_preview = _runner_provider_boundary_preview(runner_execution_sandbox_contract)
+    runner_secret_boundary_preview = _runner_secret_boundary_preview(runner_provider_boundary_preview)
+    runner_quota_ledger_preview = _runner_quota_ledger_preview(runner_secret_boundary_preview)
+    runner_cost_simulation_preview = _runner_cost_simulation_preview(runner_quota_ledger_preview)
+    runner_sandbox_incident_plan_preview = _runner_sandbox_incident_plan_preview(runner_cost_simulation_preview)
+    runner_execution_sandbox_receipt_preview = _runner_execution_sandbox_receipt_preview(runner_sandbox_incident_plan_preview)
+
+    project = decision_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_execution_sandbox_status": runner_execution_sandbox_contract["execution_sandbox_status"],
+        "latest_runner_provider_boundary_status": runner_provider_boundary_preview["provider_boundary_status"],
+        "latest_runner_secret_boundary_status": runner_secret_boundary_preview["secret_boundary_status"],
+        "latest_runner_quota_ledger_status": runner_quota_ledger_preview["quota_ledger_status"],
+        "latest_runner_cost_simulation_status": runner_cost_simulation_preview["cost_simulation_status"],
+        "latest_runner_sandbox_incident_plan_status": runner_sandbox_incident_plan_preview["sandbox_incident_plan_status"],
+        "latest_runner_execution_sandbox_receipt_status": runner_execution_sandbox_receipt_preview["execution_sandbox_receipt_status"],
+        "latest_runner_sandbox_ready_for_real_execution": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **decision_payload,
+        "project": project,
+        "runner_execution_sandbox_contract": runner_execution_sandbox_contract,
+        "runner_provider_boundary_preview": runner_provider_boundary_preview,
+        "runner_secret_boundary_preview": runner_secret_boundary_preview,
+        "runner_quota_ledger_preview": runner_quota_ledger_preview,
+        "runner_cost_simulation_preview": runner_cost_simulation_preview,
+        "runner_sandbox_incident_plan_preview": runner_sandbox_incident_plan_preview,
+        "runner_execution_sandbox_receipt_preview": runner_execution_sandbox_receipt_preview,
+        "dry_run": True,
+        "sandbox_enabled": False,
+        "provider_calls_enabled": False,
+        "secret_access_enabled": False,
+        "quota_enabled": False,
+        "cost_simulation_allowed": False,
+        "incident_plan_ready": False,
+        "sandbox_ready_for_real_execution": False,
+        "receipt_recorded": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

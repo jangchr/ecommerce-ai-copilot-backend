@@ -1469,3 +1469,51 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             "execution_unlock_blocked",
         )
 
+    def test_project_runner_execution_sandbox_dry_run_endpoint_returns_quota_and_secret_boundaries(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/execution-sandbox/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_execution_sandbox_contract",
+            "runner_provider_boundary_preview",
+            "runner_secret_boundary_preview",
+            "runner_quota_ledger_preview",
+            "runner_cost_simulation_preview",
+            "runner_sandbox_incident_plan_preview",
+            "runner_execution_sandbox_receipt_preview",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertFalse(payload["sandbox_enabled"])
+        self.assertFalse(payload["provider_calls_enabled"])
+        self.assertFalse(payload["secret_access_enabled"])
+        self.assertFalse(payload["quota_enabled"])
+        self.assertFalse(payload["cost_simulation_allowed"])
+        self.assertFalse(payload["incident_plan_ready"])
+        self.assertFalse(payload["sandbox_ready_for_real_execution"])
+        self.assertFalse(payload["receipt_recorded"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertEqual(
+            payload["runner_execution_sandbox_contract"]["execution_sandbox_contract_version"],
+            "runner_execution_sandbox_contract_v1",
+        )
+        self.assertEqual(
+            payload["runner_execution_sandbox_receipt_preview"]["execution_sandbox_receipt_version"],
+            "runner_execution_sandbox_receipt_preview_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_sandbox_ready_for_real_execution"],
+            False,
+        )
+
