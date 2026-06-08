@@ -14229,6 +14229,123 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_APPROVAL_DECISION_PANEL_BUNDLE_MARKER = 'Project Workspace approval decision panel bundle';
+        let latestProjectRunnerOperatorDecisionInputPreview = {};
+        let latestProjectRunnerApprovalDecisionSimulator = {};
+        let latestProjectRunnerReleaseGateStatePreview = {};
+        let latestProjectRunnerExecutionUnlockPreview = {};
+        let latestProjectRunnerOperatorDecisionReceiptPreview = {};
+
+        function projectWorkspaceApprovalDecisionCopyText(workspace = latestProjectWorkspace) {
+            const input = Object.keys(latestProjectRunnerOperatorDecisionInputPreview || {}).length ? latestProjectRunnerOperatorDecisionInputPreview : workspace?.runner_operator_decision_input_preview || {};
+            const simulator = Object.keys(latestProjectRunnerApprovalDecisionSimulator || {}).length ? latestProjectRunnerApprovalDecisionSimulator : workspace?.runner_approval_decision_simulator || {};
+            const gate = Object.keys(latestProjectRunnerReleaseGateStatePreview || {}).length ? latestProjectRunnerReleaseGateStatePreview : workspace?.runner_release_gate_state_preview || {};
+            const unlock = Object.keys(latestProjectRunnerExecutionUnlockPreview || {}).length ? latestProjectRunnerExecutionUnlockPreview : workspace?.runner_execution_unlock_preview || {};
+            const receipt = Object.keys(latestProjectRunnerOperatorDecisionReceiptPreview || {}).length ? latestProjectRunnerOperatorDecisionReceiptPreview : workspace?.runner_operator_decision_receipt_preview || {};
+            return [
+                t('approvalDecisionCopyTitle'),
+                `${t('operatorDecisionInputStatus')}: ${input.operator_decision_input_status || 'not_refreshed'}`,
+                `${t('approvalDecisionStatus')}: ${simulator.approval_decision_status || 'not_refreshed'}`,
+                `${t('releaseGateStatus')}: ${gate.release_gate_status || 'not_refreshed'}`,
+                `${t('executionUnlockStatus')}: ${unlock.execution_unlock_status || 'not_refreshed'}`,
+                `${t('operatorDecisionReceiptStatus')}: ${receipt.operator_decision_receipt_status || 'not_refreshed'}`,
+                `${t('gateOpen')}: ${Boolean(gate.gate_open)}`,
+                `${t('unlockAllowed')}: ${Boolean(unlock.unlock_allowed)}`,
+                '',
+                JSON.stringify({ input, simulator, gate, unlock, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceApprovalDecision() {
+            const status = document.getElementById('projectWorkspaceApprovalDecisionStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceApprovalDecisionCopyText());
+                if (status) status.textContent = t('approvalDecisionCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('approvalDecisionCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceApprovalDecision(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceApprovalDecisionStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('approvalDecisionDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_approval_decision_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/approval-decision/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('approvalDecisionDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerOperatorDecisionInputPreview = payload.runner_operator_decision_input_preview || {};
+                latestProjectRunnerApprovalDecisionSimulator = payload.runner_approval_decision_simulator || {};
+                latestProjectRunnerReleaseGateStatePreview = payload.runner_release_gate_state_preview || {};
+                latestProjectRunnerExecutionUnlockPreview = payload.runner_execution_unlock_preview || {};
+                latestProjectRunnerOperatorDecisionReceiptPreview = payload.runner_operator_decision_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_approval_decision_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_approval_decision_dry_run');
+                if (status) status.textContent = t('approvalDecisionDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceApprovalDecisionPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceApprovalDecisionPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_approval_decision_dry_run');
+                if (status) status.textContent = error.message || t('approvalDecisionDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceApprovalDecisionPanel(workspace = latestProjectWorkspace) {
+            const simulator = Object.keys(latestProjectRunnerApprovalDecisionSimulator || {}).length ? latestProjectRunnerApprovalDecisionSimulator : workspace?.runner_approval_decision_simulator || {};
+            const gate = Object.keys(latestProjectRunnerReleaseGateStatePreview || {}).length ? latestProjectRunnerReleaseGateStatePreview : workspace?.runner_release_gate_state_preview || {};
+            const unlock = Object.keys(latestProjectRunnerExecutionUnlockPreview || {}).length ? latestProjectRunnerExecutionUnlockPreview : workspace?.runner_execution_unlock_preview || {};
+            const receipt = Object.keys(latestProjectRunnerOperatorDecisionReceiptPreview || {}).length ? latestProjectRunnerOperatorDecisionReceiptPreview : workspace?.runner_operator_decision_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceApprovalDecisionPanel" data-project-approval-decision-panel-marker="Project Workspace approval decision panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('approvalDecisionPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('approvalDecisionPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceApprovalDecisionBtn" type="button" data-project-approval-decision-dry-run-action="Project Workspace approval decision panel bundle" onclick="dryRunProjectWorkspaceApprovalDecision()">${escapeHTML(t('dryRunApprovalDecision'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceApprovalDecisionBtn" type="button" onclick="copyProjectWorkspaceApprovalDecision()">${escapeHTML(t('copyApprovalDecision'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('approvalDecisionStatus'))}</div>
+                            <strong data-approval-decision-status="${escapeHTML(simulator.approval_decision_status || 'not_refreshed')}">${escapeHTML(simulator.approval_decision_status || t('approvalDecisionNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('releaseGateStatus'))}</div>
+                            <strong data-release-gate-status="${escapeHTML(gate.release_gate_status || 'not_refreshed')}">${escapeHTML(gate.release_gate_status || t('approvalDecisionNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('executionUnlockStatus'))}</div>
+                            <strong data-execution-unlock-status="${escapeHTML(unlock.execution_unlock_status || 'not_refreshed')}">${escapeHTML(unlock.execution_unlock_status || t('approvalDecisionNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('operatorDecisionReceiptStatus'))}: ${escapeHTML(receipt.operator_decision_receipt_status || 'not_refreshed')}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('approvalDecisionAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-approval-decision-audit-preview="Project Workspace approval decision panel bundle">${escapeHTML(projectWorkspaceApprovalDecisionCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('approvalDecisionNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceApprovalDecisionStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceOperatorApprovalPanel(workspace = latestProjectWorkspace) {
             const request = Object.keys(latestProjectRunnerApprovalRequestPreview || {}).length ? latestProjectRunnerApprovalRequestPreview : workspace?.runner_approval_request_preview || {};
             const consent = Object.keys(latestProjectRunnerConsentChecklistPreview || {}).length ? latestProjectRunnerConsentChecklistPreview : workspace?.runner_consent_checklist_preview || {};
@@ -15325,6 +15442,7 @@
                     ${renderProjectWorkspaceOrchestrationReadinessPanel(workspace)}
                     ${renderProjectWorkspaceOperatorControlPanel(workspace)}
                     ${renderProjectWorkspaceOperatorApprovalPanel(workspace)}
+                    ${renderProjectWorkspaceApprovalDecisionPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -18226,6 +18344,53 @@
             operatorApprovalDryRunFailed: 'Operator approval dry-run \u5931\u8d25\u3002',
             operatorApprovalCopied: '\u64cd\u4f5c\u5458\u6279\u51c6\u5df2\u590d\u5236\u3002',
             operatorApprovalCopyFailed: '\u590d\u5236\u64cd\u4f5c\u5458\u6279\u51c6\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceApprovalDecisionPanelBundleMarker: 'Project Workspace approval decision panel bundle',
+            approvalDecisionPanelTitle: 'Approval decision simulator',
+            approvalDecisionPanelHelper: 'Dry-run operator approval decision input, approve/reject/pause simulation, release gate state, execution unlock preview, and decision receipt.',
+            dryRunApprovalDecision: 'Dry-run approval decision',
+            copyApprovalDecision: 'Copy approval decision',
+            approvalDecisionCopyTitle: 'Project approval decision dry-run',
+            operatorDecisionInputStatus: 'Operator decision input status',
+            approvalDecisionStatus: 'Approval decision status',
+            releaseGateStatus: 'Release gate status',
+            executionUnlockStatus: 'Execution unlock status',
+            operatorDecisionReceiptStatus: 'Operator decision receipt status',
+            gateOpen: 'Gate open',
+            unlockAllowed: 'Unlock allowed',
+            approvalDecisionAuditPreview: 'Approval decision audit preview',
+            approvalDecisionNotRefreshedYet: 'Approval decision has not been refreshed yet.',
+            approvalDecisionDryRunRunning: 'Building approval decision dry-run...',
+            approvalDecisionDryRunComplete: 'Approval decision dry-run complete.',
+            approvalDecisionDryRunFailed: 'Approval decision dry-run failed.',
+            approvalDecisionCopied: 'Approval decision copied.',
+            approvalDecisionCopyFailed: 'Could not copy approval decision.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceApprovalDecisionPanelBundleMarker: 'Project Workspace approval decision panel bundle',
+            approvalDecisionPanelTitle: '\u6279\u51c6\u51b3\u7b56\u6a21\u62df\u5668',
+            approvalDecisionPanelHelper: '\u5bf9\u64cd\u4f5c\u5458\u51b3\u7b56\u8f93\u5165\u3001\u6279\u51c6/\u62d2\u7edd/\u6682\u505c\u6a21\u62df\u3001\u53d1\u5e03\u95f8\u95e8\u72b6\u6001\u3001\u6267\u884c\u89e3\u9501\u9884\u89c8\u548c\u51b3\u7b56\u56de\u6267\u505a dry-run\u3002',
+            dryRunApprovalDecision: 'Dry-run \u6279\u51c6\u51b3\u7b56',
+            copyApprovalDecision: '\u590d\u5236\u6279\u51c6\u51b3\u7b56',
+            approvalDecisionCopyTitle: '\u9879\u76ee\u6279\u51c6\u51b3\u7b56 dry-run',
+            operatorDecisionInputStatus: '\u64cd\u4f5c\u5458\u51b3\u7b56\u8f93\u5165\u72b6\u6001',
+            approvalDecisionStatus: '\u6279\u51c6\u51b3\u7b56\u72b6\u6001',
+            releaseGateStatus: '\u53d1\u5e03\u95f8\u95e8\u72b6\u6001',
+            executionUnlockStatus: '\u6267\u884c\u89e3\u9501\u72b6\u6001',
+            operatorDecisionReceiptStatus: '\u64cd\u4f5c\u5458\u51b3\u7b56\u56de\u6267\u72b6\u6001',
+            gateOpen: '\u95f8\u95e8\u662f\u5426\u6253\u5f00',
+            unlockAllowed: '\u662f\u5426\u5141\u8bb8\u89e3\u9501',
+            approvalDecisionAuditPreview: '\u6279\u51c6\u51b3\u7b56\u5ba1\u8ba1\u9884\u89c8',
+            approvalDecisionNotRefreshedYet: '\u6279\u51c6\u51b3\u7b56\u5c1a\u672a\u5237\u65b0\u3002',
+            approvalDecisionDryRunRunning: '\u6b63\u5728\u751f\u6210 approval decision dry-run...',
+            approvalDecisionDryRunComplete: 'Approval decision dry-run \u5b8c\u6210\u3002',
+            approvalDecisionDryRunFailed: 'Approval decision dry-run \u5931\u8d25\u3002',
+            approvalDecisionCopied: '\u6279\u51c6\u51b3\u7b56\u5df2\u590d\u5236\u3002',
+            approvalDecisionCopyFailed: '\u590d\u5236\u6279\u51c6\u51b3\u7b56\u5931\u8d25\u3002'
         });
 
 

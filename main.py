@@ -9202,6 +9202,207 @@ async def dry_run_project_agent_operator_approval(project_id: str, http_request:
     }
 
 
+
+def _runner_operator_decision_input_preview(operator_approval_payload: dict) -> dict:
+    guarded_release = dict(operator_approval_payload.get("runner_guarded_release_preview") or {})
+    project = dict(operator_approval_payload.get("project") or {})
+    return {
+        "operator_decision_input_version": "runner_operator_decision_input_preview_v1",
+        "operator_decision_input_status": "operator_decision_input_preview_only",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "approval_request_id": guarded_release.get("approval_request_id", ""),
+        "available_decisions": [
+            {"decision": "approve_preview", "enabled": True, "real_execution_enabled_after_decision": False},
+            {"decision": "reject_preview", "enabled": True, "real_execution_enabled_after_decision": False},
+            {"decision": "pause_preview", "enabled": True, "real_execution_enabled_after_decision": False},
+        ],
+        "default_decision": "pause_preview",
+        "decision_captured": False,
+        "approved_by_human": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_approval_decision_simulator(decision_input: dict, requested_decision: str = "pause_preview") -> dict:
+    decision = str(requested_decision or "pause_preview").strip()
+    if decision not in {"approve_preview", "reject_preview", "pause_preview"}:
+        decision = "pause_preview"
+
+    status_by_decision = {
+        "approve_preview": "approval_decision_preview_approved_but_release_blocked",
+        "reject_preview": "approval_decision_preview_rejected",
+        "pause_preview": "approval_decision_preview_paused",
+    }
+    return {
+        "approval_decision_simulator_version": "runner_approval_decision_simulator_v1",
+        "approval_decision_status": status_by_decision[decision],
+        "project_id": decision_input.get("project_id", "demo_project_default"),
+        "approval_request_id": decision_input.get("approval_request_id", ""),
+        "requested_decision": decision,
+        "decision_captured": False,
+        "decision_recorded": False,
+        "approved_by_human": False,
+        "approval_preview_only": decision == "approve_preview",
+        "rejected_by_human": False,
+        "paused_by_human": decision == "pause_preview",
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "decision_effects": [
+            {"effect_id": "keep_real_execution_disabled", "applied": True},
+            {"effect_id": "keep_provider_calls_disabled", "applied": True},
+            {"effect_id": "keep_state_write_disabled", "applied": True},
+            {"effect_id": "require_final_operator_confirmation", "applied": True},
+        ],
+        "decision_effect_count": 4,
+        "dry_run": True,
+    }
+
+
+def _runner_release_gate_state_preview(decision_simulator: dict) -> dict:
+    requested_decision = str(decision_simulator.get("requested_decision") or "pause_preview")
+    if requested_decision == "approve_preview":
+        gate_state = "release_gate_preview_approved_but_locked"
+    elif requested_decision == "reject_preview":
+        gate_state = "release_gate_rejected"
+    else:
+        gate_state = "release_gate_paused"
+    return {
+        "release_gate_state_version": "runner_release_gate_state_preview_v1",
+        "release_gate_status": gate_state,
+        "project_id": decision_simulator.get("project_id", "demo_project_default"),
+        "approval_request_id": decision_simulator.get("approval_request_id", ""),
+        "requested_decision": requested_decision,
+        "gate_open": False,
+        "gate_locked": True,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "operator_final_confirmation_required": True,
+        "blocking_reasons": [
+            "dry_run_mode_enabled",
+            "real_execution_adapter_disabled",
+            "provider_quota_policy_disabled",
+            "persistent_state_write_disabled",
+        ],
+        "blocking_reason_count": 4,
+        "dry_run": True,
+    }
+
+
+def _runner_execution_unlock_preview(release_gate_state: dict) -> dict:
+    unlock_steps = [
+        {"unlock_step_id": "capture_real_operator_identity", "ready": False},
+        {"unlock_step_id": "set_nonzero_provider_quota", "ready": False},
+        {"unlock_step_id": "enable_provider_sandbox", "ready": False},
+        {"unlock_step_id": "enable_persistent_runner_state", "ready": False},
+        {"unlock_step_id": "perform_final_release_confirmation", "ready": False},
+    ]
+    return {
+        "execution_unlock_preview_version": "runner_execution_unlock_preview_v1",
+        "execution_unlock_status": "execution_unlock_blocked",
+        "project_id": release_gate_state.get("project_id", "demo_project_default"),
+        "approval_request_id": release_gate_state.get("approval_request_id", ""),
+        "release_gate_status": release_gate_state.get("release_gate_status", ""),
+        "unlock_steps": unlock_steps,
+        "unlock_step_count": len(unlock_steps),
+        "ready_unlock_step_count": 0,
+        "unlock_allowed": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "state_persisted": False,
+        "dry_run": True,
+    }
+
+
+def _runner_operator_decision_receipt_preview(execution_unlock: dict) -> dict:
+    return {
+        "operator_decision_receipt_version": "runner_operator_decision_receipt_preview_v1",
+        "operator_decision_receipt_status": "operator_decision_receipt_preview_only",
+        "project_id": execution_unlock.get("project_id", "demo_project_default"),
+        "approval_request_id": execution_unlock.get("approval_request_id", ""),
+        "release_gate_status": execution_unlock.get("release_gate_status", ""),
+        "receipt_recorded": False,
+        "decision_audit_recorded": False,
+        "unlock_allowed": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "receipt_items": [
+            {"receipt_item_id": "decision_input_preview", "included": True},
+            {"receipt_item_id": "decision_simulator", "included": True},
+            {"receipt_item_id": "release_gate_state", "included": True},
+            {"receipt_item_id": "execution_unlock_preview", "included": True},
+            {"receipt_item_id": "dry_run_boundary", "included": True},
+        ],
+        "receipt_item_count": 5,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/approval-decision/dry-run")
+async def dry_run_project_agent_approval_decision(project_id: str, http_request: Request):
+    operator_approval_payload = await dry_run_project_agent_operator_approval(project_id, http_request)
+
+    decision_input = _runner_operator_decision_input_preview(operator_approval_payload)
+    decision_simulator = _runner_approval_decision_simulator(decision_input, requested_decision="pause_preview")
+    release_gate_state = _runner_release_gate_state_preview(decision_simulator)
+    execution_unlock_preview = _runner_execution_unlock_preview(release_gate_state)
+    operator_decision_receipt = _runner_operator_decision_receipt_preview(execution_unlock_preview)
+
+    project = operator_approval_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_operator_decision_input_status": decision_input["operator_decision_input_status"],
+        "latest_runner_approval_decision_status": decision_simulator["approval_decision_status"],
+        "latest_runner_release_gate_status": release_gate_state["release_gate_status"],
+        "latest_runner_execution_unlock_status": execution_unlock_preview["execution_unlock_status"],
+        "latest_runner_operator_decision_receipt_status": operator_decision_receipt["operator_decision_receipt_status"],
+        "latest_runner_gate_open": False,
+        "latest_runner_unlock_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **operator_approval_payload,
+        "project": project,
+        "runner_operator_decision_input_preview": decision_input,
+        "runner_approval_decision_simulator": decision_simulator,
+        "runner_release_gate_state_preview": release_gate_state,
+        "runner_execution_unlock_preview": execution_unlock_preview,
+        "runner_operator_decision_receipt_preview": operator_decision_receipt,
+        "dry_run": True,
+        "decision_captured": False,
+        "decision_recorded": False,
+        "approved_by_human": False,
+        "rejected_by_human": False,
+        "gate_open": False,
+        "gate_locked": True,
+        "unlock_allowed": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "receipt_recorded": False,
+        "decision_audit_recorded": False,
+        "operator_final_confirmation_required": True,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

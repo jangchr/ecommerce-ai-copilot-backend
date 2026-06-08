@@ -5676,3 +5676,45 @@ class ProjectWorkspaceOperatorApprovalPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace operator approval panel bundle", script)
         self.assertIn("project_workspace_operator_approval_panel_marker", script)
 
+
+class ProjectWorkspaceApprovalDecisionPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_approval_decision_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace approval decision panel bundle",
+            "PROJECT_WORKSPACE_APPROVAL_DECISION_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceApprovalDecisionPanel(",
+            "function projectWorkspaceApprovalDecisionCopyText(",
+            "async function copyProjectWorkspaceApprovalDecision(",
+            "async function dryRunProjectWorkspaceApprovalDecision(",
+            "/runner/approval-decision/dry-run",
+            "latestProjectRunnerOperatorDecisionInputPreview",
+            "latestProjectRunnerApprovalDecisionSimulator",
+            "latestProjectRunnerReleaseGateStatePreview",
+            "latestProjectRunnerExecutionUnlockPreview",
+            "latestProjectRunnerOperatorDecisionReceiptPreview",
+            "projectWorkspaceApprovalDecisionPanel",
+            "projectWorkspaceApprovalDecisionStatus",
+            "dryRunProjectWorkspaceApprovalDecisionBtn",
+            "copyProjectWorkspaceApprovalDecisionBtn",
+            "data-project-approval-decision-panel-marker",
+            "data-project-approval-decision-dry-run-action",
+            "data-approval-decision-audit-preview",
+            "approvalDecisionPanelTitle",
+            "approvalDecisionPanelHelper",
+            "renderProjectWorkspaceApprovalDecisionPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_approval_decision_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_approval_decision_panel_marker", script)
+        self.assertIn("Project Workspace approval decision panel bundle", script)
+
+    def test_project_workspace_approval_decision_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace approval decision panel bundle", script)
+        self.assertIn("project_workspace_approval_decision_panel_marker", script)
+
