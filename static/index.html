@@ -14612,6 +14612,126 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_PROVIDER_OBSERVABILITY_PANEL_BUNDLE_MARKER = 'Project Workspace provider observability panel bundle';
+        let latestProjectRunnerProviderHealthSnapshotPreview = {};
+        let latestProjectRunnerProviderMetricRollupPreview = {};
+        let latestProjectRunnerProviderAlertPolicyPreview = {};
+        let latestProjectRunnerProviderTraceSummaryPreview = {};
+        let latestProjectRunnerProviderObservabilityDashboardPreview = {};
+        let latestProjectRunnerProviderObservabilityReceiptPreview = {};
+
+        function projectWorkspaceProviderObservabilityCopyText(workspace = latestProjectWorkspace) {
+            const health = Object.keys(latestProjectRunnerProviderHealthSnapshotPreview || {}).length ? latestProjectRunnerProviderHealthSnapshotPreview : workspace?.runner_provider_health_snapshot_preview || {};
+            const metrics = Object.keys(latestProjectRunnerProviderMetricRollupPreview || {}).length ? latestProjectRunnerProviderMetricRollupPreview : workspace?.runner_provider_metric_rollup_preview || {};
+            const alerts = Object.keys(latestProjectRunnerProviderAlertPolicyPreview || {}).length ? latestProjectRunnerProviderAlertPolicyPreview : workspace?.runner_provider_alert_policy_preview || {};
+            const trace = Object.keys(latestProjectRunnerProviderTraceSummaryPreview || {}).length ? latestProjectRunnerProviderTraceSummaryPreview : workspace?.runner_provider_trace_summary_preview || {};
+            const dashboard = Object.keys(latestProjectRunnerProviderObservabilityDashboardPreview || {}).length ? latestProjectRunnerProviderObservabilityDashboardPreview : workspace?.runner_provider_observability_dashboard_preview || {};
+            const receipt = Object.keys(latestProjectRunnerProviderObservabilityReceiptPreview || {}).length ? latestProjectRunnerProviderObservabilityReceiptPreview : workspace?.runner_provider_observability_receipt_preview || {};
+            return [
+                t('providerObservabilityCopyTitle'),
+                `${t('providerHealthSnapshotStatus')}: ${health.provider_health_snapshot_status || 'not_refreshed'}`,
+                `${t('providerMetricRollupStatus')}: ${metrics.provider_metric_rollup_status || 'not_refreshed'}`,
+                `${t('providerAlertPolicyStatus')}: ${alerts.provider_alert_policy_status || 'not_refreshed'}`,
+                `${t('providerTraceSummaryStatus')}: ${trace.provider_trace_summary_status || 'not_refreshed'}`,
+                `${t('providerObservabilityDashboardStatus')}: ${dashboard.provider_observability_dashboard_status || 'not_refreshed'}`,
+                `${t('providerObservabilityReceiptStatus')}: ${receipt.provider_observability_receipt_status || 'not_refreshed'}`,
+                `${t('dashboardReady')}: ${Boolean(dashboard.dashboard_ready)}`,
+                '',
+                JSON.stringify({ health, metrics, alerts, trace, dashboard, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderObservability() {
+            const status = document.getElementById('projectWorkspaceProviderObservabilityStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderObservabilityCopyText());
+                if (status) status.textContent = t('providerObservabilityCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerObservabilityCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceProviderObservability(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceProviderObservabilityStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('providerObservabilityDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_provider_observability_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/provider-observability/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('providerObservabilityDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerProviderHealthSnapshotPreview = payload.runner_provider_health_snapshot_preview || {};
+                latestProjectRunnerProviderMetricRollupPreview = payload.runner_provider_metric_rollup_preview || {};
+                latestProjectRunnerProviderAlertPolicyPreview = payload.runner_provider_alert_policy_preview || {};
+                latestProjectRunnerProviderTraceSummaryPreview = payload.runner_provider_trace_summary_preview || {};
+                latestProjectRunnerProviderObservabilityDashboardPreview = payload.runner_provider_observability_dashboard_preview || {};
+                latestProjectRunnerProviderObservabilityReceiptPreview = payload.runner_provider_observability_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_provider_observability_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_provider_observability_dry_run');
+                if (status) status.textContent = t('providerObservabilityDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceProviderObservabilityPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceProviderObservabilityPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_provider_observability_dry_run');
+                if (status) status.textContent = error.message || t('providerObservabilityDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceProviderObservabilityPanel(workspace = latestProjectWorkspace) {
+            const health = Object.keys(latestProjectRunnerProviderHealthSnapshotPreview || {}).length ? latestProjectRunnerProviderHealthSnapshotPreview : workspace?.runner_provider_health_snapshot_preview || {};
+            const metrics = Object.keys(latestProjectRunnerProviderMetricRollupPreview || {}).length ? latestProjectRunnerProviderMetricRollupPreview : workspace?.runner_provider_metric_rollup_preview || {};
+            const alerts = Object.keys(latestProjectRunnerProviderAlertPolicyPreview || {}).length ? latestProjectRunnerProviderAlertPolicyPreview : workspace?.runner_provider_alert_policy_preview || {};
+            const receipt = Object.keys(latestProjectRunnerProviderObservabilityReceiptPreview || {}).length ? latestProjectRunnerProviderObservabilityReceiptPreview : workspace?.runner_provider_observability_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderObservabilityPanel" data-project-provider-observability-panel-marker="Project Workspace provider observability panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerObservabilityPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerObservabilityPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceProviderObservabilityBtn" type="button" data-project-provider-observability-dry-run-action="Project Workspace provider observability panel bundle" onclick="dryRunProjectWorkspaceProviderObservability()">${escapeHTML(t('dryRunProviderObservability'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderObservabilityBtn" type="button" onclick="copyProjectWorkspaceProviderObservability()">${escapeHTML(t('copyProviderObservability'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerHealthSnapshotStatus'))}</div>
+                            <strong data-provider-health-snapshot-status="${escapeHTML(health.provider_health_snapshot_status || 'not_refreshed')}">${escapeHTML(health.provider_health_snapshot_status || t('providerObservabilityNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerMetricRollupStatus'))}</div>
+                            <strong data-provider-metric-rollup-status="${escapeHTML(metrics.provider_metric_rollup_status || 'not_refreshed')}">${escapeHTML(metrics.provider_metric_rollup_status || t('providerObservabilityNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerAlertPolicyStatus'))}</div>
+                            <strong data-provider-alert-policy-status="${escapeHTML(alerts.provider_alert_policy_status || 'not_refreshed')}">${escapeHTML(alerts.provider_alert_policy_status || t('providerObservabilityNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('dashboardReady'))}: ${escapeHTML(String(Boolean(receipt.dashboard_ready)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerObservabilityAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-provider-observability-audit-preview="Project Workspace provider observability panel bundle">${escapeHTML(projectWorkspaceProviderObservabilityCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerObservabilityNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderObservabilityStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceProviderFailurePanel(workspace = latestProjectWorkspace) {
             const taxonomy = Object.keys(latestProjectRunnerProviderFailureTaxonomyPreview || {}).length ? latestProjectRunnerProviderFailureTaxonomyPreview : workspace?.runner_provider_failure_taxonomy_preview || {};
             const retry = Object.keys(latestProjectRunnerProviderRetryPolicyPreview || {}).length ? latestProjectRunnerProviderRetryPolicyPreview : workspace?.runner_provider_retry_policy_preview || {};
@@ -15928,6 +16048,7 @@
                     ${renderProjectWorkspaceProviderAdapterPanel(workspace)}
                     ${renderProjectWorkspaceProviderInvocationPanel(workspace)}
                     ${renderProjectWorkspaceProviderFailurePanel(workspace)}
+                    ${renderProjectWorkspaceProviderObservabilityPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -19066,6 +19187,53 @@
             providerFailureDryRunFailed: 'Provider failure dry-run \u5931\u8d25\u3002',
             providerFailureCopied: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5df2\u590d\u5236\u3002',
             providerFailureCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderObservabilityPanelBundleMarker: 'Project Workspace provider observability panel bundle',
+            providerObservabilityPanelTitle: 'Provider observability dashboard',
+            providerObservabilityPanelHelper: 'Dry-run provider health snapshot, metric rollup, alert policy, trace summary, dashboard preview, and observability receipt.',
+            dryRunProviderObservability: 'Dry-run provider observability',
+            copyProviderObservability: 'Copy provider observability',
+            providerObservabilityCopyTitle: 'Project provider observability dry-run',
+            providerHealthSnapshotStatus: 'Provider health snapshot status',
+            providerMetricRollupStatus: 'Provider metric rollup status',
+            providerAlertPolicyStatus: 'Provider alert policy status',
+            providerTraceSummaryStatus: 'Provider trace summary status',
+            providerObservabilityDashboardStatus: 'Provider observability dashboard status',
+            providerObservabilityReceiptStatus: 'Provider observability receipt status',
+            dashboardReady: 'Dashboard ready',
+            providerObservabilityAuditPreview: 'Provider observability audit preview',
+            providerObservabilityNotRefreshedYet: 'Provider observability has not been refreshed yet.',
+            providerObservabilityDryRunRunning: 'Building provider observability dry-run...',
+            providerObservabilityDryRunComplete: 'Provider observability dry-run complete.',
+            providerObservabilityDryRunFailed: 'Provider observability dry-run failed.',
+            providerObservabilityCopied: 'Provider observability copied.',
+            providerObservabilityCopyFailed: 'Could not copy provider observability.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderObservabilityPanelBundleMarker: 'Project Workspace provider observability panel bundle',
+            providerObservabilityPanelTitle: '\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027\u4eea\u8868\u76d8',
+            providerObservabilityPanelHelper: '\u5bf9\u5916\u90e8\u670d\u52a1\u5065\u5eb7\u5feb\u7167\u3001\u6307\u6807\u6c47\u603b\u3001\u544a\u8b66\u7b56\u7565\u3001\u8ffd\u8e2a\u6458\u8981\u3001\u4eea\u8868\u76d8\u9884\u89c8\u548c\u53ef\u89c2\u6d4b\u56de\u6267\u505a dry-run\u3002',
+            dryRunProviderObservability: 'Dry-run \u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027',
+            copyProviderObservability: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027',
+            providerObservabilityCopyTitle: '\u9879\u76ee\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027 dry-run',
+            providerHealthSnapshotStatus: '\u5916\u90e8\u670d\u52a1\u5065\u5eb7\u5feb\u7167\u72b6\u6001',
+            providerMetricRollupStatus: '\u5916\u90e8\u670d\u52a1\u6307\u6807\u6c47\u603b\u72b6\u6001',
+            providerAlertPolicyStatus: '\u5916\u90e8\u670d\u52a1\u544a\u8b66\u7b56\u7565\u72b6\u6001',
+            providerTraceSummaryStatus: '\u5916\u90e8\u670d\u52a1\u8ffd\u8e2a\u6458\u8981\u72b6\u6001',
+            providerObservabilityDashboardStatus: '\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u4eea\u8868\u76d8\u72b6\u6001',
+            providerObservabilityReceiptStatus: '\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u56de\u6267\u72b6\u6001',
+            dashboardReady: '\u4eea\u8868\u76d8\u662f\u5426\u5c31\u7eea',
+            providerObservabilityAuditPreview: '\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u5ba1\u8ba1\u9884\u89c8',
+            providerObservabilityNotRefreshedYet: '\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027\u5c1a\u672a\u5237\u65b0\u3002',
+            providerObservabilityDryRunRunning: '\u6b63\u5728\u751f\u6210 provider observability dry-run...',
+            providerObservabilityDryRunComplete: 'Provider observability dry-run \u5b8c\u6210\u3002',
+            providerObservabilityDryRunFailed: 'Provider observability dry-run \u5931\u8d25\u3002',
+            providerObservabilityCopied: '\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027\u5df2\u590d\u5236\u3002',
+            providerObservabilityCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u53ef\u89c2\u6d4b\u6027\u5931\u8d25\u3002'
         });
 
 

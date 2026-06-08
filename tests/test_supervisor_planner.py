@@ -1656,3 +1656,48 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             True,
         )
 
+    def test_project_runner_provider_observability_dry_run_endpoint_returns_dashboard(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/provider-observability/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_provider_health_snapshot_preview",
+            "runner_provider_metric_rollup_preview",
+            "runner_provider_alert_policy_preview",
+            "runner_provider_trace_summary_preview",
+            "runner_provider_observability_dashboard_preview",
+            "runner_provider_observability_receipt_preview",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertTrue(payload["dashboard_ready"])
+        self.assertTrue(payload["alerts_triggered"])
+        self.assertTrue(payload["operator_review_required"])
+        self.assertFalse(payload["observability_receipt_recorded"])
+        self.assertFalse(payload["trace_persisted"])
+        self.assertFalse(payload["external_notification_sent"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertEqual(
+            payload["runner_provider_health_snapshot_preview"]["provider_health_snapshot_version"],
+            "runner_provider_health_snapshot_preview_v1",
+        )
+        self.assertEqual(
+            payload["runner_provider_observability_receipt_preview"]["provider_observability_receipt_version"],
+            "runner_provider_observability_receipt_preview_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_provider_observability_dashboard_ready"],
+            True,
+        )
+

@@ -10255,6 +10255,219 @@ async def dry_run_project_agent_provider_failure(project_id: str, http_request: 
     }
 
 
+
+def _runner_provider_health_snapshot_preview(provider_failure_payload: dict) -> dict:
+    project = dict(provider_failure_payload.get("project") or {})
+    failure_receipt = dict(provider_failure_payload.get("runner_provider_failure_receipt_preview") or {})
+    health_items = [
+        {"provider_id": "text_generation_adapter", "health": "blocked_by_dry_run", "circuit_open": True},
+        {"provider_id": "image_generation_adapter", "health": "blocked_by_dry_run", "circuit_open": True},
+        {"provider_id": "video_generation_adapter", "health": "blocked_by_dry_run", "circuit_open": True},
+        {"provider_id": "comment_collection_adapter", "health": "blocked_by_dry_run", "circuit_open": True},
+        {"provider_id": "web_fetch_adapter", "health": "blocked_by_dry_run", "circuit_open": True},
+    ]
+    return {
+        "provider_health_snapshot_version": "runner_provider_health_snapshot_preview_v1",
+        "provider_health_snapshot_status": "provider_health_snapshot_preview_only",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "provider_failure_receipt_status": failure_receipt.get("provider_failure_receipt_status", ""),
+        "health_items": health_items,
+        "health_item_count": len(health_items),
+        "healthy_provider_count": 0,
+        "blocked_provider_count": len(health_items),
+        "overall_health": "blocked_by_dry_run",
+        "operator_review_required": True,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_metric_rollup_preview(health_snapshot: dict) -> dict:
+    metric_rows = [
+        {"metric_id": "provider_calls_total", "value": 0, "unit": "calls"},
+        {"metric_id": "provider_failures_total", "value": 0, "unit": "failures"},
+        {"metric_id": "provider_retries_total", "value": 0, "unit": "retries"},
+        {"metric_id": "provider_latency_p95_ms", "value": 0, "unit": "milliseconds"},
+        {"metric_id": "provider_cost_cents_total", "value": 0, "unit": "cents"},
+        {"metric_id": "provider_circuit_open_total", "value": health_snapshot.get("blocked_provider_count", 0), "unit": "providers"},
+    ]
+    return {
+        "provider_metric_rollup_version": "runner_provider_metric_rollup_preview_v1",
+        "provider_metric_rollup_status": "provider_metric_rollup_preview_only",
+        "project_id": health_snapshot.get("project_id", "demo_project_default"),
+        "provider_health_snapshot_status": health_snapshot.get("provider_health_snapshot_status", ""),
+        "metric_rows": metric_rows,
+        "metric_row_count": len(metric_rows),
+        "provider_calls_total": 0,
+        "provider_failures_total": 0,
+        "provider_retries_total": 0,
+        "provider_cost_cents_total": 0,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_alert_policy_preview(metric_rollup: dict) -> dict:
+    alert_rules = [
+        {"alert_rule_id": "provider_failure_rate_high", "enabled": True, "triggered": False},
+        {"alert_rule_id": "provider_latency_high", "enabled": True, "triggered": False},
+        {"alert_rule_id": "provider_cost_limit_reached", "enabled": True, "triggered": False},
+        {"alert_rule_id": "provider_circuit_open", "enabled": True, "triggered": True},
+        {"alert_rule_id": "secret_boundary_violation", "enabled": True, "triggered": False},
+        {"alert_rule_id": "operator_review_required", "enabled": True, "triggered": True},
+    ]
+    return {
+        "provider_alert_policy_version": "runner_provider_alert_policy_preview_v1",
+        "provider_alert_policy_status": "provider_alert_policy_preview_only",
+        "project_id": metric_rollup.get("project_id", "demo_project_default"),
+        "provider_metric_rollup_status": metric_rollup.get("provider_metric_rollup_status", ""),
+        "alert_rules": alert_rules,
+        "alert_rule_count": len(alert_rules),
+        "triggered_alert_count": sum(1 for rule in alert_rules if rule.get("triggered")),
+        "alerts_triggered": True,
+        "operator_review_required": True,
+        "external_notification_sent": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_trace_summary_preview(alert_policy: dict) -> dict:
+    trace_events = [
+        {"trace_event_id": "provider_adapter_registry_checked", "recorded": True},
+        {"trace_event_id": "provider_invocation_routed", "recorded": True},
+        {"trace_event_id": "provider_call_blocked_by_dry_run", "recorded": True},
+        {"trace_event_id": "failure_taxonomy_previewed", "recorded": True},
+        {"trace_event_id": "circuit_breaker_previewed", "recorded": True},
+        {"trace_event_id": "alert_policy_previewed", "recorded": True},
+    ]
+    return {
+        "provider_trace_summary_version": "runner_provider_trace_summary_preview_v1",
+        "provider_trace_summary_status": "provider_trace_summary_preview_only",
+        "project_id": alert_policy.get("project_id", "demo_project_default"),
+        "provider_alert_policy_status": alert_policy.get("provider_alert_policy_status", ""),
+        "trace_events": trace_events,
+        "trace_event_count": len(trace_events),
+        "trace_complete": True,
+        "trace_persisted": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_observability_dashboard_preview(trace_summary: dict) -> dict:
+    dashboard_cards = [
+        {"card_id": "overall_provider_health", "value": "blocked_by_dry_run"},
+        {"card_id": "provider_calls_total", "value": 0},
+        {"card_id": "provider_failures_total", "value": 0},
+        {"card_id": "provider_cost_cents_total", "value": 0},
+        {"card_id": "provider_circuit_open_total", "value": 5},
+        {"card_id": "operator_review_required", "value": True},
+    ]
+    return {
+        "provider_observability_dashboard_version": "runner_provider_observability_dashboard_preview_v1",
+        "provider_observability_dashboard_status": "provider_observability_dashboard_preview_only",
+        "project_id": trace_summary.get("project_id", "demo_project_default"),
+        "provider_trace_summary_status": trace_summary.get("provider_trace_summary_status", ""),
+        "dashboard_cards": dashboard_cards,
+        "dashboard_card_count": len(dashboard_cards),
+        "dashboard_ready": True,
+        "operator_review_required": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_observability_receipt_preview(dashboard: dict) -> dict:
+    return {
+        "provider_observability_receipt_version": "runner_provider_observability_receipt_preview_v1",
+        "provider_observability_receipt_status": "provider_observability_receipt_preview_only",
+        "project_id": dashboard.get("project_id", "demo_project_default"),
+        "provider_observability_dashboard_status": dashboard.get("provider_observability_dashboard_status", ""),
+        "receipt_items": [
+            {"receipt_item_id": "provider_health_snapshot", "included": True},
+            {"receipt_item_id": "provider_metric_rollup", "included": True},
+            {"receipt_item_id": "provider_alert_policy", "included": True},
+            {"receipt_item_id": "provider_trace_summary", "included": True},
+            {"receipt_item_id": "provider_observability_dashboard", "included": True},
+            {"receipt_item_id": "dry_run_boundary", "included": True},
+        ],
+        "receipt_item_count": 6,
+        "observability_receipt_recorded": False,
+        "dashboard_ready": dashboard.get("dashboard_ready", False),
+        "operator_review_required": True,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/provider-observability/dry-run")
+async def dry_run_project_agent_provider_observability(project_id: str, http_request: Request):
+    provider_failure_payload = await dry_run_project_agent_provider_failure(project_id, http_request)
+
+    runner_provider_health_snapshot_preview = _runner_provider_health_snapshot_preview(provider_failure_payload)
+    runner_provider_metric_rollup_preview = _runner_provider_metric_rollup_preview(runner_provider_health_snapshot_preview)
+    runner_provider_alert_policy_preview = _runner_provider_alert_policy_preview(runner_provider_metric_rollup_preview)
+    runner_provider_trace_summary_preview = _runner_provider_trace_summary_preview(runner_provider_alert_policy_preview)
+    runner_provider_observability_dashboard_preview = _runner_provider_observability_dashboard_preview(runner_provider_trace_summary_preview)
+    runner_provider_observability_receipt_preview = _runner_provider_observability_receipt_preview(runner_provider_observability_dashboard_preview)
+
+    project = provider_failure_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_provider_health_snapshot_status": runner_provider_health_snapshot_preview["provider_health_snapshot_status"],
+        "latest_runner_provider_metric_rollup_status": runner_provider_metric_rollup_preview["provider_metric_rollup_status"],
+        "latest_runner_provider_alert_policy_status": runner_provider_alert_policy_preview["provider_alert_policy_status"],
+        "latest_runner_provider_trace_summary_status": runner_provider_trace_summary_preview["provider_trace_summary_status"],
+        "latest_runner_provider_observability_dashboard_status": runner_provider_observability_dashboard_preview["provider_observability_dashboard_status"],
+        "latest_runner_provider_observability_receipt_status": runner_provider_observability_receipt_preview["provider_observability_receipt_status"],
+        "latest_runner_provider_observability_dashboard_ready": True,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **provider_failure_payload,
+        "project": project,
+        "runner_provider_health_snapshot_preview": runner_provider_health_snapshot_preview,
+        "runner_provider_metric_rollup_preview": runner_provider_metric_rollup_preview,
+        "runner_provider_alert_policy_preview": runner_provider_alert_policy_preview,
+        "runner_provider_trace_summary_preview": runner_provider_trace_summary_preview,
+        "runner_provider_observability_dashboard_preview": runner_provider_observability_dashboard_preview,
+        "runner_provider_observability_receipt_preview": runner_provider_observability_receipt_preview,
+        "dry_run": True,
+        "dashboard_ready": True,
+        "alerts_triggered": True,
+        "operator_review_required": True,
+        "observability_receipt_recorded": False,
+        "trace_persisted": False,
+        "external_notification_sent": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

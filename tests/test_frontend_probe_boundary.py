@@ -5890,3 +5890,46 @@ class ProjectWorkspaceProviderFailurePanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace provider failure panel bundle", script)
         self.assertIn("project_workspace_provider_failure_panel_marker", script)
 
+
+class ProjectWorkspaceProviderObservabilityPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_provider_observability_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider observability panel bundle",
+            "PROJECT_WORKSPACE_PROVIDER_OBSERVABILITY_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceProviderObservabilityPanel(",
+            "function projectWorkspaceProviderObservabilityCopyText(",
+            "async function copyProjectWorkspaceProviderObservability(",
+            "async function dryRunProjectWorkspaceProviderObservability(",
+            "/runner/provider-observability/dry-run",
+            "latestProjectRunnerProviderHealthSnapshotPreview",
+            "latestProjectRunnerProviderMetricRollupPreview",
+            "latestProjectRunnerProviderAlertPolicyPreview",
+            "latestProjectRunnerProviderTraceSummaryPreview",
+            "latestProjectRunnerProviderObservabilityDashboardPreview",
+            "latestProjectRunnerProviderObservabilityReceiptPreview",
+            "projectWorkspaceProviderObservabilityPanel",
+            "projectWorkspaceProviderObservabilityStatus",
+            "dryRunProjectWorkspaceProviderObservabilityBtn",
+            "copyProjectWorkspaceProviderObservabilityBtn",
+            "data-project-provider-observability-panel-marker",
+            "data-project-provider-observability-dry-run-action",
+            "data-provider-observability-audit-preview",
+            "providerObservabilityPanelTitle",
+            "providerObservabilityPanelHelper",
+            "renderProjectWorkspaceProviderObservabilityPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_provider_observability_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_observability_panel_marker", script)
+        self.assertIn("Project Workspace provider observability panel bundle", script)
+
+    def test_project_workspace_provider_observability_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider observability panel bundle", script)
+        self.assertIn("project_workspace_provider_observability_panel_marker", script)
+
