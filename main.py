@@ -9814,6 +9814,223 @@ async def dry_run_project_agent_provider_adapter(project_id: str, http_request: 
     }
 
 
+
+def _runner_provider_invocation_router_preview(provider_adapter_payload: dict) -> dict:
+    project = dict(provider_adapter_payload.get("project") or {})
+    registry = dict(provider_adapter_payload.get("runner_provider_adapter_registry_preview") or {})
+    return {
+        "provider_invocation_router_version": "runner_provider_invocation_router_preview_v1",
+        "provider_invocation_router_status": "provider_invocation_router_preview_only",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "provider_adapter_registry_status": registry.get("provider_adapter_registry_status", ""),
+        "routing_rules": [
+            {"route_id": "text_generation_route", "input_type": "copy_or_plan_text", "adapter_id": "text_generation_adapter", "enabled": False},
+            {"route_id": "image_generation_route", "input_type": "image_prompt", "adapter_id": "image_generation_adapter", "enabled": False},
+            {"route_id": "video_generation_route", "input_type": "video_prompt", "adapter_id": "video_generation_adapter", "enabled": False},
+            {"route_id": "comment_collection_route", "input_type": "comment_source_url", "adapter_id": "comment_collection_adapter", "enabled": False},
+            {"route_id": "web_fetch_route", "input_type": "public_url", "adapter_id": "web_fetch_adapter", "enabled": False},
+            {"route_id": "export_pack_route", "input_type": "local_project_bundle", "adapter_id": "export_pack_adapter", "enabled": False},
+        ],
+        "routing_rule_count": 6,
+        "enabled_route_count": 0,
+        "selected_route_id": "text_generation_route",
+        "selected_adapter_id": "text_generation_adapter",
+        "route_selected": True,
+        "route_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_invocation_stub_preview(invocation_router: dict) -> dict:
+    return {
+        "provider_invocation_stub_version": "runner_provider_invocation_stub_preview_v1",
+        "provider_invocation_stub_status": "provider_invocation_stub_generated",
+        "project_id": invocation_router.get("project_id", "demo_project_default"),
+        "selected_route_id": invocation_router.get("selected_route_id", "text_generation_route"),
+        "selected_adapter_id": invocation_router.get("selected_adapter_id", "text_generation_adapter"),
+        "stub_invocation_id": f"stub_invocation_{invocation_router.get('project_id', 'demo_project_default')}_dry_run",
+        "stub_payload": {
+            "input_type": "copy_or_plan_text",
+            "payload_redacted": True,
+            "prompt_preview": "dry_run_provider_invocation_prompt_placeholder",
+            "secret_fields_removed": True,
+        },
+        "stub_result": {
+            "result_type": "text",
+            "content_preview": "Provider invocation is blocked in dry-run. This is a normalized stub result.",
+            "asset_url": None,
+            "items": [],
+        },
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_normalized_provider_result_preview(invocation_stub: dict) -> dict:
+    return {
+        "normalized_provider_result_version": "runner_normalized_provider_result_preview_v1",
+        "normalized_provider_result_status": "normalized_provider_result_preview_only",
+        "project_id": invocation_stub.get("project_id", "demo_project_default"),
+        "stub_invocation_id": invocation_stub.get("stub_invocation_id", ""),
+        "adapter_id": invocation_stub.get("selected_adapter_id", "text_generation_adapter"),
+        "result_schema": {
+            "result_id": "provider_result_dry_run",
+            "result_type": "text",
+            "status": "blocked_by_dry_run",
+            "content": "Provider invocation is blocked in dry-run.",
+            "assets": [],
+            "evidence": [],
+            "warnings": ["real_execution_disabled", "external_api_not_called"],
+            "metrics": {"cost_cents": 0, "latency_ms": 0, "provider_calls": 0},
+        },
+        "normalization_rules": [
+            {"rule_id": "always_include_status", "applied": True},
+            {"rule_id": "always_include_cost_metrics", "applied": True},
+            {"rule_id": "redact_secret_fields", "applied": True},
+            {"rule_id": "preserve_adapter_id", "applied": True},
+            {"rule_id": "block_external_url_side_effects", "applied": True},
+        ],
+        "normalization_rule_count": 5,
+        "normalized": True,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_idempotency_key_preview(normalized_result: dict) -> dict:
+    project_id = normalized_result.get("project_id", "demo_project_default")
+    adapter_id = normalized_result.get("adapter_id", "text_generation_adapter")
+    return {
+        "provider_idempotency_key_version": "runner_provider_idempotency_key_preview_v1",
+        "provider_idempotency_key_status": "provider_idempotency_key_preview_only",
+        "project_id": project_id,
+        "adapter_id": adapter_id,
+        "idempotency_key": f"{project_id}:{adapter_id}:dry_run:provider_result_dry_run",
+        "dedupe_scope": "project_adapter_dry_run",
+        "duplicate_invocation_detected": False,
+        "side_effects_allowed": False,
+        "state_persisted": False,
+        "provider_call_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_result_handoff_preview(idempotency_key: dict) -> dict:
+    return {
+        "provider_result_handoff_version": "runner_provider_result_handoff_preview_v1",
+        "provider_result_handoff_status": "provider_result_handoff_preview_only",
+        "project_id": idempotency_key.get("project_id", "demo_project_default"),
+        "idempotency_key": idempotency_key.get("idempotency_key", ""),
+        "handoff_targets": [
+            {"target_id": "storyboard_agent", "receives_result": True, "real_handoff": False},
+            {"target_id": "evidence_alignment_checker", "receives_result": True, "real_handoff": False},
+            {"target_id": "project_workspace", "receives_result": True, "real_handoff": False},
+            {"target_id": "operator_control_center", "receives_result": True, "real_handoff": False},
+        ],
+        "handoff_target_count": 4,
+        "handoff_ready": False,
+        "real_handoff_performed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_invocation_audit_receipt_preview(result_handoff: dict) -> dict:
+    return {
+        "provider_invocation_audit_receipt_version": "runner_provider_invocation_audit_receipt_preview_v1",
+        "provider_invocation_audit_receipt_status": "provider_invocation_audit_receipt_preview_only",
+        "project_id": result_handoff.get("project_id", "demo_project_default"),
+        "idempotency_key": result_handoff.get("idempotency_key", ""),
+        "receipt_items": [
+            {"receipt_item_id": "provider_invocation_router", "included": True},
+            {"receipt_item_id": "provider_invocation_stub", "included": True},
+            {"receipt_item_id": "normalized_provider_result", "included": True},
+            {"receipt_item_id": "provider_idempotency_key", "included": True},
+            {"receipt_item_id": "provider_result_handoff", "included": True},
+            {"receipt_item_id": "dry_run_boundary", "included": True},
+        ],
+        "receipt_item_count": 6,
+        "audit_receipt_recorded": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "state_persisted": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/provider-invocation/dry-run")
+async def dry_run_project_agent_provider_invocation(project_id: str, http_request: Request):
+    provider_adapter_payload = await dry_run_project_agent_provider_adapter(project_id, http_request)
+
+    runner_provider_invocation_router_preview = _runner_provider_invocation_router_preview(provider_adapter_payload)
+    runner_provider_invocation_stub_preview = _runner_provider_invocation_stub_preview(runner_provider_invocation_router_preview)
+    runner_normalized_provider_result_preview = _runner_normalized_provider_result_preview(runner_provider_invocation_stub_preview)
+    runner_provider_idempotency_key_preview = _runner_provider_idempotency_key_preview(runner_normalized_provider_result_preview)
+    runner_provider_result_handoff_preview = _runner_provider_result_handoff_preview(runner_provider_idempotency_key_preview)
+    runner_provider_invocation_audit_receipt_preview = _runner_provider_invocation_audit_receipt_preview(runner_provider_result_handoff_preview)
+
+    project = provider_adapter_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_provider_invocation_router_status": runner_provider_invocation_router_preview["provider_invocation_router_status"],
+        "latest_runner_provider_invocation_stub_status": runner_provider_invocation_stub_preview["provider_invocation_stub_status"],
+        "latest_runner_normalized_provider_result_status": runner_normalized_provider_result_preview["normalized_provider_result_status"],
+        "latest_runner_provider_idempotency_key_status": runner_provider_idempotency_key_preview["provider_idempotency_key_status"],
+        "latest_runner_provider_result_handoff_status": runner_provider_result_handoff_preview["provider_result_handoff_status"],
+        "latest_runner_provider_invocation_audit_receipt_status": runner_provider_invocation_audit_receipt_preview["provider_invocation_audit_receipt_status"],
+        "latest_runner_provider_call_performed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **provider_adapter_payload,
+        "project": project,
+        "runner_provider_invocation_router_preview": runner_provider_invocation_router_preview,
+        "runner_provider_invocation_stub_preview": runner_provider_invocation_stub_preview,
+        "runner_normalized_provider_result_preview": runner_normalized_provider_result_preview,
+        "runner_provider_idempotency_key_preview": runner_provider_idempotency_key_preview,
+        "runner_provider_result_handoff_preview": runner_provider_result_handoff_preview,
+        "runner_provider_invocation_audit_receipt_preview": runner_provider_invocation_audit_receipt_preview,
+        "dry_run": True,
+        "route_selected": True,
+        "route_invocation_allowed": False,
+        "normalized": True,
+        "handoff_ready": False,
+        "real_handoff_performed": False,
+        "audit_receipt_recorded": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

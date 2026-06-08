@@ -14458,6 +14458,126 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_PROVIDER_INVOCATION_PANEL_BUNDLE_MARKER = 'Project Workspace provider invocation panel bundle';
+        let latestProjectRunnerProviderInvocationRouterPreview = {};
+        let latestProjectRunnerProviderInvocationStubPreview = {};
+        let latestProjectRunnerNormalizedProviderResultPreview = {};
+        let latestProjectRunnerProviderIdempotencyKeyPreview = {};
+        let latestProjectRunnerProviderResultHandoffPreview = {};
+        let latestProjectRunnerProviderInvocationAuditReceiptPreview = {};
+
+        function projectWorkspaceProviderInvocationCopyText(workspace = latestProjectWorkspace) {
+            const router = Object.keys(latestProjectRunnerProviderInvocationRouterPreview || {}).length ? latestProjectRunnerProviderInvocationRouterPreview : workspace?.runner_provider_invocation_router_preview || {};
+            const stub = Object.keys(latestProjectRunnerProviderInvocationStubPreview || {}).length ? latestProjectRunnerProviderInvocationStubPreview : workspace?.runner_provider_invocation_stub_preview || {};
+            const normalized = Object.keys(latestProjectRunnerNormalizedProviderResultPreview || {}).length ? latestProjectRunnerNormalizedProviderResultPreview : workspace?.runner_normalized_provider_result_preview || {};
+            const idempotency = Object.keys(latestProjectRunnerProviderIdempotencyKeyPreview || {}).length ? latestProjectRunnerProviderIdempotencyKeyPreview : workspace?.runner_provider_idempotency_key_preview || {};
+            const handoff = Object.keys(latestProjectRunnerProviderResultHandoffPreview || {}).length ? latestProjectRunnerProviderResultHandoffPreview : workspace?.runner_provider_result_handoff_preview || {};
+            const receipt = Object.keys(latestProjectRunnerProviderInvocationAuditReceiptPreview || {}).length ? latestProjectRunnerProviderInvocationAuditReceiptPreview : workspace?.runner_provider_invocation_audit_receipt_preview || {};
+            return [
+                t('providerInvocationCopyTitle'),
+                `${t('providerInvocationRouterStatus')}: ${router.provider_invocation_router_status || 'not_refreshed'}`,
+                `${t('providerInvocationStubStatus')}: ${stub.provider_invocation_stub_status || 'not_refreshed'}`,
+                `${t('normalizedProviderResultStatus')}: ${normalized.normalized_provider_result_status || 'not_refreshed'}`,
+                `${t('providerIdempotencyKeyStatus')}: ${idempotency.provider_idempotency_key_status || 'not_refreshed'}`,
+                `${t('providerResultHandoffStatus')}: ${handoff.provider_result_handoff_status || 'not_refreshed'}`,
+                `${t('providerInvocationAuditReceiptStatus')}: ${receipt.provider_invocation_audit_receipt_status || 'not_refreshed'}`,
+                `${t('providerCallPerformed')}: ${Boolean(receipt.provider_call_performed)}`,
+                '',
+                JSON.stringify({ router, stub, normalized, idempotency, handoff, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderInvocation() {
+            const status = document.getElementById('projectWorkspaceProviderInvocationStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderInvocationCopyText());
+                if (status) status.textContent = t('providerInvocationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerInvocationCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceProviderInvocation(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceProviderInvocationStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('providerInvocationDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_provider_invocation_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/provider-invocation/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('providerInvocationDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerProviderInvocationRouterPreview = payload.runner_provider_invocation_router_preview || {};
+                latestProjectRunnerProviderInvocationStubPreview = payload.runner_provider_invocation_stub_preview || {};
+                latestProjectRunnerNormalizedProviderResultPreview = payload.runner_normalized_provider_result_preview || {};
+                latestProjectRunnerProviderIdempotencyKeyPreview = payload.runner_provider_idempotency_key_preview || {};
+                latestProjectRunnerProviderResultHandoffPreview = payload.runner_provider_result_handoff_preview || {};
+                latestProjectRunnerProviderInvocationAuditReceiptPreview = payload.runner_provider_invocation_audit_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_provider_invocation_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_provider_invocation_dry_run');
+                if (status) status.textContent = t('providerInvocationDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceProviderInvocationPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceProviderInvocationPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_provider_invocation_dry_run');
+                if (status) status.textContent = error.message || t('providerInvocationDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceProviderInvocationPanel(workspace = latestProjectWorkspace) {
+            const router = Object.keys(latestProjectRunnerProviderInvocationRouterPreview || {}).length ? latestProjectRunnerProviderInvocationRouterPreview : workspace?.runner_provider_invocation_router_preview || {};
+            const normalized = Object.keys(latestProjectRunnerNormalizedProviderResultPreview || {}).length ? latestProjectRunnerNormalizedProviderResultPreview : workspace?.runner_normalized_provider_result_preview || {};
+            const handoff = Object.keys(latestProjectRunnerProviderResultHandoffPreview || {}).length ? latestProjectRunnerProviderResultHandoffPreview : workspace?.runner_provider_result_handoff_preview || {};
+            const receipt = Object.keys(latestProjectRunnerProviderInvocationAuditReceiptPreview || {}).length ? latestProjectRunnerProviderInvocationAuditReceiptPreview : workspace?.runner_provider_invocation_audit_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderInvocationPanel" data-project-provider-invocation-panel-marker="Project Workspace provider invocation panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerInvocationPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerInvocationPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceProviderInvocationBtn" type="button" data-project-provider-invocation-dry-run-action="Project Workspace provider invocation panel bundle" onclick="dryRunProjectWorkspaceProviderInvocation()">${escapeHTML(t('dryRunProviderInvocation'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderInvocationBtn" type="button" onclick="copyProjectWorkspaceProviderInvocation()">${escapeHTML(t('copyProviderInvocation'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerInvocationRouterStatus'))}</div>
+                            <strong data-provider-invocation-router-status="${escapeHTML(router.provider_invocation_router_status || 'not_refreshed')}">${escapeHTML(router.provider_invocation_router_status || t('providerInvocationNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('normalizedProviderResultStatus'))}</div>
+                            <strong data-normalized-provider-result-status="${escapeHTML(normalized.normalized_provider_result_status || 'not_refreshed')}">${escapeHTML(normalized.normalized_provider_result_status || t('providerInvocationNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerResultHandoffStatus'))}</div>
+                            <strong data-provider-result-handoff-status="${escapeHTML(handoff.provider_result_handoff_status || 'not_refreshed')}">${escapeHTML(handoff.provider_result_handoff_status || t('providerInvocationNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('providerCallPerformed'))}: ${escapeHTML(String(Boolean(receipt.provider_call_performed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerInvocationAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-provider-invocation-audit-preview="Project Workspace provider invocation panel bundle">${escapeHTML(projectWorkspaceProviderInvocationCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerInvocationNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderInvocationStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceProviderAdapterPanel(workspace = latestProjectWorkspace) {
             const registry = Object.keys(latestProjectRunnerProviderAdapterRegistryPreview || {}).length ? latestProjectRunnerProviderAdapterRegistryPreview : workspace?.runner_provider_adapter_registry_preview || {};
             const handshake = Object.keys(latestProjectRunnerProviderAdapterHandshakePreview || {}).length ? latestProjectRunnerProviderAdapterHandshakePreview : workspace?.runner_provider_adapter_handshake_preview || {};
@@ -15686,6 +15806,7 @@
                     ${renderProjectWorkspaceApprovalDecisionPanel(workspace)}
                     ${renderProjectWorkspaceExecutionSandboxPanel(workspace)}
                     ${renderProjectWorkspaceProviderAdapterPanel(workspace)}
+                    ${renderProjectWorkspaceProviderInvocationPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -18730,6 +18851,53 @@
             providerAdapterDryRunFailed: 'Provider adapter dry-run \u5931\u8d25\u3002',
             providerAdapterCopied: '\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668\u5df2\u590d\u5236\u3002',
             providerAdapterCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u9002\u914d\u5668\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderInvocationPanelBundleMarker: 'Project Workspace provider invocation panel bundle',
+            providerInvocationPanelTitle: 'Provider invocation router & normalized result',
+            providerInvocationPanelHelper: 'Dry-run invocation routing, provider stub result, normalized result schema, idempotency key, handoff preview, and audit receipt.',
+            dryRunProviderInvocation: 'Dry-run provider invocation',
+            copyProviderInvocation: 'Copy provider invocation',
+            providerInvocationCopyTitle: 'Project provider invocation dry-run',
+            providerInvocationRouterStatus: 'Provider invocation router status',
+            providerInvocationStubStatus: 'Provider invocation stub status',
+            normalizedProviderResultStatus: 'Normalized provider result status',
+            providerIdempotencyKeyStatus: 'Provider idempotency key status',
+            providerResultHandoffStatus: 'Provider result handoff status',
+            providerInvocationAuditReceiptStatus: 'Provider invocation audit receipt status',
+            providerCallPerformed: 'Provider call performed',
+            providerInvocationAuditPreview: 'Provider invocation audit preview',
+            providerInvocationNotRefreshedYet: 'Provider invocation has not been refreshed yet.',
+            providerInvocationDryRunRunning: 'Building provider invocation dry-run...',
+            providerInvocationDryRunComplete: 'Provider invocation dry-run complete.',
+            providerInvocationDryRunFailed: 'Provider invocation dry-run failed.',
+            providerInvocationCopied: 'Provider invocation copied.',
+            providerInvocationCopyFailed: 'Could not copy provider invocation.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderInvocationPanelBundleMarker: 'Project Workspace provider invocation panel bundle',
+            providerInvocationPanelTitle: '\u5916\u90e8\u670d\u52a1\u8c03\u7528\u8def\u7531\u4e0e\u6807\u51c6\u5316\u7ed3\u679c',
+            providerInvocationPanelHelper: '\u5bf9\u8c03\u7528\u8def\u7531\u3001\u5916\u90e8\u670d\u52a1\u5047\u7ed3\u679c\u3001\u6807\u51c6\u5316\u7ed3\u679c\u7ed3\u6784\u3001\u5e42\u7b49\u952e\u3001\u4ea4\u63a5\u9884\u89c8\u548c\u5ba1\u8ba1\u56de\u6267\u505a dry-run\u3002',
+            dryRunProviderInvocation: 'Dry-run \u5916\u90e8\u670d\u52a1\u8c03\u7528',
+            copyProviderInvocation: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u8c03\u7528',
+            providerInvocationCopyTitle: '\u9879\u76ee\u5916\u90e8\u670d\u52a1\u8c03\u7528 dry-run',
+            providerInvocationRouterStatus: '\u5916\u90e8\u670d\u52a1\u8c03\u7528\u8def\u7531\u72b6\u6001',
+            providerInvocationStubStatus: '\u5916\u90e8\u670d\u52a1\u5047\u8c03\u7528\u72b6\u6001',
+            normalizedProviderResultStatus: '\u6807\u51c6\u5316\u5916\u90e8\u670d\u52a1\u7ed3\u679c\u72b6\u6001',
+            providerIdempotencyKeyStatus: '\u5916\u90e8\u670d\u52a1\u5e42\u7b49\u952e\u72b6\u6001',
+            providerResultHandoffStatus: '\u5916\u90e8\u670d\u52a1\u7ed3\u679c\u4ea4\u63a5\u72b6\u6001',
+            providerInvocationAuditReceiptStatus: '\u5916\u90e8\u670d\u52a1\u8c03\u7528\u5ba1\u8ba1\u56de\u6267\u72b6\u6001',
+            providerCallPerformed: '\u662f\u5426\u771f\u7684\u8c03\u7528\u5916\u90e8\u670d\u52a1',
+            providerInvocationAuditPreview: '\u5916\u90e8\u670d\u52a1\u8c03\u7528\u5ba1\u8ba1\u9884\u89c8',
+            providerInvocationNotRefreshedYet: '\u5916\u90e8\u670d\u52a1\u8c03\u7528\u5c1a\u672a\u5237\u65b0\u3002',
+            providerInvocationDryRunRunning: '\u6b63\u5728\u751f\u6210 provider invocation dry-run...',
+            providerInvocationDryRunComplete: 'Provider invocation dry-run \u5b8c\u6210\u3002',
+            providerInvocationDryRunFailed: 'Provider invocation dry-run \u5931\u8d25\u3002',
+            providerInvocationCopied: '\u5916\u90e8\u670d\u52a1\u8c03\u7528\u5df2\u590d\u5236\u3002',
+            providerInvocationCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u8c03\u7528\u5931\u8d25\u3002'
         });
 
 

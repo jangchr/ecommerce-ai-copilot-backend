@@ -1562,3 +1562,49 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             False,
         )
 
+    def test_project_runner_provider_invocation_dry_run_endpoint_returns_normalized_result(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/provider-invocation/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_provider_invocation_router_preview",
+            "runner_provider_invocation_stub_preview",
+            "runner_normalized_provider_result_preview",
+            "runner_provider_idempotency_key_preview",
+            "runner_provider_result_handoff_preview",
+            "runner_provider_invocation_audit_receipt_preview",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertTrue(payload["route_selected"])
+        self.assertFalse(payload["route_invocation_allowed"])
+        self.assertTrue(payload["normalized"])
+        self.assertFalse(payload["handoff_ready"])
+        self.assertFalse(payload["real_handoff_performed"])
+        self.assertFalse(payload["audit_receipt_recorded"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertEqual(
+            payload["runner_provider_invocation_router_preview"]["provider_invocation_router_version"],
+            "runner_provider_invocation_router_preview_v1",
+        )
+        self.assertEqual(
+            payload["runner_normalized_provider_result_preview"]["normalized_provider_result_version"],
+            "runner_normalized_provider_result_preview_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_provider_call_performed"],
+            False,
+        )
+
