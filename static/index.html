@@ -12981,6 +12981,208 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_PERSIST_REQUEST_ROLLBACK_PANEL_BUNDLE_MARKER = 'Project Workspace persist request rollback panel bundle';
+        let latestProjectRunnerTransitionPersistRequest = {};
+        let latestProjectRunnerRollbackPlan = {};
+
+        function projectWorkspaceTransitionPersistRequestFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerTransitionPersistRequest && Object.keys(latestProjectRunnerTransitionPersistRequest).length
+                ? latestProjectRunnerTransitionPersistRequest
+                : workspace?.runner_transition_persist_request || {};
+        }
+
+        function projectWorkspaceRollbackPlanFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerRollbackPlan && Object.keys(latestProjectRunnerRollbackPlan).length
+                ? latestProjectRunnerRollbackPlan
+                : workspace?.runner_rollback_plan || {};
+        }
+
+        function projectWorkspacePersistRequestStatusLabel(request = {}) {
+            const status = String(request.persist_request_status || 'not_refreshed');
+            const labels = {
+                persist_request_waiting_for_real_agent_output: t('persistRequestStatusWaitingForRealOutput'),
+                persist_request_waiting_for_user: t('persistRequestStatusWaitingForUser'),
+                persist_request_waiting_for_explicit_gate: t('persistRequestStatusWaitingForExplicitGate'),
+                persist_request_blocked: t('persistRequestStatusBlocked'),
+                not_refreshed: t('persistRequestStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspacePersistRequestRollbackCopyText(
+            persistRequest = projectWorkspaceTransitionPersistRequestFromWorkspace(),
+            rollbackPlan = projectWorkspaceRollbackPlanFromWorkspace()
+        ) {
+            return [
+                t('persistRequestRollbackCopyTitle'),
+                `${t('projectId')}: ${rollbackPlan.project_id || persistRequest.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('transitionPersistRequestId')}: ${persistRequest.persist_request_id || t('none')}`,
+                `${t('rollbackPlanId')}: ${rollbackPlan.rollback_plan_id || t('none')}`,
+                `${t('persistRequestStatus')}: ${persistRequest.persist_request_status || 'not_refreshed'}`,
+                `${t('rollbackPlanStatus')}: ${rollbackPlan.rollback_plan_status || 'not_refreshed'}`,
+                `${t('writeAuthorized')}: ${Boolean(persistRequest.write_authorized)}`,
+                `${t('rollbackAvailable')}: ${Boolean(rollbackPlan.rollback_available)}`,
+                `${t('rollbackStepCount')}: ${rollbackPlan.rollback_step_count || 0}`,
+                '',
+                JSON.stringify({ persistRequest, rollbackPlan }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspacePersistRequestRollback() {
+            const status = document.getElementById('projectWorkspacePersistRequestRollbackStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspacePersistRequestRollbackCopyText());
+                if (status) status.textContent = t('persistRequestRollbackCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('persistRequestRollbackCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspacePersistRequestRollback(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspacePersistRequestRollbackStatus')
+                || document.getElementById('projectWorkspaceCommitPlanGuardStatus')
+                || document.getElementById('projectWorkspaceTransitionProjectionStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('persistRequestRollbackDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_persist_request_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/persist-request/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('persistRequestRollbackDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectRunnerHandoffCheckpoint = payload.runner_handoff_checkpoint || {};
+                latestProjectRunnerNextAgentUnlock = payload.runner_next_agent_unlock || {};
+                latestProjectRunnerGraphTransitionProposal = payload.runner_graph_transition_proposal || {};
+                latestProjectRunnerStateProjection = payload.runner_state_projection || {};
+                latestProjectRunnerTransitionCommitPlan = payload.runner_transition_commit_plan || {};
+                latestProjectRunnerMutationGuard = payload.runner_mutation_guard || {};
+                latestProjectRunnerTransitionPersistRequest = payload.runner_transition_persist_request || {};
+                latestProjectRunnerRollbackPlan = payload.runner_rollback_plan || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {},
+                    runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint,
+                    runner_handoff_checkpoint_summary: payload.runner_handoff_checkpoint_summary || {},
+                    runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock,
+                    runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {},
+                    runner_graph_transition_proposal: latestProjectRunnerGraphTransitionProposal,
+                    runner_graph_transition_proposal_summary: payload.runner_graph_transition_proposal_summary || {},
+                    runner_state_projection: latestProjectRunnerStateProjection,
+                    runner_state_projection_summary: payload.runner_state_projection_summary || {},
+                    runner_transition_commit_plan: latestProjectRunnerTransitionCommitPlan,
+                    runner_transition_commit_plan_summary: payload.runner_transition_commit_plan_summary || {},
+                    runner_mutation_guard: latestProjectRunnerMutationGuard,
+                    runner_mutation_guard_summary: payload.runner_mutation_guard_summary || {},
+                    runner_transition_persist_request: latestProjectRunnerTransitionPersistRequest,
+                    runner_transition_persist_request_summary: payload.runner_transition_persist_request_summary || {},
+                    runner_rollback_plan: latestProjectRunnerRollbackPlan,
+                    runner_rollback_plan_summary: payload.runner_rollback_plan_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_persist_request_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_persist_request_dry_run');
+                if (status) status.textContent = t('persistRequestRollbackDryRunComplete');
+
+                const commitPanel = document.getElementById('projectWorkspaceCommitPlanGuardPanel');
+                if (commitPanel) commitPanel.outerHTML = renderProjectWorkspaceCommitPlanGuardPanel(latestProjectWorkspace);
+                const persistPanel = document.getElementById('projectWorkspacePersistRequestRollbackPanel');
+                if (persistPanel) persistPanel.outerHTML = renderProjectWorkspacePersistRequestRollbackPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_persist_request_dry_run');
+                if (status) status.textContent = error.message || t('persistRequestRollbackDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspacePersistRequestRollbackPanel(workspace = latestProjectWorkspace) {
+            const persistRequest = projectWorkspaceTransitionPersistRequestFromWorkspace(workspace);
+            const rollbackPlan = projectWorkspaceRollbackPlanFromWorkspace(workspace);
+            const hasRollbackPlan = Boolean(rollbackPlan && Object.keys(rollbackPlan).length);
+            const statusLabel = projectWorkspacePersistRequestStatusLabel(persistRequest);
+            return `
+                <div class="section-block" id="projectWorkspacePersistRequestRollbackPanel" data-project-persist-request-rollback-panel-marker="Project Workspace persist request rollback panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('persistRequestRollbackPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('persistRequestRollbackPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspacePersistRequestRollbackBtn" type="button" data-project-persist-request-rollback-dry-run-action="Project Workspace persist request rollback panel bundle" onclick="dryRunProjectWorkspacePersistRequestRollback()">${escapeHTML(t('dryRunPersistRequestRollback'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspacePersistRequestRollbackBtn" type="button" onclick="copyProjectWorkspacePersistRequestRollback()">${escapeHTML(t('copyPersistRequestRollback'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('persistRequestStatus'))}</div>
+                            <strong data-persist-request-status="${escapeHTML(persistRequest.persist_request_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('persistRequestRollbackDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('transitionPersistRequestId'))}</div>
+                            <strong data-transition-persist-request-id="${escapeHTML(persistRequest.persist_request_id || '')}">${escapeHTML(persistRequest.persist_request_id || t('persistRequestRollbackNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('writeAuthorized'))}: ${escapeHTML(String(Boolean(persistRequest.write_authorized)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('rollbackAvailable'))}</div>
+                            <strong data-rollback-available="${escapeHTML(String(Boolean(rollbackPlan.rollback_available)))}">${escapeHTML(String(Boolean(rollbackPlan.rollback_available)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('rollbackStepCount'))}: ${escapeHTML(String(rollbackPlan.rollback_step_count || 0))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('persistRequestRollbackAuditPreview'))}</div>
+                        ${hasRollbackPlan ? `<pre class="debug" data-persist-request-rollback-audit-preview="Project Workspace persist request rollback panel bundle">${escapeHTML(projectWorkspacePersistRequestRollbackCopyText(persistRequest, rollbackPlan))}</pre>` : `<div class="recent-empty">${escapeHTML(t('persistRequestRollbackNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspacePersistRequestRollbackStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceCommitPlanGuardPanel(workspace = latestProjectWorkspace) {
             const commitPlan = projectWorkspaceTransitionCommitPlanFromWorkspace(workspace);
             const guard = projectWorkspaceMutationGuardFromWorkspace(workspace);
@@ -13626,6 +13828,7 @@
                     ${renderProjectWorkspaceHandoffCheckpointPanel(workspace)}
                     ${renderProjectWorkspaceTransitionProjectionPanel(workspace)}
                     ${renderProjectWorkspaceCommitPlanGuardPanel(workspace)}
+                    ${renderProjectWorkspacePersistRequestRollbackPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -15955,6 +16158,65 @@
             commitPlanGuardDryRunFailed: 'Commit plan guard dry-run \u5931\u8d25\u3002',
             commitPlanGuardCopied: '\u63d0\u4ea4\u8ba1\u5212\u4fdd\u62a4\u5df2\u590d\u5236\u3002',
             commitPlanGuardCopyFailed: '\u590d\u5236\u63d0\u4ea4\u8ba1\u5212\u4fdd\u62a4\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspacePersistRequestRollbackPanelBundleMarker: 'Project Workspace persist request rollback panel bundle',
+            persistRequestRollbackPanelTitle: 'Persist request & rollback plan',
+            persistRequestRollbackPanelHelper: 'Dry-run persist request and rollback plan. This prepares future writes and rollback steps without saving state.',
+            dryRunPersistRequestRollback: 'Dry-run persist request',
+            copyPersistRequestRollback: 'Copy persist request',
+            persistRequestRollbackCopyTitle: 'Project persist request and rollback plan',
+            transitionPersistRequestId: 'Transition persist request ID',
+            rollbackPlanId: 'Rollback plan ID',
+            persistRequestStatus: 'Persist request status',
+            rollbackPlanStatus: 'Rollback plan status',
+            writeAuthorized: 'Write authorized',
+            rollbackAvailable: 'Rollback available',
+            rollbackStepCount: 'Rollback step count',
+            persistRequestRollbackAuditPreview: 'Persist request rollback audit preview',
+            persistRequestStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            persistRequestStatusWaitingForUser: 'Persist request waiting for user',
+            persistRequestStatusWaitingForExplicitGate: 'Waiting for explicit persist gate',
+            persistRequestStatusBlocked: 'Persist request blocked',
+            persistRequestStatusNotRefreshed: 'Not refreshed',
+            persistRequestRollbackNotRefreshedYet: 'Persist request rollback has not been refreshed yet.',
+            persistRequestRollbackDryRunHelper: 'Dry run only: no write is authorized, no state is saved, no rollback is applied.',
+            persistRequestRollbackDryRunRunning: 'Building persist request rollback dry-run...',
+            persistRequestRollbackDryRunComplete: 'Persist request rollback dry-run complete.',
+            persistRequestRollbackDryRunFailed: 'Persist request rollback dry-run failed.',
+            persistRequestRollbackCopied: 'Persist request rollback copied.',
+            persistRequestRollbackCopyFailed: 'Could not copy persist request rollback.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspacePersistRequestRollbackPanelBundleMarker: 'Project Workspace persist request rollback panel bundle',
+            persistRequestRollbackPanelTitle: '\u5199\u5165\u7533\u8bf7\u4e0e\u56de\u6eda\u8ba1\u5212',
+            persistRequestRollbackPanelHelper: '\u5199\u5165\u7533\u8bf7\u548c\u56de\u6eda\u8ba1\u5212\u7684 dry-run\u3002\u5b83\u53ea\u51c6\u5907\u672a\u6765\u5199\u5165\u548c\u56de\u6eda\u6b65\u9aa4\uff0c\u4e0d\u771f\u6b63\u4fdd\u5b58\u72b6\u6001\u3002',
+            dryRunPersistRequestRollback: 'Dry-run \u5199\u5165\u7533\u8bf7',
+            copyPersistRequestRollback: '\u590d\u5236\u5199\u5165\u7533\u8bf7',
+            persistRequestRollbackCopyTitle: '\u9879\u76ee\u5199\u5165\u7533\u8bf7\u4e0e\u56de\u6eda\u8ba1\u5212',
+            transitionPersistRequestId: '\u5207\u6362\u5199\u5165\u7533\u8bf7 ID',
+            rollbackPlanId: '\u56de\u6eda\u8ba1\u5212 ID',
+            persistRequestStatus: '\u5199\u5165\u7533\u8bf7\u72b6\u6001',
+            rollbackPlanStatus: '\u56de\u6eda\u8ba1\u5212\u72b6\u6001',
+            writeAuthorized: '\u662f\u5426\u6388\u6743\u5199\u5165',
+            rollbackAvailable: '\u662f\u5426\u53ef\u56de\u6eda',
+            rollbackStepCount: '\u56de\u6eda\u6b65\u9aa4\u6570',
+            persistRequestRollbackAuditPreview: '\u5199\u5165\u7533\u8bf7\u56de\u6eda\u5ba1\u8ba1\u9884\u89c8',
+            persistRequestStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            persistRequestStatusWaitingForUser: '\u5199\u5165\u7533\u8bf7\u7b49\u5f85\u7528\u6237',
+            persistRequestStatusWaitingForExplicitGate: '\u7b49\u5f85\u663e\u5f0f\u5199\u5165\u95f8\u95e8',
+            persistRequestStatusBlocked: '\u5199\u5165\u7533\u8bf7\u5df2\u963b\u585e',
+            persistRequestStatusNotRefreshed: '\u672a\u5237\u65b0',
+            persistRequestRollbackNotRefreshedYet: '\u5199\u5165\u7533\u8bf7\u4e0e\u56de\u6eda\u8ba1\u5212\u5c1a\u672a\u5237\u65b0\u3002',
+            persistRequestRollbackDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u6388\u6743\u5199\u5165\uff0c\u4e0d\u4fdd\u5b58\u72b6\u6001\uff0c\u4e0d\u5e94\u7528\u56de\u6eda\u3002',
+            persistRequestRollbackDryRunRunning: '\u6b63\u5728\u751f\u6210 persist request rollback dry-run...',
+            persistRequestRollbackDryRunComplete: 'Persist request rollback dry-run \u5b8c\u6210\u3002',
+            persistRequestRollbackDryRunFailed: 'Persist request rollback dry-run \u5931\u8d25\u3002',
+            persistRequestRollbackCopied: '\u5199\u5165\u7533\u8bf7\u56de\u6eda\u8bb0\u5f55\u5df2\u590d\u5236\u3002',
+            persistRequestRollbackCopyFailed: '\u590d\u5236\u5199\u5165\u7533\u8bf7\u56de\u6eda\u8bb0\u5f55\u5931\u8d25\u3002'
         });
 
 

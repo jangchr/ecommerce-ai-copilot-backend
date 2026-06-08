@@ -4241,6 +4241,313 @@ def build_agent_runner_mutation_guard_summary(mutation_guard: dict[str, Any]) ->
 
 
 
+AGENT_RUNNER_TRANSITION_PERSIST_REQUEST_VERSION = "agent_runner_transition_persist_request_v1"
+AGENT_RUNNER_ROLLBACK_PLAN_VERSION = "agent_runner_rollback_plan_v1"
+
+
+def _persist_request_status_from_guard(mutation_guard: dict[str, Any]) -> str:
+    safe_guard = mutation_guard if isinstance(mutation_guard, dict) else {}
+    status = str(safe_guard.get("mutation_guard_status") or "mutation_guard_blocked")
+    if status == "mutation_guard_waiting_for_real_agent_output":
+        return "persist_request_waiting_for_real_agent_output"
+    if status == "mutation_guard_waiting_for_user":
+        return "persist_request_waiting_for_user"
+    if status == "mutation_guard_ready":
+        return "persist_request_waiting_for_explicit_gate"
+    return "persist_request_blocked"
+
+
+def build_agent_runner_transition_persist_request(
+    mutation_guard: dict[str, Any],
+    requested_by: str = "runner_persist_request_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run transition persist request from a mutation guard.
+
+    This prepares a future write request, but it does not persist state,
+    mutate the graph, save a project snapshot, unlock an Agent, or execute.
+    """
+
+    guard = mutation_guard if isinstance(mutation_guard, dict) else {}
+    project_id = str(guard.get("project_id") or "demo_project_default")
+    target_agent_id = str(guard.get("target_agent_id") or "")
+    persist_request_status = _persist_request_status_from_guard(guard)
+    persist_request_id = f"transition_persist_request_{project_id}_{target_agent_id or 'none'}_{persist_request_status}".replace(" ", "_")
+
+    planned_mutations = deepcopy(guard.get("planned_mutations") or [])
+    guard_checks = deepcopy(guard.get("guard_checks") or [])
+
+    if persist_request_status == "persist_request_waiting_for_real_agent_output":
+        recommended_next_state = "wait_for_real_agent_output_before_persist_request"
+        persist_request_message_text = "Persist request is waiting for real Agent output."
+    elif persist_request_status == "persist_request_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        persist_request_message_text = "Persist request is waiting for required user action."
+    elif persist_request_status == "persist_request_waiting_for_explicit_gate":
+        recommended_next_state = "add_explicit_persist_gate_before_write"
+        persist_request_message_text = "Persist request is structurally ready, but write is disabled until an explicit persist gate exists."
+    else:
+        recommended_next_state = "fix_persist_request_blockers"
+        persist_request_message_text = "Persist request is blocked by mutation guard, commit plan, projection, transition, or upstream checks."
+
+    persist_payload = {
+        "transition_persist_request_version": AGENT_RUNNER_TRANSITION_PERSIST_REQUEST_VERSION,
+        "persist_request_status": persist_request_status,
+        "persist_request_id": persist_request_id,
+        "mutation_guard_id": guard.get("mutation_guard_id"),
+        "commit_plan_id": guard.get("commit_plan_id"),
+        "projection_id": guard.get("projection_id"),
+        "target_agent_id": target_agent_id,
+        "planned_mutations": planned_mutations,
+        "planned_mutation_count": len(planned_mutations),
+        "guard_checks": guard_checks,
+        "dry_run": True,
+        "persist_request_recorded": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "agent_execution_performed": False,
+    }
+
+    persist_message = build_agent_message(
+        message_type="runner_transition_persist_request_dry_run",
+        source_agent_id="runner_persistence_manager",
+        target_agent_id=target_agent_id,
+        payload=persist_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "transition_persist_request_version": AGENT_RUNNER_TRANSITION_PERSIST_REQUEST_VERSION,
+        "persist_request_id": persist_request_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_persist_request_dry_run_api"),
+        "persist_request_status": persist_request_status,
+        "write_authorized": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(guard.get("target_agent_stage") or ""),
+        "mutation_guard_id": str(guard.get("mutation_guard_id") or ""),
+        "mutation_guard_status": str(guard.get("mutation_guard_status") or ""),
+        "mutation_allowed": bool(guard.get("mutation_allowed")),
+        "commit_plan_id": str(guard.get("commit_plan_id") or ""),
+        "projection_id": str(guard.get("projection_id") or ""),
+        "transition_id": str(guard.get("transition_id") or ""),
+        "planned_mutations": planned_mutations,
+        "planned_mutation_count": len(planned_mutations),
+        "guard_checks": guard_checks,
+        "recommended_next_state": recommended_next_state,
+        "persist_request_message_text": persist_request_message_text,
+        "mutation_guard_summary": build_agent_runner_mutation_guard_summary(guard),
+        "transition_commit_plan_summary": deepcopy(guard.get("transition_commit_plan_summary") or {}),
+        "state_projection_summary": deepcopy(guard.get("state_projection_summary") or {}),
+        "guard_message": deepcopy(guard.get("guard_message") or {}),
+        "persist_payload": persist_payload,
+        "persist_message": persist_message,
+        "dry_run": True,
+        "persist_request_recorded": False,
+        "commit_plan_persisted": False,
+        "mutation_guard_recorded": False,
+        "graph_transition_persisted": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_transition_persist_request_summary(persist_request: dict[str, Any]) -> dict[str, Any]:
+    safe_request = persist_request if isinstance(persist_request, dict) else {}
+    return {
+        "summary_version": "agent_runner_transition_persist_request_summary_v1",
+        "transition_persist_request_version": str(safe_request.get("transition_persist_request_version") or AGENT_RUNNER_TRANSITION_PERSIST_REQUEST_VERSION),
+        "persist_request_id": str(safe_request.get("persist_request_id") or ""),
+        "project_id": str(safe_request.get("project_id") or "demo_project_default"),
+        "persist_request_status": str(safe_request.get("persist_request_status") or "persist_request_blocked"),
+        "write_authorized": False,
+        "target_agent_id": str(safe_request.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_request.get("target_agent_stage") or ""),
+        "mutation_guard_id": str(safe_request.get("mutation_guard_id") or ""),
+        "commit_plan_id": str(safe_request.get("commit_plan_id") or ""),
+        "planned_mutation_count": int(safe_request.get("planned_mutation_count") or 0),
+        "persist_request_recorded": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _rollback_plan_status_from_persist_request(persist_request: dict[str, Any]) -> str:
+    safe_request = persist_request if isinstance(persist_request, dict) else {}
+    status = str(safe_request.get("persist_request_status") or "persist_request_blocked")
+    if status == "persist_request_waiting_for_real_agent_output":
+        return "rollback_plan_waiting_for_real_agent_output"
+    if status == "persist_request_waiting_for_user":
+        return "rollback_plan_waiting_for_user"
+    if status == "persist_request_waiting_for_explicit_gate":
+        return "rollback_plan_waiting_for_explicit_gate"
+    return "rollback_plan_blocked"
+
+
+def build_agent_runner_rollback_plan(
+    transition_persist_request: dict[str, Any],
+    requested_by: str = "runner_persist_request_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run rollback plan for a future transition persist request.
+
+    This previews reverse mutations for a possible future write. It does not
+    persist state, record rollback, or apply any mutation.
+    """
+
+    request = transition_persist_request if isinstance(transition_persist_request, dict) else {}
+    project_id = str(request.get("project_id") or "demo_project_default")
+    target_agent_id = str(request.get("target_agent_id") or "")
+    rollback_plan_status = _rollback_plan_status_from_persist_request(request)
+    rollback_plan_id = f"rollback_plan_{project_id}_{target_agent_id or 'none'}_{rollback_plan_status}".replace(" ", "_")
+
+    planned_mutations = deepcopy(request.get("planned_mutations") or [])
+    rollback_steps = []
+    for mutation in planned_mutations:
+        if not isinstance(mutation, dict):
+            continue
+        rollback_steps.append(
+            {
+                "path": mutation.get("path"),
+                "restore_value": mutation.get("current_value"),
+                "discard_value": mutation.get("projected_value"),
+            }
+        )
+
+    if rollback_plan_status == "rollback_plan_waiting_for_real_agent_output":
+        recommended_next_state = "wait_for_real_agent_output_before_rollback_readiness"
+        rollback_plan_message_text = "Rollback plan is prepared as a dry-run shell but waits for real Agent output."
+    elif rollback_plan_status == "rollback_plan_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        rollback_plan_message_text = "Rollback plan is waiting for required user action."
+    elif rollback_plan_status == "rollback_plan_waiting_for_explicit_gate":
+        recommended_next_state = "add_explicit_persist_gate_and_confirm_rollback"
+        rollback_plan_message_text = "Rollback plan is structurally available, but no write or rollback is enabled in dry-run."
+    else:
+        recommended_next_state = "fix_rollback_plan_blockers"
+        rollback_plan_message_text = "Rollback plan is blocked by persist request or upstream checks."
+
+    rollback_payload = {
+        "rollback_plan_version": AGENT_RUNNER_ROLLBACK_PLAN_VERSION,
+        "rollback_plan_status": rollback_plan_status,
+        "rollback_plan_id": rollback_plan_id,
+        "persist_request_id": request.get("persist_request_id"),
+        "mutation_guard_id": request.get("mutation_guard_id"),
+        "target_agent_id": target_agent_id,
+        "rollback_steps": rollback_steps,
+        "rollback_step_count": len(rollback_steps),
+        "dry_run": True,
+        "rollback_plan_recorded": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+    }
+
+    rollback_message = build_agent_message(
+        message_type="runner_rollback_plan_dry_run",
+        source_agent_id="runner_persistence_manager",
+        target_agent_id=target_agent_id,
+        payload=rollback_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "rollback_plan_version": AGENT_RUNNER_ROLLBACK_PLAN_VERSION,
+        "rollback_plan_id": rollback_plan_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_persist_request_dry_run_api"),
+        "rollback_plan_status": rollback_plan_status,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(request.get("target_agent_stage") or ""),
+        "persist_request_id": str(request.get("persist_request_id") or ""),
+        "persist_request_status": str(request.get("persist_request_status") or ""),
+        "mutation_guard_id": str(request.get("mutation_guard_id") or ""),
+        "commit_plan_id": str(request.get("commit_plan_id") or ""),
+        "planned_mutation_count": int(request.get("planned_mutation_count") or 0),
+        "rollback_steps": rollback_steps,
+        "rollback_step_count": len(rollback_steps),
+        "recommended_next_state": recommended_next_state,
+        "rollback_plan_message_text": rollback_plan_message_text,
+        "transition_persist_request_summary": build_agent_runner_transition_persist_request_summary(request),
+        "mutation_guard_summary": deepcopy(request.get("mutation_guard_summary") or {}),
+        "persist_message": deepcopy(request.get("persist_message") or {}),
+        "rollback_payload": rollback_payload,
+        "rollback_message": rollback_message,
+        "dry_run": True,
+        "rollback_plan_recorded": False,
+        "persist_request_recorded": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_rollback_plan_summary(rollback_plan: dict[str, Any]) -> dict[str, Any]:
+    safe_plan = rollback_plan if isinstance(rollback_plan, dict) else {}
+    return {
+        "summary_version": "agent_runner_rollback_plan_summary_v1",
+        "rollback_plan_version": str(safe_plan.get("rollback_plan_version") or AGENT_RUNNER_ROLLBACK_PLAN_VERSION),
+        "rollback_plan_id": str(safe_plan.get("rollback_plan_id") or ""),
+        "project_id": str(safe_plan.get("project_id") or "demo_project_default"),
+        "rollback_plan_status": str(safe_plan.get("rollback_plan_status") or "rollback_plan_blocked"),
+        "rollback_available": False,
+        "rollback_applied": False,
+        "target_agent_id": str(safe_plan.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_plan.get("target_agent_stage") or ""),
+        "persist_request_id": str(safe_plan.get("persist_request_id") or ""),
+        "mutation_guard_id": str(safe_plan.get("mutation_guard_id") or ""),
+        "rollback_step_count": int(safe_plan.get("rollback_step_count") or 0),
+        "rollback_plan_recorded": False,
+        "persist_request_recorded": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

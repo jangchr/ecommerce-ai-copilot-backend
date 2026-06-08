@@ -928,3 +928,51 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             commit_plan["commit_plan_status"],
         )
 
+    def test_project_runner_persist_request_dry_run_endpoint_returns_rollback_plan(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/persist-request/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["persist_request_recorded"])
+        self.assertFalse(payload["rollback_plan_recorded"])
+        self.assertFalse(payload["write_authorized"])
+        self.assertFalse(payload["rollback_available"])
+        self.assertFalse(payload["rollback_applied"])
+        self.assertFalse(payload["commit_plan_persisted"])
+        self.assertFalse(payload["mutation_guard_recorded"])
+        self.assertFalse(payload["graph_transition_persisted"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertFalse(payload["next_agent_unlocked"])
+        self.assertFalse(payload["handoff_complete"])
+        self.assertFalse(payload["agent_output_generated"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_transition_persist_request", payload)
+        self.assertIn("runner_rollback_plan", payload)
+        self.assertIn("runner_rollback_plan_summary", payload)
+
+        persist_request = payload["runner_transition_persist_request"]
+        rollback_plan = payload["runner_rollback_plan"]
+        summary = payload["runner_rollback_plan_summary"]
+        self.assertEqual(persist_request["transition_persist_request_version"], "agent_runner_transition_persist_request_v1")
+        self.assertEqual(rollback_plan["rollback_plan_version"], "agent_runner_rollback_plan_v1")
+        self.assertTrue(rollback_plan["dry_run"])
+        self.assertFalse(rollback_plan["rollback_available"])
+        self.assertFalse(rollback_plan["rollback_applied"])
+        self.assertFalse(rollback_plan["state_persisted"])
+        self.assertFalse(rollback_plan["project_snapshot_saved"])
+        self.assertEqual(summary["summary_version"], "agent_runner_rollback_plan_summary_v1")
+        self.assertEqual(summary["rollback_plan_status"], rollback_plan["rollback_plan_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_persist_request_status"],
+            persist_request["persist_request_status"],
+        )
+

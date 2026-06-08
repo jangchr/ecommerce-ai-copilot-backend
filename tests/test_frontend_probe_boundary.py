@@ -5061,3 +5061,51 @@ class ProjectWorkspaceCommitPlanGuardPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace commit plan guard panel bundle", script)
         self.assertIn("project_workspace_commit_plan_guard_panel_marker", script)
 
+
+class ProjectWorkspacePersistRequestRollbackPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_persist_request_rollback_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace persist request rollback panel bundle",
+            "PROJECT_WORKSPACE_PERSIST_REQUEST_ROLLBACK_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspacePersistRequestRollbackPanel(",
+            "function projectWorkspaceTransitionPersistRequestFromWorkspace(",
+            "function projectWorkspaceRollbackPlanFromWorkspace(",
+            "function projectWorkspacePersistRequestStatusLabel(",
+            "function projectWorkspacePersistRequestRollbackCopyText(",
+            "async function copyProjectWorkspacePersistRequestRollback(",
+            "async function dryRunProjectWorkspacePersistRequestRollback(",
+            "/runner/persist-request/dry-run",
+            "latestProjectRunnerTransitionPersistRequest",
+            "latestProjectRunnerRollbackPlan",
+            "runner_transition_persist_request: latestProjectRunnerTransitionPersistRequest",
+            "runner_rollback_plan: latestProjectRunnerRollbackPlan",
+            "runner_rollback_plan_summary: payload.runner_rollback_plan_summary || {}",
+            "projectWorkspacePersistRequestRollbackPanel",
+            "projectWorkspacePersistRequestRollbackStatus",
+            "dryRunProjectWorkspacePersistRequestRollbackBtn",
+            "copyProjectWorkspacePersistRequestRollbackBtn",
+            "data-project-persist-request-rollback-panel-marker",
+            "data-project-persist-request-rollback-dry-run-action",
+            "data-persist-request-status",
+            "data-transition-persist-request-id",
+            "data-rollback-available",
+            "data-persist-request-rollback-audit-preview",
+            "persistRequestRollbackPanelTitle",
+            "persistRequestRollbackDryRunHelper",
+            "renderProjectWorkspacePersistRequestRollbackPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_persist_request_rollback_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_persist_request_rollback_panel_marker", script)
+        self.assertIn("Project Workspace persist request rollback panel bundle", script)
+
+    def test_project_workspace_persist_request_rollback_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace persist request rollback panel bundle", script)
+        self.assertIn("project_workspace_persist_request_rollback_panel_marker", script)
+
