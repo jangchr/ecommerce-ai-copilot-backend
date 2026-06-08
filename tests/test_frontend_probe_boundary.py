@@ -5205,3 +5205,51 @@ class ProjectWorkspaceApprovalPolicyPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace approval policy panel bundle", script)
         self.assertIn("project_workspace_approval_policy_panel_marker", script)
 
+
+class ProjectWorkspaceAuthorizationManifestPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_authorization_manifest_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace authorization manifest panel bundle",
+            "PROJECT_WORKSPACE_AUTHORIZATION_MANIFEST_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceAuthorizationManifestPanel(",
+            "function projectWorkspaceAuthorizationPreviewFromWorkspace(",
+            "function projectWorkspaceExecutionManifestFromWorkspace(",
+            "function projectWorkspaceExecutionManifestStatusLabel(",
+            "function projectWorkspaceAuthorizationManifestCopyText(",
+            "async function copyProjectWorkspaceAuthorizationManifest(",
+            "async function dryRunProjectWorkspaceAuthorizationManifest(",
+            "/runner/authorization/dry-run",
+            "latestProjectRunnerAuthorizationPreview",
+            "latestProjectRunnerExecutionManifest",
+            "runner_authorization_preview: latestProjectRunnerAuthorizationPreview",
+            "runner_execution_manifest: latestProjectRunnerExecutionManifest",
+            "runner_execution_manifest_summary: payload.runner_execution_manifest_summary || {}",
+            "projectWorkspaceAuthorizationManifestPanel",
+            "projectWorkspaceAuthorizationManifestStatus",
+            "dryRunProjectWorkspaceAuthorizationManifestBtn",
+            "copyProjectWorkspaceAuthorizationManifestBtn",
+            "data-project-authorization-manifest-panel-marker",
+            "data-project-authorization-manifest-dry-run-action",
+            "data-execution-manifest-status",
+            "data-authorization-preview-id",
+            "data-manifest-item-count",
+            "data-authorization-manifest-audit-preview",
+            "authorizationManifestPanelTitle",
+            "authorizationManifestDryRunHelper",
+            "renderProjectWorkspaceAuthorizationManifestPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_authorization_manifest_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_authorization_manifest_panel_marker", script)
+        self.assertIn("Project Workspace authorization manifest panel bundle", script)
+
+    def test_project_workspace_authorization_manifest_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace authorization manifest panel bundle", script)
+        self.assertIn("project_workspace_authorization_manifest_panel_marker", script)
+

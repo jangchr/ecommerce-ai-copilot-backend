@@ -3336,3 +3336,236 @@ class AgentRunnerApprovalPolicyDecisionTests(unittest.TestCase):
         self.assertFalse(approval_request["approval_granted"])
         self.assertFalse(policy_decision["policy_approved"])
 
+
+class AgentRunnerAuthorizationManifestTests(unittest.TestCase):
+    def test_authorization_preview_and_execution_manifest_wait_for_real_output(self):
+        from agent_runs import (
+            build_agent_runner_approval_request,
+            build_agent_runner_audit_ledger,
+            build_agent_runner_authorization_preview,
+            build_agent_runner_authorization_preview_summary,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_manifest,
+            build_agent_runner_execution_manifest_summary,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_policy_decision,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        project = {"project_id": "project_authorization_ready", "graph_summary": {"existing_state": "kept"}}
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_authorization_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project=project,
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal, project=project)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        approval_request = build_agent_runner_approval_request(persist_gate, audit_ledger)
+        policy_decision = build_agent_runner_policy_decision(approval_request)
+        authorization_preview = build_agent_runner_authorization_preview(policy_decision)
+        authorization_summary = build_agent_runner_authorization_preview_summary(authorization_preview)
+        execution_manifest = build_agent_runner_execution_manifest(authorization_preview)
+        manifest_summary = build_agent_runner_execution_manifest_summary(execution_manifest)
+
+        self.assertEqual(authorization_preview["authorization_preview_version"], "agent_runner_authorization_preview_v1")
+        self.assertEqual(authorization_preview["authorization_status"], "authorization_waiting_for_real_agent_output")
+        self.assertFalse(authorization_preview["authorization_granted"])
+        self.assertFalse(authorization_preview["authorization_token_issued"])
+        self.assertFalse(authorization_preview["agent_execution_authorized"])
+        self.assertEqual(authorization_preview["authorization_scope_count"], 4)
+        self.assertEqual(authorization_preview["authorization_message"]["message_type"], "runner_authorization_preview_dry_run")
+        self.assertEqual(authorization_summary["summary_version"], "agent_runner_authorization_preview_summary_v1")
+
+        self.assertEqual(execution_manifest["execution_manifest_version"], "agent_runner_execution_manifest_v1")
+        self.assertEqual(execution_manifest["execution_manifest_status"], "execution_manifest_waiting_for_real_agent_output")
+        self.assertFalse(execution_manifest["execution_started"])
+        self.assertFalse(execution_manifest["manifest_recorded"])
+        self.assertFalse(execution_manifest["agent_execution_performed"])
+        self.assertEqual(execution_manifest["manifest_item_count"], 4)
+        self.assertEqual(execution_manifest["manifest_message"]["message_type"], "runner_execution_manifest_dry_run")
+        self.assertEqual(manifest_summary["summary_version"], "agent_runner_execution_manifest_summary_v1")
+
+    def test_authorization_manifest_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_approval_request,
+            build_agent_runner_audit_ledger,
+            build_agent_runner_authorization_preview,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_manifest,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_policy_decision,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_authorization_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_authorization_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        approval_request = build_agent_runner_approval_request(persist_gate, audit_ledger)
+        policy_decision = build_agent_runner_policy_decision(approval_request)
+        authorization_preview = build_agent_runner_authorization_preview(policy_decision)
+        execution_manifest = build_agent_runner_execution_manifest(authorization_preview)
+
+        self.assertEqual(authorization_preview["authorization_status"], "authorization_waiting_for_user")
+        self.assertEqual(execution_manifest["execution_manifest_status"], "execution_manifest_waiting_for_user")
+        self.assertFalse(authorization_preview["authorization_granted"])
+        self.assertFalse(execution_manifest["execution_started"])
+
+    def test_authorization_manifest_blocks_invalid_target(self):
+        from agent_runs import (
+            build_agent_runner_approval_request,
+            build_agent_runner_audit_ledger,
+            build_agent_runner_authorization_preview,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_manifest,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_policy_decision,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_authorization_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        approval_request = build_agent_runner_approval_request(persist_gate, audit_ledger)
+        policy_decision = build_agent_runner_policy_decision(approval_request)
+        authorization_preview = build_agent_runner_authorization_preview(policy_decision)
+        execution_manifest = build_agent_runner_execution_manifest(authorization_preview)
+
+        self.assertEqual(authorization_preview["authorization_status"], "authorization_blocked")
+        self.assertEqual(execution_manifest["execution_manifest_status"], "execution_manifest_blocked")
+        self.assertFalse(authorization_preview["authorization_granted"])
+        self.assertFalse(execution_manifest["execution_started"])
+

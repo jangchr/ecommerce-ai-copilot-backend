@@ -5221,6 +5221,356 @@ def build_agent_runner_policy_decision_summary(policy_decision: dict[str, Any]) 
 
 
 
+AGENT_RUNNER_AUTHORIZATION_PREVIEW_VERSION = "agent_runner_authorization_preview_v1"
+AGENT_RUNNER_EXECUTION_MANIFEST_VERSION = "agent_runner_execution_manifest_v1"
+
+
+def _authorization_preview_status_from_policy(policy_decision: dict[str, Any]) -> str:
+    safe_decision = policy_decision if isinstance(policy_decision, dict) else {}
+    status = str(safe_decision.get("policy_decision_status") or "policy_decision_blocked")
+    if status == "policy_decision_waiting_for_real_agent_output":
+        return "authorization_waiting_for_real_agent_output"
+    if status == "policy_decision_waiting_for_user":
+        return "authorization_waiting_for_user"
+    if status == "policy_decision_review_required":
+        return "authorization_waiting_for_explicit_review"
+    return "authorization_blocked"
+
+
+def build_agent_runner_authorization_preview(
+    policy_decision: dict[str, Any],
+    requested_by: str = "runner_authorization_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run authorization preview from a policy decision.
+
+    This prepares the authorization shape for future execution, but never
+    creates real credentials, authorizes writes, calls providers, or runs an
+    Agent.
+    """
+
+    decision = policy_decision if isinstance(policy_decision, dict) else {}
+    project_id = str(decision.get("project_id") or "demo_project_default")
+    target_agent_id = str(decision.get("target_agent_id") or "")
+    authorization_status = _authorization_preview_status_from_policy(decision)
+    authorization_preview_id = f"authorization_preview_{project_id}_{target_agent_id or 'none'}_{authorization_status}".replace(" ", "_")
+
+    authorization_scopes = [
+        {
+            "scope": "agent_execution",
+            "requested": True,
+            "granted": False,
+            "message": "Agent execution remains disabled in dry-run.",
+        },
+        {
+            "scope": "state_write",
+            "requested": True,
+            "granted": False,
+            "message": "State write remains disabled in dry-run.",
+        },
+        {
+            "scope": "external_provider_call",
+            "requested": False,
+            "granted": False,
+            "message": "External provider calls are not requested in this dry-run path.",
+        },
+        {
+            "scope": "cost_spend",
+            "requested": False,
+            "granted": False,
+            "message": "No CrossGrowth cost may be incurred in dry-run.",
+        },
+    ]
+
+    if authorization_status == "authorization_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_authorization"
+        authorization_message_text = "Authorization preview is waiting for real Agent output."
+    elif authorization_status == "authorization_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        authorization_message_text = "Authorization preview is waiting for required user action."
+    elif authorization_status == "authorization_waiting_for_explicit_review":
+        recommended_next_state = "implement_explicit_review_before_authorization"
+        authorization_message_text = "Authorization preview is structurally available, but no real authorization is granted in dry-run."
+    else:
+        recommended_next_state = "fix_authorization_blockers"
+        authorization_message_text = "Authorization preview is blocked by policy decision or upstream checks."
+
+    authorization_payload = {
+        "authorization_preview_version": AGENT_RUNNER_AUTHORIZATION_PREVIEW_VERSION,
+        "authorization_status": authorization_status,
+        "authorization_preview_id": authorization_preview_id,
+        "policy_decision_id": decision.get("policy_decision_id"),
+        "approval_request_id": decision.get("approval_request_id"),
+        "target_agent_id": target_agent_id,
+        "authorization_scopes": authorization_scopes,
+        "authorization_scope_count": len(authorization_scopes),
+        "dry_run": True,
+        "authorization_recorded": False,
+        "authorization_granted": False,
+        "authorization_token_issued": False,
+        "write_authorized": False,
+        "agent_execution_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+    }
+
+    authorization_message = build_agent_message(
+        message_type="runner_authorization_preview_dry_run",
+        source_agent_id="runner_authorization_manager",
+        target_agent_id=target_agent_id,
+        payload=authorization_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "authorization_preview_version": AGENT_RUNNER_AUTHORIZATION_PREVIEW_VERSION,
+        "authorization_preview_id": authorization_preview_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_authorization_dry_run_api"),
+        "authorization_status": authorization_status,
+        "authorization_granted": False,
+        "authorization_recorded": False,
+        "authorization_token_issued": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(decision.get("target_agent_stage") or ""),
+        "policy_decision_id": str(decision.get("policy_decision_id") or ""),
+        "policy_decision_status": str(decision.get("policy_decision_status") or ""),
+        "approval_request_id": str(decision.get("approval_request_id") or ""),
+        "authorization_scopes": authorization_scopes,
+        "authorization_scope_count": len(authorization_scopes),
+        "recommended_next_state": recommended_next_state,
+        "authorization_message_text": authorization_message_text,
+        "policy_decision_summary": build_agent_runner_policy_decision_summary(decision),
+        "approval_request_summary": deepcopy(decision.get("approval_request_summary") or {}),
+        "decision_message": deepcopy(decision.get("decision_message") or {}),
+        "authorization_payload": authorization_payload,
+        "authorization_message": authorization_message,
+        "dry_run": True,
+        "policy_approved": False,
+        "approval_granted": False,
+        "approval_recorded": False,
+        "explicit_approval_present": False,
+        "write_authorized": False,
+        "agent_execution_authorized": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_authorization_preview_summary(authorization_preview: dict[str, Any]) -> dict[str, Any]:
+    safe_preview = authorization_preview if isinstance(authorization_preview, dict) else {}
+    return {
+        "summary_version": "agent_runner_authorization_preview_summary_v1",
+        "authorization_preview_version": str(safe_preview.get("authorization_preview_version") or AGENT_RUNNER_AUTHORIZATION_PREVIEW_VERSION),
+        "authorization_preview_id": str(safe_preview.get("authorization_preview_id") or ""),
+        "project_id": str(safe_preview.get("project_id") or "demo_project_default"),
+        "authorization_status": str(safe_preview.get("authorization_status") or "authorization_blocked"),
+        "authorization_granted": False,
+        "authorization_recorded": False,
+        "authorization_token_issued": False,
+        "target_agent_id": str(safe_preview.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_preview.get("target_agent_stage") or ""),
+        "policy_decision_id": str(safe_preview.get("policy_decision_id") or ""),
+        "authorization_scope_count": int(safe_preview.get("authorization_scope_count") or 0),
+        "write_authorized": False,
+        "agent_execution_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _execution_manifest_status_from_authorization(authorization_preview: dict[str, Any]) -> str:
+    safe_preview = authorization_preview if isinstance(authorization_preview, dict) else {}
+    status = str(safe_preview.get("authorization_status") or "authorization_blocked")
+    if status == "authorization_waiting_for_real_agent_output":
+        return "execution_manifest_waiting_for_real_agent_output"
+    if status == "authorization_waiting_for_user":
+        return "execution_manifest_waiting_for_user"
+    if status == "authorization_waiting_for_explicit_review":
+        return "execution_manifest_waiting_for_explicit_review"
+    return "execution_manifest_blocked"
+
+
+def build_agent_runner_execution_manifest(
+    authorization_preview: dict[str, Any],
+    requested_by: str = "runner_authorization_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run execution manifest from an authorization preview.
+
+    This manifest is a preflight checklist, not an execution command.
+    """
+
+    preview = authorization_preview if isinstance(authorization_preview, dict) else {}
+    project_id = str(preview.get("project_id") or "demo_project_default")
+    target_agent_id = str(preview.get("target_agent_id") or "")
+    manifest_status = _execution_manifest_status_from_authorization(preview)
+    execution_manifest_id = f"execution_manifest_{project_id}_{target_agent_id or 'none'}_{manifest_status}".replace(" ", "_")
+
+    manifest_items = [
+        {
+            "item_id": "target_agent",
+            "value": target_agent_id,
+            "ready": bool(target_agent_id),
+        },
+        {
+            "item_id": "policy_decision",
+            "value": preview.get("policy_decision_status"),
+            "ready": False,
+        },
+        {
+            "item_id": "authorization",
+            "value": preview.get("authorization_status"),
+            "ready": False,
+        },
+        {
+            "item_id": "dry_run_boundary",
+            "value": "enabled",
+            "ready": True,
+        },
+    ]
+
+    if manifest_status == "execution_manifest_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_manifest_execution"
+        manifest_message_text = "Execution manifest is waiting for real Agent output."
+    elif manifest_status == "execution_manifest_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        manifest_message_text = "Execution manifest is waiting for required user action."
+    elif manifest_status == "execution_manifest_waiting_for_explicit_review":
+        recommended_next_state = "add_explicit_review_and_execution_authorization"
+        manifest_message_text = "Execution manifest is structurally available, but execution remains disabled."
+    else:
+        recommended_next_state = "fix_execution_manifest_blockers"
+        manifest_message_text = "Execution manifest is blocked by authorization preview or upstream checks."
+
+    manifest_payload = {
+        "execution_manifest_version": AGENT_RUNNER_EXECUTION_MANIFEST_VERSION,
+        "execution_manifest_status": manifest_status,
+        "execution_manifest_id": execution_manifest_id,
+        "authorization_preview_id": preview.get("authorization_preview_id"),
+        "policy_decision_id": preview.get("policy_decision_id"),
+        "target_agent_id": target_agent_id,
+        "manifest_items": manifest_items,
+        "manifest_item_count": len(manifest_items),
+        "dry_run": True,
+        "manifest_recorded": False,
+        "execution_started": False,
+        "agent_execution_authorized": False,
+        "agent_execution_performed": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+    }
+
+    manifest_message = build_agent_message(
+        message_type="runner_execution_manifest_dry_run",
+        source_agent_id="runner_authorization_manager",
+        target_agent_id=target_agent_id,
+        payload=manifest_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "execution_manifest_version": AGENT_RUNNER_EXECUTION_MANIFEST_VERSION,
+        "execution_manifest_id": execution_manifest_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_authorization_dry_run_api"),
+        "execution_manifest_status": manifest_status,
+        "execution_started": False,
+        "manifest_recorded": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(preview.get("target_agent_stage") or ""),
+        "authorization_preview_id": str(preview.get("authorization_preview_id") or ""),
+        "authorization_status": str(preview.get("authorization_status") or ""),
+        "policy_decision_id": str(preview.get("policy_decision_id") or ""),
+        "policy_decision_status": str(preview.get("policy_decision_status") or ""),
+        "manifest_items": manifest_items,
+        "manifest_item_count": len(manifest_items),
+        "recommended_next_state": recommended_next_state,
+        "manifest_message_text": manifest_message_text,
+        "authorization_preview_summary": build_agent_runner_authorization_preview_summary(preview),
+        "policy_decision_summary": deepcopy(preview.get("policy_decision_summary") or {}),
+        "authorization_message": deepcopy(preview.get("authorization_message") or {}),
+        "manifest_payload": manifest_payload,
+        "manifest_message": manifest_message,
+        "dry_run": True,
+        "authorization_granted": False,
+        "authorization_recorded": False,
+        "authorization_token_issued": False,
+        "policy_approved": False,
+        "approval_granted": False,
+        "write_authorized": False,
+        "agent_execution_authorized": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_execution_manifest_summary(execution_manifest: dict[str, Any]) -> dict[str, Any]:
+    safe_manifest = execution_manifest if isinstance(execution_manifest, dict) else {}
+    return {
+        "summary_version": "agent_runner_execution_manifest_summary_v1",
+        "execution_manifest_version": str(safe_manifest.get("execution_manifest_version") or AGENT_RUNNER_EXECUTION_MANIFEST_VERSION),
+        "execution_manifest_id": str(safe_manifest.get("execution_manifest_id") or ""),
+        "project_id": str(safe_manifest.get("project_id") or "demo_project_default"),
+        "execution_manifest_status": str(safe_manifest.get("execution_manifest_status") or "execution_manifest_blocked"),
+        "execution_started": False,
+        "manifest_recorded": False,
+        "target_agent_id": str(safe_manifest.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_manifest.get("target_agent_stage") or ""),
+        "authorization_preview_id": str(safe_manifest.get("authorization_preview_id") or ""),
+        "manifest_item_count": int(safe_manifest.get("manifest_item_count") or 0),
+        "authorization_granted": False,
+        "agent_execution_authorized": False,
+        "agent_execution_performed": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,

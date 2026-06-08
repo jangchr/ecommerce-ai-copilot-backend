@@ -13473,6 +13473,227 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_AUTHORIZATION_MANIFEST_PANEL_BUNDLE_MARKER = 'Project Workspace authorization manifest panel bundle';
+        let latestProjectRunnerAuthorizationPreview = {};
+        let latestProjectRunnerExecutionManifest = {};
+
+        function projectWorkspaceAuthorizationPreviewFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerAuthorizationPreview && Object.keys(latestProjectRunnerAuthorizationPreview).length
+                ? latestProjectRunnerAuthorizationPreview
+                : workspace?.runner_authorization_preview || {};
+        }
+
+        function projectWorkspaceExecutionManifestFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerExecutionManifest && Object.keys(latestProjectRunnerExecutionManifest).length
+                ? latestProjectRunnerExecutionManifest
+                : workspace?.runner_execution_manifest || {};
+        }
+
+        function projectWorkspaceExecutionManifestStatusLabel(manifest = {}) {
+            const status = String(manifest.execution_manifest_status || 'not_refreshed');
+            const labels = {
+                execution_manifest_waiting_for_real_agent_output: t('executionManifestStatusWaitingForRealOutput'),
+                execution_manifest_waiting_for_user: t('executionManifestStatusWaitingForUser'),
+                execution_manifest_waiting_for_explicit_review: t('executionManifestStatusWaitingForExplicitReview'),
+                execution_manifest_blocked: t('executionManifestStatusBlocked'),
+                not_refreshed: t('executionManifestStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceAuthorizationManifestCopyText(
+            authorizationPreview = projectWorkspaceAuthorizationPreviewFromWorkspace(),
+            executionManifest = projectWorkspaceExecutionManifestFromWorkspace()
+        ) {
+            return [
+                t('authorizationManifestCopyTitle'),
+                `${t('projectId')}: ${executionManifest.project_id || authorizationPreview.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('authorizationPreviewId')}: ${authorizationPreview.authorization_preview_id || t('none')}`,
+                `${t('executionManifestId')}: ${executionManifest.execution_manifest_id || t('none')}`,
+                `${t('authorizationStatus')}: ${authorizationPreview.authorization_status || 'not_refreshed'}`,
+                `${t('executionManifestStatus')}: ${executionManifest.execution_manifest_status || 'not_refreshed'}`,
+                `${t('authorizationGranted')}: ${Boolean(authorizationPreview.authorization_granted)}`,
+                `${t('authorizationTokenIssued')}: ${Boolean(authorizationPreview.authorization_token_issued)}`,
+                `${t('executionStarted')}: ${Boolean(executionManifest.execution_started)}`,
+                `${t('manifestItemCount')}: ${executionManifest.manifest_item_count || 0}`,
+                '',
+                JSON.stringify({ authorizationPreview, executionManifest }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceAuthorizationManifest() {
+            const status = document.getElementById('projectWorkspaceAuthorizationManifestStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceAuthorizationManifestCopyText());
+                if (status) status.textContent = t('authorizationManifestCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('authorizationManifestCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceAuthorizationManifest(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceAuthorizationManifestStatus')
+                || document.getElementById('projectWorkspaceApprovalPolicyStatus')
+                || document.getElementById('projectWorkspacePersistGateAuditStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('authorizationManifestDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_authorization_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/authorization/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('authorizationManifestDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectRunnerHandoffCheckpoint = payload.runner_handoff_checkpoint || {};
+                latestProjectRunnerNextAgentUnlock = payload.runner_next_agent_unlock || {};
+                latestProjectRunnerGraphTransitionProposal = payload.runner_graph_transition_proposal || {};
+                latestProjectRunnerStateProjection = payload.runner_state_projection || {};
+                latestProjectRunnerTransitionCommitPlan = payload.runner_transition_commit_plan || {};
+                latestProjectRunnerMutationGuard = payload.runner_mutation_guard || {};
+                latestProjectRunnerTransitionPersistRequest = payload.runner_transition_persist_request || {};
+                latestProjectRunnerRollbackPlan = payload.runner_rollback_plan || {};
+                latestProjectRunnerPersistGate = payload.runner_persist_gate || {};
+                latestProjectRunnerAuditLedger = payload.runner_audit_ledger || {};
+                latestProjectRunnerApprovalRequest = payload.runner_approval_request || {};
+                latestProjectRunnerPolicyDecision = payload.runner_policy_decision || {};
+                latestProjectRunnerAuthorizationPreview = payload.runner_authorization_preview || {};
+                latestProjectRunnerExecutionManifest = payload.runner_execution_manifest || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {},
+                    runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint,
+                    runner_handoff_checkpoint_summary: payload.runner_handoff_checkpoint_summary || {},
+                    runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock,
+                    runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {},
+                    runner_graph_transition_proposal: latestProjectRunnerGraphTransitionProposal,
+                    runner_graph_transition_proposal_summary: payload.runner_graph_transition_proposal_summary || {},
+                    runner_state_projection: latestProjectRunnerStateProjection,
+                    runner_state_projection_summary: payload.runner_state_projection_summary || {},
+                    runner_transition_commit_plan: latestProjectRunnerTransitionCommitPlan,
+                    runner_transition_commit_plan_summary: payload.runner_transition_commit_plan_summary || {},
+                    runner_mutation_guard: latestProjectRunnerMutationGuard,
+                    runner_mutation_guard_summary: payload.runner_mutation_guard_summary || {},
+                    runner_transition_persist_request: latestProjectRunnerTransitionPersistRequest,
+                    runner_transition_persist_request_summary: payload.runner_transition_persist_request_summary || {},
+                    runner_rollback_plan: latestProjectRunnerRollbackPlan,
+                    runner_rollback_plan_summary: payload.runner_rollback_plan_summary || {},
+                    runner_persist_gate: latestProjectRunnerPersistGate,
+                    runner_persist_gate_summary: payload.runner_persist_gate_summary || {},
+                    runner_audit_ledger: latestProjectRunnerAuditLedger,
+                    runner_audit_ledger_summary: payload.runner_audit_ledger_summary || {},
+                    runner_approval_request: latestProjectRunnerApprovalRequest,
+                    runner_approval_request_summary: payload.runner_approval_request_summary || {},
+                    runner_policy_decision: latestProjectRunnerPolicyDecision,
+                    runner_policy_decision_summary: payload.runner_policy_decision_summary || {},
+                    runner_authorization_preview: latestProjectRunnerAuthorizationPreview,
+                    runner_authorization_preview_summary: payload.runner_authorization_preview_summary || {},
+                    runner_execution_manifest: latestProjectRunnerExecutionManifest,
+                    runner_execution_manifest_summary: payload.runner_execution_manifest_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_authorization_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_authorization_dry_run');
+                if (status) status.textContent = t('authorizationManifestDryRunComplete');
+
+                const approvalPanel = document.getElementById('projectWorkspaceApprovalPolicyPanel');
+                if (approvalPanel) approvalPanel.outerHTML = renderProjectWorkspaceApprovalPolicyPanel(latestProjectWorkspace);
+                const authorizationPanel = document.getElementById('projectWorkspaceAuthorizationManifestPanel');
+                if (authorizationPanel) authorizationPanel.outerHTML = renderProjectWorkspaceAuthorizationManifestPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_authorization_dry_run');
+                if (status) status.textContent = error.message || t('authorizationManifestDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceAuthorizationManifestPanel(workspace = latestProjectWorkspace) {
+            const authorizationPreview = projectWorkspaceAuthorizationPreviewFromWorkspace(workspace);
+            const executionManifest = projectWorkspaceExecutionManifestFromWorkspace(workspace);
+            const hasManifest = Boolean(executionManifest && Object.keys(executionManifest).length);
+            const statusLabel = projectWorkspaceExecutionManifestStatusLabel(executionManifest);
+            return `
+                <div class="section-block" id="projectWorkspaceAuthorizationManifestPanel" data-project-authorization-manifest-panel-marker="Project Workspace authorization manifest panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('authorizationManifestPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('authorizationManifestPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceAuthorizationManifestBtn" type="button" data-project-authorization-manifest-dry-run-action="Project Workspace authorization manifest panel bundle" onclick="dryRunProjectWorkspaceAuthorizationManifest()">${escapeHTML(t('dryRunAuthorizationManifest'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceAuthorizationManifestBtn" type="button" onclick="copyProjectWorkspaceAuthorizationManifest()">${escapeHTML(t('copyAuthorizationManifest'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('executionManifestStatus'))}</div>
+                            <strong data-execution-manifest-status="${escapeHTML(executionManifest.execution_manifest_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('authorizationManifestDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('authorizationPreviewId'))}</div>
+                            <strong data-authorization-preview-id="${escapeHTML(authorizationPreview.authorization_preview_id || '')}">${escapeHTML(authorizationPreview.authorization_preview_id || t('authorizationManifestNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('authorizationTokenIssued'))}: ${escapeHTML(String(Boolean(authorizationPreview.authorization_token_issued)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('manifestItemCount'))}</div>
+                            <strong data-manifest-item-count="${escapeHTML(String(executionManifest.manifest_item_count || 0))}">${escapeHTML(String(executionManifest.manifest_item_count || 0))}</strong>
+                            <div class="field-helper">${escapeHTML(t('executionStarted'))}: ${escapeHTML(String(Boolean(executionManifest.execution_started)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('authorizationManifestAuditPreview'))}</div>
+                        ${hasManifest ? `<pre class="debug" data-authorization-manifest-audit-preview="Project Workspace authorization manifest panel bundle">${escapeHTML(projectWorkspaceAuthorizationManifestCopyText(authorizationPreview, executionManifest))}</pre>` : `<div class="recent-empty">${escapeHTML(t('authorizationManifestNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceAuthorizationManifestStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceApprovalPolicyPanel(workspace = latestProjectWorkspace) {
             const approvalRequest = projectWorkspaceApprovalRequestFromWorkspace(workspace);
             const policyDecision = projectWorkspacePolicyDecisionFromWorkspace(workspace);
@@ -14253,6 +14474,7 @@
                     ${renderProjectWorkspacePersistRequestRollbackPanel(workspace)}
                     ${renderProjectWorkspacePersistGateAuditPanel(workspace)}
                     ${renderProjectWorkspaceApprovalPolicyPanel(workspace)}
+                    ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -16757,6 +16979,67 @@
             approvalPolicyDryRunFailed: 'Approval policy dry-run \u5931\u8d25\u3002',
             approvalPolicyCopied: '\u5ba1\u6279\u7b56\u7565\u5df2\u590d\u5236\u3002',
             approvalPolicyCopyFailed: '\u590d\u5236\u5ba1\u6279\u7b56\u7565\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceAuthorizationManifestPanelBundleMarker: 'Project Workspace authorization manifest panel bundle',
+            authorizationManifestPanelTitle: 'Authorization preview & execution manifest',
+            authorizationManifestPanelHelper: 'Dry-run authorization preview and execution manifest. This lists execution requirements without issuing tokens or starting execution.',
+            dryRunAuthorizationManifest: 'Dry-run authorization',
+            copyAuthorizationManifest: 'Copy authorization',
+            authorizationManifestCopyTitle: 'Project authorization preview and execution manifest',
+            authorizationPreviewId: 'Authorization preview ID',
+            executionManifestId: 'Execution manifest ID',
+            authorizationStatus: 'Authorization status',
+            executionManifestStatus: 'Execution manifest status',
+            authorizationGranted: 'Authorization granted',
+            authorizationTokenIssued: 'Authorization token issued',
+            executionStarted: 'Execution started',
+            manifestItemCount: 'Manifest item count',
+            authorizationManifestAuditPreview: 'Authorization manifest audit preview',
+            executionManifestStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            executionManifestStatusWaitingForUser: 'Execution manifest waiting for user',
+            executionManifestStatusWaitingForExplicitReview: 'Waiting for explicit review',
+            executionManifestStatusBlocked: 'Execution manifest blocked',
+            executionManifestStatusNotRefreshed: 'Not refreshed',
+            authorizationManifestNotRefreshedYet: 'Authorization manifest has not been refreshed yet.',
+            authorizationManifestDryRunHelper: 'Dry run only: no authorization token, no execution start, no provider call, no cost.',
+            authorizationManifestDryRunRunning: 'Building authorization manifest dry-run...',
+            authorizationManifestDryRunComplete: 'Authorization manifest dry-run complete.',
+            authorizationManifestDryRunFailed: 'Authorization manifest dry-run failed.',
+            authorizationManifestCopied: 'Authorization manifest copied.',
+            authorizationManifestCopyFailed: 'Could not copy authorization manifest.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceAuthorizationManifestPanelBundleMarker: 'Project Workspace authorization manifest panel bundle',
+            authorizationManifestPanelTitle: '\u6388\u6743\u9884\u89c8\u4e0e\u6267\u884c\u6e05\u5355',
+            authorizationManifestPanelHelper: '\u6388\u6743\u9884\u89c8\u548c\u6267\u884c\u6e05\u5355\u7684 dry-run\u3002\u5b83\u5217\u51fa\u6267\u884c\u8981\u6c42\uff0c\u4f46\u4e0d\u7b7e\u53d1 token\uff0c\u4e0d\u5f00\u59cb\u6267\u884c\u3002',
+            dryRunAuthorizationManifest: 'Dry-run \u6388\u6743',
+            copyAuthorizationManifest: '\u590d\u5236\u6388\u6743',
+            authorizationManifestCopyTitle: '\u9879\u76ee\u6388\u6743\u9884\u89c8\u4e0e\u6267\u884c\u6e05\u5355',
+            authorizationPreviewId: '\u6388\u6743\u9884\u89c8 ID',
+            executionManifestId: '\u6267\u884c\u6e05\u5355 ID',
+            authorizationStatus: '\u6388\u6743\u72b6\u6001',
+            executionManifestStatus: '\u6267\u884c\u6e05\u5355\u72b6\u6001',
+            authorizationGranted: '\u662f\u5426\u5df2\u6388\u6743',
+            authorizationTokenIssued: '\u662f\u5426\u7b7e\u53d1\u6388\u6743 token',
+            executionStarted: '\u662f\u5426\u5df2\u5f00\u59cb\u6267\u884c',
+            manifestItemCount: '\u6e05\u5355\u6761\u76ee\u6570',
+            authorizationManifestAuditPreview: '\u6388\u6743\u6267\u884c\u6e05\u5355\u5ba1\u8ba1\u9884\u89c8',
+            executionManifestStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            executionManifestStatusWaitingForUser: '\u6267\u884c\u6e05\u5355\u7b49\u5f85\u7528\u6237',
+            executionManifestStatusWaitingForExplicitReview: '\u7b49\u5f85\u663e\u5f0f\u5ba1\u6838',
+            executionManifestStatusBlocked: '\u6267\u884c\u6e05\u5355\u5df2\u963b\u585e',
+            executionManifestStatusNotRefreshed: '\u672a\u5237\u65b0',
+            authorizationManifestNotRefreshedYet: '\u6388\u6743\u6267\u884c\u6e05\u5355\u5c1a\u672a\u5237\u65b0\u3002',
+            authorizationManifestDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u7b7e\u53d1\u6388\u6743 token\uff0c\u4e0d\u5f00\u59cb\u6267\u884c\uff0c\u4e0d\u8c03\u7528\u4f9b\u5e94\u5546\uff0c\u4e0d\u4ea7\u751f\u6210\u672c\u3002',
+            authorizationManifestDryRunRunning: '\u6b63\u5728\u751f\u6210 authorization manifest dry-run...',
+            authorizationManifestDryRunComplete: 'Authorization manifest dry-run \u5b8c\u6210\u3002',
+            authorizationManifestDryRunFailed: 'Authorization manifest dry-run \u5931\u8d25\u3002',
+            authorizationManifestCopied: '\u6388\u6743\u6267\u884c\u6e05\u5355\u5df2\u590d\u5236\u3002',
+            authorizationManifestCopyFailed: '\u590d\u5236\u6388\u6743\u6267\u884c\u6e05\u5355\u5931\u8d25\u3002'
         });
 
 
