@@ -8808,6 +8808,218 @@ async def dry_run_project_agent_orchestration_readiness(project_id: str, http_re
     }
 
 
+
+def _runner_operator_control_center(orchestration_payload: dict) -> dict:
+    milestone = dict(orchestration_payload.get("runner_milestone_report") or {})
+    safety = dict(orchestration_payload.get("runner_safety_contract_snapshot") or {})
+    blockers = list(orchestration_payload.get("runner_blocker_map") or [])
+    return {
+        "operator_control_center_version": "runner_operator_control_center_v1",
+        "operator_control_status": "operator_control_dry_run_ready",
+        "project_id": str(orchestration_payload.get("project", {}).get("project_id") or orchestration_payload.get("project_id") or "demo_project_default"),
+        "current_big_stage": milestone.get("current_big_stage", "multi_agent_runner_engine"),
+        "current_part": "operator_control_center",
+        "real_execution_enabled": False,
+        "dry_run_enabled": True,
+        "operator_can_enable_real_execution": False,
+        "manual_review_required": True,
+        "blocker_count": len(blockers),
+        "safety_contract_snapshot": safety,
+        "control_switches": [
+            {"switch_id": "dry_run_mode", "enabled": True, "locked": True},
+            {"switch_id": "real_execution_mode", "enabled": False, "locked": True},
+            {"switch_id": "external_provider_calls", "enabled": False, "locked": True},
+            {"switch_id": "state_write", "enabled": False, "locked": True},
+            {"switch_id": "cost_spend", "enabled": False, "locked": True},
+        ],
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+    }
+
+
+def _runner_human_approval_capture_preview(operator_control_center: dict) -> dict:
+    return {
+        "human_approval_capture_version": "runner_human_approval_capture_preview_v1",
+        "human_approval_status": "human_approval_capture_blocked_in_dry_run",
+        "project_id": operator_control_center.get("project_id", "demo_project_default"),
+        "operator_control_status": operator_control_center.get("operator_control_status", ""),
+        "approval_required": True,
+        "approval_captured": False,
+        "approved_by_human": False,
+        "approval_record_fields": [
+            {"field_id": "operator_id", "required": True, "captured": False},
+            {"field_id": "approval_reason", "required": True, "captured": False},
+            {"field_id": "execution_scope", "required": True, "captured": False},
+            {"field_id": "cost_limit_acknowledgement", "required": True, "captured": False},
+            {"field_id": "rollback_acknowledgement", "required": True, "captured": False},
+        ],
+        "approval_record_field_count": 5,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_execution_mode_switch_preview(human_approval_capture: dict) -> dict:
+    return {
+        "execution_mode_switch_version": "runner_execution_mode_switch_preview_v1",
+        "execution_mode_switch_status": "execution_mode_switch_locked",
+        "project_id": human_approval_capture.get("project_id", "demo_project_default"),
+        "current_mode": "dry_run",
+        "requested_mode": "real_execution",
+        "mode_switch_allowed": False,
+        "mode_switch_applied": False,
+        "required_conditions": [
+            {"condition_id": "human_approval_captured", "passed": False},
+            {"condition_id": "provider_sandbox_ready", "passed": False},
+            {"condition_id": "quota_policy_ready", "passed": False},
+            {"condition_id": "rollback_plan_ready", "passed": True},
+            {"condition_id": "audit_ledger_ready", "passed": True},
+        ],
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_sandbox_preview(execution_mode_switch: dict) -> dict:
+    return {
+        "provider_sandbox_version": "runner_provider_sandbox_preview_v1",
+        "provider_sandbox_status": "provider_sandbox_preview_only",
+        "project_id": execution_mode_switch.get("project_id", "demo_project_default"),
+        "provider_calls_enabled": False,
+        "allowed_providers": [],
+        "blocked_provider_categories": [
+            "llm_generation",
+            "image_generation",
+            "video_generation",
+            "external_scraping",
+            "paid_api_calls",
+        ],
+        "sandbox_rules": [
+            {"rule_id": "no_paid_provider_call", "enforced": True},
+            {"rule_id": "no_external_network_execution", "enforced": True},
+            {"rule_id": "no_secret_exposure", "enforced": True},
+            {"rule_id": "no_autonomous_provider_selection", "enforced": True},
+        ],
+        "sandbox_rule_count": 4,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "dry_run": True,
+    }
+
+
+def _runner_quota_policy_preview(provider_sandbox: dict) -> dict:
+    return {
+        "quota_policy_version": "runner_quota_policy_preview_v1",
+        "quota_policy_status": "quota_policy_preview_only",
+        "project_id": provider_sandbox.get("project_id", "demo_project_default"),
+        "quota_policy_enabled": False,
+        "budget_limit_cents": 0,
+        "max_provider_calls": 0,
+        "max_agent_runtime_seconds": 0,
+        "quota_rules": [
+            {"quota_rule_id": "zero_cost_until_approved", "limit": 0, "unit": "cents"},
+            {"quota_rule_id": "zero_provider_calls_until_approved", "limit": 0, "unit": "calls"},
+            {"quota_rule_id": "manual_reset_required", "limit": 1, "unit": "approval"},
+        ],
+        "quota_rule_count": 3,
+        "cost_incurred_by_crossgrowth": False,
+        "external_api_called": False,
+        "dry_run": True,
+    }
+
+
+def _runner_release_decision_packet(quota_policy: dict) -> dict:
+    decision_items = [
+        {"decision_item_id": "operator_control_ready", "passed": True},
+        {"decision_item_id": "human_approval_captured", "passed": False},
+        {"decision_item_id": "execution_mode_switch_allowed", "passed": False},
+        {"decision_item_id": "provider_sandbox_enabled", "passed": False},
+        {"decision_item_id": "quota_policy_enabled", "passed": False},
+        {"decision_item_id": "real_execution_allowed", "passed": False},
+    ]
+    return {
+        "release_decision_packet_version": "runner_release_decision_packet_v1",
+        "release_decision_status": "release_blocked_pending_operator_approval",
+        "project_id": quota_policy.get("project_id", "demo_project_default"),
+        "decision_items": decision_items,
+        "decision_item_count": len(decision_items),
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/operator-control/dry-run")
+async def dry_run_project_agent_operator_control(project_id: str, http_request: Request):
+    orchestration_payload = await dry_run_project_agent_orchestration_readiness(project_id, http_request)
+
+    runner_operator_control_center = _runner_operator_control_center(orchestration_payload)
+    runner_human_approval_capture_preview = _runner_human_approval_capture_preview(runner_operator_control_center)
+    runner_execution_mode_switch_preview = _runner_execution_mode_switch_preview(runner_human_approval_capture_preview)
+    runner_provider_sandbox_preview = _runner_provider_sandbox_preview(runner_execution_mode_switch_preview)
+    runner_quota_policy_preview = _runner_quota_policy_preview(runner_provider_sandbox_preview)
+    runner_release_decision_packet = _runner_release_decision_packet(runner_quota_policy_preview)
+
+    project = orchestration_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_operator_control_status": runner_operator_control_center["operator_control_status"],
+        "latest_runner_human_approval_status": runner_human_approval_capture_preview["human_approval_status"],
+        "latest_runner_execution_mode_switch_status": runner_execution_mode_switch_preview["execution_mode_switch_status"],
+        "latest_runner_provider_sandbox_status": runner_provider_sandbox_preview["provider_sandbox_status"],
+        "latest_runner_quota_policy_status": runner_quota_policy_preview["quota_policy_status"],
+        "latest_runner_release_decision_status": runner_release_decision_packet["release_decision_status"],
+        "latest_runner_release_allowed": False,
+        "latest_runner_real_execution_enabled": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **orchestration_payload,
+        "project": project,
+        "runner_operator_control_center": runner_operator_control_center,
+        "runner_human_approval_capture_preview": runner_human_approval_capture_preview,
+        "runner_execution_mode_switch_preview": runner_execution_mode_switch_preview,
+        "runner_provider_sandbox_preview": runner_provider_sandbox_preview,
+        "runner_quota_policy_preview": runner_quota_policy_preview,
+        "runner_release_decision_packet": runner_release_decision_packet,
+        "dry_run": True,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "operator_can_enable_real_execution": False,
+        "approval_required": True,
+        "approval_captured": False,
+        "approved_by_human": False,
+        "provider_calls_enabled": False,
+        "quota_policy_enabled": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

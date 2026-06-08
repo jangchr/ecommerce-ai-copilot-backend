@@ -14078,6 +14078,127 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_OPERATOR_CONTROL_PANEL_BUNDLE_MARKER = 'Project Workspace operator control panel bundle';
+        let latestProjectRunnerOperatorControlCenter = {};
+        let latestProjectRunnerHumanApprovalCapturePreview = {};
+        let latestProjectRunnerExecutionModeSwitchPreview = {};
+        let latestProjectRunnerProviderSandboxPreview = {};
+        let latestProjectRunnerQuotaPolicyPreview = {};
+        let latestProjectRunnerReleaseDecisionPacket = {};
+
+        function projectWorkspaceOperatorControlCopyText(workspace = latestProjectWorkspace) {
+            const control = Object.keys(latestProjectRunnerOperatorControlCenter || {}).length ? latestProjectRunnerOperatorControlCenter : workspace?.runner_operator_control_center || {};
+            const approval = Object.keys(latestProjectRunnerHumanApprovalCapturePreview || {}).length ? latestProjectRunnerHumanApprovalCapturePreview : workspace?.runner_human_approval_capture_preview || {};
+            const modeSwitch = Object.keys(latestProjectRunnerExecutionModeSwitchPreview || {}).length ? latestProjectRunnerExecutionModeSwitchPreview : workspace?.runner_execution_mode_switch_preview || {};
+            const providerSandbox = Object.keys(latestProjectRunnerProviderSandboxPreview || {}).length ? latestProjectRunnerProviderSandboxPreview : workspace?.runner_provider_sandbox_preview || {};
+            const quotaPolicy = Object.keys(latestProjectRunnerQuotaPolicyPreview || {}).length ? latestProjectRunnerQuotaPolicyPreview : workspace?.runner_quota_policy_preview || {};
+            const decision = Object.keys(latestProjectRunnerReleaseDecisionPacket || {}).length ? latestProjectRunnerReleaseDecisionPacket : workspace?.runner_release_decision_packet || {};
+            return [
+                t('operatorControlCopyTitle'),
+                `${t('operatorControlStatus')}: ${control.operator_control_status || 'not_refreshed'}`,
+                `${t('humanApprovalStatus')}: ${approval.human_approval_status || 'not_refreshed'}`,
+                `${t('executionModeSwitchStatus')}: ${modeSwitch.execution_mode_switch_status || 'not_refreshed'}`,
+                `${t('providerSandboxStatus')}: ${providerSandbox.provider_sandbox_status || 'not_refreshed'}`,
+                `${t('quotaPolicyStatus')}: ${quotaPolicy.quota_policy_status || 'not_refreshed'}`,
+                `${t('releaseDecisionStatus')}: ${decision.release_decision_status || 'not_refreshed'}`,
+                `${t('releaseAllowed')}: ${Boolean(decision.release_allowed)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(decision.real_execution_enabled)}`,
+                '',
+                JSON.stringify({ control, approval, modeSwitch, providerSandbox, quotaPolicy, decision }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceOperatorControl() {
+            const status = document.getElementById('projectWorkspaceOperatorControlStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceOperatorControlCopyText());
+                if (status) status.textContent = t('operatorControlCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('operatorControlCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceOperatorControl(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceOperatorControlStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('operatorControlDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_operator_control_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/operator-control/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('operatorControlDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerOperatorControlCenter = payload.runner_operator_control_center || {};
+                latestProjectRunnerHumanApprovalCapturePreview = payload.runner_human_approval_capture_preview || {};
+                latestProjectRunnerExecutionModeSwitchPreview = payload.runner_execution_mode_switch_preview || {};
+                latestProjectRunnerProviderSandboxPreview = payload.runner_provider_sandbox_preview || {};
+                latestProjectRunnerQuotaPolicyPreview = payload.runner_quota_policy_preview || {};
+                latestProjectRunnerReleaseDecisionPacket = payload.runner_release_decision_packet || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_operator_control_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_operator_control_dry_run');
+                if (status) status.textContent = t('operatorControlDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceOperatorControlPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceOperatorControlPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_operator_control_dry_run');
+                if (status) status.textContent = error.message || t('operatorControlDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceOperatorControlPanel(workspace = latestProjectWorkspace) {
+            const control = Object.keys(latestProjectRunnerOperatorControlCenter || {}).length ? latestProjectRunnerOperatorControlCenter : workspace?.runner_operator_control_center || {};
+            const approval = Object.keys(latestProjectRunnerHumanApprovalCapturePreview || {}).length ? latestProjectRunnerHumanApprovalCapturePreview : workspace?.runner_human_approval_capture_preview || {};
+            const modeSwitch = Object.keys(latestProjectRunnerExecutionModeSwitchPreview || {}).length ? latestProjectRunnerExecutionModeSwitchPreview : workspace?.runner_execution_mode_switch_preview || {};
+            const decision = Object.keys(latestProjectRunnerReleaseDecisionPacket || {}).length ? latestProjectRunnerReleaseDecisionPacket : workspace?.runner_release_decision_packet || {};
+            const hasDecision = Boolean(decision && Object.keys(decision).length);
+            return `
+                <div class="section-block" id="projectWorkspaceOperatorControlPanel" data-project-operator-control-panel-marker="Project Workspace operator control panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('operatorControlPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('operatorControlPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceOperatorControlBtn" type="button" data-project-operator-control-dry-run-action="Project Workspace operator control panel bundle" onclick="dryRunProjectWorkspaceOperatorControl()">${escapeHTML(t('dryRunOperatorControl'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceOperatorControlBtn" type="button" onclick="copyProjectWorkspaceOperatorControl()">${escapeHTML(t('copyOperatorControl'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('operatorControlStatus'))}</div>
+                            <strong data-operator-control-status="${escapeHTML(control.operator_control_status || 'not_refreshed')}">${escapeHTML(control.operator_control_status || t('operatorControlNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('humanApprovalStatus'))}</div>
+                            <strong data-human-approval-status="${escapeHTML(approval.human_approval_status || 'not_refreshed')}">${escapeHTML(approval.human_approval_status || t('operatorControlNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('releaseDecisionStatus'))}</div>
+                            <strong data-release-decision-status="${escapeHTML(decision.release_decision_status || 'not_refreshed')}">${escapeHTML(decision.release_decision_status || t('operatorControlNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('executionModeSwitchStatus'))}: ${escapeHTML(modeSwitch.execution_mode_switch_status || 'not_refreshed')}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('operatorControlAuditPreview'))}</div>
+                        ${hasDecision ? `<pre class="debug" data-operator-control-audit-preview="Project Workspace operator control panel bundle">${escapeHTML(projectWorkspaceOperatorControlCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('operatorControlNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceOperatorControlStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceOrchestrationReadinessPanel(workspace = latestProjectWorkspace) {
             const capabilityMatrix = latestProjectRunnerCapabilityMatrix.length ? latestProjectRunnerCapabilityMatrix : workspace?.runner_capability_matrix || [];
             const blockerMap = latestProjectRunnerBlockerMap.length ? latestProjectRunnerBlockerMap : workspace?.runner_blocker_map || [];
@@ -15086,6 +15207,7 @@
                     ${renderProjectWorkspaceWorkerCheckpointPanel(workspace)}
                     ${renderProjectWorkspaceFinalizationPanel(workspace)}
                     ${renderProjectWorkspaceOrchestrationReadinessPanel(workspace)}
+                    ${renderProjectWorkspaceOperatorControlPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -17895,6 +18017,53 @@
             orchestrationReadinessDryRunFailed: 'Orchestration readiness dry-run \u5931\u8d25\u3002',
             orchestrationReadinessCopied: '\u7f16\u6392\u5c31\u7eea\u62a5\u544a\u5df2\u590d\u5236\u3002',
             orchestrationReadinessCopyFailed: '\u590d\u5236\u7f16\u6392\u5c31\u7eea\u62a5\u544a\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceOperatorControlPanelBundleMarker: 'Project Workspace operator control panel bundle',
+            operatorControlPanelTitle: 'Operator control & approval capture',
+            operatorControlPanelHelper: 'Dry-run operator control center, human approval capture, execution mode switch, provider sandbox, quota policy, and release decision packet.',
+            dryRunOperatorControl: 'Dry-run operator control',
+            copyOperatorControl: 'Copy operator control',
+            operatorControlCopyTitle: 'Project operator control dry-run',
+            operatorControlStatus: 'Operator control status',
+            humanApprovalStatus: 'Human approval status',
+            executionModeSwitchStatus: 'Execution mode switch status',
+            providerSandboxStatus: 'Provider sandbox status',
+            quotaPolicyStatus: 'Quota policy status',
+            releaseDecisionStatus: 'Release decision status',
+            releaseAllowed: 'Release allowed',
+            operatorControlAuditPreview: 'Operator control audit preview',
+            operatorControlNotRefreshedYet: 'Operator control has not been refreshed yet.',
+            operatorControlDryRunRunning: 'Building operator control dry-run...',
+            operatorControlDryRunComplete: 'Operator control dry-run complete.',
+            operatorControlDryRunFailed: 'Operator control dry-run failed.',
+            operatorControlCopied: 'Operator control copied.',
+            operatorControlCopyFailed: 'Could not copy operator control.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceOperatorControlPanelBundleMarker: 'Project Workspace operator control panel bundle',
+            operatorControlPanelTitle: '\u64cd\u4f5c\u5458\u63a7\u5236\u4e0e\u4eba\u5de5\u6279\u51c6\u6355\u83b7',
+            operatorControlPanelHelper: '\u5bf9\u64cd\u4f5c\u5458\u63a7\u5236\u4e2d\u5fc3\u3001\u4eba\u5de5\u6279\u51c6\u6355\u83b7\u3001\u6267\u884c\u6a21\u5f0f\u5207\u6362\u3001\u5916\u90e8\u670d\u52a1\u6c99\u76d2\u3001\u989d\u5ea6\u7b56\u7565\u548c\u53d1\u5e03\u51b3\u7b56\u5305\u505a dry-run\u3002',
+            dryRunOperatorControl: 'Dry-run \u64cd\u4f5c\u5458\u63a7\u5236',
+            copyOperatorControl: '\u590d\u5236\u64cd\u4f5c\u5458\u63a7\u5236',
+            operatorControlCopyTitle: '\u9879\u76ee\u64cd\u4f5c\u5458\u63a7\u5236 dry-run',
+            operatorControlStatus: '\u64cd\u4f5c\u5458\u63a7\u5236\u72b6\u6001',
+            humanApprovalStatus: '\u4eba\u5de5\u6279\u51c6\u72b6\u6001',
+            executionModeSwitchStatus: '\u6267\u884c\u6a21\u5f0f\u5207\u6362\u72b6\u6001',
+            providerSandboxStatus: '\u5916\u90e8\u670d\u52a1\u6c99\u76d2\u72b6\u6001',
+            quotaPolicyStatus: '\u989d\u5ea6\u7b56\u7565\u72b6\u6001',
+            releaseDecisionStatus: '\u53d1\u5e03\u51b3\u7b56\u72b6\u6001',
+            releaseAllowed: '\u662f\u5426\u5141\u8bb8\u53d1\u5e03',
+            operatorControlAuditPreview: '\u64cd\u4f5c\u5458\u63a7\u5236\u5ba1\u8ba1\u9884\u89c8',
+            operatorControlNotRefreshedYet: '\u64cd\u4f5c\u5458\u63a7\u5236\u5c1a\u672a\u5237\u65b0\u3002',
+            operatorControlDryRunRunning: '\u6b63\u5728\u751f\u6210 operator control dry-run...',
+            operatorControlDryRunComplete: 'Operator control dry-run \u5b8c\u6210\u3002',
+            operatorControlDryRunFailed: 'Operator control dry-run \u5931\u8d25\u3002',
+            operatorControlCopied: '\u64cd\u4f5c\u5458\u63a7\u5236\u5df2\u590d\u5236\u3002',
+            operatorControlCopyFailed: '\u590d\u5236\u64cd\u4f5c\u5458\u63a7\u5236\u5931\u8d25\u3002'
         });
 
 

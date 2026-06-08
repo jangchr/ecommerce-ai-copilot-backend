@@ -1331,3 +1331,53 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             "orchestration_readiness_dry_run_complete",
         )
 
+    def test_project_runner_operator_control_dry_run_endpoint_returns_release_decision(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/operator-control/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_operator_control_center",
+            "runner_human_approval_capture_preview",
+            "runner_execution_mode_switch_preview",
+            "runner_provider_sandbox_preview",
+            "runner_quota_policy_preview",
+            "runner_release_decision_packet",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["operator_can_enable_real_execution"])
+        self.assertTrue(payload["approval_required"])
+        self.assertFalse(payload["approval_captured"])
+        self.assertFalse(payload["approved_by_human"])
+        self.assertFalse(payload["provider_calls_enabled"])
+        self.assertFalse(payload["quota_policy_enabled"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertFalse(payload["write_authorized"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        self.assertEqual(
+            payload["runner_operator_control_center"]["operator_control_center_version"],
+            "runner_operator_control_center_v1",
+        )
+        self.assertEqual(
+            payload["runner_release_decision_packet"]["release_decision_packet_version"],
+            "runner_release_decision_packet_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_release_decision_status"],
+            "release_blocked_pending_operator_approval",
+        )
+
