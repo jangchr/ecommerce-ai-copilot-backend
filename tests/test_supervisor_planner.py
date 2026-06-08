@@ -1019,3 +1019,44 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             persist_gate["persist_gate_status"],
         )
 
+    def test_project_runner_approval_dry_run_endpoint_returns_policy_decision(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/approval/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["approval_recorded"])
+        self.assertFalse(payload["approval_granted"])
+        self.assertFalse(payload["policy_decision_recorded"])
+        self.assertFalse(payload["policy_approved"])
+        self.assertFalse(payload["write_authorized"])
+        self.assertFalse(payload["state_persisted"])
+        self.assertFalse(payload["project_snapshot_saved"])
+        self.assertFalse(payload["agent_output_generated"])
+        self.assertFalse(payload["agent_invoked"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_approval_request", payload)
+        self.assertIn("runner_policy_decision", payload)
+        self.assertIn("runner_policy_decision_summary", payload)
+
+        approval = payload["runner_approval_request"]
+        policy = payload["runner_policy_decision"]
+        summary = payload["runner_policy_decision_summary"]
+        self.assertEqual(approval["approval_request_version"], "agent_runner_approval_request_v1")
+        self.assertEqual(policy["policy_decision_version"], "agent_runner_policy_decision_v1")
+        self.assertTrue(policy["dry_run"])
+        self.assertFalse(policy["policy_approved"])
+        self.assertFalse(policy["write_authorized"])
+        self.assertEqual(summary["summary_version"], "agent_runner_policy_decision_summary_v1")
+        self.assertEqual(summary["policy_decision_status"], policy["policy_decision_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_approval_request_status"],
+            approval["approval_request_status"],
+        )
+

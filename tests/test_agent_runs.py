@@ -3112,3 +3112,227 @@ class AgentRunnerPersistGateAuditLedgerTests(unittest.TestCase):
         self.assertFalse(persist_gate["write_authorized"])
         self.assertFalse(audit_ledger["audit_ledger_recorded"])
 
+
+class AgentRunnerApprovalPolicyDecisionTests(unittest.TestCase):
+    def test_approval_request_and_policy_decision_wait_for_real_output(self):
+        from agent_runs import (
+            build_agent_runner_approval_request,
+            build_agent_runner_approval_request_summary,
+            build_agent_runner_audit_ledger,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_policy_decision,
+            build_agent_runner_policy_decision_summary,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        project = {
+            "project_id": "project_approval_ready",
+            "graph_summary": {"existing_state": "kept"},
+        }
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_approval_ready",
+                "overall_status": "ready_for_agent_run",
+                "next_action_type": "start_agent_run",
+                "next_agent_id": "planner_agent",
+                "can_start_agent_run": True,
+                "user_action_required": False,
+            },
+            project=project,
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal, project=project)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        approval_request = build_agent_runner_approval_request(persist_gate, audit_ledger)
+        approval_summary = build_agent_runner_approval_request_summary(approval_request)
+        policy_decision = build_agent_runner_policy_decision(approval_request)
+        policy_summary = build_agent_runner_policy_decision_summary(policy_decision)
+
+        self.assertEqual(approval_request["approval_request_version"], "agent_runner_approval_request_v1")
+        self.assertEqual(approval_request["approval_request_status"], "approval_request_waiting_for_real_agent_output")
+        self.assertFalse(approval_request["approval_granted"])
+        self.assertFalse(approval_request["approval_recorded"])
+        self.assertFalse(approval_request["write_authorized"])
+        self.assertEqual(approval_request["required_approval_count"], 3)
+        self.assertEqual(approval_request["approval_message"]["message_type"], "runner_approval_request_dry_run")
+        self.assertEqual(approval_summary["summary_version"], "agent_runner_approval_request_summary_v1")
+
+        self.assertEqual(policy_decision["policy_decision_version"], "agent_runner_policy_decision_v1")
+        self.assertEqual(policy_decision["policy_decision_status"], "policy_decision_waiting_for_real_agent_output")
+        self.assertFalse(policy_decision["policy_approved"])
+        self.assertFalse(policy_decision["policy_decision_recorded"])
+        self.assertFalse(policy_decision["write_authorized"])
+        self.assertEqual(policy_decision["policy_check_count"], 4)
+        self.assertEqual(policy_decision["decision_message"]["message_type"], "runner_policy_decision_dry_run")
+        self.assertEqual(policy_summary["summary_version"], "agent_runner_policy_decision_summary_v1")
+
+    def test_approval_policy_waits_for_user_input(self):
+        from agent_runs import (
+            build_agent_runner_approval_request,
+            build_agent_runner_audit_ledger,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_policy_decision,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_approval_waiting",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_approval_waiting"},
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        approval_request = build_agent_runner_approval_request(persist_gate, audit_ledger)
+        policy_decision = build_agent_runner_policy_decision(approval_request)
+
+        self.assertEqual(approval_request["approval_request_status"], "approval_request_waiting_for_user")
+        self.assertEqual(policy_decision["policy_decision_status"], "policy_decision_waiting_for_user")
+        self.assertFalse(approval_request["approval_granted"])
+        self.assertFalse(policy_decision["policy_approved"])
+
+    def test_approval_policy_blocks_invalid_target(self):
+        from agent_runs import (
+            build_agent_runner_approval_request,
+            build_agent_runner_audit_ledger,
+            build_agent_runner_completion_receipt,
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_execution_receipt,
+            build_agent_runner_graph_transition_proposal,
+            build_agent_runner_handoff_checkpoint,
+            build_agent_runner_invocation_attempt,
+            build_agent_runner_invocation_envelope,
+            build_agent_runner_invocation_result,
+            build_agent_runner_mutation_guard,
+            build_agent_runner_next_agent_unlock,
+            build_agent_runner_persist_gate,
+            build_agent_runner_plan,
+            build_agent_runner_policy_decision,
+            build_agent_runner_queue_claim,
+            build_agent_runner_queue_item,
+            build_agent_runner_rollback_plan,
+            build_agent_runner_state_projection,
+            build_agent_runner_transition_commit_plan,
+            build_agent_runner_transition_persist_request,
+            build_agent_runner_worker_lease,
+            build_agent_runner_work_order,
+        )
+
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_approval_blocked",
+                "overall_status": "unknown",
+                "next_action_type": "unknown_action",
+                "next_agent_id": "missing_agent",
+                "user_action_required": False,
+            }
+        )
+        ticket = build_agent_runner_dispatch_ticket(plan)
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        order = build_agent_runner_work_order(plan, ticket, event, receipt)
+        queue_item = build_agent_runner_queue_item(order)
+        claim = build_agent_runner_queue_claim(queue_item)
+        lease = build_agent_runner_worker_lease(claim)
+        envelope = build_agent_runner_invocation_envelope(lease)
+        attempt = build_agent_runner_invocation_attempt(envelope)
+        result = build_agent_runner_invocation_result(attempt)
+        completion = build_agent_runner_completion_receipt(result)
+        checkpoint = build_agent_runner_handoff_checkpoint(completion)
+        unlock = build_agent_runner_next_agent_unlock(checkpoint)
+        proposal = build_agent_runner_graph_transition_proposal(unlock)
+        projection = build_agent_runner_state_projection(proposal)
+        commit_plan = build_agent_runner_transition_commit_plan(projection)
+        guard = build_agent_runner_mutation_guard(commit_plan)
+        persist_request = build_agent_runner_transition_persist_request(guard)
+        rollback_plan = build_agent_runner_rollback_plan(persist_request)
+        persist_gate = build_agent_runner_persist_gate(persist_request, rollback_plan)
+        audit_ledger = build_agent_runner_audit_ledger(persist_gate)
+        approval_request = build_agent_runner_approval_request(persist_gate, audit_ledger)
+        policy_decision = build_agent_runner_policy_decision(approval_request)
+
+        self.assertEqual(approval_request["approval_request_status"], "approval_request_blocked")
+        self.assertEqual(policy_decision["policy_decision_status"], "policy_decision_blocked")
+        self.assertFalse(approval_request["approval_granted"])
+        self.assertFalse(policy_decision["policy_approved"])
+

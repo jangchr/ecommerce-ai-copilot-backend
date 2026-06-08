@@ -13303,6 +13303,220 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_APPROVAL_POLICY_PANEL_BUNDLE_MARKER = 'Project Workspace approval policy panel bundle';
+        let latestProjectRunnerApprovalRequest = {};
+        let latestProjectRunnerPolicyDecision = {};
+
+        function projectWorkspaceApprovalRequestFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerApprovalRequest && Object.keys(latestProjectRunnerApprovalRequest).length
+                ? latestProjectRunnerApprovalRequest
+                : workspace?.runner_approval_request || {};
+        }
+
+        function projectWorkspacePolicyDecisionFromWorkspace(workspace = latestProjectWorkspace) {
+            return latestProjectRunnerPolicyDecision && Object.keys(latestProjectRunnerPolicyDecision).length
+                ? latestProjectRunnerPolicyDecision
+                : workspace?.runner_policy_decision || {};
+        }
+
+        function projectWorkspacePolicyDecisionStatusLabel(policy = {}) {
+            const status = String(policy.policy_decision_status || 'not_refreshed');
+            const labels = {
+                policy_decision_waiting_for_real_agent_output: t('policyDecisionStatusWaitingForRealOutput'),
+                policy_decision_waiting_for_user: t('policyDecisionStatusWaitingForUser'),
+                policy_decision_review_required: t('policyDecisionStatusReviewRequired'),
+                policy_decision_blocked: t('policyDecisionStatusBlocked'),
+                not_refreshed: t('policyDecisionStatusNotRefreshed')
+            };
+            return labels[status] || status;
+        }
+
+        function projectWorkspaceApprovalPolicyCopyText(
+            approvalRequest = projectWorkspaceApprovalRequestFromWorkspace(),
+            policyDecision = projectWorkspacePolicyDecisionFromWorkspace()
+        ) {
+            return [
+                t('approvalPolicyCopyTitle'),
+                `${t('projectId')}: ${policyDecision.project_id || approvalRequest.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('approvalRequestId')}: ${approvalRequest.approval_request_id || t('none')}`,
+                `${t('policyDecisionId')}: ${policyDecision.policy_decision_id || t('none')}`,
+                `${t('approvalRequestStatus')}: ${approvalRequest.approval_request_status || 'not_refreshed'}`,
+                `${t('policyDecisionStatus')}: ${policyDecision.policy_decision_status || 'not_refreshed'}`,
+                `${t('approvalGranted')}: ${Boolean(approvalRequest.approval_granted)}`,
+                `${t('policyApproved')}: ${Boolean(policyDecision.policy_approved)}`,
+                `${t('policyCheckCount')}: ${policyDecision.policy_check_count || 0}`,
+                '',
+                JSON.stringify({ approvalRequest, policyDecision }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceApprovalPolicy() {
+            const status = document.getElementById('projectWorkspaceApprovalPolicyStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(projectWorkspaceApprovalPolicyCopyText());
+                if (status) status.textContent = t('approvalPolicyCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('approvalPolicyCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceApprovalPolicy(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceApprovalPolicyStatus')
+                || document.getElementById('projectWorkspacePersistGateAuditStatus')
+                || document.getElementById('projectWorkspacePersistRequestRollbackStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('approvalPolicyDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_approval_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/approval/dry-run`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error(`${t('approvalPolicyDryRunFailed')} ${response.status}`);
+                }
+                const payload = await response.json();
+                latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
+                latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
+                latestProjectRunnerExecutionReceipt = payload.runner_execution_receipt || {};
+                latestProjectRunnerWorkOrder = payload.runner_work_order || {};
+                latestProjectRunnerQueueItem = payload.runner_queue_item || {};
+                latestProjectRunnerQueueClaim = payload.runner_queue_claim || {};
+                latestProjectRunnerWorkerLease = payload.runner_worker_lease || {};
+                latestProjectRunnerInvocationEnvelope = payload.runner_invocation_envelope || {};
+                latestProjectRunnerInvocationAttempt = payload.runner_invocation_attempt || {};
+                latestProjectRunnerInvocationResult = payload.runner_invocation_result || {};
+                latestProjectRunnerCompletionReceipt = payload.runner_completion_receipt || {};
+                latestProjectRunnerHandoffCheckpoint = payload.runner_handoff_checkpoint || {};
+                latestProjectRunnerNextAgentUnlock = payload.runner_next_agent_unlock || {};
+                latestProjectRunnerGraphTransitionProposal = payload.runner_graph_transition_proposal || {};
+                latestProjectRunnerStateProjection = payload.runner_state_projection || {};
+                latestProjectRunnerTransitionCommitPlan = payload.runner_transition_commit_plan || {};
+                latestProjectRunnerMutationGuard = payload.runner_mutation_guard || {};
+                latestProjectRunnerTransitionPersistRequest = payload.runner_transition_persist_request || {};
+                latestProjectRunnerRollbackPlan = payload.runner_rollback_plan || {};
+                latestProjectRunnerPersistGate = payload.runner_persist_gate || {};
+                latestProjectRunnerAuditLedger = payload.runner_audit_ledger || {};
+                latestProjectRunnerApprovalRequest = payload.runner_approval_request || {};
+                latestProjectRunnerPolicyDecision = payload.runner_policy_decision || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    project: payload.project || latestProjectWorkspace?.project || {},
+                    planner_recommendation: payload.planner_recommendation || latestProjectWorkspace?.planner_recommendation || {},
+                    runner_plan: latestProjectRunnerPlan,
+                    runner_plan_summary: payload.runner_plan_summary || {},
+                    runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
+                    runner_dispatch_summary: payload.runner_dispatch_summary || {},
+                    runner_dispatch_event: latestProjectRunnerDispatchEvent,
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    runner_execution_receipt: latestProjectRunnerExecutionReceipt,
+                    runner_execution_receipt_summary: payload.runner_execution_receipt_summary || {},
+                    runner_work_order: latestProjectRunnerWorkOrder,
+                    runner_work_order_summary: payload.runner_work_order_summary || {},
+                    runner_queue_item: latestProjectRunnerQueueItem,
+                    runner_queue_item_summary: payload.runner_queue_item_summary || {},
+                    runner_queue_claim: latestProjectRunnerQueueClaim,
+                    runner_queue_claim_summary: payload.runner_queue_claim_summary || {},
+                    runner_worker_lease: latestProjectRunnerWorkerLease,
+                    runner_worker_lease_summary: payload.runner_worker_lease_summary || {},
+                    runner_invocation_envelope: latestProjectRunnerInvocationEnvelope,
+                    runner_invocation_envelope_summary: payload.runner_invocation_envelope_summary || {},
+                    runner_invocation_attempt: latestProjectRunnerInvocationAttempt,
+                    runner_invocation_attempt_summary: payload.runner_invocation_attempt_summary || {},
+                    runner_invocation_result: latestProjectRunnerInvocationResult,
+                    runner_invocation_result_summary: payload.runner_invocation_result_summary || {},
+                    runner_completion_receipt: latestProjectRunnerCompletionReceipt,
+                    runner_completion_receipt_summary: payload.runner_completion_receipt_summary || {},
+                    runner_handoff_checkpoint: latestProjectRunnerHandoffCheckpoint,
+                    runner_handoff_checkpoint_summary: payload.runner_handoff_checkpoint_summary || {},
+                    runner_next_agent_unlock: latestProjectRunnerNextAgentUnlock,
+                    runner_next_agent_unlock_summary: payload.runner_next_agent_unlock_summary || {},
+                    runner_graph_transition_proposal: latestProjectRunnerGraphTransitionProposal,
+                    runner_graph_transition_proposal_summary: payload.runner_graph_transition_proposal_summary || {},
+                    runner_state_projection: latestProjectRunnerStateProjection,
+                    runner_state_projection_summary: payload.runner_state_projection_summary || {},
+                    runner_transition_commit_plan: latestProjectRunnerTransitionCommitPlan,
+                    runner_transition_commit_plan_summary: payload.runner_transition_commit_plan_summary || {},
+                    runner_mutation_guard: latestProjectRunnerMutationGuard,
+                    runner_mutation_guard_summary: payload.runner_mutation_guard_summary || {},
+                    runner_transition_persist_request: latestProjectRunnerTransitionPersistRequest,
+                    runner_transition_persist_request_summary: payload.runner_transition_persist_request_summary || {},
+                    runner_rollback_plan: latestProjectRunnerRollbackPlan,
+                    runner_rollback_plan_summary: payload.runner_rollback_plan_summary || {},
+                    runner_persist_gate: latestProjectRunnerPersistGate,
+                    runner_persist_gate_summary: payload.runner_persist_gate_summary || {},
+                    runner_audit_ledger: latestProjectRunnerAuditLedger,
+                    runner_audit_ledger_summary: payload.runner_audit_ledger_summary || {},
+                    runner_approval_request: latestProjectRunnerApprovalRequest,
+                    runner_approval_request_summary: payload.runner_approval_request_summary || {},
+                    runner_policy_decision: latestProjectRunnerPolicyDecision,
+                    runner_policy_decision_summary: payload.runner_policy_decision_summary || {}
+                };
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_approval_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_approval_dry_run');
+                if (status) status.textContent = t('approvalPolicyDryRunComplete');
+
+                const gatePanel = document.getElementById('projectWorkspacePersistGateAuditPanel');
+                if (gatePanel) gatePanel.outerHTML = renderProjectWorkspacePersistGateAuditPanel(latestProjectWorkspace);
+                const approvalPanel = document.getElementById('projectWorkspaceApprovalPolicyPanel');
+                if (approvalPanel) approvalPanel.outerHTML = renderProjectWorkspaceApprovalPolicyPanel(latestProjectWorkspace);
+
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_approval_dry_run');
+                if (status) status.textContent = error.message || t('approvalPolicyDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceApprovalPolicyPanel(workspace = latestProjectWorkspace) {
+            const approvalRequest = projectWorkspaceApprovalRequestFromWorkspace(workspace);
+            const policyDecision = projectWorkspacePolicyDecisionFromWorkspace(workspace);
+            const hasPolicyDecision = Boolean(policyDecision && Object.keys(policyDecision).length);
+            const statusLabel = projectWorkspacePolicyDecisionStatusLabel(policyDecision);
+            return `
+                <div class="section-block" id="projectWorkspaceApprovalPolicyPanel" data-project-approval-policy-panel-marker="Project Workspace approval policy panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('approvalPolicyPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('approvalPolicyPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceApprovalPolicyBtn" type="button" data-project-approval-policy-dry-run-action="Project Workspace approval policy panel bundle" onclick="dryRunProjectWorkspaceApprovalPolicy()">${escapeHTML(t('dryRunApprovalPolicy'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceApprovalPolicyBtn" type="button" onclick="copyProjectWorkspaceApprovalPolicy()">${escapeHTML(t('copyApprovalPolicy'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('policyDecisionStatus'))}</div>
+                            <strong data-policy-decision-status="${escapeHTML(policyDecision.policy_decision_status || 'not_refreshed')}">${escapeHTML(statusLabel)}</strong>
+                            <div class="field-helper">${escapeHTML(t('approvalPolicyDryRunHelper'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('approvalRequestId'))}</div>
+                            <strong data-approval-request-id="${escapeHTML(approvalRequest.approval_request_id || '')}">${escapeHTML(approvalRequest.approval_request_id || t('approvalPolicyNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('approvalGranted'))}: ${escapeHTML(String(Boolean(approvalRequest.approval_granted)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('policyCheckCount'))}</div>
+                            <strong data-policy-check-count="${escapeHTML(String(policyDecision.policy_check_count || 0))}">${escapeHTML(String(policyDecision.policy_check_count || 0))}</strong>
+                            <div class="field-helper">${escapeHTML(t('policyApproved'))}: ${escapeHTML(String(Boolean(policyDecision.policy_approved)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('approvalPolicyAuditPreview'))}</div>
+                        ${hasPolicyDecision ? `<pre class="debug" data-approval-policy-audit-preview="Project Workspace approval policy panel bundle">${escapeHTML(projectWorkspaceApprovalPolicyCopyText(approvalRequest, policyDecision))}</pre>` : `<div class="recent-empty">${escapeHTML(t('approvalPolicyNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceApprovalPolicyStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspacePersistGateAuditPanel(workspace = latestProjectWorkspace) {
             const persistGate = projectWorkspacePersistGateFromWorkspace(workspace);
             const auditLedger = projectWorkspaceAuditLedgerFromWorkspace(workspace);
@@ -14038,6 +14252,7 @@
                     ${renderProjectWorkspaceCommitPlanGuardPanel(workspace)}
                     ${renderProjectWorkspacePersistRequestRollbackPanel(workspace)}
                     ${renderProjectWorkspacePersistGateAuditPanel(workspace)}
+                    ${renderProjectWorkspaceApprovalPolicyPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
@@ -16483,6 +16698,65 @@
             persistGateAuditDryRunFailed: 'Persist gate audit dry-run \u5931\u8d25\u3002',
             persistGateAuditCopied: '\u5199\u5165\u95f8\u95e8\u5ba1\u8ba1\u5df2\u590d\u5236\u3002',
             persistGateAuditCopyFailed: '\u590d\u5236\u5199\u5165\u95f8\u95e8\u5ba1\u8ba1\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceApprovalPolicyPanelBundleMarker: 'Project Workspace approval policy panel bundle',
+            approvalPolicyPanelTitle: 'Approval request & policy decision',
+            approvalPolicyPanelHelper: 'Dry-run approval request and policy decision. This prepares explicit review without authorizing writes.',
+            dryRunApprovalPolicy: 'Dry-run approval',
+            copyApprovalPolicy: 'Copy approval',
+            approvalPolicyCopyTitle: 'Project approval request and policy decision',
+            approvalRequestId: 'Approval request ID',
+            policyDecisionId: 'Policy decision ID',
+            approvalRequestStatus: 'Approval request status',
+            policyDecisionStatus: 'Policy decision status',
+            approvalGranted: 'Approval granted',
+            policyApproved: 'Policy approved',
+            policyCheckCount: 'Policy check count',
+            approvalPolicyAuditPreview: 'Approval policy audit preview',
+            policyDecisionStatusWaitingForRealOutput: 'Waiting for real Agent output',
+            policyDecisionStatusWaitingForUser: 'Policy decision waiting for user',
+            policyDecisionStatusReviewRequired: 'Policy review required',
+            policyDecisionStatusBlocked: 'Policy decision blocked',
+            policyDecisionStatusNotRefreshed: 'Not refreshed',
+            approvalPolicyNotRefreshedYet: 'Approval policy has not been refreshed yet.',
+            approvalPolicyDryRunHelper: 'Dry run only: no approval is granted, no policy approval is recorded, no write is authorized.',
+            approvalPolicyDryRunRunning: 'Building approval policy dry-run...',
+            approvalPolicyDryRunComplete: 'Approval policy dry-run complete.',
+            approvalPolicyDryRunFailed: 'Approval policy dry-run failed.',
+            approvalPolicyCopied: 'Approval policy copied.',
+            approvalPolicyCopyFailed: 'Could not copy approval policy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceApprovalPolicyPanelBundleMarker: 'Project Workspace approval policy panel bundle',
+            approvalPolicyPanelTitle: '\u5ba1\u6279\u7533\u8bf7\u4e0e\u7b56\u7565\u51b3\u7b56',
+            approvalPolicyPanelHelper: '\u5ba1\u6279\u7533\u8bf7\u548c\u7b56\u7565\u51b3\u7b56\u7684 dry-run\u3002\u5b83\u51c6\u5907\u663e\u5f0f\u5ba1\u6279\uff0c\u4f46\u4e0d\u6388\u6743\u5199\u5165\u3002',
+            dryRunApprovalPolicy: 'Dry-run \u5ba1\u6279',
+            copyApprovalPolicy: '\u590d\u5236\u5ba1\u6279',
+            approvalPolicyCopyTitle: '\u9879\u76ee\u5ba1\u6279\u7533\u8bf7\u4e0e\u7b56\u7565\u51b3\u7b56',
+            approvalRequestId: '\u5ba1\u6279\u7533\u8bf7 ID',
+            policyDecisionId: '\u7b56\u7565\u51b3\u7b56 ID',
+            approvalRequestStatus: '\u5ba1\u6279\u7533\u8bf7\u72b6\u6001',
+            policyDecisionStatus: '\u7b56\u7565\u51b3\u7b56\u72b6\u6001',
+            approvalGranted: '\u662f\u5426\u5df2\u6279\u51c6',
+            policyApproved: '\u7b56\u7565\u662f\u5426\u901a\u8fc7',
+            policyCheckCount: '\u7b56\u7565\u68c0\u67e5\u6570',
+            approvalPolicyAuditPreview: '\u5ba1\u6279\u7b56\u7565\u5ba1\u8ba1\u9884\u89c8',
+            policyDecisionStatusWaitingForRealOutput: '\u7b49\u5f85\u771f\u5b9e Agent \u8f93\u51fa',
+            policyDecisionStatusWaitingForUser: '\u7b56\u7565\u51b3\u7b56\u7b49\u5f85\u7528\u6237',
+            policyDecisionStatusReviewRequired: '\u9700\u8981\u7b56\u7565\u5ba1\u6838',
+            policyDecisionStatusBlocked: '\u7b56\u7565\u51b3\u7b56\u5df2\u963b\u585e',
+            policyDecisionStatusNotRefreshed: '\u672a\u5237\u65b0',
+            approvalPolicyNotRefreshedYet: '\u5ba1\u6279\u7b56\u7565\u5c1a\u672a\u5237\u65b0\u3002',
+            approvalPolicyDryRunHelper: '\u4ec5 dry run\uff1a\u4e0d\u6279\u51c6\uff0c\u4e0d\u8bb0\u5f55\u7b56\u7565\u901a\u8fc7\uff0c\u4e0d\u6388\u6743\u5199\u5165\u3002',
+            approvalPolicyDryRunRunning: '\u6b63\u5728\u751f\u6210 approval policy dry-run...',
+            approvalPolicyDryRunComplete: 'Approval policy dry-run \u5b8c\u6210\u3002',
+            approvalPolicyDryRunFailed: 'Approval policy dry-run \u5931\u8d25\u3002',
+            approvalPolicyCopied: '\u5ba1\u6279\u7b56\u7565\u5df2\u590d\u5236\u3002',
+            approvalPolicyCopyFailed: '\u590d\u5236\u5ba1\u6279\u7b56\u7565\u5931\u8d25\u3002'
         });
 
 

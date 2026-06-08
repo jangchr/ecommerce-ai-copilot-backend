@@ -4884,6 +4884,343 @@ def build_agent_runner_audit_ledger_summary(audit_ledger: dict[str, Any]) -> dic
 
 
 
+AGENT_RUNNER_APPROVAL_REQUEST_VERSION = "agent_runner_approval_request_v1"
+AGENT_RUNNER_POLICY_DECISION_VERSION = "agent_runner_policy_decision_v1"
+
+
+def _approval_request_status_from_gate(persist_gate: dict[str, Any]) -> str:
+    safe_gate = persist_gate if isinstance(persist_gate, dict) else {}
+    status = str(safe_gate.get("persist_gate_status") or "persist_gate_blocked")
+    if status == "persist_gate_waiting_for_real_agent_output":
+        return "approval_request_waiting_for_real_agent_output"
+    if status == "persist_gate_waiting_for_user":
+        return "approval_request_waiting_for_user"
+    if status == "persist_gate_waiting_for_explicit_approval":
+        return "approval_request_ready_for_explicit_review"
+    return "approval_request_blocked"
+
+
+def build_agent_runner_approval_request(
+    persist_gate: dict[str, Any],
+    audit_ledger: dict[str, Any] | None = None,
+    requested_by: str = "runner_approval_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run approval request for a future persist gate.
+
+    This prepares the approval envelope. It does not approve writes, persist
+    state, execute agents, call providers, or record approval.
+    """
+
+    gate = persist_gate if isinstance(persist_gate, dict) else {}
+    ledger = audit_ledger if isinstance(audit_ledger, dict) else {}
+    project_id = str(gate.get("project_id") or ledger.get("project_id") or "demo_project_default")
+    target_agent_id = str(gate.get("target_agent_id") or ledger.get("target_agent_id") or "")
+    approval_request_status = _approval_request_status_from_gate(gate)
+    approval_request_id = f"approval_request_{project_id}_{target_agent_id or 'none'}_{approval_request_status}".replace(" ", "_")
+
+    required_approvals = [
+        {
+            "approval_id": "explicit_persist_approval",
+            "required": True,
+            "present": False,
+            "message": "A future explicit approval is required before any persistent write.",
+        },
+        {
+            "approval_id": "rollback_readiness_approval",
+            "required": True,
+            "present": bool(gate.get("rollback_available")),
+            "message": "Rollback readiness must be confirmed before persistent write.",
+        },
+        {
+            "approval_id": "real_agent_output_approval",
+            "required": True,
+            "present": approval_request_status not in {"approval_request_waiting_for_real_agent_output"},
+            "message": "Real Agent output must exist before approval can be granted.",
+        },
+    ]
+
+    if approval_request_status == "approval_request_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_approval"
+        approval_message_text = "Approval request is waiting for real Agent output."
+    elif approval_request_status == "approval_request_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        approval_message_text = "Approval request is waiting for required user action."
+    elif approval_request_status == "approval_request_ready_for_explicit_review":
+        recommended_next_state = "add_explicit_review_ui_or_policy_gate"
+        approval_message_text = "Approval request is structurally ready, but no explicit approval exists in dry-run."
+    else:
+        recommended_next_state = "fix_approval_request_blockers"
+        approval_message_text = "Approval request is blocked by persist gate, audit ledger, or upstream checks."
+
+    approval_payload = {
+        "approval_request_version": AGENT_RUNNER_APPROVAL_REQUEST_VERSION,
+        "approval_request_status": approval_request_status,
+        "approval_request_id": approval_request_id,
+        "persist_gate_id": gate.get("persist_gate_id"),
+        "audit_ledger_id": ledger.get("audit_ledger_id"),
+        "target_agent_id": target_agent_id,
+        "required_approvals": required_approvals,
+        "required_approval_count": len(required_approvals),
+        "dry_run": True,
+        "approval_recorded": False,
+        "approval_granted": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+    }
+
+    approval_message = build_agent_message(
+        message_type="runner_approval_request_dry_run",
+        source_agent_id="runner_approval_manager",
+        target_agent_id=target_agent_id,
+        payload=approval_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "approval_request_version": AGENT_RUNNER_APPROVAL_REQUEST_VERSION,
+        "approval_request_id": approval_request_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_approval_dry_run_api"),
+        "approval_request_status": approval_request_status,
+        "approval_granted": False,
+        "approval_recorded": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(gate.get("target_agent_stage") or ledger.get("target_agent_stage") or ""),
+        "persist_gate_id": str(gate.get("persist_gate_id") or ""),
+        "persist_gate_status": str(gate.get("persist_gate_status") or ""),
+        "audit_ledger_id": str(ledger.get("audit_ledger_id") or ""),
+        "audit_ledger_status": str(ledger.get("audit_ledger_status") or ""),
+        "required_approvals": required_approvals,
+        "required_approval_count": len(required_approvals),
+        "recommended_next_state": recommended_next_state,
+        "approval_message_text": approval_message_text,
+        "persist_gate_summary": build_agent_runner_persist_gate_summary(gate),
+        "audit_ledger_summary": build_agent_runner_audit_ledger_summary(ledger),
+        "gate_message": deepcopy(gate.get("gate_message") or {}),
+        "audit_message": deepcopy(ledger.get("audit_message") or {}),
+        "approval_payload": approval_payload,
+        "approval_message": approval_message,
+        "dry_run": True,
+        "persist_gate_recorded": False,
+        "audit_ledger_recorded": False,
+        "explicit_approval_present": False,
+        "write_authorized": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_approval_request_summary(approval_request: dict[str, Any]) -> dict[str, Any]:
+    safe_request = approval_request if isinstance(approval_request, dict) else {}
+    return {
+        "summary_version": "agent_runner_approval_request_summary_v1",
+        "approval_request_version": str(safe_request.get("approval_request_version") or AGENT_RUNNER_APPROVAL_REQUEST_VERSION),
+        "approval_request_id": str(safe_request.get("approval_request_id") or ""),
+        "project_id": str(safe_request.get("project_id") or "demo_project_default"),
+        "approval_request_status": str(safe_request.get("approval_request_status") or "approval_request_blocked"),
+        "approval_granted": False,
+        "approval_recorded": False,
+        "target_agent_id": str(safe_request.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_request.get("target_agent_stage") or ""),
+        "persist_gate_id": str(safe_request.get("persist_gate_id") or ""),
+        "audit_ledger_id": str(safe_request.get("audit_ledger_id") or ""),
+        "required_approval_count": int(safe_request.get("required_approval_count") or 0),
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def _policy_decision_status_from_approval(approval_request: dict[str, Any]) -> str:
+    safe_request = approval_request if isinstance(approval_request, dict) else {}
+    status = str(safe_request.get("approval_request_status") or "approval_request_blocked")
+    if status == "approval_request_waiting_for_real_agent_output":
+        return "policy_decision_waiting_for_real_agent_output"
+    if status == "approval_request_waiting_for_user":
+        return "policy_decision_waiting_for_user"
+    if status == "approval_request_ready_for_explicit_review":
+        return "policy_decision_review_required"
+    return "policy_decision_blocked"
+
+
+def build_agent_runner_policy_decision(
+    approval_request: dict[str, Any],
+    requested_by: str = "runner_approval_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run policy decision from an approval request.
+
+    The decision stays non-approving in dry-run mode.
+    """
+
+    request = approval_request if isinstance(approval_request, dict) else {}
+    project_id = str(request.get("project_id") or "demo_project_default")
+    target_agent_id = str(request.get("target_agent_id") or "")
+    policy_decision_status = _policy_decision_status_from_approval(request)
+    policy_decision_id = f"policy_decision_{project_id}_{target_agent_id or 'none'}_{policy_decision_status}".replace(" ", "_")
+
+    policy_checks = [
+        {
+            "policy_id": "dry_run_no_write",
+            "passed": True,
+            "message": "Dry-run policy forbids writes.",
+        },
+        {
+            "policy_id": "approval_granted",
+            "passed": False,
+            "message": "Approval is not granted in dry-run mode.",
+        },
+        {
+            "policy_id": "cost_boundary",
+            "passed": True,
+            "message": "No external provider call or cost is allowed in this dry-run chain.",
+        },
+        {
+            "policy_id": "autonomous_routing_boundary",
+            "passed": True,
+            "message": "Autonomous LLM routing remains disabled.",
+        },
+    ]
+
+    if policy_decision_status == "policy_decision_waiting_for_real_agent_output":
+        recommended_next_state = "run_real_agent_before_policy_decision"
+        policy_message_text = "Policy decision is waiting for real Agent output."
+    elif policy_decision_status == "policy_decision_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        policy_message_text = "Policy decision is waiting for required user action."
+    elif policy_decision_status == "policy_decision_review_required":
+        recommended_next_state = "implement_explicit_policy_review_before_persist"
+        policy_message_text = "Policy decision requires explicit review; dry-run cannot approve writes."
+    else:
+        recommended_next_state = "fix_policy_decision_blockers"
+        policy_message_text = "Policy decision is blocked by approval request or upstream checks."
+
+    decision_payload = {
+        "policy_decision_version": AGENT_RUNNER_POLICY_DECISION_VERSION,
+        "policy_decision_status": policy_decision_status,
+        "policy_decision_id": policy_decision_id,
+        "approval_request_id": request.get("approval_request_id"),
+        "target_agent_id": target_agent_id,
+        "policy_checks": policy_checks,
+        "policy_check_count": len(policy_checks),
+        "dry_run": True,
+        "policy_decision_recorded": False,
+        "policy_approved": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+    }
+
+    decision_message = build_agent_message(
+        message_type="runner_policy_decision_dry_run",
+        source_agent_id="runner_approval_manager",
+        target_agent_id=target_agent_id,
+        payload=decision_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "policy_decision_version": AGENT_RUNNER_POLICY_DECISION_VERSION,
+        "policy_decision_id": policy_decision_id,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_approval_dry_run_api"),
+        "policy_decision_status": policy_decision_status,
+        "policy_approved": False,
+        "policy_decision_recorded": False,
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(request.get("target_agent_stage") or ""),
+        "approval_request_id": str(request.get("approval_request_id") or ""),
+        "approval_request_status": str(request.get("approval_request_status") or ""),
+        "persist_gate_id": str(request.get("persist_gate_id") or ""),
+        "audit_ledger_id": str(request.get("audit_ledger_id") or ""),
+        "policy_checks": policy_checks,
+        "policy_check_count": len(policy_checks),
+        "recommended_next_state": recommended_next_state,
+        "policy_message_text": policy_message_text,
+        "approval_request_summary": build_agent_runner_approval_request_summary(request),
+        "persist_gate_summary": deepcopy(request.get("persist_gate_summary") or {}),
+        "audit_ledger_summary": deepcopy(request.get("audit_ledger_summary") or {}),
+        "approval_message": deepcopy(request.get("approval_message") or {}),
+        "decision_payload": decision_payload,
+        "decision_message": decision_message,
+        "dry_run": True,
+        "approval_granted": False,
+        "approval_recorded": False,
+        "persist_gate_recorded": False,
+        "audit_ledger_recorded": False,
+        "explicit_approval_present": False,
+        "write_authorized": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "next_agent_unlocked": False,
+        "handoff_complete": False,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_policy_decision_summary(policy_decision: dict[str, Any]) -> dict[str, Any]:
+    safe_decision = policy_decision if isinstance(policy_decision, dict) else {}
+    return {
+        "summary_version": "agent_runner_policy_decision_summary_v1",
+        "policy_decision_version": str(safe_decision.get("policy_decision_version") or AGENT_RUNNER_POLICY_DECISION_VERSION),
+        "policy_decision_id": str(safe_decision.get("policy_decision_id") or ""),
+        "project_id": str(safe_decision.get("project_id") or "demo_project_default"),
+        "policy_decision_status": str(safe_decision.get("policy_decision_status") or "policy_decision_blocked"),
+        "policy_approved": False,
+        "policy_decision_recorded": False,
+        "target_agent_id": str(safe_decision.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_decision.get("target_agent_stage") or ""),
+        "approval_request_id": str(safe_decision.get("approval_request_id") or ""),
+        "policy_check_count": int(safe_decision.get("policy_check_count") or 0),
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+        "agent_output_generated": False,
+        "agent_invoked": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,
