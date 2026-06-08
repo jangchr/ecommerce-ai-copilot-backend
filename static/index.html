@@ -14535,6 +14535,126 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_PROVIDER_FAILURE_PANEL_BUNDLE_MARKER = 'Project Workspace provider failure panel bundle';
+        let latestProjectRunnerProviderFailureTaxonomyPreview = {};
+        let latestProjectRunnerProviderRetryPolicyPreview = {};
+        let latestProjectRunnerProviderFallbackPlanPreview = {};
+        let latestProjectRunnerProviderCircuitBreakerPreview = {};
+        let latestProjectRunnerProviderFailureRecoveryHandoffPreview = {};
+        let latestProjectRunnerProviderFailureReceiptPreview = {};
+
+        function projectWorkspaceProviderFailureCopyText(workspace = latestProjectWorkspace) {
+            const taxonomy = Object.keys(latestProjectRunnerProviderFailureTaxonomyPreview || {}).length ? latestProjectRunnerProviderFailureTaxonomyPreview : workspace?.runner_provider_failure_taxonomy_preview || {};
+            const retry = Object.keys(latestProjectRunnerProviderRetryPolicyPreview || {}).length ? latestProjectRunnerProviderRetryPolicyPreview : workspace?.runner_provider_retry_policy_preview || {};
+            const fallback = Object.keys(latestProjectRunnerProviderFallbackPlanPreview || {}).length ? latestProjectRunnerProviderFallbackPlanPreview : workspace?.runner_provider_fallback_plan_preview || {};
+            const circuit = Object.keys(latestProjectRunnerProviderCircuitBreakerPreview || {}).length ? latestProjectRunnerProviderCircuitBreakerPreview : workspace?.runner_provider_circuit_breaker_preview || {};
+            const handoff = Object.keys(latestProjectRunnerProviderFailureRecoveryHandoffPreview || {}).length ? latestProjectRunnerProviderFailureRecoveryHandoffPreview : workspace?.runner_provider_failure_recovery_handoff_preview || {};
+            const receipt = Object.keys(latestProjectRunnerProviderFailureReceiptPreview || {}).length ? latestProjectRunnerProviderFailureReceiptPreview : workspace?.runner_provider_failure_receipt_preview || {};
+            return [
+                t('providerFailureCopyTitle'),
+                `${t('providerFailureTaxonomyStatus')}: ${taxonomy.provider_failure_taxonomy_status || 'not_refreshed'}`,
+                `${t('providerRetryPolicyStatus')}: ${retry.provider_retry_policy_status || 'not_refreshed'}`,
+                `${t('providerFallbackPlanStatus')}: ${fallback.provider_fallback_plan_status || 'not_refreshed'}`,
+                `${t('providerCircuitBreakerStatus')}: ${circuit.provider_circuit_breaker_status || 'not_refreshed'}`,
+                `${t('providerFailureRecoveryHandoffStatus')}: ${handoff.provider_failure_recovery_handoff_status || 'not_refreshed'}`,
+                `${t('providerFailureReceiptStatus')}: ${receipt.provider_failure_receipt_status || 'not_refreshed'}`,
+                `${t('providerTemporarilyBlocked')}: ${Boolean(receipt.provider_temporarily_blocked)}`,
+                '',
+                JSON.stringify({ taxonomy, retry, fallback, circuit, handoff, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderFailure() {
+            const status = document.getElementById('projectWorkspaceProviderFailureStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderFailureCopyText());
+                if (status) status.textContent = t('providerFailureCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerFailureCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceProviderFailure(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceProviderFailureStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('providerFailureDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_provider_failure_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/provider-failure/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('providerFailureDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerProviderFailureTaxonomyPreview = payload.runner_provider_failure_taxonomy_preview || {};
+                latestProjectRunnerProviderRetryPolicyPreview = payload.runner_provider_retry_policy_preview || {};
+                latestProjectRunnerProviderFallbackPlanPreview = payload.runner_provider_fallback_plan_preview || {};
+                latestProjectRunnerProviderCircuitBreakerPreview = payload.runner_provider_circuit_breaker_preview || {};
+                latestProjectRunnerProviderFailureRecoveryHandoffPreview = payload.runner_provider_failure_recovery_handoff_preview || {};
+                latestProjectRunnerProviderFailureReceiptPreview = payload.runner_provider_failure_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_provider_failure_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_provider_failure_dry_run');
+                if (status) status.textContent = t('providerFailureDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceProviderFailurePanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceProviderFailurePanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_provider_failure_dry_run');
+                if (status) status.textContent = error.message || t('providerFailureDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceProviderFailurePanel(workspace = latestProjectWorkspace) {
+            const taxonomy = Object.keys(latestProjectRunnerProviderFailureTaxonomyPreview || {}).length ? latestProjectRunnerProviderFailureTaxonomyPreview : workspace?.runner_provider_failure_taxonomy_preview || {};
+            const retry = Object.keys(latestProjectRunnerProviderRetryPolicyPreview || {}).length ? latestProjectRunnerProviderRetryPolicyPreview : workspace?.runner_provider_retry_policy_preview || {};
+            const circuit = Object.keys(latestProjectRunnerProviderCircuitBreakerPreview || {}).length ? latestProjectRunnerProviderCircuitBreakerPreview : workspace?.runner_provider_circuit_breaker_preview || {};
+            const receipt = Object.keys(latestProjectRunnerProviderFailureReceiptPreview || {}).length ? latestProjectRunnerProviderFailureReceiptPreview : workspace?.runner_provider_failure_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderFailurePanel" data-project-provider-failure-panel-marker="Project Workspace provider failure panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerFailurePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerFailurePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceProviderFailureBtn" type="button" data-project-provider-failure-dry-run-action="Project Workspace provider failure panel bundle" onclick="dryRunProjectWorkspaceProviderFailure()">${escapeHTML(t('dryRunProviderFailure'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderFailureBtn" type="button" onclick="copyProjectWorkspaceProviderFailure()">${escapeHTML(t('copyProviderFailure'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerFailureTaxonomyStatus'))}</div>
+                            <strong data-provider-failure-taxonomy-status="${escapeHTML(taxonomy.provider_failure_taxonomy_status || 'not_refreshed')}">${escapeHTML(taxonomy.provider_failure_taxonomy_status || t('providerFailureNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerRetryPolicyStatus'))}</div>
+                            <strong data-provider-retry-policy-status="${escapeHTML(retry.provider_retry_policy_status || 'not_refreshed')}">${escapeHTML(retry.provider_retry_policy_status || t('providerFailureNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerCircuitBreakerStatus'))}</div>
+                            <strong data-provider-circuit-breaker-status="${escapeHTML(circuit.provider_circuit_breaker_status || 'not_refreshed')}">${escapeHTML(circuit.provider_circuit_breaker_status || t('providerFailureNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('providerTemporarilyBlocked'))}: ${escapeHTML(String(Boolean(receipt.provider_temporarily_blocked)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerFailureAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-provider-failure-audit-preview="Project Workspace provider failure panel bundle">${escapeHTML(projectWorkspaceProviderFailureCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerFailureNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderFailureStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceProviderInvocationPanel(workspace = latestProjectWorkspace) {
             const router = Object.keys(latestProjectRunnerProviderInvocationRouterPreview || {}).length ? latestProjectRunnerProviderInvocationRouterPreview : workspace?.runner_provider_invocation_router_preview || {};
             const normalized = Object.keys(latestProjectRunnerNormalizedProviderResultPreview || {}).length ? latestProjectRunnerNormalizedProviderResultPreview : workspace?.runner_normalized_provider_result_preview || {};
@@ -15807,6 +15927,7 @@
                     ${renderProjectWorkspaceExecutionSandboxPanel(workspace)}
                     ${renderProjectWorkspaceProviderAdapterPanel(workspace)}
                     ${renderProjectWorkspaceProviderInvocationPanel(workspace)}
+                    ${renderProjectWorkspaceProviderFailurePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -18898,6 +19019,53 @@
             providerInvocationDryRunFailed: 'Provider invocation dry-run \u5931\u8d25\u3002',
             providerInvocationCopied: '\u5916\u90e8\u670d\u52a1\u8c03\u7528\u5df2\u590d\u5236\u3002',
             providerInvocationCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u8c03\u7528\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderFailurePanelBundleMarker: 'Project Workspace provider failure panel bundle',
+            providerFailurePanelTitle: 'Provider failure handling & circuit breaker',
+            providerFailurePanelHelper: 'Dry-run provider failure taxonomy, retry policy, fallback plan, circuit breaker, recovery handoff, and failure receipt.',
+            dryRunProviderFailure: 'Dry-run provider failure',
+            copyProviderFailure: 'Copy provider failure',
+            providerFailureCopyTitle: 'Project provider failure dry-run',
+            providerFailureTaxonomyStatus: 'Provider failure taxonomy status',
+            providerRetryPolicyStatus: 'Provider retry policy status',
+            providerFallbackPlanStatus: 'Provider fallback plan status',
+            providerCircuitBreakerStatus: 'Provider circuit breaker status',
+            providerFailureRecoveryHandoffStatus: 'Provider failure recovery handoff status',
+            providerFailureReceiptStatus: 'Provider failure receipt status',
+            providerTemporarilyBlocked: 'Provider temporarily blocked',
+            providerFailureAuditPreview: 'Provider failure audit preview',
+            providerFailureNotRefreshedYet: 'Provider failure has not been refreshed yet.',
+            providerFailureDryRunRunning: 'Building provider failure dry-run...',
+            providerFailureDryRunComplete: 'Provider failure dry-run complete.',
+            providerFailureDryRunFailed: 'Provider failure dry-run failed.',
+            providerFailureCopied: 'Provider failure copied.',
+            providerFailureCopyFailed: 'Could not copy provider failure.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderFailurePanelBundleMarker: 'Project Workspace provider failure panel bundle',
+            providerFailurePanelTitle: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5904\u7406\u4e0e\u7194\u65ad\u5668',
+            providerFailurePanelHelper: '\u5bf9\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5206\u7c7b\u3001\u91cd\u8bd5\u7b56\u7565\u3001\u964d\u7ea7\u65b9\u6848\u3001\u7194\u65ad\u5668\u3001\u6062\u590d\u4ea4\u63a5\u548c\u5931\u8d25\u56de\u6267\u505a dry-run\u3002',
+            dryRunProviderFailure: 'Dry-run \u5916\u90e8\u670d\u52a1\u5931\u8d25',
+            copyProviderFailure: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u5931\u8d25',
+            providerFailureCopyTitle: '\u9879\u76ee\u5916\u90e8\u670d\u52a1\u5931\u8d25 dry-run',
+            providerFailureTaxonomyStatus: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5206\u7c7b\u72b6\u6001',
+            providerRetryPolicyStatus: '\u5916\u90e8\u670d\u52a1\u91cd\u8bd5\u7b56\u7565\u72b6\u6001',
+            providerFallbackPlanStatus: '\u5916\u90e8\u670d\u52a1\u964d\u7ea7\u65b9\u6848\u72b6\u6001',
+            providerCircuitBreakerStatus: '\u5916\u90e8\u670d\u52a1\u7194\u65ad\u5668\u72b6\u6001',
+            providerFailureRecoveryHandoffStatus: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u6062\u590d\u4ea4\u63a5\u72b6\u6001',
+            providerFailureReceiptStatus: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u56de\u6267\u72b6\u6001',
+            providerTemporarilyBlocked: '\u5916\u90e8\u670d\u52a1\u662f\u5426\u6682\u65f6\u963b\u65ad',
+            providerFailureAuditPreview: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5ba1\u8ba1\u9884\u89c8',
+            providerFailureNotRefreshedYet: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5c1a\u672a\u5237\u65b0\u3002',
+            providerFailureDryRunRunning: '\u6b63\u5728\u751f\u6210 provider failure dry-run...',
+            providerFailureDryRunComplete: 'Provider failure dry-run \u5b8c\u6210\u3002',
+            providerFailureDryRunFailed: 'Provider failure dry-run \u5931\u8d25\u3002',
+            providerFailureCopied: '\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5df2\u590d\u5236\u3002',
+            providerFailureCopyFailed: '\u590d\u5236\u5916\u90e8\u670d\u52a1\u5931\u8d25\u5931\u8d25\u3002'
         });
 
 

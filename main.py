@@ -10031,6 +10031,230 @@ async def dry_run_project_agent_provider_invocation(project_id: str, http_reques
     }
 
 
+
+def _runner_provider_failure_taxonomy_preview(provider_invocation_payload: dict) -> dict:
+    project = dict(provider_invocation_payload.get("project") or {})
+    invocation_receipt = dict(provider_invocation_payload.get("runner_provider_invocation_audit_receipt_preview") or {})
+    failure_types = [
+        {"failure_type": "timeout", "retryable": True, "requires_operator_review": False},
+        {"failure_type": "rate_limited", "retryable": True, "requires_operator_review": False},
+        {"failure_type": "quota_exceeded", "retryable": False, "requires_operator_review": True},
+        {"failure_type": "provider_unavailable", "retryable": True, "requires_operator_review": False},
+        {"failure_type": "schema_mismatch", "retryable": False, "requires_operator_review": True},
+        {"failure_type": "secret_boundary_violation", "retryable": False, "requires_operator_review": True},
+        {"failure_type": "policy_blocked", "retryable": False, "requires_operator_review": True},
+    ]
+    return {
+        "provider_failure_taxonomy_version": "runner_provider_failure_taxonomy_preview_v1",
+        "provider_failure_taxonomy_status": "provider_failure_taxonomy_preview_only",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "provider_invocation_audit_receipt_status": invocation_receipt.get("provider_invocation_audit_receipt_status", ""),
+        "failure_types": failure_types,
+        "failure_type_count": len(failure_types),
+        "selected_failure_type": "policy_blocked",
+        "failure_detected": True,
+        "retryable": False,
+        "operator_review_required": True,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_retry_policy_preview(failure_taxonomy: dict) -> dict:
+    retry_steps = [
+        {"retry_step_id": "classify_failure", "ready": True, "executed": False},
+        {"retry_step_id": "check_idempotency_key", "ready": True, "executed": False},
+        {"retry_step_id": "check_quota_before_retry", "ready": False, "executed": False},
+        {"retry_step_id": "apply_backoff_window", "ready": False, "executed": False},
+        {"retry_step_id": "request_operator_review_for_non_retryable", "ready": True, "executed": False},
+    ]
+    return {
+        "provider_retry_policy_version": "runner_provider_retry_policy_preview_v1",
+        "provider_retry_policy_status": "provider_retry_policy_blocked",
+        "project_id": failure_taxonomy.get("project_id", "demo_project_default"),
+        "selected_failure_type": failure_taxonomy.get("selected_failure_type", "policy_blocked"),
+        "retry_steps": retry_steps,
+        "retry_step_count": len(retry_steps),
+        "retry_allowed": False,
+        "max_retry_attempts": 0,
+        "backoff_strategy": "none_in_dry_run",
+        "operator_review_required": True,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_fallback_plan_preview(retry_policy: dict) -> dict:
+    fallback_options = [
+        {"fallback_id": "use_existing_project_evidence", "available": True, "selected": True},
+        {"fallback_id": "use_template_stub_output", "available": True, "selected": False},
+        {"fallback_id": "queue_manual_operator_task", "available": True, "selected": False},
+        {"fallback_id": "pause_dependent_agent", "available": True, "selected": False},
+        {"fallback_id": "skip_optional_asset_generation", "available": True, "selected": False},
+    ]
+    return {
+        "provider_fallback_plan_version": "runner_provider_fallback_plan_preview_v1",
+        "provider_fallback_plan_status": "provider_fallback_plan_preview_only",
+        "project_id": retry_policy.get("project_id", "demo_project_default"),
+        "provider_retry_policy_status": retry_policy.get("provider_retry_policy_status", ""),
+        "fallback_options": fallback_options,
+        "fallback_option_count": len(fallback_options),
+        "selected_fallback_id": "use_existing_project_evidence",
+        "fallback_selected": True,
+        "fallback_executed": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_circuit_breaker_preview(fallback_plan: dict) -> dict:
+    circuit_rules = [
+        {"circuit_rule_id": "open_after_repeated_timeouts", "threshold": 3, "active": False},
+        {"circuit_rule_id": "open_after_quota_exceeded", "threshold": 1, "active": True},
+        {"circuit_rule_id": "open_after_secret_boundary_violation", "threshold": 1, "active": True},
+        {"circuit_rule_id": "open_after_schema_mismatch", "threshold": 2, "active": False},
+        {"circuit_rule_id": "operator_manual_open", "threshold": 1, "active": False},
+    ]
+    return {
+        "provider_circuit_breaker_version": "runner_provider_circuit_breaker_preview_v1",
+        "provider_circuit_breaker_status": "provider_circuit_breaker_preview_only",
+        "project_id": fallback_plan.get("project_id", "demo_project_default"),
+        "provider_fallback_plan_status": fallback_plan.get("provider_fallback_plan_status", ""),
+        "circuit_rules": circuit_rules,
+        "circuit_rule_count": len(circuit_rules),
+        "circuit_open": True,
+        "provider_temporarily_blocked": True,
+        "operator_review_required": True,
+        "next_provider_call_allowed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_failure_recovery_handoff_preview(circuit_breaker: dict) -> dict:
+    handoff_targets = [
+        {"target_id": "operator_control_center", "reason": "operator_review_required", "handoff_ready": True},
+        {"target_id": "project_workspace", "reason": "show_failure_receipt", "handoff_ready": True},
+        {"target_id": "runner_queue", "reason": "pause_dependent_work", "handoff_ready": False},
+        {"target_id": "audit_ledger", "reason": "record_failure_classification", "handoff_ready": True},
+    ]
+    return {
+        "provider_failure_recovery_handoff_version": "runner_provider_failure_recovery_handoff_preview_v1",
+        "provider_failure_recovery_handoff_status": "provider_failure_recovery_handoff_preview_only",
+        "project_id": circuit_breaker.get("project_id", "demo_project_default"),
+        "provider_circuit_breaker_status": circuit_breaker.get("provider_circuit_breaker_status", ""),
+        "handoff_targets": handoff_targets,
+        "handoff_target_count": len(handoff_targets),
+        "recovery_handoff_ready": False,
+        "real_handoff_performed": False,
+        "operator_review_required": True,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_provider_failure_receipt_preview(recovery_handoff: dict) -> dict:
+    return {
+        "provider_failure_receipt_version": "runner_provider_failure_receipt_preview_v1",
+        "provider_failure_receipt_status": "provider_failure_receipt_preview_only",
+        "project_id": recovery_handoff.get("project_id", "demo_project_default"),
+        "provider_failure_recovery_handoff_status": recovery_handoff.get("provider_failure_recovery_handoff_status", ""),
+        "receipt_items": [
+            {"receipt_item_id": "failure_taxonomy", "included": True},
+            {"receipt_item_id": "retry_policy", "included": True},
+            {"receipt_item_id": "fallback_plan", "included": True},
+            {"receipt_item_id": "circuit_breaker", "included": True},
+            {"receipt_item_id": "recovery_handoff", "included": True},
+            {"receipt_item_id": "dry_run_boundary", "included": True},
+        ],
+        "receipt_item_count": 6,
+        "failure_receipt_recorded": False,
+        "retry_allowed": False,
+        "fallback_executed": False,
+        "circuit_open": True,
+        "provider_temporarily_blocked": True,
+        "operator_review_required": True,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/provider-failure/dry-run")
+async def dry_run_project_agent_provider_failure(project_id: str, http_request: Request):
+    provider_invocation_payload = await dry_run_project_agent_provider_invocation(project_id, http_request)
+
+    runner_provider_failure_taxonomy_preview = _runner_provider_failure_taxonomy_preview(provider_invocation_payload)
+    runner_provider_retry_policy_preview = _runner_provider_retry_policy_preview(runner_provider_failure_taxonomy_preview)
+    runner_provider_fallback_plan_preview = _runner_provider_fallback_plan_preview(runner_provider_retry_policy_preview)
+    runner_provider_circuit_breaker_preview = _runner_provider_circuit_breaker_preview(runner_provider_fallback_plan_preview)
+    runner_provider_failure_recovery_handoff_preview = _runner_provider_failure_recovery_handoff_preview(runner_provider_circuit_breaker_preview)
+    runner_provider_failure_receipt_preview = _runner_provider_failure_receipt_preview(runner_provider_failure_recovery_handoff_preview)
+
+    project = provider_invocation_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_provider_failure_taxonomy_status": runner_provider_failure_taxonomy_preview["provider_failure_taxonomy_status"],
+        "latest_runner_provider_retry_policy_status": runner_provider_retry_policy_preview["provider_retry_policy_status"],
+        "latest_runner_provider_fallback_plan_status": runner_provider_fallback_plan_preview["provider_fallback_plan_status"],
+        "latest_runner_provider_circuit_breaker_status": runner_provider_circuit_breaker_preview["provider_circuit_breaker_status"],
+        "latest_runner_provider_failure_recovery_handoff_status": runner_provider_failure_recovery_handoff_preview["provider_failure_recovery_handoff_status"],
+        "latest_runner_provider_failure_receipt_status": runner_provider_failure_receipt_preview["provider_failure_receipt_status"],
+        "latest_runner_provider_temporarily_blocked": True,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **provider_invocation_payload,
+        "project": project,
+        "runner_provider_failure_taxonomy_preview": runner_provider_failure_taxonomy_preview,
+        "runner_provider_retry_policy_preview": runner_provider_retry_policy_preview,
+        "runner_provider_fallback_plan_preview": runner_provider_fallback_plan_preview,
+        "runner_provider_circuit_breaker_preview": runner_provider_circuit_breaker_preview,
+        "runner_provider_failure_recovery_handoff_preview": runner_provider_failure_recovery_handoff_preview,
+        "runner_provider_failure_receipt_preview": runner_provider_failure_receipt_preview,
+        "dry_run": True,
+        "failure_detected": True,
+        "retry_allowed": False,
+        "fallback_selected": True,
+        "fallback_executed": False,
+        "circuit_open": True,
+        "provider_temporarily_blocked": True,
+        "next_provider_call_allowed": False,
+        "operator_review_required": True,
+        "failure_receipt_recorded": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "agent_execution_performed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)

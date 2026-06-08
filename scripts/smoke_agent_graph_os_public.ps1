@@ -82,6 +82,7 @@ Add-Check "project_workspace_approval_decision_panel_marker" ($page.Content -mat
 Add-Check "project_workspace_execution_sandbox_panel_marker" ($page.Content -match "Project Workspace execution sandbox panel bundle")
 Add-Check "project_workspace_provider_adapter_panel_marker" ($page.Content -match "Project Workspace provider adapter panel bundle")
 Add-Check "project_workspace_provider_invocation_panel_marker" ($page.Content -match "Project Workspace provider invocation panel bundle")
+Add-Check "project_workspace_provider_failure_panel_marker" ($page.Content -match "Project Workspace provider failure panel bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
 Add-Check "project_workspace_authorization_manifest_panel_marker" ($page.Content -match "Project Workspace authorization manifest panel bundle")
