@@ -97,7 +97,7 @@ class CgRunnerBatchGateCommandTests(unittest.TestCase):
             '"batch-gate" { BatchGate }',
             ".\\scripts\\cg.ps1 batch-gate",
             "Run super-batch frontend quality guard",
-            "Run super-batch focused unit tests",
+            "Run fast local super-batch unit tests",
             "tests.test_agent_runs",
             "tests.test_supervisor_planner",
             "tests.test_frontend_probe_boundary",
@@ -126,3 +126,28 @@ class CgRunnerBatchGateCommandTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn(".\\scripts\\cg.ps1 batch-gate", result.stdout)
+
+
+class CgRunnerBatchGateCadenceCompressionTests(unittest.TestCase):
+    def test_batch_gate_uses_fast_local_suite_and_skips_deep_endpoint_suite(self):
+        text = (ROOT / "scripts" / "cg.ps1").read_text(encoding="utf-8")
+        self.assertIn("function BatchGate()", text)
+        self.assertIn("Run fast local super-batch unit tests", text)
+        self.assertIn("Deep endpoint suite intentionally skipped for local speed", text)
+
+        batch_gate_body = text.split("function BatchGate()", 1)[1].split("function DeepBatchGate()", 1)[0]
+        self.assertIn("tests.test_frontend_probe_boundary", batch_gate_body)
+        self.assertIn("tests.test_frontend_quality_guard", batch_gate_body)
+        self.assertIn("tests.test_agent_runs", batch_gate_body)
+        self.assertIn("tests.test_pre_render_local_check", batch_gate_body)
+        self.assertNotIn("tests.test_supervisor_planner", batch_gate_body)
+
+    def test_deep_batch_gate_keeps_full_endpoint_suite_available(self):
+        text = (ROOT / "scripts" / "cg.ps1").read_text(encoding="utf-8")
+        self.assertIn("function DeepBatchGate()", text)
+        self.assertIn('"deep-batch-gate" { DeepBatchGate }', text)
+        self.assertIn(".\\scripts\\cg.ps1 deep-batch-gate", text)
+
+        deep_gate_body = text.split("function DeepBatchGate()", 1)[1]
+        self.assertIn("tests.test_supervisor_planner", deep_gate_body)
+        self.assertIn("Run deep endpoint super-batch unit tests", deep_gate_body)
