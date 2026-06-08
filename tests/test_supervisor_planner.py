@@ -1381,3 +1381,46 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             "release_blocked_pending_operator_approval",
         )
 
+    def test_project_runner_operator_approval_dry_run_endpoint_returns_guarded_release(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/operator-approval/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        for key in [
+            "runner_approval_request_preview",
+            "runner_approval_audit_trail_preview",
+            "runner_consent_checklist_preview",
+            "runner_rollback_playbook_preview",
+            "runner_guarded_release_preview",
+        ]:
+            self.assertIn(key, payload)
+
+        self.assertTrue(payload["approval_required"])
+        self.assertFalse(payload["approval_request_recorded"])
+        self.assertFalse(payload["approval_captured"])
+        self.assertFalse(payload["approved_by_human"])
+        self.assertFalse(payload["audit_trail_recorded"])
+        self.assertFalse(payload["all_required_consent_confirmed"])
+        self.assertFalse(payload["rollback_ready"])
+        self.assertFalse(payload["rollback_executed"])
+        self.assertFalse(payload["guarded_release_allowed"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertTrue(payload["operator_final_confirmation_required"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertEqual(
+            payload["runner_guarded_release_preview"]["guarded_release_preview_version"],
+            "runner_guarded_release_preview_v1",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_guarded_release_status"],
+            "guarded_release_blocked",
+        )
+

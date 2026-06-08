@@ -14155,6 +14155,123 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_OPERATOR_APPROVAL_PANEL_BUNDLE_MARKER = 'Project Workspace operator approval panel bundle';
+        let latestProjectRunnerApprovalRequestPreview = {};
+        let latestProjectRunnerApprovalAuditTrailPreview = {};
+        let latestProjectRunnerConsentChecklistPreview = {};
+        let latestProjectRunnerRollbackPlaybookPreview = {};
+        let latestProjectRunnerGuardedReleasePreview = {};
+
+        function projectWorkspaceOperatorApprovalCopyText(workspace = latestProjectWorkspace) {
+            const request = Object.keys(latestProjectRunnerApprovalRequestPreview || {}).length ? latestProjectRunnerApprovalRequestPreview : workspace?.runner_approval_request_preview || {};
+            const auditTrail = Object.keys(latestProjectRunnerApprovalAuditTrailPreview || {}).length ? latestProjectRunnerApprovalAuditTrailPreview : workspace?.runner_approval_audit_trail_preview || {};
+            const consent = Object.keys(latestProjectRunnerConsentChecklistPreview || {}).length ? latestProjectRunnerConsentChecklistPreview : workspace?.runner_consent_checklist_preview || {};
+            const rollback = Object.keys(latestProjectRunnerRollbackPlaybookPreview || {}).length ? latestProjectRunnerRollbackPlaybookPreview : workspace?.runner_rollback_playbook_preview || {};
+            const release = Object.keys(latestProjectRunnerGuardedReleasePreview || {}).length ? latestProjectRunnerGuardedReleasePreview : workspace?.runner_guarded_release_preview || {};
+            return [
+                t('operatorApprovalCopyTitle'),
+                `${t('approvalRequestStatus')}: ${request.approval_request_status || 'not_refreshed'}`,
+                `${t('approvalAuditTrailStatus')}: ${auditTrail.approval_audit_trail_status || 'not_refreshed'}`,
+                `${t('consentChecklistStatus')}: ${consent.consent_checklist_status || 'not_refreshed'}`,
+                `${t('rollbackPlaybookStatus')}: ${rollback.rollback_playbook_status || 'not_refreshed'}`,
+                `${t('guardedReleaseStatus')}: ${release.guarded_release_status || 'not_refreshed'}`,
+                `${t('guardedReleaseAllowed')}: ${Boolean(release.release_allowed)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(release.real_execution_enabled)}`,
+                '',
+                JSON.stringify({ request, auditTrail, consent, rollback, release }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceOperatorApproval() {
+            const status = document.getElementById('projectWorkspaceOperatorApprovalStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceOperatorApprovalCopyText());
+                if (status) status.textContent = t('operatorApprovalCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('operatorApprovalCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceOperatorApproval(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceOperatorApprovalStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('operatorApprovalDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_operator_approval_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/operator-approval/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('operatorApprovalDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerApprovalRequestPreview = payload.runner_approval_request_preview || {};
+                latestProjectRunnerApprovalAuditTrailPreview = payload.runner_approval_audit_trail_preview || {};
+                latestProjectRunnerConsentChecklistPreview = payload.runner_consent_checklist_preview || {};
+                latestProjectRunnerRollbackPlaybookPreview = payload.runner_rollback_playbook_preview || {};
+                latestProjectRunnerGuardedReleasePreview = payload.runner_guarded_release_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_operator_approval_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_operator_approval_dry_run');
+                if (status) status.textContent = t('operatorApprovalDryRunComplete');
+
+                const panel = document.getElementById('projectWorkspaceOperatorApprovalPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceOperatorApprovalPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_operator_approval_dry_run');
+                if (status) status.textContent = error.message || t('operatorApprovalDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceOperatorApprovalPanel(workspace = latestProjectWorkspace) {
+            const request = Object.keys(latestProjectRunnerApprovalRequestPreview || {}).length ? latestProjectRunnerApprovalRequestPreview : workspace?.runner_approval_request_preview || {};
+            const consent = Object.keys(latestProjectRunnerConsentChecklistPreview || {}).length ? latestProjectRunnerConsentChecklistPreview : workspace?.runner_consent_checklist_preview || {};
+            const rollback = Object.keys(latestProjectRunnerRollbackPlaybookPreview || {}).length ? latestProjectRunnerRollbackPlaybookPreview : workspace?.runner_rollback_playbook_preview || {};
+            const release = Object.keys(latestProjectRunnerGuardedReleasePreview || {}).length ? latestProjectRunnerGuardedReleasePreview : workspace?.runner_guarded_release_preview || {};
+            const hasRelease = Boolean(release && Object.keys(release).length);
+            return `
+                <div class="section-block" id="projectWorkspaceOperatorApprovalPanel" data-project-operator-approval-panel-marker="Project Workspace operator approval panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('operatorApprovalPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('operatorApprovalPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceOperatorApprovalBtn" type="button" data-project-operator-approval-dry-run-action="Project Workspace operator approval panel bundle" onclick="dryRunProjectWorkspaceOperatorApproval()">${escapeHTML(t('dryRunOperatorApproval'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceOperatorApprovalBtn" type="button" onclick="copyProjectWorkspaceOperatorApproval()">${escapeHTML(t('copyOperatorApproval'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('approvalRequestStatus'))}</div>
+                            <strong data-approval-request-status="${escapeHTML(request.approval_request_status || 'not_refreshed')}">${escapeHTML(request.approval_request_status || t('operatorApprovalNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('consentChecklistStatus'))}</div>
+                            <strong data-consent-checklist-status="${escapeHTML(consent.consent_checklist_status || 'not_refreshed')}">${escapeHTML(consent.consent_checklist_status || t('operatorApprovalNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('guardedReleaseStatus'))}</div>
+                            <strong data-guarded-release-status="${escapeHTML(release.guarded_release_status || 'not_refreshed')}">${escapeHTML(release.guarded_release_status || t('operatorApprovalNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('rollbackPlaybookStatus'))}: ${escapeHTML(rollback.rollback_playbook_status || 'not_refreshed')}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('operatorApprovalAuditPreview'))}</div>
+                        ${hasRelease ? `<pre class="debug" data-operator-approval-audit-preview="Project Workspace operator approval panel bundle">${escapeHTML(projectWorkspaceOperatorApprovalCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('operatorApprovalNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceOperatorApprovalStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceOperatorControlPanel(workspace = latestProjectWorkspace) {
             const control = Object.keys(latestProjectRunnerOperatorControlCenter || {}).length ? latestProjectRunnerOperatorControlCenter : workspace?.runner_operator_control_center || {};
             const approval = Object.keys(latestProjectRunnerHumanApprovalCapturePreview || {}).length ? latestProjectRunnerHumanApprovalCapturePreview : workspace?.runner_human_approval_capture_preview || {};
@@ -15207,6 +15324,7 @@
                     ${renderProjectWorkspaceFinalizationPanel(workspace)}
                     ${renderProjectWorkspaceOrchestrationReadinessPanel(workspace)}
                     ${renderProjectWorkspaceOperatorControlPanel(workspace)}
+                    ${renderProjectWorkspaceOperatorApprovalPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -18063,6 +18181,51 @@
             operatorControlDryRunFailed: 'Operator control dry-run \u5931\u8d25\u3002',
             operatorControlCopied: '\u64cd\u4f5c\u5458\u63a7\u5236\u5df2\u590d\u5236\u3002',
             operatorControlCopyFailed: '\u590d\u5236\u64cd\u4f5c\u5458\u63a7\u5236\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceOperatorApprovalPanelBundleMarker: 'Project Workspace operator approval panel bundle',
+            operatorApprovalPanelTitle: 'Approval workflow & guarded release',
+            operatorApprovalPanelHelper: 'Dry-run approval request, audit trail, consent checklist, rollback playbook, and guarded release preview.',
+            dryRunOperatorApproval: 'Dry-run approval workflow',
+            copyOperatorApproval: 'Copy approval workflow',
+            operatorApprovalCopyTitle: 'Project operator approval dry-run',
+            approvalRequestStatus: 'Approval request status',
+            approvalAuditTrailStatus: 'Approval audit trail status',
+            consentChecklistStatus: 'Consent checklist status',
+            rollbackPlaybookStatus: 'Rollback playbook status',
+            guardedReleaseStatus: 'Guarded release status',
+            guardedReleaseAllowed: 'Guarded release allowed',
+            operatorApprovalAuditPreview: 'Operator approval audit preview',
+            operatorApprovalNotRefreshedYet: 'Operator approval has not been refreshed yet.',
+            operatorApprovalDryRunRunning: 'Building operator approval dry-run...',
+            operatorApprovalDryRunComplete: 'Operator approval dry-run complete.',
+            operatorApprovalDryRunFailed: 'Operator approval dry-run failed.',
+            operatorApprovalCopied: 'Operator approval copied.',
+            operatorApprovalCopyFailed: 'Could not copy operator approval.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceOperatorApprovalPanelBundleMarker: 'Project Workspace operator approval panel bundle',
+            operatorApprovalPanelTitle: '\u6279\u51c6\u5de5\u4f5c\u6d41\u4e0e\u53d7\u4fdd\u62a4\u53d1\u5e03',
+            operatorApprovalPanelHelper: '\u5bf9\u6279\u51c6\u8bf7\u6c42\u3001\u5ba1\u8ba1\u8f68\u8ff9\u3001\u540c\u610f\u68c0\u67e5\u6e05\u5355\u3001\u56de\u6eda\u9884\u6848\u548c\u53d7\u4fdd\u62a4\u53d1\u5e03\u505a dry-run\u3002',
+            dryRunOperatorApproval: 'Dry-run \u6279\u51c6\u5de5\u4f5c\u6d41',
+            copyOperatorApproval: '\u590d\u5236\u6279\u51c6\u5de5\u4f5c\u6d41',
+            operatorApprovalCopyTitle: '\u9879\u76ee\u64cd\u4f5c\u5458\u6279\u51c6 dry-run',
+            approvalRequestStatus: '\u6279\u51c6\u8bf7\u6c42\u72b6\u6001',
+            approvalAuditTrailStatus: '\u6279\u51c6\u5ba1\u8ba1\u8f68\u8ff9\u72b6\u6001',
+            consentChecklistStatus: '\u540c\u610f\u68c0\u67e5\u6e05\u5355\u72b6\u6001',
+            rollbackPlaybookStatus: '\u56de\u6eda\u9884\u6848\u72b6\u6001',
+            guardedReleaseStatus: '\u53d7\u4fdd\u62a4\u53d1\u5e03\u72b6\u6001',
+            guardedReleaseAllowed: '\u662f\u5426\u5141\u8bb8\u53d7\u4fdd\u62a4\u53d1\u5e03',
+            operatorApprovalAuditPreview: '\u64cd\u4f5c\u5458\u6279\u51c6\u5ba1\u8ba1\u9884\u89c8',
+            operatorApprovalNotRefreshedYet: '\u64cd\u4f5c\u5458\u6279\u51c6\u5c1a\u672a\u5237\u65b0\u3002',
+            operatorApprovalDryRunRunning: '\u6b63\u5728\u751f\u6210 operator approval dry-run...',
+            operatorApprovalDryRunComplete: 'Operator approval dry-run \u5b8c\u6210\u3002',
+            operatorApprovalDryRunFailed: 'Operator approval dry-run \u5931\u8d25\u3002',
+            operatorApprovalCopied: '\u64cd\u4f5c\u5458\u6279\u51c6\u5df2\u590d\u5236\u3002',
+            operatorApprovalCopyFailed: '\u590d\u5236\u64cd\u4f5c\u5458\u6279\u51c6\u5931\u8d25\u3002'
         });
 
 

@@ -5634,3 +5634,45 @@ class FrontendInteractionBindingRepairTests(unittest.TestCase):
         self.assertIn("Frontend interaction binding repair bundle", script)
         self.assertIn("frontend_interaction_binding_repair_marker", script)
 
+
+class ProjectWorkspaceOperatorApprovalPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_operator_approval_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace operator approval panel bundle",
+            "PROJECT_WORKSPACE_OPERATOR_APPROVAL_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceOperatorApprovalPanel(",
+            "function projectWorkspaceOperatorApprovalCopyText(",
+            "async function copyProjectWorkspaceOperatorApproval(",
+            "async function dryRunProjectWorkspaceOperatorApproval(",
+            "/runner/operator-approval/dry-run",
+            "latestProjectRunnerApprovalRequestPreview",
+            "latestProjectRunnerApprovalAuditTrailPreview",
+            "latestProjectRunnerConsentChecklistPreview",
+            "latestProjectRunnerRollbackPlaybookPreview",
+            "latestProjectRunnerGuardedReleasePreview",
+            "projectWorkspaceOperatorApprovalPanel",
+            "projectWorkspaceOperatorApprovalStatus",
+            "dryRunProjectWorkspaceOperatorApprovalBtn",
+            "copyProjectWorkspaceOperatorApprovalBtn",
+            "data-project-operator-approval-panel-marker",
+            "data-project-operator-approval-dry-run-action",
+            "data-operator-approval-audit-preview",
+            "operatorApprovalPanelTitle",
+            "operatorApprovalPanelHelper",
+            "renderProjectWorkspaceOperatorApprovalPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_operator_approval_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_operator_approval_panel_marker", script)
+        self.assertIn("Project Workspace operator approval panel bundle", script)
+
+    def test_project_workspace_operator_approval_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace operator approval panel bundle", script)
+        self.assertIn("project_workspace_operator_approval_panel_marker", script)
+

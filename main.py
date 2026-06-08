@@ -9020,6 +9020,188 @@ async def dry_run_project_agent_operator_control(project_id: str, http_request: 
     }
 
 
+
+def _runner_approval_request_preview(operator_payload: dict) -> dict:
+    release_packet = dict(operator_payload.get("runner_release_decision_packet") or {})
+    project = dict(operator_payload.get("project") or {})
+    return {
+        "approval_request_version": "runner_approval_request_preview_v1",
+        "approval_request_status": "approval_request_preview_only",
+        "approval_request_id": f"approval_request_{project.get('project_id', 'demo_project_default')}_dry_run",
+        "project_id": project.get("project_id", "demo_project_default"),
+        "release_decision_status": release_packet.get("release_decision_status", "release_blocked_pending_operator_approval"),
+        "requested_execution_mode": "real_execution",
+        "approval_required": True,
+        "approval_request_recorded": False,
+        "approved_by_human": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "request_fields": [
+            {"field_id": "operator_identity", "required": True, "captured": False},
+            {"field_id": "business_reason", "required": True, "captured": False},
+            {"field_id": "execution_scope", "required": True, "captured": False},
+            {"field_id": "provider_budget_limit", "required": True, "captured": False},
+            {"field_id": "rollback_owner", "required": True, "captured": False},
+        ],
+        "request_field_count": 5,
+        "dry_run": True,
+    }
+
+
+def _runner_approval_audit_trail_preview(approval_request: dict) -> dict:
+    return {
+        "approval_audit_trail_version": "runner_approval_audit_trail_preview_v1",
+        "approval_audit_trail_status": "approval_audit_trail_preview_only",
+        "approval_request_id": approval_request.get("approval_request_id", ""),
+        "project_id": approval_request.get("project_id", "demo_project_default"),
+        "audit_events": [
+            {"event_id": "request_created_preview", "recorded": False, "actor": "system_preview"},
+            {"event_id": "operator_review_pending", "recorded": False, "actor": "operator"},
+            {"event_id": "approval_not_captured", "recorded": False, "actor": "operator"},
+            {"event_id": "release_blocked", "recorded": False, "actor": "runner_guard"},
+        ],
+        "audit_event_count": 4,
+        "audit_trail_recorded": False,
+        "approved_by_human": False,
+        "release_allowed": False,
+        "dry_run": True,
+    }
+
+
+def _runner_consent_checklist_preview(approval_audit_trail: dict) -> dict:
+    consent_items = [
+        {"consent_item_id": "understand_real_execution_scope", "required": True, "confirmed": False},
+        {"consent_item_id": "accept_provider_cost_limit", "required": True, "confirmed": False},
+        {"consent_item_id": "accept_external_api_boundary", "required": True, "confirmed": False},
+        {"consent_item_id": "accept_state_write_boundary", "required": True, "confirmed": False},
+        {"consent_item_id": "accept_rollback_plan", "required": True, "confirmed": False},
+    ]
+    return {
+        "consent_checklist_version": "runner_consent_checklist_preview_v1",
+        "consent_checklist_status": "consent_checklist_incomplete",
+        "approval_request_id": approval_audit_trail.get("approval_request_id", ""),
+        "project_id": approval_audit_trail.get("project_id", "demo_project_default"),
+        "consent_items": consent_items,
+        "consent_item_count": len(consent_items),
+        "confirmed_consent_count": 0,
+        "all_required_consent_confirmed": False,
+        "approved_by_human": False,
+        "release_allowed": False,
+        "dry_run": True,
+    }
+
+
+def _runner_rollback_playbook_preview(consent_checklist: dict) -> dict:
+    rollback_steps = [
+        {"rollback_step_id": "capture_pre_execution_snapshot", "ready": True, "executed": False},
+        {"rollback_step_id": "isolate_failed_runner_state", "ready": True, "executed": False},
+        {"rollback_step_id": "restore_project_snapshot", "ready": False, "executed": False},
+        {"rollback_step_id": "record_operator_incident_note", "ready": False, "executed": False},
+        {"rollback_step_id": "block_followup_real_execution", "ready": True, "executed": False},
+    ]
+    return {
+        "rollback_playbook_version": "runner_rollback_playbook_preview_v1",
+        "rollback_playbook_status": "rollback_playbook_preview_only",
+        "approval_request_id": consent_checklist.get("approval_request_id", ""),
+        "project_id": consent_checklist.get("project_id", "demo_project_default"),
+        "rollback_steps": rollback_steps,
+        "rollback_step_count": len(rollback_steps),
+        "rollback_ready": False,
+        "rollback_executed": False,
+        "release_allowed": False,
+        "dry_run": True,
+    }
+
+
+def _runner_guarded_release_preview(rollback_playbook: dict) -> dict:
+    release_checks = [
+        {"release_check_id": "approval_request_recorded", "passed": False},
+        {"release_check_id": "audit_trail_recorded", "passed": False},
+        {"release_check_id": "consent_confirmed", "passed": False},
+        {"release_check_id": "rollback_ready", "passed": False},
+        {"release_check_id": "provider_quota_enabled", "passed": False},
+        {"release_check_id": "operator_final_confirmed", "passed": False},
+    ]
+    return {
+        "guarded_release_preview_version": "runner_guarded_release_preview_v1",
+        "guarded_release_status": "guarded_release_blocked",
+        "approval_request_id": rollback_playbook.get("approval_request_id", ""),
+        "project_id": rollback_playbook.get("project_id", "demo_project_default"),
+        "release_checks": release_checks,
+        "release_check_count": len(release_checks),
+        "passed_release_check_count": 0,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "operator_final_confirmation_required": True,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "dry_run": True,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/operator-approval/dry-run")
+async def dry_run_project_agent_operator_approval(project_id: str, http_request: Request):
+    operator_payload = await dry_run_project_agent_operator_control(project_id, http_request)
+
+    runner_approval_request_preview = _runner_approval_request_preview(operator_payload)
+    runner_approval_audit_trail_preview = _runner_approval_audit_trail_preview(runner_approval_request_preview)
+    runner_consent_checklist_preview = _runner_consent_checklist_preview(runner_approval_audit_trail_preview)
+    runner_rollback_playbook_preview = _runner_rollback_playbook_preview(runner_consent_checklist_preview)
+    runner_guarded_release_preview = _runner_guarded_release_preview(runner_rollback_playbook_preview)
+
+    project = operator_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_approval_request_status": runner_approval_request_preview["approval_request_status"],
+        "latest_runner_approval_audit_trail_status": runner_approval_audit_trail_preview["approval_audit_trail_status"],
+        "latest_runner_consent_checklist_status": runner_consent_checklist_preview["consent_checklist_status"],
+        "latest_runner_rollback_playbook_status": runner_rollback_playbook_preview["rollback_playbook_status"],
+        "latest_runner_guarded_release_status": runner_guarded_release_preview["guarded_release_status"],
+        "latest_runner_guarded_release_allowed": False,
+        "latest_runner_operator_approval_captured": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **operator_payload,
+        "project": project,
+        "runner_approval_request_preview": runner_approval_request_preview,
+        "runner_approval_audit_trail_preview": runner_approval_audit_trail_preview,
+        "runner_consent_checklist_preview": runner_consent_checklist_preview,
+        "runner_rollback_playbook_preview": runner_rollback_playbook_preview,
+        "runner_guarded_release_preview": runner_guarded_release_preview,
+        "dry_run": True,
+        "approval_required": True,
+        "approval_request_recorded": False,
+        "approval_captured": False,
+        "approved_by_human": False,
+        "audit_trail_recorded": False,
+        "all_required_consent_confirmed": False,
+        "rollback_ready": False,
+        "rollback_executed": False,
+        "guarded_release_allowed": False,
+        "release_allowed": False,
+        "real_execution_enabled": False,
+        "operator_final_confirmation_required": True,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "write_authorized": False,
+        "state_persisted": False,
+        "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
 def _project_history_payload(project_id: str) -> dict:
     safe_id = _safe_project_id(project_id)
     project, planner_recommendation = _project_with_planner_summary(safe_id)
