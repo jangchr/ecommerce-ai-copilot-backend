@@ -4776,3 +4776,48 @@ class ProjectWorkspaceQueueClaimPanelFrontendTests(unittest.TestCase):
         self.assertIn("Project Workspace queue claim panel bundle", script)
         self.assertIn("project_workspace_queue_claim_panel_marker", script)
 
+
+class ProjectWorkspaceWorkerLeasePanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_worker_lease_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace worker lease panel bundle",
+            "PROJECT_WORKSPACE_WORKER_LEASE_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceWorkerLeasePanel(",
+            "function projectWorkspaceWorkerLeaseFromWorkspace(",
+            "function projectWorkspaceWorkerLeaseStatusLabel(",
+            "function projectWorkspaceWorkerLeaseCopyText(",
+            "async function copyProjectWorkspaceWorkerLease(",
+            "async function dryRunProjectWorkspaceWorkerLease(",
+            "/runner/lease/dry-run",
+            "latestProjectRunnerWorkerLease",
+            "runner_worker_lease: latestProjectRunnerWorkerLease",
+            "runner_worker_lease_summary: payload.runner_worker_lease_summary || {}",
+            "projectWorkspaceWorkerLeasePanel",
+            "projectWorkspaceWorkerLeaseStatus",
+            "dryRunProjectWorkspaceWorkerLeaseBtn",
+            "copyProjectWorkspaceWorkerLeaseBtn",
+            "data-project-worker-lease-panel-marker",
+            "data-project-worker-lease-dry-run-action",
+            "data-worker-lease-status",
+            "data-worker-lease-id",
+            "data-worker-lease-allowed",
+            "data-worker-lease-audit-preview",
+            "workerLeasePanelTitle",
+            "workerLeaseDryRunHelper",
+            "renderProjectWorkspaceWorkerLeasePanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_worker_lease_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_worker_lease_panel_marker", script)
+        self.assertIn("Project Workspace worker lease panel bundle", script)
+
+    def test_project_workspace_worker_lease_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace worker lease panel bundle", script)
+        self.assertIn("project_workspace_worker_lease_panel_marker", script)
+

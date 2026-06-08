@@ -700,3 +700,37 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             claim["claim_status"],
         )
 
+    def test_project_runner_lease_dry_run_endpoint_returns_worker_lease(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/lease/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["lease_persisted"])
+        self.assertFalse(payload["lease_acquired"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["cost_incurred_by_crossgrowth"])
+        self.assertIn("runner_worker_lease", payload)
+        self.assertIn("runner_worker_lease_summary", payload)
+
+        lease = payload["runner_worker_lease"]
+        summary = payload["runner_worker_lease_summary"]
+        self.assertEqual(lease["worker_lease_version"], "agent_runner_worker_lease_v1")
+        self.assertTrue(lease["dry_run"])
+        self.assertFalse(lease["lease_persisted"])
+        self.assertFalse(lease["lease_acquired"])
+        self.assertFalse(lease["agent_execution_performed"])
+        self.assertFalse(lease["external_api_called"])
+        self.assertFalse(lease["cost_incurred_by_crossgrowth"])
+        self.assertEqual(summary["summary_version"], "agent_runner_worker_lease_summary_v1")
+        self.assertEqual(summary["lease_status"], lease["lease_status"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_worker_lease_status"],
+            lease["lease_status"],
+        )
+

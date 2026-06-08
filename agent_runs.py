@@ -2676,6 +2676,155 @@ def build_agent_runner_queue_claim_summary(queue_claim: dict[str, Any]) -> dict[
 
 
 
+AGENT_RUNNER_WORKER_LEASE_VERSION = "agent_runner_worker_lease_v1"
+
+
+def _worker_lease_status_from_claim(queue_claim: dict[str, Any]) -> str:
+    safe_claim = queue_claim if isinstance(queue_claim, dict) else {}
+    status = str(safe_claim.get("claim_status") or "claim_blocked")
+    if bool(safe_claim.get("claim_allowed")) and status == "claim_ready_dry_run":
+        return "lease_ready_dry_run"
+    if status == "claim_waiting_for_user":
+        return "lease_waiting_for_user"
+    return "lease_blocked"
+
+
+def build_agent_runner_worker_lease(
+    queue_claim: dict[str, Any],
+    lease_seconds: int = 300,
+    requested_by: str = "runner_lease_dry_run_api",
+) -> dict[str, Any]:
+    """Build a dry-run worker lease for a queue claim.
+
+    This does not acquire a real lease, persist a lock, execute the agent,
+    call providers, spend money, or enable autonomous LLM routing.
+    """
+
+    claim = queue_claim if isinstance(queue_claim, dict) else {}
+    project_id = str(claim.get("project_id") or "demo_project_default")
+    target_agent_id = str(claim.get("target_agent_id") or "")
+    worker_id = str(claim.get("worker_id") or "runner_worker_dry_run")
+    lease_status = _worker_lease_status_from_claim(claim)
+    lease_allowed = lease_status == "lease_ready_dry_run"
+    safe_seconds = max(30, min(int(lease_seconds or 300), 3600))
+    lease_id = f"lease_{project_id}_{target_agent_id or 'none'}_{worker_id}_{lease_status}".replace(" ", "_")
+    lease_token = f"dry_run_token::{lease_id}"
+
+    blocking_check_ids = [
+        str(value)
+        for value in (claim.get("blocking_check_ids") or [])
+        if str(value or "")
+    ]
+
+    if lease_allowed:
+        recommended_next_state = "ready_for_explicit_agent_invocation_dry_run"
+        lease_message_text = "Dry-run worker lease is ready. Real lock persistence and Agent execution are still disabled."
+    elif lease_status == "lease_waiting_for_user":
+        recommended_next_state = "collect_required_user_input"
+        lease_message_text = "Worker lease is waiting for required user action."
+    else:
+        recommended_next_state = "fix_lease_blockers"
+        lease_message_text = "Worker lease is blocked by claim, queue item, work order, execution receipt, dispatch, or contract validation."
+
+    lease_payload = {
+        "worker_lease_version": AGENT_RUNNER_WORKER_LEASE_VERSION,
+        "lease_status": lease_status,
+        "lease_allowed": lease_allowed,
+        "lease_id": lease_id,
+        "lease_token": lease_token,
+        "lease_seconds": safe_seconds,
+        "worker_id": worker_id,
+        "claim_id": claim.get("claim_id"),
+        "queue_item_id": claim.get("queue_item_id"),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": claim.get("target_agent_stage"),
+        "blocking_check_ids": blocking_check_ids,
+        "dry_run": True,
+        "lease_persisted": False,
+        "lease_acquired": False,
+        "agent_execution_performed": False,
+    }
+
+    lease_message = build_agent_message(
+        message_type="runner_worker_lease_dry_run",
+        source_agent_id="runner_lease_manager",
+        target_agent_id=target_agent_id,
+        payload=lease_payload,
+        run_id="",
+        job_id="",
+        artifact_ids=[],
+        project_id=project_id,
+    )
+
+    return {
+        "worker_lease_version": AGENT_RUNNER_WORKER_LEASE_VERSION,
+        "lease_id": lease_id,
+        "lease_token": lease_token,
+        "lease_seconds": safe_seconds,
+        "project_id": project_id,
+        "requested_by": str(requested_by or "runner_lease_dry_run_api"),
+        "worker_id": worker_id,
+        "lease_status": lease_status,
+        "lease_allowed": lease_allowed,
+        "claim_id": str(claim.get("claim_id") or ""),
+        "claim_version": str(claim.get("claim_version") or ""),
+        "claim_status": str(claim.get("claim_status") or ""),
+        "claim_allowed": bool(claim.get("claim_allowed")),
+        "queue_item_id": str(claim.get("queue_item_id") or ""),
+        "target_agent_id": target_agent_id,
+        "target_agent_stage": str(claim.get("target_agent_stage") or ""),
+        "priority": str(claim.get("priority") or "normal"),
+        "recommended_next_state": recommended_next_state,
+        "lease_message_text": lease_message_text,
+        "blocking_check_ids": blocking_check_ids,
+        "queue_claim_summary": build_agent_runner_queue_claim_summary(claim),
+        "queue_item_summary": deepcopy(claim.get("queue_item_summary") or {}),
+        "work_order_summary": deepcopy(claim.get("work_order_summary") or {}),
+        "required_inputs": deepcopy(claim.get("required_inputs") or []),
+        "expected_outputs": deepcopy(claim.get("expected_outputs") or []),
+        "work_payload": deepcopy(claim.get("work_payload") or {}),
+        "claim_message": deepcopy(claim.get("claim_message") or {}),
+        "lease_message": lease_message,
+        "dry_run": True,
+        "lease_persisted": False,
+        "lease_acquired": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+def build_agent_runner_worker_lease_summary(worker_lease: dict[str, Any]) -> dict[str, Any]:
+    safe_lease = worker_lease if isinstance(worker_lease, dict) else {}
+    return {
+        "summary_version": "agent_runner_worker_lease_summary_v1",
+        "worker_lease_version": str(safe_lease.get("worker_lease_version") or AGENT_RUNNER_WORKER_LEASE_VERSION),
+        "lease_id": str(safe_lease.get("lease_id") or ""),
+        "project_id": str(safe_lease.get("project_id") or "demo_project_default"),
+        "worker_id": str(safe_lease.get("worker_id") or "runner_worker_dry_run"),
+        "lease_status": str(safe_lease.get("lease_status") or "lease_blocked"),
+        "lease_allowed": bool(safe_lease.get("lease_allowed")),
+        "target_agent_id": str(safe_lease.get("target_agent_id") or ""),
+        "target_agent_stage": str(safe_lease.get("target_agent_stage") or ""),
+        "claim_id": str(safe_lease.get("claim_id") or ""),
+        "queue_item_id": str(safe_lease.get("queue_item_id") or ""),
+        "lease_seconds": int(safe_lease.get("lease_seconds") or 300),
+        "blocking_check_count": len(safe_lease.get("blocking_check_ids") or []),
+        "dry_run": True,
+        "lease_persisted": False,
+        "lease_acquired": False,
+        "agent_execution_performed": False,
+        "external_api_called": False,
+        "cost_incurred_by_crossgrowth": False,
+        "llm_autonomous_decision_enabled": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 def build_product_asset_lock_v2(
     project: dict[str, Any] | None,
     generation_data: dict[str, Any] | None,
