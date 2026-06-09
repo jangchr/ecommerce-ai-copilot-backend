@@ -2264,6 +2264,188 @@ def build_agent_runner_execution_receipt_summary(receipt: dict[str, Any]) -> dic
 
 
 
+AGENT_RUNNER_EVENT_LEDGER_SUMMARY_VERSION = "agent_runner_event_ledger_summary_v1"
+
+
+def _runner_normalized_event_from_record(
+    record: dict[str, Any],
+    *,
+    fallback_event_type: str,
+    fallback_status_key: str,
+    source_agent_id: str = "",
+    target_agent_id: str = "",
+    blocking_default: bool = True,
+) -> dict[str, Any]:
+    safe_record = record if isinstance(record, dict) else {}
+
+    event_status = str(
+        safe_record.get("event_status")
+        or safe_record.get("receipt_status")
+        or safe_record.get("audit_ledger_status")
+        or safe_record.get("real_execution_incident_response_status")
+        or safe_record.get("incident_receipt_status")
+        or safe_record.get(fallback_status_key)
+        or "not_refreshed"
+    )
+    event_type = str(
+        safe_record.get("event_type")
+        or safe_record.get("message_type")
+        or fallback_event_type
+    )
+    event_id = str(
+        safe_record.get("event_id")
+        or safe_record.get("receipt_id")
+        or safe_record.get("audit_ledger_id")
+        or safe_record.get("incident_receipt_id")
+        or f"{event_type}_{event_status}"
+    ).replace(" ", "_")
+
+    safe_to_continue = bool(safe_record.get("safe_to_continue"))
+    provider_call_performed = bool(safe_record.get("provider_call_performed"))
+    external_api_called = bool(safe_record.get("external_api_called"))
+    agent_execution_performed = bool(safe_record.get("agent_execution_performed") or safe_record.get("execution_performed"))
+
+    blocking = bool(
+        safe_record.get("blocking")
+        or safe_record.get("abort_recommended")
+        or safe_record.get("incident_detected")
+        or safe_record.get("manual_review_required")
+        or blocking_default
+    )
+
+    return {
+        "event_id": event_id,
+        "event_type": event_type,
+        "event_status": event_status,
+        "project_id": str(safe_record.get("project_id") or "demo_project_default"),
+        "source_agent_id": str(safe_record.get("source_agent_id") or source_agent_id),
+        "target_agent_id": str(safe_record.get("target_agent_id") or target_agent_id),
+        "blocking": blocking,
+        "safe_to_continue": safe_to_continue,
+        "dry_run": True,
+        "provider_call_performed": provider_call_performed,
+        "external_api_called": external_api_called,
+        "agent_execution_performed": agent_execution_performed,
+        "manual_review_required": bool(safe_record.get("manual_review_required") or blocking),
+    }
+
+
+def build_agent_runner_event_ledger_summary(
+    *,
+    project_id: str = "demo_project_default",
+    dispatch_event: dict[str, Any] | None = None,
+    execution_receipt: dict[str, Any] | None = None,
+    audit_ledger: dict[str, Any] | None = None,
+    safety_chain_event: dict[str, Any] | None = None,
+    incident_receipt: dict[str, Any] | None = None,
+    requested_by: str = "runner_event_ledger_summary_builder",
+) -> dict[str, Any]:
+    """Build a unified dry-run event ledger summary.
+
+    This normalizes multiple runner events and receipts into a single ledger
+    summary. It does not persist the ledger, execute agents, call providers,
+    call external APIs, or enable real execution.
+    """
+
+    safe_project_id = str(project_id or "demo_project_default")
+    normalized_events: list[dict[str, Any]] = []
+
+    if isinstance(dispatch_event, dict) and dispatch_event:
+        normalized_events.append(
+            _runner_normalized_event_from_record(
+                dispatch_event,
+                fallback_event_type="runner_dispatch_dry_run",
+                fallback_status_key="dispatch_status",
+                source_agent_id="runner_dispatcher",
+                target_agent_id=str(dispatch_event.get("target_agent_id") or ""),
+                blocking_default=not bool(dispatch_event.get("dispatch_allowed")),
+            )
+        )
+
+    if isinstance(execution_receipt, dict) and execution_receipt:
+        normalized_events.append(
+            _runner_normalized_event_from_record(
+                execution_receipt,
+                fallback_event_type="runner_execution_receipt",
+                fallback_status_key="receipt_status",
+                source_agent_id="runner_executor",
+                target_agent_id=str(execution_receipt.get("target_agent_id") or ""),
+                blocking_default=not bool(execution_receipt.get("execution_allowed")),
+            )
+        )
+
+    if isinstance(audit_ledger, dict) and audit_ledger:
+        normalized_events.append(
+            _runner_normalized_event_from_record(
+                audit_ledger,
+                fallback_event_type="runner_audit_ledger_dry_run",
+                fallback_status_key="audit_ledger_status",
+                source_agent_id="runner_auditor",
+                target_agent_id=str(audit_ledger.get("target_agent_id") or ""),
+                blocking_default=True,
+            )
+        )
+
+    if isinstance(safety_chain_event, dict) and safety_chain_event:
+        normalized_events.append(
+            _runner_normalized_event_from_record(
+                safety_chain_event,
+                fallback_event_type="runner_real_execution_safety_chain_dry_run",
+                fallback_status_key="event_status",
+                source_agent_id="risk_approval_agent",
+                target_agent_id="supervisor_agent",
+                blocking_default=not bool(safety_chain_event.get("safe_to_continue")),
+            )
+        )
+
+    if isinstance(incident_receipt, dict) and incident_receipt:
+        normalized_events.append(
+            _runner_normalized_event_from_record(
+                incident_receipt,
+                fallback_event_type="runner_real_execution_incident_receipt",
+                fallback_status_key="incident_receipt_status",
+                source_agent_id="incident_response_agent",
+                target_agent_id="supervisor_agent",
+                blocking_default=True,
+            )
+        )
+
+    for index, event in enumerate(normalized_events, start=1):
+        event["sequence_index"] = index
+        event["project_id"] = safe_project_id
+
+    blocking_events = [event for event in normalized_events if bool(event.get("blocking"))]
+    provider_call_performed = any(bool(event.get("provider_call_performed")) for event in normalized_events)
+    external_api_called = any(bool(event.get("external_api_called")) for event in normalized_events)
+    agent_execution_performed = any(bool(event.get("agent_execution_performed")) for event in normalized_events)
+    safe_to_continue = bool(normalized_events) and not blocking_events and not provider_call_performed and not external_api_called and not agent_execution_performed
+
+    return {
+        "runner_event_ledger_summary_version": AGENT_RUNNER_EVENT_LEDGER_SUMMARY_VERSION,
+        "runner_event_ledger_summary_status": "event_ledger_recorded_safely" if normalized_events else "event_ledger_not_refreshed",
+        "project_id": safe_project_id,
+        "requested_by": str(requested_by or "runner_event_ledger_summary_builder"),
+        "event_count": len(normalized_events),
+        "blocking_event_count": len(blocking_events),
+        "non_blocking_event_count": len(normalized_events) - len(blocking_events),
+        "event_types": [str(event.get("event_type") or "") for event in normalized_events],
+        "event_statuses": [str(event.get("event_status") or "") for event in normalized_events],
+        "blocking_event_ids": [str(event.get("event_id") or "") for event in blocking_events],
+        "normalized_events": normalized_events,
+        "safe_to_continue": safe_to_continue,
+        "manual_review_required": True,
+        "dry_run": True,
+        "ledger_persisted": False,
+        "provider_call_performed": provider_call_performed,
+        "external_api_called": external_api_called,
+        "agent_execution_performed": agent_execution_performed,
+        "cost_incurred_by_crossgrowth": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
+
+
 
 AGENT_RUNNER_WORK_ORDER_VERSION = "agent_runner_work_order_v1"
 

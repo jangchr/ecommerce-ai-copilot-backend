@@ -1332,12 +1332,52 @@ class AgentRunnerDispatchEventTests(unittest.TestCase):
 
 
 class AgentRunnerExecutionReceiptTests(unittest.TestCase):
+
+    def test_event_ledger_summary_normalizes_runner_events(self):
+        from agent_runs import (
+            build_agent_runner_dispatch_event,
+            build_agent_runner_dispatch_ticket,
+            build_agent_runner_event_ledger_summary,
+            build_agent_runner_execution_receipt,
+        )
+
+        ticket = build_agent_runner_dispatch_ticket(
+            {
+                "project": {"project_id": "project_event_ledger_summary"},
+                "next_agent_id": "strategy_agent",
+                "next_action_type": "draft_strategy",
+                "contract_validation": {"valid": False, "errors": ["missing_input"]},
+            }
+        )
+        event = build_agent_runner_dispatch_event(ticket)
+        receipt = build_agent_runner_execution_receipt(ticket, event)
+        summary = build_agent_runner_event_ledger_summary(
+            project_id="project_event_ledger_summary",
+            dispatch_event=event,
+            execution_receipt=receipt,
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(summary["runner_event_ledger_summary_version"], "agent_runner_event_ledger_summary_v1")
+        self.assertEqual(summary["runner_event_ledger_summary_status"], "event_ledger_recorded_safely")
+        self.assertEqual(summary["project_id"], "project_event_ledger_summary")
+        self.assertEqual(summary["event_count"], 2)
+        self.assertGreaterEqual(summary["blocking_event_count"], 1)
+        self.assertFalse(summary["safe_to_continue"])
+        self.assertFalse(summary["provider_call_performed"])
+        self.assertFalse(summary["external_api_called"])
+        self.assertFalse(summary["agent_execution_performed"])
+        self.assertTrue(summary["dry_run"])
+        self.assertEqual(summary["normalized_events"][0]["event_type"], "runner_dispatch_dry_run")
+
+
     def test_execution_receipt_records_ready_dry_run_without_execution(self):
         from agent_runs import (
             build_agent_runner_dispatch_event,
             build_agent_runner_dispatch_ticket,
             build_agent_runner_execution_receipt,
             build_agent_runner_execution_receipt_summary,
+            build_agent_runner_event_ledger_summary,
             build_agent_runner_plan,
         )
 

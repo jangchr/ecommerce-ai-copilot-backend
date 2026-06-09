@@ -2154,6 +2154,7 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         receipt = incident["incident_receipt"]
         audit_summary = payload["runner_real_execution_safety_chain_audit_summary_preview"]
         safety_event = payload["runner_real_execution_safety_chain_event_preview"]
+        event_ledger_summary = payload["runner_event_ledger_summary"]
 
         self.assertEqual(incident["real_execution_incident_response_status"], "incident_response_opened_safely")
         self.assertEqual(incident["launch_monitor_status"], "launch_monitor_blocked_safely")
@@ -2225,5 +2226,34 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_real_execution_safety_chain_event_type"],
             "runner_real_execution_safety_chain_dry_run",
+        )
+        self.assertEqual(
+            event_ledger_summary["runner_event_ledger_summary_version"],
+            "agent_runner_event_ledger_summary_v1",
+        )
+        self.assertEqual(
+            event_ledger_summary["runner_event_ledger_summary_status"],
+            "event_ledger_recorded_safely",
+        )
+        self.assertEqual(event_ledger_summary["event_count"], 2)
+        self.assertEqual(event_ledger_summary["blocking_event_count"], 2)
+        self.assertFalse(event_ledger_summary["provider_call_performed"])
+        self.assertFalse(event_ledger_summary["external_api_called"])
+        self.assertFalse(event_ledger_summary["agent_execution_performed"])
+        self.assertFalse(event_ledger_summary["safe_to_continue"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_event_ledger_summary_status"],
+            "event_ledger_recorded_safely",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_event_ledger_event_count"],
+            2,
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_event_ledger_blocking_event_count"],
+            2,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_runner_event_ledger_safe_to_continue"]
         )
 
