@@ -15364,6 +15364,117 @@
         let latestProjectRunnerRealExecutionLaunchDenialReceiptPreview = {};
         const PROJECT_WORKSPACE_REAL_EXECUTION_LAUNCH_MONITOR_PANEL_BUNDLE_MARKER = 'Project Workspace real execution launch monitor panel bundle';
         let latestProjectRunnerRealExecutionLaunchMonitorPreview = {};
+        const PROJECT_WORKSPACE_REAL_EXECUTION_INCIDENT_RESPONSE_PANEL_BUNDLE_MARKER = 'Project Workspace real execution incident response panel bundle';
+        let latestProjectRunnerRealExecutionIncidentResponsePreview = {};
+
+        function projectWorkspaceRealExecutionIncidentResponseCopyText(workspace = latestProjectWorkspace) {
+            const incident = Object.keys(latestProjectRunnerRealExecutionIncidentResponsePreview || {}).length ? latestProjectRunnerRealExecutionIncidentResponsePreview : workspace?.runner_real_execution_incident_response_preview || {};
+            return [
+                t('realExecutionIncidentResponseCopyTitle'),
+                `${t('realExecutionIncidentResponseStatus')}: ${incident.real_execution_incident_response_status || 'not_refreshed'}`,
+                `${t('incidentDetected')}: ${Boolean(incident.incident_detected)}`,
+                `${t('incidentSeverity')}: ${incident.incident_severity || 'not_refreshed'}`,
+                `${t('containmentPlanStatus')}: ${incident.containment_plan_status || 'not_refreshed'}`,
+                `${t('recoveryReady')}: ${Boolean(incident.recovery_ready)}`,
+                `${t('incidentReceiptStatus')}: ${incident.incident_receipt_status || 'not_refreshed'}`,
+                '',
+                JSON.stringify({ incident }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionIncidentResponse() {
+            const status = document.getElementById('projectWorkspaceRealExecutionIncidentResponseStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionIncidentResponseCopyText());
+                if (status) status.textContent = t('realExecutionIncidentResponseCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionIncidentResponseCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceRealExecutionIncidentResponse(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRealExecutionIncidentResponseStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('realExecutionIncidentResponseDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_real_execution_incident_response_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/real-execution-incident-response/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('realExecutionIncidentResponseDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerRealExecutionLaunchAuthorizationPreview = payload.runner_real_execution_launch_authorization_preview || {};
+                latestProjectRunnerRealExecutionLaunchLockPreview = payload.runner_real_execution_launch_lock_preview || {};
+                latestProjectRunnerRealExecutionLaunchDenialReceiptPreview = payload.runner_real_execution_launch_denial_receipt_preview || {};
+                latestProjectRunnerRealExecutionLaunchMonitorPreview = payload.runner_real_execution_launch_monitor_preview || {};
+                latestProjectRunnerRealExecutionIncidentResponsePreview = payload.runner_real_execution_incident_response_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_real_execution_incident_response_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_real_execution_incident_response_dry_run');
+                if (status) status.textContent = t('realExecutionIncidentResponseDryRunComplete');
+
+                const monitorPanel = document.getElementById('projectWorkspaceRealExecutionLaunchMonitorPanel');
+                if (monitorPanel) monitorPanel.outerHTML = renderProjectWorkspaceRealExecutionLaunchMonitorPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceRealExecutionIncidentResponsePanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionIncidentResponsePanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
+                if (status) status.textContent = error.message || t('realExecutionIncidentResponseDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionIncidentResponsePanel(workspace = latestProjectWorkspace) {
+            const incident = Object.keys(latestProjectRunnerRealExecutionIncidentResponsePreview || {}).length ? latestProjectRunnerRealExecutionIncidentResponsePreview : workspace?.runner_real_execution_incident_response_preview || {};
+            const hasIncident = Boolean(incident && Object.keys(incident).length);
+            const recoveryChecks = Array.isArray(incident.recovery_checklist) ? incident.recovery_checklist : [];
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionIncidentResponsePanel" data-project-real-execution-incident-response-panel-marker="Project Workspace real execution incident response panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionIncidentResponsePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionIncidentResponsePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceRealExecutionIncidentResponseBtn" type="button" data-project-real-execution-incident-response-dry-run-action="Project Workspace real execution incident response panel bundle" onclick="dryRunProjectWorkspaceRealExecutionIncidentResponse()">${escapeHTML(t('dryRunRealExecutionIncidentResponse'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionIncidentResponseBtn" type="button" onclick="copyProjectWorkspaceRealExecutionIncidentResponse()">${escapeHTML(t('copyRealExecutionIncidentResponse'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionIncidentResponseStatus'))}</div>
+                            <strong data-real-execution-incident-response-status="${escapeHTML(incident.real_execution_incident_response_status || 'not_refreshed')}">${escapeHTML(incident.real_execution_incident_response_status || t('realExecutionIncidentResponseNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('incidentSeverity'))}</div>
+                            <strong data-real-execution-incident-severity="${escapeHTML(incident.incident_severity || 'not_refreshed')}">${escapeHTML(incident.incident_severity || t('realExecutionIncidentResponseNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('containmentPlanStatus'))}</div>
+                            <strong data-real-execution-containment-plan-status="${escapeHTML(incident.containment_plan_status || 'not_refreshed')}">${escapeHTML(incident.containment_plan_status || t('realExecutionIncidentResponseNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('incidentReceiptStatus'))}: ${escapeHTML(incident.incident_receipt_status || 'not_refreshed')}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('recoveryChecklist'))}</div>
+                        ${recoveryChecks.length ? `<ul>${recoveryChecks.slice(0, 6).map((item) => `<li>${escapeHTML(item.recovery_check_id || '')}: ${escapeHTML(item.status || '')}</li>`).join('')}</ul>` : `<div class="recent-empty">${escapeHTML(t('realExecutionIncidentResponseNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionIncidentResponseAuditPreview'))}</div>
+                        ${hasIncident ? `<pre class="debug" data-real-execution-incident-response-audit-preview="Project Workspace real execution incident response panel bundle">${escapeHTML(projectWorkspaceRealExecutionIncidentResponseCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realExecutionIncidentResponseNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionIncidentResponseStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceRealExecutionLaunchMonitorCopyText(workspace = latestProjectWorkspace) {
             const monitor = Object.keys(latestProjectRunnerRealExecutionLaunchMonitorPreview || {}).length ? latestProjectRunnerRealExecutionLaunchMonitorPreview : workspace?.runner_real_execution_launch_monitor_preview || {};
@@ -17345,6 +17456,7 @@
                     ${renderProjectWorkspaceRealExecutionApprovalDecisionPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionLaunchMonitorPanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionIncidentResponsePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -21001,6 +21113,53 @@
             realExecutionLaunchMonitorDryRunFailed: 'Real execution launch monitor dry-run \u5931\u8d25\u3002',
             realExecutionLaunchMonitorCopied: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7\u5df2\u590d\u5236\u3002',
             realExecutionLaunchMonitorCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionIncidentResponsePanelBundleMarker: 'Project Workspace real execution incident response panel bundle',
+            realExecutionIncidentResponsePanelTitle: 'Real execution incident response',
+            realExecutionIncidentResponsePanelHelper: 'Dry-run incident response with containment plan, recovery checklist, and incident receipt. This keeps real execution blocked.',
+            dryRunRealExecutionIncidentResponse: 'Dry-run incident response',
+            copyRealExecutionIncidentResponse: 'Copy incident response',
+            realExecutionIncidentResponseCopyTitle: 'Project real execution incident response',
+            realExecutionIncidentResponseStatus: 'Incident response status',
+            incidentDetected: 'Incident detected',
+            incidentSeverity: 'Incident severity',
+            containmentPlanStatus: 'Containment plan status',
+            recoveryReady: 'Recovery ready',
+            incidentReceiptStatus: 'Incident receipt status',
+            recoveryChecklist: 'Recovery checklist',
+            realExecutionIncidentResponseAuditPreview: 'Real execution incident response audit preview',
+            realExecutionIncidentResponseNotRefreshedYet: 'Real execution incident response has not been refreshed yet.',
+            realExecutionIncidentResponseDryRunRunning: 'Building real execution incident response dry-run.',
+            realExecutionIncidentResponseDryRunComplete: 'Real execution incident response dry-run complete.',
+            realExecutionIncidentResponseDryRunFailed: 'Real execution incident response dry-run failed.',
+            realExecutionIncidentResponseCopied: 'Real execution incident response copied.',
+            realExecutionIncidentResponseCopyFailed: 'Could not copy real execution incident response.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionIncidentResponsePanelBundleMarker: 'Project Workspace real execution incident response panel bundle',
+            realExecutionIncidentResponsePanelTitle: '\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94',
+            realExecutionIncidentResponsePanelHelper: 'Dry-run \u5f02\u5e38\u54cd\u5e94\uff0c\u5c55\u793a containment plan\u3001recovery checklist \u548c incident receipt\uff1b\u771f\u5b9e\u6267\u884c\u4fdd\u6301\u963b\u65ad\u3002',
+            dryRunRealExecutionIncidentResponse: 'Dry-run \u5f02\u5e38\u54cd\u5e94',
+            copyRealExecutionIncidentResponse: '\u590d\u5236\u5f02\u5e38\u54cd\u5e94',
+            realExecutionIncidentResponseCopyTitle: '\u9879\u76ee\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94',
+            realExecutionIncidentResponseStatus: '\u5f02\u5e38\u54cd\u5e94\u72b6\u6001',
+            incidentDetected: '\u662f\u5426\u68c0\u6d4b\u5230\u5f02\u5e38',
+            incidentSeverity: '\u5f02\u5e38\u7ea7\u522b',
+            containmentPlanStatus: '\u9694\u79bb\u65b9\u6848\u72b6\u6001',
+            recoveryReady: '\u662f\u5426\u53ef\u6062\u590d',
+            incidentReceiptStatus: '\u5f02\u5e38\u56de\u6267\u72b6\u6001',
+            recoveryChecklist: '\u6062\u590d\u68c0\u67e5\u6e05\u5355',
+            realExecutionIncidentResponseAuditPreview: '\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionIncidentResponseNotRefreshedYet: '\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionIncidentResponseDryRunRunning: '\u6b63\u5728\u751f\u6210 real execution incident response dry-run.',
+            realExecutionIncidentResponseDryRunComplete: 'Real execution incident response dry-run \u5b8c\u6210\u3002',
+            realExecutionIncidentResponseDryRunFailed: 'Real execution incident response dry-run \u5931\u8d25\u3002',
+            realExecutionIncidentResponseCopied: '\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94\u5df2\u590d\u5236\u3002',
+            realExecutionIncidentResponseCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94\u5931\u8d25\u3002'
         });
 
 
