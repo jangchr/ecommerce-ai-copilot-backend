@@ -1996,3 +1996,41 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             receipt["real_execution_approval_request_receipt_status"],
         )
 
+    def test_project_runner_real_execution_approval_decision_dry_run_endpoint_denies_without_operator_approval(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/real-execution-approval-decision/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertEqual(payload["approval_decision"], "denied")
+        self.assertFalse(payload["operator_approval_captured"])
+        self.assertFalse(payload["approval_request_ready"])
+        self.assertFalse(payload["real_execution_mode_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        decision = payload["runner_real_execution_approval_decision_preview"]
+        ledger = payload["runner_real_execution_decision_ledger_preview"]
+        receipt = payload["runner_real_execution_denied_receipt_preview"]
+
+        self.assertEqual(decision["real_execution_approval_decision_status"], "approval_decision_denied_in_dry_run")
+        self.assertEqual(decision["approval_decision"], "denied")
+        self.assertGreater(decision["blocking_decision_check_count"], 0)
+        self.assertEqual(ledger["real_execution_decision_ledger_status"], "decision_ledger_recorded")
+        self.assertEqual(receipt["real_execution_denied_receipt_status"], "real_execution_denied_safely")
+        self.assertFalse(receipt["real_execution_enabled"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_approval_decision"],
+            "denied",
+        )
+
