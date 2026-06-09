@@ -61,6 +61,9 @@ from agent_runs import (
     build_agent_message,
     build_agent_runner_plan,
     build_agent_runner_plan_summary,
+    build_agent_contract_registry,
+    build_agent_contract_summary,
+    build_agent_contract_completeness_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6210,6 +6213,9 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
     project, planner_recommendation = _project_with_planner_summary(safe_id)
     context = _latest_project_planner_context(safe_id)
 
+    agent_contract_registry = build_agent_contract_registry()
+    agent_contract_summary = build_agent_contract_summary(agent_contract_registry)
+    agent_contract_completeness_report = build_agent_contract_completeness_report(agent_contract_registry)
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6238,6 +6244,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
             "latest_runner_dispatch_allowed": bool(runner_dispatch_ticket.get("dispatch_allowed")),
             "latest_runner_dispatch_event_status": runner_dispatch_event.get("event_status", ""),
             "latest_runner_dispatch_event_id": runner_dispatch_event.get("event_id", ""),
+        "latest_agent_contract_report_status": agent_contract_completeness_report.get("report_status", ""),
+        "latest_agent_contract_complete_role_count": int(agent_contract_completeness_report.get("complete_role_count") or 0),
+        "latest_agent_contract_missing_role_count": int(agent_contract_completeness_report.get("missing_role_count") or 0),
+        "latest_agent_contract_supervisor_can_use_registry": bool(agent_contract_completeness_report.get("supervisor_can_use_registry")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6255,6 +6265,9 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "runner_dispatch_summary": runner_dispatch_summary,
         "runner_dispatch_event": runner_dispatch_event,
         "runner_dispatch_event_summary": runner_dispatch_event_summary,
+        "agent_contract_registry": agent_contract_registry,
+        "agent_contract_summary": agent_contract_summary,
+        "agent_contract_completeness_report": agent_contract_completeness_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

@@ -430,6 +430,32 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(plan["handoff_message"]["handoff_valid"], plan["handoff_message"])
         self.assertEqual(summary["summary_version"], "agent_runner_plan_summary_v1")
         self.assertEqual(summary["execution_status"], plan["execution_status"])
+        self.assertIn("agent_contract_registry", payload)
+        self.assertIn("agent_contract_summary", payload)
+        self.assertIn("agent_contract_completeness_report", payload)
+        contract_report = payload["agent_contract_completeness_report"]
+        self.assertEqual(
+            contract_report["completeness_report_version"],
+            "agent_contract_completeness_report_v1",
+        )
+        self.assertEqual(contract_report["report_status"], "agent_contract_registry_complete")
+        self.assertEqual(contract_report["missing_role_count"], 0)
+        self.assertTrue(contract_report["supervisor_can_use_registry"])
+        self.assertFalse(contract_report["real_execution_allowed"])
+        self.assertFalse(contract_report["provider_call_allowed"])
+        self.assertFalse(contract_report["external_api_call_allowed"])
+        self.assertFalse(contract_report["agent_execution_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_agent_contract_report_status"],
+            "agent_contract_registry_complete",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_agent_contract_missing_role_count"],
+            0,
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_agent_contract_supervisor_can_use_registry"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],
