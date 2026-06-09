@@ -2152,6 +2152,7 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
 
         incident = payload["runner_real_execution_incident_response_preview"]
         receipt = incident["incident_receipt"]
+        audit_summary = payload["runner_real_execution_safety_chain_audit_summary_preview"]
 
         self.assertEqual(incident["real_execution_incident_response_status"], "incident_response_opened_safely")
         self.assertEqual(incident["launch_monitor_status"], "launch_monitor_blocked_safely")
@@ -2178,5 +2179,27 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_real_execution_incident_receipt_status"],
             "incident_response_recorded",
+        )
+        self.assertEqual(
+            audit_summary["real_execution_safety_chain_audit_summary_status"],
+            "safety_chain_recorded_safely",
+        )
+        self.assertEqual(audit_summary["chain_status"], "blocked_safely")
+        self.assertEqual(audit_summary["launch_authorization_status"], "launch_authorization_denied")
+        self.assertEqual(audit_summary["launch_monitor_status"], "launch_monitor_blocked_safely")
+        self.assertEqual(audit_summary["incident_response_status"], "incident_response_opened_safely")
+        self.assertTrue(audit_summary["abort_recommended"])
+        self.assertTrue(audit_summary["incident_detected"])
+        self.assertFalse(audit_summary["provider_call_performed"])
+        self.assertFalse(audit_summary["external_api_called"])
+        self.assertFalse(audit_summary["agent_execution_performed"])
+        self.assertFalse(audit_summary["safe_to_continue"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_safety_chain_audit_summary_status"],
+            "safety_chain_recorded_safely",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_safety_chain_status"],
+            "blocked_safely",
         )
 

@@ -12767,6 +12767,87 @@ def _runner_real_execution_launch_monitor_preview(launch_payload: dict) -> dict:
     }
 
 
+def _runner_real_execution_safety_chain_audit_summary_preview(
+    incident_payload: dict,
+    incident_response: dict,
+) -> dict:
+    incident = incident_response if isinstance(incident_response, dict) else {}
+    monitor = dict(incident_payload.get("runner_real_execution_launch_monitor_preview") or {})
+    authorization = dict(incident_payload.get("runner_real_execution_launch_authorization_preview") or {})
+    launch_lock = dict(incident_payload.get("runner_real_execution_launch_lock_preview") or {})
+    denial_receipt = dict(incident_payload.get("runner_real_execution_launch_denial_receipt_preview") or {})
+
+    project_id = str(
+        incident_payload.get("project", {}).get("project_id")
+        or incident_payload.get("project_id")
+        or incident.get("project_id")
+        or "demo_project_default"
+    )
+
+    audit_events = [
+        {
+            "audit_event_id": f"real_execution_safety_chain_{project_id}_launch_authorization",
+            "audit_event_type": "real_execution_launch_authorization_checked",
+            "audit_event_status": authorization.get("real_execution_launch_authorization_status", "not_refreshed"),
+            "blocking": True,
+        },
+        {
+            "audit_event_id": f"real_execution_safety_chain_{project_id}_launch_monitor",
+            "audit_event_type": "real_execution_launch_monitor_checked",
+            "audit_event_status": monitor.get("real_execution_launch_monitor_status", "not_refreshed"),
+            "blocking": bool(monitor.get("abort_recommended")),
+        },
+        {
+            "audit_event_id": f"real_execution_safety_chain_{project_id}_incident_response",
+            "audit_event_type": "real_execution_incident_response_recorded",
+            "audit_event_status": incident.get("real_execution_incident_response_status", "not_refreshed"),
+            "blocking": bool(incident.get("incident_detected")),
+        },
+    ]
+
+    blocking_tripwire_signal_ids = list(monitor.get("blocking_tripwire_signal_ids") or incident.get("blocking_tripwire_signal_ids") or [])
+    failed_health_probe_ids = list(monitor.get("failed_health_probe_ids") or incident.get("failed_health_probe_ids") or [])
+
+    return {
+        "real_execution_safety_chain_audit_summary_version": "runner_real_execution_safety_chain_audit_summary_preview_v1",
+        "real_execution_safety_chain_audit_summary_status": "safety_chain_recorded_safely",
+        "project_id": project_id,
+        "chain_status": "blocked_safely",
+        "chain_step_count": len(audit_events),
+        "audit_events": audit_events,
+        "audit_event_count": len(audit_events),
+        "launch_authorization_status": authorization.get("real_execution_launch_authorization_status", ""),
+        "launch_lock_status": launch_lock.get("real_execution_launch_lock_status", ""),
+        "launch_denial_receipt_status": denial_receipt.get("real_execution_launch_denial_receipt_status", ""),
+        "launch_monitor_status": monitor.get("real_execution_launch_monitor_status", ""),
+        "incident_response_status": incident.get("real_execution_incident_response_status", ""),
+        "incident_receipt_status": incident.get("incident_receipt_status", ""),
+        "containment_plan_status": incident.get("containment_plan_status", ""),
+        "health_probe_summary": monitor.get("health_probe_summary", ""),
+        "blocking_tripwire_signal_ids": blocking_tripwire_signal_ids,
+        "blocking_tripwire_signal_count": len(blocking_tripwire_signal_ids),
+        "failed_health_probe_ids": failed_health_probe_ids,
+        "failed_health_probe_count": len(failed_health_probe_ids),
+        "abort_recommended": bool(incident.get("abort_recommended") or monitor.get("abort_recommended")),
+        "incident_detected": bool(incident.get("incident_detected")),
+        "recovery_ready": bool(incident.get("recovery_ready")),
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 def _runner_real_execution_incident_response_preview(monitor_payload: dict) -> dict:
     monitor = dict(monitor_payload.get("runner_real_execution_launch_monitor_preview") or {})
     project_id = str(monitor_payload.get("project", {}).get("project_id") or monitor_payload.get("project_id") or "demo_project_default")
@@ -13068,6 +13149,10 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
     monitor_payload = await dry_run_project_agent_real_execution_launch_monitor(project_id, http_request)
 
     runner_real_execution_incident_response_preview = _runner_real_execution_incident_response_preview(monitor_payload)
+    runner_real_execution_safety_chain_audit_summary_preview = _runner_real_execution_safety_chain_audit_summary_preview(
+        monitor_payload,
+        runner_real_execution_incident_response_preview,
+    )
 
     project = monitor_payload["project"]
     graph_summary = dict(project.get("graph_summary") or {})
@@ -13078,6 +13163,10 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         "latest_runner_real_execution_containment_plan_status": runner_real_execution_incident_response_preview["containment_plan_status"],
         "latest_runner_real_execution_recovery_ready": runner_real_execution_incident_response_preview["recovery_ready"],
         "latest_runner_real_execution_incident_receipt_status": runner_real_execution_incident_response_preview["incident_receipt_status"],
+        "latest_runner_real_execution_safety_chain_audit_summary_status": runner_real_execution_safety_chain_audit_summary_preview["real_execution_safety_chain_audit_summary_status"],
+        "latest_runner_real_execution_safety_chain_status": runner_real_execution_safety_chain_audit_summary_preview["chain_status"],
+        "latest_runner_real_execution_safety_chain_audit_event_count": runner_real_execution_safety_chain_audit_summary_preview["audit_event_count"],
+        "latest_runner_real_execution_safety_chain_safe_to_continue": runner_real_execution_safety_chain_audit_summary_preview["safe_to_continue"],
     })
     project["graph_summary"] = graph_summary
     try:
@@ -13089,6 +13178,7 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         **monitor_payload,
         "project": project,
         "runner_real_execution_incident_response_preview": runner_real_execution_incident_response_preview,
+        "runner_real_execution_safety_chain_audit_summary_preview": runner_real_execution_safety_chain_audit_summary_preview,
         "dry_run": True,
         "incident_detected": runner_real_execution_incident_response_preview["incident_detected"],
         "incident_response_opened": runner_real_execution_incident_response_preview["incident_detected"],
