@@ -105,6 +105,7 @@ Add-Check "project_workspace_runner_event_ledger_summary_marker" ($page.Content 
 Add-Check "project_workspace_supervisor_event_ledger_decision_marker" ($page.Content -match "Project Workspace supervisor event ledger decision bundle")
 Add-Check "project_workspace_supervisor_next_step_routing_plan_marker" ($page.Content -match "Project Workspace supervisor next-step routing plan bundle")
 Add-Check "project_workspace_supervisor_next_step_work_order_preview_marker" ($page.Content -match "Project Workspace supervisor next-step work order preview bundle")
+Add-Check "project_workspace_queue_lease_worker_dry_run_chain_marker" ($page.Content -match "Project Workspace queue lease worker dry-run chain bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

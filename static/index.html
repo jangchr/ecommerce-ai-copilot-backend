@@ -11553,6 +11553,52 @@
             };
         }
 
+
+        function projectWorkspaceExportQueueLeaseWorkerDryRunChainSnapshot(workspace = latestProjectWorkspace) {
+            const chain = projectWorkspaceQueueLeaseWorkerDryRunChainFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack queue lease worker dry-run chain bundle',
+                queue_lease_worker_dry_run_chain_status: chain.queue_lease_worker_dry_run_chain_status || '',
+                queue_persistence_status: chain.queue_persistence_status || '',
+                worker_lease_status: chain.worker_lease_status || '',
+                worker_invocation_status: chain.worker_invocation_status || '',
+                queue_persisted: Boolean(chain.queue_persisted),
+                worker_lease_created: Boolean(chain.worker_lease_created),
+                worker_invocation_performed: Boolean(chain.worker_invocation_performed),
+                provider_call_performed: Boolean(chain.provider_call_performed),
+                external_api_called: Boolean(chain.external_api_called),
+                agent_execution_performed: Boolean(chain.agent_execution_performed),
+                safe_to_continue: Boolean(chain.safe_to_continue),
+                dry_run: Boolean(chain.dry_run),
+                queue_persistence_preview: chain.queue_persistence_preview || {},
+                worker_lease_preview: chain.worker_lease_preview || {},
+                worker_invocation_preview: chain.worker_invocation_preview || {},
+                has_queue_lease_worker_chain: Boolean(chain.queue_lease_worker_dry_run_chain_status || chain.queue_persistence_status || chain.worker_lease_status || chain.worker_invocation_status)
+            };
+        }
+
+        function projectWorkspaceExportQueueLeaseWorkerDryRunChainMarkdown(workspace = latestProjectWorkspace) {
+            const chain = projectWorkspaceExportQueueLeaseWorkerDryRunChainSnapshot(workspace);
+            if (!chain.has_queue_lease_worker_chain) {
+                return `## ${t('projectWorkspaceExportQueueLeaseWorkerTitle')}\n${t('queueLeaseWorkerChainNotRefreshedYet')}`;
+            }
+            return [
+                `## ${t('projectWorkspaceExportQueueLeaseWorkerTitle')}`,
+                `${t('queueLeaseWorkerChainStatus')}: ${chain.queue_lease_worker_dry_run_chain_status || 'not_refreshed'}`,
+                `${t('queuePersistenceStatus')}: ${chain.queue_persistence_status || 'not_refreshed'}`,
+                `${t('workerLeaseStatus')}: ${chain.worker_lease_status || 'not_refreshed'}`,
+                `${t('workerInvocationStatus')}: ${chain.worker_invocation_status || 'not_refreshed'}`,
+                `${t('queuePersisted')}: ${chain.queue_persisted}`,
+                `${t('workerLeaseCreated')}: ${chain.worker_lease_created}`,
+                `${t('workerInvocationPerformed')}: ${chain.worker_invocation_performed}`,
+                `${t('providerCallPerformed')}: ${chain.provider_call_performed}`,
+                `${t('externalApiCalled')}: ${chain.external_api_called}`,
+                `${t('agentExecutionPerformed')}: ${chain.agent_execution_performed}`,
+                `${t('safeToContinue')}: ${chain.safe_to_continue}`,
+                `${t('dryRun')}: ${chain.dry_run}`
+            ].join('\n');
+        }
+
         function projectWorkspaceExportSupervisorNextStepWorkOrderPreviewMarkdown(workspace = latestProjectWorkspace) {
             const preview = projectWorkspaceExportSupervisorNextStepWorkOrderPreviewSnapshot(workspace);
             if (!preview.has_work_order_preview) {
@@ -11780,6 +11826,8 @@
                 '',
                 projectWorkspaceExportSupervisorNextStepWorkOrderPreviewMarkdown(workspace),
                 '',
+                projectWorkspaceExportQueueLeaseWorkerDryRunChainMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11799,6 +11847,7 @@
                 runner_supervisor_event_ledger_decision_summary: projectWorkspaceExportSupervisorEventLedgerDecisionSnapshot(workspace),
                 runner_supervisor_next_step_routing_plan: projectWorkspaceExportSupervisorNextStepRoutingPlanSnapshot(workspace),
                 runner_supervisor_next_step_work_order_preview: projectWorkspaceExportSupervisorNextStepWorkOrderPreviewSnapshot(workspace),
+                runner_queue_lease_worker_dry_run_chain: projectWorkspaceExportQueueLeaseWorkerDryRunChainSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -15746,6 +15795,139 @@
         let latestProjectRunnerSupervisorNextStepRoutingPlan = {};
         const PROJECT_WORKSPACE_SUPERVISOR_NEXT_STEP_WORK_ORDER_PREVIEW_BUNDLE_MARKER = 'Project Workspace supervisor next-step work order preview bundle';
         let latestProjectRunnerSupervisorNextStepWorkOrderPreview = {};
+        const PROJECT_WORKSPACE_QUEUE_LEASE_WORKER_DRY_RUN_CHAIN_BUNDLE_MARKER = 'Project Workspace queue lease worker dry-run chain bundle';
+        let latestProjectRunnerQueueLeaseWorkerDryRunChain = {};
+
+        function projectWorkspaceQueueLeaseWorkerDryRunChainFromWorkspace(workspace = latestProjectWorkspace) {
+            const chain = Object.keys(latestProjectRunnerQueueLeaseWorkerDryRunChain || {}).length
+                ? latestProjectRunnerQueueLeaseWorkerDryRunChain
+                : workspace?.runner_queue_lease_worker_dry_run_chain || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (chain && Object.keys(chain).length) return chain;
+            return {
+                queue_lease_worker_dry_run_chain_version: '',
+                queue_lease_worker_dry_run_chain_status: graphSummary.latest_runner_queue_lease_worker_chain_status || '',
+                queue_persistence_status: graphSummary.latest_runner_queue_persistence_status || '',
+                worker_lease_status: graphSummary.latest_runner_worker_lease_status || '',
+                worker_invocation_status: graphSummary.latest_runner_worker_invocation_status || '',
+                queue_persisted: Boolean(graphSummary.latest_runner_queue_persisted),
+                worker_lease_created: Boolean(graphSummary.latest_runner_worker_lease_created),
+                worker_invocation_performed: Boolean(graphSummary.latest_runner_worker_invocation_performed),
+                safe_to_continue: Boolean(graphSummary.latest_runner_queue_lease_worker_safe_to_continue),
+                queue_persistence_preview: {},
+                worker_lease_preview: {},
+                worker_invocation_preview: {},
+                dry_run: true,
+                provider_call_performed: false,
+                external_api_called: false,
+                agent_execution_performed: false
+            };
+        }
+
+        function projectWorkspaceQueueLeaseWorkerDryRunChainCopyText(workspace = latestProjectWorkspace) {
+            const chain = projectWorkspaceQueueLeaseWorkerDryRunChainFromWorkspace(workspace);
+            return [
+                t('queueLeaseWorkerChainCopyTitle'),
+                `${t('queueLeaseWorkerChainStatus')}: ${chain.queue_lease_worker_dry_run_chain_status || 'not_refreshed'}`,
+                `${t('queuePersistenceStatus')}: ${chain.queue_persistence_status || 'not_refreshed'}`,
+                `${t('workerLeaseStatus')}: ${chain.worker_lease_status || 'not_refreshed'}`,
+                `${t('workerInvocationStatus')}: ${chain.worker_invocation_status || 'not_refreshed'}`,
+                `${t('queuePersisted')}: ${Boolean(chain.queue_persisted)}`,
+                `${t('workerLeaseCreated')}: ${Boolean(chain.worker_lease_created)}`,
+                `${t('workerInvocationPerformed')}: ${Boolean(chain.worker_invocation_performed)}`,
+                `${t('providerCallPerformed')}: ${Boolean(chain.provider_call_performed)}`,
+                `${t('externalApiCalled')}: ${Boolean(chain.external_api_called)}`,
+                `${t('agentExecutionPerformed')}: ${Boolean(chain.agent_execution_performed)}`,
+                `${t('safeToContinue')}: ${Boolean(chain.safe_to_continue)}`,
+                `${t('dryRun')}: ${Boolean(chain.dry_run)}`,
+                '',
+                JSON.stringify({ runner_queue_lease_worker_dry_run_chain: chain }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceQueueLeaseWorkerDryRunChain() {
+            const status = document.getElementById('projectWorkspaceQueueLeaseWorkerDryRunChainStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceQueueLeaseWorkerDryRunChainCopyText());
+                if (status) status.textContent = t('queueLeaseWorkerChainCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('queueLeaseWorkerChainCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel(workspace = latestProjectWorkspace) {
+            const chain = projectWorkspaceQueueLeaseWorkerDryRunChainFromWorkspace(workspace);
+            const queuePreview = chain.queue_persistence_preview || {};
+            const leasePreview = chain.worker_lease_preview || {};
+            const invocationPreview = chain.worker_invocation_preview || {};
+            const hasChain = Boolean(
+                chain.queue_lease_worker_dry_run_chain_status ||
+                chain.queue_persistence_status ||
+                chain.worker_lease_status ||
+                chain.worker_invocation_status
+            );
+            return `
+                <div class="section-block" id="projectWorkspaceQueueLeaseWorkerDryRunChainPanel" data-project-queue-lease-worker-dry-run-chain-marker="Project Workspace queue lease worker dry-run chain bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('queueLeaseWorkerChainPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('queueLeaseWorkerChainPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceQueueLeaseWorkerDryRunChainBtn" type="button" onclick="copyProjectWorkspaceQueueLeaseWorkerDryRunChain()">${escapeHTML(t('copyQueueLeaseWorkerChain'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queueLeaseWorkerChainStatus'))}</div>
+                            <strong data-queue-lease-worker-chain-status="${escapeHTML(chain.queue_lease_worker_dry_run_chain_status || 'not_refreshed')}">${escapeHTML(chain.queue_lease_worker_dry_run_chain_status || t('queueLeaseWorkerChainNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queuePersistenceStatus'))}</div>
+                            <strong data-queue-persistence-status="${escapeHTML(chain.queue_persistence_status || 'not_refreshed')}">${escapeHTML(chain.queue_persistence_status || t('queueLeaseWorkerChainNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('queuePersisted'))}: ${escapeHTML(String(Boolean(chain.queue_persisted)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workerLeaseStatus'))}</div>
+                            <strong data-worker-lease-status="${escapeHTML(chain.worker_lease_status || 'not_refreshed')}">${escapeHTML(chain.worker_lease_status || t('queueLeaseWorkerChainNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('workerLeaseCreated'))}: ${escapeHTML(String(Boolean(chain.worker_lease_created)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workerInvocationStatus'))}</div>
+                            <strong data-worker-invocation-status="${escapeHTML(chain.worker_invocation_status || 'not_refreshed')}">${escapeHTML(chain.worker_invocation_status || t('queueLeaseWorkerChainNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('workerInvocationPerformed'))}: ${escapeHTML(String(Boolean(chain.worker_invocation_performed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('queuePreview'))}</div>
+                            <div>${escapeHTML(t('supervisorTargetAgent'))}: ${escapeHTML(queuePreview.target_agent_id || chain.target_agent_id || t('none'))}</div>
+                            <div>${escapeHTML(t('supervisorRecommendedCommand'))}: ${escapeHTML(queuePreview.recommended_command || chain.recommended_command || t('none'))}</div>
+                            <div>${escapeHTML(t('queuePersisted'))}: ${escapeHTML(String(Boolean(queuePreview.queue_persisted)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workerLeasePreview'))}</div>
+                            <div>${escapeHTML(t('workerId'))}: ${escapeHTML(leasePreview.worker_id || t('none'))}</div>
+                            <div>${escapeHTML(t('leaseId'))}: ${escapeHTML(leasePreview.lease_id || t('none'))}</div>
+                            <div>${escapeHTML(t('workerLeaseCreated'))}: ${escapeHTML(String(Boolean(leasePreview.worker_lease_created)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('workerInvocationPreview'))}</div>
+                            <div>${escapeHTML(t('agentExecutionAllowed'))}: ${escapeHTML(String(Boolean(invocationPreview.agent_execution_allowed)))}</div>
+                            <div>${escapeHTML(t('providerCallAllowed'))}: ${escapeHTML(String(Boolean(invocationPreview.provider_call_allowed)))}</div>
+                            <div>${escapeHTML(t('externalApiCallAllowed'))}: ${escapeHTML(String(Boolean(invocationPreview.external_api_call_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('queueLeaseWorkerAuditPreview'))}</div>
+                        ${hasChain ? `<pre class="debug" data-queue-lease-worker-dry-run-chain-audit-preview="Project Workspace queue lease worker dry-run chain bundle">${escapeHTML(projectWorkspaceQueueLeaseWorkerDryRunChainCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('queueLeaseWorkerChainNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceQueueLeaseWorkerDryRunChainStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceSupervisorNextStepWorkOrderPreviewFromWorkspace(workspace = latestProjectWorkspace) {
             const preview = Object.keys(latestProjectRunnerSupervisorNextStepWorkOrderPreview || {}).length
@@ -16480,6 +16662,7 @@
                 latestProjectRunnerSupervisorEventLedgerDecisionSummary = payload.runner_supervisor_event_ledger_decision_summary || {};
                 latestProjectRunnerSupervisorNextStepRoutingPlan = payload.runner_supervisor_next_step_routing_plan || {};
                 latestProjectRunnerSupervisorNextStepWorkOrderPreview = payload.runner_supervisor_next_step_work_order_preview || {};
+                latestProjectRunnerQueueLeaseWorkerDryRunChain = payload.runner_queue_lease_worker_dry_run_chain || {};
 
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -16507,6 +16690,8 @@
                 if (nextStepRoutingPanel) nextStepRoutingPanel.outerHTML = renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(latestProjectWorkspace);
                 const workOrderPreviewPanel = document.getElementById('projectWorkspaceSupervisorNextStepWorkOrderPreviewPanel');
                 if (workOrderPreviewPanel) workOrderPreviewPanel.outerHTML = renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(latestProjectWorkspace);
+                const queueLeaseWorkerPanel = document.getElementById('projectWorkspaceQueueLeaseWorkerDryRunChainPanel');
+                if (queueLeaseWorkerPanel) queueLeaseWorkerPanel.outerHTML = renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -18683,6 +18868,7 @@
                     ${renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(workspace)}
+                    ${renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -22731,6 +22917,55 @@
             workOrderPersisted: '\u662f\u5426\u5df2\u6301\u4e45\u5316\u5de5\u4f5c\u5355',
             recommendedNextState: '\u63a8\u8350\u4e0b\u4e00\u72b6\u6001',
             projectWorkspaceExportSupervisorWorkOrderTitle: 'Supervisor \u4e0b\u4e00\u6b65\u5de5\u4f5c\u5355\u9884\u89c8'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceQueueLeaseWorkerDryRunChainBundleMarker: 'Project Workspace queue lease worker dry-run chain bundle',
+            queueLeaseWorkerChainPanelTitle: 'Queue / Lease / Worker dry-run chain',
+            queueLeaseWorkerChainPanelHelper: 'Dry-run chain from work order preview to queue persistence, worker lease, and worker invocation. No queue item, lease, worker, Agent, provider, or external API is executed.',
+            copyQueueLeaseWorkerChain: 'Copy queue / lease / worker chain',
+            queueLeaseWorkerChainCopyTitle: 'Project queue / lease / worker dry-run chain',
+            queueLeaseWorkerChainStatus: 'Queue / lease / worker chain status',
+            queuePersistenceStatus: 'Queue persistence status',
+            workerLeaseStatus: 'Worker lease status',
+            workerInvocationStatus: 'Worker invocation status',
+            workerLeaseCreated: 'Worker lease created',
+            workerInvocationPerformed: 'Worker invocation performed',
+            queuePreview: 'Queue preview',
+            workerLeasePreview: 'Worker lease preview',
+            workerInvocationPreview: 'Worker invocation preview',
+            workerId: 'Worker ID',
+            leaseId: 'Lease ID',
+            queueLeaseWorkerAuditPreview: 'Queue / lease / worker audit preview',
+            queueLeaseWorkerChainNotRefreshedYet: 'Queue / lease / worker dry-run chain has not been refreshed yet.',
+            queueLeaseWorkerChainCopied: 'Queue / lease / worker chain copied.',
+            queueLeaseWorkerChainCopyFailed: 'Could not copy queue / lease / worker chain.',
+            projectWorkspaceExportQueueLeaseWorkerTitle: 'Queue / lease / worker dry-run chain'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceQueueLeaseWorkerDryRunChainBundleMarker: 'Project Workspace queue lease worker dry-run chain bundle',
+            queueLeaseWorkerChainPanelTitle: 'Queue / Lease / Worker dry-run \u94fe\u8def',
+            queueLeaseWorkerChainPanelHelper: '\u4ece\u5de5\u4f5c\u5355\u9884\u89c8\u5230\u961f\u5217\u6301\u4e45\u5316\u3001worker lease \u548c worker invocation \u7684 dry-run \u94fe\u8def\uff1b\u4e0d\u771f\u5b9e\u5165\u961f\u3001\u4e0d\u521b\u5efa lease\u3001\u4e0d\u6267\u884c worker / Agent / provider / \u5916\u90e8 API\u3002',
+            copyQueueLeaseWorkerChain: '\u590d\u5236 Queue / Lease / Worker \u94fe\u8def',
+            queueLeaseWorkerChainCopyTitle: '\u9879\u76ee Queue / Lease / Worker dry-run \u94fe\u8def',
+            queueLeaseWorkerChainStatus: 'Queue / Lease / Worker \u94fe\u8def\u72b6\u6001',
+            queuePersistenceStatus: '\u961f\u5217\u6301\u4e45\u5316\u72b6\u6001',
+            workerLeaseStatus: 'Worker lease \u72b6\u6001',
+            workerInvocationStatus: 'Worker invocation \u72b6\u6001',
+            workerLeaseCreated: '\u662f\u5426\u521b\u5efa worker lease',
+            workerInvocationPerformed: '\u662f\u5426\u6267\u884c worker invocation',
+            queuePreview: '\u961f\u5217\u9884\u89c8',
+            workerLeasePreview: 'Worker lease \u9884\u89c8',
+            workerInvocationPreview: 'Worker invocation \u9884\u89c8',
+            workerId: 'Worker ID',
+            leaseId: 'Lease ID',
+            queueLeaseWorkerAuditPreview: 'Queue / Lease / Worker \u5ba1\u8ba1\u9884\u89c8',
+            queueLeaseWorkerChainNotRefreshedYet: 'Queue / Lease / Worker dry-run \u94fe\u8def\u5c1a\u672a\u5237\u65b0\u3002',
+            queueLeaseWorkerChainCopied: 'Queue / Lease / Worker \u94fe\u8def\u5df2\u590d\u5236\u3002',
+            queueLeaseWorkerChainCopyFailed: '\u590d\u5236 Queue / Lease / Worker \u94fe\u8def\u5931\u8d25\u3002',
+            projectWorkspaceExportQueueLeaseWorkerTitle: 'Queue / Lease / Worker dry-run \u94fe\u8def'
         });
 
 

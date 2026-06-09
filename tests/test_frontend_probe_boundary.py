@@ -6447,3 +6447,21 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
         self.assertIn("Project Workspace supervisor next-step work order preview bundle", script)
         self.assertIn("project_workspace_supervisor_next_step_work_order_preview_marker", script)
+
+    def test_project_workspace_queue_lease_worker_dry_run_chain_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace queue lease worker dry-run chain bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_QUEUE_LEASE_WORKER_DRY_RUN_CHAIN_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel", html)
+        self.assertIn("copyProjectWorkspaceQueueLeaseWorkerDryRunChain", html)
+        self.assertIn("runner_queue_lease_worker_dry_run_chain", html)
+
+    def test_project_workspace_queue_lease_worker_dry_run_chain_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_queue_lease_worker_dry_run_chain_marker", script)
+        self.assertIn("Project Workspace queue lease worker dry-run chain bundle", script)
+
+    def test_project_workspace_queue_lease_worker_dry_run_chain_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace queue lease worker dry-run chain bundle", script)
+        self.assertIn("project_workspace_queue_lease_worker_dry_run_chain_marker", script)
