@@ -2153,6 +2153,7 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         incident = payload["runner_real_execution_incident_response_preview"]
         receipt = incident["incident_receipt"]
         audit_summary = payload["runner_real_execution_safety_chain_audit_summary_preview"]
+        safety_event = payload["runner_real_execution_safety_chain_event_preview"]
 
         self.assertEqual(incident["real_execution_incident_response_status"], "incident_response_opened_safely")
         self.assertEqual(incident["launch_monitor_status"], "launch_monitor_blocked_safely")
@@ -2201,5 +2202,28 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_real_execution_safety_chain_status"],
             "blocked_safely",
+        )
+        self.assertEqual(
+            safety_event["real_execution_safety_chain_event_version"],
+            "runner_real_execution_safety_chain_event_preview_v1",
+        )
+        self.assertEqual(safety_event["event_type"], "runner_real_execution_safety_chain_dry_run")
+        self.assertEqual(safety_event["event_status"], "safety_chain_blocked_safely")
+        self.assertEqual(safety_event["source_agent_id"], "risk_approval_agent")
+        self.assertEqual(safety_event["target_agent_id"], "supervisor_agent")
+        self.assertEqual(safety_event["chain_status"], "blocked_safely")
+        self.assertTrue(safety_event["abort_recommended"])
+        self.assertTrue(safety_event["incident_detected"])
+        self.assertFalse(safety_event["provider_call_performed"])
+        self.assertFalse(safety_event["external_api_called"])
+        self.assertFalse(safety_event["agent_execution_performed"])
+        self.assertFalse(safety_event["safe_to_continue"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_safety_chain_event_status"],
+            "safety_chain_blocked_safely",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_safety_chain_event_type"],
+            "runner_real_execution_safety_chain_dry_run",
         )
 
