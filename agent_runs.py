@@ -2511,6 +2511,101 @@ def build_agent_runner_supervisor_next_step_routing_plan(
     }
 
 
+
+AGENT_RUNNER_SUPERVISOR_NEXT_STEP_WORK_ORDER_PREVIEW_VERSION = "agent_runner_supervisor_next_step_work_order_preview_v1"
+
+
+def build_agent_runner_supervisor_next_step_work_order_preview(
+    routing_plan: dict[str, Any],
+    *,
+    project_id: str = "demo_project_default",
+    requested_by: str = "runner_supervisor_next_step_work_order_preview_builder",
+) -> dict[str, Any]:
+    """Bridge a Supervisor next-step routing plan into a dry-run work order preview.
+
+    This creates a structured work order draft for the next safe dry-run step.
+    It does not execute agents, call providers, call external APIs, spend money,
+    persist a queue item, or unlock real execution.
+    """
+
+    plan = routing_plan if isinstance(routing_plan, dict) else {}
+    safe_project_id = str(project_id or plan.get("project_id") or "demo_project_default")
+    routing_status = str(plan.get("supervisor_next_step_routing_plan_status") or "routing_plan_manual_review_required")
+    next_step_type = str(plan.get("next_step_type") or "request_operator_review")
+    target_agent_id = str(plan.get("target_agent_id") or "operator_agent")
+    recommended_command = str(plan.get("recommended_command") or "")
+    recommended_endpoint = str(plan.get("recommended_endpoint") or "")
+    blocking_event_ids = [
+        str(item)
+        for item in (plan.get("blocking_event_ids") or [])
+        if str(item or "")
+    ]
+    next_agent_candidates = [
+        str(item)
+        for item in (plan.get("next_agent_candidates") or [])
+        if str(item or "")
+    ]
+
+    if bool(plan.get("routing_allowed")) and routing_status == "routing_plan_ready_for_next_dry_run":
+        work_order_status = "supervisor_work_order_ready_dry_run"
+        work_order_allowed = True
+        recommended_next_state = "continue_next_safe_dry_run_step"
+        work_order_message = "Supervisor routing plan is ready for the next safe dry-run work order. Real execution remains disabled."
+    elif routing_status == "routing_plan_waiting_for_event_ledger":
+        work_order_status = "supervisor_work_order_waiting_for_event_ledger"
+        work_order_allowed = False
+        recommended_next_state = "refresh_runner_event_ledger_summary"
+        work_order_message = "Supervisor needs a refreshed event ledger before creating a runnable dry-run work order."
+    elif routing_status == "routing_plan_manual_review_required":
+        work_order_status = "supervisor_work_order_waiting_for_manual_review"
+        work_order_allowed = False
+        recommended_next_state = "request_operator_review"
+        work_order_message = "Supervisor requires manual review before the next dry-run work order can proceed."
+    else:
+        work_order_status = "supervisor_work_order_blocked"
+        work_order_allowed = False
+        recommended_next_state = "inspect_blocking_events_before_next_dry_run"
+        work_order_message = "Supervisor work order is blocked by event ledger or safety routing blockers."
+
+    work_order_id = f"supervisor_next_step_work_order_{safe_project_id}_{next_step_type}_{work_order_status}".replace(" ", "_")
+
+    return {
+        "supervisor_next_step_work_order_preview_version": AGENT_RUNNER_SUPERVISOR_NEXT_STEP_WORK_ORDER_PREVIEW_VERSION,
+        "supervisor_next_step_work_order_status": work_order_status,
+        "work_order_id": work_order_id,
+        "project_id": safe_project_id,
+        "requested_by": str(requested_by or "runner_supervisor_next_step_work_order_preview_builder"),
+        "source_routing_plan_version": str(plan.get("supervisor_next_step_routing_plan_version") or ""),
+        "source_routing_plan_status": routing_status,
+        "next_step_type": next_step_type,
+        "target_agent_id": target_agent_id,
+        "recommended_endpoint": recommended_endpoint,
+        "recommended_command": recommended_command,
+        "routing_reason": str(plan.get("routing_reason") or ""),
+        "work_order_allowed": work_order_allowed,
+        "routing_allowed": bool(plan.get("routing_allowed")) and work_order_allowed,
+        "supervisor_routing_allowed": bool(plan.get("supervisor_routing_allowed")) and work_order_allowed,
+        "recommended_next_state": recommended_next_state,
+        "work_order_message": work_order_message,
+        "blocking_event_ids": blocking_event_ids,
+        "blocking_event_count": len(blocking_event_ids),
+        "next_agent_candidates": next_agent_candidates,
+        "manual_review_required": True,
+        "queue_persisted": False,
+        "work_order_persisted": False,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "agent_execution_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "safe_to_continue": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_runner_event_ledger_summary(
     *,
     project_id: str = "demo_project_default",

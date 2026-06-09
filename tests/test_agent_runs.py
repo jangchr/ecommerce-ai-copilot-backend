@@ -1335,6 +1335,51 @@ class AgentRunnerExecutionReceiptTests(unittest.TestCase):
 
 
 
+
+    def test_supervisor_next_step_work_order_preview_blocks_on_blocking_route(self):
+        from agent_runs import build_agent_runner_supervisor_next_step_work_order_preview
+
+        routing_plan = {
+            "project_id": "project_supervisor_next_step_work_order",
+            "supervisor_next_step_routing_plan_version": "agent_runner_supervisor_next_step_routing_plan_v1",
+            "supervisor_next_step_routing_plan_status": "routing_plan_blocked_by_event_ledger",
+            "next_step_type": "inspect_blocking_events",
+            "target_agent_id": "risk_approval_agent",
+            "recommended_endpoint": "/api/v1/projects/{project_id}/runner/real-execution-incident-response/dry-run",
+            "recommended_command": "/api/v1/projects/project_supervisor_next_step_work_order/runner/real-execution-incident-response/dry-run",
+            "routing_allowed": False,
+            "blocking_event_ids": ["event_one", "event_two"],
+            "next_agent_candidates": ["risk_approval_agent"],
+            "dry_run": True,
+        }
+        preview = build_agent_runner_supervisor_next_step_work_order_preview(
+            routing_plan,
+            project_id="project_supervisor_next_step_work_order",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            preview["supervisor_next_step_work_order_preview_version"],
+            "agent_runner_supervisor_next_step_work_order_preview_v1",
+        )
+        self.assertEqual(preview["supervisor_next_step_work_order_status"], "supervisor_work_order_blocked")
+        self.assertIn("supervisor_next_step_work_order_project_supervisor_next_step_work_order", preview["work_order_id"])
+        self.assertEqual(preview["next_step_type"], "inspect_blocking_events")
+        self.assertEqual(preview["target_agent_id"], "risk_approval_agent")
+        self.assertEqual(preview["blocking_event_count"], 2)
+        self.assertFalse(preview["work_order_allowed"])
+        self.assertFalse(preview["routing_allowed"])
+        self.assertFalse(preview["real_execution_allowed"])
+        self.assertFalse(preview["provider_call_allowed"])
+        self.assertFalse(preview["external_api_call_allowed"])
+        self.assertFalse(preview["agent_execution_allowed"])
+        self.assertFalse(preview["provider_call_performed"])
+        self.assertFalse(preview["external_api_called"])
+        self.assertFalse(preview["agent_execution_performed"])
+        self.assertFalse(preview["safe_to_continue"])
+        self.assertTrue(preview["dry_run"])
+
+
     def test_supervisor_next_step_routing_plan_blocks_on_blocking_events(self):
         from agent_runs import build_agent_runner_supervisor_next_step_routing_plan
 

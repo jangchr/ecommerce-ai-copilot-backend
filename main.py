@@ -70,6 +70,7 @@ from agent_runs import (
     build_agent_runner_event_ledger_summary,
     build_agent_runner_supervisor_event_ledger_decision_summary,
     build_agent_runner_supervisor_next_step_routing_plan,
+    build_agent_runner_supervisor_next_step_work_order_preview,
     build_agent_runner_work_order,
     build_agent_runner_work_order_summary,
     build_agent_runner_queue_item,
@@ -13238,6 +13239,11 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         project_id=project_id,
         requested_by="project_runner_real_execution_incident_response_dry_run_api",
     )
+    runner_supervisor_next_step_work_order_preview = build_agent_runner_supervisor_next_step_work_order_preview(
+        runner_supervisor_next_step_routing_plan,
+        project_id=project_id,
+        requested_by="project_runner_real_execution_incident_response_dry_run_api",
+    )
 
     project = monitor_payload["project"]
     graph_summary = dict(project.get("graph_summary") or {})
@@ -13266,6 +13272,10 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         "latest_runner_supervisor_next_step_type": runner_supervisor_next_step_routing_plan["next_step_type"],
         "latest_runner_supervisor_next_step_target_agent_id": runner_supervisor_next_step_routing_plan["target_agent_id"],
         "latest_runner_supervisor_next_step_routing_allowed": runner_supervisor_next_step_routing_plan["routing_allowed"],
+        "latest_runner_supervisor_next_step_work_order_status": runner_supervisor_next_step_work_order_preview["supervisor_next_step_work_order_status"],
+        "latest_runner_supervisor_next_step_work_order_id": runner_supervisor_next_step_work_order_preview["work_order_id"],
+        "latest_runner_supervisor_next_step_work_order_allowed": runner_supervisor_next_step_work_order_preview["work_order_allowed"],
+        "latest_runner_supervisor_next_step_work_order_target_agent_id": runner_supervisor_next_step_work_order_preview["target_agent_id"],
     })
     project["graph_summary"] = graph_summary
     try:
@@ -13282,6 +13292,7 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         "runner_event_ledger_summary": runner_event_ledger_summary,
         "runner_supervisor_event_ledger_decision_summary": runner_supervisor_event_ledger_decision_summary,
         "runner_supervisor_next_step_routing_plan": runner_supervisor_next_step_routing_plan,
+        "runner_supervisor_next_step_work_order_preview": runner_supervisor_next_step_work_order_preview,
         "dry_run": True,
         "incident_detected": runner_real_execution_incident_response_preview["incident_detected"],
         "incident_response_opened": runner_real_execution_incident_response_preview["incident_detected"],
