@@ -2330,6 +2330,92 @@ def _runner_normalized_event_from_record(
     }
 
 
+
+AGENT_RUNNER_SUPERVISOR_EVENT_LEDGER_DECISION_SUMMARY_VERSION = "agent_runner_supervisor_event_ledger_decision_summary_v1"
+
+
+def build_agent_runner_supervisor_event_ledger_decision_summary(
+    event_ledger_summary: dict[str, Any],
+    *,
+    project_id: str = "demo_project_default",
+    requested_by: str = "runner_supervisor_event_ledger_decision_builder",
+) -> dict[str, Any]:
+    """Build a Supervisor decision summary from the unified runner event ledger.
+
+    This is a dry-run routing decision. It does not execute agents, call
+    providers, call external APIs, spend money, or unlock real execution.
+    """
+
+    ledger = event_ledger_summary if isinstance(event_ledger_summary, dict) else {}
+    safe_project_id = str(project_id or ledger.get("project_id") or "demo_project_default")
+    events = ledger.get("normalized_events") if isinstance(ledger.get("normalized_events"), list) else []
+    blocking_event_count = int(ledger.get("blocking_event_count") or 0)
+    event_count = int(ledger.get("event_count") or len(events))
+    provider_call_performed = bool(ledger.get("provider_call_performed"))
+    external_api_called = bool(ledger.get("external_api_called"))
+    agent_execution_performed = bool(ledger.get("agent_execution_performed"))
+    safe_to_continue = bool(ledger.get("safe_to_continue"))
+
+    if not event_count:
+        supervisor_decision_status = "supervisor_waiting_for_event_ledger"
+        recommended_next_action = "refresh_runner_event_ledger_summary"
+        decision_reason = "No normalized runner events are available for Supervisor routing."
+    elif provider_call_performed or external_api_called or agent_execution_performed:
+        supervisor_decision_status = "supervisor_hard_blocked_external_execution_detected"
+        recommended_next_action = "open_incident_response_and_manual_review"
+        decision_reason = "A real provider/API/agent execution signal was detected, so Supervisor must hard-block the chain."
+    elif blocking_event_count > 0:
+        supervisor_decision_status = "supervisor_blocked_by_event_ledger"
+        recommended_next_action = "inspect_blocking_events_before_next_dry_run"
+        decision_reason = "The event ledger contains blocking events, so Supervisor keeps real execution disabled."
+    elif safe_to_continue:
+        supervisor_decision_status = "supervisor_ready_for_next_dry_run_step"
+        recommended_next_action = "continue_next_safe_dry_run_step"
+        decision_reason = "The event ledger has no blocking events, but real execution is still disabled by default."
+    else:
+        supervisor_decision_status = "supervisor_manual_review_required"
+        recommended_next_action = "request_operator_review"
+        decision_reason = "The event ledger is recorded but does not permit automatic continuation."
+
+    blocking_event_ids = [
+        str(event.get("event_id") or "")
+        for event in events
+        if isinstance(event, dict) and bool(event.get("blocking"))
+    ]
+    next_agent_candidates = [
+        str(event.get("target_agent_id") or "")
+        for event in events
+        if isinstance(event, dict) and str(event.get("target_agent_id") or "")
+    ]
+
+    return {
+        "supervisor_event_ledger_decision_summary_version": AGENT_RUNNER_SUPERVISOR_EVENT_LEDGER_DECISION_SUMMARY_VERSION,
+        "supervisor_event_ledger_decision_status": supervisor_decision_status,
+        "project_id": safe_project_id,
+        "requested_by": str(requested_by or "runner_supervisor_event_ledger_decision_builder"),
+        "event_ledger_summary_version": str(ledger.get("runner_event_ledger_summary_version") or ""),
+        "event_ledger_summary_status": str(ledger.get("runner_event_ledger_summary_status") or ""),
+        "event_count": event_count,
+        "blocking_event_count": blocking_event_count,
+        "blocking_event_ids": blocking_event_ids,
+        "next_agent_candidates": next_agent_candidates,
+        "recommended_next_action": recommended_next_action,
+        "decision_reason": decision_reason,
+        "supervisor_routing_allowed": safe_to_continue and blocking_event_count == 0,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "agent_execution_allowed": False,
+        "provider_call_performed": provider_call_performed,
+        "external_api_called": external_api_called,
+        "agent_execution_performed": agent_execution_performed,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_runner_event_ledger_summary(
     *,
     project_id: str = "demo_project_default",

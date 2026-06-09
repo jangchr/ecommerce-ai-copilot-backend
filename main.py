@@ -68,6 +68,7 @@ from agent_runs import (
     build_agent_runner_execution_receipt,
     build_agent_runner_execution_receipt_summary,
     build_agent_runner_event_ledger_summary,
+    build_agent_runner_supervisor_event_ledger_decision_summary,
     build_agent_runner_work_order,
     build_agent_runner_work_order_summary,
     build_agent_runner_queue_item,
@@ -13226,6 +13227,11 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         incident_receipt=runner_real_execution_incident_response_preview.get("incident_receipt"),
         requested_by="project_runner_real_execution_incident_response_dry_run_api",
     )
+    runner_supervisor_event_ledger_decision_summary = build_agent_runner_supervisor_event_ledger_decision_summary(
+        runner_event_ledger_summary,
+        project_id=project_id,
+        requested_by="project_runner_real_execution_incident_response_dry_run_api",
+    )
 
     project = monitor_payload["project"]
     graph_summary = dict(project.get("graph_summary") or {})
@@ -13247,6 +13253,9 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         "latest_runner_event_ledger_event_count": runner_event_ledger_summary["event_count"],
         "latest_runner_event_ledger_blocking_event_count": runner_event_ledger_summary["blocking_event_count"],
         "latest_runner_event_ledger_safe_to_continue": runner_event_ledger_summary["safe_to_continue"],
+        "latest_runner_supervisor_event_ledger_decision_status": runner_supervisor_event_ledger_decision_summary["supervisor_event_ledger_decision_status"],
+        "latest_runner_supervisor_recommended_next_action": runner_supervisor_event_ledger_decision_summary["recommended_next_action"],
+        "latest_runner_supervisor_routing_allowed": runner_supervisor_event_ledger_decision_summary["supervisor_routing_allowed"],
     })
     project["graph_summary"] = graph_summary
     try:
@@ -13261,6 +13270,7 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         "runner_real_execution_safety_chain_audit_summary_preview": runner_real_execution_safety_chain_audit_summary_preview,
         "runner_real_execution_safety_chain_event_preview": runner_real_execution_safety_chain_event_preview,
         "runner_event_ledger_summary": runner_event_ledger_summary,
+        "runner_supervisor_event_ledger_decision_summary": runner_supervisor_event_ledger_decision_summary,
         "dry_run": True,
         "incident_detected": runner_real_execution_incident_response_preview["incident_detected"],
         "incident_response_opened": runner_real_execution_incident_response_preview["incident_detected"],

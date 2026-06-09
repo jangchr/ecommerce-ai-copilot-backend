@@ -1333,6 +1333,59 @@ class AgentRunnerDispatchEventTests(unittest.TestCase):
 
 class AgentRunnerExecutionReceiptTests(unittest.TestCase):
 
+
+    def test_supervisor_event_ledger_decision_blocks_on_blocking_events(self):
+        from agent_runs import (
+            build_agent_runner_event_ledger_summary,
+            build_agent_runner_supervisor_event_ledger_decision_summary,
+        )
+
+        ledger = build_agent_runner_event_ledger_summary(
+            project_id="project_supervisor_event_ledger_decision",
+            safety_chain_event={
+                "event_id": "safety_chain_event_project_supervisor_event_ledger_decision",
+                "event_type": "runner_real_execution_safety_chain_dry_run",
+                "event_status": "safety_chain_blocked_safely",
+                "project_id": "project_supervisor_event_ledger_decision",
+                "source_agent_id": "risk_approval_agent",
+                "target_agent_id": "supervisor_agent",
+                "abort_recommended": True,
+                "incident_detected": True,
+                "safe_to_continue": False,
+                "provider_call_performed": False,
+                "external_api_called": False,
+                "agent_execution_performed": False,
+                "dry_run": True,
+            },
+            requested_by="unit_test",
+        )
+        decision = build_agent_runner_supervisor_event_ledger_decision_summary(
+            ledger,
+            project_id="project_supervisor_event_ledger_decision",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            decision["supervisor_event_ledger_decision_summary_version"],
+            "agent_runner_supervisor_event_ledger_decision_summary_v1",
+        )
+        self.assertEqual(
+            decision["supervisor_event_ledger_decision_status"],
+            "supervisor_blocked_by_event_ledger",
+        )
+        self.assertEqual(decision["recommended_next_action"], "inspect_blocking_events_before_next_dry_run")
+        self.assertFalse(decision["supervisor_routing_allowed"])
+        self.assertFalse(decision["real_execution_allowed"])
+        self.assertFalse(decision["provider_call_allowed"])
+        self.assertFalse(decision["external_api_call_allowed"])
+        self.assertFalse(decision["agent_execution_allowed"])
+        self.assertFalse(decision["provider_call_performed"])
+        self.assertFalse(decision["external_api_called"])
+        self.assertFalse(decision["agent_execution_performed"])
+        self.assertFalse(decision["safe_to_continue"])
+        self.assertTrue(decision["dry_run"])
+
+
     def test_event_ledger_summary_normalizes_runner_events(self):
         from agent_runs import (
             build_agent_runner_dispatch_event,

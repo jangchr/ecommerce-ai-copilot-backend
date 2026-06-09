@@ -2155,6 +2155,7 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         audit_summary = payload["runner_real_execution_safety_chain_audit_summary_preview"]
         safety_event = payload["runner_real_execution_safety_chain_event_preview"]
         event_ledger_summary = payload["runner_event_ledger_summary"]
+        supervisor_decision = payload["runner_supervisor_event_ledger_decision_summary"]
 
         self.assertEqual(incident["real_execution_incident_response_status"], "incident_response_opened_safely")
         self.assertEqual(incident["launch_monitor_status"], "launch_monitor_blocked_safely")
@@ -2255,5 +2256,34 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         )
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_runner_event_ledger_safe_to_continue"]
+        )
+        self.assertEqual(
+            supervisor_decision["supervisor_event_ledger_decision_summary_version"],
+            "agent_runner_supervisor_event_ledger_decision_summary_v1",
+        )
+        self.assertEqual(
+            supervisor_decision["supervisor_event_ledger_decision_status"],
+            "supervisor_blocked_by_event_ledger",
+        )
+        self.assertEqual(
+            supervisor_decision["recommended_next_action"],
+            "inspect_blocking_events_before_next_dry_run",
+        )
+        self.assertFalse(supervisor_decision["supervisor_routing_allowed"])
+        self.assertFalse(supervisor_decision["real_execution_allowed"])
+        self.assertFalse(supervisor_decision["provider_call_allowed"])
+        self.assertFalse(supervisor_decision["external_api_call_allowed"])
+        self.assertFalse(supervisor_decision["agent_execution_allowed"])
+        self.assertFalse(supervisor_decision["safe_to_continue"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_supervisor_event_ledger_decision_status"],
+            "supervisor_blocked_by_event_ledger",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_supervisor_recommended_next_action"],
+            "inspect_blocking_events_before_next_dry_run",
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_runner_supervisor_routing_allowed"]
         )
 
