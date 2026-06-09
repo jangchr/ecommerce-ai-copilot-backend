@@ -14766,6 +14766,126 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_CAPABILITY_INVOCATION_GATE_PANEL_BUNDLE_MARKER = 'Project Workspace capability invocation gate panel bundle';
+        let latestProjectRunnerCapabilityInvocationGatePreview = {};
+        let latestProjectRunnerCapabilityInvocationRequestPreview = {};
+        let latestProjectRunnerCapabilityInvocationDecisionPreview = {};
+        let latestProjectRunnerCapabilityInvocationGateReceiptPreview = {};
+
+        function projectWorkspaceCapabilityInvocationGateCopyText(workspace = latestProjectWorkspace) {
+            const gate = Object.keys(latestProjectRunnerCapabilityInvocationGatePreview || {}).length ? latestProjectRunnerCapabilityInvocationGatePreview : workspace?.runner_capability_invocation_gate_preview || {};
+            const request = Object.keys(latestProjectRunnerCapabilityInvocationRequestPreview || {}).length ? latestProjectRunnerCapabilityInvocationRequestPreview : workspace?.runner_capability_invocation_request_preview || {};
+            const decision = Object.keys(latestProjectRunnerCapabilityInvocationDecisionPreview || {}).length ? latestProjectRunnerCapabilityInvocationDecisionPreview : workspace?.runner_capability_invocation_decision_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityInvocationGateReceiptPreview || {}).length ? latestProjectRunnerCapabilityInvocationGateReceiptPreview : workspace?.runner_capability_invocation_gate_receipt_preview || {};
+            return [
+                t('capabilityInvocationGateCopyTitle'),
+                `${t('capabilityInvocationGateStatus')}: ${gate.capability_invocation_gate_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationRequestStatus')}: ${request.capability_invocation_request_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationDecisionStatus')}: ${decision.capability_invocation_decision_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationGateReceiptStatus')}: ${receipt.capability_invocation_gate_receipt_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationAllowed')}: ${Boolean(receipt.capability_invocation_allowed)}`,
+                '',
+                JSON.stringify({ gate, request, decision, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCapabilityInvocationGate() {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationGateStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceCapabilityInvocationGateCopyText());
+                if (status) status.textContent = t('capabilityInvocationGateCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('capabilityInvocationGateCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceCapabilityInvocationGate(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationGateStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('capabilityInvocationGateDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_capability_invocation_gate_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/capability-invocation-gate/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('capabilityInvocationGateDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerAgentCapabilityCatalogPreview = payload.runner_agent_capability_catalog_preview || {};
+                latestProjectRunnerAgentToolBindingMatrixPreview = payload.runner_agent_tool_binding_matrix_preview || {};
+                latestProjectRunnerCapabilityPolicyGatePreview = payload.runner_capability_policy_gate_preview || {};
+                latestProjectRunnerToolInvocationContractPreview = payload.runner_tool_invocation_contract_preview || {};
+                latestProjectRunnerCapabilityHandoffPlanPreview = payload.runner_capability_handoff_plan_preview || {};
+                latestProjectRunnerCapabilityBindingReceiptPreview = payload.runner_capability_binding_receipt_preview || {};
+                latestProjectRunnerCapabilityInvocationGatePreview = payload.runner_capability_invocation_gate_preview || {};
+                latestProjectRunnerCapabilityInvocationRequestPreview = payload.runner_capability_invocation_request_preview || {};
+                latestProjectRunnerCapabilityInvocationDecisionPreview = payload.runner_capability_invocation_decision_preview || {};
+                latestProjectRunnerCapabilityInvocationGateReceiptPreview = payload.runner_capability_invocation_gate_receipt_preview || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_capability_invocation_gate_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_capability_invocation_gate_dry_run');
+                if (status) status.textContent = t('capabilityInvocationGateDryRunComplete');
+
+                const bindingPanel = document.getElementById('projectWorkspaceCapabilityBindingPanel');
+                if (bindingPanel) bindingPanel.outerHTML = renderProjectWorkspaceCapabilityBindingPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceCapabilityInvocationGatePanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceCapabilityInvocationGatePanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_capability_invocation_gate_dry_run');
+                if (status) status.textContent = error.message || t('capabilityInvocationGateDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceCapabilityInvocationGatePanel(workspace = latestProjectWorkspace) {
+            const gate = Object.keys(latestProjectRunnerCapabilityInvocationGatePreview || {}).length ? latestProjectRunnerCapabilityInvocationGatePreview : workspace?.runner_capability_invocation_gate_preview || {};
+            const request = Object.keys(latestProjectRunnerCapabilityInvocationRequestPreview || {}).length ? latestProjectRunnerCapabilityInvocationRequestPreview : workspace?.runner_capability_invocation_request_preview || {};
+            const decision = Object.keys(latestProjectRunnerCapabilityInvocationDecisionPreview || {}).length ? latestProjectRunnerCapabilityInvocationDecisionPreview : workspace?.runner_capability_invocation_decision_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityInvocationGateReceiptPreview || {}).length ? latestProjectRunnerCapabilityInvocationGateReceiptPreview : workspace?.runner_capability_invocation_gate_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceCapabilityInvocationGatePanel" data-project-capability-invocation-gate-panel-marker="Project Workspace capability invocation gate panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationGatePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('capabilityInvocationGatePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceCapabilityInvocationGateBtn" type="button" data-project-capability-invocation-gate-dry-run-action="Project Workspace capability invocation gate panel bundle" onclick="dryRunProjectWorkspaceCapabilityInvocationGate()">${escapeHTML(t('dryRunCapabilityInvocationGate'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceCapabilityInvocationGateBtn" type="button" onclick="copyProjectWorkspaceCapabilityInvocationGate()">${escapeHTML(t('copyCapabilityInvocationGate'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationGateStatus'))}</div>
+                            <strong data-capability-invocation-gate-status="${escapeHTML(gate.capability_invocation_gate_status || 'not_refreshed')}">${escapeHTML(gate.capability_invocation_gate_status || t('capabilityInvocationGateNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationRequestStatus'))}</div>
+                            <strong data-capability-invocation-request-status="${escapeHTML(request.capability_invocation_request_status || 'not_refreshed')}">${escapeHTML(request.capability_invocation_request_status || t('capabilityInvocationGateNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationDecisionStatus'))}</div>
+                            <strong data-capability-invocation-decision-status="${escapeHTML(decision.capability_invocation_decision_status || 'not_refreshed')}">${escapeHTML(decision.capability_invocation_decision_status || t('capabilityInvocationGateNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('capabilityInvocationAllowed'))}: ${escapeHTML(String(Boolean(receipt.capability_invocation_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('capabilityInvocationGateAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-capability-invocation-gate-audit-preview="Project Workspace capability invocation gate panel bundle">${escapeHTML(projectWorkspaceCapabilityInvocationGateCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('capabilityInvocationGateNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCapabilityInvocationGateStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceCapabilityBindingPanel(workspace = latestProjectWorkspace) {
             const catalog = Object.keys(latestProjectRunnerAgentCapabilityCatalogPreview || {}).length ? latestProjectRunnerAgentCapabilityCatalogPreview : workspace?.runner_agent_capability_catalog_preview || {};
             const matrix = Object.keys(latestProjectRunnerAgentToolBindingMatrixPreview || {}).length ? latestProjectRunnerAgentToolBindingMatrixPreview : workspace?.runner_agent_tool_binding_matrix_preview || {};
@@ -16170,6 +16290,7 @@
                     ${renderProjectWorkspaceProviderFailurePanel(workspace)}
                     ${renderProjectWorkspaceProviderObservabilityPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityBindingPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityInvocationGatePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -19402,6 +19523,49 @@
             capabilityBindingDryRunFailed: 'Capability binding dry-run \u5931\u8d25\u3002',
             capabilityBindingCopied: 'Agent \u80fd\u529b\u7ed1\u5b9a\u5df2\u590d\u5236\u3002',
             capabilityBindingCopyFailed: '\u590d\u5236 Agent \u80fd\u529b\u7ed1\u5b9a\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCapabilityInvocationGatePanelBundleMarker: 'Project Workspace capability invocation gate panel bundle',
+            capabilityInvocationGatePanelTitle: 'Capability invocation gate',
+            capabilityInvocationGatePanelHelper: 'Final dry-run gate before any capability or tool can be invoked. It blocks real calls until policy, contract, sandbox, approval, quota, and rollback are complete.',
+            dryRunCapabilityInvocationGate: 'Dry-run invocation gate',
+            copyCapabilityInvocationGate: 'Copy invocation gate',
+            capabilityInvocationGateCopyTitle: 'Project capability invocation gate',
+            capabilityInvocationGateStatus: 'Invocation gate status',
+            capabilityInvocationRequestStatus: 'Invocation request status',
+            capabilityInvocationDecisionStatus: 'Invocation decision status',
+            capabilityInvocationGateReceiptStatus: 'Invocation gate receipt status',
+            capabilityInvocationAllowed: 'Capability invocation allowed',
+            capabilityInvocationGateAuditPreview: 'Capability invocation gate audit preview',
+            capabilityInvocationGateNotRefreshedYet: 'Capability invocation gate has not been refreshed yet.',
+            capabilityInvocationGateDryRunRunning: 'Building capability invocation gate dry-run.',
+            capabilityInvocationGateDryRunComplete: 'Capability invocation gate dry-run complete.',
+            capabilityInvocationGateDryRunFailed: 'Capability invocation gate dry-run failed.',
+            capabilityInvocationGateCopied: 'Capability invocation gate copied.',
+            capabilityInvocationGateCopyFailed: 'Could not copy capability invocation gate.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCapabilityInvocationGatePanelBundleMarker: 'Project Workspace capability invocation gate panel bundle',
+            capabilityInvocationGatePanelTitle: 'Capability \u8c03\u7528\u95e8',
+            capabilityInvocationGatePanelHelper: '\u771f\u6b63\u8c03\u7528\u4efb\u4f55\u80fd\u529b\u6216\u5de5\u5177\u524d\u7684\u6700\u540e dry-run \u68c0\u67e5\u95e8\u3002\u5728 policy\u3001contract\u3001sandbox\u3001approval\u3001quota \u548c rollback \u9f50\u5168\u524d\uff0c\u5b83\u4f1a\u963b\u6b62\u771f\u5b9e\u8c03\u7528\u3002',
+            dryRunCapabilityInvocationGate: 'Dry-run \u8c03\u7528\u95e8',
+            copyCapabilityInvocationGate: '\u590d\u5236\u8c03\u7528\u95e8',
+            capabilityInvocationGateCopyTitle: '\u9879\u76ee capability \u8c03\u7528\u95e8',
+            capabilityInvocationGateStatus: '\u8c03\u7528\u95e8\u72b6\u6001',
+            capabilityInvocationRequestStatus: '\u8c03\u7528\u8bf7\u6c42\u72b6\u6001',
+            capabilityInvocationDecisionStatus: '\u8c03\u7528\u51b3\u7b56\u72b6\u6001',
+            capabilityInvocationGateReceiptStatus: '\u8c03\u7528\u95e8\u56de\u6267\u72b6\u6001',
+            capabilityInvocationAllowed: '\u662f\u5426\u5141\u8bb8 capability \u8c03\u7528',
+            capabilityInvocationGateAuditPreview: 'Capability \u8c03\u7528\u95e8\u5ba1\u8ba1\u9884\u89c8',
+            capabilityInvocationGateNotRefreshedYet: 'Capability \u8c03\u7528\u95e8\u5c1a\u672a\u5237\u65b0\u3002',
+            capabilityInvocationGateDryRunRunning: '\u6b63\u5728\u751f\u6210 capability invocation gate dry-run.',
+            capabilityInvocationGateDryRunComplete: 'Capability invocation gate dry-run \u5b8c\u6210\u3002',
+            capabilityInvocationGateDryRunFailed: 'Capability invocation gate dry-run \u5931\u8d25\u3002',
+            capabilityInvocationGateCopied: 'Capability \u8c03\u7528\u95e8\u5df2\u590d\u5236\u3002',
+            capabilityInvocationGateCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u95e8\u5931\u8d25\u3002'
         });
 
 

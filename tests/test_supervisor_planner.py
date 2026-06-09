@@ -1748,3 +1748,38 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             False,
         )
 
+    def test_project_runner_capability_invocation_gate_dry_run_endpoint_returns_blocked_gate(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/capability-invocation-gate/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        gate = payload["runner_capability_invocation_gate_preview"]
+        request = payload["runner_capability_invocation_request_preview"]
+        decision = payload["runner_capability_invocation_decision_preview"]
+        receipt = payload["runner_capability_invocation_gate_receipt_preview"]
+
+        self.assertEqual(gate["capability_invocation_gate_status"], "capability_invocation_blocked")
+        self.assertGreater(gate["blocking_check_count"], 0)
+        self.assertEqual(request["capability_invocation_request_status"], "capability_invocation_request_blocked")
+        self.assertIn("operator_approval_id", request["missing_authorization_refs"])
+        self.assertEqual(decision["capability_invocation_decision_status"], "capability_invocation_blocked")
+        self.assertEqual(decision["decision_type"], "block_real_invocation")
+        self.assertEqual(receipt["capability_invocation_gate_receipt_status"], "capability_invocation_gate_receipt_preview_only")
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_capability_invocation_gate_status"],
+            gate["capability_invocation_gate_status"],
+        )
+

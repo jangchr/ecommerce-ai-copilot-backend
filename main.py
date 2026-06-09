@@ -10627,6 +10627,162 @@ def _runner_capability_binding_receipt_preview(handoff_plan: dict) -> dict:
     }
 
 
+
+def _runner_capability_invocation_gate_preview(binding_payload: dict) -> dict:
+    policy_gate = dict(binding_payload.get("runner_capability_policy_gate_preview") or {})
+    tool_contract = dict(binding_payload.get("runner_tool_invocation_contract_preview") or {})
+    binding_receipt = dict(binding_payload.get("runner_capability_binding_receipt_preview") or {})
+    project_id = str(binding_payload.get("project", {}).get("project_id") or binding_payload.get("project_id") or "demo_project_default")
+    gate_checks = [
+        {
+            "gate_check_id": "capability_policy_gate_passed",
+            "passed": bool(policy_gate.get("all_required_policy_checks_passed")),
+            "blocking": True,
+            "reason": "Capability policy gate must pass before any tool invocation.",
+        },
+        {
+            "gate_check_id": "tool_invocation_contract_complete",
+            "passed": bool(tool_contract.get("contract_complete")),
+            "blocking": True,
+            "reason": "Tool invocation contract must include approval, quota, idempotency, and rollback fields.",
+        },
+        {
+            "gate_check_id": "capability_binding_receipt_recorded",
+            "passed": bool(binding_receipt.get("capability_binding_receipt_recorded")),
+            "blocking": True,
+            "reason": "Capability binding receipt must be recorded before invocation.",
+        },
+        {
+            "gate_check_id": "sandbox_enabled",
+            "passed": False,
+            "blocking": True,
+            "reason": "Execution sandbox must be enabled before capability invocation.",
+        },
+        {
+            "gate_check_id": "operator_approval_captured",
+            "passed": False,
+            "blocking": True,
+            "reason": "Operator approval is required before any real provider-capable invocation.",
+        },
+        {
+            "gate_check_id": "provider_call_guarded",
+            "passed": True,
+            "blocking": False,
+            "reason": "Dry-run keeps provider calls disabled.",
+        },
+    ]
+    blocking_check_ids = [
+        item["gate_check_id"]
+        for item in gate_checks
+        if item.get("blocking") and not item.get("passed")
+    ]
+    return {
+        "capability_invocation_gate_version": "runner_capability_invocation_gate_preview_v1",
+        "capability_invocation_gate_status": "capability_invocation_blocked",
+        "project_id": project_id,
+        "capability_policy_gate_status": policy_gate.get("capability_policy_gate_status", ""),
+        "tool_invocation_contract_status": tool_contract.get("tool_invocation_contract_status", ""),
+        "capability_binding_receipt_status": binding_receipt.get("capability_binding_receipt_status", ""),
+        "gate_checks": gate_checks,
+        "gate_check_count": len(gate_checks),
+        "passed_gate_check_count": sum(1 for item in gate_checks if item.get("passed")),
+        "blocking_check_ids": blocking_check_ids,
+        "blocking_check_count": len(blocking_check_ids),
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_request_preview(invocation_gate: dict) -> dict:
+    project_id = str(invocation_gate.get("project_id") or "demo_project_default")
+    return {
+        "capability_invocation_request_version": "runner_capability_invocation_request_preview_v1",
+        "capability_invocation_request_status": "capability_invocation_request_blocked",
+        "project_id": project_id,
+        "capability_invocation_gate_status": invocation_gate.get("capability_invocation_gate_status", ""),
+        "request_type": "tool_capability_invocation",
+        "target_capability_id": "dry_run_capability_placeholder",
+        "target_provider_adapter_id": "dry_run_provider_adapter_placeholder",
+        "idempotency_key": f"capability_invocation_{project_id}_dry_run",
+        "required_authorization_refs": [
+            "operator_approval_id",
+            "quota_reservation_id",
+            "sandbox_session_id",
+            "rollback_plan_id",
+        ],
+        "missing_authorization_refs": [
+            "operator_approval_id",
+            "quota_reservation_id",
+            "sandbox_session_id",
+            "rollback_plan_id",
+        ],
+        "payload_redacted": True,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_decision_preview(invocation_request: dict) -> dict:
+    missing_refs = list(invocation_request.get("missing_authorization_refs") or [])
+    decision_reasons = [
+        "Capability invocation remains blocked in dry-run.",
+        "Real provider or tool invocation requires explicit operator approval, quota reservation, sandbox session, and rollback plan.",
+    ]
+    return {
+        "capability_invocation_decision_version": "runner_capability_invocation_decision_preview_v1",
+        "capability_invocation_decision_status": "capability_invocation_blocked",
+        "project_id": invocation_request.get("project_id", "demo_project_default"),
+        "capability_invocation_request_status": invocation_request.get("capability_invocation_request_status", ""),
+        "decision_type": "block_real_invocation",
+        "decision_reasons": decision_reasons,
+        "missing_authorization_refs": missing_refs,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_gate_receipt_preview(invocation_decision: dict) -> dict:
+    receipt_items = [
+        {"receipt_item_id": "capability_invocation_gate", "included": True},
+        {"receipt_item_id": "capability_invocation_request", "included": True},
+        {"receipt_item_id": "capability_invocation_decision", "included": True},
+        {"receipt_item_id": "missing_authorization_refs", "included": True},
+        {"receipt_item_id": "dry_run_boundary", "included": True},
+    ]
+    return {
+        "capability_invocation_gate_receipt_version": "runner_capability_invocation_gate_receipt_preview_v1",
+        "capability_invocation_gate_receipt_status": "capability_invocation_gate_receipt_preview_only",
+        "project_id": invocation_decision.get("project_id", "demo_project_default"),
+        "capability_invocation_decision_status": invocation_decision.get("capability_invocation_decision_status", ""),
+        "receipt_items": receipt_items,
+        "receipt_item_count": len(receipt_items),
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/capability-binding/dry-run")
 async def dry_run_project_agent_capability_binding(project_id: str, http_request: Request):
     provider_observability_payload = await dry_run_project_agent_provider_observability(project_id, http_request)
@@ -10682,6 +10838,50 @@ async def dry_run_project_agent_capability_binding(project_id: str, http_request
         "write_authorized": False,
         "state_persisted": False,
         "project_snapshot_saved": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/capability-invocation-gate/dry-run")
+async def dry_run_project_agent_capability_invocation_gate(project_id: str, http_request: Request):
+    capability_binding_payload = await dry_run_project_agent_capability_binding(project_id, http_request)
+
+    runner_capability_invocation_gate_preview = _runner_capability_invocation_gate_preview(capability_binding_payload)
+    runner_capability_invocation_request_preview = _runner_capability_invocation_request_preview(runner_capability_invocation_gate_preview)
+    runner_capability_invocation_decision_preview = _runner_capability_invocation_decision_preview(runner_capability_invocation_request_preview)
+    runner_capability_invocation_gate_receipt_preview = _runner_capability_invocation_gate_receipt_preview(runner_capability_invocation_decision_preview)
+
+    project = capability_binding_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_capability_invocation_gate_status": runner_capability_invocation_gate_preview["capability_invocation_gate_status"],
+        "latest_runner_capability_invocation_request_status": runner_capability_invocation_request_preview["capability_invocation_request_status"],
+        "latest_runner_capability_invocation_decision_status": runner_capability_invocation_decision_preview["capability_invocation_decision_status"],
+        "latest_runner_capability_invocation_gate_receipt_status": runner_capability_invocation_gate_receipt_preview["capability_invocation_gate_receipt_status"],
+        "latest_runner_capability_invocation_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **capability_binding_payload,
+        "project": project,
+        "runner_capability_invocation_gate_preview": runner_capability_invocation_gate_preview,
+        "runner_capability_invocation_request_preview": runner_capability_invocation_request_preview,
+        "runner_capability_invocation_decision_preview": runner_capability_invocation_decision_preview,
+        "runner_capability_invocation_gate_receipt_preview": runner_capability_invocation_gate_receipt_preview,
+        "dry_run": True,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
         "manual_review_required": True,
         "safe_to_continue": False,
         "request_id": http_request.state.request_id,
