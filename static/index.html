@@ -11458,6 +11458,51 @@
             timeline.has_timeline = Boolean(steps.length || timeline.chain_status || timeline.event_status);
             return timeline;
         }
+
+        function projectWorkspaceExportRunnerEventLedgerSnapshot(workspace = latestProjectWorkspace) {
+            const ledger = projectWorkspaceRunnerEventLedgerSummaryFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack runner event ledger bundle',
+                runner_event_ledger_summary_status: ledger.runner_event_ledger_summary_status || '',
+                event_count: ledger.event_count || 0,
+                blocking_event_count: ledger.blocking_event_count || 0,
+                safe_to_continue: Boolean(ledger.safe_to_continue),
+                dry_run: Boolean(ledger.dry_run),
+                provider_call_performed: Boolean(ledger.provider_call_performed),
+                external_api_called: Boolean(ledger.external_api_called),
+                agent_execution_performed: Boolean(ledger.agent_execution_performed),
+                normalized_events: Array.isArray(ledger.normalized_events) ? ledger.normalized_events : [],
+                has_event_ledger: Boolean(ledger.runner_event_ledger_summary_status || ledger.event_count)
+            };
+        }
+
+        function projectWorkspaceExportRunnerEventLedgerMarkdown(workspace = latestProjectWorkspace) {
+            const ledger = projectWorkspaceExportRunnerEventLedgerSnapshot(workspace);
+            if (!ledger.has_event_ledger) {
+                return `## ${t('projectWorkspaceExportRunnerEventLedgerTitle')}\n${t('runnerEventLedgerNotRefreshedYet')}`;
+            }
+            const rows = ledger.normalized_events.map((event, index) => [
+                `### ${index + 1}. ${event.event_type || event.event_id || 'event'}`,
+                `${t('timelineStatus')}: ${event.event_status || 'not_refreshed'}`,
+                `${t('timelineAgentRole')}: ${event.source_agent_id || ''} ? ${event.target_agent_id || ''}`,
+                `${t('timelineBlocking')}: ${Boolean(event.blocking)}`,
+                `${t('safeToContinue')}: ${Boolean(event.safe_to_continue)}`
+            ].join('\n'));
+            return [
+                `## ${t('projectWorkspaceExportRunnerEventLedgerTitle')}`,
+                `${t('runnerEventLedgerStatus')}: ${ledger.runner_event_ledger_summary_status || 'not_refreshed'}`,
+                `${t('runnerEventLedgerEventCount')}: ${ledger.event_count}`,
+                `${t('runnerEventLedgerBlockingCount')}: ${ledger.blocking_event_count}`,
+                `${t('safeToContinue')}: ${ledger.safe_to_continue}`,
+                `${t('providerCallPerformed')}: ${ledger.provider_call_performed}`,
+                `${t('externalApiCalled')}: ${ledger.external_api_called}`,
+                `${t('agentExecutionPerformed')}: ${ledger.agent_execution_performed}`,
+                `${t('dryRun')}: ${ledger.dry_run}`,
+                '',
+                ...rows
+            ].join('\n');
+        }
+
         function projectWorkspaceExportSafetyTimelineMarkdown(workspace = latestProjectWorkspace) {
             const timeline = projectWorkspaceExportSafetyTimelineSnapshot(workspace);
             if (!timeline.has_timeline) {
@@ -11571,6 +11616,8 @@
                 '',
                 projectWorkspaceExportSafetyTimelineMarkdown(workspace),
                 '',
+                projectWorkspaceExportRunnerEventLedgerMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11586,6 +11633,7 @@
                 graph_summary: workspace?.project?.graph_summary || {},
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
+                runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -15525,6 +15573,108 @@
         let latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview = {};
         let latestProjectRunnerRealExecutionSafetyChainEventPreview = {};
         const PROJECT_WORKSPACE_REAL_EXECUTION_SAFETY_TIMELINE_BUNDLE_MARKER = 'Project Workspace real execution safety timeline bundle';
+        const PROJECT_WORKSPACE_RUNNER_EVENT_LEDGER_SUMMARY_BUNDLE_MARKER = 'Project Workspace runner event ledger summary bundle';
+        let latestProjectRunnerEventLedgerSummary = {};
+
+        function projectWorkspaceRunnerEventLedgerSummaryFromWorkspace(workspace = latestProjectWorkspace) {
+            const summary = Object.keys(latestProjectRunnerEventLedgerSummary || {}).length
+                ? latestProjectRunnerEventLedgerSummary
+                : workspace?.runner_event_ledger_summary || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (summary && Object.keys(summary).length) return summary;
+            return {
+                runner_event_ledger_summary_version: '',
+                runner_event_ledger_summary_status: graphSummary.latest_runner_event_ledger_summary_status || '',
+                event_count: graphSummary.latest_runner_event_ledger_event_count || 0,
+                blocking_event_count: graphSummary.latest_runner_event_ledger_blocking_event_count || 0,
+                safe_to_continue: Boolean(graphSummary.latest_runner_event_ledger_safe_to_continue),
+                normalized_events: [],
+                dry_run: true,
+                provider_call_performed: false,
+                external_api_called: false,
+                agent_execution_performed: false
+            };
+        }
+
+        function projectWorkspaceRunnerEventLedgerCopyText(workspace = latestProjectWorkspace) {
+            const ledger = projectWorkspaceRunnerEventLedgerSummaryFromWorkspace(workspace);
+            return [
+                t('runnerEventLedgerCopyTitle'),
+                `${t('runnerEventLedgerStatus')}: ${ledger.runner_event_ledger_summary_status || 'not_refreshed'}`,
+                `${t('runnerEventLedgerEventCount')}: ${ledger.event_count || 0}`,
+                `${t('runnerEventLedgerBlockingCount')}: ${ledger.blocking_event_count || 0}`,
+                `${t('safeToContinue')}: ${Boolean(ledger.safe_to_continue)}`,
+                `${t('providerCallPerformed')}: ${Boolean(ledger.provider_call_performed)}`,
+                `${t('externalApiCalled')}: ${Boolean(ledger.external_api_called)}`,
+                `${t('agentExecutionPerformed')}: ${Boolean(ledger.agent_execution_performed)}`,
+                `${t('dryRun')}: ${Boolean(ledger.dry_run)}`,
+                '',
+                JSON.stringify({ runner_event_ledger_summary: ledger }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRunnerEventLedgerSummary() {
+            const status = document.getElementById('projectWorkspaceRunnerEventLedgerStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRunnerEventLedgerCopyText());
+                if (status) status.textContent = t('runnerEventLedgerCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('runnerEventLedgerCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceRunnerEventLedgerSummaryPanel(workspace = latestProjectWorkspace) {
+            const ledger = projectWorkspaceRunnerEventLedgerSummaryFromWorkspace(workspace);
+            const events = Array.isArray(ledger.normalized_events) ? ledger.normalized_events : [];
+            const hasLedger = Boolean(ledger.runner_event_ledger_summary_status || events.length);
+            return `
+                <div class="section-block" id="projectWorkspaceRunnerEventLedgerSummaryPanel" data-project-runner-event-ledger-summary-marker="Project Workspace runner event ledger summary bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runnerEventLedgerPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runnerEventLedgerPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceRunnerEventLedgerSummaryBtn" type="button" onclick="copyProjectWorkspaceRunnerEventLedgerSummary()">${escapeHTML(t('copyRunnerEventLedger'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerEventLedgerStatus'))}</div>
+                            <strong data-runner-event-ledger-status="${escapeHTML(ledger.runner_event_ledger_summary_status || 'not_refreshed')}">${escapeHTML(ledger.runner_event_ledger_summary_status || t('runnerEventLedgerNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('runnerEventLedgerEventCount'))}</div>
+                            <strong data-runner-event-ledger-event-count="${escapeHTML(String(ledger.event_count || 0))}">${escapeHTML(String(ledger.event_count || 0))}</strong>
+                            <div class="field-helper">${escapeHTML(t('runnerEventLedgerBlockingCount'))}: ${escapeHTML(String(ledger.blocking_event_count || 0))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('safeToContinue'))}</div>
+                            <strong data-runner-event-ledger-safe-to-continue="${escapeHTML(String(Boolean(ledger.safe_to_continue)))}">${escapeHTML(String(Boolean(ledger.safe_to_continue)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('dryRun'))}: ${escapeHTML(String(Boolean(ledger.dry_run)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('runnerEventLedgerNormalizedEvents'))}</div>
+                        ${events.length ? events.map((event) => `
+                            <div class="artifact-timeline-row" data-runner-event-ledger-event="${escapeHTML(event.event_id || '')}">
+                                <strong>${escapeHTML(event.event_type || 'event')}: ${escapeHTML(event.event_status || 'not_refreshed')}</strong>
+                                <div>${escapeHTML(t('timelineAgentRole'))}: ${escapeHTML(event.source_agent_id || '')} ? ${escapeHTML(event.target_agent_id || '')}</div>
+                                <div>${escapeHTML(t('timelineBlocking'))}: ${escapeHTML(String(Boolean(event.blocking)))}</div>
+                                <div>${escapeHTML(t('safeToContinue'))}: ${escapeHTML(String(Boolean(event.safe_to_continue)))}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('runnerEventLedgerNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('runnerEventLedgerAuditPreview'))}</div>
+                        ${hasLedger ? `<pre class="debug" data-runner-event-ledger-audit-preview="Project Workspace runner event ledger summary bundle">${escapeHTML(projectWorkspaceRunnerEventLedgerCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('runnerEventLedgerNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRunnerEventLedgerStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceRealExecutionSafetyTimelineSteps(workspace = latestProjectWorkspace) {
             const summary = workspace?.project?.graph_summary || {};
@@ -15807,6 +15957,7 @@
                 latestProjectRunnerRealExecutionIncidentResponsePreview = payload.runner_real_execution_incident_response_preview || {};
                 latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview = payload.runner_real_execution_safety_chain_audit_summary_preview || {};
                 latestProjectRunnerRealExecutionSafetyChainEventPreview = payload.runner_real_execution_safety_chain_event_preview || {};
+                latestProjectRunnerEventLedgerSummary = payload.runner_event_ledger_summary || {};
 
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -15826,6 +15977,8 @@
                 if (auditPanel) auditPanel.outerHTML = renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(latestProjectWorkspace);
                 const timelinePanel = document.getElementById('projectWorkspaceRealExecutionSafetyTimelinePanel');
                 if (timelinePanel) timelinePanel.outerHTML = renderProjectWorkspaceRealExecutionSafetyTimelinePanel(latestProjectWorkspace);
+                const ledgerPanel = document.getElementById('projectWorkspaceRunnerEventLedgerSummaryPanel');
+                if (ledgerPanel) ledgerPanel.outerHTML = renderProjectWorkspaceRunnerEventLedgerSummaryPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -17998,6 +18151,7 @@
                     ${renderProjectWorkspaceRealExecutionIncidentResponsePanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionSafetyTimelinePanel(workspace)}
+                    ${renderProjectWorkspaceRunnerEventLedgerSummaryPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -21884,6 +22038,41 @@
             projectWorkspaceExportSafetyTimelineTitle: '\u591a Agent \u5b89\u5168\u65f6\u95f4\u7ebf',
             projectWorkspaceExportSafetyTimelineNotRefreshed: '\u5c1a\u672a\u5237\u65b0\u591a Agent \u5b89\u5168\u65f6\u95f4\u7ebf\u3002'
         });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRunnerEventLedgerSummaryBundleMarker: 'Project Workspace runner event ledger summary bundle',
+            runnerEventLedgerPanelTitle: 'Runner event ledger summary',
+            runnerEventLedgerPanelHelper: 'Unified dry-run event ledger normalized from dispatch, execution receipt, audit ledger, safety chain event, and incident receipt.',
+            copyRunnerEventLedger: 'Copy event ledger summary',
+            runnerEventLedgerCopyTitle: 'Project runner event ledger summary',
+            runnerEventLedgerStatus: 'Event ledger status',
+            runnerEventLedgerEventCount: 'Event count',
+            runnerEventLedgerBlockingCount: 'Blocking event count',
+            runnerEventLedgerNormalizedEvents: 'Normalized events',
+            runnerEventLedgerAuditPreview: 'Event ledger audit preview',
+            runnerEventLedgerNotRefreshedYet: 'Runner event ledger has not been refreshed yet.',
+            runnerEventLedgerCopied: 'Runner event ledger copied.',
+            runnerEventLedgerCopyFailed: 'Could not copy runner event ledger.',
+            projectWorkspaceExportRunnerEventLedgerTitle: 'Runner event ledger'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRunnerEventLedgerSummaryBundleMarker: 'Project Workspace runner event ledger summary bundle',
+            runnerEventLedgerPanelTitle: 'Runner \u4e8b\u4ef6\u8d26\u672c\u6458\u8981',
+            runnerEventLedgerPanelHelper: '\u4ece dispatch\u3001execution receipt\u3001audit ledger\u3001safety chain event \u548c incident receipt \u7edf\u4e00\u6807\u51c6\u5316\u51fa\u6765\u7684 dry-run \u4e8b\u4ef6\u8d26\u672c\u3002',
+            copyRunnerEventLedger: '\u590d\u5236\u4e8b\u4ef6\u8d26\u672c\u6458\u8981',
+            runnerEventLedgerCopyTitle: '\u9879\u76ee Runner \u4e8b\u4ef6\u8d26\u672c\u6458\u8981',
+            runnerEventLedgerStatus: '\u4e8b\u4ef6\u8d26\u672c\u72b6\u6001',
+            runnerEventLedgerEventCount: '\u4e8b\u4ef6\u6570',
+            runnerEventLedgerBlockingCount: '\u963b\u65ad\u4e8b\u4ef6\u6570',
+            runnerEventLedgerNormalizedEvents: '\u6807\u51c6\u5316\u4e8b\u4ef6',
+            runnerEventLedgerAuditPreview: '\u4e8b\u4ef6\u8d26\u672c\u5ba1\u8ba1\u9884\u89c8',
+            runnerEventLedgerNotRefreshedYet: 'Runner \u4e8b\u4ef6\u8d26\u672c\u5c1a\u672a\u5237\u65b0\u3002',
+            runnerEventLedgerCopied: 'Runner \u4e8b\u4ef6\u8d26\u672c\u5df2\u590d\u5236\u3002',
+            runnerEventLedgerCopyFailed: '\u590d\u5236 Runner \u4e8b\u4ef6\u8d26\u672c\u5931\u8d25\u3002',
+            projectWorkspaceExportRunnerEventLedgerTitle: 'Runner \u4e8b\u4ef6\u8d26\u672c'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();

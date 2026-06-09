@@ -6375,3 +6375,21 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
         self.assertIn("Project Workspace export pack safety timeline bundle", script)
         self.assertIn("project_workspace_export_pack_safety_timeline_marker", script)
+
+    def test_project_workspace_runner_event_ledger_summary_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace runner event ledger summary bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_RUNNER_EVENT_LEDGER_SUMMARY_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceRunnerEventLedgerSummaryPanel", html)
+        self.assertIn("copyProjectWorkspaceRunnerEventLedgerSummary", html)
+        self.assertIn("runner_event_ledger_summary", html)
+
+    def test_project_workspace_runner_event_ledger_summary_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_runner_event_ledger_summary_marker", script)
+        self.assertIn("Project Workspace runner event ledger summary bundle", script)
+
+    def test_project_workspace_runner_event_ledger_summary_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace runner event ledger summary bundle", script)
+        self.assertIn("project_workspace_runner_event_ledger_summary_marker", script)
