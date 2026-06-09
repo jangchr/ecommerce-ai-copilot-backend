@@ -2606,6 +2606,190 @@ def build_agent_runner_supervisor_next_step_work_order_preview(
     }
 
 
+
+AGENT_RUNNER_QUEUE_LEASE_WORKER_DRY_RUN_CHAIN_VERSION = "agent_runner_queue_lease_worker_dry_run_chain_v1"
+
+
+def build_agent_runner_queue_lease_worker_dry_run_chain(
+    work_order_preview: dict[str, Any],
+    *,
+    project_id: str = "demo_project_default",
+    requested_by: str = "runner_queue_lease_worker_dry_run_chain_builder",
+) -> dict[str, Any]:
+    """Build a dry-run chain from Supervisor work order preview to queue/lease/worker previews.
+
+    This is a simulation chain only. It does not persist queue records, create
+    worker leases, execute workers, execute agents, call providers, call
+    external APIs, spend money, or unlock real execution.
+    """
+
+    work_order = work_order_preview if isinstance(work_order_preview, dict) else {}
+    safe_project_id = str(project_id or work_order.get("project_id") or "demo_project_default")
+    work_order_status = str(work_order.get("supervisor_next_step_work_order_status") or "supervisor_work_order_blocked")
+    work_order_id = str(work_order.get("work_order_id") or f"supervisor_next_step_work_order_{safe_project_id}")
+    target_agent_id = str(work_order.get("target_agent_id") or "operator_agent")
+    next_step_type = str(work_order.get("next_step_type") or "request_operator_review")
+    recommended_command = str(work_order.get("recommended_command") or "")
+    blocking_event_ids = [
+        str(item)
+        for item in (work_order.get("blocking_event_ids") or [])
+        if str(item or "")
+    ]
+
+    work_order_allowed = bool(work_order.get("work_order_allowed"))
+    queue_persistence_allowed = bool(work_order_allowed and not blocking_event_ids)
+
+    if queue_persistence_allowed:
+        queue_status = "queue_persistence_ready_dry_run"
+        queue_message = "Work order is eligible for queue persistence dry-run. No queue record is persisted."
+    elif work_order_status == "supervisor_work_order_waiting_for_event_ledger":
+        queue_status = "queue_persistence_waiting_for_event_ledger"
+        queue_message = "Queue persistence dry-run is waiting for a refreshed event ledger."
+    elif work_order_status == "supervisor_work_order_waiting_for_manual_review":
+        queue_status = "queue_persistence_waiting_for_manual_review"
+        queue_message = "Queue persistence dry-run is waiting for manual review."
+    else:
+        queue_status = "queue_persistence_blocked_by_work_order"
+        queue_message = "Queue persistence dry-run is blocked by the Supervisor work order preview."
+
+    queue_preview = {
+        "queue_persistence_preview_version": "agent_runner_queue_persistence_preview_v1",
+        "queue_persistence_status": queue_status,
+        "project_id": safe_project_id,
+        "work_order_id": work_order_id,
+        "target_agent_id": target_agent_id,
+        "next_step_type": next_step_type,
+        "recommended_command": recommended_command,
+        "queue_persistence_allowed": queue_persistence_allowed,
+        "queue_persisted": False,
+        "queue_item_id": f"queue_item_preview_{work_order_id}".replace(" ", "_"),
+        "queue_message": queue_message,
+        "blocking_event_ids": blocking_event_ids,
+        "manual_review_required": True,
+        "dry_run": True,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+    worker_lease_allowed = bool(queue_persistence_allowed and not queue_preview["queue_persisted"])
+    if worker_lease_allowed:
+        lease_status = "worker_lease_ready_dry_run"
+        lease_message = "Worker lease can be previewed, but no lease is created or persisted."
+    else:
+        lease_status = "worker_lease_blocked_by_queue_preview"
+        lease_message = "Worker lease dry-run is blocked because queue persistence is not allowed or not persisted."
+
+    lease_preview = {
+        "worker_lease_preview_version": "agent_runner_worker_lease_preview_v1",
+        "worker_lease_status": lease_status,
+        "project_id": safe_project_id,
+        "work_order_id": work_order_id,
+        "queue_item_id": queue_preview["queue_item_id"],
+        "target_agent_id": target_agent_id,
+        "worker_lease_allowed": worker_lease_allowed,
+        "worker_lease_created": False,
+        "worker_id": "worker_dry_run_preview",
+        "lease_id": f"lease_preview_{work_order_id}".replace(" ", "_"),
+        "lease_message": lease_message,
+        "manual_review_required": True,
+        "dry_run": True,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+    worker_invocation_allowed = bool(worker_lease_allowed and lease_preview["worker_lease_created"])
+    if worker_invocation_allowed:
+        invocation_status = "worker_invocation_ready_dry_run"
+        invocation_message = "Worker invocation can be previewed, but no Agent/provider/API call is performed."
+    else:
+        invocation_status = "worker_invocation_blocked_by_lease_preview"
+        invocation_message = "Worker invocation dry-run is blocked because no real lease is created."
+
+    invocation_preview = {
+        "worker_invocation_preview_version": "agent_runner_worker_invocation_preview_v1",
+        "worker_invocation_status": invocation_status,
+        "project_id": safe_project_id,
+        "work_order_id": work_order_id,
+        "lease_id": lease_preview["lease_id"],
+        "target_agent_id": target_agent_id,
+        "next_step_type": next_step_type,
+        "worker_invocation_allowed": worker_invocation_allowed,
+        "worker_invocation_performed": False,
+        "agent_execution_allowed": False,
+        "agent_execution_performed": False,
+        "provider_call_allowed": False,
+        "provider_call_performed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "invocation_message": invocation_message,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+    blocking_stage_count = sum(
+        1
+        for blocked in [
+            not queue_persistence_allowed,
+            not worker_lease_allowed,
+            not worker_invocation_allowed,
+        ]
+        if blocked
+    )
+
+    if blocking_stage_count:
+        chain_status = "queue_lease_worker_chain_blocked_safely"
+        recommended_next_state = "inspect_queue_lease_worker_blockers"
+    else:
+        chain_status = "queue_lease_worker_chain_ready_dry_run"
+        recommended_next_state = "continue_worker_invocation_dry_run_review"
+
+    return {
+        "queue_lease_worker_dry_run_chain_version": AGENT_RUNNER_QUEUE_LEASE_WORKER_DRY_RUN_CHAIN_VERSION,
+        "queue_lease_worker_dry_run_chain_status": chain_status,
+        "project_id": safe_project_id,
+        "requested_by": str(requested_by or "runner_queue_lease_worker_dry_run_chain_builder"),
+        "work_order_id": work_order_id,
+        "work_order_status": work_order_status,
+        "target_agent_id": target_agent_id,
+        "next_step_type": next_step_type,
+        "recommended_command": recommended_command,
+        "recommended_next_state": recommended_next_state,
+        "blocking_stage_count": blocking_stage_count,
+        "blocking_event_ids": blocking_event_ids,
+        "queue_persistence_preview": queue_preview,
+        "worker_lease_preview": lease_preview,
+        "worker_invocation_preview": invocation_preview,
+        "queue_persistence_status": queue_preview["queue_persistence_status"],
+        "worker_lease_status": lease_preview["worker_lease_status"],
+        "worker_invocation_status": invocation_preview["worker_invocation_status"],
+        "queue_persistence_allowed": queue_persistence_allowed,
+        "worker_lease_allowed": worker_lease_allowed,
+        "worker_invocation_allowed": worker_invocation_allowed,
+        "queue_persisted": False,
+        "worker_lease_created": False,
+        "worker_invocation_performed": False,
+        "work_order_persisted": False,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "provider_call_performed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "agent_execution_allowed": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+        "cost_incurred_by_crossgrowth": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_runner_event_ledger_summary(
     *,
     project_id: str = "demo_project_default",

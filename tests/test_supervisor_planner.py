@@ -2158,6 +2158,7 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         supervisor_decision = payload["runner_supervisor_event_ledger_decision_summary"]
         supervisor_routing_plan = payload["runner_supervisor_next_step_routing_plan"]
         supervisor_work_order = payload["runner_supervisor_next_step_work_order_preview"]
+        queue_lease_worker_chain = payload["runner_queue_lease_worker_dry_run_chain"]
 
         self.assertEqual(incident["real_execution_incident_response_status"], "incident_response_opened_safely")
         self.assertEqual(incident["launch_monitor_status"], "launch_monitor_blocked_safely")
@@ -2347,4 +2348,51 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_runner_supervisor_next_step_work_order_allowed"]
         )
+        self.assertEqual(
+            queue_lease_worker_chain["queue_lease_worker_dry_run_chain_version"],
+            "agent_runner_queue_lease_worker_dry_run_chain_v1",
+        )
+        self.assertEqual(
+            queue_lease_worker_chain["queue_lease_worker_dry_run_chain_status"],
+            "queue_lease_worker_chain_blocked_safely",
+        )
+        self.assertEqual(
+            queue_lease_worker_chain["queue_persistence_status"],
+            "queue_persistence_blocked_by_work_order",
+        )
+        self.assertEqual(
+            queue_lease_worker_chain["worker_lease_status"],
+            "worker_lease_blocked_by_queue_preview",
+        )
+        self.assertEqual(
+            queue_lease_worker_chain["worker_invocation_status"],
+            "worker_invocation_blocked_by_lease_preview",
+        )
+        self.assertFalse(queue_lease_worker_chain["queue_persisted"])
+        self.assertFalse(queue_lease_worker_chain["worker_lease_created"])
+        self.assertFalse(queue_lease_worker_chain["worker_invocation_performed"])
+        self.assertFalse(queue_lease_worker_chain["provider_call_performed"])
+        self.assertFalse(queue_lease_worker_chain["external_api_called"])
+        self.assertFalse(queue_lease_worker_chain["agent_execution_performed"])
+        self.assertFalse(queue_lease_worker_chain["safe_to_continue"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_queue_lease_worker_chain_status"],
+            "queue_lease_worker_chain_blocked_safely",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_queue_persistence_status"],
+            "queue_persistence_blocked_by_work_order",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_worker_lease_status"],
+            "worker_lease_blocked_by_queue_preview",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_worker_invocation_status"],
+            "worker_invocation_blocked_by_lease_preview",
+        )
+        self.assertFalse(payload["project"]["graph_summary"]["latest_runner_queue_persisted"])
+        self.assertFalse(payload["project"]["graph_summary"]["latest_runner_worker_lease_created"])
+        self.assertFalse(payload["project"]["graph_summary"]["latest_runner_worker_invocation_performed"])
+        self.assertFalse(payload["project"]["graph_summary"]["latest_runner_queue_lease_worker_safe_to_continue"])
 

@@ -1336,6 +1336,48 @@ class AgentRunnerExecutionReceiptTests(unittest.TestCase):
 
 
 
+
+    def test_queue_lease_worker_dry_run_chain_blocks_without_allowed_work_order(self):
+        from agent_runs import build_agent_runner_queue_lease_worker_dry_run_chain
+
+        work_order = {
+            "project_id": "project_queue_lease_worker_chain",
+            "supervisor_next_step_work_order_status": "supervisor_work_order_blocked",
+            "work_order_id": "supervisor_next_step_work_order_project_queue_lease_worker_chain",
+            "target_agent_id": "risk_approval_agent",
+            "next_step_type": "inspect_blocking_events",
+            "recommended_command": "/api/v1/projects/project_queue_lease_worker_chain/runner/real-execution-incident-response/dry-run",
+            "work_order_allowed": False,
+            "blocking_event_ids": ["event_one"],
+            "dry_run": True,
+        }
+        chain = build_agent_runner_queue_lease_worker_dry_run_chain(
+            work_order,
+            project_id="project_queue_lease_worker_chain",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            chain["queue_lease_worker_dry_run_chain_version"],
+            "agent_runner_queue_lease_worker_dry_run_chain_v1",
+        )
+        self.assertEqual(chain["queue_lease_worker_dry_run_chain_status"], "queue_lease_worker_chain_blocked_safely")
+        self.assertEqual(chain["queue_persistence_status"], "queue_persistence_blocked_by_work_order")
+        self.assertEqual(chain["worker_lease_status"], "worker_lease_blocked_by_queue_preview")
+        self.assertEqual(chain["worker_invocation_status"], "worker_invocation_blocked_by_lease_preview")
+        self.assertFalse(chain["queue_persistence_allowed"])
+        self.assertFalse(chain["worker_lease_allowed"])
+        self.assertFalse(chain["worker_invocation_allowed"])
+        self.assertFalse(chain["queue_persisted"])
+        self.assertFalse(chain["worker_lease_created"])
+        self.assertFalse(chain["worker_invocation_performed"])
+        self.assertFalse(chain["provider_call_performed"])
+        self.assertFalse(chain["external_api_called"])
+        self.assertFalse(chain["agent_execution_performed"])
+        self.assertFalse(chain["safe_to_continue"])
+        self.assertTrue(chain["dry_run"])
+
+
     def test_supervisor_next_step_work_order_preview_blocks_on_blocking_route(self):
         from agent_runs import build_agent_runner_supervisor_next_step_work_order_preview
 

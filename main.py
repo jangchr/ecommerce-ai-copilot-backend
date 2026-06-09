@@ -71,6 +71,7 @@ from agent_runs import (
     build_agent_runner_supervisor_event_ledger_decision_summary,
     build_agent_runner_supervisor_next_step_routing_plan,
     build_agent_runner_supervisor_next_step_work_order_preview,
+    build_agent_runner_queue_lease_worker_dry_run_chain,
     build_agent_runner_work_order,
     build_agent_runner_work_order_summary,
     build_agent_runner_queue_item,
@@ -13244,6 +13245,11 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         project_id=project_id,
         requested_by="project_runner_real_execution_incident_response_dry_run_api",
     )
+    runner_queue_lease_worker_dry_run_chain = build_agent_runner_queue_lease_worker_dry_run_chain(
+        runner_supervisor_next_step_work_order_preview,
+        project_id=project_id,
+        requested_by="project_runner_real_execution_incident_response_dry_run_api",
+    )
 
     project = monitor_payload["project"]
     graph_summary = dict(project.get("graph_summary") or {})
@@ -13276,6 +13282,14 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         "latest_runner_supervisor_next_step_work_order_id": runner_supervisor_next_step_work_order_preview["work_order_id"],
         "latest_runner_supervisor_next_step_work_order_allowed": runner_supervisor_next_step_work_order_preview["work_order_allowed"],
         "latest_runner_supervisor_next_step_work_order_target_agent_id": runner_supervisor_next_step_work_order_preview["target_agent_id"],
+        "latest_runner_queue_lease_worker_chain_status": runner_queue_lease_worker_dry_run_chain["queue_lease_worker_dry_run_chain_status"],
+        "latest_runner_queue_persistence_status": runner_queue_lease_worker_dry_run_chain["queue_persistence_status"],
+        "latest_runner_worker_lease_status": runner_queue_lease_worker_dry_run_chain["worker_lease_status"],
+        "latest_runner_worker_invocation_status": runner_queue_lease_worker_dry_run_chain["worker_invocation_status"],
+        "latest_runner_queue_persisted": runner_queue_lease_worker_dry_run_chain["queue_persisted"],
+        "latest_runner_worker_lease_created": runner_queue_lease_worker_dry_run_chain["worker_lease_created"],
+        "latest_runner_worker_invocation_performed": runner_queue_lease_worker_dry_run_chain["worker_invocation_performed"],
+        "latest_runner_queue_lease_worker_safe_to_continue": runner_queue_lease_worker_dry_run_chain["safe_to_continue"],
     })
     project["graph_summary"] = graph_summary
     try:
@@ -13293,6 +13307,7 @@ async def dry_run_project_agent_real_execution_incident_response(project_id: str
         "runner_supervisor_event_ledger_decision_summary": runner_supervisor_event_ledger_decision_summary,
         "runner_supervisor_next_step_routing_plan": runner_supervisor_next_step_routing_plan,
         "runner_supervisor_next_step_work_order_preview": runner_supervisor_next_step_work_order_preview,
+        "runner_queue_lease_worker_dry_run_chain": runner_queue_lease_worker_dry_run_chain,
         "dry_run": True,
         "incident_detected": runner_real_execution_incident_response_preview["incident_detected"],
         "incident_response_opened": runner_real_execution_incident_response_preview["incident_detected"],
