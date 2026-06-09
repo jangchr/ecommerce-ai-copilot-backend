@@ -54,6 +54,7 @@ Add-Check "project_workspace_history_ux_bundle_marker" ($page.Content -match "Pr
 Add-Check "project_workspace_action_links_bundle_marker" ($page.Content -match "Project Workspace action links bundle")
 Add-Check "project_workspace_report_reader_bundle_marker" ($page.Content -match "Project Workspace report reader bundle")
 Add-Check "project_workspace_export_pack_bundle_marker" ($page.Content -match "Project Workspace export pack bundle")
+Add-Check "project_workspace_export_pack_safety_chain_marker" ($page.Content -match "Project Workspace export pack safety chain bundle")
 Add-Check "project_workspace_runner_plan_panel_marker" ($page.Content -match "Project Workspace runner plan panel bundle")
 Add-Check "project_workspace_dispatch_ticket_panel_marker" ($page.Content -match "Project Workspace dispatch ticket panel bundle")
 Add-Check "project_workspace_dispatch_event_panel_marker" ($page.Content -match "Project Workspace dispatch event panel bundle")

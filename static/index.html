@@ -11215,10 +11215,50 @@
             }
         }
 
+
+        function projectWorkspaceSafetyChainFieldsFromSummary(summary = {}) {
+            const safeSummary = summary || {};
+            return {
+                hasSafetyChain: Boolean(
+                    safeSummary.latest_runner_real_execution_safety_chain_event_status ||
+                    safeSummary.latest_runner_real_execution_safety_chain_status ||
+                    safeSummary.latest_runner_real_execution_safety_chain_audit_summary_status ||
+                    safeSummary.latest_runner_real_execution_safety_chain_event_id
+                ),
+                event_id: safeSummary.latest_runner_real_execution_safety_chain_event_id || '',
+                event_type: safeSummary.latest_runner_real_execution_safety_chain_event_type || '',
+                event_status: safeSummary.latest_runner_real_execution_safety_chain_event_status || '',
+                chain_status: safeSummary.latest_runner_real_execution_safety_chain_status || '',
+                audit_summary_status: safeSummary.latest_runner_real_execution_safety_chain_audit_summary_status || '',
+                audit_event_count: safeSummary.latest_runner_real_execution_safety_chain_audit_event_count || 0,
+                safe_to_continue: Boolean(safeSummary.latest_runner_real_execution_safety_chain_safe_to_continue),
+                abort_recommended: Boolean(safeSummary.latest_runner_real_execution_abort_recommended),
+                incident_detected: Boolean(safeSummary.latest_runner_real_execution_incident_detected)
+            };
+        }
+
+        function projectWorkspaceReportSafetyChainPreviewText(item = {}) {
+            const report = item.report || {};
+            const summary = report.summary || item.graph_summary || report.project_graph_summary || {};
+            const safety = projectWorkspaceSafetyChainFieldsFromSummary(summary);
+            if (!safety.hasSafetyChain) return '';
+            return [
+                `${t('projectReportSafetyChainPreview')}:`,
+                `${t('realExecutionSafetyChainEventId')}: ${safety.event_id || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventStatus')}: ${safety.event_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventType')}: ${safety.event_type || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainStatus')}: ${safety.chain_status || 'not_refreshed'}`,
+                `${t('safeToContinue')}: ${safety.safe_to_continue}`,
+                `${t('abortRecommended')}: ${safety.abort_recommended}`,
+                `${t('incidentDetected')}: ${safety.incident_detected}`
+            ].join('\n');
+        }
+
         function projectWorkspaceReportPreviewText(item = {}) {
             const report = item.report || {};
             const summary = report.summary || {};
             const markdown = item.markdown_report || report.markdown_report || '';
+            const safetyChainPreview = projectWorkspaceReportSafetyChainPreviewText(item);
             const lines = [
                 t('projectReportReaderTitle'),
                 item.report_id ? `${t('projectHistoryReportId')}: ${item.report_id}` : '',
@@ -11228,6 +11268,7 @@
                 summary.run_id ? `${t('projectHistoryRunId')}: ${summary.run_id}` : '',
                 summary.job_id ? `${t('projectHistoryActionJob')}: ${summary.job_id}` : '',
                 markdown ? `${t('projectReportMarkdownPreview')}:\n${String(markdown).slice(0, 900)}` : '',
+                safetyChainPreview,
                 `${t('projectHistoryActionHint')}: ${projectWorkspaceHistoryActionHint(item, 'reports')}`
             ];
             return lines.filter(Boolean).join('\n');
@@ -11390,6 +11431,61 @@
 
         const PROJECT_WORKSPACE_EXPORT_PACK_BUNDLE_MARKER = 'Project Workspace export pack bundle';
 
+        const PROJECT_WORKSPACE_EXPORT_PACK_SAFETY_CHAIN_BUNDLE_MARKER = 'Project Workspace export pack safety chain bundle';
+
+        function projectWorkspaceExportSafetyChainSnapshot(workspace = latestProjectWorkspace) {
+            const summary = workspace?.project?.graph_summary || {};
+            const audit = workspace?.runner_real_execution_safety_chain_audit_summary_preview || {};
+            const event = workspace?.runner_real_execution_safety_chain_event_preview || {};
+            const fallback = projectWorkspaceSafetyChainFieldsFromSummary(summary);
+            const snapshot = {
+                marker: PROJECT_WORKSPACE_EXPORT_PACK_SAFETY_CHAIN_BUNDLE_MARKER,
+                audit_summary_status: audit.real_execution_safety_chain_audit_summary_status || fallback.audit_summary_status || '',
+                chain_status: audit.chain_status || event.chain_status || fallback.chain_status || '',
+                event_id: event.event_id || fallback.event_id || '',
+                event_type: event.event_type || fallback.event_type || '',
+                event_status: event.event_status || fallback.event_status || '',
+                audit_event_count: audit.audit_event_count || fallback.audit_event_count || 0,
+                abort_recommended: Boolean(audit.abort_recommended || event.abort_recommended || fallback.abort_recommended),
+                incident_detected: Boolean(audit.incident_detected || event.incident_detected || fallback.incident_detected),
+                safe_to_continue: Boolean(audit.safe_to_continue || event.safe_to_continue || fallback.safe_to_continue),
+                provider_call_performed: Boolean(audit.provider_call_performed || event.provider_call_performed),
+                external_api_called: Boolean(audit.external_api_called || event.external_api_called),
+                agent_execution_performed: Boolean(audit.agent_execution_performed || event.agent_execution_performed),
+                dry_run: true
+            };
+            snapshot.has_safety_chain = Boolean(
+                snapshot.audit_summary_status ||
+                snapshot.chain_status ||
+                snapshot.event_status ||
+                snapshot.event_id
+            );
+            return snapshot;
+        }
+
+        function projectWorkspaceExportSafetyChainMarkdown(workspace = latestProjectWorkspace) {
+            const safety = projectWorkspaceExportSafetyChainSnapshot(workspace);
+            if (!safety.has_safety_chain) {
+                return `## ${t('projectWorkspaceExportSafetyChainTitle')}\n${t('projectWorkspaceExportSafetyChainNotRefreshed')}`;
+            }
+            return [
+                `## ${t('projectWorkspaceExportSafetyChainTitle')}`,
+                `${t('realExecutionSafetyChainEventId')}: ${safety.event_id || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventStatus')}: ${safety.event_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventType')}: ${safety.event_type || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainStatus')}: ${safety.chain_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainAuditStatus')}: ${safety.audit_summary_status || 'not_refreshed'}`,
+                `${t('safeToContinue')}: ${safety.safe_to_continue}`,
+                `${t('abortRecommended')}: ${safety.abort_recommended}`,
+                `${t('incidentDetected')}: ${safety.incident_detected}`,
+                `${t('providerCallPerformed')}: ${safety.provider_call_performed}`,
+                `${t('externalApiCalled')}: ${safety.external_api_called}`,
+                `${t('agentExecutionPerformed')}: ${safety.agent_execution_performed}`,
+                `${t('dryRun')}: ${safety.dry_run}`
+            ].join('\n');
+        }
+
+
         function projectWorkspaceExportPackMarkdownText(workspace = latestProjectWorkspace) {
             const project = workspace?.project || {};
             const summary = project.graph_summary || {};
@@ -11418,6 +11514,8 @@
                 `${t('recentProjectSources')}: ${summary.source_count || projectWorkspaceHistoryArray(workspace, 'recent_sources').length}`,
                 `${t('recentProjectAssets')}: ${summary.asset_count || projectWorkspaceHistoryArray(workspace, 'recent_assets').length}`,
                 '',
+                projectWorkspaceExportSafetyChainMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11431,6 +11529,7 @@
                 generated_at: new Date().toISOString(),
                 project_id: workspace?.project?.project_id || latestProjectId || 'demo_project_default',
                 graph_summary: workspace?.project?.graph_summary || {},
+                real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -21458,6 +21557,29 @@
             safetyChainHistoryCopyFailed: '\u590d\u5236\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u6458\u8981\u5931\u8d25\u3002',
             safetyChainHistoryNotRefreshedYet: '\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u5c1a\u672a\u5237\u65b0\u3002',
             realExecutionSafetyChainEventId: '\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6 ID'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceExportPackSafetyChainBundleMarker: 'Project Workspace export pack safety chain bundle',
+            projectWorkspaceExportSafetyChainTitle: 'Real execution safety chain',
+            projectWorkspaceExportSafetyChainNotRefreshed: 'No real execution safety chain event has been refreshed yet.',
+            projectReportSafetyChainPreview: 'Report safety chain preview',
+            providerCallPerformed: 'Provider call performed',
+            externalApiCalled: 'External API called',
+            agentExecutionPerformed: 'Agent execution performed',
+            dryRun: 'Dry-run'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceExportPackSafetyChainBundleMarker: 'Project Workspace export pack safety chain bundle',
+            projectWorkspaceExportSafetyChainTitle: '\u771f\u5b9e\u6267\u884c\u5b89\u5168\u94fe\u8def',
+            projectWorkspaceExportSafetyChainNotRefreshed: '\u5c1a\u672a\u5237\u65b0\u771f\u5b9e\u6267\u884c\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u3002',
+            projectReportSafetyChainPreview: 'Report \u5b89\u5168\u94fe\u8def\u9884\u89c8',
+            providerCallPerformed: '\u662f\u5426\u6267\u884c provider \u8c03\u7528',
+            externalApiCalled: '\u662f\u5426\u8c03\u7528\u5916\u90e8 API',
+            agentExecutionPerformed: '\u662f\u5426\u6267\u884c Agent',
+            dryRun: 'Dry-run'
         });
 
 
