@@ -1850,3 +1850,40 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             guard["capability_invocation_release_guard_status"],
         )
 
+    def test_project_runner_capability_invocation_release_packet_dry_run_endpoint_returns_final_blocked_receipt(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/capability-invocation-release-packet/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_invocation_ready"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        packet = payload["runner_capability_invocation_release_packet_preview"]
+        risk = payload["runner_capability_invocation_risk_summary_preview"]
+        signoff = payload["runner_capability_invocation_signoff_packet_preview"]
+        receipt = payload["runner_capability_invocation_final_blocked_receipt_preview"]
+
+        self.assertEqual(packet["capability_invocation_release_packet_status"], "release_packet_blocked")
+        self.assertGreater(packet["blocking_release_check_count"], 0)
+        self.assertEqual(risk["capability_invocation_risk_summary_status"], "risk_summary_requires_operator_review")
+        self.assertEqual(signoff["capability_invocation_signoff_packet_status"], "signoff_missing")
+        self.assertGreater(signoff["missing_signoff_field_count"], 0)
+        self.assertEqual(receipt["capability_invocation_final_blocked_receipt_status"], "final_blocked_before_real_invocation")
+        self.assertFalse(receipt["release_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_capability_invocation_final_blocked_receipt_status"],
+            receipt["capability_invocation_final_blocked_receipt_status"],
+        )
+

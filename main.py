@@ -11243,6 +11243,219 @@ async def dry_run_project_agent_capability_invocation_rehearsal(project_id: str,
     }
 
 
+
+def _runner_capability_invocation_release_packet_preview(runbook_payload: dict) -> dict:
+    runbook = dict(runbook_payload.get("runner_capability_invocation_runbook_preview") or {})
+    review = dict(runbook_payload.get("runner_capability_invocation_operator_review_packet_preview") or {})
+    guard = dict(runbook_payload.get("runner_capability_invocation_release_guard_preview") or {})
+    project_id = str(runbook_payload.get("project", {}).get("project_id") or runbook_payload.get("project_id") or "demo_project_default")
+
+    release_checklist = [
+        {
+            "release_check_id": "runbook_reviewed",
+            "status": "required",
+            "passed": False,
+            "blocking": True,
+            "reason": "Capability invocation runbook must be reviewed before real invocation.",
+        },
+        {
+            "release_check_id": "operator_signoff_captured",
+            "status": "missing",
+            "passed": False,
+            "blocking": True,
+            "reason": "Explicit operator signoff is required before release.",
+        },
+        {
+            "release_check_id": "quota_budget_confirmed",
+            "status": "missing",
+            "passed": False,
+            "blocking": True,
+            "reason": "Quota and budget reservation are required before provider-capable execution.",
+        },
+        {
+            "release_check_id": "sandbox_session_ready",
+            "status": "missing",
+            "passed": False,
+            "blocking": True,
+            "reason": "Sandbox session must be ready before any real tool invocation.",
+        },
+        {
+            "release_check_id": "rollback_plan_ready",
+            "status": "missing",
+            "passed": False,
+            "blocking": True,
+            "reason": "Rollback plan is required before release.",
+        },
+        {
+            "release_check_id": "dry_run_boundary_verified",
+            "status": "passed",
+            "passed": True,
+            "blocking": False,
+            "reason": "Dry-run boundary kept real provider calls disabled.",
+        },
+    ]
+    blocking_release_check_ids = [
+        item["release_check_id"]
+        for item in release_checklist
+        if item.get("blocking") and not item.get("passed")
+    ]
+    return {
+        "capability_invocation_release_packet_version": "runner_capability_invocation_release_packet_preview_v1",
+        "capability_invocation_release_packet_status": "release_packet_blocked",
+        "project_id": project_id,
+        "runbook_status": runbook.get("capability_invocation_runbook_status", ""),
+        "operator_review_packet_status": review.get("capability_invocation_operator_review_packet_status", ""),
+        "release_guard_status": guard.get("capability_invocation_release_guard_status", ""),
+        "release_checklist": release_checklist,
+        "release_check_count": len(release_checklist),
+        "blocking_release_check_ids": blocking_release_check_ids,
+        "blocking_release_check_count": len(blocking_release_check_ids),
+        "release_allowed": False,
+        "real_invocation_ready": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_risk_summary_preview(release_packet: dict) -> dict:
+    project_id = str(release_packet.get("project_id") or "demo_project_default")
+    risks = [
+        {
+            "risk_id": "provider_cost_risk",
+            "risk_level": "high_without_approval",
+            "mitigation": "Require quota, budget, and explicit operator approval before real provider invocation.",
+        },
+        {
+            "risk_id": "external_api_side_effect_risk",
+            "risk_level": "high_without_sandbox",
+            "mitigation": "Require sandbox session and rollback plan before real execution.",
+        },
+        {
+            "risk_id": "autonomous_agent_decision_risk",
+            "risk_level": "blocked",
+            "mitigation": "Keep autonomous LLM decision disabled until explicit real execution mode exists.",
+        },
+        {
+            "risk_id": "audit_gap_risk",
+            "risk_level": "medium",
+            "mitigation": "Record release packet, signoff packet, and final blocked receipt.",
+        },
+    ]
+    return {
+        "capability_invocation_risk_summary_version": "runner_capability_invocation_risk_summary_preview_v1",
+        "capability_invocation_risk_summary_status": "risk_summary_requires_operator_review",
+        "project_id": project_id,
+        "risk_items": risks,
+        "risk_item_count": len(risks),
+        "highest_risk_level": "high_without_approval",
+        "release_allowed": False,
+        "manual_review_required": True,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_signoff_packet_preview(
+    release_packet: dict,
+    risk_summary: dict,
+) -> dict:
+    project_id = str(release_packet.get("project_id") or "demo_project_default")
+    signoff_fields = [
+        {
+            "signoff_field_id": "operator_id",
+            "status": "missing",
+            "required": True,
+        },
+        {
+            "signoff_field_id": "approval_reason",
+            "status": "missing",
+            "required": True,
+        },
+        {
+            "signoff_field_id": "quota_budget_acknowledgement",
+            "status": "missing",
+            "required": True,
+        },
+        {
+            "signoff_field_id": "sandbox_acknowledgement",
+            "status": "missing",
+            "required": True,
+        },
+        {
+            "signoff_field_id": "rollback_acknowledgement",
+            "status": "missing",
+            "required": True,
+        },
+    ]
+    missing_signoff_field_ids = [
+        item["signoff_field_id"]
+        for item in signoff_fields
+        if item.get("required") and item.get("status") != "captured"
+    ]
+    return {
+        "capability_invocation_signoff_packet_version": "runner_capability_invocation_signoff_packet_preview_v1",
+        "capability_invocation_signoff_packet_status": "signoff_missing",
+        "project_id": project_id,
+        "release_packet_status": release_packet.get("capability_invocation_release_packet_status", ""),
+        "risk_summary_status": risk_summary.get("capability_invocation_risk_summary_status", ""),
+        "signoff_fields": signoff_fields,
+        "signoff_field_count": len(signoff_fields),
+        "missing_signoff_field_ids": missing_signoff_field_ids,
+        "missing_signoff_field_count": len(missing_signoff_field_ids),
+        "operator_signoff_captured": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_final_blocked_receipt_preview(
+    release_packet: dict,
+    risk_summary: dict,
+    signoff_packet: dict,
+) -> dict:
+    project_id = str(release_packet.get("project_id") or "demo_project_default")
+    receipt_reasons = [
+        "Release packet is blocked.",
+        "Operator signoff is missing.",
+        "Quota, sandbox, and rollback acknowledgements are missing.",
+        "Real capability invocation remains disabled in dry-run mode.",
+    ]
+    return {
+        "capability_invocation_final_blocked_receipt_version": "runner_capability_invocation_final_blocked_receipt_preview_v1",
+        "capability_invocation_final_blocked_receipt_status": "final_blocked_before_real_invocation",
+        "project_id": project_id,
+        "release_packet_status": release_packet.get("capability_invocation_release_packet_status", ""),
+        "risk_summary_status": risk_summary.get("capability_invocation_risk_summary_status", ""),
+        "signoff_packet_status": signoff_packet.get("capability_invocation_signoff_packet_status", ""),
+        "receipt_reasons": receipt_reasons,
+        "receipt_reason_count": len(receipt_reasons),
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/capability-invocation-runbook/dry-run")
 async def dry_run_project_agent_capability_invocation_runbook(project_id: str, http_request: Request):
     rehearsal_payload = await dry_run_project_agent_capability_invocation_rehearsal(project_id, http_request)
@@ -11280,6 +11493,61 @@ async def dry_run_project_agent_capability_invocation_runbook(project_id: str, h
         "release_allowed": False,
         "real_invocation_ready": False,
         "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/capability-invocation-release-packet/dry-run")
+async def dry_run_project_agent_capability_invocation_release_packet(project_id: str, http_request: Request):
+    runbook_payload = await dry_run_project_agent_capability_invocation_runbook(project_id, http_request)
+
+    runner_capability_invocation_release_packet_preview = _runner_capability_invocation_release_packet_preview(runbook_payload)
+    runner_capability_invocation_risk_summary_preview = _runner_capability_invocation_risk_summary_preview(
+        runner_capability_invocation_release_packet_preview
+    )
+    runner_capability_invocation_signoff_packet_preview = _runner_capability_invocation_signoff_packet_preview(
+        runner_capability_invocation_release_packet_preview,
+        runner_capability_invocation_risk_summary_preview,
+    )
+    runner_capability_invocation_final_blocked_receipt_preview = _runner_capability_invocation_final_blocked_receipt_preview(
+        runner_capability_invocation_release_packet_preview,
+        runner_capability_invocation_risk_summary_preview,
+        runner_capability_invocation_signoff_packet_preview,
+    )
+
+    project = runbook_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_capability_invocation_release_packet_status": runner_capability_invocation_release_packet_preview["capability_invocation_release_packet_status"],
+        "latest_runner_capability_invocation_risk_summary_status": runner_capability_invocation_risk_summary_preview["capability_invocation_risk_summary_status"],
+        "latest_runner_capability_invocation_signoff_packet_status": runner_capability_invocation_signoff_packet_preview["capability_invocation_signoff_packet_status"],
+        "latest_runner_capability_invocation_final_blocked_receipt_status": runner_capability_invocation_final_blocked_receipt_preview["capability_invocation_final_blocked_receipt_status"],
+        "latest_runner_capability_invocation_release_packet_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **runbook_payload,
+        "project": project,
+        "runner_capability_invocation_release_packet_preview": runner_capability_invocation_release_packet_preview,
+        "runner_capability_invocation_risk_summary_preview": runner_capability_invocation_risk_summary_preview,
+        "runner_capability_invocation_signoff_packet_preview": runner_capability_invocation_signoff_packet_preview,
+        "runner_capability_invocation_final_blocked_receipt_preview": runner_capability_invocation_final_blocked_receipt_preview,
+        "dry_run": True,
+        "release_allowed": False,
+        "real_invocation_ready": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
         "provider_call_performed": False,
         "external_api_called": False,
         "agent_execution_performed": False,

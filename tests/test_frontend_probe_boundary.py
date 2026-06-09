@@ -6097,3 +6097,44 @@ class ProjectWorkspaceCapabilityInvocationRunbookPanelFrontendTests(unittest.Tes
         self.assertIn("Project Workspace capability invocation runbook panel bundle", script)
         self.assertIn("project_workspace_capability_invocation_runbook_panel_marker", script)
 
+
+class ProjectWorkspaceCapabilityInvocationReleasePacketPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_capability_invocation_release_packet_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace capability invocation release packet panel bundle",
+            "PROJECT_WORKSPACE_CAPABILITY_INVOCATION_RELEASE_PACKET_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(",
+            "function projectWorkspaceCapabilityInvocationReleasePacketCopyText(",
+            "async function copyProjectWorkspaceCapabilityInvocationReleasePacket(",
+            "async function dryRunProjectWorkspaceCapabilityInvocationReleasePacket(",
+            "/runner/capability-invocation-release-packet/dry-run",
+            "latestProjectRunnerCapabilityInvocationReleasePacketPreview",
+            "latestProjectRunnerCapabilityInvocationRiskSummaryPreview",
+            "latestProjectRunnerCapabilityInvocationSignoffPacketPreview",
+            "latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview",
+            "projectWorkspaceCapabilityInvocationReleasePacketPanel",
+            "projectWorkspaceCapabilityInvocationReleasePacketStatus",
+            "dryRunProjectWorkspaceCapabilityInvocationReleasePacketBtn",
+            "copyProjectWorkspaceCapabilityInvocationReleasePacketBtn",
+            "data-project-capability-invocation-release-packet-panel-marker",
+            "data-project-capability-invocation-release-packet-dry-run-action",
+            "data-capability-invocation-release-packet-audit-preview",
+            "capabilityInvocationReleasePacketPanelTitle",
+            "capabilityInvocationReleasePacketPanelHelper",
+            "renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_capability_invocation_release_packet_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_capability_invocation_release_packet_panel_marker", script)
+        self.assertIn("Project Workspace capability invocation release packet panel bundle", script)
+
+    def test_project_workspace_capability_invocation_release_packet_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace capability invocation release packet panel bundle", script)
+        self.assertIn("project_workspace_capability_invocation_release_packet_panel_marker", script)
+

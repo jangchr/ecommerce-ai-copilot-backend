@@ -14986,6 +14986,124 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_CAPABILITY_INVOCATION_RELEASE_PACKET_PANEL_BUNDLE_MARKER = 'Project Workspace capability invocation release packet panel bundle';
+        let latestProjectRunnerCapabilityInvocationReleasePacketPreview = {};
+        let latestProjectRunnerCapabilityInvocationRiskSummaryPreview = {};
+        let latestProjectRunnerCapabilityInvocationSignoffPacketPreview = {};
+        let latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview = {};
+
+        function projectWorkspaceCapabilityInvocationReleasePacketCopyText(workspace = latestProjectWorkspace) {
+            const packet = Object.keys(latestProjectRunnerCapabilityInvocationReleasePacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationReleasePacketPreview : workspace?.runner_capability_invocation_release_packet_preview || {};
+            const risk = Object.keys(latestProjectRunnerCapabilityInvocationRiskSummaryPreview || {}).length ? latestProjectRunnerCapabilityInvocationRiskSummaryPreview : workspace?.runner_capability_invocation_risk_summary_preview || {};
+            const signoff = Object.keys(latestProjectRunnerCapabilityInvocationSignoffPacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationSignoffPacketPreview : workspace?.runner_capability_invocation_signoff_packet_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview || {}).length ? latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview : workspace?.runner_capability_invocation_final_blocked_receipt_preview || {};
+            return [
+                t('capabilityInvocationReleasePacketCopyTitle'),
+                `${t('capabilityInvocationReleasePacketStatus')}: ${packet.capability_invocation_release_packet_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationRiskSummaryStatus')}: ${risk.capability_invocation_risk_summary_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationSignoffPacketStatus')}: ${signoff.capability_invocation_signoff_packet_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationFinalBlockedReceiptStatus')}: ${receipt.capability_invocation_final_blocked_receipt_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationReleaseAllowed')}: ${Boolean(receipt.release_allowed)}`,
+                '',
+                JSON.stringify({ packet, risk, signoff, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCapabilityInvocationReleasePacket() {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationReleasePacketStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceCapabilityInvocationReleasePacketCopyText());
+                if (status) status.textContent = t('capabilityInvocationReleasePacketCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('capabilityInvocationReleasePacketCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceCapabilityInvocationReleasePacket(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationReleasePacketStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('capabilityInvocationReleasePacketDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_capability_invocation_release_packet_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/capability-invocation-release-packet/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('capabilityInvocationReleasePacketDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerCapabilityInvocationRunbookPreview = payload.runner_capability_invocation_runbook_preview || {};
+                latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview = payload.runner_capability_invocation_operator_review_packet_preview || {};
+                latestProjectRunnerCapabilityInvocationReleaseGuardPreview = payload.runner_capability_invocation_release_guard_preview || {};
+                latestProjectRunnerCapabilityInvocationReleasePacketPreview = payload.runner_capability_invocation_release_packet_preview || {};
+                latestProjectRunnerCapabilityInvocationRiskSummaryPreview = payload.runner_capability_invocation_risk_summary_preview || {};
+                latestProjectRunnerCapabilityInvocationSignoffPacketPreview = payload.runner_capability_invocation_signoff_packet_preview || {};
+                latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview = payload.runner_capability_invocation_final_blocked_receipt_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_capability_invocation_release_packet_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_capability_invocation_release_packet_dry_run');
+                if (status) status.textContent = t('capabilityInvocationReleasePacketDryRunComplete');
+
+                const runbookPanel = document.getElementById('projectWorkspaceCapabilityInvocationRunbookPanel');
+                if (runbookPanel) runbookPanel.outerHTML = renderProjectWorkspaceCapabilityInvocationRunbookPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceCapabilityInvocationReleasePacketPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_capability_invocation_release_packet_dry_run');
+                if (status) status.textContent = error.message || t('capabilityInvocationReleasePacketDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(workspace = latestProjectWorkspace) {
+            const packet = Object.keys(latestProjectRunnerCapabilityInvocationReleasePacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationReleasePacketPreview : workspace?.runner_capability_invocation_release_packet_preview || {};
+            const risk = Object.keys(latestProjectRunnerCapabilityInvocationRiskSummaryPreview || {}).length ? latestProjectRunnerCapabilityInvocationRiskSummaryPreview : workspace?.runner_capability_invocation_risk_summary_preview || {};
+            const signoff = Object.keys(latestProjectRunnerCapabilityInvocationSignoffPacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationSignoffPacketPreview : workspace?.runner_capability_invocation_signoff_packet_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview || {}).length ? latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview : workspace?.runner_capability_invocation_final_blocked_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceCapabilityInvocationReleasePacketPanel" data-project-capability-invocation-release-packet-panel-marker="Project Workspace capability invocation release packet panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationReleasePacketPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('capabilityInvocationReleasePacketPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceCapabilityInvocationReleasePacketBtn" type="button" data-project-capability-invocation-release-packet-dry-run-action="Project Workspace capability invocation release packet panel bundle" onclick="dryRunProjectWorkspaceCapabilityInvocationReleasePacket()">${escapeHTML(t('dryRunCapabilityInvocationReleasePacket'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceCapabilityInvocationReleasePacketBtn" type="button" onclick="copyProjectWorkspaceCapabilityInvocationReleasePacket()">${escapeHTML(t('copyCapabilityInvocationReleasePacket'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationReleasePacketStatus'))}</div>
+                            <strong data-capability-invocation-release-packet-status="${escapeHTML(packet.capability_invocation_release_packet_status || 'not_refreshed')}">${escapeHTML(packet.capability_invocation_release_packet_status || t('capabilityInvocationReleasePacketNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationRiskSummaryStatus'))}</div>
+                            <strong data-capability-invocation-risk-summary-status="${escapeHTML(risk.capability_invocation_risk_summary_status || 'not_refreshed')}">${escapeHTML(risk.capability_invocation_risk_summary_status || t('capabilityInvocationReleasePacketNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationFinalBlockedReceiptStatus'))}</div>
+                            <strong data-capability-invocation-final-blocked-receipt-status="${escapeHTML(receipt.capability_invocation_final_blocked_receipt_status || 'not_refreshed')}">${escapeHTML(receipt.capability_invocation_final_blocked_receipt_status || t('capabilityInvocationReleasePacketNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('capabilityInvocationReleaseAllowed'))}: ${escapeHTML(String(Boolean(receipt.release_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('capabilityInvocationReleasePacketAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-capability-invocation-release-packet-audit-preview="Project Workspace capability invocation release packet panel bundle">${escapeHTML(projectWorkspaceCapabilityInvocationReleasePacketCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('capabilityInvocationReleasePacketNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCapabilityInvocationReleasePacketStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceCapabilityInvocationRunbookPanel(workspace = latestProjectWorkspace) {
             const runbook = Object.keys(latestProjectRunnerCapabilityInvocationRunbookPreview || {}).length ? latestProjectRunnerCapabilityInvocationRunbookPreview : workspace?.runner_capability_invocation_runbook_preview || {};
             const review = Object.keys(latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview : workspace?.runner_capability_invocation_operator_review_packet_preview || {};
@@ -16519,6 +16637,7 @@
                     ${renderProjectWorkspaceCapabilityInvocationGatePanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationRehearsalPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationRunbookPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -19874,6 +19993,49 @@
             capabilityInvocationRunbookDryRunFailed: 'Capability invocation runbook dry-run \u5931\u8d25\u3002',
             capabilityInvocationRunbookCopied: 'Capability \u8c03\u7528\u624b\u518c\u5df2\u590d\u5236\u3002',
             capabilityInvocationRunbookCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u624b\u518c\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCapabilityInvocationReleasePacketPanelBundleMarker: 'Project Workspace capability invocation release packet panel bundle',
+            capabilityInvocationReleasePacketPanelTitle: 'Capability invocation release packet',
+            capabilityInvocationReleasePacketPanelHelper: 'Dry-run release packet, risk summary, signoff placeholder, and final blocked receipt before any real capability invocation.',
+            dryRunCapabilityInvocationReleasePacket: 'Dry-run release packet',
+            copyCapabilityInvocationReleasePacket: 'Copy release packet',
+            capabilityInvocationReleasePacketCopyTitle: 'Project capability invocation release packet',
+            capabilityInvocationReleasePacketStatus: 'Release packet status',
+            capabilityInvocationRiskSummaryStatus: 'Risk summary status',
+            capabilityInvocationSignoffPacketStatus: 'Signoff packet status',
+            capabilityInvocationFinalBlockedReceiptStatus: 'Final blocked receipt status',
+            capabilityInvocationReleaseAllowed: 'Release allowed',
+            capabilityInvocationReleasePacketAuditPreview: 'Capability invocation release packet audit preview',
+            capabilityInvocationReleasePacketNotRefreshedYet: 'Capability invocation release packet has not been refreshed yet.',
+            capabilityInvocationReleasePacketDryRunRunning: 'Building capability invocation release packet dry-run.',
+            capabilityInvocationReleasePacketDryRunComplete: 'Capability invocation release packet dry-run complete.',
+            capabilityInvocationReleasePacketDryRunFailed: 'Capability invocation release packet dry-run failed.',
+            capabilityInvocationReleasePacketCopied: 'Capability invocation release packet copied.',
+            capabilityInvocationReleasePacketCopyFailed: 'Could not copy capability invocation release packet.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCapabilityInvocationReleasePacketPanelBundleMarker: 'Project Workspace capability invocation release packet panel bundle',
+            capabilityInvocationReleasePacketPanelTitle: 'Capability \u8c03\u7528\u53d1\u5e03\u5305',
+            capabilityInvocationReleasePacketPanelHelper: '\u771f\u5b9e capability \u8c03\u7528\u524d\u7684 dry-run \u53d1\u5e03\u5305\u3001\u98ce\u9669\u6458\u8981\u3001\u7b7e\u6838\u5360\u4f4d\u548c\u6700\u7ec8\u963b\u585e\u56de\u6267\u3002',
+            dryRunCapabilityInvocationReleasePacket: 'Dry-run \u53d1\u5e03\u5305',
+            copyCapabilityInvocationReleasePacket: '\u590d\u5236\u53d1\u5e03\u5305',
+            capabilityInvocationReleasePacketCopyTitle: '\u9879\u76ee capability \u8c03\u7528\u53d1\u5e03\u5305',
+            capabilityInvocationReleasePacketStatus: '\u53d1\u5e03\u5305\u72b6\u6001',
+            capabilityInvocationRiskSummaryStatus: '\u98ce\u9669\u6458\u8981\u72b6\u6001',
+            capabilityInvocationSignoffPacketStatus: '\u7b7e\u6838\u5305\u72b6\u6001',
+            capabilityInvocationFinalBlockedReceiptStatus: '\u6700\u7ec8\u963b\u585e\u56de\u6267\u72b6\u6001',
+            capabilityInvocationReleaseAllowed: '\u662f\u5426\u5141\u8bb8\u53d1\u5e03',
+            capabilityInvocationReleasePacketAuditPreview: 'Capability \u8c03\u7528\u53d1\u5e03\u5305\u5ba1\u8ba1\u9884\u89c8',
+            capabilityInvocationReleasePacketNotRefreshedYet: 'Capability \u8c03\u7528\u53d1\u5e03\u5305\u5c1a\u672a\u5237\u65b0\u3002',
+            capabilityInvocationReleasePacketDryRunRunning: '\u6b63\u5728\u751f\u6210 capability invocation release packet dry-run.',
+            capabilityInvocationReleasePacketDryRunComplete: 'Capability invocation release packet dry-run \u5b8c\u6210\u3002',
+            capabilityInvocationReleasePacketDryRunFailed: 'Capability invocation release packet dry-run \u5931\u8d25\u3002',
+            capabilityInvocationReleasePacketCopied: 'Capability \u8c03\u7528\u53d1\u5e03\u5305\u5df2\u590d\u5236\u3002',
+            capabilityInvocationReleasePacketCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u53d1\u5e03\u5305\u5931\u8d25\u3002'
         });
 
 
