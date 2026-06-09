@@ -2072,3 +2072,53 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             receipt["real_execution_launch_denial_receipt_status"],
         )
 
+    def test_project_runner_real_execution_launch_monitor_dry_run_endpoint_records_tripwires_and_abort_plan(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/real-execution-launch-monitor/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertTrue(payload["monitoring_started"])
+        self.assertTrue(payload["abort_recommended"])
+        self.assertFalse(payload["launch_authorized"])
+        self.assertFalse(payload["launch_allowed"])
+        self.assertFalse(payload["operator_approval_captured"])
+        self.assertFalse(payload["real_execution_mode_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        monitor = payload["runner_real_execution_launch_monitor_preview"]
+
+        self.assertEqual(monitor["real_execution_launch_monitor_status"], "launch_monitor_blocked_safely")
+        self.assertEqual(monitor["launch_authorization_status"], "launch_authorization_denied")
+        self.assertEqual(monitor["launch_lock_status"], "launch_locked")
+        self.assertEqual(monitor["launch_denial_receipt_status"], "launch_denied_safely")
+        self.assertGreater(monitor["blocking_tripwire_signal_count"], 0)
+        self.assertIn("launch_authorization_denied", monitor["blocking_tripwire_signal_ids"])
+        self.assertIn("launch_lock_active", monitor["blocking_tripwire_signal_ids"])
+        self.assertEqual(monitor["failed_health_probe_count"], 0)
+        self.assertEqual(monitor["health_probe_summary"], "dry_run_safe_but_launch_blocked")
+        self.assertGreater(monitor["abort_plan_step_count"], 0)
+        self.assertTrue(monitor["abort_recommended"])
+        self.assertFalse(monitor["provider_call_performed"])
+        self.assertFalse(monitor["external_api_called"])
+        self.assertFalse(monitor["agent_execution_performed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_launch_monitor_status"],
+            monitor["real_execution_launch_monitor_status"],
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_abort_recommended"],
+            True,
+        )
+
