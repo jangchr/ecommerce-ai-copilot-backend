@@ -11433,6 +11433,59 @@
 
         const PROJECT_WORKSPACE_EXPORT_PACK_SAFETY_CHAIN_BUNDLE_MARKER = 'Project Workspace export pack safety chain bundle';
 
+        const PROJECT_WORKSPACE_EXPORT_PACK_SAFETY_TIMELINE_BUNDLE_MARKER = 'Project Workspace export pack safety timeline bundle';
+        function projectWorkspaceExportSafetyTimelineSnapshot(workspace = latestProjectWorkspace) {
+            const summary = workspace?.project?.graph_summary || {};
+            const steps = typeof projectWorkspaceRealExecutionSafetyTimelineSteps === 'function'
+                ? projectWorkspaceRealExecutionSafetyTimelineSteps(workspace)
+                : [];
+            const timeline = {
+                marker: PROJECT_WORKSPACE_EXPORT_PACK_SAFETY_TIMELINE_BUNDLE_MARKER,
+                timeline_status: steps.length ? 'timeline_export_ready' : 'timeline_not_refreshed',
+                project_id: workspace?.project?.project_id || latestProjectId || 'demo_project_default',
+                step_count: steps.length,
+                chain_status: summary.latest_runner_real_execution_safety_chain_status || '',
+                event_status: summary.latest_runner_real_execution_safety_chain_event_status || '',
+                safe_to_continue: Boolean(summary.latest_runner_real_execution_safety_chain_safe_to_continue),
+                abort_recommended: Boolean(summary.latest_runner_real_execution_abort_recommended),
+                incident_detected: Boolean(summary.latest_runner_real_execution_incident_detected),
+                provider_call_performed: false,
+                external_api_called: false,
+                agent_execution_performed: false,
+                dry_run: true,
+                steps
+            };
+            timeline.has_timeline = Boolean(steps.length || timeline.chain_status || timeline.event_status);
+            return timeline;
+        }
+        function projectWorkspaceExportSafetyTimelineMarkdown(workspace = latestProjectWorkspace) {
+            const timeline = projectWorkspaceExportSafetyTimelineSnapshot(workspace);
+            if (!timeline.has_timeline) {
+                return `## ${t('projectWorkspaceExportSafetyTimelineTitle')}\n${t('projectWorkspaceExportSafetyTimelineNotRefreshed')}`;
+            }
+            const rows = timeline.steps.map((step, index) => [
+                `### ${index + 1}. ${step.title || step.step_id}`,
+                `${t('timelineAgentRole')}: ${step.agent_id || 'not_refreshed'}`,
+                `${t('timelineStatus')}: ${step.status || 'not_refreshed'}`,
+                `${t('timelineBlocking')}: ${Boolean(step.blocking)}`,
+                `${t('timelineEvidence')}: ${step.evidence || 'not_refreshed'}`
+            ].join('\n'));
+            return [
+                `## ${t('projectWorkspaceExportSafetyTimelineTitle')}`,
+                `${t('realExecutionSafetyChainStatus')}: ${timeline.chain_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventStatus')}: ${timeline.event_status || 'not_refreshed'}`,
+                `${t('safeToContinue')}: ${timeline.safe_to_continue}`,
+                `${t('abortRecommended')}: ${timeline.abort_recommended}`,
+                `${t('incidentDetected')}: ${timeline.incident_detected}`,
+                `${t('providerCallPerformed')}: ${timeline.provider_call_performed}`,
+                `${t('externalApiCalled')}: ${timeline.external_api_called}`,
+                `${t('agentExecutionPerformed')}: ${timeline.agent_execution_performed}`,
+                `${t('dryRun')}: ${timeline.dry_run}`,
+                '',
+                ...rows
+            ].join('\n');
+        }
+
         function projectWorkspaceExportSafetyChainSnapshot(workspace = latestProjectWorkspace) {
             const summary = workspace?.project?.graph_summary || {};
             const audit = workspace?.runner_real_execution_safety_chain_audit_summary_preview || {};
@@ -11516,6 +11569,8 @@
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
+                projectWorkspaceExportSafetyTimelineMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11530,6 +11585,7 @@
                 project_id: workspace?.project?.project_id || latestProjectId || 'demo_project_default',
                 graph_summary: workspace?.project?.graph_summary || {},
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
+                real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -21817,6 +21873,17 @@
             timelineEvidence: '\u8bc1\u636e'
         });
 
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceExportPackSafetyTimelineBundleMarker: 'Project Workspace export pack safety timeline bundle',
+            projectWorkspaceExportSafetyTimelineTitle: 'Multi-Agent safety timeline',
+            projectWorkspaceExportSafetyTimelineNotRefreshed: 'No Multi-Agent safety timeline has been refreshed yet.'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceExportPackSafetyTimelineBundleMarker: 'Project Workspace export pack safety timeline bundle',
+            projectWorkspaceExportSafetyTimelineTitle: '\u591a Agent \u5b89\u5168\u65f6\u95f4\u7ebf',
+            projectWorkspaceExportSafetyTimelineNotRefreshed: '\u5c1a\u672a\u5237\u65b0\u591a Agent \u5b89\u5168\u65f6\u95f4\u7ebf\u3002'
+        });
 
         applyLanguageCopy();
         mountUserTaskFlow();

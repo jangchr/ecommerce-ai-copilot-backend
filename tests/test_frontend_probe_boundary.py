@@ -6359,3 +6359,19 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         self.assertIn("Project Workspace real execution safety timeline bundle", script)
         self.assertIn("project_workspace_real_execution_safety_timeline_marker", script)
 
+
+    def test_project_workspace_export_pack_safety_timeline_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace export pack safety timeline bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_EXPORT_PACK_SAFETY_TIMELINE_BUNDLE_MARKER", html)
+        self.assertIn("projectWorkspaceExportSafetyTimelineSnapshot", html)
+        self.assertIn("projectWorkspaceExportSafetyTimelineMarkdown", html)
+        self.assertIn("real_execution_safety_timeline", html)
+    def test_project_workspace_export_pack_safety_timeline_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_export_pack_safety_timeline_marker", script)
+        self.assertIn("Project Workspace export pack safety timeline bundle", script)
+    def test_project_workspace_export_pack_safety_timeline_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace export pack safety timeline bundle", script)
+        self.assertIn("project_workspace_export_pack_safety_timeline_marker", script)
