@@ -15468,6 +15468,171 @@
         const PROJECT_WORKSPACE_REAL_EXECUTION_SAFETY_CHAIN_AUDIT_PANEL_BUNDLE_MARKER = 'Project Workspace real execution safety chain audit panel bundle';
         let latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview = {};
         let latestProjectRunnerRealExecutionSafetyChainEventPreview = {};
+        const PROJECT_WORKSPACE_REAL_EXECUTION_SAFETY_TIMELINE_BUNDLE_MARKER = 'Project Workspace real execution safety timeline bundle';
+
+        function projectWorkspaceRealExecutionSafetyTimelineSteps(workspace = latestProjectWorkspace) {
+            const summary = workspace?.project?.graph_summary || {};
+            const { audit, event } = typeof projectWorkspaceSafetyChainEventFromWorkspace === 'function'
+                ? projectWorkspaceSafetyChainEventFromWorkspace(workspace)
+                : { audit: workspace?.runner_real_execution_safety_chain_audit_summary_preview || {}, event: workspace?.runner_real_execution_safety_chain_event_preview || {} };
+
+            return [
+                {
+                    step_id: 'supervisor_mode_gate',
+                    agent_id: 'supervisor_agent',
+                    title: t('timelineSupervisorModeGate'),
+                    status: summary.latest_runner_real_execution_mode_receipt_status || summary.latest_runner_real_execution_go_no_go_decision || 'not_refreshed',
+                    blocking: true,
+                    evidence: t('timelineSupervisorModeGateEvidence')
+                },
+                {
+                    step_id: 'risk_readiness',
+                    agent_id: 'risk_approval_agent',
+                    title: t('timelineRiskReadiness'),
+                    status: summary.latest_runner_real_execution_readiness_status || summary.latest_runner_real_execution_go_no_go_decision || 'not_refreshed',
+                    blocking: true,
+                    evidence: t('timelineRiskReadinessEvidence')
+                },
+                {
+                    step_id: 'approval_request',
+                    agent_id: 'risk_approval_agent',
+                    title: t('timelineApprovalRequest'),
+                    status: summary.latest_runner_real_execution_approval_request_receipt_status || 'not_refreshed',
+                    blocking: true,
+                    evidence: t('timelineApprovalRequestEvidence')
+                },
+                {
+                    step_id: 'approval_decision',
+                    agent_id: 'risk_approval_agent',
+                    title: t('timelineApprovalDecision'),
+                    status: summary.latest_runner_real_execution_approval_decision || 'denied',
+                    blocking: true,
+                    evidence: t('timelineApprovalDecisionEvidence')
+                },
+                {
+                    step_id: 'launch_authorization',
+                    agent_id: 'risk_approval_agent',
+                    title: t('timelineLaunchAuthorization'),
+                    status: summary.latest_runner_real_execution_launch_denial_receipt_status || 'not_refreshed',
+                    blocking: true,
+                    evidence: t('timelineLaunchAuthorizationEvidence')
+                },
+                {
+                    step_id: 'launch_monitor',
+                    agent_id: 'launch_monitor',
+                    title: t('timelineLaunchMonitor'),
+                    status: summary.latest_runner_real_execution_launch_monitor_status || 'not_refreshed',
+                    blocking: Boolean(summary.latest_runner_real_execution_abort_recommended),
+                    evidence: `${t('abortRecommended')}: ${Boolean(summary.latest_runner_real_execution_abort_recommended)}`
+                },
+                {
+                    step_id: 'incident_response',
+                    agent_id: 'incident_response_agent',
+                    title: t('timelineIncidentResponse'),
+                    status: summary.latest_runner_real_execution_incident_response_status || 'not_refreshed',
+                    blocking: Boolean(summary.latest_runner_real_execution_incident_detected),
+                    evidence: `${t('incidentDetected')}: ${Boolean(summary.latest_runner_real_execution_incident_detected)}`
+                },
+                {
+                    step_id: 'event_ledger',
+                    agent_id: 'event_ledger',
+                    title: t('timelineEventLedger'),
+                    status: event.event_status || summary.latest_runner_real_execution_safety_chain_event_status || 'not_refreshed',
+                    blocking: !Boolean(event.safe_to_continue || audit.safe_to_continue || summary.latest_runner_real_execution_safety_chain_safe_to_continue),
+                    evidence: `${t('realExecutionSafetyChainEventType')}: ${event.event_type || summary.latest_runner_real_execution_safety_chain_event_type || 'not_refreshed'}`
+                },
+                {
+                    step_id: 'export_pack',
+                    agent_id: 'operator_agent',
+                    title: t('timelineExportPack'),
+                    status: t('timelineExportPackStatus'),
+                    blocking: false,
+                    evidence: t('timelineExportPackEvidence')
+                }
+            ];
+        }
+
+        function projectWorkspaceRealExecutionSafetyTimelineCopyText(workspace = latestProjectWorkspace) {
+            const steps = projectWorkspaceRealExecutionSafetyTimelineSteps(workspace);
+            const summary = workspace?.project?.graph_summary || {};
+            return [
+                t('realExecutionSafetyTimelineCopyTitle'),
+                `${t('projectId')}: ${workspace?.project?.project_id || latestProjectId || 'demo_project_default'}`,
+                `${t('realExecutionSafetyChainStatus')}: ${summary.latest_runner_real_execution_safety_chain_status || 'not_refreshed'}`,
+                `${t('safeToContinue')}: ${Boolean(summary.latest_runner_real_execution_safety_chain_safe_to_continue)}`,
+                '',
+                ...steps.map((step, index) => [
+                    `${index + 1}. ${step.title}`,
+                    `${t('timelineAgentRole')}: ${step.agent_id}`,
+                    `${t('timelineStatus')}: ${step.status}`,
+                    `${t('timelineBlocking')}: ${Boolean(step.blocking)}`,
+                    `${t('timelineEvidence')}: ${step.evidence}`
+                ].join('\n')),
+                '',
+                JSON.stringify({ timeline_steps: steps, graph_summary: summary }, null, 2)
+            ].join('\n\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionSafetyTimeline() {
+            const status = document.getElementById('projectWorkspaceRealExecutionSafetyTimelineStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionSafetyTimelineCopyText());
+                if (status) status.textContent = t('realExecutionSafetyTimelineCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionSafetyTimelineCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionSafetyTimelinePanel(workspace = latestProjectWorkspace) {
+            const steps = projectWorkspaceRealExecutionSafetyTimelineSteps(workspace);
+            const summary = workspace?.project?.graph_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionSafetyTimelinePanel" data-project-real-execution-safety-timeline-marker="Project Workspace real execution safety timeline bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionSafetyTimelinePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionSafetyTimelinePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionSafetyTimelineBtn" type="button" onclick="copyProjectWorkspaceRealExecutionSafetyTimeline()">${escapeHTML(t('copyRealExecutionSafetyTimeline'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionSafetyChainStatus'))}</div>
+                            <strong data-real-execution-safety-timeline-chain-status="${escapeHTML(summary.latest_runner_real_execution_safety_chain_status || 'not_refreshed')}">${escapeHTML(summary.latest_runner_real_execution_safety_chain_status || t('realExecutionSafetyTimelineNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('safeToContinue'))}</div>
+                            <strong data-real-execution-safety-timeline-safe-to-continue="${escapeHTML(String(Boolean(summary.latest_runner_real_execution_safety_chain_safe_to_continue)))}">${escapeHTML(String(Boolean(summary.latest_runner_real_execution_safety_chain_safe_to_continue)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionSafetyChainEventStatus'))}</div>
+                            <strong data-real-execution-safety-timeline-event-status="${escapeHTML(summary.latest_runner_real_execution_safety_chain_event_status || 'not_refreshed')}">${escapeHTML(summary.latest_runner_real_execution_safety_chain_event_status || t('realExecutionSafetyTimelineNotRefreshedYet'))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionSafetyTimelineSteps'))}</div>
+                        ${steps.map((step, index) => `
+                            <div class="artifact-timeline-row" data-real-execution-safety-timeline-step="${escapeHTML(step.step_id)}">
+                                <strong>${escapeHTML(index + 1)}. ${escapeHTML(step.title)}</strong>
+                                <div>${escapeHTML(t('timelineAgentRole'))}: ${escapeHTML(step.agent_id)}</div>
+                                <div>${escapeHTML(t('timelineStatus'))}: ${escapeHTML(step.status)}</div>
+                                <div>${escapeHTML(t('timelineBlocking'))}: ${escapeHTML(String(Boolean(step.blocking)))}</div>
+                                <div class="field-helper">${escapeHTML(t('timelineEvidence'))}: ${escapeHTML(step.evidence)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionSafetyTimelineAuditPreview'))}</div>
+                        <pre class="debug" data-real-execution-safety-timeline-audit-preview="Project Workspace real execution safety timeline bundle">${escapeHTML(projectWorkspaceRealExecutionSafetyTimelineCopyText(workspace))}</pre>
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionSafetyTimelineStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceRealExecutionSafetyChainAuditCopyText(workspace = latestProjectWorkspace) {
             const audit = Object.keys(latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview || {}).length ? latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview : workspace?.runner_real_execution_safety_chain_audit_summary_preview || {};
@@ -15603,6 +15768,8 @@
                 if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionIncidentResponsePanel(latestProjectWorkspace);
                 const auditPanel = document.getElementById('projectWorkspaceRealExecutionSafetyChainAuditPanel');
                 if (auditPanel) auditPanel.outerHTML = renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(latestProjectWorkspace);
+                const timelinePanel = document.getElementById('projectWorkspaceRealExecutionSafetyTimelinePanel');
+                if (timelinePanel) timelinePanel.outerHTML = renderProjectWorkspaceRealExecutionSafetyTimelinePanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -17774,6 +17941,7 @@
                     ${renderProjectWorkspaceRealExecutionLaunchMonitorPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionIncidentResponsePanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionSafetyTimelinePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -21580,6 +21748,73 @@
             externalApiCalled: '\u662f\u5426\u8c03\u7528\u5916\u90e8 API',
             agentExecutionPerformed: '\u662f\u5426\u6267\u884c Agent',
             dryRun: 'Dry-run'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionSafetyTimelineBundleMarker: 'Project Workspace real execution safety timeline bundle',
+            realExecutionSafetyTimelinePanelTitle: 'Multi-Agent safety timeline',
+            realExecutionSafetyTimelinePanelHelper: 'Timeline from Supervisor through Risk / Approval Agent, launch monitor, incident response, event ledger, and export pack. It explains why real execution remains blocked.',
+            copyRealExecutionSafetyTimeline: 'Copy safety timeline',
+            realExecutionSafetyTimelineCopyTitle: 'Project Multi-Agent safety timeline',
+            realExecutionSafetyTimelineSteps: 'Safety timeline steps',
+            realExecutionSafetyTimelineAuditPreview: 'Safety timeline audit preview',
+            realExecutionSafetyTimelineNotRefreshedYet: 'Safety timeline has not been refreshed yet.',
+            realExecutionSafetyTimelineCopied: 'Safety timeline copied.',
+            realExecutionSafetyTimelineCopyFailed: 'Could not copy safety timeline.',
+            timelineSupervisorModeGate: 'Supervisor mode gate',
+            timelineSupervisorModeGateEvidence: 'Supervisor keeps real execution in dry-run unless all safety gates pass.',
+            timelineRiskReadiness: 'Risk readiness summary',
+            timelineRiskReadinessEvidence: 'Risk / Approval Agent checks readiness before any provider, tool, or external API can run.',
+            timelineApprovalRequest: 'Approval request',
+            timelineApprovalRequestEvidence: 'Operator approval request is drafted but no real execution is unlocked.',
+            timelineApprovalDecision: 'Approval decision',
+            timelineApprovalDecisionEvidence: 'Decision ledger records denial / blocked state for real execution.',
+            timelineLaunchAuthorization: 'Launch authorization',
+            timelineLaunchAuthorizationEvidence: 'Launch lock and denial receipt keep real execution blocked.',
+            timelineLaunchMonitor: 'Launch monitor',
+            timelineIncidentResponse: 'Incident response',
+            timelineEventLedger: 'Event ledger',
+            timelineExportPack: 'Export pack audit trail',
+            timelineExportPackStatus: 'included_in_export_pack',
+            timelineExportPackEvidence: 'Safety chain audit trail is included in Workspace export pack / report reader.',
+            timelineAgentRole: 'Agent role',
+            timelineStatus: 'Status',
+            timelineBlocking: 'Blocking',
+            timelineEvidence: 'Evidence'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionSafetyTimelineBundleMarker: 'Project Workspace real execution safety timeline bundle',
+            realExecutionSafetyTimelinePanelTitle: '\u591a Agent \u5b89\u5168\u65f6\u95f4\u7ebf',
+            realExecutionSafetyTimelinePanelHelper: '\u4ece Supervisor \u5230 Risk / Approval Agent\u3001launch monitor\u?incident response\u?event ledger \u548c export pack \u7684\u987a\u5e8f\u65f6\u95f4\u7ebf\uff0c\u7528\u6765\u89e3\u91ca\u4e3a\u4ec0\u4e48\u771f\u5b9e\u6267\u884c\u4ecd\u7136\u88ab\u963b\u65ad\u3002',
+            copyRealExecutionSafetyTimeline: '\u590d\u5236\u5b89\u5168\u65f6\u95f4\u7ebf',
+            realExecutionSafetyTimelineCopyTitle: '\u9879\u76ee\u591a Agent \u5b89\u5168\u65f6\u95f4\u7ebf',
+            realExecutionSafetyTimelineSteps: '\u5b89\u5168\u65f6\u95f4\u7ebf\u6b65\u9aa4',
+            realExecutionSafetyTimelineAuditPreview: '\u5b89\u5168\u65f6\u95f4\u7ebf\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionSafetyTimelineNotRefreshedYet: '\u5b89\u5168\u65f6\u95f4\u7ebf\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionSafetyTimelineCopied: '\u5b89\u5168\u65f6\u95f4\u7ebf\u5df2\u590d\u5236\u3002',
+            realExecutionSafetyTimelineCopyFailed: '\u590d\u5236\u5b89\u5168\u65f6\u95f4\u7ebf\u5931\u8d25\u3002',
+            timelineSupervisorModeGate: 'Supervisor \u6a21\u5f0f\u95f8\u95e8',
+            timelineSupervisorModeGateEvidence: 'Supervisor \u4fdd\u6301\u771f\u5b9e\u6267\u884c\u4e3a dry-run\uff0c\u9664\u975e\u6240\u6709\u5b89\u5168\u95f8\u95e8\u901a\u8fc7\u3002',
+            timelineRiskReadiness: 'Risk readiness \u6458\u8981',
+            timelineRiskReadinessEvidence: 'Risk / Approval Agent \u5728 provider\u3001tool \u6216\u5916\u90e8 API \u8fd0\u884c\u524d\u68c0\u67e5\u5c31\u7eea\u72b6\u6001\u3002',
+            timelineApprovalRequest: '\u5ba1\u6279\u8bf7\u6c42',
+            timelineApprovalRequestEvidence: '\u751f\u6210\u64cd\u4f5c\u5458\u5ba1\u6279\u8bf7\u6c42\uff0c\u4f46\u4e0d\u89e3\u9501\u771f\u5b9e\u6267\u884c\u3002',
+            timelineApprovalDecision: '\u5ba1\u6279\u51b3\u7b56',
+            timelineApprovalDecisionEvidence: '\u51b3\u7b56\u8d26\u672c\u8bb0\u5f55\u771f\u5b9e\u6267\u884c\u88ab\u62d2\u7edd / \u963b\u65ad\u3002',
+            timelineLaunchAuthorization: '\u542f\u52a8\u6388\u6743',
+            timelineLaunchAuthorizationEvidence: 'Launch lock \u548c denial receipt \u4fdd\u6301\u771f\u5b9e\u6267\u884c\u963b\u65ad\u3002',
+            timelineLaunchMonitor: '\u542f\u52a8\u76d1\u63a7',
+            timelineIncidentResponse: '\u5f02\u5e38\u54cd\u5e94',
+            timelineEventLedger: '\u4e8b\u4ef6\u8d26\u672c',
+            timelineExportPack: '\u5bfc\u51fa\u5305\u5ba1\u8ba1\u94fe\u8def',
+            timelineExportPackStatus: 'included_in_export_pack',
+            timelineExportPackEvidence: '\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1\u5df2\u8fdb\u5165 Workspace export pack / report reader\u3002',
+            timelineAgentRole: 'Agent \u89d2\u8272',
+            timelineStatus: '\u72b6\u6001',
+            timelineBlocking: '\u662f\u5426\u963b\u65ad',
+            timelineEvidence: '\u8bc1\u636e'
         });
 
 
