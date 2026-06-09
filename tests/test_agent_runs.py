@@ -1334,6 +1334,43 @@ class AgentRunnerDispatchEventTests(unittest.TestCase):
 class AgentRunnerExecutionReceiptTests(unittest.TestCase):
 
 
+
+    def test_supervisor_next_step_routing_plan_blocks_on_blocking_events(self):
+        from agent_runs import build_agent_runner_supervisor_next_step_routing_plan
+
+        decision = {
+            "project_id": "project_supervisor_next_step_routing",
+            "supervisor_event_ledger_decision_status": "supervisor_blocked_by_event_ledger",
+            "recommended_next_action": "inspect_blocking_events_before_next_dry_run",
+            "blocking_event_ids": ["event_one", "event_two"],
+            "next_agent_candidates": ["risk_approval_agent"],
+            "supervisor_routing_allowed": False,
+            "safe_to_continue": False,
+            "dry_run": True,
+        }
+        plan = build_agent_runner_supervisor_next_step_routing_plan(
+            decision,
+            project_id="project_supervisor_next_step_routing",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            plan["supervisor_next_step_routing_plan_version"],
+            "agent_runner_supervisor_next_step_routing_plan_v1",
+        )
+        self.assertEqual(plan["supervisor_next_step_routing_plan_status"], "routing_plan_blocked_by_event_ledger")
+        self.assertEqual(plan["next_step_type"], "inspect_blocking_events")
+        self.assertEqual(plan["target_agent_id"], "risk_approval_agent")
+        self.assertEqual(plan["blocking_event_count"], 2)
+        self.assertFalse(plan["routing_allowed"])
+        self.assertFalse(plan["real_execution_allowed"])
+        self.assertFalse(plan["provider_call_allowed"])
+        self.assertFalse(plan["external_api_call_allowed"])
+        self.assertFalse(plan["agent_execution_allowed"])
+        self.assertFalse(plan["safe_to_continue"])
+        self.assertTrue(plan["dry_run"])
+
+
     def test_supervisor_event_ledger_decision_blocks_on_blocking_events(self):
         from agent_runs import (
             build_agent_runner_event_ledger_summary,

@@ -2416,6 +2416,101 @@ def build_agent_runner_supervisor_event_ledger_decision_summary(
     }
 
 
+
+AGENT_RUNNER_SUPERVISOR_NEXT_STEP_ROUTING_PLAN_VERSION = "agent_runner_supervisor_next_step_routing_plan_v1"
+
+
+def build_agent_runner_supervisor_next_step_routing_plan(
+    supervisor_decision: dict[str, Any],
+    *,
+    project_id: str = "demo_project_default",
+    requested_by: str = "runner_supervisor_next_step_routing_plan_builder",
+) -> dict[str, Any]:
+    """Build the next dry-run routing plan from Supervisor decision summary.
+
+    This is a safe routing plan only. It does not execute agents, call
+    providers, call external APIs, spend money, or unlock real execution.
+    """
+
+    decision = supervisor_decision if isinstance(supervisor_decision, dict) else {}
+    safe_project_id = str(project_id or decision.get("project_id") or "demo_project_default")
+    decision_status = str(decision.get("supervisor_event_ledger_decision_status") or "supervisor_manual_review_required")
+    recommended_next_action = str(decision.get("recommended_next_action") or "request_operator_review")
+    blocking_event_ids = [
+        str(item)
+        for item in (decision.get("blocking_event_ids") or [])
+        if str(item or "")
+    ]
+    next_agent_candidates = [
+        str(item)
+        for item in (decision.get("next_agent_candidates") or [])
+        if str(item or "")
+    ]
+
+    if decision_status == "supervisor_waiting_for_event_ledger":
+        routing_plan_status = "routing_plan_waiting_for_event_ledger"
+        next_step_type = "refresh_event_ledger"
+        target_agent_id = "supervisor_agent"
+        recommended_endpoint = "/api/v1/projects/{project_id}/runner/real-execution-incident-response/dry-run"
+        routing_reason = "Supervisor needs a refreshed unified event ledger before planning the next dry-run step."
+    elif decision_status == "supervisor_hard_blocked_external_execution_detected":
+        routing_plan_status = "routing_plan_hard_blocked"
+        next_step_type = "open_incident_response"
+        target_agent_id = "incident_response_agent"
+        recommended_endpoint = "/api/v1/projects/{project_id}/runner/real-execution-incident-response/dry-run"
+        routing_reason = "External execution signals require incident response and manual review."
+    elif decision_status == "supervisor_blocked_by_event_ledger":
+        routing_plan_status = "routing_plan_blocked_by_event_ledger"
+        next_step_type = "inspect_blocking_events"
+        target_agent_id = "risk_approval_agent"
+        recommended_endpoint = "/api/v1/projects/{project_id}/runner/real-execution-incident-response/dry-run"
+        routing_reason = "Blocking ledger events must be inspected before any next dry-run routing step."
+    elif decision_status == "supervisor_ready_for_next_dry_run_step":
+        routing_plan_status = "routing_plan_ready_for_next_dry_run"
+        next_step_type = "continue_next_safe_dry_run"
+        target_agent_id = next_agent_candidates[0] if next_agent_candidates else "supervisor_agent"
+        recommended_endpoint = "/api/v1/projects/{project_id}/runner/dispatch/dry-run"
+        routing_reason = "Supervisor can continue only to the next safe dry-run step; real execution remains disabled."
+    else:
+        routing_plan_status = "routing_plan_manual_review_required"
+        next_step_type = "request_operator_review"
+        target_agent_id = "operator_agent"
+        recommended_endpoint = "/api/v1/projects/{project_id}/runner/real-execution-approval-request/dry-run"
+        routing_reason = "Supervisor requires operator review before planning the next dry-run step."
+
+    routing_allowed = routing_plan_status == "routing_plan_ready_for_next_dry_run"
+
+    return {
+        "supervisor_next_step_routing_plan_version": AGENT_RUNNER_SUPERVISOR_NEXT_STEP_ROUTING_PLAN_VERSION,
+        "supervisor_next_step_routing_plan_status": routing_plan_status,
+        "project_id": safe_project_id,
+        "requested_by": str(requested_by or "runner_supervisor_next_step_routing_plan_builder"),
+        "source_decision_status": decision_status,
+        "source_recommended_next_action": recommended_next_action,
+        "next_step_type": next_step_type,
+        "target_agent_id": target_agent_id,
+        "recommended_endpoint": recommended_endpoint,
+        "recommended_command": recommended_endpoint.replace("{project_id}", safe_project_id),
+        "routing_reason": routing_reason,
+        "blocking_event_ids": blocking_event_ids,
+        "blocking_event_count": len(blocking_event_ids),
+        "next_agent_candidates": next_agent_candidates,
+        "routing_allowed": routing_allowed,
+        "supervisor_routing_allowed": bool(decision.get("supervisor_routing_allowed")) and routing_allowed,
+        "manual_review_required": True,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "agent_execution_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "safe_to_continue": False,
+        "dry_run": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_runner_event_ledger_summary(
     *,
     project_id: str = "demo_project_default",

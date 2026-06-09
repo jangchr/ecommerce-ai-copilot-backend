@@ -2156,6 +2156,7 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         safety_event = payload["runner_real_execution_safety_chain_event_preview"]
         event_ledger_summary = payload["runner_event_ledger_summary"]
         supervisor_decision = payload["runner_supervisor_event_ledger_decision_summary"]
+        supervisor_routing_plan = payload["runner_supervisor_next_step_routing_plan"]
 
         self.assertEqual(incident["real_execution_incident_response_status"], "incident_response_opened_safely")
         self.assertEqual(incident["launch_monitor_status"], "launch_monitor_blocked_safely")
@@ -2285,5 +2286,36 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         )
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_runner_supervisor_routing_allowed"]
+        )
+        self.assertEqual(
+            supervisor_routing_plan["supervisor_next_step_routing_plan_version"],
+            "agent_runner_supervisor_next_step_routing_plan_v1",
+        )
+        self.assertEqual(
+            supervisor_routing_plan["supervisor_next_step_routing_plan_status"],
+            "routing_plan_blocked_by_event_ledger",
+        )
+        self.assertEqual(supervisor_routing_plan["next_step_type"], "inspect_blocking_events")
+        self.assertEqual(supervisor_routing_plan["target_agent_id"], "risk_approval_agent")
+        self.assertFalse(supervisor_routing_plan["routing_allowed"])
+        self.assertFalse(supervisor_routing_plan["real_execution_allowed"])
+        self.assertFalse(supervisor_routing_plan["provider_call_allowed"])
+        self.assertFalse(supervisor_routing_plan["external_api_call_allowed"])
+        self.assertFalse(supervisor_routing_plan["agent_execution_allowed"])
+        self.assertFalse(supervisor_routing_plan["safe_to_continue"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_supervisor_next_step_routing_plan_status"],
+            "routing_plan_blocked_by_event_ledger",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_supervisor_next_step_type"],
+            "inspect_blocking_events",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_supervisor_next_step_target_agent_id"],
+            "risk_approval_agent",
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_runner_supervisor_next_step_routing_allowed"]
         )
 
