@@ -6465,3 +6465,21 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
         self.assertIn("Project Workspace queue lease worker dry-run chain bundle", script)
         self.assertIn("project_workspace_queue_lease_worker_dry_run_chain_marker", script)
+
+    def test_project_workspace_agent_contract_registry_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace agent contract registry bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_AGENT_CONTRACT_REGISTRY_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceAgentContractRegistryPanel", html)
+        self.assertIn("copyProjectWorkspaceAgentContractRegistry", html)
+        self.assertIn("agent_contract_completeness_report", html)
+
+    def test_project_workspace_agent_contract_registry_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_agent_contract_registry_marker", script)
+        self.assertIn("Project Workspace agent contract registry bundle", script)
+
+    def test_project_workspace_agent_contract_registry_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace agent contract registry bundle", script)
+        self.assertIn("project_workspace_agent_contract_registry_marker", script)

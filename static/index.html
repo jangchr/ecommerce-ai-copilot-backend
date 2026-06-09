@@ -11577,6 +11577,56 @@
             };
         }
 
+
+        function projectWorkspaceExportAgentContractRegistrySnapshot(workspace = latestProjectWorkspace) {
+            const bundle = projectWorkspaceAgentContractCompletenessReportFromWorkspace(workspace);
+            const report = bundle.report || {};
+            return {
+                marker: 'Project Workspace export pack agent contract registry bundle',
+                report_status: report.report_status || '',
+                registry_version: report.registry_version || '',
+                canonical_role_count: Number(report.canonical_role_count || 0),
+                complete_role_count: Number(report.complete_role_count || 0),
+                missing_role_count: Number(report.missing_role_count || 0),
+                complete_roles: Array.isArray(report.complete_roles) ? report.complete_roles : [],
+                missing_roles: Array.isArray(report.missing_roles) ? report.missing_roles : [],
+                role_reports: Array.isArray(report.role_reports) ? report.role_reports : [],
+                supervisor_can_use_registry: Boolean(report.supervisor_can_use_registry),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                agent_execution_allowed: Boolean(report.agent_execution_allowed),
+                dry_run: Boolean(report.dry_run),
+                has_agent_contract_report: Boolean(report.report_status || report.completeness_report_version)
+            };
+        }
+
+        function projectWorkspaceExportAgentContractRegistryMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportAgentContractRegistrySnapshot(workspace);
+            if (!report.has_agent_contract_report) {
+                return `## ${t('projectWorkspaceExportAgentContractTitle')}\n${t('agentContractReportNotRefreshedYet')}`;
+            }
+            const roleLines = report.role_reports.length
+                ? report.role_reports.map((role) => `- ${role.role_id || ''}: ${role.resolved_contract_id || role.primary_contract_id || ''} (${role.complete ? 'complete' : 'incomplete'})`)
+                : ['- none'];
+            return [
+                `## ${t('projectWorkspaceExportAgentContractTitle')}`,
+                `${t('agentContractReportStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('agentContractRegistryVersion')}: ${report.registry_version || 'not_refreshed'}`,
+                `${t('agentContractCompleteRoleCount')}: ${report.complete_role_count}`,
+                `${t('agentContractMissingRoleCount')}: ${report.missing_role_count}`,
+                `${t('agentContractSupervisorCanUseRegistry')}: ${report.supervisor_can_use_registry}`,
+                `${t('realExecutionAllowed')}: ${report.real_execution_allowed}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${report.external_api_call_allowed}`,
+                `${t('agentExecutionAllowed')}: ${report.agent_execution_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('agentContractCanonicalRoles')}:`,
+                ...roleLines
+            ].join('\n');
+        }
+
         function projectWorkspaceExportQueueLeaseWorkerDryRunChainMarkdown(workspace = latestProjectWorkspace) {
             const chain = projectWorkspaceExportQueueLeaseWorkerDryRunChainSnapshot(workspace);
             if (!chain.has_queue_lease_worker_chain) {
@@ -11828,6 +11878,8 @@
                 '',
                 projectWorkspaceExportQueueLeaseWorkerDryRunChainMarkdown(workspace),
                 '',
+                projectWorkspaceExportAgentContractRegistryMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11848,6 +11900,7 @@
                 runner_supervisor_next_step_routing_plan: projectWorkspaceExportSupervisorNextStepRoutingPlanSnapshot(workspace),
                 runner_supervisor_next_step_work_order_preview: projectWorkspaceExportSupervisorNextStepWorkOrderPreviewSnapshot(workspace),
                 runner_queue_lease_worker_dry_run_chain: projectWorkspaceExportQueueLeaseWorkerDryRunChainSnapshot(workspace),
+                agent_contract_registry: projectWorkspaceExportAgentContractRegistrySnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -11966,6 +12019,9 @@
                 }
                 const payload = await response.json();
                 latestProjectRunnerPlan = payload.runner_plan || {};
+                latestProjectAgentContractRegistry = payload.agent_contract_registry || {};
+                latestProjectAgentContractSummary = payload.agent_contract_summary || {};
+                latestProjectAgentContractCompletenessReport = payload.agent_contract_completeness_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -15797,6 +15853,153 @@
         let latestProjectRunnerSupervisorNextStepWorkOrderPreview = {};
         const PROJECT_WORKSPACE_QUEUE_LEASE_WORKER_DRY_RUN_CHAIN_BUNDLE_MARKER = 'Project Workspace queue lease worker dry-run chain bundle';
         let latestProjectRunnerQueueLeaseWorkerDryRunChain = {};
+        const PROJECT_WORKSPACE_AGENT_CONTRACT_REGISTRY_BUNDLE_MARKER = 'Project Workspace agent contract registry bundle';
+        let latestProjectAgentContractRegistry = {};
+        let latestProjectAgentContractSummary = {};
+        let latestProjectAgentContractCompletenessReport = {};
+
+        function projectWorkspaceAgentContractCompletenessReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectAgentContractCompletenessReport || {}).length
+                ? latestProjectAgentContractCompletenessReport
+                : workspace?.agent_contract_completeness_report || {};
+            const summary = Object.keys(latestProjectAgentContractSummary || {}).length
+                ? latestProjectAgentContractSummary
+                : workspace?.agent_contract_summary || {};
+            const registry = Object.keys(latestProjectAgentContractRegistry || {}).length
+                ? latestProjectAgentContractRegistry
+                : workspace?.agent_contract_registry || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) {
+                return { report, summary, registry };
+            }
+            return {
+                report: {
+                    completeness_report_version: '',
+                    report_status: graphSummary.latest_agent_contract_report_status || '',
+                    complete_role_count: Number(graphSummary.latest_agent_contract_complete_role_count || 0),
+                    missing_role_count: Number(graphSummary.latest_agent_contract_missing_role_count || 0),
+                    supervisor_can_use_registry: Boolean(graphSummary.latest_agent_contract_supervisor_can_use_registry),
+                    role_reports: [],
+                    dry_run: true,
+                    real_execution_allowed: false,
+                    provider_call_allowed: false,
+                    external_api_call_allowed: false,
+                    agent_execution_allowed: false
+                },
+                summary,
+                registry
+            };
+        }
+
+        function projectWorkspaceAgentContractRegistryCopyText(workspace = latestProjectWorkspace) {
+            const bundle = projectWorkspaceAgentContractCompletenessReportFromWorkspace(workspace);
+            const report = bundle.report || {};
+            const roles = Array.isArray(report.role_reports) ? report.role_reports : [];
+            return [
+                t('agentContractRegistryCopyTitle'),
+                `${t('agentContractReportStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('agentContractCompleteRoleCount')}: ${Number(report.complete_role_count || 0)}`,
+                `${t('agentContractMissingRoleCount')}: ${Number(report.missing_role_count || 0)}`,
+                `${t('agentContractSupervisorCanUseRegistry')}: ${Boolean(report.supervisor_can_use_registry)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('agentExecutionAllowed')}: ${Boolean(report.agent_execution_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('agentContractCanonicalRoles')}:`,
+                roles.length
+                    ? roles.map((role) => `- ${role.role_id || ''} -> ${role.resolved_contract_id || role.primary_contract_id || ''} (${role.complete ? 'complete' : 'incomplete'})`).join('\n')
+                    : '- none',
+                '',
+                JSON.stringify({
+                    agent_contract_summary: bundle.summary || {},
+                    agent_contract_completeness_report: report
+                }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceAgentContractRegistry() {
+            const status = document.getElementById('projectWorkspaceAgentContractRegistryStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceAgentContractRegistryCopyText());
+                if (status) status.textContent = t('agentContractRegistryCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('agentContractRegistryCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceAgentContractRegistryPanel(workspace = latestProjectWorkspace) {
+            const bundle = projectWorkspaceAgentContractCompletenessReportFromWorkspace(workspace);
+            const report = bundle.report || {};
+            const summary = bundle.summary || {};
+            const roles = Array.isArray(report.role_reports) ? report.role_reports : [];
+            const hasReport = Boolean(report.report_status || report.completeness_report_version || roles.length);
+            return `
+                <div class="section-block" id="projectWorkspaceAgentContractRegistryPanel" data-project-agent-contract-registry-marker="Project Workspace agent contract registry bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('agentContractRegistryPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('agentContractRegistryPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceAgentContractRegistryBtn" type="button" onclick="copyProjectWorkspaceAgentContractRegistry()">${escapeHTML(t('copyAgentContractRegistry'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('agentContractReportStatus'))}</div>
+                            <strong data-agent-contract-report-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('agentContractReportNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('agentContractCompleteRoleCount'))}</div>
+                            <strong data-agent-contract-complete-role-count="${escapeHTML(String(Number(report.complete_role_count || 0)))}">${escapeHTML(String(Number(report.complete_role_count || 0)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('agentContractMissingRoleCount'))}: ${escapeHTML(String(Number(report.missing_role_count || 0)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('agentContractSupervisorCanUseRegistry'))}</div>
+                            <strong data-agent-contract-supervisor-can-use-registry="${escapeHTML(String(Boolean(report.supervisor_can_use_registry)))}">${escapeHTML(String(Boolean(report.supervisor_can_use_registry)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('agentContractRegistryVersion'))}: ${escapeHTML(report.registry_version || summary.registry_version || t('none'))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('agentContractCanonicalRoles'))}</div>
+                        ${roles.length ? roles.map((role) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(role.role_label || role.role_id || '')}</strong>
+                                <span>${escapeHTML(role.resolved_contract_id || role.primary_contract_id || t('none'))}</span>
+                                <span>${escapeHTML(role.complete ? t('complete') : t('incomplete'))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('agentContractReportNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.real_execution_allowed)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerCallAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.provider_call_allowed)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('externalApiCallAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.external_api_call_allowed)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('agentExecutionAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.agent_execution_allowed)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('agentContractRegistryAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-agent-contract-registry-audit-preview="Project Workspace agent contract registry bundle">${escapeHTML(projectWorkspaceAgentContractRegistryCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('agentContractReportNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceAgentContractRegistryStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceQueueLeaseWorkerDryRunChainFromWorkspace(workspace = latestProjectWorkspace) {
             const chain = Object.keys(latestProjectRunnerQueueLeaseWorkerDryRunChain || {}).length
@@ -16663,6 +16866,9 @@
                 latestProjectRunnerSupervisorNextStepRoutingPlan = payload.runner_supervisor_next_step_routing_plan || {};
                 latestProjectRunnerSupervisorNextStepWorkOrderPreview = payload.runner_supervisor_next_step_work_order_preview || {};
                 latestProjectRunnerQueueLeaseWorkerDryRunChain = payload.runner_queue_lease_worker_dry_run_chain || {};
+                latestProjectAgentContractRegistry = payload.agent_contract_registry || {};
+                latestProjectAgentContractSummary = payload.agent_contract_summary || {};
+                latestProjectAgentContractCompletenessReport = payload.agent_contract_completeness_report || {};
 
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -16692,6 +16898,8 @@
                 if (workOrderPreviewPanel) workOrderPreviewPanel.outerHTML = renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(latestProjectWorkspace);
                 const queueLeaseWorkerPanel = document.getElementById('projectWorkspaceQueueLeaseWorkerDryRunChainPanel');
                 if (queueLeaseWorkerPanel) queueLeaseWorkerPanel.outerHTML = renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel(latestProjectWorkspace);
+                const agentContractPanel = document.getElementById('projectWorkspaceAgentContractRegistryPanel');
+                if (agentContractPanel) agentContractPanel.outerHTML = renderProjectWorkspaceAgentContractRegistryPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -18869,6 +19077,7 @@
                     ${renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(workspace)}
                     ${renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel(workspace)}
+                    ${renderProjectWorkspaceAgentContractRegistryPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -22966,6 +23175,45 @@
             queueLeaseWorkerChainCopied: 'Queue / Lease / Worker \u94fe\u8def\u5df2\u590d\u5236\u3002',
             queueLeaseWorkerChainCopyFailed: '\u590d\u5236 Queue / Lease / Worker \u94fe\u8def\u5931\u8d25\u3002',
             projectWorkspaceExportQueueLeaseWorkerTitle: 'Queue / Lease / Worker dry-run \u94fe\u8def'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceAgentContractRegistryBundleMarker: 'Project Workspace agent contract registry bundle',
+            agentContractRegistryPanelTitle: 'Agent Contract Registry',
+            agentContractRegistryPanelHelper: 'Canonical multi-Agent role contracts for Supervisor routing. This checks whether Evidence, Strategy, Creative, Video, Risk, Supervisor, and Finalizer roles are covered without unlocking real execution.',
+            copyAgentContractRegistry: 'Copy agent contract report',
+            agentContractRegistryCopyTitle: 'Project Agent Contract Registry report',
+            agentContractReportStatus: 'Contract report status',
+            agentContractRegistryVersion: 'Contract registry version',
+            agentContractCompleteRoleCount: 'Complete role count',
+            agentContractMissingRoleCount: 'Missing role count',
+            agentContractSupervisorCanUseRegistry: 'Supervisor can use registry',
+            agentContractCanonicalRoles: 'Canonical Agent roles',
+            agentContractRegistryAuditPreview: 'Agent contract registry audit preview',
+            agentContractReportNotRefreshedYet: 'Agent contract report has not been refreshed yet.',
+            agentContractRegistryCopied: 'Agent contract registry report copied.',
+            agentContractRegistryCopyFailed: 'Could not copy Agent contract registry report.',
+            projectWorkspaceExportAgentContractTitle: 'Agent Contract Registry'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceAgentContractRegistryBundleMarker: 'Project Workspace agent contract registry bundle',
+            agentContractRegistryPanelTitle: 'Agent Contract Registry / Agent \u5951\u7ea6\u6ce8\u518c\u8868',
+            agentContractRegistryPanelHelper: '\u7528\u4e8e Supervisor \u8c03\u5ea6\u7684\u6807\u51c6\u591a Agent \u89d2\u8272\u5951\u7ea6\uff1b\u68c0\u67e5 Evidence\u3001Strategy\u3001Creative\u3001Video\u3001Risk\u3001Supervisor \u548c Finalizer \u662f\u5426\u5df2\u88ab contract \u8986\u76d6\uff0c\u4e0d\u89e3\u9501\u771f\u5b9e\u6267\u884c\u3002',
+            copyAgentContractRegistry: '\u590d\u5236 Agent \u5951\u7ea6\u62a5\u544a',
+            agentContractRegistryCopyTitle: '\u9879\u76ee Agent Contract Registry \u62a5\u544a',
+            agentContractReportStatus: '\u5951\u7ea6\u62a5\u544a\u72b6\u6001',
+            agentContractRegistryVersion: '\u5951\u7ea6\u6ce8\u518c\u8868\u7248\u672c',
+            agentContractCompleteRoleCount: '\u5df2\u5b8c\u6574\u8986\u76d6\u89d2\u8272\u6570',
+            agentContractMissingRoleCount: '\u7f3a\u5931\u89d2\u8272\u6570',
+            agentContractSupervisorCanUseRegistry: 'Supervisor \u662f\u5426\u53ef\u4f7f\u7528\u6ce8\u518c\u8868',
+            agentContractCanonicalRoles: '\u6807\u51c6 Agent \u89d2\u8272',
+            agentContractRegistryAuditPreview: 'Agent \u5951\u7ea6\u6ce8\u518c\u8868\u5ba1\u8ba1\u9884\u89c8',
+            agentContractReportNotRefreshedYet: 'Agent \u5951\u7ea6\u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            agentContractRegistryCopied: 'Agent \u5951\u7ea6\u62a5\u544a\u5df2\u590d\u5236\u3002',
+            agentContractRegistryCopyFailed: '\u590d\u5236 Agent \u5951\u7ea6\u62a5\u544a\u5931\u8d25\u3002',
+            projectWorkspaceExportAgentContractTitle: 'Agent Contract Registry / Agent \u5951\u7ea6\u6ce8\u518c\u8868'
         });
 
 
