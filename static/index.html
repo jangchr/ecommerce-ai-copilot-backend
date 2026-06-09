@@ -15362,6 +15362,115 @@
         let latestProjectRunnerRealExecutionLaunchAuthorizationPreview = {};
         let latestProjectRunnerRealExecutionLaunchLockPreview = {};
         let latestProjectRunnerRealExecutionLaunchDenialReceiptPreview = {};
+        const PROJECT_WORKSPACE_REAL_EXECUTION_LAUNCH_MONITOR_PANEL_BUNDLE_MARKER = 'Project Workspace real execution launch monitor panel bundle';
+        let latestProjectRunnerRealExecutionLaunchMonitorPreview = {};
+
+        function projectWorkspaceRealExecutionLaunchMonitorCopyText(workspace = latestProjectWorkspace) {
+            const monitor = Object.keys(latestProjectRunnerRealExecutionLaunchMonitorPreview || {}).length ? latestProjectRunnerRealExecutionLaunchMonitorPreview : workspace?.runner_real_execution_launch_monitor_preview || {};
+            return [
+                t('realExecutionLaunchMonitorCopyTitle'),
+                `${t('realExecutionLaunchMonitorStatus')}: ${monitor.real_execution_launch_monitor_status || 'not_refreshed'}`,
+                `${t('blockingTripwireSignalCount')}: ${monitor.blocking_tripwire_signal_count || 0}`,
+                `${t('failedHealthProbeCount')}: ${monitor.failed_health_probe_count || 0}`,
+                `${t('healthProbeSummary')}: ${monitor.health_probe_summary || 'not_refreshed'}`,
+                `${t('abortRecommended')}: ${Boolean(monitor.abort_recommended)}`,
+                '',
+                JSON.stringify({ monitor }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionLaunchMonitor() {
+            const status = document.getElementById('projectWorkspaceRealExecutionLaunchMonitorStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionLaunchMonitorCopyText());
+                if (status) status.textContent = t('realExecutionLaunchMonitorCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionLaunchMonitorCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceRealExecutionLaunchMonitor(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRealExecutionLaunchMonitorStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('realExecutionLaunchMonitorDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_real_execution_launch_monitor_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/real-execution-launch-monitor/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('realExecutionLaunchMonitorDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerRealExecutionLaunchAuthorizationPreview = payload.runner_real_execution_launch_authorization_preview || {};
+                latestProjectRunnerRealExecutionLaunchLockPreview = payload.runner_real_execution_launch_lock_preview || {};
+                latestProjectRunnerRealExecutionLaunchDenialReceiptPreview = payload.runner_real_execution_launch_denial_receipt_preview || {};
+                latestProjectRunnerRealExecutionLaunchMonitorPreview = payload.runner_real_execution_launch_monitor_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_real_execution_launch_monitor_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_real_execution_launch_monitor_dry_run');
+                if (status) status.textContent = t('realExecutionLaunchMonitorDryRunComplete');
+
+                const launchPanel = document.getElementById('projectWorkspaceRealExecutionLaunchAuthorizationPanel');
+                if (launchPanel) launchPanel.outerHTML = renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceRealExecutionLaunchMonitorPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionLaunchMonitorPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_launch_monitor_dry_run');
+                if (status) status.textContent = error.message || t('realExecutionLaunchMonitorDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionLaunchMonitorPanel(workspace = latestProjectWorkspace) {
+            const monitor = Object.keys(latestProjectRunnerRealExecutionLaunchMonitorPreview || {}).length ? latestProjectRunnerRealExecutionLaunchMonitorPreview : workspace?.runner_real_execution_launch_monitor_preview || {};
+            const hasMonitor = Boolean(monitor && Object.keys(monitor).length);
+            const tripwires = Array.isArray(monitor.blocking_tripwire_signal_ids) ? monitor.blocking_tripwire_signal_ids : [];
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionLaunchMonitorPanel" data-project-real-execution-launch-monitor-panel-marker="Project Workspace real execution launch monitor panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionLaunchMonitorPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionLaunchMonitorPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceRealExecutionLaunchMonitorBtn" type="button" data-project-real-execution-launch-monitor-dry-run-action="Project Workspace real execution launch monitor panel bundle" onclick="dryRunProjectWorkspaceRealExecutionLaunchMonitor()">${escapeHTML(t('dryRunRealExecutionLaunchMonitor'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionLaunchMonitorBtn" type="button" onclick="copyProjectWorkspaceRealExecutionLaunchMonitor()">${escapeHTML(t('copyRealExecutionLaunchMonitor'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionLaunchMonitorStatus'))}</div>
+                            <strong data-real-execution-launch-monitor-status="${escapeHTML(monitor.real_execution_launch_monitor_status || 'not_refreshed')}">${escapeHTML(monitor.real_execution_launch_monitor_status || t('realExecutionLaunchMonitorNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('blockingTripwireSignalCount'))}</div>
+                            <strong data-real-execution-blocking-tripwire-count="${escapeHTML(String(monitor.blocking_tripwire_signal_count || 0))}">${escapeHTML(String(monitor.blocking_tripwire_signal_count || 0))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('abortRecommended'))}</div>
+                            <strong data-real-execution-abort-recommended="${escapeHTML(String(Boolean(monitor.abort_recommended)))}">${escapeHTML(String(Boolean(monitor.abort_recommended)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('healthProbeSummary'))}: ${escapeHTML(monitor.health_probe_summary || 'not_refreshed')}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingTripwireSignals'))}</div>
+                        ${tripwires.length ? `<ul>${tripwires.map((item) => `<li>${escapeHTML(item)}</li>`).join('')}</ul>` : `<div class="recent-empty">${escapeHTML(t('realExecutionLaunchMonitorNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionLaunchMonitorAuditPreview'))}</div>
+                        ${hasMonitor ? `<pre class="debug" data-real-execution-launch-monitor-audit-preview="Project Workspace real execution launch monitor panel bundle">${escapeHTML(projectWorkspaceRealExecutionLaunchMonitorCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realExecutionLaunchMonitorNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionLaunchMonitorStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceRealExecutionLaunchAuthorizationCopyText(workspace = latestProjectWorkspace) {
             const authorization = Object.keys(latestProjectRunnerRealExecutionLaunchAuthorizationPreview || {}).length ? latestProjectRunnerRealExecutionLaunchAuthorizationPreview : workspace?.runner_real_execution_launch_authorization_preview || {};
@@ -17235,6 +17344,7 @@
                     ${renderProjectWorkspaceRealExecutionApprovalRequestPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionApprovalDecisionPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionLaunchMonitorPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -20846,6 +20956,51 @@
             realExecutionLaunchAuthorizationDryRunFailed: 'Real execution launch authorization dry-run \u5931\u8d25\u3002',
             realExecutionLaunchAuthorizationCopied: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743\u5df2\u590d\u5236\u3002',
             realExecutionLaunchAuthorizationCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionLaunchMonitorPanelBundleMarker: 'Project Workspace real execution launch monitor panel bundle',
+            realExecutionLaunchMonitorPanelTitle: 'Real execution launch monitor',
+            realExecutionLaunchMonitorPanelHelper: 'Dry-run launch monitor with tripwire signals, health probes, abort recommendation, and audit preview. This does not execute providers or Agents.',
+            dryRunRealExecutionLaunchMonitor: 'Dry-run launch monitor',
+            copyRealExecutionLaunchMonitor: 'Copy launch monitor',
+            realExecutionLaunchMonitorCopyTitle: 'Project real execution launch monitor',
+            realExecutionLaunchMonitorStatus: 'Launch monitor status',
+            blockingTripwireSignalCount: 'Blocking tripwire signal count',
+            failedHealthProbeCount: 'Failed health probe count',
+            healthProbeSummary: 'Health probe summary',
+            abortRecommended: 'Abort recommended',
+            blockingTripwireSignals: 'Blocking tripwire signals',
+            realExecutionLaunchMonitorAuditPreview: 'Real execution launch monitor audit preview',
+            realExecutionLaunchMonitorNotRefreshedYet: 'Real execution launch monitor has not been refreshed yet.',
+            realExecutionLaunchMonitorDryRunRunning: 'Building real execution launch monitor dry-run.',
+            realExecutionLaunchMonitorDryRunComplete: 'Real execution launch monitor dry-run complete.',
+            realExecutionLaunchMonitorDryRunFailed: 'Real execution launch monitor dry-run failed.',
+            realExecutionLaunchMonitorCopied: 'Real execution launch monitor copied.',
+            realExecutionLaunchMonitorCopyFailed: 'Could not copy real execution launch monitor.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionLaunchMonitorPanelBundleMarker: 'Project Workspace real execution launch monitor panel bundle',
+            realExecutionLaunchMonitorPanelTitle: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7',
+            realExecutionLaunchMonitorPanelHelper: 'Dry-run \u542f\u52a8\u76d1\u63a7\uff0c\u5c55\u793a tripwire \u4fe1\u53f7\u3001health probe\u3001abort \u5efa\u8bae\u548c\u5ba1\u8ba1\u9884\u89c8\uff1b\u4e0d\u4f1a\u6267\u884c provider \u6216 Agent\u3002',
+            dryRunRealExecutionLaunchMonitor: 'Dry-run \u542f\u52a8\u76d1\u63a7',
+            copyRealExecutionLaunchMonitor: '\u590d\u5236\u542f\u52a8\u76d1\u63a7',
+            realExecutionLaunchMonitorCopyTitle: '\u9879\u76ee\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7',
+            realExecutionLaunchMonitorStatus: '\u542f\u52a8\u76d1\u63a7\u72b6\u6001',
+            blockingTripwireSignalCount: '\u963b\u65ad\u578b tripwire \u6570\u91cf',
+            failedHealthProbeCount: '\u5931\u8d25 health probe \u6570\u91cf',
+            healthProbeSummary: 'Health probe \u6458\u8981',
+            abortRecommended: '\u662f\u5426\u5efa\u8bae\u4e2d\u6b62',
+            blockingTripwireSignals: '\u963b\u65ad\u578b tripwire \u4fe1\u53f7',
+            realExecutionLaunchMonitorAuditPreview: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionLaunchMonitorNotRefreshedYet: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionLaunchMonitorDryRunRunning: '\u6b63\u5728\u751f\u6210 real execution launch monitor dry-run.',
+            realExecutionLaunchMonitorDryRunComplete: 'Real execution launch monitor dry-run \u5b8c\u6210\u3002',
+            realExecutionLaunchMonitorDryRunFailed: 'Real execution launch monitor dry-run \u5931\u8d25\u3002',
+            realExecutionLaunchMonitorCopied: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7\u5df2\u590d\u5236\u3002',
+            realExecutionLaunchMonitorCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u542f\u52a8\u76d1\u63a7\u5931\u8d25\u3002'
         });
 
 
