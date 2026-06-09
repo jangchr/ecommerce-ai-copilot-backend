@@ -6411,3 +6411,21 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
         self.assertIn("Project Workspace supervisor event ledger decision bundle", script)
         self.assertIn("project_workspace_supervisor_event_ledger_decision_marker", script)
+
+    def test_project_workspace_supervisor_next_step_routing_plan_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace supervisor next-step routing plan bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_SUPERVISOR_NEXT_STEP_ROUTING_PLAN_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel", html)
+        self.assertIn("copyProjectWorkspaceSupervisorNextStepRoutingPlan", html)
+        self.assertIn("runner_supervisor_next_step_routing_plan", html)
+
+    def test_project_workspace_supervisor_next_step_routing_plan_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_supervisor_next_step_routing_plan_marker", script)
+        self.assertIn("Project Workspace supervisor next-step routing plan bundle", script)
+
+    def test_project_workspace_supervisor_next_step_routing_plan_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace supervisor next-step routing plan bundle", script)
+        self.assertIn("project_workspace_supervisor_next_step_routing_plan_marker", script)

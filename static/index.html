@@ -11498,6 +11498,58 @@
             };
         }
 
+
+        function projectWorkspaceExportSupervisorNextStepRoutingPlanSnapshot(workspace = latestProjectWorkspace) {
+            const plan = projectWorkspaceSupervisorNextStepRoutingPlanFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack supervisor next-step routing plan bundle',
+                supervisor_next_step_routing_plan_status: plan.supervisor_next_step_routing_plan_status || '',
+                next_step_type: plan.next_step_type || '',
+                target_agent_id: plan.target_agent_id || '',
+                recommended_endpoint: plan.recommended_endpoint || '',
+                recommended_command: plan.recommended_command || '',
+                routing_reason: plan.routing_reason || '',
+                routing_allowed: Boolean(plan.routing_allowed),
+                supervisor_routing_allowed: Boolean(plan.supervisor_routing_allowed),
+                real_execution_allowed: Boolean(plan.real_execution_allowed),
+                provider_call_allowed: Boolean(plan.provider_call_allowed),
+                external_api_call_allowed: Boolean(plan.external_api_call_allowed),
+                agent_execution_allowed: Boolean(plan.agent_execution_allowed),
+                manual_review_required: Boolean(plan.manual_review_required),
+                safe_to_continue: Boolean(plan.safe_to_continue),
+                dry_run: Boolean(plan.dry_run),
+                blocking_event_ids: Array.isArray(plan.blocking_event_ids) ? plan.blocking_event_ids : [],
+                next_agent_candidates: Array.isArray(plan.next_agent_candidates) ? plan.next_agent_candidates : [],
+                has_next_step_routing_plan: Boolean(plan.supervisor_next_step_routing_plan_status || plan.next_step_type || plan.recommended_command)
+            };
+        }
+
+        function projectWorkspaceExportSupervisorNextStepRoutingPlanMarkdown(workspace = latestProjectWorkspace) {
+            const plan = projectWorkspaceExportSupervisorNextStepRoutingPlanSnapshot(workspace);
+            if (!plan.has_next_step_routing_plan) {
+                return `## ${t('projectWorkspaceExportSupervisorNextStepRoutingTitle')}\n${t('supervisorNextStepRoutingNotRefreshedYet')}`;
+            }
+            return [
+                `## ${t('projectWorkspaceExportSupervisorNextStepRoutingTitle')}`,
+                `${t('supervisorNextStepRoutingStatus')}: ${plan.supervisor_next_step_routing_plan_status || 'not_refreshed'}`,
+                `${t('supervisorNextStepType')}: ${plan.next_step_type || 'not_refreshed'}`,
+                `${t('supervisorTargetAgent')}: ${plan.target_agent_id || 'not_refreshed'}`,
+                `${t('supervisorRecommendedEndpoint')}: ${plan.recommended_endpoint || 'not_refreshed'}`,
+                `${t('supervisorRecommendedCommand')}: ${plan.recommended_command || 'not_refreshed'}`,
+                `${t('supervisorRoutingReason')}: ${plan.routing_reason || 'not_refreshed'}`,
+                `${t('supervisorRoutingAllowed')}: ${plan.routing_allowed}`,
+                `${t('realExecutionAllowed')}: ${plan.real_execution_allowed}`,
+                `${t('providerCallAllowed')}: ${plan.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${plan.external_api_call_allowed}`,
+                `${t('agentExecutionAllowed')}: ${plan.agent_execution_allowed}`,
+                `${t('manualReviewRequired')}: ${plan.manual_review_required}`,
+                `${t('safeToContinue')}: ${plan.safe_to_continue}`,
+                `${t('dryRun')}: ${plan.dry_run}`,
+                `${t('supervisorBlockingEvents')}: ${plan.blocking_event_ids.join(', ') || 'none'}`,
+                `${t('supervisorNextAgentCandidates')}: ${plan.next_agent_candidates.join(', ') || 'none'}`
+            ].join('\n');
+        }
+
         function projectWorkspaceExportSupervisorEventLedgerDecisionMarkdown(workspace = latestProjectWorkspace) {
             const decision = projectWorkspaceExportSupervisorEventLedgerDecisionSnapshot(workspace);
             if (!decision.has_supervisor_decision) {
@@ -11665,6 +11717,8 @@
                 '',
                 projectWorkspaceExportSupervisorEventLedgerDecisionMarkdown(workspace),
                 '',
+                projectWorkspaceExportSupervisorNextStepRoutingPlanMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11682,6 +11736,7 @@
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
                 runner_supervisor_event_ledger_decision_summary: projectWorkspaceExportSupervisorEventLedgerDecisionSnapshot(workspace),
+                runner_supervisor_next_step_routing_plan: projectWorkspaceExportSupervisorNextStepRoutingPlanSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -15625,6 +15680,125 @@
         let latestProjectRunnerEventLedgerSummary = {};
         const PROJECT_WORKSPACE_SUPERVISOR_EVENT_LEDGER_DECISION_BUNDLE_MARKER = 'Project Workspace supervisor event ledger decision bundle';
         let latestProjectRunnerSupervisorEventLedgerDecisionSummary = {};
+        const PROJECT_WORKSPACE_SUPERVISOR_NEXT_STEP_ROUTING_PLAN_BUNDLE_MARKER = 'Project Workspace supervisor next-step routing plan bundle';
+        let latestProjectRunnerSupervisorNextStepRoutingPlan = {};
+
+        function projectWorkspaceSupervisorNextStepRoutingPlanFromWorkspace(workspace = latestProjectWorkspace) {
+            const plan = Object.keys(latestProjectRunnerSupervisorNextStepRoutingPlan || {}).length
+                ? latestProjectRunnerSupervisorNextStepRoutingPlan
+                : workspace?.runner_supervisor_next_step_routing_plan || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (plan && Object.keys(plan).length) return plan;
+            return {
+                supervisor_next_step_routing_plan_version: '',
+                supervisor_next_step_routing_plan_status: graphSummary.latest_runner_supervisor_next_step_routing_plan_status || '',
+                next_step_type: graphSummary.latest_runner_supervisor_next_step_type || '',
+                target_agent_id: graphSummary.latest_runner_supervisor_next_step_target_agent_id || '',
+                routing_allowed: Boolean(graphSummary.latest_runner_supervisor_next_step_routing_allowed),
+                recommended_endpoint: '',
+                recommended_command: '',
+                routing_reason: '',
+                blocking_event_ids: [],
+                next_agent_candidates: [],
+                manual_review_required: true,
+                real_execution_allowed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                agent_execution_allowed: false,
+                safe_to_continue: false,
+                dry_run: true
+            };
+        }
+
+        function projectWorkspaceSupervisorNextStepRoutingPlanCopyText(workspace = latestProjectWorkspace) {
+            const plan = projectWorkspaceSupervisorNextStepRoutingPlanFromWorkspace(workspace);
+            return [
+                t('supervisorNextStepRoutingCopyTitle'),
+                `${t('supervisorNextStepRoutingStatus')}: ${plan.supervisor_next_step_routing_plan_status || 'not_refreshed'}`,
+                `${t('supervisorNextStepType')}: ${plan.next_step_type || 'not_refreshed'}`,
+                `${t('supervisorTargetAgent')}: ${plan.target_agent_id || 'not_refreshed'}`,
+                `${t('supervisorRecommendedEndpoint')}: ${plan.recommended_endpoint || 'not_refreshed'}`,
+                `${t('supervisorRecommendedCommand')}: ${plan.recommended_command || 'not_refreshed'}`,
+                `${t('supervisorRoutingAllowed')}: ${Boolean(plan.routing_allowed)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(plan.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(plan.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(plan.external_api_call_allowed)}`,
+                `${t('agentExecutionAllowed')}: ${Boolean(plan.agent_execution_allowed)}`,
+                `${t('manualReviewRequired')}: ${Boolean(plan.manual_review_required)}`,
+                `${t('safeToContinue')}: ${Boolean(plan.safe_to_continue)}`,
+                `${t('dryRun')}: ${Boolean(plan.dry_run)}`,
+                '',
+                JSON.stringify({ runner_supervisor_next_step_routing_plan: plan }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceSupervisorNextStepRoutingPlan() {
+            const status = document.getElementById('projectWorkspaceSupervisorNextStepRoutingPlanStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceSupervisorNextStepRoutingPlanCopyText());
+                if (status) status.textContent = t('supervisorNextStepRoutingCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('supervisorNextStepRoutingCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(workspace = latestProjectWorkspace) {
+            const plan = projectWorkspaceSupervisorNextStepRoutingPlanFromWorkspace(workspace);
+            const blockingIds = Array.isArray(plan.blocking_event_ids) ? plan.blocking_event_ids : [];
+            const candidates = Array.isArray(plan.next_agent_candidates) ? plan.next_agent_candidates : [];
+            const hasPlan = Boolean(plan.supervisor_next_step_routing_plan_status || plan.next_step_type || plan.recommended_command);
+            return `
+                <div class="section-block" id="projectWorkspaceSupervisorNextStepRoutingPlanPanel" data-project-supervisor-next-step-routing-plan-marker="Project Workspace supervisor next-step routing plan bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('supervisorNextStepRoutingPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('supervisorNextStepRoutingPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceSupervisorNextStepRoutingPlanBtn" type="button" onclick="copyProjectWorkspaceSupervisorNextStepRoutingPlan()">${escapeHTML(t('copySupervisorNextStepRoutingPlan'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorNextStepRoutingStatus'))}</div>
+                            <strong data-supervisor-next-step-routing-status="${escapeHTML(plan.supervisor_next_step_routing_plan_status || 'not_refreshed')}">${escapeHTML(plan.supervisor_next_step_routing_plan_status || t('supervisorNextStepRoutingNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorNextStepType'))}</div>
+                            <strong data-supervisor-next-step-type="${escapeHTML(plan.next_step_type || 'not_refreshed')}">${escapeHTML(plan.next_step_type || t('supervisorNextStepRoutingNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('supervisorTargetAgent'))}: ${escapeHTML(plan.target_agent_id || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorRoutingAllowed'))}</div>
+                            <strong data-supervisor-next-step-routing-allowed="${escapeHTML(String(Boolean(plan.routing_allowed)))}">${escapeHTML(String(Boolean(plan.routing_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('realExecutionAllowed'))}: ${escapeHTML(String(Boolean(plan.real_execution_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('supervisorRecommendedCommand'))}</div>
+                        <code data-supervisor-next-step-recommended-command="${escapeHTML(plan.recommended_command || 'not_refreshed')}">${escapeHTML(plan.recommended_command || t('supervisorNextStepRoutingNotRefreshedYet'))}</code>
+                        <div class="field-helper">${escapeHTML(t('supervisorRoutingReason'))}: ${escapeHTML(plan.routing_reason || t('supervisorNextStepRoutingNotRefreshedYet'))}</div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorBlockingEvents'))}</div>
+                            ${blockingIds.length ? blockingIds.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorNextAgentCandidates'))}</div>
+                            ${candidates.length ? candidates.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('supervisorNextStepRoutingAuditPreview'))}</div>
+                        ${hasPlan ? `<pre class="debug" data-supervisor-next-step-routing-plan-audit-preview="Project Workspace supervisor next-step routing plan bundle">${escapeHTML(projectWorkspaceSupervisorNextStepRoutingPlanCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('supervisorNextStepRoutingNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceSupervisorNextStepRoutingPlanStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceSupervisorEventLedgerDecisionFromWorkspace(workspace = latestProjectWorkspace) {
             const decision = Object.keys(latestProjectRunnerSupervisorEventLedgerDecisionSummary || {}).length
@@ -16117,6 +16291,7 @@
                 latestProjectRunnerRealExecutionSafetyChainEventPreview = payload.runner_real_execution_safety_chain_event_preview || {};
                 latestProjectRunnerEventLedgerSummary = payload.runner_event_ledger_summary || {};
                 latestProjectRunnerSupervisorEventLedgerDecisionSummary = payload.runner_supervisor_event_ledger_decision_summary || {};
+                latestProjectRunnerSupervisorNextStepRoutingPlan = payload.runner_supervisor_next_step_routing_plan || {};
 
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -16140,6 +16315,8 @@
                 if (ledgerPanel) ledgerPanel.outerHTML = renderProjectWorkspaceRunnerEventLedgerSummaryPanel(latestProjectWorkspace);
                 const supervisorDecisionPanel = document.getElementById('projectWorkspaceSupervisorEventLedgerDecisionPanel');
                 if (supervisorDecisionPanel) supervisorDecisionPanel.outerHTML = renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(latestProjectWorkspace);
+                const nextStepRoutingPanel = document.getElementById('projectWorkspaceSupervisorNextStepRoutingPlanPanel');
+                if (nextStepRoutingPanel) nextStepRoutingPanel.outerHTML = renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -18314,6 +18491,7 @@
                     ${renderProjectWorkspaceRealExecutionSafetyTimelinePanel(workspace)}
                     ${renderProjectWorkspaceRunnerEventLedgerSummaryPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(workspace)}
+                    ${renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -22282,6 +22460,45 @@
             agentExecutionAllowed: '\u662f\u5426\u5141\u8bb8 Agent \u6267\u884c',
             manualReviewRequired: '\u662f\u5426\u9700\u8981\u4eba\u5de5\u590d\u6838',
             projectWorkspaceExportSupervisorDecisionTitle: 'Supervisor \u4e8b\u4ef6\u8d26\u672c\u51b3\u7b56'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceSupervisorNextStepRoutingPlanBundleMarker: 'Project Workspace supervisor next-step routing plan bundle',
+            supervisorNextStepRoutingPanelTitle: 'Supervisor next-step routing plan',
+            supervisorNextStepRoutingPanelHelper: 'Supervisor turns the event ledger decision into the next safe dry-run routing plan. It never unlocks real provider, API, or Agent execution.',
+            copySupervisorNextStepRoutingPlan: 'Copy next-step routing plan',
+            supervisorNextStepRoutingCopyTitle: 'Project Supervisor next-step routing plan',
+            supervisorNextStepRoutingStatus: 'Next-step routing status',
+            supervisorNextStepType: 'Next step type',
+            supervisorTargetAgent: 'Target Agent',
+            supervisorRecommendedEndpoint: 'Recommended endpoint',
+            supervisorRecommendedCommand: 'Recommended command',
+            supervisorRoutingReason: 'Routing reason',
+            supervisorNextStepRoutingAuditPreview: 'Next-step routing audit preview',
+            supervisorNextStepRoutingNotRefreshedYet: 'Supervisor next-step routing plan has not been refreshed yet.',
+            supervisorNextStepRoutingCopied: 'Supervisor next-step routing plan copied.',
+            supervisorNextStepRoutingCopyFailed: 'Could not copy Supervisor next-step routing plan.',
+            projectWorkspaceExportSupervisorNextStepRoutingTitle: 'Supervisor next-step routing plan'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceSupervisorNextStepRoutingPlanBundleMarker: 'Project Workspace supervisor next-step routing plan bundle',
+            supervisorNextStepRoutingPanelTitle: 'Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212',
+            supervisorNextStepRoutingPanelHelper: 'Supervisor \u628a event ledger \u51b3\u7b56\u8f6c\u6210\u4e0b\u4e00\u4e2a\u5b89\u5168 dry-run \u8c03\u5ea6\u8ba1\u5212\uff0c\u4e0d\u89e3\u9501 provider\u3001API \u6216 Agent \u771f\u5b9e\u6267\u884c\u3002',
+            copySupervisorNextStepRoutingPlan: '\u590d\u5236\u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212',
+            supervisorNextStepRoutingCopyTitle: '\u9879\u76ee Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212',
+            supervisorNextStepRoutingStatus: '\u4e0b\u4e00\u6b65\u8c03\u5ea6\u72b6\u6001',
+            supervisorNextStepType: '\u4e0b\u4e00\u6b65\u7c7b\u578b',
+            supervisorTargetAgent: '\u76ee\u6807 Agent',
+            supervisorRecommendedEndpoint: '\u63a8\u8350 endpoint',
+            supervisorRecommendedCommand: '\u63a8\u8350\u547d\u4ee4',
+            supervisorRoutingReason: '\u8c03\u5ea6\u539f\u56e0',
+            supervisorNextStepRoutingAuditPreview: '\u4e0b\u4e00\u6b65\u8c03\u5ea6\u5ba1\u8ba1\u9884\u89c8',
+            supervisorNextStepRoutingNotRefreshedYet: 'Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212\u5c1a\u672a\u5237\u65b0\u3002',
+            supervisorNextStepRoutingCopied: 'Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212\u5df2\u590d\u5236\u3002',
+            supervisorNextStepRoutingCopyFailed: '\u590d\u5236 Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212\u5931\u8d25\u3002',
+            projectWorkspaceExportSupervisorNextStepRoutingTitle: 'Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212'
         });
 
 
