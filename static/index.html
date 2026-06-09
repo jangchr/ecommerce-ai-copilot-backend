@@ -11660,6 +11660,71 @@
             };
         }
 
+
+        function projectWorkspaceExportKeyframeVideoAssetChainSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceKeyframeVideoAssetChainReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack keyframe video asset chain bundle',
+                report_status: report.report_status || '',
+                keyframe_video_asset_chain_report_version: report.keyframe_video_asset_chain_report_version || '',
+                stage_count: Number(report.stage_count || 0),
+                complete_stage_count: Number(report.complete_stage_count || 0),
+                missing_stage_count: Number(report.missing_stage_count || 0),
+                stage_reports: Array.isArray(report.stage_reports) ? report.stage_reports : [],
+                multi_agent_output_chain_ready: Boolean(report.multi_agent_output_chain_ready),
+                supports_product_asset_lock: Boolean(report.supports_product_asset_lock),
+                supports_keyframe_scene_plan: Boolean(report.supports_keyframe_scene_plan),
+                supports_prompt_handoff_pack: Boolean(report.supports_prompt_handoff_pack),
+                supports_manual_generation_handoff: Boolean(report.supports_manual_generation_handoff),
+                supports_experiment_feedback_rework: Boolean(report.supports_experiment_feedback_rework),
+                supports_video_asset_export: Boolean(report.supports_video_asset_export),
+                provider_neutral_prompt_pack_ready: Boolean(report.provider_neutral_prompt_pack_ready),
+                manual_generation_handoff_ready: Boolean(report.manual_generation_handoff_ready),
+                image_reference_required: Boolean(report.image_reference_required),
+                manual_review_required: Boolean(report.manual_review_required),
+                human_approval_required_before_generation: Boolean(report.human_approval_required_before_generation),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                dry_run: Boolean(report.dry_run),
+                has_keyframe_video_asset_chain_report: Boolean(report.report_status || report.keyframe_video_asset_chain_report_version)
+            };
+        }
+
+        function projectWorkspaceExportKeyframeVideoAssetChainMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportKeyframeVideoAssetChainSnapshot(workspace);
+            if (!report.has_keyframe_video_asset_chain_report) {
+                return `## ${t('projectWorkspaceExportKeyframeVideoAssetTitle')}\n${t('keyframeVideoAssetChainNotRefreshedYet')}`;
+            }
+            const stageLines = report.stage_reports.length
+                ? report.stage_reports.map((stage) => `- ${stage.stage_index || ''}. ${stage.stage_label || stage.stage_id || ''} / ${stage.agent_id || ''} (${stage.complete ? 'complete' : 'incomplete'})`)
+                : ['- none'];
+            return [
+                `## ${t('projectWorkspaceExportKeyframeVideoAssetTitle')}`,
+                `${t('keyframeVideoAssetChainStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('keyframeVideoAssetCompleteStageCount')}: ${report.complete_stage_count}`,
+                `${t('keyframeVideoAssetMissingStageCount')}: ${report.missing_stage_count}`,
+                `${t('providerNeutralPromptPackReady')}: ${report.provider_neutral_prompt_pack_ready}`,
+                `${t('manualGenerationHandoffReady')}: ${report.manual_generation_handoff_ready}`,
+                `${t('imageReferenceRequired')}: ${report.image_reference_required}`,
+                `${t('manualReviewRequired')}: ${report.manual_review_required}`,
+                `${t('realExecutionAllowed')}: ${report.real_execution_allowed}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${report.external_api_call_allowed}`,
+                `${t('videoGenerationPerformed')}: ${report.video_generation_performed}`,
+                `${t('imageGenerationPerformed')}: ${report.image_generation_performed}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('keyframeVideoAssetTimeline')}:`,
+                ...stageLines
+            ].join('\n');
+        }
+
         function projectWorkspaceExportMultiAgentOutputChainMarkdown(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceExportMultiAgentOutputChainSnapshot(workspace);
             if (!report.has_multi_agent_output_chain_report) {
@@ -12004,6 +12069,8 @@
                 '',
                 projectWorkspaceExportMultiAgentOutputChainMarkdown(workspace),
                 '',
+                projectWorkspaceExportKeyframeVideoAssetChainMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12027,6 +12094,7 @@
                 agent_contract_registry: projectWorkspaceExportAgentContractRegistrySnapshot(workspace),
                 source_adapter_contract_report: projectWorkspaceExportSourceAdapterContractSnapshot(workspace),
                 multi_agent_output_chain_report: projectWorkspaceExportMultiAgentOutputChainSnapshot(workspace),
+                keyframe_video_asset_chain_report: projectWorkspaceExportKeyframeVideoAssetChainSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12150,6 +12218,7 @@
                 latestProjectAgentContractCompletenessReport = payload.agent_contract_completeness_report || {};
                 latestProjectSourceAdapterContractReport = payload.source_adapter_contract_report || {};
                 latestProjectMultiAgentOutputChainReport = payload.multi_agent_output_chain_report || {};
+                latestProjectKeyframeVideoAssetChainReport = payload.keyframe_video_asset_chain_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -15989,6 +16058,157 @@
         let latestProjectSourceAdapterContractReport = {};
         const PROJECT_WORKSPACE_MULTI_AGENT_OUTPUT_CHAIN_BUNDLE_MARKER = 'Project Workspace multi-agent output chain bundle';
         let latestProjectMultiAgentOutputChainReport = {};
+        const PROJECT_WORKSPACE_KEYFRAME_VIDEO_ASSET_CHAIN_BUNDLE_MARKER = 'Project Workspace keyframe video asset chain bundle';
+        let latestProjectKeyframeVideoAssetChainReport = {};
+
+        function projectWorkspaceKeyframeVideoAssetChainReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectKeyframeVideoAssetChainReport || {}).length
+                ? latestProjectKeyframeVideoAssetChainReport
+                : workspace?.keyframe_video_asset_chain_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                keyframe_video_asset_chain_report_version: '',
+                report_status: graphSummary.latest_keyframe_video_asset_chain_status || '',
+                complete_stage_count: Number(graphSummary.latest_keyframe_video_asset_complete_stage_count || 0),
+                missing_stage_count: Number(graphSummary.latest_keyframe_video_asset_missing_stage_count || 0),
+                supports_manual_generation_handoff: Boolean(graphSummary.latest_keyframe_video_asset_supports_manual_handoff),
+                stage_reports: [],
+                image_reference_required: true,
+                manual_review_required: true,
+                provider_neutral_prompt_pack_ready: false,
+                manual_generation_handoff_ready: false,
+                dry_run: true,
+                real_execution_allowed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceKeyframeVideoAssetChainCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceKeyframeVideoAssetChainReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.stage_reports) ? report.stage_reports : [];
+            return [
+                t('keyframeVideoAssetChainCopyTitle'),
+                `${t('keyframeVideoAssetChainStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('keyframeVideoAssetCompleteStageCount')}: ${Number(report.complete_stage_count || 0)}`,
+                `${t('keyframeVideoAssetMissingStageCount')}: ${Number(report.missing_stage_count || 0)}`,
+                `${t('providerNeutralPromptPackReady')}: ${Boolean(report.provider_neutral_prompt_pack_ready)}`,
+                `${t('manualGenerationHandoffReady')}: ${Boolean(report.manual_generation_handoff_ready)}`,
+                `${t('imageReferenceRequired')}: ${Boolean(report.image_reference_required)}`,
+                `${t('manualReviewRequired')}: ${Boolean(report.manual_review_required)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('videoGenerationPerformed')}: ${Boolean(report.video_generation_performed)}`,
+                `${t('imageGenerationPerformed')}: ${Boolean(report.image_generation_performed)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('keyframeVideoAssetStages')}:`,
+                stages.length
+                    ? stages.map((stage) => `- ${stage.stage_index || ''}. ${stage.stage_label || stage.stage_id || ''} / ${stage.agent_id || ''} (${stage.complete ? 'complete' : 'incomplete'})`).join('\n')
+                    : '- none',
+                '',
+                JSON.stringify({ keyframe_video_asset_chain_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceKeyframeVideoAssetChain() {
+            const status = document.getElementById('projectWorkspaceKeyframeVideoAssetChainStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceKeyframeVideoAssetChainCopyText());
+                if (status) status.textContent = t('keyframeVideoAssetChainCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('keyframeVideoAssetChainCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceKeyframeVideoAssetChainPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceKeyframeVideoAssetChainReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.stage_reports) ? report.stage_reports : [];
+            const hasReport = Boolean(report.report_status || report.keyframe_video_asset_chain_report_version || stages.length);
+            return `
+                <div class="section-block" id="projectWorkspaceKeyframeVideoAssetChainPanel" data-project-keyframe-video-asset-chain-marker="Project Workspace keyframe video asset chain bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('keyframeVideoAssetChainPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('keyframeVideoAssetChainPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceKeyframeVideoAssetChainBtn" type="button" onclick="copyProjectWorkspaceKeyframeVideoAssetChain()">${escapeHTML(t('copyKeyframeVideoAssetChain'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('keyframeVideoAssetChainStatus'))}</div>
+                            <strong data-keyframe-video-asset-chain-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('keyframeVideoAssetChainNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('keyframeVideoAssetCompleteStageCount'))}</div>
+                            <strong data-keyframe-video-asset-complete-stage-count="${escapeHTML(String(Number(report.complete_stage_count || 0)))}">${escapeHTML(String(Number(report.complete_stage_count || 0)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('keyframeVideoAssetMissingStageCount'))}: ${escapeHTML(String(Number(report.missing_stage_count || 0)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('manualGenerationHandoffReady'))}</div>
+                            <strong data-keyframe-video-asset-manual-handoff="${escapeHTML(String(Boolean(report.manual_generation_handoff_ready || report.supports_manual_generation_handoff)))}">${escapeHTML(String(Boolean(report.manual_generation_handoff_ready || report.supports_manual_generation_handoff)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('dryRun'))}: ${escapeHTML(String(Boolean(report.dry_run)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('keyframeVideoAssetTimeline'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(String(stage.stage_index || ''))}. ${escapeHTML(stage.stage_label || stage.stage_id || '')}</strong>
+                                <span>${escapeHTML(stage.agent_id || '')}</span>
+                                <span>${escapeHTML(stage.complete ? t('complete') : t('incomplete'))}</span>
+                            </div>
+                            <div class="field-helper">
+                                ${escapeHTML(t('expectedOutputs'))}: ${escapeHTML((stage.expected_outputs || []).join(', ') || t('none'))}
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('keyframeVideoAssetChainNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerNeutralPromptPackReady'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.provider_neutral_prompt_pack_ready)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('imageReferenceRequired'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.image_reference_required)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('manualReviewRequired'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.manual_review_required)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('videoGenerationPerformed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.video_generation_performed)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('imageGenerationPerformed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.image_generation_performed)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('paidGenerationAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.paid_generation_allowed)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('keyframeVideoAssetAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-keyframe-video-asset-chain-audit-preview="Project Workspace keyframe video asset chain bundle">${escapeHTML(projectWorkspaceKeyframeVideoAssetChainCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('keyframeVideoAssetChainNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceKeyframeVideoAssetChainStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceMultiAgentOutputChainReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectMultiAgentOutputChainReport || {}).length
@@ -17325,6 +17545,8 @@
                 if (sourceAdapterContractPanel) sourceAdapterContractPanel.outerHTML = renderProjectWorkspaceSourceAdapterContractPanel(latestProjectWorkspace);
                 const multiAgentOutputPanel = document.getElementById('projectWorkspaceMultiAgentOutputChainPanel');
                 if (multiAgentOutputPanel) multiAgentOutputPanel.outerHTML = renderProjectWorkspaceMultiAgentOutputChainPanel(latestProjectWorkspace);
+                const keyframeVideoAssetPanel = document.getElementById('projectWorkspaceKeyframeVideoAssetChainPanel');
+                if (keyframeVideoAssetPanel) keyframeVideoAssetPanel.outerHTML = renderProjectWorkspaceKeyframeVideoAssetChainPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -19505,6 +19727,7 @@
                     ${renderProjectWorkspaceAgentContractRegistryPanel(workspace)}
                     ${renderProjectWorkspaceSourceAdapterContractPanel(workspace)}
                     ${renderProjectWorkspaceMultiAgentOutputChainPanel(workspace)}
+                    ${renderProjectWorkspaceKeyframeVideoAssetChainPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -23739,6 +23962,55 @@
             multiAgentOutputChainCopied: '\u591a Agent \u4ea7\u51fa\u94fe\u8def\u5df2\u590d\u5236\u3002',
             multiAgentOutputChainCopyFailed: '\u590d\u5236\u591a Agent \u4ea7\u51fa\u94fe\u8def\u5931\u8d25\u3002',
             projectWorkspaceExportMultiAgentOutputTitle: 'Multi-Agent Output Chain / \u591a Agent \u4ea7\u51fa\u94fe\u8def'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceKeyframeVideoAssetChainBundleMarker: 'Project Workspace keyframe video asset chain bundle',
+            keyframeVideoAssetChainPanelTitle: 'Keyframe / Video Asset Chain',
+            keyframeVideoAssetChainPanelHelper: 'Dry-run readiness chain for product identity lock, keyframe scene plan, provider-neutral prompt pack, manual generation handoff, experiment rework, and video asset export. It does not call video providers or generate media.',
+            copyKeyframeVideoAssetChain: 'Copy keyframe / video asset chain',
+            keyframeVideoAssetChainCopyTitle: 'Project keyframe / video asset chain report',
+            keyframeVideoAssetChainStatus: 'Keyframe / video asset chain status',
+            keyframeVideoAssetCompleteStageCount: 'Complete asset stages',
+            keyframeVideoAssetMissingStageCount: 'Missing asset stages',
+            providerNeutralPromptPackReady: 'Provider-neutral prompt pack ready',
+            manualGenerationHandoffReady: 'Manual generation handoff ready',
+            imageReferenceRequired: 'Image reference required',
+            manualReviewRequired: 'Manual review required',
+            imageGenerationPerformed: 'Image generation performed',
+            paidGenerationAllowed: 'Paid generation allowed',
+            keyframeVideoAssetStages: 'Keyframe / video asset stages',
+            keyframeVideoAssetTimeline: 'Product lock ? Keyframes ? Prompt pack ? Manual handoff ? Rework ? Export timeline',
+            keyframeVideoAssetAuditPreview: 'Keyframe / video asset audit preview',
+            keyframeVideoAssetChainNotRefreshedYet: 'Keyframe / video asset chain has not been refreshed yet.',
+            keyframeVideoAssetChainCopied: 'Keyframe / video asset chain copied.',
+            keyframeVideoAssetChainCopyFailed: 'Could not copy keyframe / video asset chain.',
+            projectWorkspaceExportKeyframeVideoAssetTitle: 'Keyframe / Video Asset Chain'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceKeyframeVideoAssetChainBundleMarker: 'Project Workspace keyframe video asset chain bundle',
+            keyframeVideoAssetChainPanelTitle: 'Keyframe / Video Asset Chain / \u5173\u952e\u5e27\u4e0e\u89c6\u9891\u7d20\u6750\u94fe\u8def',
+            keyframeVideoAssetChainPanelHelper: '\u4ea7\u54c1\u89c6\u89c9\u9501\u5b9a\u3001\u5173\u952e\u5e27\u573a\u666f\u8ba1\u5212\u3001provider-neutral prompt pack\u3001\u624b\u52a8\u751f\u6210 handoff\u3001\u5b9e\u9a8c\u53cd\u9988 rework \u548c\u89c6\u9891\u7d20\u6750\u5bfc\u51fa\u7684 dry-run readiness \u94fe\u8def\uff1b\u4e0d\u8c03\u7528\u89c6\u9891 provider\uff0c\u4e0d\u751f\u6210\u5a92\u4f53\u3002',
+            copyKeyframeVideoAssetChain: '\u590d\u5236\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def',
+            keyframeVideoAssetChainCopyTitle: '\u9879\u76ee\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def\u62a5\u544a',
+            keyframeVideoAssetChainStatus: '\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def\u72b6\u6001',
+            keyframeVideoAssetCompleteStageCount: '\u5df2\u5b8c\u6574\u7d20\u6750\u9636\u6bb5',
+            keyframeVideoAssetMissingStageCount: '\u7f3a\u5931\u7d20\u6750\u9636\u6bb5',
+            providerNeutralPromptPackReady: 'Provider-neutral prompt pack \u5df2\u5c31\u7eea',
+            manualGenerationHandoffReady: '\u624b\u52a8\u751f\u6210 handoff \u5df2\u5c31\u7eea',
+            imageReferenceRequired: '\u9700\u8981\u56fe\u50cf\u53c2\u8003',
+            manualReviewRequired: '\u9700\u8981\u4eba\u5de5\u5ba1\u6838',
+            imageGenerationPerformed: '\u662f\u5426\u6267\u884c\u56fe\u50cf\u751f\u6210',
+            paidGenerationAllowed: '\u662f\u5426\u5141\u8bb8\u4ed8\u8d39\u751f\u6210',
+            keyframeVideoAssetStages: '\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u9636\u6bb5',
+            keyframeVideoAssetTimeline: '\u4ea7\u54c1\u9501\u5b9a \u2192 \u5173\u952e\u5e27 \u2192 Prompt pack \u2192 \u624b\u52a8 handoff \u2192 Rework \u2192 Export \u65f6\u95f4\u7ebf',
+            keyframeVideoAssetAuditPreview: '\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u5ba1\u8ba1\u9884\u89c8',
+            keyframeVideoAssetChainNotRefreshedYet: '\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def\u5c1a\u672a\u5237\u65b0\u3002',
+            keyframeVideoAssetChainCopied: '\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def\u5df2\u590d\u5236\u3002',
+            keyframeVideoAssetChainCopyFailed: '\u590d\u5236\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def\u5931\u8d25\u3002',
+            projectWorkspaceExportKeyframeVideoAssetTitle: 'Keyframe / Video Asset Chain / \u5173\u952e\u5e27\u4e0e\u89c6\u9891\u7d20\u6750\u94fe\u8def'
         });
 
 

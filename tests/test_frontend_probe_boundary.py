@@ -6526,6 +6526,25 @@ import unittest as _cg_invalid_unicode_unittest
 
 
 class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
+    def test_project_workspace_keyframe_video_asset_chain_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace keyframe video asset chain bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_KEYFRAME_VIDEO_ASSET_CHAIN_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceKeyframeVideoAssetChainPanel", html)
+        self.assertIn("copyProjectWorkspaceKeyframeVideoAssetChain", html)
+        self.assertIn("keyframe_video_asset_chain_report", html)
+
+    def test_project_workspace_keyframe_video_asset_chain_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_keyframe_video_asset_chain_marker", script)
+        self.assertIn("Project Workspace keyframe video asset chain bundle", script)
+
+    def test_project_workspace_keyframe_video_asset_chain_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace keyframe video asset chain bundle", script)
+        self.assertIn("project_workspace_keyframe_video_asset_chain_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))

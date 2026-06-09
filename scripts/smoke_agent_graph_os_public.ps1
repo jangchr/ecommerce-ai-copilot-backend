@@ -109,6 +109,7 @@ Add-Check "project_workspace_queue_lease_worker_dry_run_chain_marker" ($page.Con
 Add-Check "project_workspace_agent_contract_registry_marker" ($page.Content -match "Project Workspace agent contract registry bundle")
 Add-Check "project_workspace_source_adapter_contract_marker" ($page.Content -match "Project Workspace source adapter contract bundle")
 Add-Check "project_workspace_multi_agent_output_chain_marker" ($page.Content -match "Project Workspace multi-agent output chain bundle")
+Add-Check "project_workspace_keyframe_video_asset_chain_marker" ($page.Content -match "Project Workspace keyframe video asset chain bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
