@@ -1688,6 +1688,157 @@ def build_agent_contract_completeness_report(registry: dict[str, Any] | None = N
     }
 
 
+
+SOURCE_ADAPTER_CONTRACT_REPORT_VERSION = "source_adapter_contract_report_v1"
+
+SOURCE_ADAPTER_CONTRACT_MATRIX = [
+    {
+        "adapter_id": "amazon_visible_reviews",
+        "display_name": "Amazon visible-page reviews",
+        "source_types": ["amazon", "amazon_url", "amazon_review_api", "review_workspace"],
+        "entrypoints": ["/api/v1/amazon-intake", "/api/v1/analyze-review-workspace"],
+        "input_contract": ["normalized_amazon_url", "current_visible_reviews", "browser_extension_payload", "review_workspace_payload"],
+        "output_contract": ["SourceEvidence", "ReviewRecord", "review_insights", "source_breakdown", "data_warnings"],
+        "allowed_modes": ["current_visible_sample", "user_confirmed_sample", "dry_run_probe"],
+        "prohibited_actions": ["bypass_login", "bypass_captcha", "scrape_hidden_reviews", "make_full_population_claims"],
+        "required_boundaries": ["visible_sample_only", "manual_fallback_required", "no_platform_bypass"],
+        "real_source_default_enabled": False,
+    },
+    {
+        "adapter_id": "pasted_reviews",
+        "display_name": "User-pasted reviews",
+        "source_types": ["pasted_reviews", "user_pasted_reviews", "text_review_batch"],
+        "entrypoints": ["/api/v1/generate-from-reviews", "/api/v1/analyze-pasted-review-workspace"],
+        "input_contract": ["pasted_reviews", "product_name", "product_category", "output_language"],
+        "output_contract": ["pasted_reviews_v1", "llm_evidence_packet", "evidence_quotes", "review_workspace_payload"],
+        "allowed_modes": ["user_supplied_text_only", "no_external_fetch"],
+        "prohibited_actions": ["claim_amazon_source", "external_fetch", "infer_verified_purchase", "invent_reviews"],
+        "required_boundaries": ["user_pasted_reviews_unverified", "user_pasted_reviews_no_external_fetch"],
+        "real_source_default_enabled": False,
+    },
+    {
+        "adapter_id": "source_probe_debug",
+        "display_name": "Debug source probe",
+        "source_types": ["source_probe", "debug_source_probe", "amazon_review_api"],
+        "entrypoints": ["/api/v1/debug/source-probe"],
+        "input_contract": ["url", "providers", "real_source_mode"],
+        "output_contract": ["SourceEvidence", "debug_meta", "data_warnings"],
+        "allowed_modes": ["debug_only", "guarded_probe", "shadow_eval"],
+        "prohibited_actions": ["production_auto_fetch", "silent_external_fetch", "bypass_runtime_flag"],
+        "required_boundaries": ["debug_only", "provider_allowlist", "manual_operator_visibility"],
+        "real_source_default_enabled": False,
+    },
+    {
+        "adapter_id": "external_crawler_dry_run",
+        "display_name": "External crawler / Apify dry-run",
+        "source_types": ["external_crawler", "apify", "amazon_review_api"],
+        "entrypoints": ["scripts/run_apify_amazon_crawler_worker.py", "scripts/run_external_crawler_contract_smoke.py"],
+        "input_contract": ["url", "provider", "actor_id", "max_reviews", "operator_token"],
+        "output_contract": ["normalized_external_payload", "SourceEvidence", "ReviewRecord", "provider_debug_meta"],
+        "allowed_modes": ["operator_configured_dry_run", "contract_smoke", "shadow_eval"],
+        "prohibited_actions": ["call_without_token", "call_without_operator_approval", "store_provider_secret", "bypass_platform_controls"],
+        "required_boundaries": ["ALLOW_REAL_SOURCE_ADAPTERS_false_by_default", "operator_supplied_provider_credentials", "no_hidden_content_claim"],
+        "real_source_default_enabled": False,
+    },
+    {
+        "adapter_id": "review_workspace_visible_sample",
+        "display_name": "Review workspace visible sample",
+        "source_types": ["review_workspace", "amazon_visible_page_sample", "browser_extension_visible_sample"],
+        "entrypoints": ["/api/v1/analyze-review-workspace"],
+        "input_contract": ["product", "reviews", "source_breakdown", "output_language"],
+        "output_contract": ["review_workspace_v1", "pain_points", "buyer_objections", "liked_points", "high_signal_reviews"],
+        "allowed_modes": ["visible_sample_analysis", "deduped_current_sample"],
+        "prohibited_actions": ["population_statistics_claim", "unseen_review_claim", "verified_purchase_inference"],
+        "required_boundaries": ["visible_sample_only", "raw_unique_duplicate_counts", "sample_size_note"],
+        "real_source_default_enabled": False,
+    },
+]
+
+
+def build_source_adapter_contract_report() -> dict[str, Any]:
+    """Build Source Adapter Contract readiness for ecommerce data inputs.
+
+    This report documents allowed inputs, outputs, and safety boundaries for
+    ecommerce source adapters. It does not call adapters, fetch URLs, invoke
+    external crawlers, call providers, execute agents, or unlock real source mode.
+    """
+
+    adapter_reports: list[dict[str, Any]] = []
+    for adapter in SOURCE_ADAPTER_CONTRACT_MATRIX:
+        input_count = len(adapter.get("input_contract") or [])
+        output_count = len(adapter.get("output_contract") or [])
+        boundary_count = len(adapter.get("required_boundaries") or [])
+        prohibited_count = len(adapter.get("prohibited_actions") or [])
+        complete = input_count > 0 and output_count > 0 and boundary_count > 0 and prohibited_count > 0
+
+        adapter_reports.append({
+            "adapter_id": str(adapter.get("adapter_id") or ""),
+            "display_name": str(adapter.get("display_name") or ""),
+            "source_types": list(adapter.get("source_types") or []),
+            "entrypoints": list(adapter.get("entrypoints") or []),
+            "input_contract": list(adapter.get("input_contract") or []),
+            "output_contract": list(adapter.get("output_contract") or []),
+            "allowed_modes": list(adapter.get("allowed_modes") or []),
+            "prohibited_actions": list(adapter.get("prohibited_actions") or []),
+            "required_boundaries": list(adapter.get("required_boundaries") or []),
+            "input_contract_count": input_count,
+            "output_contract_count": output_count,
+            "required_boundary_count": boundary_count,
+            "prohibited_action_count": prohibited_count,
+            "real_source_default_enabled": bool(adapter.get("real_source_default_enabled")),
+            "complete": complete,
+            "dry_run": True,
+            "real_source_adapter_enabled": False,
+            "external_fetch_performed": False,
+            "provider_call_performed": False,
+            "external_api_called": False,
+            "agent_execution_performed": False,
+        })
+
+    missing_adapters = [item["adapter_id"] for item in adapter_reports if not item["complete"]]
+    complete_adapters = [item["adapter_id"] for item in adapter_reports if item["complete"]]
+    report_status = "source_adapter_contracts_complete" if not missing_adapters else "source_adapter_contracts_incomplete"
+
+    boundary_catalog = sorted({
+        boundary
+        for item in adapter_reports
+        for boundary in item.get("required_boundaries", [])
+    })
+    prohibited_catalog = sorted({
+        action
+        for item in adapter_reports
+        for action in item.get("prohibited_actions", [])
+    })
+
+    return {
+        "source_adapter_contract_report_version": SOURCE_ADAPTER_CONTRACT_REPORT_VERSION,
+        "report_status": report_status,
+        "adapter_count": len(adapter_reports),
+        "complete_adapter_count": len(complete_adapters),
+        "missing_adapter_count": len(missing_adapters),
+        "complete_adapters": complete_adapters,
+        "missing_adapters": missing_adapters,
+        "adapter_reports": adapter_reports,
+        "boundary_catalog": boundary_catalog,
+        "prohibited_action_catalog": prohibited_catalog,
+        "supports_amazon_visible_reviews": "amazon_visible_reviews" in complete_adapters,
+        "supports_pasted_reviews": "pasted_reviews" in complete_adapters,
+        "supports_source_probe_debug": "source_probe_debug" in complete_adapters,
+        "supports_external_crawler_dry_run": "external_crawler_dry_run" in complete_adapters,
+        "supports_review_workspace_visible_sample": "review_workspace_visible_sample" in complete_adapters,
+        "manual_review_required": False,
+        "dry_run": True,
+        "real_source_adapter_enabled": False,
+        "allow_real_source_adapters_default": False,
+        "external_fetch_performed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

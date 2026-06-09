@@ -64,6 +64,7 @@ from agent_runs import (
     build_agent_contract_registry,
     build_agent_contract_summary,
     build_agent_contract_completeness_report,
+    build_source_adapter_contract_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6216,6 +6217,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
     agent_contract_registry = build_agent_contract_registry()
     agent_contract_summary = build_agent_contract_summary(agent_contract_registry)
     agent_contract_completeness_report = build_agent_contract_completeness_report(agent_contract_registry)
+    source_adapter_contract_report = build_source_adapter_contract_report()
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6248,6 +6250,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_agent_contract_complete_role_count": int(agent_contract_completeness_report.get("complete_role_count") or 0),
         "latest_agent_contract_missing_role_count": int(agent_contract_completeness_report.get("missing_role_count") or 0),
         "latest_agent_contract_supervisor_can_use_registry": bool(agent_contract_completeness_report.get("supervisor_can_use_registry")),
+        "latest_source_adapter_contract_report_status": source_adapter_contract_report.get("report_status", ""),
+        "latest_source_adapter_contract_complete_count": int(source_adapter_contract_report.get("complete_adapter_count") or 0),
+        "latest_source_adapter_contract_missing_count": int(source_adapter_contract_report.get("missing_adapter_count") or 0),
+        "latest_source_adapter_contract_supports_external_crawler_dry_run": bool(source_adapter_contract_report.get("supports_external_crawler_dry_run")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6268,6 +6274,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "agent_contract_registry": agent_contract_registry,
         "agent_contract_summary": agent_contract_summary,
         "agent_contract_completeness_report": agent_contract_completeness_report,
+        "source_adapter_contract_report": source_adapter_contract_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
