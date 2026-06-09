@@ -11524,6 +11524,65 @@
             };
         }
 
+
+        function projectWorkspaceExportSupervisorNextStepWorkOrderPreviewSnapshot(workspace = latestProjectWorkspace) {
+            const preview = projectWorkspaceSupervisorNextStepWorkOrderPreviewFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack supervisor next-step work order preview bundle',
+                supervisor_next_step_work_order_status: preview.supervisor_next_step_work_order_status || '',
+                work_order_id: preview.work_order_id || '',
+                next_step_type: preview.next_step_type || '',
+                target_agent_id: preview.target_agent_id || '',
+                recommended_endpoint: preview.recommended_endpoint || '',
+                recommended_command: preview.recommended_command || '',
+                recommended_next_state: preview.recommended_next_state || '',
+                work_order_message: preview.work_order_message || '',
+                work_order_allowed: Boolean(preview.work_order_allowed),
+                routing_allowed: Boolean(preview.routing_allowed),
+                queue_persisted: Boolean(preview.queue_persisted),
+                work_order_persisted: Boolean(preview.work_order_persisted),
+                real_execution_allowed: Boolean(preview.real_execution_allowed),
+                provider_call_allowed: Boolean(preview.provider_call_allowed),
+                external_api_call_allowed: Boolean(preview.external_api_call_allowed),
+                agent_execution_allowed: Boolean(preview.agent_execution_allowed),
+                safe_to_continue: Boolean(preview.safe_to_continue),
+                dry_run: Boolean(preview.dry_run),
+                blocking_event_ids: Array.isArray(preview.blocking_event_ids) ? preview.blocking_event_ids : [],
+                next_agent_candidates: Array.isArray(preview.next_agent_candidates) ? preview.next_agent_candidates : [],
+                has_work_order_preview: Boolean(preview.supervisor_next_step_work_order_status || preview.work_order_id || preview.recommended_command)
+            };
+        }
+
+        function projectWorkspaceExportSupervisorNextStepWorkOrderPreviewMarkdown(workspace = latestProjectWorkspace) {
+            const preview = projectWorkspaceExportSupervisorNextStepWorkOrderPreviewSnapshot(workspace);
+            if (!preview.has_work_order_preview) {
+                return `## ${t('projectWorkspaceExportSupervisorWorkOrderTitle')}\n${t('supervisorNextStepWorkOrderNotRefreshedYet')}`;
+            }
+            return [
+                `## ${t('projectWorkspaceExportSupervisorWorkOrderTitle')}`,
+                `${t('supervisorNextStepWorkOrderStatus')}: ${preview.supervisor_next_step_work_order_status || 'not_refreshed'}`,
+                `${t('supervisorWorkOrderId')}: ${preview.work_order_id || 'not_refreshed'}`,
+                `${t('supervisorNextStepType')}: ${preview.next_step_type || 'not_refreshed'}`,
+                `${t('supervisorTargetAgent')}: ${preview.target_agent_id || 'not_refreshed'}`,
+                `${t('supervisorRecommendedEndpoint')}: ${preview.recommended_endpoint || 'not_refreshed'}`,
+                `${t('supervisorRecommendedCommand')}: ${preview.recommended_command || 'not_refreshed'}`,
+                `${t('recommendedNextState')}: ${preview.recommended_next_state || 'not_refreshed'}`,
+                `${t('supervisorWorkOrderMessage')}: ${preview.work_order_message || 'not_refreshed'}`,
+                `${t('supervisorWorkOrderAllowed')}: ${preview.work_order_allowed}`,
+                `${t('supervisorRoutingAllowed')}: ${preview.routing_allowed}`,
+                `${t('queuePersisted')}: ${preview.queue_persisted}`,
+                `${t('workOrderPersisted')}: ${preview.work_order_persisted}`,
+                `${t('realExecutionAllowed')}: ${preview.real_execution_allowed}`,
+                `${t('providerCallAllowed')}: ${preview.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${preview.external_api_call_allowed}`,
+                `${t('agentExecutionAllowed')}: ${preview.agent_execution_allowed}`,
+                `${t('safeToContinue')}: ${preview.safe_to_continue}`,
+                `${t('dryRun')}: ${preview.dry_run}`,
+                `${t('supervisorBlockingEvents')}: ${preview.blocking_event_ids.join(', ') || 'none'}`,
+                `${t('supervisorNextAgentCandidates')}: ${preview.next_agent_candidates.join(', ') || 'none'}`
+            ].join('\n');
+        }
+
         function projectWorkspaceExportSupervisorNextStepRoutingPlanMarkdown(workspace = latestProjectWorkspace) {
             const plan = projectWorkspaceExportSupervisorNextStepRoutingPlanSnapshot(workspace);
             if (!plan.has_next_step_routing_plan) {
@@ -11719,6 +11778,8 @@
                 '',
                 projectWorkspaceExportSupervisorNextStepRoutingPlanMarkdown(workspace),
                 '',
+                projectWorkspaceExportSupervisorNextStepWorkOrderPreviewMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11737,6 +11798,7 @@
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
                 runner_supervisor_event_ledger_decision_summary: projectWorkspaceExportSupervisorEventLedgerDecisionSnapshot(workspace),
                 runner_supervisor_next_step_routing_plan: projectWorkspaceExportSupervisorNextStepRoutingPlanSnapshot(workspace),
+                runner_supervisor_next_step_work_order_preview: projectWorkspaceExportSupervisorNextStepWorkOrderPreviewSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -15682,6 +15744,131 @@
         let latestProjectRunnerSupervisorEventLedgerDecisionSummary = {};
         const PROJECT_WORKSPACE_SUPERVISOR_NEXT_STEP_ROUTING_PLAN_BUNDLE_MARKER = 'Project Workspace supervisor next-step routing plan bundle';
         let latestProjectRunnerSupervisorNextStepRoutingPlan = {};
+        const PROJECT_WORKSPACE_SUPERVISOR_NEXT_STEP_WORK_ORDER_PREVIEW_BUNDLE_MARKER = 'Project Workspace supervisor next-step work order preview bundle';
+        let latestProjectRunnerSupervisorNextStepWorkOrderPreview = {};
+
+        function projectWorkspaceSupervisorNextStepWorkOrderPreviewFromWorkspace(workspace = latestProjectWorkspace) {
+            const preview = Object.keys(latestProjectRunnerSupervisorNextStepWorkOrderPreview || {}).length
+                ? latestProjectRunnerSupervisorNextStepWorkOrderPreview
+                : workspace?.runner_supervisor_next_step_work_order_preview || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (preview && Object.keys(preview).length) return preview;
+            return {
+                supervisor_next_step_work_order_preview_version: '',
+                supervisor_next_step_work_order_status: graphSummary.latest_runner_supervisor_next_step_work_order_status || '',
+                work_order_id: graphSummary.latest_runner_supervisor_next_step_work_order_id || '',
+                next_step_type: graphSummary.latest_runner_supervisor_next_step_type || '',
+                target_agent_id: graphSummary.latest_runner_supervisor_next_step_work_order_target_agent_id || '',
+                recommended_endpoint: '',
+                recommended_command: '',
+                routing_reason: '',
+                work_order_allowed: Boolean(graphSummary.latest_runner_supervisor_next_step_work_order_allowed),
+                routing_allowed: Boolean(graphSummary.latest_runner_supervisor_next_step_routing_allowed),
+                queue_persisted: false,
+                work_order_persisted: false,
+                real_execution_allowed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                agent_execution_allowed: false,
+                safe_to_continue: false,
+                dry_run: true,
+                blocking_event_ids: [],
+                next_agent_candidates: []
+            };
+        }
+
+        function projectWorkspaceSupervisorNextStepWorkOrderPreviewCopyText(workspace = latestProjectWorkspace) {
+            const preview = projectWorkspaceSupervisorNextStepWorkOrderPreviewFromWorkspace(workspace);
+            return [
+                t('supervisorNextStepWorkOrderCopyTitle'),
+                `${t('supervisorNextStepWorkOrderStatus')}: ${preview.supervisor_next_step_work_order_status || 'not_refreshed'}`,
+                `${t('supervisorWorkOrderId')}: ${preview.work_order_id || 'not_refreshed'}`,
+                `${t('supervisorNextStepType')}: ${preview.next_step_type || 'not_refreshed'}`,
+                `${t('supervisorTargetAgent')}: ${preview.target_agent_id || 'not_refreshed'}`,
+                `${t('supervisorRecommendedEndpoint')}: ${preview.recommended_endpoint || 'not_refreshed'}`,
+                `${t('supervisorRecommendedCommand')}: ${preview.recommended_command || 'not_refreshed'}`,
+                `${t('supervisorWorkOrderAllowed')}: ${Boolean(preview.work_order_allowed)}`,
+                `${t('supervisorRoutingAllowed')}: ${Boolean(preview.routing_allowed)}`,
+                `${t('queuePersisted')}: ${Boolean(preview.queue_persisted)}`,
+                `${t('workOrderPersisted')}: ${Boolean(preview.work_order_persisted)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(preview.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(preview.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(preview.external_api_call_allowed)}`,
+                `${t('agentExecutionAllowed')}: ${Boolean(preview.agent_execution_allowed)}`,
+                `${t('safeToContinue')}: ${Boolean(preview.safe_to_continue)}`,
+                `${t('dryRun')}: ${Boolean(preview.dry_run)}`,
+                '',
+                JSON.stringify({ runner_supervisor_next_step_work_order_preview: preview }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceSupervisorNextStepWorkOrderPreview() {
+            const status = document.getElementById('projectWorkspaceSupervisorNextStepWorkOrderPreviewStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceSupervisorNextStepWorkOrderPreviewCopyText());
+                if (status) status.textContent = t('supervisorNextStepWorkOrderCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('supervisorNextStepWorkOrderCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(workspace = latestProjectWorkspace) {
+            const preview = projectWorkspaceSupervisorNextStepWorkOrderPreviewFromWorkspace(workspace);
+            const blockingIds = Array.isArray(preview.blocking_event_ids) ? preview.blocking_event_ids : [];
+            const candidates = Array.isArray(preview.next_agent_candidates) ? preview.next_agent_candidates : [];
+            const hasPreview = Boolean(preview.supervisor_next_step_work_order_status || preview.work_order_id || preview.recommended_command);
+            return `
+                <div class="section-block" id="projectWorkspaceSupervisorNextStepWorkOrderPreviewPanel" data-project-supervisor-next-step-work-order-preview-marker="Project Workspace supervisor next-step work order preview bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('supervisorNextStepWorkOrderPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('supervisorNextStepWorkOrderPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceSupervisorNextStepWorkOrderPreviewBtn" type="button" onclick="copyProjectWorkspaceSupervisorNextStepWorkOrderPreview()">${escapeHTML(t('copySupervisorNextStepWorkOrderPreview'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorNextStepWorkOrderStatus'))}</div>
+                            <strong data-supervisor-next-step-work-order-status="${escapeHTML(preview.supervisor_next_step_work_order_status || 'not_refreshed')}">${escapeHTML(preview.supervisor_next_step_work_order_status || t('supervisorNextStepWorkOrderNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorWorkOrderId'))}</div>
+                            <strong data-supervisor-next-step-work-order-id="${escapeHTML(preview.work_order_id || 'not_refreshed')}">${escapeHTML(preview.work_order_id || t('supervisorNextStepWorkOrderNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('supervisorTargetAgent'))}: ${escapeHTML(preview.target_agent_id || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorWorkOrderAllowed'))}</div>
+                            <strong data-supervisor-next-step-work-order-allowed="${escapeHTML(String(Boolean(preview.work_order_allowed)))}">${escapeHTML(String(Boolean(preview.work_order_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('queuePersisted'))}: ${escapeHTML(String(Boolean(preview.queue_persisted)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('supervisorRecommendedCommand'))}</div>
+                        <code data-supervisor-next-step-work-order-recommended-command="${escapeHTML(preview.recommended_command || 'not_refreshed')}">${escapeHTML(preview.recommended_command || t('supervisorNextStepWorkOrderNotRefreshedYet'))}</code>
+                        <div class="field-helper">${escapeHTML(t('supervisorWorkOrderMessage'))}: ${escapeHTML(preview.work_order_message || t('supervisorNextStepWorkOrderNotRefreshedYet'))}</div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorBlockingEvents'))}</div>
+                            ${blockingIds.length ? blockingIds.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorNextAgentCandidates'))}</div>
+                            ${candidates.length ? candidates.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('supervisorNextStepWorkOrderAuditPreview'))}</div>
+                        ${hasPreview ? `<pre class="debug" data-supervisor-next-step-work-order-preview-audit-preview="Project Workspace supervisor next-step work order preview bundle">${escapeHTML(projectWorkspaceSupervisorNextStepWorkOrderPreviewCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('supervisorNextStepWorkOrderNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceSupervisorNextStepWorkOrderPreviewStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceSupervisorNextStepRoutingPlanFromWorkspace(workspace = latestProjectWorkspace) {
             const plan = Object.keys(latestProjectRunnerSupervisorNextStepRoutingPlan || {}).length
@@ -16292,6 +16479,7 @@
                 latestProjectRunnerEventLedgerSummary = payload.runner_event_ledger_summary || {};
                 latestProjectRunnerSupervisorEventLedgerDecisionSummary = payload.runner_supervisor_event_ledger_decision_summary || {};
                 latestProjectRunnerSupervisorNextStepRoutingPlan = payload.runner_supervisor_next_step_routing_plan || {};
+                latestProjectRunnerSupervisorNextStepWorkOrderPreview = payload.runner_supervisor_next_step_work_order_preview || {};
 
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -16317,6 +16505,8 @@
                 if (supervisorDecisionPanel) supervisorDecisionPanel.outerHTML = renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(latestProjectWorkspace);
                 const nextStepRoutingPanel = document.getElementById('projectWorkspaceSupervisorNextStepRoutingPlanPanel');
                 if (nextStepRoutingPanel) nextStepRoutingPanel.outerHTML = renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(latestProjectWorkspace);
+                const workOrderPreviewPanel = document.getElementById('projectWorkspaceSupervisorNextStepWorkOrderPreviewPanel');
+                if (workOrderPreviewPanel) workOrderPreviewPanel.outerHTML = renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -18492,6 +18682,7 @@
                     ${renderProjectWorkspaceRunnerEventLedgerSummaryPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextStepRoutingPlanPanel(workspace)}
+                    ${renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -22499,6 +22690,47 @@
             supervisorNextStepRoutingCopied: 'Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212\u5df2\u590d\u5236\u3002',
             supervisorNextStepRoutingCopyFailed: '\u590d\u5236 Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212\u5931\u8d25\u3002',
             projectWorkspaceExportSupervisorNextStepRoutingTitle: 'Supervisor \u4e0b\u4e00\u6b65\u8c03\u5ea6\u8ba1\u5212'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceSupervisorNextStepWorkOrderPreviewBundleMarker: 'Project Workspace supervisor next-step work order preview bundle',
+            supervisorNextStepWorkOrderPanelTitle: 'Supervisor next-step work order preview',
+            supervisorNextStepWorkOrderPanelHelper: 'Supervisor bridges the next-step routing plan into a dry-run work order draft. It does not persist a queue item or execute an Agent.',
+            copySupervisorNextStepWorkOrderPreview: 'Copy work order preview',
+            supervisorNextStepWorkOrderCopyTitle: 'Project Supervisor next-step work order preview',
+            supervisorNextStepWorkOrderStatus: 'Work order status',
+            supervisorWorkOrderId: 'Work order ID',
+            supervisorWorkOrderAllowed: 'Work order allowed',
+            supervisorWorkOrderMessage: 'Work order message',
+            supervisorNextStepWorkOrderAuditPreview: 'Work order preview audit',
+            supervisorNextStepWorkOrderNotRefreshedYet: 'Supervisor next-step work order preview has not been refreshed yet.',
+            supervisorNextStepWorkOrderCopied: 'Supervisor next-step work order preview copied.',
+            supervisorNextStepWorkOrderCopyFailed: 'Could not copy Supervisor next-step work order preview.',
+            queuePersisted: 'Queue persisted',
+            workOrderPersisted: 'Work order persisted',
+            recommendedNextState: 'Recommended next state',
+            projectWorkspaceExportSupervisorWorkOrderTitle: 'Supervisor next-step work order preview'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceSupervisorNextStepWorkOrderPreviewBundleMarker: 'Project Workspace supervisor next-step work order preview bundle',
+            supervisorNextStepWorkOrderPanelTitle: 'Supervisor \u4e0b\u4e00\u6b65\u5de5\u4f5c\u5355\u9884\u89c8',
+            supervisorNextStepWorkOrderPanelHelper: 'Supervisor \u628a\u4e0b\u4e00\u6b65 routing plan \u8f6c\u6210 dry-run \u5de5\u4f5c\u5355\u8349\u7a3f\uff0c\u4e0d\u5165\u961f\u3001\u4e0d\u6267\u884c Agent\u3002',
+            copySupervisorNextStepWorkOrderPreview: '\u590d\u5236\u5de5\u4f5c\u5355\u9884\u89c8',
+            supervisorNextStepWorkOrderCopyTitle: '\u9879\u76ee Supervisor \u4e0b\u4e00\u6b65\u5de5\u4f5c\u5355\u9884\u89c8',
+            supervisorNextStepWorkOrderStatus: '\u5de5\u4f5c\u5355\u72b6\u6001',
+            supervisorWorkOrderId: '\u5de5\u4f5c\u5355 ID',
+            supervisorWorkOrderAllowed: '\u662f\u5426\u5141\u8bb8\u5de5\u4f5c\u5355',
+            supervisorWorkOrderMessage: '\u5de5\u4f5c\u5355\u8bf4\u660e',
+            supervisorNextStepWorkOrderAuditPreview: '\u5de5\u4f5c\u5355\u9884\u89c8\u5ba1\u8ba1',
+            supervisorNextStepWorkOrderNotRefreshedYet: 'Supervisor \u4e0b\u4e00\u6b65\u5de5\u4f5c\u5355\u9884\u89c8\u5c1a\u672a\u5237\u65b0\u3002',
+            supervisorNextStepWorkOrderCopied: 'Supervisor \u4e0b\u4e00\u6b65\u5de5\u4f5c\u5355\u9884\u89c8\u5df2\u590d\u5236\u3002',
+            supervisorNextStepWorkOrderCopyFailed: '\u590d\u5236 Supervisor \u4e0b\u4e00\u6b65\u5de5\u4f5c\u5355\u9884\u89c8\u5931\u8d25\u3002',
+            queuePersisted: '\u662f\u5426\u5df2\u5165\u961f\u6301\u4e45\u5316',
+            workOrderPersisted: '\u662f\u5426\u5df2\u6301\u4e45\u5316\u5de5\u4f5c\u5355',
+            recommendedNextState: '\u63a8\u8350\u4e0b\u4e00\u72b6\u6001',
+            projectWorkspaceExportSupervisorWorkOrderTitle: 'Supervisor \u4e0b\u4e00\u6b65\u5de5\u4f5c\u5355\u9884\u89c8'
         });
 
 
