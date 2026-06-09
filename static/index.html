@@ -15431,6 +15431,41 @@
             }
         }
 
+
+        async function dryRunProjectWorkspaceRealExecutionSafetyChain(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            const steps = [
+                [t('realExecutionModeGatePanelTitle'), () => dryRunProjectWorkspaceRealExecutionModeGate(safeProjectId)],
+                [t('realExecutionReadinessSummaryPanelTitle'), () => dryRunProjectWorkspaceRealExecutionReadinessSummary(safeProjectId)],
+                [t('realExecutionApprovalRequestPanelTitle'), () => dryRunProjectWorkspaceRealExecutionApprovalRequest(safeProjectId)],
+                [t('realExecutionApprovalDecisionPanelTitle'), () => dryRunProjectWorkspaceRealExecutionApprovalDecision(safeProjectId)],
+                [t('realExecutionLaunchAuthorizationPanelTitle'), () => dryRunProjectWorkspaceRealExecutionLaunchAuthorization(safeProjectId)],
+                [t('realExecutionLaunchMonitorPanelTitle'), () => dryRunProjectWorkspaceRealExecutionLaunchMonitor(safeProjectId)],
+                [t('realExecutionIncidentResponsePanelTitle'), () => dryRunProjectWorkspaceRealExecutionIncidentResponse(safeProjectId)]
+            ];
+
+            try {
+                if (status) status.textContent = t('realExecutionSafetyChainDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_real_execution_safety_chain_dry_run');
+
+                let finalPayload = null;
+                for (const [label, runStep] of steps) {
+                    if (status) status.textContent = `${t('realExecutionSafetyChainDryRunStep')}: ${label}`;
+                    finalPayload = await runStep();
+                }
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_real_execution_safety_chain_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_real_execution_safety_chain_dry_run');
+                if (status) status.textContent = t('realExecutionSafetyChainDryRunComplete');
+                return finalPayload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_safety_chain_dry_run');
+                if (status) status.textContent = error.message || t('realExecutionSafetyChainDryRunFailed');
+                throw error;
+            }
+        }
+
         function renderProjectWorkspaceRealExecutionIncidentResponsePanel(workspace = latestProjectWorkspace) {
             const incident = Object.keys(latestProjectRunnerRealExecutionIncidentResponsePreview || {}).length ? latestProjectRunnerRealExecutionIncidentResponsePreview : workspace?.runner_real_execution_incident_response_preview || {};
             const hasIncident = Boolean(incident && Object.keys(incident).length);
@@ -17460,6 +17495,7 @@
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
+                        <button class="btn-secondary" id="dryRunProjectWorkspaceRealExecutionSafetyChainBtn" type="button" data-project-real-execution-safety-chain-action="Project Workspace real execution safety chain action" onclick="dryRunProjectWorkspaceRealExecutionSafetyChain()">${escapeHTML(t('dryRunRealExecutionSafetyChain'))}</button>
                         <button class="btn-secondary" id="refreshProjectSummaryBtn" type="button" onclick="refreshProjectWorkspaceSummary()">${escapeHTML(t('refreshProjectSummary'))}</button>
                         <button class="btn-secondary" id="refreshProjectWorkspaceAndPlannerBtn" type="button" onclick="refreshProjectWorkspaceAndPlannerShortcut()">${escapeHTML(t('refreshWorkspaceAndPlanner'))}</button>
                     </div>
@@ -21160,6 +21196,23 @@
             realExecutionIncidentResponseDryRunFailed: 'Real execution incident response dry-run \u5931\u8d25\u3002',
             realExecutionIncidentResponseCopied: '\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94\u5df2\u590d\u5236\u3002',
             realExecutionIncidentResponseCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u5f02\u5e38\u54cd\u5e94\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            dryRunRealExecutionSafetyChain: 'Run real execution safety chain',
+            realExecutionSafetyChainDryRunRunning: 'Running real execution safety chain dry-run.',
+            realExecutionSafetyChainDryRunStep: 'Running safety step',
+            realExecutionSafetyChainDryRunComplete: 'Real execution safety chain dry-run complete.',
+            realExecutionSafetyChainDryRunFailed: 'Real execution safety chain dry-run failed.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            dryRunRealExecutionSafetyChain: '\u8fd0\u884c\u771f\u5b9e\u6267\u884c\u5b89\u5168\u94fe\u8def',
+            realExecutionSafetyChainDryRunRunning: '\u6b63\u5728\u8fd0\u884c real execution safety chain dry-run\u3002',
+            realExecutionSafetyChainDryRunStep: '\u6b63\u5728\u8fd0\u884c\u5b89\u5168\u6b65\u9aa4',
+            realExecutionSafetyChainDryRunComplete: 'Real execution safety chain dry-run \u5b8c\u6210\u3002',
+            realExecutionSafetyChainDryRunFailed: 'Real execution safety chain dry-run \u5931\u8d25\u3002'
         });
 
 
