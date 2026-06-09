@@ -4144,6 +4144,60 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_keyframe_video_asset_chain_report_connects_prompt_pack_and_manual_handoff(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_video_asset_chain_report,
+            build_multi_agent_output_chain_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_keyframe_video_asset_chain",
+            requested_by="unit_test",
+        )
+        report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_keyframe_video_asset_chain",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            report["keyframe_video_asset_chain_report_version"],
+            "keyframe_video_asset_chain_report_v1",
+        )
+        self.assertEqual(report["report_status"], "keyframe_video_asset_chain_ready_dry_run")
+        self.assertGreaterEqual(report["stage_count"], 6)
+        self.assertEqual(report["missing_stage_count"], 0)
+        self.assertTrue(report["multi_agent_output_chain_ready"])
+        self.assertTrue(report["supports_product_asset_lock"])
+        self.assertTrue(report["supports_keyframe_scene_plan"])
+        self.assertTrue(report["supports_prompt_handoff_pack"])
+        self.assertTrue(report["supports_manual_generation_handoff"])
+        self.assertTrue(report["supports_experiment_feedback_rework"])
+        self.assertTrue(report["supports_video_asset_export"])
+        self.assertTrue(report["provider_neutral_prompt_pack_ready"])
+        self.assertTrue(report["manual_generation_handoff_ready"])
+        self.assertTrue(report["image_reference_required"])
+        self.assertTrue(report["manual_review_required"])
+        self.assertTrue(report["human_approval_required_before_generation"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertFalse(report["provider_secret_required"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_multi_agent_output_chain_report_connects_ecommerce_output_stages(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

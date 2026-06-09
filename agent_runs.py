@@ -1997,6 +1997,161 @@ def build_multi_agent_output_chain_report(
     }
 
 
+
+KEYFRAME_VIDEO_ASSET_CHAIN_REPORT_VERSION = "keyframe_video_asset_chain_report_v1"
+
+KEYFRAME_VIDEO_ASSET_CHAIN_MATRIX = [
+    {
+        "stage_id": "product_asset_lock",
+        "stage_label": "Product Asset Lock",
+        "agent_id": "asset_lock_agent",
+        "required_inputs": ["storyboard", "product_name", "product_category", "uploaded_product_asset_optional"],
+        "expected_outputs": ["product_asset_lock_v2", "identity_constraints", "image_reference_rules"],
+        "handoff_targets": ["product_identity_validator", "keyframe_agent", "prompt_handoff_agent"],
+        "safety_boundaries": ["manual_image_reference_required", "preserve_product_identity", "block_product_drift"],
+    },
+    {
+        "stage_id": "keyframe_scene_plan",
+        "stage_label": "Keyframe Scene Plan",
+        "agent_id": "keyframe_agent",
+        "required_inputs": ["storyboard", "video_generation_packet", "product_asset_lock_v2"],
+        "expected_outputs": ["keyframe_plan", "keyframe_prompts", "motion_prompts", "overlay_text"],
+        "handoff_targets": ["prompt_handoff_agent", "experiment_agent"],
+        "safety_boundaries": ["review_each_keyframe_before_paid_generation", "one_short_test_clip_first", "preserve_quote_boundaries"],
+    },
+    {
+        "stage_id": "prompt_handoff_pack",
+        "stage_label": "Provider-neutral Prompt Handoff Pack",
+        "agent_id": "prompt_handoff_agent",
+        "required_inputs": ["keyframe_plan", "storyboard", "video_generation_packet", "product_asset_lock_v2"],
+        "expected_outputs": ["external_video_tool_handoff", "gemini_video_prompt", "doubao_video_prompt", "image_to_video_prompt", "copy_ready_generation_brief"],
+        "handoff_targets": ["provider_job_agent", "experiment_agent", "human_approval_agent"],
+        "safety_boundaries": ["manual_copy_paste_only", "no_external_api_call", "provider_neutral_prompt_pack"],
+    },
+    {
+        "stage_id": "manual_generation_handoff",
+        "stage_label": "Manual Generation Handoff",
+        "agent_id": "provider_job_agent",
+        "required_inputs": ["external_video_tool_handoff", "human_approval_gate", "provider_cost_boundary"],
+        "expected_outputs": ["provider_job_dry_run_packet", "manual_export_payload", "cost_estimate", "approval_boundary"],
+        "handoff_targets": ["experiment_agent", "finalizer_agent"],
+        "safety_boundaries": ["provider_call_blocked_by_default", "manual_export_only", "human_approval_required"],
+    },
+    {
+        "stage_id": "experiment_feedback_rework",
+        "stage_label": "Experiment Feedback Rework",
+        "agent_id": "experiment_agent",
+        "required_inputs": ["manual_external_result", "experiment_feedback", "keyframe_plan"],
+        "expected_outputs": ["revised_keyframe_plan", "revised_external_video_handoff", "rework_decision"],
+        "handoff_targets": ["prompt_handoff_agent", "asset_lock_agent"],
+        "safety_boundaries": ["rework_if_product_drift", "rework_if_storyboard_not_followed", "keep_manual_review_loop"],
+    },
+    {
+        "stage_id": "video_asset_export",
+        "stage_label": "Video Asset Export Readiness",
+        "agent_id": "finalizer_agent",
+        "required_inputs": ["external_video_tool_handoff", "keyframe_plan", "provider_job_dry_run_packet", "audit_trail"],
+        "expected_outputs": ["video_asset_export_pack", "prompt_pack_export", "keyframe_audit_trail", "workspace_export_summary"],
+        "handoff_targets": [],
+        "safety_boundaries": ["export_safe_prompts_only", "no_provider_secret_export", "no_hidden_source_claims"],
+    },
+]
+
+
+def build_keyframe_video_asset_chain_report(
+    *,
+    multi_agent_output_chain_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "keyframe_video_asset_chain_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run readiness report for keyframe/video asset generation.
+
+    This connects product identity lock, keyframe planning, provider-neutral
+    prompt packs, manual video tool handoff, experiment rework, and export
+    readiness. It does not generate images or video, call providers, call
+    external APIs, spend money, mutate state, or unlock real execution.
+    """
+
+    output_report = multi_agent_output_chain_report if isinstance(multi_agent_output_chain_report, dict) else {}
+    multi_agent_ready = (
+        str(output_report.get("report_status") or "") == "multi_agent_output_chain_ready_dry_run"
+        and int(output_report.get("missing_stage_count") or 0) == 0
+        and bool(output_report.get("supports_creative_to_video"))
+    )
+
+    stage_reports: list[dict[str, Any]] = []
+    for index, stage in enumerate(KEYFRAME_VIDEO_ASSET_CHAIN_MATRIX, start=1):
+        required_inputs = list(stage.get("required_inputs") or [])
+        expected_outputs = list(stage.get("expected_outputs") or [])
+        handoff_targets = list(stage.get("handoff_targets") or [])
+        safety_boundaries = list(stage.get("safety_boundaries") or [])
+
+        complete = bool(required_inputs and expected_outputs and safety_boundaries and multi_agent_ready)
+
+        stage_reports.append({
+            "stage_index": index,
+            "stage_id": str(stage.get("stage_id") or ""),
+            "stage_label": str(stage.get("stage_label") or ""),
+            "agent_id": str(stage.get("agent_id") or ""),
+            "required_inputs": required_inputs,
+            "expected_outputs": expected_outputs,
+            "handoff_targets": handoff_targets,
+            "safety_boundaries": safety_boundaries,
+            "complete": complete,
+            "ready_for_dry_run": complete,
+            "multi_agent_output_chain_ready": multi_agent_ready,
+            "requires_human_review": True,
+            "requires_image_reference_review": stage.get("stage_id") in {"product_asset_lock", "keyframe_scene_plan", "prompt_handoff_pack"},
+            "real_execution_allowed": False,
+            "provider_call_allowed": False,
+            "external_api_call_allowed": False,
+            "video_generation_performed": False,
+            "image_generation_performed": False,
+            "paid_generation_allowed": False,
+            "dry_run": True,
+        })
+
+    missing_stages = [item["stage_id"] for item in stage_reports if not item["complete"]]
+    complete_stages = [item["stage_id"] for item in stage_reports if item["complete"]]
+    report_status = "keyframe_video_asset_chain_ready_dry_run" if not missing_stages else "keyframe_video_asset_chain_incomplete"
+
+    return {
+        "keyframe_video_asset_chain_report_version": KEYFRAME_VIDEO_ASSET_CHAIN_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "keyframe_video_asset_chain_report_builder"),
+        "stage_count": len(stage_reports),
+        "complete_stage_count": len(complete_stages),
+        "missing_stage_count": len(missing_stages),
+        "complete_stages": complete_stages,
+        "missing_stages": missing_stages,
+        "stage_reports": stage_reports,
+        "multi_agent_output_chain_ready": multi_agent_ready,
+        "supports_product_asset_lock": "product_asset_lock" in complete_stages,
+        "supports_keyframe_scene_plan": "keyframe_scene_plan" in complete_stages,
+        "supports_prompt_handoff_pack": "prompt_handoff_pack" in complete_stages,
+        "supports_manual_generation_handoff": "manual_generation_handoff" in complete_stages,
+        "supports_experiment_feedback_rework": "experiment_feedback_rework" in complete_stages,
+        "supports_video_asset_export": "video_asset_export" in complete_stages,
+        "provider_neutral_prompt_pack_ready": "prompt_handoff_pack" in complete_stages,
+        "manual_generation_handoff_ready": "manual_generation_handoff" in complete_stages,
+        "image_reference_required": True,
+        "manual_review_required": True,
+        "recommended_next_state": "show_keyframe_video_asset_chain_in_workspace" if not missing_stages else "inspect_keyframe_video_asset_chain_contract_gaps",
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "provider_secret_required": False,
+        "provider_secret_exported": False,
+        "human_approval_required_before_generation": True,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

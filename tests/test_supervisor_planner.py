@@ -510,6 +510,39 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(
             payload["project"]["graph_summary"]["latest_multi_agent_output_supports_creative_to_video"]
         )
+        self.assertIn("keyframe_video_asset_chain_report", payload)
+        asset_chain = payload["keyframe_video_asset_chain_report"]
+        self.assertEqual(
+            asset_chain["keyframe_video_asset_chain_report_version"],
+            "keyframe_video_asset_chain_report_v1",
+        )
+        self.assertEqual(asset_chain["report_status"], "keyframe_video_asset_chain_ready_dry_run")
+        self.assertEqual(asset_chain["missing_stage_count"], 0)
+        self.assertTrue(asset_chain["supports_product_asset_lock"])
+        self.assertTrue(asset_chain["supports_keyframe_scene_plan"])
+        self.assertTrue(asset_chain["supports_prompt_handoff_pack"])
+        self.assertTrue(asset_chain["supports_manual_generation_handoff"])
+        self.assertTrue(asset_chain["provider_neutral_prompt_pack_ready"])
+        self.assertTrue(asset_chain["manual_generation_handoff_ready"])
+        self.assertTrue(asset_chain["image_reference_required"])
+        self.assertTrue(asset_chain["human_approval_required_before_generation"])
+        self.assertFalse(asset_chain["real_execution_allowed"])
+        self.assertFalse(asset_chain["provider_call_allowed"])
+        self.assertFalse(asset_chain["external_api_call_allowed"])
+        self.assertFalse(asset_chain["video_generation_performed"])
+        self.assertFalse(asset_chain["image_generation_performed"])
+        self.assertFalse(asset_chain["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_keyframe_video_asset_chain_status"],
+            "keyframe_video_asset_chain_ready_dry_run",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_keyframe_video_asset_missing_stage_count"],
+            0,
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_keyframe_video_asset_supports_manual_handoff"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

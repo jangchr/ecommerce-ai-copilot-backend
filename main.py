@@ -66,6 +66,7 @@ from agent_runs import (
     build_agent_contract_completeness_report,
     build_source_adapter_contract_report,
     build_multi_agent_output_chain_report,
+    build_keyframe_video_asset_chain_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6225,6 +6226,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    keyframe_video_asset_chain_report = build_keyframe_video_asset_chain_report(
+        multi_agent_output_chain_report=multi_agent_output_chain_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6265,6 +6271,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_multi_agent_output_complete_stage_count": int(multi_agent_output_chain_report.get("complete_stage_count") or 0),
         "latest_multi_agent_output_missing_stage_count": int(multi_agent_output_chain_report.get("missing_stage_count") or 0),
         "latest_multi_agent_output_supports_creative_to_video": bool(multi_agent_output_chain_report.get("supports_creative_to_video")),
+        "latest_keyframe_video_asset_chain_status": keyframe_video_asset_chain_report.get("report_status", ""),
+        "latest_keyframe_video_asset_complete_stage_count": int(keyframe_video_asset_chain_report.get("complete_stage_count") or 0),
+        "latest_keyframe_video_asset_missing_stage_count": int(keyframe_video_asset_chain_report.get("missing_stage_count") or 0),
+        "latest_keyframe_video_asset_supports_manual_handoff": bool(keyframe_video_asset_chain_report.get("supports_manual_generation_handoff")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6287,6 +6297,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "agent_contract_completeness_report": agent_contract_completeness_report,
         "source_adapter_contract_report": source_adapter_contract_report,
         "multi_agent_output_chain_report": multi_agent_output_chain_report,
+        "keyframe_video_asset_chain_report": keyframe_video_asset_chain_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
