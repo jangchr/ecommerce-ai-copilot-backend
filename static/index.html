@@ -542,6 +542,108 @@
             color: var(--text-secondary);
             line-height: 1.45;
         }
+
+        .business-scenario-demo-strip {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 18px;
+        }
+        .business-scenario-demo-shell {
+            background: linear-gradient(135deg, rgba(0,122,255,0.08), rgba(88,86,214,0.08));
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+        .business-scenario-demo-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .business-scenario-demo-header h3 {
+            margin: 0 0 6px;
+            color: var(--text-primary);
+        }
+        .business-scenario-demo-header p {
+            margin: 0;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            max-width: 860px;
+        }
+        .business-scenario-demo-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .business-scenario-demo-step {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 142px;
+        }
+        .business-scenario-demo-step-number {
+            display: inline-flex;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 122, 255, 0.12);
+            color: var(--accent-blue);
+            font-weight: 800;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .business-scenario-demo-step strong {
+            display: block;
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.35;
+            margin-bottom: 6px;
+        }
+        .business-scenario-demo-step p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .business-scenario-demo-outcome {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 14px;
+        }
+        .business-scenario-demo-outcome strong {
+            color: var(--text-primary);
+        }
+        .business-scenario-demo-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        @media (max-width: 1100px) {
+            .business-scenario-demo-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 720px) {
+            .business-scenario-demo-header,
+            .business-scenario-demo-outcome {
+                display: grid;
+            }
+            .business-scenario-demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .active-workspace-panel {
             max-width: 1400px;
             margin: 0 auto;
@@ -2422,6 +2524,60 @@
             </div>
         </section>
 
+        <section class="business-scenario-demo-strip" id="businessScenarioDemoStrip">
+            <div class="business-scenario-demo-shell">
+                <div class="business-scenario-demo-header">
+                    <div>
+                        <h3 data-i18n="businessScenarioDemoTitle">Business scenario demo: ecommerce reviews to multi-agent creative output</h3>
+                        <p data-i18n="businessScenarioDemoSubtitle">Use this strip to explain the demo path inside the existing page: product URL or review evidence, Supervisor planning, specialist agents, creative output, safety approval, dry-run protection, and Workspace trace.</p>
+                    </div>
+                    <span class="source-badge" data-i18n="businessScenarioDemoBadge">Multi-agent demo path</span>
+                </div>
+                <div class="business-scenario-demo-grid">
+                    <div class="business-scenario-demo-step">
+                        <span class="business-scenario-demo-step-number">1</span>
+                        <strong data-i18n="businessDemoStepInputTitle">Product URL / review evidence</strong>
+                        <p data-i18n="businessDemoStepInputBody">Start from Amazon, Shopify, an independent store, browser-extension captures, or pasted buyer feedback.</p>
+                    </div>
+                    <div class="business-scenario-demo-step">
+                        <span class="business-scenario-demo-step-number">2</span>
+                        <strong data-i18n="businessDemoStepSupervisorTitle">Supervisor Agent plans the work</strong>
+                        <p data-i18n="businessDemoStepSupervisorBody">Supervisor turns the business input into a runner plan and decides which specialist Agent should act next.</p>
+                    </div>
+                    <div class="business-scenario-demo-step">
+                        <span class="business-scenario-demo-step-number">3</span>
+                        <strong data-i18n="businessDemoStepAgentsTitle">Evidence / Strategy / Creative Agents</strong>
+                        <p data-i18n="businessDemoStepAgentsBody">Evidence extracts buyer pain points, Strategy picks the audience and angle, and Creative writes the ad script.</p>
+                    </div>
+                    <div class="business-scenario-demo-step">
+                        <span class="business-scenario-demo-step-number">4</span>
+                        <strong data-i18n="businessDemoStepCreativeTitle">Storyboard and video materials</strong>
+                        <p data-i18n="businessDemoStepCreativeBody">Video / Generation prepares short-video scenes, keyframe prompts, captions, hooks, and asset direction.</p>
+                    </div>
+                    <div class="business-scenario-demo-step">
+                        <span class="business-scenario-demo-step-number">5</span>
+                        <strong data-i18n="businessDemoStepRiskTitle">Risk approval and dry-run gate</strong>
+                        <p data-i18n="businessDemoStepRiskBody">Risk / Approval checks approval gate, release guard, launch lock, tripwire, health probe, and abort plan before real execution.</p>
+                    </div>
+                    <div class="business-scenario-demo-step">
+                        <span class="business-scenario-demo-step-number">6</span>
+                        <strong data-i18n="businessDemoStepWorkspaceTitle">Workspace trace and audit trail</strong>
+                        <p data-i18n="businessDemoStepWorkspaceBody">Workspace keeps the plan, dispatch ticket, generated output, approval state, and audit trail visible.</p>
+                    </div>
+                </div>
+                <div class="business-scenario-demo-outcome">
+                    <div>
+                        <strong data-i18n="businessDemoOutcomeTitle">What this proves in the demo</strong>
+                        <div class="field-helper" data-i18n="businessDemoOutcomeBody">CrossGrowth is not a single prompt wrapper. It is a traceable ecommerce multi-agent system that turns grounded buyer evidence into safe creative production.</div>
+                    </div>
+                    <div class="business-scenario-demo-actions">
+                        <button class="btn-secondary" type="button" onclick="copyBusinessScenarioDemoScript()" data-i18n="businessDemoCopyScript">Copy interview demo script</button>
+                        <span class="field-helper" id="businessScenarioDemoCopyStatus" aria-live="polite"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="active-workspace-panel" id="activeWorkspacePanel">
             <div class="active-workspace-shell">
                 <div class="workspace-panel" id="amazonProductWorkspace"></div>
@@ -3662,6 +3818,32 @@
                 waitlistBody: 'Want to use this for your own products? Join the waitlist for product-description input, saved history, more product sources, and future commercial plans.',
                 workflowPathTitle: 'Choose your workflow path',
                 workflowPathSubtitle: 'Pick the task you have today. Only the active workspace is shown, and the result appears directly below it.',
+                businessScenarioDemoBadge: 'Multi-agent demo path',
+                businessScenarioDemoTitle: 'Business scenario demo: ecommerce reviews to multi-agent creative output',
+                businessScenarioDemoSubtitle: 'Use this strip to explain the demo path inside the existing page: product URL or review evidence, Supervisor planning, specialist agents, creative output, safety approval, dry-run protection, and Workspace trace.',
+                businessDemoStepInputTitle: 'Product URL / review evidence',
+                businessDemoStepInputBody: 'Start from Amazon, Shopify, an independent store, browser-extension captures, or pasted buyer feedback.',
+                businessDemoStepSupervisorTitle: 'Supervisor Agent plans the work',
+                businessDemoStepSupervisorBody: 'Supervisor turns the business input into a runner plan and decides which specialist Agent should act next.',
+                businessDemoStepAgentsTitle: 'Evidence / Strategy / Creative Agents',
+                businessDemoStepAgentsBody: 'Evidence extracts buyer pain points, Strategy picks the audience and angle, and Creative writes the ad script.',
+                businessDemoStepCreativeTitle: 'Storyboard and video materials',
+                businessDemoStepCreativeBody: 'Video / Generation prepares short-video scenes, keyframe prompts, captions, hooks, and asset direction.',
+                businessDemoStepRiskTitle: 'Risk approval and dry-run gate',
+                businessDemoStepRiskBody: 'Risk / Approval checks approval gate, release guard, launch lock, tripwire, health probe, and abort plan before real execution.',
+                businessDemoStepWorkspaceTitle: 'Workspace trace and audit trail',
+                businessDemoStepWorkspaceBody: 'Workspace keeps the plan, dispatch ticket, generated output, approval state, and audit trail visible.',
+                businessDemoOutcomeTitle: 'What this proves in the demo',
+                businessDemoOutcomeBody: 'CrossGrowth is not a single prompt wrapper. It is a traceable ecommerce multi-agent system that turns grounded buyer evidence into safe creative production.',
+                businessDemoCopyScript: 'Copy interview demo script',
+                businessDemoScriptCopied: 'Interview demo script copied.',
+                businessDemoScriptCopyFailed: 'Could not copy interview demo script.',
+                businessDemoScriptLineOne: 'CrossGrowth is a multi-agent ecommerce creative system, not a single prompt workflow.',
+                businessDemoScriptLineTwo: 'The business input is an Amazon, Shopify, or independent-store product URL plus visible review evidence.',
+                businessDemoScriptLineThree: 'Supervisor Agent turns that evidence into a runner plan and assigns Evidence, Strategy, Creative, Video / Generation, and Risk / Approval Agents.',
+                businessDemoScriptLineFour: 'Evidence extracts buyer pain points and quotes; Strategy chooses the audience and angle; Creative writes the TikTok hook and storyboard; Video / Generation prepares keyframe prompts and video materials.',
+                businessDemoScriptLineFive: 'Risk / Approval keeps real provider calls in dry-run unless approval gate, release guard, launch lock, tripwire, health probe, and abort plan are satisfied.',
+                businessDemoScriptLineSix: 'Workspace records the plan, dispatch ticket, output, approval state, and audit trail so the result is explainable and traceable.',
                 userTaskFlowBadge: 'User-task flow',
                 pathAmazonProductTitle: 'I have an Amazon product link',
 
@@ -4620,6 +4802,32 @@
                 waitlistBody: '想把它用在你自己的产品上？加入试用名单，后续优先体验产品描述输入、历史记录、更多产品来源和商业版本。',
                 workflowPathTitle: '选择你的生成方式',
                 workflowPathSubtitle: '根据你手上已有的素材选择一条路径。页面只展示当前路径，生成结果会直接出现在这里。',
+                businessScenarioDemoBadge: '\u591a Agent \u6f14\u793a\u94fe\u8def',
+                businessScenarioDemoTitle: '\u4e1a\u52a1\u573a\u666f Demo\uff1a\u4ece\u7535\u5546\u8bc4\u8bba\u5230\u591a Agent \u521b\u610f\u8f93\u51fa',
+                businessScenarioDemoSubtitle: '\u7528\u8fd9\u4e00\u6bb5\u5728\u73b0\u6709\u9875\u9762\u91cc\u8bb2\u6e05\u695a\u6f14\u793a\u94fe\u8def\uff1a\u5546\u54c1 URL \u6216\u8bc4\u8bba\u8bc1\u636e\uff0cSupervisor \u89c4\u5212\uff0c\u4e13\u4e1a Agent \u5206\u5de5\uff0c\u521b\u610f\u8f93\u51fa\uff0c\u98ce\u9669\u5ba1\u6279\uff0cdry-run \u4fdd\u62a4\uff0c\u4ee5\u53ca Workspace \u7559\u75d5\u3002',
+                businessDemoStepInputTitle: '\u5546\u54c1 URL / \u8bc4\u8bba\u8bc1\u636e',
+                businessDemoStepInputBody: '\u53ef\u4ee5\u4ece Amazon\u3001Shopify\u3001\u72ec\u7acb\u7ad9\u3001\u6d4f\u89c8\u5668\u63d2\u4ef6\u91c7\u96c6\u6216\u7c98\u8d34\u4e70\u5bb6\u53cd\u9988\u5f00\u59cb\u3002',
+                businessDemoStepSupervisorTitle: 'Supervisor Agent \u89c4\u5212\u4efb\u52a1',
+                businessDemoStepSupervisorBody: 'Supervisor \u628a\u4e1a\u52a1\u8f93\u5165\u8f6c\u6210 runner plan\uff0c\u5e76\u51b3\u5b9a\u4e0b\u4e00\u4e2a\u8be5\u54ea\u4e2a\u4e13\u4e1a Agent \u6267\u884c\u3002',
+                businessDemoStepAgentsTitle: 'Evidence / Strategy / Creative Agents',
+                businessDemoStepAgentsBody: 'Evidence \u63d0\u53d6\u4e70\u5bb6\u75db\u70b9\uff0cStrategy \u5224\u65ad\u53d7\u4f17\u548c\u89d2\u5ea6\uff0cCreative \u751f\u6210\u5e7f\u544a\u811a\u672c\u3002',
+                businessDemoStepCreativeTitle: '\u5206\u955c\u548c\u89c6\u9891\u7d20\u6750',
+                businessDemoStepCreativeBody: 'Video / Generation \u51c6\u5907\u77ed\u89c6\u9891\u5206\u955c\u3001\u5173\u952e\u5e27\u63d0\u793a\u8bcd\u3001\u5b57\u5e55\u3001hook \u548c\u7d20\u6750\u65b9\u5411\u3002',
+                businessDemoStepRiskTitle: '\u98ce\u9669\u5ba1\u6279\u548c dry-run \u95f8\u95e8',
+                businessDemoStepRiskBody: 'Risk / Approval \u5728\u771f\u5b9e\u6267\u884c\u524d\u68c0\u67e5 approval gate\u3001release guard\u3001launch lock\u3001tripwire\u3001health probe \u548c abort plan\u3002',
+                businessDemoStepWorkspaceTitle: 'Workspace \u7559\u75d5\u548c\u5ba1\u8ba1\u8bb0\u5f55',
+                businessDemoStepWorkspaceBody: 'Workspace \u628a\u8ba1\u5212\u3001dispatch ticket\u3001\u751f\u6210\u7ed3\u679c\u3001\u5ba1\u6279\u72b6\u6001\u548c\u5ba1\u8ba1\u94fe\u8def\u5c55\u793a\u51fa\u6765\u3002',
+                businessDemoOutcomeTitle: '\u8fd9\u4e2a Demo \u8981\u8bc1\u660e\u4ec0\u4e48',
+                businessDemoOutcomeBody: 'CrossGrowth \u4e0d\u662f\u5355 prompt \u5305\u88c5\u5668\uff0c\u800c\u662f\u4e00\u4e2a\u53ef\u8ffd\u8e2a\u7684\u7535\u5546\u591a Agent \u7cfb\u7edf\uff0c\u80fd\u628a\u6709\u8bc1\u636e\u7684\u4e70\u5bb6\u8bed\u8a00\u8f6c\u6210\u5b89\u5168\u7684\u521b\u610f\u751f\u4ea7\u3002',
+                businessDemoCopyScript: '\u590d\u5236\u9762\u8bd5\u6f14\u793a\u8bb2\u7a3f',
+                businessDemoScriptCopied: '\u9762\u8bd5\u6f14\u793a\u8bb2\u7a3f\u5df2\u590d\u5236\u3002',
+                businessDemoScriptCopyFailed: '\u65e0\u6cd5\u590d\u5236\u9762\u8bd5\u6f14\u793a\u8bb2\u7a3f\u3002',
+                businessDemoScriptLineOne: 'CrossGrowth \u662f\u4e00\u4e2a\u9762\u5411\u7535\u5546\u521b\u610f\u751f\u4ea7\u7684\u591a Agent \u7cfb\u7edf\uff0c\u4e0d\u662f\u5355 prompt workflow\u3002',
+                businessDemoScriptLineTwo: '\u5b83\u7684\u4e1a\u52a1\u8f93\u5165\u662f Amazon\u3001Shopify \u6216\u72ec\u7acb\u7ad9\u7684\u5546\u54c1 URL\uff0c\u52a0\u4e0a\u5f53\u524d\u53ef\u89c1\u7684\u8bc4\u8bba\u8bc1\u636e\u3002',
+                businessDemoScriptLineThree: 'Supervisor Agent \u628a\u8bc1\u636e\u8f6c\u6210 runner plan\uff0c\u518d\u5206\u6d3e\u7ed9 Evidence\u3001Strategy\u3001Creative\u3001Video / Generation \u548c Risk / Approval Agents\u3002',
+                businessDemoScriptLineFour: 'Evidence \u63d0\u53d6\u4e70\u5bb6\u75db\u70b9\u548c\u539f\u8bdd\uff1bStrategy \u9009\u53d7\u4f17\u548c\u8425\u9500\u89d2\u5ea6\uff1bCreative \u5199 TikTok hook \u548c\u5206\u955c\uff1bVideo / Generation \u51c6\u5907\u5173\u952e\u5e27 prompt \u548c\u89c6\u9891\u7d20\u6750\u3002',
+                businessDemoScriptLineFive: 'Risk / Approval \u4f1a\u628a\u771f\u5b9e provider \u8c03\u7528\u7559\u5728 dry-run\uff0c\u9664\u975e approval gate\u3001release guard\u3001launch lock\u3001tripwire\u3001health probe \u548c abort plan \u90fd\u6ee1\u8db3\u3002',
+                businessDemoScriptLineSix: 'Workspace \u8bb0\u5f55\u8ba1\u5212\u3001dispatch ticket\u3001\u8f93\u51fa\u3001\u5ba1\u6279\u72b6\u6001\u548c\u5ba1\u8ba1\u94fe\u8def\uff0c\u6240\u4ee5\u7ed3\u679c\u662f\u53ef\u89e3\u91ca\u3001\u53ef\u8ffd\u8e2a\u7684\u3002',
                 userTaskFlowBadge: '用户任务流程',
                 pathAmazonProductTitle: '\u6211\u6709 Amazon \u5546\u54c1\u94fe\u63a5',
 
@@ -11462,6 +11670,31 @@
         }
 
 
+
+
+        function businessScenarioDemoScriptText() {
+            return [
+                t('businessDemoScriptLineOne'),
+                t('businessDemoScriptLineTwo'),
+                t('businessDemoScriptLineThree'),
+                t('businessDemoScriptLineFour'),
+                t('businessDemoScriptLineFive'),
+                t('businessDemoScriptLineSix')
+            ].join('\n');
+        }
+
+        async function copyBusinessScenarioDemoScript() {
+            const status = document.getElementById('businessScenarioDemoCopyStatus');
+            try {
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('businessDemoScriptCopyFailed'));
+                }
+                await navigator.clipboard.writeText(businessScenarioDemoScriptText());
+                if (status) status.textContent = t('businessDemoScriptCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('businessDemoScriptCopyFailed');
+            }
+        }
 
         const PROJECT_WORKSPACE_RUNNER_PLAN_PANEL_BUNDLE_MARKER = 'Project Workspace runner plan panel bundle';
         let latestProjectRunnerPlan = {};
