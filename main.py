@@ -11027,6 +11027,175 @@ async def dry_run_project_agent_capability_invocation_gate(project_id: str, http
     }
 
 
+
+def _runner_capability_invocation_runbook_preview(rehearsal_payload: dict) -> dict:
+    rehearsal = dict(rehearsal_payload.get("runner_capability_invocation_runtime_rehearsal_preview") or {})
+    ledger = dict(rehearsal_payload.get("runner_capability_invocation_attempt_ledger_preview") or {})
+    receipt = dict(rehearsal_payload.get("runner_capability_invocation_rehearsal_receipt_preview") or {})
+    project_id = str(rehearsal_payload.get("project", {}).get("project_id") or rehearsal_payload.get("project_id") or "demo_project_default")
+
+    runbook_steps = [
+        {
+            "runbook_step_id": "review_capability_gate",
+            "title": "Review capability invocation gate",
+            "status": "required",
+            "blocking": True,
+        },
+        {
+            "runbook_step_id": "capture_operator_approval",
+            "title": "Capture explicit operator approval",
+            "status": "missing",
+            "blocking": True,
+        },
+        {
+            "runbook_step_id": "reserve_quota_and_budget",
+            "title": "Reserve quota and budget",
+            "status": "missing",
+            "blocking": True,
+        },
+        {
+            "runbook_step_id": "open_sandbox_session",
+            "title": "Open sandbox session",
+            "status": "missing",
+            "blocking": True,
+        },
+        {
+            "runbook_step_id": "prepare_rollback_plan",
+            "title": "Prepare rollback plan",
+            "status": "missing",
+            "blocking": True,
+        },
+        {
+            "runbook_step_id": "record_attempt_ledger",
+            "title": "Record dry-run attempt ledger",
+            "status": "preview_recorded",
+            "blocking": False,
+        },
+    ]
+    blocking_step_ids = [
+        item["runbook_step_id"]
+        for item in runbook_steps
+        if item.get("blocking") and item.get("status") != "complete"
+    ]
+
+    return {
+        "capability_invocation_runbook_version": "runner_capability_invocation_runbook_preview_v1",
+        "capability_invocation_runbook_status": "capability_invocation_runbook_blocked",
+        "project_id": project_id,
+        "runtime_rehearsal_status": rehearsal.get("capability_invocation_runtime_rehearsal_status", ""),
+        "attempt_ledger_status": ledger.get("capability_invocation_attempt_ledger_status", ""),
+        "rehearsal_receipt_status": receipt.get("capability_invocation_rehearsal_receipt_status", ""),
+        "runbook_steps": runbook_steps,
+        "runbook_step_count": len(runbook_steps),
+        "blocking_step_ids": blocking_step_ids,
+        "blocking_step_count": len(blocking_step_ids),
+        "real_invocation_ready": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_operator_review_packet_preview(runbook: dict) -> dict:
+    project_id = str(runbook.get("project_id") or "demo_project_default")
+    review_items = [
+        {
+            "review_item_id": "risk_summary",
+            "status": "required",
+            "message": "Review blocked runbook steps before any real invocation.",
+        },
+        {
+            "review_item_id": "missing_authorizations",
+            "status": "required",
+            "message": "Operator approval, quota, sandbox, and rollback references are still missing.",
+        },
+        {
+            "review_item_id": "dry_run_boundary",
+            "status": "passed",
+            "message": "Dry-run boundary prevented provider calls and real execution.",
+        },
+        {
+            "review_item_id": "audit_trail",
+            "status": "preview_recorded",
+            "message": "Runbook preview can be copied into an approval record.",
+        },
+    ]
+    return {
+        "capability_invocation_operator_review_packet_version": "runner_capability_invocation_operator_review_packet_preview_v1",
+        "capability_invocation_operator_review_packet_status": "operator_review_required",
+        "project_id": project_id,
+        "review_items": review_items,
+        "review_item_count": len(review_items),
+        "blocking_step_ids": list(runbook.get("blocking_step_ids") or []),
+        "manual_review_required": True,
+        "operator_approval_captured": False,
+        "real_invocation_ready": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_release_guard_preview(
+    runbook: dict,
+    operator_review_packet: dict,
+) -> dict:
+    guard_checks = [
+        {
+            "guard_check_id": "runbook_unblocked",
+            "passed": not bool(runbook.get("blocking_step_ids")),
+            "blocking": True,
+        },
+        {
+            "guard_check_id": "operator_review_completed",
+            "passed": bool(operator_review_packet.get("operator_approval_captured")),
+            "blocking": True,
+        },
+        {
+            "guard_check_id": "real_invocation_disabled",
+            "passed": not bool(runbook.get("real_execution_enabled")),
+            "blocking": False,
+        },
+        {
+            "guard_check_id": "provider_call_not_performed",
+            "passed": not bool(runbook.get("provider_call_performed")),
+            "blocking": False,
+        },
+    ]
+    blocking_guard_check_ids = [
+        item["guard_check_id"]
+        for item in guard_checks
+        if item.get("blocking") and not item.get("passed")
+    ]
+    return {
+        "capability_invocation_release_guard_version": "runner_capability_invocation_release_guard_preview_v1",
+        "capability_invocation_release_guard_status": "release_guard_blocked",
+        "project_id": runbook.get("project_id", "demo_project_default"),
+        "runbook_status": runbook.get("capability_invocation_runbook_status", ""),
+        "operator_review_packet_status": operator_review_packet.get("capability_invocation_operator_review_packet_status", ""),
+        "guard_checks": guard_checks,
+        "guard_check_count": len(guard_checks),
+        "blocking_guard_check_ids": blocking_guard_check_ids,
+        "blocking_guard_check_count": len(blocking_guard_check_ids),
+        "release_allowed": False,
+        "real_invocation_ready": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/capability-invocation-rehearsal/dry-run")
 async def dry_run_project_agent_capability_invocation_rehearsal(project_id: str, http_request: Request):
     invocation_gate_payload = await dry_run_project_agent_capability_invocation_gate(project_id, http_request)
@@ -11064,6 +11233,53 @@ async def dry_run_project_agent_capability_invocation_rehearsal(project_id: str,
         "capability_invocation_allowed": False,
         "runtime_rehearsal_allowed": False,
         "adapter_invocation_attempted": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/capability-invocation-runbook/dry-run")
+async def dry_run_project_agent_capability_invocation_runbook(project_id: str, http_request: Request):
+    rehearsal_payload = await dry_run_project_agent_capability_invocation_rehearsal(project_id, http_request)
+
+    runner_capability_invocation_runbook_preview = _runner_capability_invocation_runbook_preview(rehearsal_payload)
+    runner_capability_invocation_operator_review_packet_preview = _runner_capability_invocation_operator_review_packet_preview(
+        runner_capability_invocation_runbook_preview
+    )
+    runner_capability_invocation_release_guard_preview = _runner_capability_invocation_release_guard_preview(
+        runner_capability_invocation_runbook_preview,
+        runner_capability_invocation_operator_review_packet_preview,
+    )
+
+    project = rehearsal_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_capability_invocation_runbook_status": runner_capability_invocation_runbook_preview["capability_invocation_runbook_status"],
+        "latest_runner_capability_invocation_operator_review_packet_status": runner_capability_invocation_operator_review_packet_preview["capability_invocation_operator_review_packet_status"],
+        "latest_runner_capability_invocation_release_guard_status": runner_capability_invocation_release_guard_preview["capability_invocation_release_guard_status"],
+        "latest_runner_capability_invocation_release_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **rehearsal_payload,
+        "project": project,
+        "runner_capability_invocation_runbook_preview": runner_capability_invocation_runbook_preview,
+        "runner_capability_invocation_operator_review_packet_preview": runner_capability_invocation_operator_review_packet_preview,
+        "runner_capability_invocation_release_guard_preview": runner_capability_invocation_release_guard_preview,
+        "dry_run": True,
+        "release_allowed": False,
+        "real_invocation_ready": False,
+        "capability_invocation_allowed": False,
         "provider_call_performed": False,
         "external_api_called": False,
         "agent_execution_performed": False,

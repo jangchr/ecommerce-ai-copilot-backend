@@ -1816,3 +1816,37 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             receipt["capability_invocation_rehearsal_receipt_status"],
         )
 
+    def test_project_runner_capability_invocation_runbook_dry_run_endpoint_returns_blocked_release_guard(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/capability-invocation-runbook/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["real_invocation_ready"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        runbook = payload["runner_capability_invocation_runbook_preview"]
+        review = payload["runner_capability_invocation_operator_review_packet_preview"]
+        guard = payload["runner_capability_invocation_release_guard_preview"]
+
+        self.assertEqual(runbook["capability_invocation_runbook_status"], "capability_invocation_runbook_blocked")
+        self.assertGreater(runbook["blocking_step_count"], 0)
+        self.assertEqual(review["capability_invocation_operator_review_packet_status"], "operator_review_required")
+        self.assertFalse(review["operator_approval_captured"])
+        self.assertEqual(guard["capability_invocation_release_guard_status"], "release_guard_blocked")
+        self.assertFalse(guard["release_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_capability_invocation_release_guard_status"],
+            guard["capability_invocation_release_guard_status"],
+        )
+

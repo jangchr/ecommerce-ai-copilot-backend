@@ -6057,3 +6057,43 @@ class ProjectWorkspaceCapabilityInvocationRehearsalPanelFrontendTests(unittest.T
         self.assertIn("Project Workspace capability invocation rehearsal panel bundle", script)
         self.assertIn("project_workspace_capability_invocation_rehearsal_panel_marker", script)
 
+
+class ProjectWorkspaceCapabilityInvocationRunbookPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_capability_invocation_runbook_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace capability invocation runbook panel bundle",
+            "PROJECT_WORKSPACE_CAPABILITY_INVOCATION_RUNBOOK_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceCapabilityInvocationRunbookPanel(",
+            "function projectWorkspaceCapabilityInvocationRunbookCopyText(",
+            "async function copyProjectWorkspaceCapabilityInvocationRunbook(",
+            "async function dryRunProjectWorkspaceCapabilityInvocationRunbook(",
+            "/runner/capability-invocation-runbook/dry-run",
+            "latestProjectRunnerCapabilityInvocationRunbookPreview",
+            "latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview",
+            "latestProjectRunnerCapabilityInvocationReleaseGuardPreview",
+            "projectWorkspaceCapabilityInvocationRunbookPanel",
+            "projectWorkspaceCapabilityInvocationRunbookStatus",
+            "dryRunProjectWorkspaceCapabilityInvocationRunbookBtn",
+            "copyProjectWorkspaceCapabilityInvocationRunbookBtn",
+            "data-project-capability-invocation-runbook-panel-marker",
+            "data-project-capability-invocation-runbook-dry-run-action",
+            "data-capability-invocation-runbook-audit-preview",
+            "capabilityInvocationRunbookPanelTitle",
+            "capabilityInvocationRunbookPanelHelper",
+            "renderProjectWorkspaceCapabilityInvocationRunbookPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_capability_invocation_runbook_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_capability_invocation_runbook_panel_marker", script)
+        self.assertIn("Project Workspace capability invocation runbook panel bundle", script)
+
+    def test_project_workspace_capability_invocation_runbook_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace capability invocation runbook panel bundle", script)
+        self.assertIn("project_workspace_capability_invocation_runbook_panel_marker", script)
+

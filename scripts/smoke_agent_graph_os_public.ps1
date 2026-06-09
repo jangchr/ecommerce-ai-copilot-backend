@@ -87,6 +87,7 @@ Add-Check "project_workspace_provider_observability_panel_marker" ($page.Content
 Add-Check "project_workspace_capability_binding_panel_marker" ($page.Content -match "Project Workspace capability binding panel bundle")
 Add-Check "project_workspace_capability_invocation_gate_panel_marker" ($page.Content -match "Project Workspace capability invocation gate panel bundle")
 Add-Check "project_workspace_capability_invocation_rehearsal_panel_marker" ($page.Content -match "Project Workspace capability invocation rehearsal panel bundle")
+Add-Check "project_workspace_capability_invocation_runbook_panel_marker" ($page.Content -match "Project Workspace capability invocation runbook panel bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
 Add-Check "project_workspace_authorization_manifest_panel_marker" ($page.Content -match "Project Workspace authorization manifest panel bundle")

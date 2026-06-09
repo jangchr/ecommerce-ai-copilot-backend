@@ -14915,6 +14915,119 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_CAPABILITY_INVOCATION_RUNBOOK_PANEL_BUNDLE_MARKER = 'Project Workspace capability invocation runbook panel bundle';
+        let latestProjectRunnerCapabilityInvocationRunbookPreview = {};
+        let latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview = {};
+        let latestProjectRunnerCapabilityInvocationReleaseGuardPreview = {};
+
+        function projectWorkspaceCapabilityInvocationRunbookCopyText(workspace = latestProjectWorkspace) {
+            const runbook = Object.keys(latestProjectRunnerCapabilityInvocationRunbookPreview || {}).length ? latestProjectRunnerCapabilityInvocationRunbookPreview : workspace?.runner_capability_invocation_runbook_preview || {};
+            const review = Object.keys(latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview : workspace?.runner_capability_invocation_operator_review_packet_preview || {};
+            const guard = Object.keys(latestProjectRunnerCapabilityInvocationReleaseGuardPreview || {}).length ? latestProjectRunnerCapabilityInvocationReleaseGuardPreview : workspace?.runner_capability_invocation_release_guard_preview || {};
+            return [
+                t('capabilityInvocationRunbookCopyTitle'),
+                `${t('capabilityInvocationRunbookStatus')}: ${runbook.capability_invocation_runbook_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationOperatorReviewPacketStatus')}: ${review.capability_invocation_operator_review_packet_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationReleaseGuardStatus')}: ${guard.capability_invocation_release_guard_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationReleaseAllowed')}: ${Boolean(guard.release_allowed)}`,
+                '',
+                JSON.stringify({ runbook, review, guard }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCapabilityInvocationRunbook() {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationRunbookStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceCapabilityInvocationRunbookCopyText());
+                if (status) status.textContent = t('capabilityInvocationRunbookCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('capabilityInvocationRunbookCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceCapabilityInvocationRunbook(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationRunbookStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('capabilityInvocationRunbookDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_capability_invocation_runbook_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/capability-invocation-runbook/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('capabilityInvocationRunbookDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview = payload.runner_capability_invocation_runtime_rehearsal_preview || {};
+                latestProjectRunnerCapabilityInvocationAttemptLedgerPreview = payload.runner_capability_invocation_attempt_ledger_preview || {};
+                latestProjectRunnerCapabilityInvocationRehearsalReceiptPreview = payload.runner_capability_invocation_rehearsal_receipt_preview || {};
+                latestProjectRunnerCapabilityInvocationRunbookPreview = payload.runner_capability_invocation_runbook_preview || {};
+                latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview = payload.runner_capability_invocation_operator_review_packet_preview || {};
+                latestProjectRunnerCapabilityInvocationReleaseGuardPreview = payload.runner_capability_invocation_release_guard_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_capability_invocation_runbook_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_capability_invocation_runbook_dry_run');
+                if (status) status.textContent = t('capabilityInvocationRunbookDryRunComplete');
+
+                const rehearsalPanel = document.getElementById('projectWorkspaceCapabilityInvocationRehearsalPanel');
+                if (rehearsalPanel) rehearsalPanel.outerHTML = renderProjectWorkspaceCapabilityInvocationRehearsalPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceCapabilityInvocationRunbookPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceCapabilityInvocationRunbookPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_capability_invocation_runbook_dry_run');
+                if (status) status.textContent = error.message || t('capabilityInvocationRunbookDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceCapabilityInvocationRunbookPanel(workspace = latestProjectWorkspace) {
+            const runbook = Object.keys(latestProjectRunnerCapabilityInvocationRunbookPreview || {}).length ? latestProjectRunnerCapabilityInvocationRunbookPreview : workspace?.runner_capability_invocation_runbook_preview || {};
+            const review = Object.keys(latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationOperatorReviewPacketPreview : workspace?.runner_capability_invocation_operator_review_packet_preview || {};
+            const guard = Object.keys(latestProjectRunnerCapabilityInvocationReleaseGuardPreview || {}).length ? latestProjectRunnerCapabilityInvocationReleaseGuardPreview : workspace?.runner_capability_invocation_release_guard_preview || {};
+            const hasGuard = Boolean(guard && Object.keys(guard).length);
+            return `
+                <div class="section-block" id="projectWorkspaceCapabilityInvocationRunbookPanel" data-project-capability-invocation-runbook-panel-marker="Project Workspace capability invocation runbook panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationRunbookPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('capabilityInvocationRunbookPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceCapabilityInvocationRunbookBtn" type="button" data-project-capability-invocation-runbook-dry-run-action="Project Workspace capability invocation runbook panel bundle" onclick="dryRunProjectWorkspaceCapabilityInvocationRunbook()">${escapeHTML(t('dryRunCapabilityInvocationRunbook'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceCapabilityInvocationRunbookBtn" type="button" onclick="copyProjectWorkspaceCapabilityInvocationRunbook()">${escapeHTML(t('copyCapabilityInvocationRunbook'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationRunbookStatus'))}</div>
+                            <strong data-capability-invocation-runbook-status="${escapeHTML(runbook.capability_invocation_runbook_status || 'not_refreshed')}">${escapeHTML(runbook.capability_invocation_runbook_status || t('capabilityInvocationRunbookNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationOperatorReviewPacketStatus'))}</div>
+                            <strong data-capability-invocation-operator-review-packet-status="${escapeHTML(review.capability_invocation_operator_review_packet_status || 'not_refreshed')}">${escapeHTML(review.capability_invocation_operator_review_packet_status || t('capabilityInvocationRunbookNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationReleaseGuardStatus'))}</div>
+                            <strong data-capability-invocation-release-guard-status="${escapeHTML(guard.capability_invocation_release_guard_status || 'not_refreshed')}">${escapeHTML(guard.capability_invocation_release_guard_status || t('capabilityInvocationRunbookNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('capabilityInvocationReleaseAllowed'))}: ${escapeHTML(String(Boolean(guard.release_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('capabilityInvocationRunbookAuditPreview'))}</div>
+                        ${hasGuard ? `<pre class="debug" data-capability-invocation-runbook-audit-preview="Project Workspace capability invocation runbook panel bundle">${escapeHTML(projectWorkspaceCapabilityInvocationRunbookCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('capabilityInvocationRunbookNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCapabilityInvocationRunbookStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceCapabilityInvocationRehearsalPanel(workspace = latestProjectWorkspace) {
             const rehearsal = Object.keys(latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview || {}).length ? latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview : workspace?.runner_capability_invocation_runtime_rehearsal_preview || {};
             const ledger = Object.keys(latestProjectRunnerCapabilityInvocationAttemptLedgerPreview || {}).length ? latestProjectRunnerCapabilityInvocationAttemptLedgerPreview : workspace?.runner_capability_invocation_attempt_ledger_preview || {};
@@ -16405,6 +16518,7 @@
                     ${renderProjectWorkspaceCapabilityBindingPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationGatePanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationRehearsalPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityInvocationRunbookPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -19719,6 +19833,47 @@
             capabilityInvocationRehearsalDryRunFailed: 'Capability invocation rehearsal dry-run \u5931\u8d25\u3002',
             capabilityInvocationRehearsalCopied: 'Capability \u8c03\u7528\u6f14\u7ec3\u5df2\u590d\u5236\u3002',
             capabilityInvocationRehearsalCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u6f14\u7ec3\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCapabilityInvocationRunbookPanelBundleMarker: 'Project Workspace capability invocation runbook panel bundle',
+            capabilityInvocationRunbookPanelTitle: 'Capability invocation runbook',
+            capabilityInvocationRunbookPanelHelper: 'Dry-run runbook, operator review packet, and release guard for a future real capability invocation.',
+            dryRunCapabilityInvocationRunbook: 'Dry-run invocation runbook',
+            copyCapabilityInvocationRunbook: 'Copy invocation runbook',
+            capabilityInvocationRunbookCopyTitle: 'Project capability invocation runbook',
+            capabilityInvocationRunbookStatus: 'Runbook status',
+            capabilityInvocationOperatorReviewPacketStatus: 'Operator review packet status',
+            capabilityInvocationReleaseGuardStatus: 'Release guard status',
+            capabilityInvocationReleaseAllowed: 'Release allowed',
+            capabilityInvocationRunbookAuditPreview: 'Capability invocation runbook audit preview',
+            capabilityInvocationRunbookNotRefreshedYet: 'Capability invocation runbook has not been refreshed yet.',
+            capabilityInvocationRunbookDryRunRunning: 'Building capability invocation runbook dry-run.',
+            capabilityInvocationRunbookDryRunComplete: 'Capability invocation runbook dry-run complete.',
+            capabilityInvocationRunbookDryRunFailed: 'Capability invocation runbook dry-run failed.',
+            capabilityInvocationRunbookCopied: 'Capability invocation runbook copied.',
+            capabilityInvocationRunbookCopyFailed: 'Could not copy capability invocation runbook.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCapabilityInvocationRunbookPanelBundleMarker: 'Project Workspace capability invocation runbook panel bundle',
+            capabilityInvocationRunbookPanelTitle: 'Capability \u8c03\u7528\u6267\u884c\u624b\u518c',
+            capabilityInvocationRunbookPanelHelper: '\u9762\u5411\u672a\u6765\u771f\u5b9e capability \u8c03\u7528\u7684 dry-run \u6267\u884c\u624b\u518c\u3001\u64cd\u4f5c\u5458\u590d\u6838\u5305\u548c\u53d1\u5e03\u4fdd\u62a4\u95e8\u3002',
+            dryRunCapabilityInvocationRunbook: 'Dry-run \u8c03\u7528\u624b\u518c',
+            copyCapabilityInvocationRunbook: '\u590d\u5236\u8c03\u7528\u624b\u518c',
+            capabilityInvocationRunbookCopyTitle: '\u9879\u76ee capability \u8c03\u7528\u6267\u884c\u624b\u518c',
+            capabilityInvocationRunbookStatus: '\u6267\u884c\u624b\u518c\u72b6\u6001',
+            capabilityInvocationOperatorReviewPacketStatus: '\u64cd\u4f5c\u5458\u590d\u6838\u5305\u72b6\u6001',
+            capabilityInvocationReleaseGuardStatus: '\u53d1\u5e03\u4fdd\u62a4\u95e8\u72b6\u6001',
+            capabilityInvocationReleaseAllowed: '\u662f\u5426\u5141\u8bb8\u53d1\u5e03',
+            capabilityInvocationRunbookAuditPreview: 'Capability \u8c03\u7528\u624b\u518c\u5ba1\u8ba1\u9884\u89c8',
+            capabilityInvocationRunbookNotRefreshedYet: 'Capability \u8c03\u7528\u6267\u884c\u624b\u518c\u5c1a\u672a\u5237\u65b0\u3002',
+            capabilityInvocationRunbookDryRunRunning: '\u6b63\u5728\u751f\u6210 capability invocation runbook dry-run.',
+            capabilityInvocationRunbookDryRunComplete: 'Capability invocation runbook dry-run \u5b8c\u6210\u3002',
+            capabilityInvocationRunbookDryRunFailed: 'Capability invocation runbook dry-run \u5931\u8d25\u3002',
+            capabilityInvocationRunbookCopied: 'Capability \u8c03\u7528\u624b\u518c\u5df2\u590d\u5236\u3002',
+            capabilityInvocationRunbookCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u624b\u518c\u5931\u8d25\u3002'
         });
 
 
