@@ -6501,3 +6501,21 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
         self.assertIn("Project Workspace source adapter contract bundle", script)
         self.assertIn("project_workspace_source_adapter_contract_marker", script)
+
+    def test_project_workspace_multi_agent_output_chain_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace multi-agent output chain bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_MULTI_AGENT_OUTPUT_CHAIN_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceMultiAgentOutputChainPanel", html)
+        self.assertIn("copyProjectWorkspaceMultiAgentOutputChain", html)
+        self.assertIn("multi_agent_output_chain_report", html)
+
+    def test_project_workspace_multi_agent_output_chain_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_multi_agent_output_chain_marker", script)
+        self.assertIn("Project Workspace multi-agent output chain bundle", script)
+
+    def test_project_workspace_multi_agent_output_chain_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace multi-agent output chain bundle", script)
+        self.assertIn("project_workspace_multi_agent_output_chain_marker", script)
