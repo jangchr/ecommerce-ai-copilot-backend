@@ -1543,6 +1543,151 @@ def get_agent_contract(agent_id: str, registry: dict[str, Any] | None = None) ->
     return deepcopy(by_id.get(str(agent_id or ""), {}))
 
 
+
+AGENT_CONTRACT_COMPLETENESS_REPORT_VERSION = "agent_contract_completeness_report_v1"
+
+AGENT_CONTRACT_CANONICAL_ROLE_MATRIX = [
+    {
+        "role_id": "supervisor_agent",
+        "role_label": "Supervisor Agent",
+        "primary_contract_id": "planner_agent",
+        "contract_aliases": ["planner_agent", "graph_router_agent"],
+        "required_capabilities": ["plan_next_agent", "validate_contract_handoff", "block_unsafe_execution"],
+        "required_safety_fields": ["input_contract", "output_contract", "allowed_next_agent_ids"],
+    },
+    {
+        "role_id": "evidence_agent",
+        "role_label": "Evidence Agent",
+        "primary_contract_id": "evidence_agent",
+        "contract_aliases": ["evidence_agent", "source_evidence_agent"],
+        "required_capabilities": ["extract_evidence", "bind_quotes", "preserve_source_trace"],
+        "required_safety_fields": ["input_contract", "output_contract", "allowed_next_agent_ids"],
+    },
+    {
+        "role_id": "strategy_agent",
+        "role_label": "Strategy Agent",
+        "primary_contract_id": "strategy_agent",
+        "contract_aliases": ["strategy_agent"],
+        "required_capabilities": ["turn_evidence_into_strategy", "select_hook_angle", "respect_evidence_boundaries"],
+        "required_safety_fields": ["input_contract", "output_contract", "allowed_next_agent_ids"],
+    },
+    {
+        "role_id": "creative_agent",
+        "role_label": "Creative Agent",
+        "primary_contract_id": "storyboard_agent",
+        "contract_aliases": ["storyboard_agent", "prompt_handoff_agent"],
+        "required_capabilities": ["create_storyboard", "structure_short_video", "prepare_creative_assets"],
+        "required_safety_fields": ["input_contract", "output_contract", "allowed_next_agent_ids"],
+    },
+    {
+        "role_id": "video_generation_agent",
+        "role_label": "Video / Generation Agent",
+        "primary_contract_id": "provider_job_agent",
+        "contract_aliases": ["keyframe_agent", "prompt_handoff_agent", "provider_job_agent"],
+        "required_capabilities": ["prepare_generation_packet", "handoff_to_provider_dry_run", "record_provider_boundary"],
+        "required_safety_fields": ["input_contract", "output_contract", "allowed_next_agent_ids"],
+    },
+    {
+        "role_id": "risk_approval_agent",
+        "role_label": "Risk / Approval Agent",
+        "primary_contract_id": "risk_agent",
+        "contract_aliases": ["risk_agent", "human_approval_agent", "cost_guard_agent"],
+        "required_capabilities": ["validate_risk", "request_human_approval", "block_real_execution"],
+        "required_safety_fields": ["input_contract", "output_contract", "allowed_next_agent_ids"],
+    },
+    {
+        "role_id": "finalizer_agent",
+        "role_label": "Workspace / Audit Finalizer Agent",
+        "primary_contract_id": "finalizer_agent",
+        "contract_aliases": ["finalizer_agent"],
+        "required_capabilities": ["write_report", "prepare_export_pack", "preserve_audit_trail"],
+        "required_safety_fields": ["input_contract", "output_contract", "allowed_next_agent_ids"],
+    },
+]
+
+
+def build_agent_contract_completeness_report(registry: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Build a completeness report for canonical CrossGrowth multi-Agent roles.
+
+    This report checks whether the existing Agent Contract Registry covers the
+    project's canonical roles. It does not execute agents, call providers, call
+    external APIs, mutate state, or unlock real execution.
+    """
+
+    safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
+    by_id = safe_registry.get("contract_by_agent_id") if isinstance(safe_registry.get("contract_by_agent_id"), dict) else {}
+    role_reports: list[dict[str, Any]] = []
+
+    for role in AGENT_CONTRACT_CANONICAL_ROLE_MATRIX:
+        aliases = [str(item) for item in (role.get("contract_aliases") or [])]
+        present_aliases = [agent_id for agent_id in aliases if agent_id in by_id]
+        primary_contract_id = str(role.get("primary_contract_id") or "")
+        primary_contract = by_id.get(primary_contract_id) if isinstance(by_id.get(primary_contract_id), dict) else {}
+        selected_contract = primary_contract if primary_contract else (by_id.get(present_aliases[0]) if present_aliases else {})
+        selected_contract = selected_contract if isinstance(selected_contract, dict) else {}
+
+        missing_safety_fields = [
+            field
+            for field in (role.get("required_safety_fields") or [])
+            if not selected_contract.get(field)
+        ]
+        input_count = len(selected_contract.get("input_contract") or [])
+        output_count = len(selected_contract.get("output_contract") or [])
+        allowed_next_count = len(selected_contract.get("allowed_next_agent_ids") or [])
+
+        complete = bool(selected_contract) and not missing_safety_fields and input_count > 0 and output_count > 0
+
+        role_reports.append({
+            "role_id": str(role.get("role_id") or ""),
+            "role_label": str(role.get("role_label") or ""),
+            "primary_contract_id": primary_contract_id,
+            "resolved_contract_id": str(selected_contract.get("agent_id") or ""),
+            "contract_present": bool(selected_contract),
+            "present_aliases": present_aliases,
+            "missing_aliases": [agent_id for agent_id in aliases if agent_id not in present_aliases],
+            "required_capabilities": list(role.get("required_capabilities") or []),
+            "missing_safety_fields": missing_safety_fields,
+            "input_contract_count": input_count,
+            "output_contract_count": output_count,
+            "allowed_next_agent_count": allowed_next_count,
+            "stage": str(selected_contract.get("stage") or ""),
+            "display_name": str(selected_contract.get("display_name") or role.get("role_label") or ""),
+            "complete": complete,
+            "dry_run": True,
+            "real_execution_allowed": False,
+            "provider_call_allowed": False,
+            "external_api_call_allowed": False,
+            "agent_execution_allowed": False,
+        })
+
+    missing_roles = [item["role_id"] for item in role_reports if not item["complete"]]
+    complete_roles = [item["role_id"] for item in role_reports if item["complete"]]
+
+    report_status = "agent_contract_registry_complete" if not missing_roles else "agent_contract_registry_incomplete"
+
+    return {
+        "completeness_report_version": AGENT_CONTRACT_COMPLETENESS_REPORT_VERSION,
+        "registry_version": str(safe_registry.get("registry_version") or AGENT_CONTRACT_REGISTRY_VERSION),
+        "report_status": report_status,
+        "canonical_role_count": len(role_reports),
+        "complete_role_count": len(complete_roles),
+        "missing_role_count": len(missing_roles),
+        "complete_roles": complete_roles,
+        "missing_roles": missing_roles,
+        "role_reports": role_reports,
+        "contract_count": int(safe_registry.get("contract_count") or len(by_id)),
+        "edge_count": int(safe_registry.get("edge_count") or 0),
+        "supervisor_can_use_registry": not missing_roles,
+        "manual_review_required": bool(missing_roles),
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "agent_execution_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
