@@ -15137,6 +15137,124 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_REAL_EXECUTION_READINESS_SUMMARY_PANEL_BUNDLE_MARKER = 'Project Workspace real execution readiness summary panel bundle';
+        let latestProjectRunnerRealExecutionReadinessSummaryPreview = {};
+        let latestProjectRunnerRealExecutionOperatorNextActionsPreview = {};
+        let latestProjectRunnerRealExecutionExecutiveBriefPreview = {};
+
+        function projectWorkspaceRealExecutionReadinessSummaryCopyText(workspace = latestProjectWorkspace) {
+            const summary = Object.keys(latestProjectRunnerRealExecutionReadinessSummaryPreview || {}).length ? latestProjectRunnerRealExecutionReadinessSummaryPreview : workspace?.runner_real_execution_readiness_summary_preview || {};
+            const actions = Object.keys(latestProjectRunnerRealExecutionOperatorNextActionsPreview || {}).length ? latestProjectRunnerRealExecutionOperatorNextActionsPreview : workspace?.runner_real_execution_operator_next_actions_preview || {};
+            const brief = Object.keys(latestProjectRunnerRealExecutionExecutiveBriefPreview || {}).length ? latestProjectRunnerRealExecutionExecutiveBriefPreview : workspace?.runner_real_execution_executive_brief_preview || {};
+            return [
+                t('realExecutionReadinessSummaryCopyTitle'),
+                `${t('realExecutionReadinessSummaryStatus')}: ${summary.real_execution_readiness_summary_status || 'not_refreshed'}`,
+                `${t('realExecutionGoNoGoDecision')}: ${summary.go_no_go_decision || 'no_go'}`,
+                `${t('realExecutionOperatorNextActionsStatus')}: ${actions.real_execution_operator_next_actions_status || 'not_refreshed'}`,
+                `${t('realExecutionExecutiveBriefStatus')}: ${brief.real_execution_executive_brief_status || 'not_refreshed'}`,
+                '',
+                JSON.stringify({ summary, actions, brief }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionReadinessSummary() {
+            const status = document.getElementById('projectWorkspaceRealExecutionReadinessSummaryStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionReadinessSummaryCopyText());
+                if (status) status.textContent = t('realExecutionReadinessSummaryCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionReadinessSummaryCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceRealExecutionReadinessSummary(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRealExecutionReadinessSummaryStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('realExecutionReadinessSummaryDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_real_execution_readiness_summary_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/real-execution-readiness-summary/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('realExecutionReadinessSummaryDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerRealExecutionModeGatePreview = payload.runner_real_execution_mode_gate_preview || {};
+                latestProjectRunnerRealExecutionSwitchPlanPreview = payload.runner_real_execution_switch_plan_preview || {};
+                latestProjectRunnerRealExecutionSafetyCasePreview = payload.runner_real_execution_safety_case_preview || {};
+                latestProjectRunnerRealExecutionModeReceiptPreview = payload.runner_real_execution_mode_receipt_preview || {};
+                latestProjectRunnerRealExecutionReadinessSummaryPreview = payload.runner_real_execution_readiness_summary_preview || {};
+                latestProjectRunnerRealExecutionOperatorNextActionsPreview = payload.runner_real_execution_operator_next_actions_preview || {};
+                latestProjectRunnerRealExecutionExecutiveBriefPreview = payload.runner_real_execution_executive_brief_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_real_execution_readiness_summary_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_real_execution_readiness_summary_dry_run');
+                if (status) status.textContent = t('realExecutionReadinessSummaryDryRunComplete');
+
+                const modeGatePanel = document.getElementById('projectWorkspaceRealExecutionModeGatePanel');
+                if (modeGatePanel) modeGatePanel.outerHTML = renderProjectWorkspaceRealExecutionModeGatePanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceRealExecutionReadinessSummaryPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionReadinessSummaryPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_readiness_summary_dry_run');
+                if (status) status.textContent = error.message || t('realExecutionReadinessSummaryDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionReadinessSummaryPanel(workspace = latestProjectWorkspace) {
+            const summary = Object.keys(latestProjectRunnerRealExecutionReadinessSummaryPreview || {}).length ? latestProjectRunnerRealExecutionReadinessSummaryPreview : workspace?.runner_real_execution_readiness_summary_preview || {};
+            const actions = Object.keys(latestProjectRunnerRealExecutionOperatorNextActionsPreview || {}).length ? latestProjectRunnerRealExecutionOperatorNextActionsPreview : workspace?.runner_real_execution_operator_next_actions_preview || {};
+            const brief = Object.keys(latestProjectRunnerRealExecutionExecutiveBriefPreview || {}).length ? latestProjectRunnerRealExecutionExecutiveBriefPreview : workspace?.runner_real_execution_executive_brief_preview || {};
+            const hasBrief = Boolean(brief && Object.keys(brief).length);
+            const briefLines = Array.isArray(brief.brief_lines) ? brief.brief_lines : [];
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionReadinessSummaryPanel" data-project-real-execution-readiness-summary-panel-marker="Project Workspace real execution readiness summary panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionReadinessSummaryPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionReadinessSummaryPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceRealExecutionReadinessSummaryBtn" type="button" data-project-real-execution-readiness-summary-dry-run-action="Project Workspace real execution readiness summary panel bundle" onclick="dryRunProjectWorkspaceRealExecutionReadinessSummary()">${escapeHTML(t('dryRunRealExecutionReadinessSummary'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionReadinessSummaryBtn" type="button" onclick="copyProjectWorkspaceRealExecutionReadinessSummary()">${escapeHTML(t('copyRealExecutionReadinessSummary'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionReadinessSummaryStatus'))}</div>
+                            <strong data-real-execution-readiness-summary-status="${escapeHTML(summary.real_execution_readiness_summary_status || 'not_refreshed')}">${escapeHTML(summary.real_execution_readiness_summary_status || t('realExecutionReadinessSummaryNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionGoNoGoDecision'))}</div>
+                            <strong data-real-execution-go-no-go-decision="${escapeHTML(summary.go_no_go_decision || 'no_go')}">${escapeHTML(summary.go_no_go_decision || 'no_go')}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionExecutiveBriefStatus'))}</div>
+                            <strong data-real-execution-executive-brief-status="${escapeHTML(brief.real_execution_executive_brief_status || 'not_refreshed')}">${escapeHTML(brief.real_execution_executive_brief_status || t('realExecutionReadinessSummaryNotRefreshedYet'))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionExecutiveBriefLines'))}</div>
+                        ${briefLines.length ? `<ul>${briefLines.map((line) => `<li>${escapeHTML(line)}</li>`).join('')}</ul>` : `<div class="recent-empty">${escapeHTML(t('realExecutionReadinessSummaryNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionReadinessSummaryAuditPreview'))}</div>
+                        ${hasBrief ? `<pre class="debug" data-real-execution-readiness-summary-audit-preview="Project Workspace real execution readiness summary panel bundle">${escapeHTML(projectWorkspaceRealExecutionReadinessSummaryCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realExecutionReadinessSummaryNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionReadinessSummaryStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceRealExecutionModeGatePanel(workspace = latestProjectWorkspace) {
             const gate = Object.keys(latestProjectRunnerRealExecutionModeGatePreview || {}).length ? latestProjectRunnerRealExecutionModeGatePreview : workspace?.runner_real_execution_mode_gate_preview || {};
             const switchPlan = Object.keys(latestProjectRunnerRealExecutionSwitchPlanPreview || {}).length ? latestProjectRunnerRealExecutionSwitchPlanPreview : workspace?.runner_real_execution_switch_plan_preview || {};
@@ -16758,6 +16876,7 @@
                     ${renderProjectWorkspaceCapabilityInvocationRunbookPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionModeGatePanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionReadinessSummaryPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -20199,6 +20318,49 @@
             realExecutionModeGateDryRunFailed: 'Real execution mode gate dry-run \u5931\u8d25\u3002',
             realExecutionModeGateCopied: '\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8\u5df2\u590d\u5236\u3002',
             realExecutionModeGateCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionReadinessSummaryPanelBundleMarker: 'Project Workspace real execution readiness summary panel bundle',
+            realExecutionReadinessSummaryPanelTitle: 'Real execution readiness summary',
+            realExecutionReadinessSummaryPanelHelper: 'Dry-run Go / No-Go summary for whether the project is ready to enter real Agent, tool, or provider execution.',
+            dryRunRealExecutionReadinessSummary: 'Dry-run readiness summary',
+            copyRealExecutionReadinessSummary: 'Copy readiness summary',
+            realExecutionReadinessSummaryCopyTitle: 'Project real execution readiness summary',
+            realExecutionReadinessSummaryStatus: 'Readiness summary status',
+            realExecutionGoNoGoDecision: 'Go / No-Go decision',
+            realExecutionOperatorNextActionsStatus: 'Operator next actions status',
+            realExecutionExecutiveBriefStatus: 'Executive brief status',
+            realExecutionExecutiveBriefLines: 'Executive brief',
+            realExecutionReadinessSummaryAuditPreview: 'Real execution readiness summary audit preview',
+            realExecutionReadinessSummaryNotRefreshedYet: 'Real execution readiness summary has not been refreshed yet.',
+            realExecutionReadinessSummaryDryRunRunning: 'Building real execution readiness summary dry-run.',
+            realExecutionReadinessSummaryDryRunComplete: 'Real execution readiness summary dry-run complete.',
+            realExecutionReadinessSummaryDryRunFailed: 'Real execution readiness summary dry-run failed.',
+            realExecutionReadinessSummaryCopied: 'Real execution readiness summary copied.',
+            realExecutionReadinessSummaryCopyFailed: 'Could not copy real execution readiness summary.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionReadinessSummaryPanelBundleMarker: 'Project Workspace real execution readiness summary panel bundle',
+            realExecutionReadinessSummaryPanelTitle: '\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8',
+            realExecutionReadinessSummaryPanelHelper: '\u7528 dry-run \u65b9\u5f0f\u751f\u6210 Go / No-Go \u603b\u7ed3\uff0c\u5224\u65ad\u9879\u76ee\u662f\u5426\u51c6\u5907\u597d\u8fdb\u5165\u771f\u5b9e Agent\u3001tool \u6216 provider \u6267\u884c\u3002',
+            dryRunRealExecutionReadinessSummary: 'Dry-run \u51c6\u5907\u5ea6\u603b\u89c8',
+            copyRealExecutionReadinessSummary: '\u590d\u5236\u51c6\u5907\u5ea6\u603b\u89c8',
+            realExecutionReadinessSummaryCopyTitle: '\u9879\u76ee\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8',
+            realExecutionReadinessSummaryStatus: '\u51c6\u5907\u5ea6\u603b\u89c8\u72b6\u6001',
+            realExecutionGoNoGoDecision: 'Go / No-Go \u51b3\u7b56',
+            realExecutionOperatorNextActionsStatus: '\u64cd\u4f5c\u5458\u4e0b\u4e00\u6b65\u72b6\u6001',
+            realExecutionExecutiveBriefStatus: '\u7b80\u660e\u6458\u8981\u72b6\u6001',
+            realExecutionExecutiveBriefLines: '\u7b80\u660e\u6458\u8981',
+            realExecutionReadinessSummaryAuditPreview: '\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionReadinessSummaryNotRefreshedYet: '\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionReadinessSummaryDryRunRunning: '\u6b63\u5728\u751f\u6210 real execution readiness summary dry-run.',
+            realExecutionReadinessSummaryDryRunComplete: 'Real execution readiness summary dry-run \u5b8c\u6210\u3002',
+            realExecutionReadinessSummaryDryRunFailed: 'Real execution readiness summary dry-run \u5931\u8d25\u3002',
+            realExecutionReadinessSummaryCopied: '\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8\u5df2\u590d\u5236\u3002',
+            realExecutionReadinessSummaryCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8\u5931\u8d25\u3002'
         });
 
 

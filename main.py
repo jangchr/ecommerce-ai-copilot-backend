@@ -11776,6 +11776,166 @@ async def dry_run_project_agent_capability_invocation_release_packet(project_id:
     }
 
 
+
+def _runner_real_execution_readiness_summary_preview(mode_gate_payload: dict) -> dict:
+    mode_gate = dict(mode_gate_payload.get("runner_real_execution_mode_gate_preview") or {})
+    switch_plan = dict(mode_gate_payload.get("runner_real_execution_switch_plan_preview") or {})
+    safety_case = dict(mode_gate_payload.get("runner_real_execution_safety_case_preview") or {})
+    mode_receipt = dict(mode_gate_payload.get("runner_real_execution_mode_receipt_preview") or {})
+    release_packet = dict(mode_gate_payload.get("runner_capability_invocation_release_packet_preview") or {})
+    signoff_packet = dict(mode_gate_payload.get("runner_capability_invocation_signoff_packet_preview") or {})
+    project_id = str(mode_gate_payload.get("project", {}).get("project_id") or mode_gate_payload.get("project_id") or "demo_project_default")
+
+    readiness_checks = [
+        {
+            "readiness_check_id": "real_execution_mode_gate",
+            "label": "Real execution mode gate",
+            "status": mode_gate.get("real_execution_mode_gate_status", "not_refreshed"),
+            "passed": bool(mode_gate.get("real_execution_mode_allowed")),
+            "blocking": True,
+        },
+        {
+            "readiness_check_id": "release_packet",
+            "label": "Capability invocation release packet",
+            "status": release_packet.get("capability_invocation_release_packet_status", "not_refreshed"),
+            "passed": bool(release_packet.get("release_allowed")),
+            "blocking": True,
+        },
+        {
+            "readiness_check_id": "operator_signoff",
+            "label": "Operator signoff",
+            "status": signoff_packet.get("capability_invocation_signoff_packet_status", "not_refreshed"),
+            "passed": bool(signoff_packet.get("operator_signoff_captured")),
+            "blocking": True,
+        },
+        {
+            "readiness_check_id": "switch_plan",
+            "label": "Real execution switch plan",
+            "status": switch_plan.get("real_execution_switch_plan_status", "not_refreshed"),
+            "passed": bool(switch_plan.get("real_execution_mode_allowed")),
+            "blocking": True,
+        },
+        {
+            "readiness_check_id": "safety_case",
+            "label": "Real execution safety case",
+            "status": safety_case.get("real_execution_safety_case_status", "not_refreshed"),
+            "passed": bool(safety_case.get("real_execution_enabled")),
+            "blocking": True,
+        },
+        {
+            "readiness_check_id": "dry_run_boundary",
+            "label": "Dry-run boundary",
+            "status": mode_receipt.get("real_execution_mode_receipt_status", "not_refreshed"),
+            "passed": not bool(mode_receipt.get("real_execution_enabled")),
+            "blocking": False,
+        },
+    ]
+    blocking_readiness_check_ids = [
+        item["readiness_check_id"]
+        for item in readiness_checks
+        if item.get("blocking") and not item.get("passed")
+    ]
+    return {
+        "real_execution_readiness_summary_version": "runner_real_execution_readiness_summary_preview_v1",
+        "real_execution_readiness_summary_status": "not_ready_for_real_execution",
+        "project_id": project_id,
+        "go_no_go_decision": "no_go",
+        "go_no_go_reason": "Real execution remains blocked until signoff, quota, sandbox, rollback, credentials, and release packet checks are complete.",
+        "readiness_checks": readiness_checks,
+        "readiness_check_count": len(readiness_checks),
+        "blocking_readiness_check_ids": blocking_readiness_check_ids,
+        "blocking_readiness_check_count": len(blocking_readiness_check_ids),
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
+def _runner_real_execution_operator_next_actions_preview(readiness_summary: dict) -> dict:
+    project_id = str(readiness_summary.get("project_id") or "demo_project_default")
+    next_actions = [
+        {
+            "next_action_id": "continue_dry_run_batches",
+            "label": "Continue dry-run validation batches",
+            "priority": "high",
+            "owner": "operator",
+        },
+        {
+            "next_action_id": "prepare_operator_signoff",
+            "label": "Prepare operator signoff fields",
+            "priority": "high",
+            "owner": "operator",
+        },
+        {
+            "next_action_id": "prepare_quota_sandbox_rollback",
+            "label": "Prepare quota, sandbox, and rollback references",
+            "priority": "high",
+            "owner": "operator",
+        },
+        {
+            "next_action_id": "keep_real_execution_disabled",
+            "label": "Keep real execution disabled until explicit approval",
+            "priority": "critical",
+            "owner": "system",
+        },
+    ]
+    return {
+        "real_execution_operator_next_actions_version": "runner_real_execution_operator_next_actions_preview_v1",
+        "real_execution_operator_next_actions_status": "operator_actions_required",
+        "project_id": project_id,
+        "next_actions": next_actions,
+        "next_action_count": len(next_actions),
+        "manual_review_required": True,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
+def _runner_real_execution_executive_brief_preview(
+    readiness_summary: dict,
+    operator_next_actions: dict,
+) -> dict:
+    project_id = str(readiness_summary.get("project_id") or "demo_project_default")
+    brief_lines = [
+        "No-go for real execution.",
+        "Dry-run remains safe: no provider call, no external API call, no agent execution.",
+        "Manual review and signoff are still required.",
+        "Next step is to prepare approval, quota, sandbox, rollback, and credentials before any real mode attempt.",
+    ]
+    return {
+        "real_execution_executive_brief_version": "runner_real_execution_executive_brief_preview_v1",
+        "real_execution_executive_brief_status": "real_execution_no_go_brief_ready",
+        "project_id": project_id,
+        "brief_lines": brief_lines,
+        "brief_line_count": len(brief_lines),
+        "go_no_go_decision": readiness_summary.get("go_no_go_decision", "no_go"),
+        "blocking_readiness_check_count": readiness_summary.get("blocking_readiness_check_count", 0),
+        "operator_next_action_count": operator_next_actions.get("next_action_count", 0),
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/real-execution-mode-gate/dry-run")
 async def dry_run_project_agent_real_execution_mode_gate(project_id: str, http_request: Request):
     release_packet_payload = await dry_run_project_agent_capability_invocation_release_packet(project_id, http_request)
@@ -11819,6 +11979,56 @@ async def dry_run_project_agent_real_execution_mode_gate(project_id: str, http_r
         "dry_run": True,
         "real_execution_mode_allowed": False,
         "real_execution_enabled": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/real-execution-readiness-summary/dry-run")
+async def dry_run_project_agent_real_execution_readiness_summary(project_id: str, http_request: Request):
+    mode_gate_payload = await dry_run_project_agent_real_execution_mode_gate(project_id, http_request)
+
+    runner_real_execution_readiness_summary_preview = _runner_real_execution_readiness_summary_preview(mode_gate_payload)
+    runner_real_execution_operator_next_actions_preview = _runner_real_execution_operator_next_actions_preview(
+        runner_real_execution_readiness_summary_preview
+    )
+    runner_real_execution_executive_brief_preview = _runner_real_execution_executive_brief_preview(
+        runner_real_execution_readiness_summary_preview,
+        runner_real_execution_operator_next_actions_preview,
+    )
+
+    project = mode_gate_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_real_execution_readiness_summary_status": runner_real_execution_readiness_summary_preview["real_execution_readiness_summary_status"],
+        "latest_runner_real_execution_go_no_go_decision": runner_real_execution_readiness_summary_preview["go_no_go_decision"],
+        "latest_runner_real_execution_operator_next_actions_status": runner_real_execution_operator_next_actions_preview["real_execution_operator_next_actions_status"],
+        "latest_runner_real_execution_executive_brief_status": runner_real_execution_executive_brief_preview["real_execution_executive_brief_status"],
+        "latest_runner_real_execution_summary_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **mode_gate_payload,
+        "project": project,
+        "runner_real_execution_readiness_summary_preview": runner_real_execution_readiness_summary_preview,
+        "runner_real_execution_operator_next_actions_preview": runner_real_execution_operator_next_actions_preview,
+        "runner_real_execution_executive_brief_preview": runner_real_execution_executive_brief_preview,
+        "dry_run": True,
+        "go_no_go_decision": "no_go",
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
         "capability_invocation_allowed": False,
         "tool_invocation_allowed": False,
         "provider_call_performed": False,

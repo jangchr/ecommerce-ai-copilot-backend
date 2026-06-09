@@ -6179,3 +6179,44 @@ class ProjectWorkspaceRealExecutionModeGatePanelFrontendTests(unittest.TestCase)
         self.assertIn("Project Workspace real execution mode gate panel bundle", script)
         self.assertIn("project_workspace_real_execution_mode_gate_panel_marker", script)
 
+
+class ProjectWorkspaceRealExecutionReadinessSummaryPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_real_execution_readiness_summary_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace real execution readiness summary panel bundle",
+            "PROJECT_WORKSPACE_REAL_EXECUTION_READINESS_SUMMARY_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceRealExecutionReadinessSummaryPanel(",
+            "function projectWorkspaceRealExecutionReadinessSummaryCopyText(",
+            "async function copyProjectWorkspaceRealExecutionReadinessSummary(",
+            "async function dryRunProjectWorkspaceRealExecutionReadinessSummary(",
+            "/runner/real-execution-readiness-summary/dry-run",
+            "latestProjectRunnerRealExecutionReadinessSummaryPreview",
+            "latestProjectRunnerRealExecutionOperatorNextActionsPreview",
+            "latestProjectRunnerRealExecutionExecutiveBriefPreview",
+            "projectWorkspaceRealExecutionReadinessSummaryPanel",
+            "projectWorkspaceRealExecutionReadinessSummaryStatus",
+            "dryRunProjectWorkspaceRealExecutionReadinessSummaryBtn",
+            "copyProjectWorkspaceRealExecutionReadinessSummaryBtn",
+            "data-project-real-execution-readiness-summary-panel-marker",
+            "data-project-real-execution-readiness-summary-dry-run-action",
+            "data-real-execution-readiness-summary-audit-preview",
+            "data-real-execution-go-no-go-decision",
+            "realExecutionReadinessSummaryPanelTitle",
+            "realExecutionReadinessSummaryPanelHelper",
+            "renderProjectWorkspaceRealExecutionReadinessSummaryPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_real_execution_readiness_summary_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_real_execution_readiness_summary_panel_marker", script)
+        self.assertIn("Project Workspace real execution readiness summary panel bundle", script)
+
+    def test_project_workspace_real_execution_readiness_summary_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace real execution readiness summary panel bundle", script)
+        self.assertIn("project_workspace_real_execution_readiness_summary_panel_marker", script)
+

@@ -1922,3 +1922,39 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             receipt["real_execution_mode_receipt_status"],
         )
 
+    def test_project_runner_real_execution_readiness_summary_dry_run_endpoint_returns_no_go_brief(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/real-execution-readiness-summary/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertEqual(payload["go_no_go_decision"], "no_go")
+        self.assertFalse(payload["real_execution_mode_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        summary = payload["runner_real_execution_readiness_summary_preview"]
+        actions = payload["runner_real_execution_operator_next_actions_preview"]
+        brief = payload["runner_real_execution_executive_brief_preview"]
+
+        self.assertEqual(summary["real_execution_readiness_summary_status"], "not_ready_for_real_execution")
+        self.assertEqual(summary["go_no_go_decision"], "no_go")
+        self.assertGreater(summary["blocking_readiness_check_count"], 0)
+        self.assertEqual(actions["real_execution_operator_next_actions_status"], "operator_actions_required")
+        self.assertEqual(brief["real_execution_executive_brief_status"], "real_execution_no_go_brief_ready")
+        self.assertIn("No-go for real execution.", brief["brief_lines"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_go_no_go_decision"],
+            "no_go",
+        )
+
