@@ -15061,6 +15061,125 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_REAL_EXECUTION_MODE_GATE_PANEL_BUNDLE_MARKER = 'Project Workspace real execution mode gate panel bundle';
+        let latestProjectRunnerRealExecutionModeGatePreview = {};
+        let latestProjectRunnerRealExecutionSwitchPlanPreview = {};
+        let latestProjectRunnerRealExecutionSafetyCasePreview = {};
+        let latestProjectRunnerRealExecutionModeReceiptPreview = {};
+
+        function projectWorkspaceRealExecutionModeGateCopyText(workspace = latestProjectWorkspace) {
+            const gate = Object.keys(latestProjectRunnerRealExecutionModeGatePreview || {}).length ? latestProjectRunnerRealExecutionModeGatePreview : workspace?.runner_real_execution_mode_gate_preview || {};
+            const switchPlan = Object.keys(latestProjectRunnerRealExecutionSwitchPlanPreview || {}).length ? latestProjectRunnerRealExecutionSwitchPlanPreview : workspace?.runner_real_execution_switch_plan_preview || {};
+            const safetyCase = Object.keys(latestProjectRunnerRealExecutionSafetyCasePreview || {}).length ? latestProjectRunnerRealExecutionSafetyCasePreview : workspace?.runner_real_execution_safety_case_preview || {};
+            const receipt = Object.keys(latestProjectRunnerRealExecutionModeReceiptPreview || {}).length ? latestProjectRunnerRealExecutionModeReceiptPreview : workspace?.runner_real_execution_mode_receipt_preview || {};
+            return [
+                t('realExecutionModeGateCopyTitle'),
+                `${t('realExecutionModeGateStatus')}: ${gate.real_execution_mode_gate_status || 'not_refreshed'}`,
+                `${t('realExecutionSwitchPlanStatus')}: ${switchPlan.real_execution_switch_plan_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyCaseStatus')}: ${safetyCase.real_execution_safety_case_status || 'not_refreshed'}`,
+                `${t('realExecutionModeReceiptStatus')}: ${receipt.real_execution_mode_receipt_status || 'not_refreshed'}`,
+                `${t('realExecutionEnabled')}: ${Boolean(receipt.real_execution_enabled)}`,
+                '',
+                JSON.stringify({ gate, switchPlan, safetyCase, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionModeGate() {
+            const status = document.getElementById('projectWorkspaceRealExecutionModeGateStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionModeGateCopyText());
+                if (status) status.textContent = t('realExecutionModeGateCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionModeGateCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceRealExecutionModeGate(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRealExecutionModeGateStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('realExecutionModeGateDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_real_execution_mode_gate_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/real-execution-mode-gate/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('realExecutionModeGateDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerCapabilityInvocationReleasePacketPreview = payload.runner_capability_invocation_release_packet_preview || {};
+                latestProjectRunnerCapabilityInvocationRiskSummaryPreview = payload.runner_capability_invocation_risk_summary_preview || {};
+                latestProjectRunnerCapabilityInvocationSignoffPacketPreview = payload.runner_capability_invocation_signoff_packet_preview || {};
+                latestProjectRunnerCapabilityInvocationFinalBlockedReceiptPreview = payload.runner_capability_invocation_final_blocked_receipt_preview || {};
+                latestProjectRunnerRealExecutionModeGatePreview = payload.runner_real_execution_mode_gate_preview || {};
+                latestProjectRunnerRealExecutionSwitchPlanPreview = payload.runner_real_execution_switch_plan_preview || {};
+                latestProjectRunnerRealExecutionSafetyCasePreview = payload.runner_real_execution_safety_case_preview || {};
+                latestProjectRunnerRealExecutionModeReceiptPreview = payload.runner_real_execution_mode_receipt_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_real_execution_mode_gate_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_real_execution_mode_gate_dry_run');
+                if (status) status.textContent = t('realExecutionModeGateDryRunComplete');
+
+                const releasePacketPanel = document.getElementById('projectWorkspaceCapabilityInvocationReleasePacketPanel');
+                if (releasePacketPanel) releasePacketPanel.outerHTML = renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceRealExecutionModeGatePanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionModeGatePanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_mode_gate_dry_run');
+                if (status) status.textContent = error.message || t('realExecutionModeGateDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionModeGatePanel(workspace = latestProjectWorkspace) {
+            const gate = Object.keys(latestProjectRunnerRealExecutionModeGatePreview || {}).length ? latestProjectRunnerRealExecutionModeGatePreview : workspace?.runner_real_execution_mode_gate_preview || {};
+            const switchPlan = Object.keys(latestProjectRunnerRealExecutionSwitchPlanPreview || {}).length ? latestProjectRunnerRealExecutionSwitchPlanPreview : workspace?.runner_real_execution_switch_plan_preview || {};
+            const safetyCase = Object.keys(latestProjectRunnerRealExecutionSafetyCasePreview || {}).length ? latestProjectRunnerRealExecutionSafetyCasePreview : workspace?.runner_real_execution_safety_case_preview || {};
+            const receipt = Object.keys(latestProjectRunnerRealExecutionModeReceiptPreview || {}).length ? latestProjectRunnerRealExecutionModeReceiptPreview : workspace?.runner_real_execution_mode_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionModeGatePanel" data-project-real-execution-mode-gate-panel-marker="Project Workspace real execution mode gate panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionModeGatePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionModeGatePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceRealExecutionModeGateBtn" type="button" data-project-real-execution-mode-gate-dry-run-action="Project Workspace real execution mode gate panel bundle" onclick="dryRunProjectWorkspaceRealExecutionModeGate()">${escapeHTML(t('dryRunRealExecutionModeGate'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionModeGateBtn" type="button" onclick="copyProjectWorkspaceRealExecutionModeGate()">${escapeHTML(t('copyRealExecutionModeGate'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionModeGateStatus'))}</div>
+                            <strong data-real-execution-mode-gate-status="${escapeHTML(gate.real_execution_mode_gate_status || 'not_refreshed')}">${escapeHTML(gate.real_execution_mode_gate_status || t('realExecutionModeGateNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionSwitchPlanStatus'))}</div>
+                            <strong data-real-execution-switch-plan-status="${escapeHTML(switchPlan.real_execution_switch_plan_status || 'not_refreshed')}">${escapeHTML(switchPlan.real_execution_switch_plan_status || t('realExecutionModeGateNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionModeReceiptStatus'))}</div>
+                            <strong data-real-execution-mode-receipt-status="${escapeHTML(receipt.real_execution_mode_receipt_status || 'not_refreshed')}">${escapeHTML(receipt.real_execution_mode_receipt_status || t('realExecutionModeGateNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('realExecutionEnabled'))}: ${escapeHTML(String(Boolean(receipt.real_execution_enabled)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionModeGateAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-real-execution-mode-gate-audit-preview="Project Workspace real execution mode gate panel bundle">${escapeHTML(projectWorkspaceRealExecutionModeGateCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realExecutionModeGateNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionModeGateStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(workspace = latestProjectWorkspace) {
             const packet = Object.keys(latestProjectRunnerCapabilityInvocationReleasePacketPreview || {}).length ? latestProjectRunnerCapabilityInvocationReleasePacketPreview : workspace?.runner_capability_invocation_release_packet_preview || {};
             const risk = Object.keys(latestProjectRunnerCapabilityInvocationRiskSummaryPreview || {}).length ? latestProjectRunnerCapabilityInvocationRiskSummaryPreview : workspace?.runner_capability_invocation_risk_summary_preview || {};
@@ -16638,6 +16757,7 @@
                     ${renderProjectWorkspaceCapabilityInvocationRehearsalPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationRunbookPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionModeGatePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -20036,6 +20156,49 @@
             capabilityInvocationReleasePacketDryRunFailed: 'Capability invocation release packet dry-run \u5931\u8d25\u3002',
             capabilityInvocationReleasePacketCopied: 'Capability \u8c03\u7528\u53d1\u5e03\u5305\u5df2\u590d\u5236\u3002',
             capabilityInvocationReleasePacketCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u53d1\u5e03\u5305\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionModeGatePanelBundleMarker: 'Project Workspace real execution mode gate panel bundle',
+            realExecutionModeGatePanelTitle: 'Real execution mode gate',
+            realExecutionModeGatePanelHelper: 'Dry-run mode gate that keeps real Agent, tool, and provider execution disabled until approval, quota, sandbox, rollback, and credentials are ready.',
+            dryRunRealExecutionModeGate: 'Dry-run real mode gate',
+            copyRealExecutionModeGate: 'Copy real mode gate',
+            realExecutionModeGateCopyTitle: 'Project real execution mode gate',
+            realExecutionModeGateStatus: 'Real mode gate status',
+            realExecutionSwitchPlanStatus: 'Switch plan status',
+            realExecutionSafetyCaseStatus: 'Safety case status',
+            realExecutionModeReceiptStatus: 'Real mode receipt status',
+            realExecutionEnabled: 'Real execution enabled',
+            realExecutionModeGateAuditPreview: 'Real execution mode gate audit preview',
+            realExecutionModeGateNotRefreshedYet: 'Real execution mode gate has not been refreshed yet.',
+            realExecutionModeGateDryRunRunning: 'Building real execution mode gate dry-run.',
+            realExecutionModeGateDryRunComplete: 'Real execution mode gate dry-run complete.',
+            realExecutionModeGateDryRunFailed: 'Real execution mode gate dry-run failed.',
+            realExecutionModeGateCopied: 'Real execution mode gate copied.',
+            realExecutionModeGateCopyFailed: 'Could not copy real execution mode gate.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionModeGatePanelBundleMarker: 'Project Workspace real execution mode gate panel bundle',
+            realExecutionModeGatePanelTitle: '\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8',
+            realExecutionModeGatePanelHelper: 'Dry-run \u6a21\u5f0f\u95e8\uff1a\u5728 approval\u3001quota\u3001sandbox\u3001rollback \u548c credentials \u9f50\u5168\u524d\uff0c\u4fdd\u6301 Agent\u3001tool \u548c provider \u771f\u5b9e\u6267\u884c\u7981\u7528\u3002',
+            dryRunRealExecutionModeGate: 'Dry-run \u771f\u5b9e\u6a21\u5f0f\u95e8',
+            copyRealExecutionModeGate: '\u590d\u5236\u771f\u5b9e\u6a21\u5f0f\u95e8',
+            realExecutionModeGateCopyTitle: '\u9879\u76ee\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8',
+            realExecutionModeGateStatus: '\u771f\u5b9e\u6a21\u5f0f\u95e8\u72b6\u6001',
+            realExecutionSwitchPlanStatus: '\u5207\u6362\u8ba1\u5212\u72b6\u6001',
+            realExecutionSafetyCaseStatus: '\u5b89\u5168\u8bf4\u660e\u72b6\u6001',
+            realExecutionModeReceiptStatus: '\u771f\u5b9e\u6a21\u5f0f\u56de\u6267\u72b6\u6001',
+            realExecutionEnabled: '\u662f\u5426\u542f\u7528\u771f\u5b9e\u6267\u884c',
+            realExecutionModeGateAuditPreview: '\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionModeGateNotRefreshedYet: '\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionModeGateDryRunRunning: '\u6b63\u5728\u751f\u6210 real execution mode gate dry-run.',
+            realExecutionModeGateDryRunComplete: 'Real execution mode gate dry-run \u5b8c\u6210\u3002',
+            realExecutionModeGateDryRunFailed: 'Real execution mode gate dry-run \u5931\u8d25\u3002',
+            realExecutionModeGateCopied: '\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8\u5df2\u590d\u5236\u3002',
+            realExecutionModeGateCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u6a21\u5f0f\u95e8\u5931\u8d25\u3002'
         });
 
 

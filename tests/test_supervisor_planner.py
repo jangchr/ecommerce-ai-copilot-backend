@@ -1887,3 +1887,38 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             receipt["capability_invocation_final_blocked_receipt_status"],
         )
 
+    def test_project_runner_real_execution_mode_gate_dry_run_endpoint_stays_blocked(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/real-execution-mode-gate/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["real_execution_mode_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        gate = payload["runner_real_execution_mode_gate_preview"]
+        switch_plan = payload["runner_real_execution_switch_plan_preview"]
+        safety_case = payload["runner_real_execution_safety_case_preview"]
+        receipt = payload["runner_real_execution_mode_receipt_preview"]
+
+        self.assertEqual(gate["real_execution_mode_gate_status"], "real_execution_mode_blocked")
+        self.assertGreater(gate["blocking_mode_gate_check_count"], 0)
+        self.assertEqual(switch_plan["real_execution_switch_plan_status"], "switch_plan_blocked_in_dry_run")
+        self.assertEqual(safety_case["real_execution_safety_case_status"], "real_execution_safety_case_blocked_safely")
+        self.assertEqual(receipt["real_execution_mode_receipt_status"], "real_execution_mode_blocked_safely")
+        self.assertFalse(receipt["real_execution_enabled"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_mode_receipt_status"],
+            receipt["real_execution_mode_receipt_status"],
+        )
+
