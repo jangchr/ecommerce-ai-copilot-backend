@@ -4142,3 +4142,32 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
         self.assertIn("waiting_for_user", finalization["run_finalization_status"])
         self.assertIn("waiting_for_user", completion_ledger["completion_ledger_status"])
 
+
+    def test_source_adapter_contract_report_covers_ecommerce_inputs(self):
+        from agent_runs import build_source_adapter_contract_report
+
+        report = build_source_adapter_contract_report()
+
+        self.assertEqual(
+            report["source_adapter_contract_report_version"],
+            "source_adapter_contract_report_v1",
+        )
+        self.assertEqual(report["report_status"], "source_adapter_contracts_complete")
+        self.assertGreaterEqual(report["adapter_count"], 5)
+        self.assertEqual(report["missing_adapter_count"], 0)
+        self.assertTrue(report["supports_amazon_visible_reviews"])
+        self.assertTrue(report["supports_pasted_reviews"])
+        self.assertTrue(report["supports_source_probe_debug"])
+        self.assertTrue(report["supports_external_crawler_dry_run"])
+        self.assertTrue(report["supports_review_workspace_visible_sample"])
+        self.assertIn("bypass_login", report["prohibited_action_catalog"])
+        self.assertIn("bypass_captcha", report["prohibited_action_catalog"])
+        self.assertIn("visible_sample_only", report["boundary_catalog"])
+        self.assertFalse(report["real_source_adapter_enabled"])
+        self.assertFalse(report["allow_real_source_adapters_default"])
+        self.assertFalse(report["external_fetch_performed"])
+        self.assertFalse(report["provider_call_performed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["agent_execution_performed"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertTrue(report["dry_run"])

@@ -11601,6 +11601,65 @@
             };
         }
 
+
+        function projectWorkspaceExportSourceAdapterContractSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceSourceAdapterContractReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack source adapter contract bundle',
+                report_status: report.report_status || '',
+                source_adapter_contract_report_version: report.source_adapter_contract_report_version || '',
+                adapter_count: Number(report.adapter_count || 0),
+                complete_adapter_count: Number(report.complete_adapter_count || 0),
+                missing_adapter_count: Number(report.missing_adapter_count || 0),
+                adapter_reports: Array.isArray(report.adapter_reports) ? report.adapter_reports : [],
+                boundary_catalog: Array.isArray(report.boundary_catalog) ? report.boundary_catalog : [],
+                prohibited_action_catalog: Array.isArray(report.prohibited_action_catalog) ? report.prohibited_action_catalog : [],
+                supports_amazon_visible_reviews: Boolean(report.supports_amazon_visible_reviews),
+                supports_pasted_reviews: Boolean(report.supports_pasted_reviews),
+                supports_source_probe_debug: Boolean(report.supports_source_probe_debug),
+                supports_external_crawler_dry_run: Boolean(report.supports_external_crawler_dry_run),
+                supports_review_workspace_visible_sample: Boolean(report.supports_review_workspace_visible_sample),
+                real_source_adapter_enabled: Boolean(report.real_source_adapter_enabled),
+                external_fetch_performed: Boolean(report.external_fetch_performed),
+                provider_call_performed: Boolean(report.provider_call_performed),
+                external_api_called: Boolean(report.external_api_called),
+                agent_execution_performed: Boolean(report.agent_execution_performed),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                dry_run: Boolean(report.dry_run),
+                has_source_adapter_contract_report: Boolean(report.report_status || report.source_adapter_contract_report_version)
+            };
+        }
+
+        function projectWorkspaceExportSourceAdapterContractMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportSourceAdapterContractSnapshot(workspace);
+            if (!report.has_source_adapter_contract_report) {
+                return `## ${t('projectWorkspaceExportSourceAdapterContractTitle')}\n${t('sourceAdapterContractNotRefreshedYet')}`;
+            }
+            const adapterLines = report.adapter_reports.length
+                ? report.adapter_reports.map((adapter) => `- ${adapter.adapter_id || ''}: ${adapter.display_name || ''} (${adapter.complete ? 'complete' : 'incomplete'})`)
+                : ['- none'];
+            return [
+                `## ${t('projectWorkspaceExportSourceAdapterContractTitle')}`,
+                `${t('sourceAdapterContractReportStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('sourceAdapterContractCompleteCount')}: ${report.complete_adapter_count}`,
+                `${t('sourceAdapterContractMissingCount')}: ${report.missing_adapter_count}`,
+                `${t('sourceAdapterExternalCrawlerDryRunSupported')}: ${report.supports_external_crawler_dry_run}`,
+                `${t('realSourceAdapterEnabled')}: ${report.real_source_adapter_enabled}`,
+                `${t('externalFetchPerformed')}: ${report.external_fetch_performed}`,
+                `${t('providerCallPerformed')}: ${report.provider_call_performed}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('agentExecutionPerformed')}: ${report.agent_execution_performed}`,
+                `${t('realExecutionAllowed')}: ${report.real_execution_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('sourceAdapterContracts')}:`,
+                ...adapterLines,
+                '',
+                `${t('sourceAdapterRequiredBoundaries')}: ${report.boundary_catalog.join(', ') || 'none'}`,
+                `${t('sourceAdapterProhibitedActions')}: ${report.prohibited_action_catalog.join(', ') || 'none'}`
+            ].join('\n');
+        }
+
         function projectWorkspaceExportAgentContractRegistryMarkdown(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceExportAgentContractRegistrySnapshot(workspace);
             if (!report.has_agent_contract_report) {
@@ -11880,6 +11939,8 @@
                 '',
                 projectWorkspaceExportAgentContractRegistryMarkdown(workspace),
                 '',
+                projectWorkspaceExportSourceAdapterContractMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11901,6 +11962,7 @@
                 runner_supervisor_next_step_work_order_preview: projectWorkspaceExportSupervisorNextStepWorkOrderPreviewSnapshot(workspace),
                 runner_queue_lease_worker_dry_run_chain: projectWorkspaceExportQueueLeaseWorkerDryRunChainSnapshot(workspace),
                 agent_contract_registry: projectWorkspaceExportAgentContractRegistrySnapshot(workspace),
+                source_adapter_contract_report: projectWorkspaceExportSourceAdapterContractSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12022,6 +12084,7 @@
                 latestProjectAgentContractRegistry = payload.agent_contract_registry || {};
                 latestProjectAgentContractSummary = payload.agent_contract_summary || {};
                 latestProjectAgentContractCompletenessReport = payload.agent_contract_completeness_report || {};
+                latestProjectSourceAdapterContractReport = payload.source_adapter_contract_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -15857,6 +15920,150 @@
         let latestProjectAgentContractRegistry = {};
         let latestProjectAgentContractSummary = {};
         let latestProjectAgentContractCompletenessReport = {};
+        const PROJECT_WORKSPACE_SOURCE_ADAPTER_CONTRACT_BUNDLE_MARKER = 'Project Workspace source adapter contract bundle';
+        let latestProjectSourceAdapterContractReport = {};
+
+        function projectWorkspaceSourceAdapterContractReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectSourceAdapterContractReport || {}).length
+                ? latestProjectSourceAdapterContractReport
+                : workspace?.source_adapter_contract_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                source_adapter_contract_report_version: '',
+                report_status: graphSummary.latest_source_adapter_contract_report_status || '',
+                complete_adapter_count: Number(graphSummary.latest_source_adapter_contract_complete_count || 0),
+                missing_adapter_count: Number(graphSummary.latest_source_adapter_contract_missing_count || 0),
+                supports_external_crawler_dry_run: Boolean(graphSummary.latest_source_adapter_contract_supports_external_crawler_dry_run),
+                adapter_reports: [],
+                boundary_catalog: [],
+                prohibited_action_catalog: [],
+                dry_run: true,
+                real_source_adapter_enabled: false,
+                external_fetch_performed: false,
+                provider_call_performed: false,
+                external_api_called: false,
+                agent_execution_performed: false,
+                real_execution_allowed: false
+            };
+        }
+
+        function projectWorkspaceSourceAdapterContractCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceSourceAdapterContractReportFromWorkspace(workspace);
+            const adapters = Array.isArray(report.adapter_reports) ? report.adapter_reports : [];
+            return [
+                t('sourceAdapterContractCopyTitle'),
+                `${t('sourceAdapterContractReportStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('sourceAdapterContractCompleteCount')}: ${Number(report.complete_adapter_count || 0)}`,
+                `${t('sourceAdapterContractMissingCount')}: ${Number(report.missing_adapter_count || 0)}`,
+                `${t('sourceAdapterExternalCrawlerDryRunSupported')}: ${Boolean(report.supports_external_crawler_dry_run)}`,
+                `${t('realSourceAdapterEnabled')}: ${Boolean(report.real_source_adapter_enabled)}`,
+                `${t('externalFetchPerformed')}: ${Boolean(report.external_fetch_performed)}`,
+                `${t('providerCallPerformed')}: ${Boolean(report.provider_call_performed)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('agentExecutionPerformed')}: ${Boolean(report.agent_execution_performed)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('sourceAdapterContracts')}:`,
+                adapters.length
+                    ? adapters.map((adapter) => `- ${adapter.adapter_id || ''}: ${adapter.display_name || ''} (${adapter.complete ? 'complete' : 'incomplete'})`).join('\n')
+                    : '- none',
+                '',
+                `${t('sourceAdapterProhibitedActions')}: ${(report.prohibited_action_catalog || []).join(', ') || 'none'}`,
+                `${t('sourceAdapterRequiredBoundaries')}: ${(report.boundary_catalog || []).join(', ') || 'none'}`,
+                '',
+                JSON.stringify({ source_adapter_contract_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceSourceAdapterContract() {
+            const status = document.getElementById('projectWorkspaceSourceAdapterContractStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceSourceAdapterContractCopyText());
+                if (status) status.textContent = t('sourceAdapterContractCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('sourceAdapterContractCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceSourceAdapterContractPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceSourceAdapterContractReportFromWorkspace(workspace);
+            const adapters = Array.isArray(report.adapter_reports) ? report.adapter_reports : [];
+            const boundaries = Array.isArray(report.boundary_catalog) ? report.boundary_catalog : [];
+            const prohibited = Array.isArray(report.prohibited_action_catalog) ? report.prohibited_action_catalog : [];
+            const hasReport = Boolean(report.report_status || report.source_adapter_contract_report_version || adapters.length);
+            return `
+                <div class="section-block" id="projectWorkspaceSourceAdapterContractPanel" data-project-source-adapter-contract-marker="Project Workspace source adapter contract bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('sourceAdapterContractPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('sourceAdapterContractPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceSourceAdapterContractBtn" type="button" onclick="copyProjectWorkspaceSourceAdapterContract()">${escapeHTML(t('copySourceAdapterContract'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('sourceAdapterContractReportStatus'))}</div>
+                            <strong data-source-adapter-contract-report-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('sourceAdapterContractNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('sourceAdapterContractCompleteCount'))}</div>
+                            <strong data-source-adapter-contract-complete-count="${escapeHTML(String(Number(report.complete_adapter_count || 0)))}">${escapeHTML(String(Number(report.complete_adapter_count || 0)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('sourceAdapterContractMissingCount'))}: ${escapeHTML(String(Number(report.missing_adapter_count || 0)))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('sourceAdapterExternalCrawlerDryRunSupported'))}</div>
+                            <strong data-source-adapter-external-crawler-dry-run-supported="${escapeHTML(String(Boolean(report.supports_external_crawler_dry_run)))}">${escapeHTML(String(Boolean(report.supports_external_crawler_dry_run)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('realSourceAdapterEnabled'))}: ${escapeHTML(String(Boolean(report.real_source_adapter_enabled)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('sourceAdapterContracts'))}</div>
+                        ${adapters.length ? adapters.map((adapter) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(adapter.display_name || adapter.adapter_id || '')}</strong>
+                                <span>${escapeHTML((adapter.source_types || []).join(', ') || t('none'))}</span>
+                                <span>${escapeHTML(adapter.complete ? t('complete') : t('incomplete'))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('sourceAdapterContractNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('sourceAdapterRequiredBoundaries'))}</div>
+                            ${boundaries.length ? boundaries.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('sourceAdapterProhibitedActions'))}</div>
+                            ${prohibited.length ? prohibited.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('externalFetchPerformed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.external_fetch_performed)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('externalApiCalled'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('agentExecutionPerformed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.agent_execution_performed)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('sourceAdapterContractAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-source-adapter-contract-audit-preview="Project Workspace source adapter contract bundle">${escapeHTML(projectWorkspaceSourceAdapterContractCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('sourceAdapterContractNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceSourceAdapterContractStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceAgentContractCompletenessReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectAgentContractCompletenessReport || {}).length
@@ -16900,6 +17107,8 @@
                 if (queueLeaseWorkerPanel) queueLeaseWorkerPanel.outerHTML = renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel(latestProjectWorkspace);
                 const agentContractPanel = document.getElementById('projectWorkspaceAgentContractRegistryPanel');
                 if (agentContractPanel) agentContractPanel.outerHTML = renderProjectWorkspaceAgentContractRegistryPanel(latestProjectWorkspace);
+                const sourceAdapterContractPanel = document.getElementById('projectWorkspaceSourceAdapterContractPanel');
+                if (sourceAdapterContractPanel) sourceAdapterContractPanel.outerHTML = renderProjectWorkspaceSourceAdapterContractPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -19078,6 +19287,7 @@
                     ${renderProjectWorkspaceSupervisorNextStepWorkOrderPreviewPanel(workspace)}
                     ${renderProjectWorkspaceQueueLeaseWorkerDryRunChainPanel(workspace)}
                     ${renderProjectWorkspaceAgentContractRegistryPanel(workspace)}
+                    ${renderProjectWorkspaceSourceAdapterContractPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -23214,6 +23424,51 @@
             agentContractRegistryCopied: 'Agent \u5951\u7ea6\u62a5\u544a\u5df2\u590d\u5236\u3002',
             agentContractRegistryCopyFailed: '\u590d\u5236 Agent \u5951\u7ea6\u62a5\u544a\u5931\u8d25\u3002',
             projectWorkspaceExportAgentContractTitle: 'Agent Contract Registry / Agent \u5951\u7ea6\u6ce8\u518c\u8868'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceSourceAdapterContractBundleMarker: 'Project Workspace source adapter contract bundle',
+            sourceAdapterContractPanelTitle: 'Source Adapter Contracts',
+            sourceAdapterContractPanelHelper: 'Contracts for ecommerce data inputs: Amazon visible reviews, pasted reviews, debug source probe, external crawler dry-run, and visible review workspace. These contracts do not fetch hidden data or unlock real source adapters.',
+            copySourceAdapterContract: 'Copy source adapter contract report',
+            sourceAdapterContractCopyTitle: 'Project Source Adapter Contract report',
+            sourceAdapterContractReportStatus: 'Source adapter contract status',
+            sourceAdapterContractCompleteCount: 'Complete adapter count',
+            sourceAdapterContractMissingCount: 'Missing adapter count',
+            sourceAdapterExternalCrawlerDryRunSupported: 'External crawler dry-run supported',
+            realSourceAdapterEnabled: 'Real source adapter enabled',
+            externalFetchPerformed: 'External fetch performed',
+            sourceAdapterContracts: 'Source adapter contracts',
+            sourceAdapterRequiredBoundaries: 'Required source boundaries',
+            sourceAdapterProhibitedActions: 'Prohibited source actions',
+            sourceAdapterContractAuditPreview: 'Source adapter contract audit preview',
+            sourceAdapterContractNotRefreshedYet: 'Source adapter contract report has not been refreshed yet.',
+            sourceAdapterContractCopied: 'Source adapter contract report copied.',
+            sourceAdapterContractCopyFailed: 'Could not copy source adapter contract report.',
+            projectWorkspaceExportSourceAdapterContractTitle: 'Source Adapter Contracts'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceSourceAdapterContractBundleMarker: 'Project Workspace source adapter contract bundle',
+            sourceAdapterContractPanelTitle: 'Source Adapter Contracts / \u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6',
+            sourceAdapterContractPanelHelper: '\u7535\u5546\u6570\u636e\u8f93\u5165\u5951\u7ea6\uff1aAmazon \u5f53\u524d\u53ef\u89c1\u8bc4\u8bba\u3001\u7c98\u8d34\u8bc4\u8bba\u3001debug source probe\u3001\u5916\u90e8 crawler dry-run \u548c\u53ef\u89c1\u8bc4\u8bba workspace\uff1b\u4e0d\u6293\u9690\u85cf\u6570\u636e\uff0c\u4e0d\u89e3\u9501\u771f\u5b9e source adapter\u3002',
+            copySourceAdapterContract: '\u590d\u5236\u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6\u62a5\u544a',
+            sourceAdapterContractCopyTitle: '\u9879\u76ee Source Adapter Contract \u62a5\u544a',
+            sourceAdapterContractReportStatus: '\u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6\u72b6\u6001',
+            sourceAdapterContractCompleteCount: '\u5df2\u5b8c\u6574\u9002\u914d\u5668\u6570',
+            sourceAdapterContractMissingCount: '\u7f3a\u5931\u9002\u914d\u5668\u6570',
+            sourceAdapterExternalCrawlerDryRunSupported: '\u662f\u5426\u652f\u6301\u5916\u90e8 crawler dry-run',
+            realSourceAdapterEnabled: '\u662f\u5426\u5f00\u542f\u771f\u5b9e source adapter',
+            externalFetchPerformed: '\u662f\u5426\u6267\u884c\u5916\u90e8\u6293\u53d6',
+            sourceAdapterContracts: '\u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6',
+            sourceAdapterRequiredBoundaries: '\u5fc5\u8981\u6570\u636e\u6e90\u8fb9\u754c',
+            sourceAdapterProhibitedActions: '\u7981\u6b62\u7684\u6570\u636e\u6e90\u884c\u4e3a',
+            sourceAdapterContractAuditPreview: '\u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6\u5ba1\u8ba1\u9884\u89c8',
+            sourceAdapterContractNotRefreshedYet: '\u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6\u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            sourceAdapterContractCopied: '\u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6\u62a5\u544a\u5df2\u590d\u5236\u3002',
+            sourceAdapterContractCopyFailed: '\u590d\u5236\u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6\u62a5\u544a\u5931\u8d25\u3002',
+            projectWorkspaceExportSourceAdapterContractTitle: 'Source Adapter Contracts / \u6570\u636e\u6e90\u9002\u914d\u5668\u5951\u7ea6'
         });
 
 

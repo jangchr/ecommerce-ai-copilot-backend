@@ -456,6 +456,32 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(
             payload["project"]["graph_summary"]["latest_agent_contract_supervisor_can_use_registry"]
         )
+        self.assertIn("source_adapter_contract_report", payload)
+        source_adapter_report = payload["source_adapter_contract_report"]
+        self.assertEqual(
+            source_adapter_report["source_adapter_contract_report_version"],
+            "source_adapter_contract_report_v1",
+        )
+        self.assertEqual(source_adapter_report["report_status"], "source_adapter_contracts_complete")
+        self.assertEqual(source_adapter_report["missing_adapter_count"], 0)
+        self.assertTrue(source_adapter_report["supports_amazon_visible_reviews"])
+        self.assertTrue(source_adapter_report["supports_pasted_reviews"])
+        self.assertTrue(source_adapter_report["supports_external_crawler_dry_run"])
+        self.assertFalse(source_adapter_report["real_source_adapter_enabled"])
+        self.assertFalse(source_adapter_report["external_fetch_performed"])
+        self.assertFalse(source_adapter_report["external_api_called"])
+        self.assertFalse(source_adapter_report["agent_execution_performed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_source_adapter_contract_report_status"],
+            "source_adapter_contracts_complete",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_source_adapter_contract_missing_count"],
+            0,
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_source_adapter_contract_supports_external_crawler_dry_run"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],
@@ -2421,4 +2447,3 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(payload["project"]["graph_summary"]["latest_runner_worker_lease_created"])
         self.assertFalse(payload["project"]["graph_summary"]["latest_runner_worker_invocation_performed"])
         self.assertFalse(payload["project"]["graph_summary"]["latest_runner_queue_lease_worker_safe_to_continue"])
-
