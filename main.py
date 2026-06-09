@@ -12767,6 +12767,153 @@ def _runner_real_execution_launch_monitor_preview(launch_payload: dict) -> dict:
     }
 
 
+def _runner_real_execution_incident_response_preview(monitor_payload: dict) -> dict:
+    monitor = dict(monitor_payload.get("runner_real_execution_launch_monitor_preview") or {})
+    project_id = str(monitor_payload.get("project", {}).get("project_id") or monitor_payload.get("project_id") or "demo_project_default")
+
+    blocking_tripwire_signal_ids = list(monitor.get("blocking_tripwire_signal_ids") or [])
+    failed_health_probe_ids = list(monitor.get("failed_health_probe_ids") or [])
+    abort_recommended = bool(monitor.get("abort_recommended"))
+
+    incident_detected = abort_recommended or bool(blocking_tripwire_signal_ids) or bool(failed_health_probe_ids)
+    incident_severity = "high" if blocking_tripwire_signal_ids else "medium"
+
+    containment_actions = [
+        {
+            "containment_action_id": "keep_launch_lock_active",
+            "status": "ready",
+            "blocking": True,
+            "action": "Keep launch lock active and prevent launch authorization.",
+        },
+        {
+            "containment_action_id": "block_provider_tool_external_api_calls",
+            "status": "ready",
+            "blocking": True,
+            "action": "Keep provider, tool, and external API execution disabled.",
+        },
+        {
+            "containment_action_id": "freeze_real_agent_execution",
+            "status": "ready",
+            "blocking": True,
+            "action": "Keep real Agent execution disabled while incident review is open.",
+        },
+        {
+            "containment_action_id": "preserve_workspace_audit_trace",
+            "status": "ready",
+            "blocking": False,
+            "action": "Preserve monitor, tripwire, health probe, and abort-plan evidence in graph summary.",
+        },
+    ]
+
+    recovery_checklist = [
+        {
+            "recovery_check_id": "operator_approval_captured",
+            "required": True,
+            "status": "missing",
+            "reason": "Explicit operator approval is required before any future real execution attempt.",
+        },
+        {
+            "recovery_check_id": "launch_authorization_approved",
+            "required": True,
+            "status": "missing",
+            "reason": "Launch authorization must be approved before execution.",
+        },
+        {
+            "recovery_check_id": "sandbox_session_ready",
+            "required": True,
+            "status": "missing",
+            "reason": "A sandbox session must be ready before provider or tool execution.",
+        },
+        {
+            "recovery_check_id": "rollback_plan_confirmed",
+            "required": True,
+            "status": "missing",
+            "reason": "Rollback plan must be confirmed before real execution.",
+        },
+        {
+            "recovery_check_id": "provider_credentials_scoped",
+            "required": True,
+            "status": "missing",
+            "reason": "Provider credentials must be scoped and reviewed before use.",
+        },
+        {
+            "recovery_check_id": "budget_quota_confirmed",
+            "required": True,
+            "status": "missing",
+            "reason": "Budget and quota limits must be confirmed before external calls.",
+        },
+    ]
+
+    incident_events = [
+        {
+            "incident_event_id": f"real_execution_incident_{project_id}_launch_blocked",
+            "incident_event_type": "real_execution_launch_blocked",
+            "incident_event_status": "recorded",
+            "severity": incident_severity,
+            "reason": "Launch monitor recommended abort and real execution remains locked.",
+            "blocking_tripwire_signal_ids": blocking_tripwire_signal_ids,
+            "failed_health_probe_ids": failed_health_probe_ids,
+        }
+    ]
+
+    incident_receipt = {
+        "incident_receipt_version": "runner_real_execution_incident_receipt_preview_v1",
+        "incident_receipt_status": "incident_response_recorded",
+        "project_id": project_id,
+        "incident_detected": incident_detected,
+        "incident_severity": incident_severity,
+        "incident_event_count": len(incident_events),
+        "containment_action_count": len(containment_actions),
+        "recovery_check_count": len(recovery_checklist),
+        "real_execution_enabled": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+    return {
+        "real_execution_incident_response_version": "runner_real_execution_incident_response_preview_v1",
+        "real_execution_incident_response_status": "incident_response_opened_safely" if incident_detected else "incident_response_not_required",
+        "project_id": project_id,
+        "launch_monitor_status": monitor.get("real_execution_launch_monitor_status", ""),
+        "health_probe_summary": monitor.get("health_probe_summary", ""),
+        "blocking_tripwire_signal_ids": blocking_tripwire_signal_ids,
+        "blocking_tripwire_signal_count": len(blocking_tripwire_signal_ids),
+        "failed_health_probe_ids": failed_health_probe_ids,
+        "failed_health_probe_count": len(failed_health_probe_ids),
+        "abort_recommended": abort_recommended,
+        "incident_detected": incident_detected,
+        "incident_severity": incident_severity,
+        "incident_events": incident_events,
+        "incident_event_count": len(incident_events),
+        "containment_actions": containment_actions,
+        "containment_action_count": len(containment_actions),
+        "containment_plan_status": "containment_ready",
+        "recovery_checklist": recovery_checklist,
+        "recovery_check_count": len(recovery_checklist),
+        "recovery_ready": False,
+        "incident_receipt": incident_receipt,
+        "incident_receipt_status": incident_receipt["incident_receipt_status"],
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/real-execution-approval-decision/dry-run")
 async def dry_run_project_agent_real_execution_approval_decision(project_id: str, http_request: Request):
     approval_payload = await dry_run_project_agent_real_execution_approval_request(project_id, http_request)
@@ -12899,6 +13046,55 @@ async def dry_run_project_agent_real_execution_launch_monitor(project_id: str, h
         "dry_run": True,
         "monitoring_started": True,
         "abort_recommended": runner_real_execution_launch_monitor_preview["abort_recommended"],
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/real-execution-incident-response/dry-run")
+async def dry_run_project_agent_real_execution_incident_response(project_id: str, http_request: Request):
+    monitor_payload = await dry_run_project_agent_real_execution_launch_monitor(project_id, http_request)
+
+    runner_real_execution_incident_response_preview = _runner_real_execution_incident_response_preview(monitor_payload)
+
+    project = monitor_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_real_execution_incident_response_status": runner_real_execution_incident_response_preview["real_execution_incident_response_status"],
+        "latest_runner_real_execution_incident_detected": runner_real_execution_incident_response_preview["incident_detected"],
+        "latest_runner_real_execution_incident_severity": runner_real_execution_incident_response_preview["incident_severity"],
+        "latest_runner_real_execution_containment_plan_status": runner_real_execution_incident_response_preview["containment_plan_status"],
+        "latest_runner_real_execution_recovery_ready": runner_real_execution_incident_response_preview["recovery_ready"],
+        "latest_runner_real_execution_incident_receipt_status": runner_real_execution_incident_response_preview["incident_receipt_status"],
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **monitor_payload,
+        "project": project,
+        "runner_real_execution_incident_response_preview": runner_real_execution_incident_response_preview,
+        "dry_run": True,
+        "incident_detected": runner_real_execution_incident_response_preview["incident_detected"],
+        "incident_response_opened": runner_real_execution_incident_response_preview["incident_detected"],
+        "abort_recommended": runner_real_execution_incident_response_preview["abort_recommended"],
+        "containment_plan_status": runner_real_execution_incident_response_preview["containment_plan_status"],
+        "recovery_ready": False,
         "launch_authorized": False,
         "launch_allowed": False,
         "operator_approval_captured": False,

@@ -2122,3 +2122,61 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             True,
         )
 
+    def test_project_runner_real_execution_incident_response_dry_run_endpoint_opens_containment_plan(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/real-execution-incident-response/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertTrue(payload["incident_detected"])
+        self.assertTrue(payload["incident_response_opened"])
+        self.assertTrue(payload["abort_recommended"])
+        self.assertEqual(payload["containment_plan_status"], "containment_ready")
+        self.assertFalse(payload["recovery_ready"])
+        self.assertFalse(payload["launch_authorized"])
+        self.assertFalse(payload["launch_allowed"])
+        self.assertFalse(payload["operator_approval_captured"])
+        self.assertFalse(payload["real_execution_mode_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        incident = payload["runner_real_execution_incident_response_preview"]
+        receipt = incident["incident_receipt"]
+
+        self.assertEqual(incident["real_execution_incident_response_status"], "incident_response_opened_safely")
+        self.assertEqual(incident["launch_monitor_status"], "launch_monitor_blocked_safely")
+        self.assertEqual(incident["containment_plan_status"], "containment_ready")
+        self.assertGreater(incident["containment_action_count"], 0)
+        self.assertGreater(incident["recovery_check_count"], 0)
+        self.assertTrue(incident["incident_detected"])
+        self.assertEqual(incident["incident_severity"], "high")
+        self.assertIn("launch_authorization_denied", incident["blocking_tripwire_signal_ids"])
+        self.assertFalse(incident["recovery_ready"])
+        self.assertEqual(receipt["incident_receipt_status"], "incident_response_recorded")
+        self.assertFalse(receipt["real_execution_enabled"])
+        self.assertFalse(receipt["provider_call_performed"])
+        self.assertFalse(receipt["external_api_called"])
+        self.assertFalse(receipt["agent_execution_performed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_incident_response_status"],
+            incident["real_execution_incident_response_status"],
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_containment_plan_status"],
+            "containment_ready",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_incident_receipt_status"],
+            "incident_response_recorded",
+        )
+
