@@ -6220,3 +6220,44 @@ class ProjectWorkspaceRealExecutionReadinessSummaryPanelFrontendTests(unittest.T
         self.assertIn("Project Workspace real execution readiness summary panel bundle", script)
         self.assertIn("project_workspace_real_execution_readiness_summary_panel_marker", script)
 
+
+class ProjectWorkspaceRealExecutionApprovalRequestPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_real_execution_approval_request_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace real execution approval request panel bundle",
+            "PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_REQUEST_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceRealExecutionApprovalRequestPanel(",
+            "function projectWorkspaceRealExecutionApprovalRequestCopyText(",
+            "async function copyProjectWorkspaceRealExecutionApprovalRequest(",
+            "async function dryRunProjectWorkspaceRealExecutionApprovalRequest(",
+            "/runner/real-execution-approval-request/dry-run",
+            "latestProjectRunnerRealExecutionApprovalRequestDraftPreview",
+            "latestProjectRunnerRealExecutionApprovalFormSchemaPreview",
+            "latestProjectRunnerRealExecutionApprovalReviewQueuePreview",
+            "latestProjectRunnerRealExecutionApprovalRequestReceiptPreview",
+            "projectWorkspaceRealExecutionApprovalRequestPanel",
+            "projectWorkspaceRealExecutionApprovalRequestStatus",
+            "dryRunProjectWorkspaceRealExecutionApprovalRequestBtn",
+            "copyProjectWorkspaceRealExecutionApprovalRequestBtn",
+            "data-project-real-execution-approval-request-panel-marker",
+            "data-project-real-execution-approval-request-dry-run-action",
+            "data-real-execution-approval-request-audit-preview",
+            "realExecutionApprovalRequestPanelTitle",
+            "realExecutionApprovalRequestPanelHelper",
+            "renderProjectWorkspaceRealExecutionApprovalRequestPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_real_execution_approval_request_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_real_execution_approval_request_panel_marker", script)
+        self.assertIn("Project Workspace real execution approval request panel bundle", script)
+
+    def test_project_workspace_real_execution_approval_request_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace real execution approval request panel bundle", script)
+        self.assertIn("project_workspace_real_execution_approval_request_panel_marker", script)
+

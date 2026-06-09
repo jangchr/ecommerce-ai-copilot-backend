@@ -1958,3 +1958,41 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             "no_go",
         )
 
+    def test_project_runner_real_execution_approval_request_dry_run_endpoint_records_draft_not_approval(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/real-execution-approval-request/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["operator_approval_captured"])
+        self.assertFalse(payload["approval_request_ready"])
+        self.assertFalse(payload["real_execution_mode_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        draft = payload["runner_real_execution_approval_request_draft_preview"]
+        schema = payload["runner_real_execution_approval_form_schema_preview"]
+        queue = payload["runner_real_execution_approval_review_queue_preview"]
+        receipt = payload["runner_real_execution_approval_request_receipt_preview"]
+
+        self.assertEqual(draft["real_execution_approval_request_draft_status"], "approval_request_draft_blocked")
+        self.assertGreater(draft["missing_approval_field_count"], 0)
+        self.assertEqual(schema["real_execution_approval_form_schema_status"], "approval_form_schema_ready_for_review")
+        self.assertEqual(queue["real_execution_approval_review_queue_status"], "approval_review_queue_waiting_for_operator")
+        self.assertEqual(receipt["real_execution_approval_request_receipt_status"], "approval_request_draft_recorded_not_approved")
+        self.assertFalse(receipt["operator_approval_captured"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_approval_request_receipt_status"],
+            receipt["real_execution_approval_request_receipt_status"],
+        )
+

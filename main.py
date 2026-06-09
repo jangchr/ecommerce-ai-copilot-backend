@@ -11990,6 +11990,208 @@ async def dry_run_project_agent_real_execution_mode_gate(project_id: str, http_r
     }
 
 
+
+def _runner_real_execution_approval_request_draft_preview(readiness_payload: dict) -> dict:
+    summary = dict(readiness_payload.get("runner_real_execution_readiness_summary_preview") or {})
+    actions = dict(readiness_payload.get("runner_real_execution_operator_next_actions_preview") or {})
+    brief = dict(readiness_payload.get("runner_real_execution_executive_brief_preview") or {})
+    mode_receipt = dict(readiness_payload.get("runner_real_execution_mode_receipt_preview") or {})
+    project_id = str(readiness_payload.get("project", {}).get("project_id") or readiness_payload.get("project_id") or "demo_project_default")
+
+    required_approval_fields = [
+        {
+            "approval_field_id": "operator_id",
+            "label": "Operator ID",
+            "required": True,
+            "status": "missing",
+        },
+        {
+            "approval_field_id": "approval_reason",
+            "label": "Approval reason",
+            "required": True,
+            "status": "missing",
+        },
+        {
+            "approval_field_id": "budget_limit_acknowledgement",
+            "label": "Budget / quota acknowledgement",
+            "required": True,
+            "status": "missing",
+        },
+        {
+            "approval_field_id": "sandbox_session_id",
+            "label": "Sandbox session ID",
+            "required": True,
+            "status": "missing",
+        },
+        {
+            "approval_field_id": "rollback_plan_id",
+            "label": "Rollback plan ID",
+            "required": True,
+            "status": "missing",
+        },
+        {
+            "approval_field_id": "provider_credential_scope",
+            "label": "Provider credential scope",
+            "required": True,
+            "status": "missing",
+        },
+        {
+            "approval_field_id": "kill_switch_acknowledgement",
+            "label": "Kill switch acknowledgement",
+            "required": True,
+            "status": "missing",
+        },
+    ]
+    missing_approval_field_ids = [
+        item["approval_field_id"]
+        for item in required_approval_fields
+        if item.get("required") and item.get("status") != "captured"
+    ]
+
+    return {
+        "real_execution_approval_request_draft_version": "runner_real_execution_approval_request_draft_preview_v1",
+        "real_execution_approval_request_draft_status": "approval_request_draft_blocked",
+        "project_id": project_id,
+        "go_no_go_decision": summary.get("go_no_go_decision", "no_go"),
+        "readiness_summary_status": summary.get("real_execution_readiness_summary_status", ""),
+        "operator_next_actions_status": actions.get("real_execution_operator_next_actions_status", ""),
+        "executive_brief_status": brief.get("real_execution_executive_brief_status", ""),
+        "real_execution_mode_receipt_status": mode_receipt.get("real_execution_mode_receipt_status", ""),
+        "required_approval_fields": required_approval_fields,
+        "required_approval_field_count": len(required_approval_fields),
+        "missing_approval_field_ids": missing_approval_field_ids,
+        "missing_approval_field_count": len(missing_approval_field_ids),
+        "approval_request_ready": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
+def _runner_real_execution_approval_form_schema_preview(approval_request: dict) -> dict:
+    project_id = str(approval_request.get("project_id") or "demo_project_default")
+    form_sections = [
+        {
+            "form_section_id": "operator_identity",
+            "title": "Operator identity",
+            "field_ids": ["operator_id"],
+        },
+        {
+            "form_section_id": "approval_reasoning",
+            "title": "Approval reasoning",
+            "field_ids": ["approval_reason"],
+        },
+        {
+            "form_section_id": "runtime_controls",
+            "title": "Runtime controls",
+            "field_ids": [
+                "budget_limit_acknowledgement",
+                "sandbox_session_id",
+                "rollback_plan_id",
+                "provider_credential_scope",
+                "kill_switch_acknowledgement",
+            ],
+        },
+    ]
+    return {
+        "real_execution_approval_form_schema_version": "runner_real_execution_approval_form_schema_preview_v1",
+        "real_execution_approval_form_schema_status": "approval_form_schema_ready_for_review",
+        "project_id": project_id,
+        "form_sections": form_sections,
+        "form_section_count": len(form_sections),
+        "required_approval_fields": list(approval_request.get("required_approval_fields") or []),
+        "missing_approval_field_ids": list(approval_request.get("missing_approval_field_ids") or []),
+        "approval_request_ready": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "dry_run": True,
+    }
+
+
+def _runner_real_execution_approval_review_queue_preview(
+    approval_request: dict,
+    approval_form_schema: dict,
+) -> dict:
+    project_id = str(approval_request.get("project_id") or "demo_project_default")
+    queue_items = [
+        {
+            "queue_item_id": f"real_execution_approval_{project_id}_draft",
+            "queue_item_type": "real_execution_approval_request",
+            "queue_item_status": "waiting_for_operator_input",
+            "priority": "critical",
+            "blocked_by": list(approval_request.get("missing_approval_field_ids") or []),
+        }
+    ]
+    return {
+        "real_execution_approval_review_queue_version": "runner_real_execution_approval_review_queue_preview_v1",
+        "real_execution_approval_review_queue_status": "approval_review_queue_waiting_for_operator",
+        "project_id": project_id,
+        "queue_items": queue_items,
+        "queue_item_count": len(queue_items),
+        "approval_form_schema_status": approval_form_schema.get("real_execution_approval_form_schema_status", ""),
+        "operator_approval_captured": False,
+        "approval_request_ready": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
+def _runner_real_execution_approval_request_receipt_preview(
+    approval_request: dict,
+    approval_form_schema: dict,
+    approval_review_queue: dict,
+) -> dict:
+    project_id = str(approval_request.get("project_id") or "demo_project_default")
+    receipt_reasons = [
+        "Approval request is only a dry-run draft.",
+        "Required approval fields are missing.",
+        "Approval review queue is waiting for operator input.",
+        "Real execution mode remains disabled.",
+    ]
+    return {
+        "real_execution_approval_request_receipt_version": "runner_real_execution_approval_request_receipt_preview_v1",
+        "real_execution_approval_request_receipt_status": "approval_request_draft_recorded_not_approved",
+        "project_id": project_id,
+        "approval_request_draft_status": approval_request.get("real_execution_approval_request_draft_status", ""),
+        "approval_form_schema_status": approval_form_schema.get("real_execution_approval_form_schema_status", ""),
+        "approval_review_queue_status": approval_review_queue.get("real_execution_approval_review_queue_status", ""),
+        "receipt_reasons": receipt_reasons,
+        "receipt_reason_count": len(receipt_reasons),
+        "operator_approval_captured": False,
+        "approval_request_ready": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/real-execution-readiness-summary/dry-run")
 async def dry_run_project_agent_real_execution_readiness_summary(project_id: str, http_request: Request):
     mode_gate_payload = await dry_run_project_agent_real_execution_mode_gate(project_id, http_request)
@@ -12026,6 +12228,63 @@ async def dry_run_project_agent_real_execution_readiness_summary(project_id: str
         "runner_real_execution_executive_brief_preview": runner_real_execution_executive_brief_preview,
         "dry_run": True,
         "go_no_go_decision": "no_go",
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/real-execution-approval-request/dry-run")
+async def dry_run_project_agent_real_execution_approval_request(project_id: str, http_request: Request):
+    readiness_payload = await dry_run_project_agent_real_execution_readiness_summary(project_id, http_request)
+
+    runner_real_execution_approval_request_draft_preview = _runner_real_execution_approval_request_draft_preview(readiness_payload)
+    runner_real_execution_approval_form_schema_preview = _runner_real_execution_approval_form_schema_preview(
+        runner_real_execution_approval_request_draft_preview
+    )
+    runner_real_execution_approval_review_queue_preview = _runner_real_execution_approval_review_queue_preview(
+        runner_real_execution_approval_request_draft_preview,
+        runner_real_execution_approval_form_schema_preview,
+    )
+    runner_real_execution_approval_request_receipt_preview = _runner_real_execution_approval_request_receipt_preview(
+        runner_real_execution_approval_request_draft_preview,
+        runner_real_execution_approval_form_schema_preview,
+        runner_real_execution_approval_review_queue_preview,
+    )
+
+    project = readiness_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_real_execution_approval_request_draft_status": runner_real_execution_approval_request_draft_preview["real_execution_approval_request_draft_status"],
+        "latest_runner_real_execution_approval_form_schema_status": runner_real_execution_approval_form_schema_preview["real_execution_approval_form_schema_status"],
+        "latest_runner_real_execution_approval_review_queue_status": runner_real_execution_approval_review_queue_preview["real_execution_approval_review_queue_status"],
+        "latest_runner_real_execution_approval_request_receipt_status": runner_real_execution_approval_request_receipt_preview["real_execution_approval_request_receipt_status"],
+        "latest_runner_real_execution_operator_approval_captured": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **readiness_payload,
+        "project": project,
+        "runner_real_execution_approval_request_draft_preview": runner_real_execution_approval_request_draft_preview,
+        "runner_real_execution_approval_form_schema_preview": runner_real_execution_approval_form_schema_preview,
+        "runner_real_execution_approval_review_queue_preview": runner_real_execution_approval_review_queue_preview,
+        "runner_real_execution_approval_request_receipt_preview": runner_real_execution_approval_request_receipt_preview,
+        "dry_run": True,
+        "operator_approval_captured": False,
+        "approval_request_ready": False,
         "real_execution_mode_allowed": False,
         "real_execution_enabled": False,
         "release_allowed": False,

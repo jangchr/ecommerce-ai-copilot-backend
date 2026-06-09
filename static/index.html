@@ -15209,6 +15209,128 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_REQUEST_PANEL_BUNDLE_MARKER = 'Project Workspace real execution approval request panel bundle';
+        let latestProjectRunnerRealExecutionApprovalRequestDraftPreview = {};
+        let latestProjectRunnerRealExecutionApprovalFormSchemaPreview = {};
+        let latestProjectRunnerRealExecutionApprovalReviewQueuePreview = {};
+        let latestProjectRunnerRealExecutionApprovalRequestReceiptPreview = {};
+
+        function projectWorkspaceRealExecutionApprovalRequestCopyText(workspace = latestProjectWorkspace) {
+            const draft = Object.keys(latestProjectRunnerRealExecutionApprovalRequestDraftPreview || {}).length ? latestProjectRunnerRealExecutionApprovalRequestDraftPreview : workspace?.runner_real_execution_approval_request_draft_preview || {};
+            const schema = Object.keys(latestProjectRunnerRealExecutionApprovalFormSchemaPreview || {}).length ? latestProjectRunnerRealExecutionApprovalFormSchemaPreview : workspace?.runner_real_execution_approval_form_schema_preview || {};
+            const queue = Object.keys(latestProjectRunnerRealExecutionApprovalReviewQueuePreview || {}).length ? latestProjectRunnerRealExecutionApprovalReviewQueuePreview : workspace?.runner_real_execution_approval_review_queue_preview || {};
+            const receipt = Object.keys(latestProjectRunnerRealExecutionApprovalRequestReceiptPreview || {}).length ? latestProjectRunnerRealExecutionApprovalRequestReceiptPreview : workspace?.runner_real_execution_approval_request_receipt_preview || {};
+            return [
+                t('realExecutionApprovalRequestCopyTitle'),
+                `${t('realExecutionApprovalRequestDraftStatus')}: ${draft.real_execution_approval_request_draft_status || 'not_refreshed'}`,
+                `${t('realExecutionApprovalFormSchemaStatus')}: ${schema.real_execution_approval_form_schema_status || 'not_refreshed'}`,
+                `${t('realExecutionApprovalReviewQueueStatus')}: ${queue.real_execution_approval_review_queue_status || 'not_refreshed'}`,
+                `${t('realExecutionApprovalRequestReceiptStatus')}: ${receipt.real_execution_approval_request_receipt_status || 'not_refreshed'}`,
+                `${t('operatorApprovalCaptured')}: ${Boolean(receipt.operator_approval_captured)}`,
+                '',
+                JSON.stringify({ draft, schema, queue, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionApprovalRequest() {
+            const status = document.getElementById('projectWorkspaceRealExecutionApprovalRequestStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionApprovalRequestCopyText());
+                if (status) status.textContent = t('realExecutionApprovalRequestCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionApprovalRequestCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceRealExecutionApprovalRequest(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRealExecutionApprovalRequestStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('realExecutionApprovalRequestDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_real_execution_approval_request_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/real-execution-approval-request/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('realExecutionApprovalRequestDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerRealExecutionReadinessSummaryPreview = payload.runner_real_execution_readiness_summary_preview || {};
+                latestProjectRunnerRealExecutionOperatorNextActionsPreview = payload.runner_real_execution_operator_next_actions_preview || {};
+                latestProjectRunnerRealExecutionExecutiveBriefPreview = payload.runner_real_execution_executive_brief_preview || {};
+                latestProjectRunnerRealExecutionApprovalRequestDraftPreview = payload.runner_real_execution_approval_request_draft_preview || {};
+                latestProjectRunnerRealExecutionApprovalFormSchemaPreview = payload.runner_real_execution_approval_form_schema_preview || {};
+                latestProjectRunnerRealExecutionApprovalReviewQueuePreview = payload.runner_real_execution_approval_review_queue_preview || {};
+                latestProjectRunnerRealExecutionApprovalRequestReceiptPreview = payload.runner_real_execution_approval_request_receipt_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_real_execution_approval_request_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_real_execution_approval_request_dry_run');
+                if (status) status.textContent = t('realExecutionApprovalRequestDryRunComplete');
+
+                const readinessPanel = document.getElementById('projectWorkspaceRealExecutionReadinessSummaryPanel');
+                if (readinessPanel) readinessPanel.outerHTML = renderProjectWorkspaceRealExecutionReadinessSummaryPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceRealExecutionApprovalRequestPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionApprovalRequestPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_approval_request_dry_run');
+                if (status) status.textContent = error.message || t('realExecutionApprovalRequestDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionApprovalRequestPanel(workspace = latestProjectWorkspace) {
+            const draft = Object.keys(latestProjectRunnerRealExecutionApprovalRequestDraftPreview || {}).length ? latestProjectRunnerRealExecutionApprovalRequestDraftPreview : workspace?.runner_real_execution_approval_request_draft_preview || {};
+            const schema = Object.keys(latestProjectRunnerRealExecutionApprovalFormSchemaPreview || {}).length ? latestProjectRunnerRealExecutionApprovalFormSchemaPreview : workspace?.runner_real_execution_approval_form_schema_preview || {};
+            const queue = Object.keys(latestProjectRunnerRealExecutionApprovalReviewQueuePreview || {}).length ? latestProjectRunnerRealExecutionApprovalReviewQueuePreview : workspace?.runner_real_execution_approval_review_queue_preview || {};
+            const receipt = Object.keys(latestProjectRunnerRealExecutionApprovalRequestReceiptPreview || {}).length ? latestProjectRunnerRealExecutionApprovalRequestReceiptPreview : workspace?.runner_real_execution_approval_request_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionApprovalRequestPanel" data-project-real-execution-approval-request-panel-marker="Project Workspace real execution approval request panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionApprovalRequestPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionApprovalRequestPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceRealExecutionApprovalRequestBtn" type="button" data-project-real-execution-approval-request-dry-run-action="Project Workspace real execution approval request panel bundle" onclick="dryRunProjectWorkspaceRealExecutionApprovalRequest()">${escapeHTML(t('dryRunRealExecutionApprovalRequest'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionApprovalRequestBtn" type="button" onclick="copyProjectWorkspaceRealExecutionApprovalRequest()">${escapeHTML(t('copyRealExecutionApprovalRequest'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionApprovalRequestDraftStatus'))}</div>
+                            <strong data-real-execution-approval-request-draft-status="${escapeHTML(draft.real_execution_approval_request_draft_status || 'not_refreshed')}">${escapeHTML(draft.real_execution_approval_request_draft_status || t('realExecutionApprovalRequestNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionApprovalReviewQueueStatus'))}</div>
+                            <strong data-real-execution-approval-review-queue-status="${escapeHTML(queue.real_execution_approval_review_queue_status || 'not_refreshed')}">${escapeHTML(queue.real_execution_approval_review_queue_status || t('realExecutionApprovalRequestNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionApprovalRequestReceiptStatus'))}</div>
+                            <strong data-real-execution-approval-request-receipt-status="${escapeHTML(receipt.real_execution_approval_request_receipt_status || 'not_refreshed')}">${escapeHTML(receipt.real_execution_approval_request_receipt_status || t('realExecutionApprovalRequestNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('operatorApprovalCaptured'))}: ${escapeHTML(String(Boolean(receipt.operator_approval_captured)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionApprovalFormSchemaStatus'))}</div>
+                        <strong data-real-execution-approval-form-schema-status="${escapeHTML(schema.real_execution_approval_form_schema_status || 'not_refreshed')}">${escapeHTML(schema.real_execution_approval_form_schema_status || t('realExecutionApprovalRequestNotRefreshedYet'))}</strong>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionApprovalRequestAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-real-execution-approval-request-audit-preview="Project Workspace real execution approval request panel bundle">${escapeHTML(projectWorkspaceRealExecutionApprovalRequestCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realExecutionApprovalRequestNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionApprovalRequestStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceRealExecutionReadinessSummaryPanel(workspace = latestProjectWorkspace) {
             const summary = Object.keys(latestProjectRunnerRealExecutionReadinessSummaryPreview || {}).length ? latestProjectRunnerRealExecutionReadinessSummaryPreview : workspace?.runner_real_execution_readiness_summary_preview || {};
             const actions = Object.keys(latestProjectRunnerRealExecutionOperatorNextActionsPreview || {}).length ? latestProjectRunnerRealExecutionOperatorNextActionsPreview : workspace?.runner_real_execution_operator_next_actions_preview || {};
@@ -16877,6 +16999,7 @@
                     ${renderProjectWorkspaceCapabilityInvocationReleasePacketPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionModeGatePanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionReadinessSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionApprovalRequestPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -20361,6 +20484,49 @@
             realExecutionReadinessSummaryDryRunFailed: 'Real execution readiness summary dry-run \u5931\u8d25\u3002',
             realExecutionReadinessSummaryCopied: '\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8\u5df2\u590d\u5236\u3002',
             realExecutionReadinessSummaryCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u51c6\u5907\u5ea6\u603b\u89c8\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionApprovalRequestPanelBundleMarker: 'Project Workspace real execution approval request panel bundle',
+            realExecutionApprovalRequestPanelTitle: 'Real execution approval request',
+            realExecutionApprovalRequestPanelHelper: 'Dry-run approval request draft, form schema, review queue, and receipt. This is not approval and does not enable real execution.',
+            dryRunRealExecutionApprovalRequest: 'Dry-run approval request',
+            copyRealExecutionApprovalRequest: 'Copy approval request',
+            realExecutionApprovalRequestCopyTitle: 'Project real execution approval request',
+            realExecutionApprovalRequestDraftStatus: 'Approval request draft status',
+            realExecutionApprovalFormSchemaStatus: 'Approval form schema status',
+            realExecutionApprovalReviewQueueStatus: 'Approval review queue status',
+            realExecutionApprovalRequestReceiptStatus: 'Approval request receipt status',
+            operatorApprovalCaptured: 'Operator approval captured',
+            realExecutionApprovalRequestAuditPreview: 'Real execution approval request audit preview',
+            realExecutionApprovalRequestNotRefreshedYet: 'Real execution approval request has not been refreshed yet.',
+            realExecutionApprovalRequestDryRunRunning: 'Building real execution approval request dry-run.',
+            realExecutionApprovalRequestDryRunComplete: 'Real execution approval request dry-run complete.',
+            realExecutionApprovalRequestDryRunFailed: 'Real execution approval request dry-run failed.',
+            realExecutionApprovalRequestCopied: 'Real execution approval request copied.',
+            realExecutionApprovalRequestCopyFailed: 'Could not copy real execution approval request.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionApprovalRequestPanelBundleMarker: 'Project Workspace real execution approval request panel bundle',
+            realExecutionApprovalRequestPanelTitle: '\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u7533\u8bf7',
+            realExecutionApprovalRequestPanelHelper: 'Dry-run \u5ba1\u6279\u7533\u8bf7\u8349\u7a3f\u3001\u8868\u5355\u7ed3\u6784\u3001\u590d\u6838\u961f\u5217\u548c\u56de\u6267\u3002\u8fd9\u4e0d\u662f\u6279\u51c6\uff0c\u4e5f\u4e0d\u4f1a\u542f\u7528\u771f\u5b9e\u6267\u884c\u3002',
+            dryRunRealExecutionApprovalRequest: 'Dry-run \u5ba1\u6279\u7533\u8bf7',
+            copyRealExecutionApprovalRequest: '\u590d\u5236\u5ba1\u6279\u7533\u8bf7',
+            realExecutionApprovalRequestCopyTitle: '\u9879\u76ee\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u7533\u8bf7',
+            realExecutionApprovalRequestDraftStatus: '\u5ba1\u6279\u7533\u8bf7\u8349\u7a3f\u72b6\u6001',
+            realExecutionApprovalFormSchemaStatus: '\u5ba1\u6279\u8868\u5355\u7ed3\u6784\u72b6\u6001',
+            realExecutionApprovalReviewQueueStatus: '\u5ba1\u6279\u590d\u6838\u961f\u5217\u72b6\u6001',
+            realExecutionApprovalRequestReceiptStatus: '\u5ba1\u6279\u7533\u8bf7\u56de\u6267\u72b6\u6001',
+            operatorApprovalCaptured: '\u662f\u5426\u5df2\u6355\u83b7\u64cd\u4f5c\u5458\u6279\u51c6',
+            realExecutionApprovalRequestAuditPreview: '\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u7533\u8bf7\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionApprovalRequestNotRefreshedYet: '\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u7533\u8bf7\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionApprovalRequestDryRunRunning: '\u6b63\u5728\u751f\u6210 real execution approval request dry-run.',
+            realExecutionApprovalRequestDryRunComplete: 'Real execution approval request dry-run \u5b8c\u6210\u3002',
+            realExecutionApprovalRequestDryRunFailed: 'Real execution approval request dry-run \u5931\u8d25\u3002',
+            realExecutionApprovalRequestCopied: '\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u7533\u8bf7\u5df2\u590d\u5236\u3002',
+            realExecutionApprovalRequestCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u7533\u8bf7\u5931\u8d25\u3002'
         });
 
 
