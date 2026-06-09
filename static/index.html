@@ -15366,6 +15366,83 @@
         let latestProjectRunnerRealExecutionLaunchMonitorPreview = {};
         const PROJECT_WORKSPACE_REAL_EXECUTION_INCIDENT_RESPONSE_PANEL_BUNDLE_MARKER = 'Project Workspace real execution incident response panel bundle';
         let latestProjectRunnerRealExecutionIncidentResponsePreview = {};
+        const PROJECT_WORKSPACE_REAL_EXECUTION_SAFETY_CHAIN_AUDIT_PANEL_BUNDLE_MARKER = 'Project Workspace real execution safety chain audit panel bundle';
+        let latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview = {};
+        let latestProjectRunnerRealExecutionSafetyChainEventPreview = {};
+
+        function projectWorkspaceRealExecutionSafetyChainAuditCopyText(workspace = latestProjectWorkspace) {
+            const audit = Object.keys(latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview || {}).length ? latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview : workspace?.runner_real_execution_safety_chain_audit_summary_preview || {};
+            const event = Object.keys(latestProjectRunnerRealExecutionSafetyChainEventPreview || {}).length ? latestProjectRunnerRealExecutionSafetyChainEventPreview : workspace?.runner_real_execution_safety_chain_event_preview || {};
+            return [
+                t('realExecutionSafetyChainAuditCopyTitle'),
+                `${t('realExecutionSafetyChainAuditStatus')}: ${audit.real_execution_safety_chain_audit_summary_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainStatus')}: ${audit.chain_status || event.chain_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventStatus')}: ${event.event_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventType')}: ${event.event_type || 'not_refreshed'}`,
+                `${t('abortRecommended')}: ${Boolean(audit.abort_recommended || event.abort_recommended)}`,
+                `${t('incidentDetected')}: ${Boolean(audit.incident_detected || event.incident_detected)}`,
+                `${t('safeToContinue')}: ${Boolean(audit.safe_to_continue || event.safe_to_continue)}`,
+                '',
+                JSON.stringify({ audit, event }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionSafetyChainAudit() {
+            const status = document.getElementById('projectWorkspaceRealExecutionSafetyChainAuditStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionSafetyChainAuditCopyText());
+                if (status) status.textContent = t('realExecutionSafetyChainAuditCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionSafetyChainAuditCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(workspace = latestProjectWorkspace) {
+            const audit = Object.keys(latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview || {}).length ? latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview : workspace?.runner_real_execution_safety_chain_audit_summary_preview || {};
+            const event = Object.keys(latestProjectRunnerRealExecutionSafetyChainEventPreview || {}).length ? latestProjectRunnerRealExecutionSafetyChainEventPreview : workspace?.runner_real_execution_safety_chain_event_preview || {};
+            const hasAudit = Boolean(audit && Object.keys(audit).length);
+            const auditEvents = Array.isArray(audit.audit_events) ? audit.audit_events : [];
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionSafetyChainAuditPanel" data-project-real-execution-safety-chain-audit-panel-marker="Project Workspace real execution safety chain audit panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionSafetyChainAuditPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionSafetyChainAuditPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionSafetyChainAuditBtn" type="button" onclick="copyProjectWorkspaceRealExecutionSafetyChainAudit()">${escapeHTML(t('copyRealExecutionSafetyChainAudit'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionSafetyChainAuditStatus'))}</div>
+                            <strong data-real-execution-safety-chain-audit-status="${escapeHTML(audit.real_execution_safety_chain_audit_summary_status || 'not_refreshed')}">${escapeHTML(audit.real_execution_safety_chain_audit_summary_status || t('realExecutionSafetyChainAuditNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionSafetyChainEventStatus'))}</div>
+                            <strong data-real-execution-safety-chain-event-status="${escapeHTML(event.event_status || 'not_refreshed')}">${escapeHTML(event.event_status || t('realExecutionSafetyChainAuditNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('realExecutionSafetyChainEventType'))}: ${escapeHTML(event.event_type || 'not_refreshed')}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('safeToContinue'))}</div>
+                            <strong data-real-execution-safety-chain-safe-to-continue="${escapeHTML(String(Boolean(audit.safe_to_continue || event.safe_to_continue)))}">${escapeHTML(String(Boolean(audit.safe_to_continue || event.safe_to_continue)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('abortRecommended'))}: ${escapeHTML(String(Boolean(audit.abort_recommended || event.abort_recommended)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionSafetyChainAuditEvents'))}</div>
+                        ${auditEvents.length ? `<ul>${auditEvents.map((item) => `<li>${escapeHTML(item.audit_event_type || '')}: ${escapeHTML(item.audit_event_status || '')}</li>`).join('')}</ul>` : `<div class="recent-empty">${escapeHTML(t('realExecutionSafetyChainAuditNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionSafetyChainAuditPreview'))}</div>
+                        ${hasAudit ? `<pre class="debug" data-real-execution-safety-chain-audit-preview="Project Workspace real execution safety chain audit panel bundle">${escapeHTML(projectWorkspaceRealExecutionSafetyChainAuditCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realExecutionSafetyChainAuditNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionSafetyChainAuditStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceRealExecutionIncidentResponseCopyText(workspace = latestProjectWorkspace) {
             const incident = Object.keys(latestProjectRunnerRealExecutionIncidentResponsePreview || {}).length ? latestProjectRunnerRealExecutionIncidentResponsePreview : workspace?.runner_real_execution_incident_response_preview || {};
@@ -15408,6 +15485,8 @@
                 latestProjectRunnerRealExecutionLaunchDenialReceiptPreview = payload.runner_real_execution_launch_denial_receipt_preview || {};
                 latestProjectRunnerRealExecutionLaunchMonitorPreview = payload.runner_real_execution_launch_monitor_preview || {};
                 latestProjectRunnerRealExecutionIncidentResponsePreview = payload.runner_real_execution_incident_response_preview || {};
+                latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview = payload.runner_real_execution_safety_chain_audit_summary_preview || {};
+                latestProjectRunnerRealExecutionSafetyChainEventPreview = payload.runner_real_execution_safety_chain_event_preview || {};
 
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -15423,6 +15502,8 @@
                 if (monitorPanel) monitorPanel.outerHTML = renderProjectWorkspaceRealExecutionLaunchMonitorPanel(latestProjectWorkspace);
                 const panel = document.getElementById('projectWorkspaceRealExecutionIncidentResponsePanel');
                 if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionIncidentResponsePanel(latestProjectWorkspace);
+                const auditPanel = document.getElementById('projectWorkspaceRealExecutionSafetyChainAuditPanel');
+                if (auditPanel) auditPanel.outerHTML = renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -17492,6 +17573,7 @@
                     ${renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionLaunchMonitorPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionIncidentResponsePanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -21213,6 +21295,43 @@
             realExecutionSafetyChainDryRunStep: '\u6b63\u5728\u8fd0\u884c\u5b89\u5168\u6b65\u9aa4',
             realExecutionSafetyChainDryRunComplete: 'Real execution safety chain dry-run \u5b8c\u6210\u3002',
             realExecutionSafetyChainDryRunFailed: 'Real execution safety chain dry-run \u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionSafetyChainAuditPanelBundleMarker: 'Project Workspace real execution safety chain audit panel bundle',
+            realExecutionSafetyChainAuditPanelTitle: 'Real execution safety chain audit/event',
+            realExecutionSafetyChainAuditPanelHelper: 'Shows the safety chain audit summary and event ledger preview produced by incident response dry-run.',
+            copyRealExecutionSafetyChainAudit: 'Copy safety chain audit/event',
+            realExecutionSafetyChainAuditCopyTitle: 'Project real execution safety chain audit/event',
+            realExecutionSafetyChainAuditStatus: 'Safety chain audit status',
+            realExecutionSafetyChainStatus: 'Safety chain status',
+            realExecutionSafetyChainEventStatus: 'Safety chain event status',
+            realExecutionSafetyChainEventType: 'Safety chain event type',
+            realExecutionSafetyChainAuditEvents: 'Safety chain audit events',
+            realExecutionSafetyChainAuditPreview: 'Safety chain audit/event preview',
+            realExecutionSafetyChainAuditNotRefreshedYet: 'Safety chain audit/event has not been refreshed yet.',
+            realExecutionSafetyChainAuditCopied: 'Safety chain audit/event copied.',
+            realExecutionSafetyChainAuditCopyFailed: 'Could not copy safety chain audit/event.',
+            safeToContinue: 'Safe to continue'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionSafetyChainAuditPanelBundleMarker: 'Project Workspace real execution safety chain audit panel bundle',
+            realExecutionSafetyChainAuditPanelTitle: '\u771f\u5b9e\u6267\u884c\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6',
+            realExecutionSafetyChainAuditPanelHelper: '\u5c55\u793a incident response dry-run \u4ea7\u751f\u7684\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1\u6458\u8981\u548c event ledger \u9884\u89c8\u3002',
+            copyRealExecutionSafetyChainAudit: '\u590d\u5236\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6',
+            realExecutionSafetyChainAuditCopyTitle: '\u9879\u76ee\u771f\u5b9e\u6267\u884c\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6',
+            realExecutionSafetyChainAuditStatus: '\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1\u72b6\u6001',
+            realExecutionSafetyChainStatus: '\u5b89\u5168\u94fe\u8def\u72b6\u6001',
+            realExecutionSafetyChainEventStatus: '\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u72b6\u6001',
+            realExecutionSafetyChainEventType: '\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u7c7b\u578b',
+            realExecutionSafetyChainAuditEvents: '\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1\u4e8b\u4ef6',
+            realExecutionSafetyChainAuditPreview: '\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6\u9884\u89c8',
+            realExecutionSafetyChainAuditNotRefreshedYet: '\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionSafetyChainAuditCopied: '\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6\u5df2\u590d\u5236\u3002',
+            realExecutionSafetyChainAuditCopyFailed: '\u590d\u5236\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6\u5931\u8d25\u3002',
+            safeToContinue: '\u662f\u5426\u53ef\u7ee7\u7eed'
         });
 
 
