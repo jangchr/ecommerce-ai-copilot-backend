@@ -14843,6 +14843,119 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_CAPABILITY_INVOCATION_REHEARSAL_PANEL_BUNDLE_MARKER = 'Project Workspace capability invocation rehearsal panel bundle';
+        let latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview = {};
+        let latestProjectRunnerCapabilityInvocationAttemptLedgerPreview = {};
+        let latestProjectRunnerCapabilityInvocationRehearsalReceiptPreview = {};
+
+        function projectWorkspaceCapabilityInvocationRehearsalCopyText(workspace = latestProjectWorkspace) {
+            const rehearsal = Object.keys(latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview || {}).length ? latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview : workspace?.runner_capability_invocation_runtime_rehearsal_preview || {};
+            const ledger = Object.keys(latestProjectRunnerCapabilityInvocationAttemptLedgerPreview || {}).length ? latestProjectRunnerCapabilityInvocationAttemptLedgerPreview : workspace?.runner_capability_invocation_attempt_ledger_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityInvocationRehearsalReceiptPreview || {}).length ? latestProjectRunnerCapabilityInvocationRehearsalReceiptPreview : workspace?.runner_capability_invocation_rehearsal_receipt_preview || {};
+            return [
+                t('capabilityInvocationRehearsalCopyTitle'),
+                `${t('capabilityInvocationRuntimeRehearsalStatus')}: ${rehearsal.capability_invocation_runtime_rehearsal_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationAttemptLedgerStatus')}: ${ledger.capability_invocation_attempt_ledger_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationRehearsalReceiptStatus')}: ${receipt.capability_invocation_rehearsal_receipt_status || 'not_refreshed'}`,
+                `${t('capabilityInvocationAllowed')}: ${Boolean(receipt.capability_invocation_allowed)}`,
+                '',
+                JSON.stringify({ rehearsal, ledger, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCapabilityInvocationRehearsal() {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationRehearsalStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceCapabilityInvocationRehearsalCopyText());
+                if (status) status.textContent = t('capabilityInvocationRehearsalCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('capabilityInvocationRehearsalCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceCapabilityInvocationRehearsal(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceCapabilityInvocationRehearsalStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('capabilityInvocationRehearsalDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_capability_invocation_rehearsal_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/capability-invocation-rehearsal/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('capabilityInvocationRehearsalDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerCapabilityInvocationGatePreview = payload.runner_capability_invocation_gate_preview || {};
+                latestProjectRunnerCapabilityInvocationRequestPreview = payload.runner_capability_invocation_request_preview || {};
+                latestProjectRunnerCapabilityInvocationDecisionPreview = payload.runner_capability_invocation_decision_preview || {};
+                latestProjectRunnerCapabilityInvocationGateReceiptPreview = payload.runner_capability_invocation_gate_receipt_preview || {};
+                latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview = payload.runner_capability_invocation_runtime_rehearsal_preview || {};
+                latestProjectRunnerCapabilityInvocationAttemptLedgerPreview = payload.runner_capability_invocation_attempt_ledger_preview || {};
+                latestProjectRunnerCapabilityInvocationRehearsalReceiptPreview = payload.runner_capability_invocation_rehearsal_receipt_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_capability_invocation_rehearsal_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_capability_invocation_rehearsal_dry_run');
+                if (status) status.textContent = t('capabilityInvocationRehearsalDryRunComplete');
+
+                const gatePanel = document.getElementById('projectWorkspaceCapabilityInvocationGatePanel');
+                if (gatePanel) gatePanel.outerHTML = renderProjectWorkspaceCapabilityInvocationGatePanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceCapabilityInvocationRehearsalPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceCapabilityInvocationRehearsalPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_capability_invocation_rehearsal_dry_run');
+                if (status) status.textContent = error.message || t('capabilityInvocationRehearsalDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceCapabilityInvocationRehearsalPanel(workspace = latestProjectWorkspace) {
+            const rehearsal = Object.keys(latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview || {}).length ? latestProjectRunnerCapabilityInvocationRuntimeRehearsalPreview : workspace?.runner_capability_invocation_runtime_rehearsal_preview || {};
+            const ledger = Object.keys(latestProjectRunnerCapabilityInvocationAttemptLedgerPreview || {}).length ? latestProjectRunnerCapabilityInvocationAttemptLedgerPreview : workspace?.runner_capability_invocation_attempt_ledger_preview || {};
+            const receipt = Object.keys(latestProjectRunnerCapabilityInvocationRehearsalReceiptPreview || {}).length ? latestProjectRunnerCapabilityInvocationRehearsalReceiptPreview : workspace?.runner_capability_invocation_rehearsal_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceCapabilityInvocationRehearsalPanel" data-project-capability-invocation-rehearsal-panel-marker="Project Workspace capability invocation rehearsal panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationRehearsalPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('capabilityInvocationRehearsalPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceCapabilityInvocationRehearsalBtn" type="button" data-project-capability-invocation-rehearsal-dry-run-action="Project Workspace capability invocation rehearsal panel bundle" onclick="dryRunProjectWorkspaceCapabilityInvocationRehearsal()">${escapeHTML(t('dryRunCapabilityInvocationRehearsal'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceCapabilityInvocationRehearsalBtn" type="button" onclick="copyProjectWorkspaceCapabilityInvocationRehearsal()">${escapeHTML(t('copyCapabilityInvocationRehearsal'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationRuntimeRehearsalStatus'))}</div>
+                            <strong data-capability-invocation-runtime-rehearsal-status="${escapeHTML(rehearsal.capability_invocation_runtime_rehearsal_status || 'not_refreshed')}">${escapeHTML(rehearsal.capability_invocation_runtime_rehearsal_status || t('capabilityInvocationRehearsalNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationAttemptLedgerStatus'))}</div>
+                            <strong data-capability-invocation-attempt-ledger-status="${escapeHTML(ledger.capability_invocation_attempt_ledger_status || 'not_refreshed')}">${escapeHTML(ledger.capability_invocation_attempt_ledger_status || t('capabilityInvocationRehearsalNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('capabilityInvocationRehearsalReceiptStatus'))}</div>
+                            <strong data-capability-invocation-rehearsal-receipt-status="${escapeHTML(receipt.capability_invocation_rehearsal_receipt_status || 'not_refreshed')}">${escapeHTML(receipt.capability_invocation_rehearsal_receipt_status || t('capabilityInvocationRehearsalNotRefreshedYet'))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('capabilityInvocationRehearsalAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-capability-invocation-rehearsal-audit-preview="Project Workspace capability invocation rehearsal panel bundle">${escapeHTML(projectWorkspaceCapabilityInvocationRehearsalCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('capabilityInvocationRehearsalNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCapabilityInvocationRehearsalStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceCapabilityInvocationGatePanel(workspace = latestProjectWorkspace) {
             const gate = Object.keys(latestProjectRunnerCapabilityInvocationGatePreview || {}).length ? latestProjectRunnerCapabilityInvocationGatePreview : workspace?.runner_capability_invocation_gate_preview || {};
             const request = Object.keys(latestProjectRunnerCapabilityInvocationRequestPreview || {}).length ? latestProjectRunnerCapabilityInvocationRequestPreview : workspace?.runner_capability_invocation_request_preview || {};
@@ -16291,6 +16404,7 @@
                     ${renderProjectWorkspaceProviderObservabilityPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityBindingPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityInvocationGatePanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityInvocationRehearsalPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -19566,6 +19680,45 @@
             capabilityInvocationGateDryRunFailed: 'Capability invocation gate dry-run \u5931\u8d25\u3002',
             capabilityInvocationGateCopied: 'Capability \u8c03\u7528\u95e8\u5df2\u590d\u5236\u3002',
             capabilityInvocationGateCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u95e8\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCapabilityInvocationRehearsalPanelBundleMarker: 'Project Workspace capability invocation rehearsal panel bundle',
+            capabilityInvocationRehearsalPanelTitle: 'Capability invocation rehearsal',
+            capabilityInvocationRehearsalPanelHelper: 'Dry-run runtime rehearsal and attempt ledger for capability invocation. It records the blocked lifecycle without calling providers.',
+            dryRunCapabilityInvocationRehearsal: 'Dry-run invocation rehearsal',
+            copyCapabilityInvocationRehearsal: 'Copy invocation rehearsal',
+            capabilityInvocationRehearsalCopyTitle: 'Project capability invocation rehearsal',
+            capabilityInvocationRuntimeRehearsalStatus: 'Runtime rehearsal status',
+            capabilityInvocationAttemptLedgerStatus: 'Attempt ledger status',
+            capabilityInvocationRehearsalReceiptStatus: 'Rehearsal receipt status',
+            capabilityInvocationRehearsalAuditPreview: 'Capability invocation rehearsal audit preview',
+            capabilityInvocationRehearsalNotRefreshedYet: 'Capability invocation rehearsal has not been refreshed yet.',
+            capabilityInvocationRehearsalDryRunRunning: 'Building capability invocation rehearsal dry-run.',
+            capabilityInvocationRehearsalDryRunComplete: 'Capability invocation rehearsal dry-run complete.',
+            capabilityInvocationRehearsalDryRunFailed: 'Capability invocation rehearsal dry-run failed.',
+            capabilityInvocationRehearsalCopied: 'Capability invocation rehearsal copied.',
+            capabilityInvocationRehearsalCopyFailed: 'Could not copy capability invocation rehearsal.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCapabilityInvocationRehearsalPanelBundleMarker: 'Project Workspace capability invocation rehearsal panel bundle',
+            capabilityInvocationRehearsalPanelTitle: 'Capability \u8c03\u7528\u6f14\u7ec3',
+            capabilityInvocationRehearsalPanelHelper: 'Capability \u8c03\u7528\u7684 dry-run \u8fd0\u884c\u65f6\u6f14\u7ec3\u548c\u5c1d\u8bd5\u8d26\u672c\u3002\u5b83\u53ea\u8bb0\u5f55\u88ab\u963b\u6b62\u7684\u751f\u547d\u5468\u671f\uff0c\u4e0d\u4f1a\u8c03 provider\u3002',
+            dryRunCapabilityInvocationRehearsal: 'Dry-run \u8c03\u7528\u6f14\u7ec3',
+            copyCapabilityInvocationRehearsal: '\u590d\u5236\u8c03\u7528\u6f14\u7ec3',
+            capabilityInvocationRehearsalCopyTitle: '\u9879\u76ee capability \u8c03\u7528\u6f14\u7ec3',
+            capabilityInvocationRuntimeRehearsalStatus: '\u8fd0\u884c\u65f6\u6f14\u7ec3\u72b6\u6001',
+            capabilityInvocationAttemptLedgerStatus: '\u5c1d\u8bd5\u8d26\u672c\u72b6\u6001',
+            capabilityInvocationRehearsalReceiptStatus: '\u6f14\u7ec3\u56de\u6267\u72b6\u6001',
+            capabilityInvocationRehearsalAuditPreview: 'Capability \u8c03\u7528\u6f14\u7ec3\u5ba1\u8ba1\u9884\u89c8',
+            capabilityInvocationRehearsalNotRefreshedYet: 'Capability \u8c03\u7528\u6f14\u7ec3\u5c1a\u672a\u5237\u65b0\u3002',
+            capabilityInvocationRehearsalDryRunRunning: '\u6b63\u5728\u751f\u6210 capability invocation rehearsal dry-run.',
+            capabilityInvocationRehearsalDryRunComplete: 'Capability invocation rehearsal dry-run \u5b8c\u6210\u3002',
+            capabilityInvocationRehearsalDryRunFailed: 'Capability invocation rehearsal dry-run \u5931\u8d25\u3002',
+            capabilityInvocationRehearsalCopied: 'Capability \u8c03\u7528\u6f14\u7ec3\u5df2\u590d\u5236\u3002',
+            capabilityInvocationRehearsalCopyFailed: '\u590d\u5236 capability \u8c03\u7528\u6f14\u7ec3\u5931\u8d25\u3002'
         });
 
 

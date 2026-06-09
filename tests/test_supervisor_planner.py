@@ -1783,3 +1783,36 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             gate["capability_invocation_gate_status"],
         )
 
+    def test_project_runner_capability_invocation_rehearsal_dry_run_endpoint_returns_safe_blocked_receipt(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/capability-invocation-rehearsal/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["runtime_rehearsal_allowed"])
+        self.assertFalse(payload["adapter_invocation_attempted"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        rehearsal = payload["runner_capability_invocation_runtime_rehearsal_preview"]
+        ledger = payload["runner_capability_invocation_attempt_ledger_preview"]
+        receipt = payload["runner_capability_invocation_rehearsal_receipt_preview"]
+
+        self.assertEqual(rehearsal["capability_invocation_runtime_rehearsal_status"], "runtime_rehearsal_blocked")
+        self.assertGreater(rehearsal["blocking_step_count"], 0)
+        self.assertEqual(ledger["capability_invocation_attempt_ledger_status"], "attempt_ledger_preview_recorded")
+        self.assertEqual(ledger["attempt_status"], "blocked_before_invocation")
+        self.assertEqual(receipt["capability_invocation_rehearsal_receipt_status"], "capability_invocation_rehearsal_blocked_safely")
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_capability_invocation_rehearsal_receipt_status"],
+            receipt["capability_invocation_rehearsal_receipt_status"],
+        )
+

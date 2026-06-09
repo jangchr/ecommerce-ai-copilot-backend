@@ -10844,6 +10844,145 @@ async def dry_run_project_agent_capability_binding(project_id: str, http_request
     }
 
 
+
+def _runner_capability_invocation_runtime_rehearsal_preview(invocation_gate_payload: dict) -> dict:
+    gate = dict(invocation_gate_payload.get("runner_capability_invocation_gate_preview") or {})
+    request = dict(invocation_gate_payload.get("runner_capability_invocation_request_preview") or {})
+    decision = dict(invocation_gate_payload.get("runner_capability_invocation_decision_preview") or {})
+    project_id = str(invocation_gate_payload.get("project", {}).get("project_id") or invocation_gate_payload.get("project_id") or "demo_project_default")
+    gate_blocked = str(gate.get("capability_invocation_gate_status") or "") != "capability_invocation_ready"
+
+    runtime_steps = [
+        {
+            "runtime_step_id": "validate_capability_invocation_gate",
+            "status": "blocked" if gate_blocked else "passed",
+            "blocking": gate_blocked,
+            "reason": "Capability invocation gate must pass before runtime rehearsal can continue.",
+        },
+        {
+            "runtime_step_id": "reserve_runtime_quota",
+            "status": "not_started",
+            "blocking": True,
+            "reason": "Quota reservation is required before any real provider-capable runtime call.",
+        },
+        {
+            "runtime_step_id": "open_sandbox_session",
+            "status": "not_started",
+            "blocking": True,
+            "reason": "Sandbox session is required before tool execution.",
+        },
+        {
+            "runtime_step_id": "adapter_dry_run",
+            "status": "not_started",
+            "blocking": True,
+            "reason": "Adapter dry-run is blocked until gate, quota, sandbox, and approval are complete.",
+        },
+        {
+            "runtime_step_id": "write_attempt_ledger",
+            "status": "ready_for_preview",
+            "blocking": False,
+            "reason": "Preview ledger can be written without real invocation.",
+        },
+    ]
+    blocking_step_ids = [
+        item["runtime_step_id"]
+        for item in runtime_steps
+        if item.get("blocking") and item.get("status") != "passed"
+    ]
+    return {
+        "capability_invocation_runtime_rehearsal_version": "runner_capability_invocation_runtime_rehearsal_preview_v1",
+        "capability_invocation_runtime_rehearsal_status": "runtime_rehearsal_blocked",
+        "project_id": project_id,
+        "capability_invocation_gate_status": gate.get("capability_invocation_gate_status", ""),
+        "capability_invocation_request_status": request.get("capability_invocation_request_status", ""),
+        "capability_invocation_decision_status": decision.get("capability_invocation_decision_status", ""),
+        "runtime_steps": runtime_steps,
+        "runtime_step_count": len(runtime_steps),
+        "blocking_step_ids": blocking_step_ids,
+        "blocking_step_count": len(blocking_step_ids),
+        "runtime_rehearsal_allowed": False,
+        "adapter_invocation_attempted": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_attempt_ledger_preview(runtime_rehearsal: dict) -> dict:
+    project_id = str(runtime_rehearsal.get("project_id") or "demo_project_default")
+    blocked_events = [
+        {
+            "event_id": f"capability_invocation_attempt_{project_id}_blocked",
+            "event_type": "capability_invocation_attempt_blocked",
+            "event_status": "blocked",
+            "reason": "Runtime rehearsal is blocked before adapter invocation.",
+            "blocking_step_ids": list(runtime_rehearsal.get("blocking_step_ids") or []),
+        }
+    ]
+    return {
+        "capability_invocation_attempt_ledger_version": "runner_capability_invocation_attempt_ledger_preview_v1",
+        "capability_invocation_attempt_ledger_status": "attempt_ledger_preview_recorded",
+        "project_id": project_id,
+        "attempt_id": f"capability_invocation_attempt_{project_id}_dry_run",
+        "attempt_status": "blocked_before_invocation",
+        "attempt_events": blocked_events,
+        "attempt_event_count": len(blocked_events),
+        "runtime_rehearsal_status": runtime_rehearsal.get("capability_invocation_runtime_rehearsal_status", ""),
+        "adapter_invocation_attempted": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "dry_run": True,
+    }
+
+
+def _runner_capability_invocation_rehearsal_receipt_preview(
+    runtime_rehearsal: dict,
+    attempt_ledger: dict,
+) -> dict:
+    receipt_checks = [
+        {
+            "receipt_check_id": "runtime_rehearsal_recorded",
+            "passed": bool(runtime_rehearsal.get("capability_invocation_runtime_rehearsal_version")),
+        },
+        {
+            "receipt_check_id": "attempt_ledger_recorded",
+            "passed": bool(attempt_ledger.get("capability_invocation_attempt_ledger_version")),
+        },
+        {
+            "receipt_check_id": "provider_call_blocked",
+            "passed": not bool(attempt_ledger.get("provider_call_performed")),
+        },
+        {
+            "receipt_check_id": "real_execution_disabled",
+            "passed": not bool(attempt_ledger.get("real_execution_enabled")),
+        },
+    ]
+    return {
+        "capability_invocation_rehearsal_receipt_version": "runner_capability_invocation_rehearsal_receipt_preview_v1",
+        "capability_invocation_rehearsal_receipt_status": "capability_invocation_rehearsal_blocked_safely",
+        "project_id": runtime_rehearsal.get("project_id", "demo_project_default"),
+        "runtime_rehearsal_status": runtime_rehearsal.get("capability_invocation_runtime_rehearsal_status", ""),
+        "attempt_ledger_status": attempt_ledger.get("capability_invocation_attempt_ledger_status", ""),
+        "receipt_checks": receipt_checks,
+        "receipt_check_count": len(receipt_checks),
+        "passed_receipt_check_count": sum(1 for item in receipt_checks if item.get("passed")),
+        "capability_invocation_allowed": False,
+        "runtime_rehearsal_allowed": False,
+        "adapter_invocation_attempted": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/capability-invocation-gate/dry-run")
 async def dry_run_project_agent_capability_invocation_gate(project_id: str, http_request: Request):
     capability_binding_payload = await dry_run_project_agent_capability_binding(project_id, http_request)
@@ -10878,6 +11017,53 @@ async def dry_run_project_agent_capability_invocation_gate(project_id: str, http
         "dry_run": True,
         "capability_invocation_allowed": False,
         "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/capability-invocation-rehearsal/dry-run")
+async def dry_run_project_agent_capability_invocation_rehearsal(project_id: str, http_request: Request):
+    invocation_gate_payload = await dry_run_project_agent_capability_invocation_gate(project_id, http_request)
+
+    runner_capability_invocation_runtime_rehearsal_preview = _runner_capability_invocation_runtime_rehearsal_preview(invocation_gate_payload)
+    runner_capability_invocation_attempt_ledger_preview = _runner_capability_invocation_attempt_ledger_preview(
+        runner_capability_invocation_runtime_rehearsal_preview
+    )
+    runner_capability_invocation_rehearsal_receipt_preview = _runner_capability_invocation_rehearsal_receipt_preview(
+        runner_capability_invocation_runtime_rehearsal_preview,
+        runner_capability_invocation_attempt_ledger_preview,
+    )
+
+    project = invocation_gate_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_capability_invocation_runtime_rehearsal_status": runner_capability_invocation_runtime_rehearsal_preview["capability_invocation_runtime_rehearsal_status"],
+        "latest_runner_capability_invocation_attempt_ledger_status": runner_capability_invocation_attempt_ledger_preview["capability_invocation_attempt_ledger_status"],
+        "latest_runner_capability_invocation_rehearsal_receipt_status": runner_capability_invocation_rehearsal_receipt_preview["capability_invocation_rehearsal_receipt_status"],
+        "latest_runner_capability_invocation_rehearsal_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **invocation_gate_payload,
+        "project": project,
+        "runner_capability_invocation_runtime_rehearsal_preview": runner_capability_invocation_runtime_rehearsal_preview,
+        "runner_capability_invocation_attempt_ledger_preview": runner_capability_invocation_attempt_ledger_preview,
+        "runner_capability_invocation_rehearsal_receipt_preview": runner_capability_invocation_rehearsal_receipt_preview,
+        "dry_run": True,
+        "capability_invocation_allowed": False,
+        "runtime_rehearsal_allowed": False,
+        "adapter_invocation_attempted": False,
         "provider_call_performed": False,
         "external_api_called": False,
         "agent_execution_performed": False,
