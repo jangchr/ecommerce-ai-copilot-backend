@@ -6519,3 +6519,14 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
         self.assertIn("Project Workspace multi-agent output chain bundle", script)
         self.assertIn("project_workspace_multi_agent_output_chain_marker", script)
+
+import re as _cg_invalid_unicode_re
+from pathlib import Path as _CgInvalidUnicodePath
+import unittest as _cg_invalid_unicode_unittest
+
+
+class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
+    def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
+        html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
+        matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
+        self.assertEqual(matches, [])
