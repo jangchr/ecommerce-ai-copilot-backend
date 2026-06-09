@@ -102,6 +102,7 @@ Add-Check "project_workspace_real_execution_safety_chain_action_marker" ($page.C
 Add-Check "project_workspace_real_execution_safety_chain_audit_panel_marker" ($page.Content -match "Project Workspace real execution safety chain audit panel bundle")
 Add-Check "project_workspace_real_execution_safety_timeline_marker" ($page.Content -match "Project Workspace real execution safety timeline bundle")
 Add-Check "project_workspace_runner_event_ledger_summary_marker" ($page.Content -match "Project Workspace runner event ledger summary bundle")
+Add-Check "project_workspace_supervisor_event_ledger_decision_marker" ($page.Content -match "Project Workspace supervisor event ledger decision bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

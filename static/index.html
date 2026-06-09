@@ -11476,6 +11476,51 @@
             };
         }
 
+
+        function projectWorkspaceExportSupervisorEventLedgerDecisionSnapshot(workspace = latestProjectWorkspace) {
+            const decision = projectWorkspaceSupervisorEventLedgerDecisionFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack supervisor event ledger decision bundle',
+                supervisor_event_ledger_decision_status: decision.supervisor_event_ledger_decision_status || '',
+                recommended_next_action: decision.recommended_next_action || '',
+                decision_reason: decision.decision_reason || '',
+                supervisor_routing_allowed: Boolean(decision.supervisor_routing_allowed),
+                real_execution_allowed: Boolean(decision.real_execution_allowed),
+                provider_call_allowed: Boolean(decision.provider_call_allowed),
+                external_api_call_allowed: Boolean(decision.external_api_call_allowed),
+                agent_execution_allowed: Boolean(decision.agent_execution_allowed),
+                manual_review_required: Boolean(decision.manual_review_required),
+                safe_to_continue: Boolean(decision.safe_to_continue),
+                dry_run: Boolean(decision.dry_run),
+                blocking_event_ids: Array.isArray(decision.blocking_event_ids) ? decision.blocking_event_ids : [],
+                next_agent_candidates: Array.isArray(decision.next_agent_candidates) ? decision.next_agent_candidates : [],
+                has_supervisor_decision: Boolean(decision.supervisor_event_ledger_decision_status || decision.recommended_next_action)
+            };
+        }
+
+        function projectWorkspaceExportSupervisorEventLedgerDecisionMarkdown(workspace = latestProjectWorkspace) {
+            const decision = projectWorkspaceExportSupervisorEventLedgerDecisionSnapshot(workspace);
+            if (!decision.has_supervisor_decision) {
+                return `## ${t('projectWorkspaceExportSupervisorDecisionTitle')}\n${t('supervisorEventLedgerDecisionNotRefreshedYet')}`;
+            }
+            return [
+                `## ${t('projectWorkspaceExportSupervisorDecisionTitle')}`,
+                `${t('supervisorEventLedgerDecisionStatus')}: ${decision.supervisor_event_ledger_decision_status || 'not_refreshed'}`,
+                `${t('supervisorRecommendedNextAction')}: ${decision.recommended_next_action || 'not_refreshed'}`,
+                `${t('supervisorDecisionReason')}: ${decision.decision_reason || 'not_refreshed'}`,
+                `${t('supervisorRoutingAllowed')}: ${decision.supervisor_routing_allowed}`,
+                `${t('realExecutionAllowed')}: ${decision.real_execution_allowed}`,
+                `${t('providerCallAllowed')}: ${decision.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${decision.external_api_call_allowed}`,
+                `${t('agentExecutionAllowed')}: ${decision.agent_execution_allowed}`,
+                `${t('manualReviewRequired')}: ${decision.manual_review_required}`,
+                `${t('safeToContinue')}: ${decision.safe_to_continue}`,
+                `${t('dryRun')}: ${decision.dry_run}`,
+                `${t('supervisorBlockingEvents')}: ${decision.blocking_event_ids.join(', ') || 'none'}`,
+                `${t('supervisorNextAgentCandidates')}: ${decision.next_agent_candidates.join(', ') || 'none'}`
+            ].join('\n');
+        }
+
         function projectWorkspaceExportRunnerEventLedgerMarkdown(workspace = latestProjectWorkspace) {
             const ledger = projectWorkspaceExportRunnerEventLedgerSnapshot(workspace);
             if (!ledger.has_event_ledger) {
@@ -11618,6 +11663,8 @@
                 '',
                 projectWorkspaceExportRunnerEventLedgerMarkdown(workspace),
                 '',
+                projectWorkspaceExportSupervisorEventLedgerDecisionMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -11634,6 +11681,7 @@
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
+                runner_supervisor_event_ledger_decision_summary: projectWorkspaceExportSupervisorEventLedgerDecisionSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -15575,6 +15623,116 @@
         const PROJECT_WORKSPACE_REAL_EXECUTION_SAFETY_TIMELINE_BUNDLE_MARKER = 'Project Workspace real execution safety timeline bundle';
         const PROJECT_WORKSPACE_RUNNER_EVENT_LEDGER_SUMMARY_BUNDLE_MARKER = 'Project Workspace runner event ledger summary bundle';
         let latestProjectRunnerEventLedgerSummary = {};
+        const PROJECT_WORKSPACE_SUPERVISOR_EVENT_LEDGER_DECISION_BUNDLE_MARKER = 'Project Workspace supervisor event ledger decision bundle';
+        let latestProjectRunnerSupervisorEventLedgerDecisionSummary = {};
+
+        function projectWorkspaceSupervisorEventLedgerDecisionFromWorkspace(workspace = latestProjectWorkspace) {
+            const decision = Object.keys(latestProjectRunnerSupervisorEventLedgerDecisionSummary || {}).length
+                ? latestProjectRunnerSupervisorEventLedgerDecisionSummary
+                : workspace?.runner_supervisor_event_ledger_decision_summary || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (decision && Object.keys(decision).length) return decision;
+            return {
+                supervisor_event_ledger_decision_summary_version: '',
+                supervisor_event_ledger_decision_status: graphSummary.latest_runner_supervisor_event_ledger_decision_status || '',
+                recommended_next_action: graphSummary.latest_runner_supervisor_recommended_next_action || '',
+                supervisor_routing_allowed: Boolean(graphSummary.latest_runner_supervisor_routing_allowed),
+                real_execution_allowed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                agent_execution_allowed: false,
+                manual_review_required: true,
+                safe_to_continue: false,
+                dry_run: true,
+                blocking_event_ids: [],
+                next_agent_candidates: []
+            };
+        }
+
+        function projectWorkspaceSupervisorEventLedgerDecisionCopyText(workspace = latestProjectWorkspace) {
+            const decision = projectWorkspaceSupervisorEventLedgerDecisionFromWorkspace(workspace);
+            return [
+                t('supervisorEventLedgerDecisionCopyTitle'),
+                `${t('supervisorEventLedgerDecisionStatus')}: ${decision.supervisor_event_ledger_decision_status || 'not_refreshed'}`,
+                `${t('supervisorRecommendedNextAction')}: ${decision.recommended_next_action || 'not_refreshed'}`,
+                `${t('supervisorRoutingAllowed')}: ${Boolean(decision.supervisor_routing_allowed)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(decision.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(decision.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(decision.external_api_call_allowed)}`,
+                `${t('agentExecutionAllowed')}: ${Boolean(decision.agent_execution_allowed)}`,
+                `${t('manualReviewRequired')}: ${Boolean(decision.manual_review_required)}`,
+                `${t('safeToContinue')}: ${Boolean(decision.safe_to_continue)}`,
+                `${t('dryRun')}: ${Boolean(decision.dry_run)}`,
+                '',
+                JSON.stringify({ runner_supervisor_event_ledger_decision_summary: decision }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceSupervisorEventLedgerDecision() {
+            const status = document.getElementById('projectWorkspaceSupervisorEventLedgerDecisionStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceSupervisorEventLedgerDecisionCopyText());
+                if (status) status.textContent = t('supervisorEventLedgerDecisionCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('supervisorEventLedgerDecisionCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(workspace = latestProjectWorkspace) {
+            const decision = projectWorkspaceSupervisorEventLedgerDecisionFromWorkspace(workspace);
+            const blockingIds = Array.isArray(decision.blocking_event_ids) ? decision.blocking_event_ids : [];
+            const candidates = Array.isArray(decision.next_agent_candidates) ? decision.next_agent_candidates : [];
+            const hasDecision = Boolean(decision.supervisor_event_ledger_decision_status || decision.recommended_next_action);
+            return `
+                <div class="section-block" id="projectWorkspaceSupervisorEventLedgerDecisionPanel" data-project-supervisor-event-ledger-decision-marker="Project Workspace supervisor event ledger decision bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('supervisorEventLedgerDecisionPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('supervisorEventLedgerDecisionPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceSupervisorEventLedgerDecisionBtn" type="button" onclick="copyProjectWorkspaceSupervisorEventLedgerDecision()">${escapeHTML(t('copySupervisorEventLedgerDecision'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorEventLedgerDecisionStatus'))}</div>
+                            <strong data-supervisor-event-ledger-decision-status="${escapeHTML(decision.supervisor_event_ledger_decision_status || 'not_refreshed')}">${escapeHTML(decision.supervisor_event_ledger_decision_status || t('supervisorEventLedgerDecisionNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorRecommendedNextAction'))}</div>
+                            <strong data-supervisor-recommended-next-action="${escapeHTML(decision.recommended_next_action || 'not_refreshed')}">${escapeHTML(decision.recommended_next_action || t('supervisorEventLedgerDecisionNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorRoutingAllowed'))}</div>
+                            <strong data-supervisor-routing-allowed="${escapeHTML(String(Boolean(decision.supervisor_routing_allowed)))}">${escapeHTML(String(Boolean(decision.supervisor_routing_allowed)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('realExecutionAllowed'))}: ${escapeHTML(String(Boolean(decision.real_execution_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('supervisorDecisionReason'))}</div>
+                        <div class="field-helper">${escapeHTML(decision.decision_reason || t('supervisorEventLedgerDecisionNotRefreshedYet'))}</div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorBlockingEvents'))}</div>
+                            ${blockingIds.length ? blockingIds.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supervisorNextAgentCandidates'))}</div>
+                            ${candidates.length ? candidates.map((item) => `<div class="artifact-timeline-row">${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('supervisorEventLedgerDecisionAuditPreview'))}</div>
+                        ${hasDecision ? `<pre class="debug" data-supervisor-event-ledger-decision-audit-preview="Project Workspace supervisor event ledger decision bundle">${escapeHTML(projectWorkspaceSupervisorEventLedgerDecisionCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('supervisorEventLedgerDecisionNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceSupervisorEventLedgerDecisionStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceRunnerEventLedgerSummaryFromWorkspace(workspace = latestProjectWorkspace) {
             const summary = Object.keys(latestProjectRunnerEventLedgerSummary || {}).length
@@ -15958,6 +16116,7 @@
                 latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview = payload.runner_real_execution_safety_chain_audit_summary_preview || {};
                 latestProjectRunnerRealExecutionSafetyChainEventPreview = payload.runner_real_execution_safety_chain_event_preview || {};
                 latestProjectRunnerEventLedgerSummary = payload.runner_event_ledger_summary || {};
+                latestProjectRunnerSupervisorEventLedgerDecisionSummary = payload.runner_supervisor_event_ledger_decision_summary || {};
 
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -15979,6 +16138,8 @@
                 if (timelinePanel) timelinePanel.outerHTML = renderProjectWorkspaceRealExecutionSafetyTimelinePanel(latestProjectWorkspace);
                 const ledgerPanel = document.getElementById('projectWorkspaceRunnerEventLedgerSummaryPanel');
                 if (ledgerPanel) ledgerPanel.outerHTML = renderProjectWorkspaceRunnerEventLedgerSummaryPanel(latestProjectWorkspace);
+                const supervisorDecisionPanel = document.getElementById('projectWorkspaceSupervisorEventLedgerDecisionPanel');
+                if (supervisorDecisionPanel) supervisorDecisionPanel.outerHTML = renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -18152,6 +18313,7 @@
                     ${renderProjectWorkspaceRealExecutionSafetyChainAuditPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionSafetyTimelinePanel(workspace)}
                     ${renderProjectWorkspaceRunnerEventLedgerSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceSupervisorEventLedgerDecisionPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -22071,6 +22233,55 @@
             runnerEventLedgerCopied: 'Runner \u4e8b\u4ef6\u8d26\u672c\u5df2\u590d\u5236\u3002',
             runnerEventLedgerCopyFailed: '\u590d\u5236 Runner \u4e8b\u4ef6\u8d26\u672c\u5931\u8d25\u3002',
             projectWorkspaceExportRunnerEventLedgerTitle: 'Runner \u4e8b\u4ef6\u8d26\u672c'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceSupervisorEventLedgerDecisionBundleMarker: 'Project Workspace supervisor event ledger decision bundle',
+            supervisorEventLedgerDecisionPanelTitle: 'Supervisor event ledger decision',
+            supervisorEventLedgerDecisionPanelHelper: 'Supervisor reads the unified event ledger and decides whether to keep the chain blocked, wait for manual review, or continue the next dry-run step.',
+            copySupervisorEventLedgerDecision: 'Copy Supervisor decision',
+            supervisorEventLedgerDecisionCopyTitle: 'Project Supervisor event ledger decision',
+            supervisorEventLedgerDecisionStatus: 'Supervisor decision status',
+            supervisorRecommendedNextAction: 'Recommended next action',
+            supervisorRoutingAllowed: 'Supervisor routing allowed',
+            supervisorDecisionReason: 'Decision reason',
+            supervisorBlockingEvents: 'Blocking events',
+            supervisorNextAgentCandidates: 'Next agent candidates',
+            supervisorEventLedgerDecisionAuditPreview: 'Supervisor decision audit preview',
+            supervisorEventLedgerDecisionNotRefreshedYet: 'Supervisor event ledger decision has not been refreshed yet.',
+            supervisorEventLedgerDecisionCopied: 'Supervisor event ledger decision copied.',
+            supervisorEventLedgerDecisionCopyFailed: 'Could not copy Supervisor event ledger decision.',
+            realExecutionAllowed: 'Real execution allowed',
+            providerCallAllowed: 'Provider call allowed',
+            externalApiCallAllowed: 'External API call allowed',
+            agentExecutionAllowed: 'Agent execution allowed',
+            manualReviewRequired: 'Manual review required',
+            projectWorkspaceExportSupervisorDecisionTitle: 'Supervisor event ledger decision'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceSupervisorEventLedgerDecisionBundleMarker: 'Project Workspace supervisor event ledger decision bundle',
+            supervisorEventLedgerDecisionPanelTitle: 'Supervisor \u4e8b\u4ef6\u8d26\u672c\u51b3\u7b56',
+            supervisorEventLedgerDecisionPanelHelper: 'Supervisor \u8bfb\u53d6\u7edf\u4e00 event ledger\uff0c\u5224\u65ad\u7ee7\u7eed\u963b\u65ad\u3001\u7b49\u5f85\u4eba\u5de5\u590d\u6838\uff0c\u8fd8\u662f\u8fdb\u5165\u4e0b\u4e00\u4e2a dry-run \u6b65\u9aa4\u3002',
+            copySupervisorEventLedgerDecision: '\u590d\u5236 Supervisor \u51b3\u7b56',
+            supervisorEventLedgerDecisionCopyTitle: '\u9879\u76ee Supervisor \u4e8b\u4ef6\u8d26\u672c\u51b3\u7b56',
+            supervisorEventLedgerDecisionStatus: 'Supervisor \u51b3\u7b56\u72b6\u6001',
+            supervisorRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            supervisorRoutingAllowed: 'Supervisor \u662f\u5426\u5141\u8bb8\u8c03\u5ea6',
+            supervisorDecisionReason: '\u51b3\u7b56\u539f\u56e0',
+            supervisorBlockingEvents: '\u963b\u65ad\u4e8b\u4ef6',
+            supervisorNextAgentCandidates: '\u4e0b\u4e00 Agent \u5019\u9009',
+            supervisorEventLedgerDecisionAuditPreview: 'Supervisor \u51b3\u?\u5ba1\u8ba1\u9884\u89c8',
+            supervisorEventLedgerDecisionNotRefreshedYet: 'Supervisor \u4e8b\u4ef6\u8d26\u672c\u51b3\u7b56\u5c1a\u672a\u5237\u65b0\u3002',
+            supervisorEventLedgerDecisionCopied: 'Supervisor \u4e8b\u4ef6\u8d26\u672c\u51b3\u7b56\u5df2\u590d\u5236\u3002',
+            supervisorEventLedgerDecisionCopyFailed: '\u590d\u5236 Supervisor \u4e8b\u4ef6\u8d26\u672c\u51b3\u7b56\u5931\u8d25\u3002',
+            realExecutionAllowed: '\u662f\u5426\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            providerCallAllowed: '\u662f\u5426\u5141\u8bb8 provider \u8c03\u7528',
+            externalApiCallAllowed: '\u662f\u5426\u5141\u8bb8\u5916\u90e8 API \u8c03\u7528',
+            agentExecutionAllowed: '\u662f\u5426\u5141\u8bb8 Agent \u6267\u884c',
+            manualReviewRequired: '\u662f\u5426\u9700\u8981\u4eba\u5de5\u590d\u6838',
+            projectWorkspaceExportSupervisorDecisionTitle: 'Supervisor \u4e8b\u4ef6\u8d26\u672c\u51b3\u7b56'
         });
 
 

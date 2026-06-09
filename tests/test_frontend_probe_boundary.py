@@ -6393,3 +6393,21 @@ class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittes
         script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
         self.assertIn("Project Workspace runner event ledger summary bundle", script)
         self.assertIn("project_workspace_runner_event_ledger_summary_marker", script)
+
+    def test_project_workspace_supervisor_event_ledger_decision_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace supervisor event ledger decision bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_SUPERVISOR_EVENT_LEDGER_DECISION_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceSupervisorEventLedgerDecisionPanel", html)
+        self.assertIn("copyProjectWorkspaceSupervisorEventLedgerDecision", html)
+        self.assertIn("runner_supervisor_event_ledger_decision_summary", html)
+
+    def test_project_workspace_supervisor_event_ledger_decision_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_supervisor_event_ledger_decision_marker", script)
+        self.assertIn("Project Workspace supervisor event ledger decision bundle", script)
+
+    def test_project_workspace_supervisor_event_ledger_decision_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace supervisor event ledger decision bundle", script)
+        self.assertIn("project_workspace_supervisor_event_ledger_decision_marker", script)
