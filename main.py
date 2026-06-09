@@ -12447,6 +12447,174 @@ async def dry_run_project_agent_real_execution_approval_request(project_id: str,
     }
 
 
+
+def _runner_real_execution_launch_authorization_preview(decision_payload: dict) -> dict:
+    decision = dict(decision_payload.get("runner_real_execution_approval_decision_preview") or {})
+    ledger = dict(decision_payload.get("runner_real_execution_decision_ledger_preview") or {})
+    denied_receipt = dict(decision_payload.get("runner_real_execution_denied_receipt_preview") or {})
+    project_id = str(decision_payload.get("project", {}).get("project_id") or decision_payload.get("project_id") or "demo_project_default")
+
+    authorization_checks = [
+        {
+            "authorization_check_id": "approval_decision_approved",
+            "passed": str(decision.get("approval_decision") or "") == "approved",
+            "blocking": True,
+            "reason": "Approval decision must be approved before launch authorization.",
+        },
+        {
+            "authorization_check_id": "decision_ledger_recorded",
+            "passed": bool(ledger.get("real_execution_decision_ledger_version")),
+            "blocking": False,
+            "reason": "Decision ledger is recorded for audit.",
+        },
+        {
+            "authorization_check_id": "denied_receipt_absent",
+            "passed": False,
+            "blocking": True,
+            "reason": "Denied receipt is present, so launch cannot be authorized.",
+        },
+        {
+            "authorization_check_id": "real_execution_mode_enabled",
+            "passed": bool(decision.get("real_execution_enabled")),
+            "blocking": True,
+            "reason": "Real execution mode is not enabled.",
+        },
+        {
+            "authorization_check_id": "provider_call_guarded",
+            "passed": not bool(decision.get("provider_call_performed")),
+            "blocking": False,
+            "reason": "No provider call was performed in dry-run.",
+        },
+        {
+            "authorization_check_id": "dry_run_boundary_verified",
+            "passed": True,
+            "blocking": False,
+            "reason": "Dry-run boundary remains enforced.",
+        },
+    ]
+    blocking_authorization_check_ids = [
+        item["authorization_check_id"]
+        for item in authorization_checks
+        if item.get("blocking") and not item.get("passed")
+    ]
+
+    return {
+        "real_execution_launch_authorization_version": "runner_real_execution_launch_authorization_preview_v1",
+        "real_execution_launch_authorization_status": "launch_authorization_denied",
+        "project_id": project_id,
+        "approval_decision_status": decision.get("real_execution_approval_decision_status", ""),
+        "decision_ledger_status": ledger.get("real_execution_decision_ledger_status", ""),
+        "denied_receipt_status": denied_receipt.get("real_execution_denied_receipt_status", ""),
+        "authorization_checks": authorization_checks,
+        "authorization_check_count": len(authorization_checks),
+        "blocking_authorization_check_ids": blocking_authorization_check_ids,
+        "blocking_authorization_check_count": len(blocking_authorization_check_ids),
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
+def _runner_real_execution_launch_lock_preview(launch_authorization: dict) -> dict:
+    project_id = str(launch_authorization.get("project_id") or "demo_project_default")
+    lock_reasons = [
+        "Approval decision is not approved.",
+        "Launch authorization is denied.",
+        "Real execution mode is not enabled.",
+        "Provider/tool execution remains disabled.",
+    ]
+    locks = [
+        {
+            "launch_lock_id": "approval_lock",
+            "lock_status": "locked",
+            "reason": "Missing approved operator decision.",
+        },
+        {
+            "launch_lock_id": "real_mode_lock",
+            "lock_status": "locked",
+            "reason": "Real execution mode is disabled.",
+        },
+        {
+            "launch_lock_id": "provider_lock",
+            "lock_status": "locked",
+            "reason": "Provider calls are disabled.",
+        },
+        {
+            "launch_lock_id": "dry_run_lock",
+            "lock_status": "locked",
+            "reason": "Dry-run boundary remains active.",
+        },
+    ]
+    return {
+        "real_execution_launch_lock_version": "runner_real_execution_launch_lock_preview_v1",
+        "real_execution_launch_lock_status": "launch_locked",
+        "project_id": project_id,
+        "launch_authorization_status": launch_authorization.get("real_execution_launch_authorization_status", ""),
+        "locks": locks,
+        "lock_count": len(locks),
+        "lock_reasons": lock_reasons,
+        "lock_reason_count": len(lock_reasons),
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
+def _runner_real_execution_launch_denial_receipt_preview(
+    launch_authorization: dict,
+    launch_lock: dict,
+) -> dict:
+    project_id = str(launch_authorization.get("project_id") or "demo_project_default")
+    denial_events = [
+        {
+            "denial_event_id": f"real_execution_launch_{project_id}_denied",
+            "denial_event_type": "real_execution_launch_denied",
+            "denial_event_status": "recorded",
+            "reason": "Launch authorization denied and launch lock active.",
+        }
+    ]
+    return {
+        "real_execution_launch_denial_receipt_version": "runner_real_execution_launch_denial_receipt_preview_v1",
+        "real_execution_launch_denial_receipt_status": "launch_denied_safely",
+        "project_id": project_id,
+        "launch_authorization_status": launch_authorization.get("real_execution_launch_authorization_status", ""),
+        "launch_lock_status": launch_lock.get("real_execution_launch_lock_status", ""),
+        "denial_events": denial_events,
+        "denial_event_count": len(denial_events),
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/real-execution-approval-decision/dry-run")
 async def dry_run_project_agent_real_execution_approval_decision(project_id: str, http_request: Request):
     approval_payload = await dry_run_project_agent_real_execution_approval_request(project_id, http_request)
@@ -12485,6 +12653,58 @@ async def dry_run_project_agent_real_execution_approval_decision(project_id: str
         "approval_decision": "denied",
         "operator_approval_captured": False,
         "approval_request_ready": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/real-execution-launch-authorization/dry-run")
+async def dry_run_project_agent_real_execution_launch_authorization(project_id: str, http_request: Request):
+    decision_payload = await dry_run_project_agent_real_execution_approval_decision(project_id, http_request)
+
+    runner_real_execution_launch_authorization_preview = _runner_real_execution_launch_authorization_preview(decision_payload)
+    runner_real_execution_launch_lock_preview = _runner_real_execution_launch_lock_preview(
+        runner_real_execution_launch_authorization_preview
+    )
+    runner_real_execution_launch_denial_receipt_preview = _runner_real_execution_launch_denial_receipt_preview(
+        runner_real_execution_launch_authorization_preview,
+        runner_real_execution_launch_lock_preview,
+    )
+
+    project = decision_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_real_execution_launch_authorization_status": runner_real_execution_launch_authorization_preview["real_execution_launch_authorization_status"],
+        "latest_runner_real_execution_launch_lock_status": runner_real_execution_launch_lock_preview["real_execution_launch_lock_status"],
+        "latest_runner_real_execution_launch_denial_receipt_status": runner_real_execution_launch_denial_receipt_preview["real_execution_launch_denial_receipt_status"],
+        "latest_runner_real_execution_launch_authorized": False,
+        "latest_runner_real_execution_launch_allowed": False,
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **decision_payload,
+        "project": project,
+        "runner_real_execution_launch_authorization_preview": runner_real_execution_launch_authorization_preview,
+        "runner_real_execution_launch_lock_preview": runner_real_execution_launch_lock_preview,
+        "runner_real_execution_launch_denial_receipt_preview": runner_real_execution_launch_denial_receipt_preview,
+        "dry_run": True,
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
         "real_execution_mode_allowed": False,
         "real_execution_enabled": False,
         "release_allowed": False,

@@ -15357,6 +15357,120 @@
             }
         }
 
+
+        const PROJECT_WORKSPACE_REAL_EXECUTION_LAUNCH_AUTHORIZATION_PANEL_BUNDLE_MARKER = 'Project Workspace real execution launch authorization panel bundle';
+        let latestProjectRunnerRealExecutionLaunchAuthorizationPreview = {};
+        let latestProjectRunnerRealExecutionLaunchLockPreview = {};
+        let latestProjectRunnerRealExecutionLaunchDenialReceiptPreview = {};
+
+        function projectWorkspaceRealExecutionLaunchAuthorizationCopyText(workspace = latestProjectWorkspace) {
+            const authorization = Object.keys(latestProjectRunnerRealExecutionLaunchAuthorizationPreview || {}).length ? latestProjectRunnerRealExecutionLaunchAuthorizationPreview : workspace?.runner_real_execution_launch_authorization_preview || {};
+            const lock = Object.keys(latestProjectRunnerRealExecutionLaunchLockPreview || {}).length ? latestProjectRunnerRealExecutionLaunchLockPreview : workspace?.runner_real_execution_launch_lock_preview || {};
+            const receipt = Object.keys(latestProjectRunnerRealExecutionLaunchDenialReceiptPreview || {}).length ? latestProjectRunnerRealExecutionLaunchDenialReceiptPreview : workspace?.runner_real_execution_launch_denial_receipt_preview || {};
+            return [
+                t('realExecutionLaunchAuthorizationCopyTitle'),
+                `${t('realExecutionLaunchAuthorizationStatus')}: ${authorization.real_execution_launch_authorization_status || 'not_refreshed'}`,
+                `${t('realExecutionLaunchLockStatus')}: ${lock.real_execution_launch_lock_status || 'not_refreshed'}`,
+                `${t('realExecutionLaunchDenialReceiptStatus')}: ${receipt.real_execution_launch_denial_receipt_status || 'not_refreshed'}`,
+                `${t('launchAuthorized')}: ${Boolean(receipt.launch_authorized)}`,
+                `${t('launchAllowed')}: ${Boolean(receipt.launch_allowed)}`,
+                '',
+                JSON.stringify({ authorization, lock, receipt }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionLaunchAuthorization() {
+            const status = document.getElementById('projectWorkspaceRealExecutionLaunchAuthorizationStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealExecutionLaunchAuthorizationCopyText());
+                if (status) status.textContent = t('realExecutionLaunchAuthorizationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realExecutionLaunchAuthorizationCopyFailed');
+            }
+        }
+
+        async function dryRunProjectWorkspaceRealExecutionLaunchAuthorization(projectId = latestProjectId) {
+            const status = document.getElementById('projectWorkspaceRealExecutionLaunchAuthorizationStatus');
+            const safeProjectId = projectId || latestProjectWorkspace?.project?.project_id || 'demo_project_default';
+            try {
+                if (status) status.textContent = t('realExecutionLaunchAuthorizationDryRunRunning');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('syncing', 'runner_real_execution_launch_authorization_dry_run');
+                const response = await fetch(`/api/v1/projects/${encodeURIComponent(safeProjectId)}/runner/real-execution-launch-authorization/dry-run`, { method: 'POST' });
+                if (!response.ok) throw new Error(`${t('realExecutionLaunchAuthorizationDryRunFailed')} ${response.status}`);
+                const payload = await response.json();
+
+                latestProjectRunnerRealExecutionApprovalDecisionPreview = payload.runner_real_execution_approval_decision_preview || {};
+                latestProjectRunnerRealExecutionDecisionLedgerPreview = payload.runner_real_execution_decision_ledger_preview || {};
+                latestProjectRunnerRealExecutionDeniedReceiptPreview = payload.runner_real_execution_denied_receipt_preview || {};
+                latestProjectRunnerRealExecutionLaunchAuthorizationPreview = payload.runner_real_execution_launch_authorization_preview || {};
+                latestProjectRunnerRealExecutionLaunchLockPreview = payload.runner_real_execution_launch_lock_preview || {};
+                latestProjectRunnerRealExecutionLaunchDenialReceiptPreview = payload.runner_real_execution_launch_denial_receipt_preview || {};
+
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    ...payload,
+                    project: payload.project || latestProjectWorkspace?.project || {}
+                };
+
+                if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_real_execution_launch_authorization_dry_run');
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_real_execution_launch_authorization_dry_run');
+                if (status) status.textContent = t('realExecutionLaunchAuthorizationDryRunComplete');
+
+                const decisionPanel = document.getElementById('projectWorkspaceRealExecutionApprovalDecisionPanel');
+                if (decisionPanel) decisionPanel.outerHTML = renderProjectWorkspaceRealExecutionApprovalDecisionPanel(latestProjectWorkspace);
+                const panel = document.getElementById('projectWorkspaceRealExecutionLaunchAuthorizationPanel');
+                if (panel) panel.outerHTML = renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(latestProjectWorkspace);
+                return payload;
+            } catch (error) {
+                if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_launch_authorization_dry_run');
+                if (status) status.textContent = error.message || t('realExecutionLaunchAuthorizationDryRunFailed');
+                throw error;
+            }
+        }
+
+        function renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(workspace = latestProjectWorkspace) {
+            const authorization = Object.keys(latestProjectRunnerRealExecutionLaunchAuthorizationPreview || {}).length ? latestProjectRunnerRealExecutionLaunchAuthorizationPreview : workspace?.runner_real_execution_launch_authorization_preview || {};
+            const lock = Object.keys(latestProjectRunnerRealExecutionLaunchLockPreview || {}).length ? latestProjectRunnerRealExecutionLaunchLockPreview : workspace?.runner_real_execution_launch_lock_preview || {};
+            const receipt = Object.keys(latestProjectRunnerRealExecutionLaunchDenialReceiptPreview || {}).length ? latestProjectRunnerRealExecutionLaunchDenialReceiptPreview : workspace?.runner_real_execution_launch_denial_receipt_preview || {};
+            const hasReceipt = Boolean(receipt && Object.keys(receipt).length);
+            return `
+                <div class="section-block" id="projectWorkspaceRealExecutionLaunchAuthorizationPanel" data-project-real-execution-launch-authorization-panel-marker="Project Workspace real execution launch authorization panel bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realExecutionLaunchAuthorizationPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realExecutionLaunchAuthorizationPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="dryRunProjectWorkspaceRealExecutionLaunchAuthorizationBtn" type="button" data-project-real-execution-launch-authorization-dry-run-action="Project Workspace real execution launch authorization panel bundle" onclick="dryRunProjectWorkspaceRealExecutionLaunchAuthorization()">${escapeHTML(t('dryRunRealExecutionLaunchAuthorization'))}</button>
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealExecutionLaunchAuthorizationBtn" type="button" onclick="copyProjectWorkspaceRealExecutionLaunchAuthorization()">${escapeHTML(t('copyRealExecutionLaunchAuthorization'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionLaunchAuthorizationStatus'))}</div>
+                            <strong data-real-execution-launch-authorization-status="${escapeHTML(authorization.real_execution_launch_authorization_status || 'not_refreshed')}">${escapeHTML(authorization.real_execution_launch_authorization_status || t('realExecutionLaunchAuthorizationNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionLaunchLockStatus'))}</div>
+                            <strong data-real-execution-launch-lock-status="${escapeHTML(lock.real_execution_launch_lock_status || 'not_refreshed')}">${escapeHTML(lock.real_execution_launch_lock_status || t('realExecutionLaunchAuthorizationNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionLaunchDenialReceiptStatus'))}</div>
+                            <strong data-real-execution-launch-denial-receipt-status="${escapeHTML(receipt.real_execution_launch_denial_receipt_status || 'not_refreshed')}">${escapeHTML(receipt.real_execution_launch_denial_receipt_status || t('realExecutionLaunchAuthorizationNotRefreshedYet'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('launchAllowed'))}: ${escapeHTML(String(Boolean(receipt.launch_allowed)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realExecutionLaunchAuthorizationAuditPreview'))}</div>
+                        ${hasReceipt ? `<pre class="debug" data-real-execution-launch-authorization-audit-preview="Project Workspace real execution launch authorization panel bundle">${escapeHTML(projectWorkspaceRealExecutionLaunchAuthorizationCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realExecutionLaunchAuthorizationNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealExecutionLaunchAuthorizationStatus"></div>
+                </div>
+            `;
+        }
+
+
         function renderProjectWorkspaceRealExecutionApprovalDecisionPanel(workspace = latestProjectWorkspace) {
             const decision = Object.keys(latestProjectRunnerRealExecutionApprovalDecisionPreview || {}).length ? latestProjectRunnerRealExecutionApprovalDecisionPreview : workspace?.runner_real_execution_approval_decision_preview || {};
             const ledger = Object.keys(latestProjectRunnerRealExecutionDecisionLedgerPreview || {}).length ? latestProjectRunnerRealExecutionDecisionLedgerPreview : workspace?.runner_real_execution_decision_ledger_preview || {};
@@ -17120,6 +17234,7 @@
                     ${renderProjectWorkspaceRealExecutionReadinessSummaryPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionApprovalRequestPanel(workspace)}
                     ${renderProjectWorkspaceRealExecutionApprovalDecisionPanel(workspace)}
+                    ${renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -20688,6 +20803,49 @@
             realExecutionApprovalDecisionDryRunFailed: 'Real execution approval decision dry-run \u5931\u8d25\u3002',
             realExecutionApprovalDecisionCopied: '\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u51b3\u7b56\u5df2\u590d\u5236\u3002',
             realExecutionApprovalDecisionCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u5ba1\u6279\u51b3\u7b56\u5931\u8d25\u3002'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionLaunchAuthorizationPanelBundleMarker: 'Project Workspace real execution launch authorization panel bundle',
+            realExecutionLaunchAuthorizationPanelTitle: 'Real execution launch authorization',
+            realExecutionLaunchAuthorizationPanelHelper: 'Dry-run launch authorization, launch lock, and denial receipt. This keeps real execution locked.',
+            dryRunRealExecutionLaunchAuthorization: 'Dry-run launch authorization',
+            copyRealExecutionLaunchAuthorization: 'Copy launch authorization',
+            realExecutionLaunchAuthorizationCopyTitle: 'Project real execution launch authorization',
+            realExecutionLaunchAuthorizationStatus: 'Launch authorization status',
+            realExecutionLaunchLockStatus: 'Launch lock status',
+            realExecutionLaunchDenialReceiptStatus: 'Launch denial receipt status',
+            launchAuthorized: 'Launch authorized',
+            launchAllowed: 'Launch allowed',
+            realExecutionLaunchAuthorizationAuditPreview: 'Real execution launch authorization audit preview',
+            realExecutionLaunchAuthorizationNotRefreshedYet: 'Real execution launch authorization has not been refreshed yet.',
+            realExecutionLaunchAuthorizationDryRunRunning: 'Building real execution launch authorization dry-run.',
+            realExecutionLaunchAuthorizationDryRunComplete: 'Real execution launch authorization dry-run complete.',
+            realExecutionLaunchAuthorizationDryRunFailed: 'Real execution launch authorization dry-run failed.',
+            realExecutionLaunchAuthorizationCopied: 'Real execution launch authorization copied.',
+            realExecutionLaunchAuthorizationCopyFailed: 'Could not copy real execution launch authorization.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionLaunchAuthorizationPanelBundleMarker: 'Project Workspace real execution launch authorization panel bundle',
+            realExecutionLaunchAuthorizationPanelTitle: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743',
+            realExecutionLaunchAuthorizationPanelHelper: 'Dry-run \u542f\u52a8\u6388\u6743\u3001\u542f\u52a8\u9501\u548c\u62d2\u7edd\u56de\u6267\u3002\u8fd9\u4f1a\u4fdd\u6301\u771f\u5b9e\u6267\u884c\u9501\u5b9a\u3002',
+            dryRunRealExecutionLaunchAuthorization: 'Dry-run \u542f\u52a8\u6388\u6743',
+            copyRealExecutionLaunchAuthorization: '\u590d\u5236\u542f\u52a8\u6388\u6743',
+            realExecutionLaunchAuthorizationCopyTitle: '\u9879\u76ee\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743',
+            realExecutionLaunchAuthorizationStatus: '\u542f\u52a8\u6388\u6743\u72b6\u6001',
+            realExecutionLaunchLockStatus: '\u542f\u52a8\u9501\u72b6\u6001',
+            realExecutionLaunchDenialReceiptStatus: '\u542f\u52a8\u62d2\u7edd\u56de\u6267\u72b6\u6001',
+            launchAuthorized: '\u662f\u5426\u5df2\u542f\u52a8\u6388\u6743',
+            launchAllowed: '\u662f\u5426\u5141\u8bb8\u542f\u52a8',
+            realExecutionLaunchAuthorizationAuditPreview: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionLaunchAuthorizationNotRefreshedYet: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionLaunchAuthorizationDryRunRunning: '\u6b63\u5728\u751f\u6210 real execution launch authorization dry-run.',
+            realExecutionLaunchAuthorizationDryRunComplete: 'Real execution launch authorization dry-run \u5b8c\u6210\u3002',
+            realExecutionLaunchAuthorizationDryRunFailed: 'Real execution launch authorization dry-run \u5931\u8d25\u3002',
+            realExecutionLaunchAuthorizationCopied: '\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743\u5df2\u590d\u5236\u3002',
+            realExecutionLaunchAuthorizationCopyFailed: '\u590d\u5236\u771f\u5b9e\u6267\u884c\u542f\u52a8\u6388\u6743\u5931\u8d25\u3002'
         });
 
 

@@ -2034,3 +2034,41 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
             "denied",
         )
 
+    def test_project_runner_real_execution_launch_authorization_dry_run_endpoint_keeps_launch_locked(self):
+        project = self._create_project()
+        response = self.client.post(
+            f"/api/v1/projects/{project['project_id']}/runner/real-execution-launch-authorization/dry-run"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["dry_run"])
+        self.assertFalse(payload["launch_authorized"])
+        self.assertFalse(payload["launch_allowed"])
+        self.assertFalse(payload["operator_approval_captured"])
+        self.assertFalse(payload["real_execution_mode_allowed"])
+        self.assertFalse(payload["real_execution_enabled"])
+        self.assertFalse(payload["release_allowed"])
+        self.assertFalse(payload["capability_invocation_allowed"])
+        self.assertFalse(payload["tool_invocation_allowed"])
+        self.assertFalse(payload["provider_call_performed"])
+        self.assertFalse(payload["external_api_called"])
+        self.assertFalse(payload["agent_execution_performed"])
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["safe_to_continue"])
+
+        authorization = payload["runner_real_execution_launch_authorization_preview"]
+        lock = payload["runner_real_execution_launch_lock_preview"]
+        receipt = payload["runner_real_execution_launch_denial_receipt_preview"]
+
+        self.assertEqual(authorization["real_execution_launch_authorization_status"], "launch_authorization_denied")
+        self.assertGreater(authorization["blocking_authorization_check_count"], 0)
+        self.assertEqual(lock["real_execution_launch_lock_status"], "launch_locked")
+        self.assertGreater(lock["lock_count"], 0)
+        self.assertEqual(receipt["real_execution_launch_denial_receipt_status"], "launch_denied_safely")
+        self.assertFalse(receipt["launch_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_runner_real_execution_launch_denial_receipt_status"],
+            receipt["real_execution_launch_denial_receipt_status"],
+        )
+

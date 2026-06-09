@@ -6301,3 +6301,43 @@ class ProjectWorkspaceRealExecutionApprovalDecisionPanelFrontendTests(unittest.T
         self.assertIn("Project Workspace real execution approval decision panel bundle", script)
         self.assertIn("project_workspace_real_execution_approval_decision_panel_marker", script)
 
+
+class ProjectWorkspaceRealExecutionLaunchAuthorizationPanelFrontendTests(unittest.TestCase):
+    def test_project_workspace_real_execution_launch_authorization_panel_markers(self):
+        html = FRONTEND_PATH.read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace real execution launch authorization panel bundle",
+            "PROJECT_WORKSPACE_REAL_EXECUTION_LAUNCH_AUTHORIZATION_PANEL_BUNDLE_MARKER",
+            "function renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(",
+            "function projectWorkspaceRealExecutionLaunchAuthorizationCopyText(",
+            "async function copyProjectWorkspaceRealExecutionLaunchAuthorization(",
+            "async function dryRunProjectWorkspaceRealExecutionLaunchAuthorization(",
+            "/runner/real-execution-launch-authorization/dry-run",
+            "latestProjectRunnerRealExecutionLaunchAuthorizationPreview",
+            "latestProjectRunnerRealExecutionLaunchLockPreview",
+            "latestProjectRunnerRealExecutionLaunchDenialReceiptPreview",
+            "projectWorkspaceRealExecutionLaunchAuthorizationPanel",
+            "projectWorkspaceRealExecutionLaunchAuthorizationStatus",
+            "dryRunProjectWorkspaceRealExecutionLaunchAuthorizationBtn",
+            "copyProjectWorkspaceRealExecutionLaunchAuthorizationBtn",
+            "data-project-real-execution-launch-authorization-panel-marker",
+            "data-project-real-execution-launch-authorization-dry-run-action",
+            "data-real-execution-launch-authorization-audit-preview",
+            "realExecutionLaunchAuthorizationPanelTitle",
+            "realExecutionLaunchAuthorizationPanelHelper",
+            "renderProjectWorkspaceRealExecutionLaunchAuthorizationPanel(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_real_execution_launch_authorization_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_real_execution_launch_authorization_panel_marker", script)
+        self.assertIn("Project Workspace real execution launch authorization panel bundle", script)
+
+    def test_project_workspace_real_execution_launch_authorization_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace real execution launch authorization panel bundle", script)
+        self.assertIn("project_workspace_real_execution_launch_authorization_panel_marker", script)
+

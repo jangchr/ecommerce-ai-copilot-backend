@@ -93,6 +93,7 @@ Add-Check "project_workspace_real_execution_mode_gate_panel_marker" ($page.Conte
 Add-Check "project_workspace_real_execution_readiness_summary_panel_marker" ($page.Content -match "Project Workspace real execution readiness summary panel bundle")
 Add-Check "project_workspace_real_execution_approval_request_panel_marker" ($page.Content -match "Project Workspace real execution approval request panel bundle")
 Add-Check "project_workspace_real_execution_approval_decision_panel_marker" ($page.Content -match "Project Workspace real execution approval decision panel bundle")
+Add-Check "project_workspace_real_execution_launch_authorization_panel_marker" ($page.Content -match "Project Workspace real execution launch authorization panel bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
 Add-Check "project_workspace_authorization_manifest_panel_marker" ($page.Content -match "Project Workspace authorization manifest panel bundle")
