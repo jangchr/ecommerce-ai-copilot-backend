@@ -17477,6 +17477,106 @@
         }
 
 
+
+        const PROJECT_WORKSPACE_SAFETY_CHAIN_HISTORY_SUMMARY_BUNDLE_MARKER = 'Project Workspace safety chain history summary bundle';
+
+        function projectWorkspaceSafetyChainEventFromWorkspace(workspace = latestProjectWorkspace) {
+            const summary = workspace?.project?.graph_summary || {};
+            const audit = Object.keys(latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview || {}).length
+                ? latestProjectRunnerRealExecutionSafetyChainAuditSummaryPreview
+                : workspace?.runner_real_execution_safety_chain_audit_summary_preview || {};
+            const event = Object.keys(latestProjectRunnerRealExecutionSafetyChainEventPreview || {}).length
+                ? latestProjectRunnerRealExecutionSafetyChainEventPreview
+                : workspace?.runner_real_execution_safety_chain_event_preview || {};
+
+            if (event && Object.keys(event).length) return { audit, event, summary };
+
+            return {
+                audit,
+                event: {
+                    event_id: summary.latest_runner_real_execution_safety_chain_event_id || '',
+                    event_type: summary.latest_runner_real_execution_safety_chain_event_type || '',
+                    event_status: summary.latest_runner_real_execution_safety_chain_event_status || '',
+                    chain_status: summary.latest_runner_real_execution_safety_chain_status || '',
+                    safe_to_continue: Boolean(summary.latest_runner_real_execution_safety_chain_safe_to_continue),
+                    abort_recommended: Boolean(summary.latest_runner_real_execution_abort_recommended),
+                    incident_detected: Boolean(summary.latest_runner_real_execution_incident_detected),
+                    dry_run: true
+                },
+                summary
+            };
+        }
+
+        function projectWorkspaceSafetyChainHistoryCopyText(workspace = latestProjectWorkspace) {
+            const { audit, event, summary } = projectWorkspaceSafetyChainEventFromWorkspace(workspace);
+            return [
+                t('safetyChainHistoryCopyTitle'),
+                `${t('realExecutionSafetyChainEventId')}: ${event.event_id || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventStatus')}: ${event.event_status || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainEventType')}: ${event.event_type || 'not_refreshed'}`,
+                `${t('realExecutionSafetyChainStatus')}: ${event.chain_status || audit.chain_status || summary.latest_runner_real_execution_safety_chain_status || 'not_refreshed'}`,
+                `${t('safeToContinue')}: ${Boolean(event.safe_to_continue || audit.safe_to_continue)}`,
+                `${t('abortRecommended')}: ${Boolean(event.abort_recommended || audit.abort_recommended || summary.latest_runner_real_execution_abort_recommended)}`,
+                `${t('incidentDetected')}: ${Boolean(event.incident_detected || audit.incident_detected || summary.latest_runner_real_execution_incident_detected)}`,
+                '',
+                JSON.stringify({ event, audit, graph_summary: summary }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceSafetyChainHistorySummary() {
+            const status = document.getElementById('projectWorkspaceStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceSafetyChainHistoryCopyText());
+                if (status) status.textContent = t('safetyChainHistoryCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('safetyChainHistoryCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceSafetyChainHistorySummary(workspace = latestProjectWorkspace) {
+            const { audit, event, summary } = projectWorkspaceSafetyChainEventFromWorkspace(workspace);
+            const hasEvent = Boolean(
+                event.event_status ||
+                event.event_id ||
+                audit.real_execution_safety_chain_audit_summary_status ||
+                summary.latest_runner_real_execution_safety_chain_event_status
+            );
+            return `
+                <div class="graph-os-card" id="projectWorkspaceSafetyChainHistorySummary" data-project-safety-chain-history-summary-marker="Project Workspace safety chain history summary bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('safetyChainHistoryPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('safetyChainHistoryPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceSafetyChainHistorySummaryBtn" type="button" onclick="copyProjectWorkspaceSafetyChainHistorySummary()">${escapeHTML(t('copySafetyChainHistorySummary'))}</button>
+                        </div>
+                    </div>
+                    ${hasEvent ? `
+                        <div class="graph-os-compact-grid">
+                            <div class="graph-os-card">
+                                <div class="json-key">${escapeHTML(t('realExecutionSafetyChainEventStatus'))}</div>
+                                <strong data-safety-chain-history-event-status="${escapeHTML(event.event_status || 'not_refreshed')}">${escapeHTML(event.event_status || t('none'))}</strong>
+                                <div class="field-helper">${escapeHTML(t('realExecutionSafetyChainEventType'))}: ${escapeHTML(event.event_type || t('none'))}</div>
+                            </div>
+                            <div class="graph-os-card">
+                                <div class="json-key">${escapeHTML(t('realExecutionSafetyChainStatus'))}</div>
+                                <strong data-safety-chain-history-chain-status="${escapeHTML(event.chain_status || audit.chain_status || 'not_refreshed')}">${escapeHTML(event.chain_status || audit.chain_status || t('none'))}</strong>
+                                <div class="field-helper">${escapeHTML(t('realExecutionSafetyChainEventId'))}: ${escapeHTML(event.event_id || t('none'))}</div>
+                            </div>
+                            <div class="graph-os-card">
+                                <div class="json-key">${escapeHTML(t('safeToContinue'))}</div>
+                                <strong data-safety-chain-history-safe-to-continue="${escapeHTML(String(Boolean(event.safe_to_continue || audit.safe_to_continue)))}">${escapeHTML(String(Boolean(event.safe_to_continue || audit.safe_to_continue)))}</strong>
+                                <div class="field-helper">${escapeHTML(t('abortRecommended'))}: ${escapeHTML(String(Boolean(event.abort_recommended || audit.abort_recommended || summary.latest_runner_real_execution_abort_recommended)))}</div>
+                            </div>
+                        </div>
+                        <pre class="debug" data-safety-chain-history-audit-preview="Project Workspace safety chain history summary bundle">${escapeHTML(projectWorkspaceSafetyChainHistoryCopyText(workspace))}</pre>
+                    ` : `<div class="recent-empty">${escapeHTML(t('safetyChainHistoryNotRefreshedYet'))}</div>`}
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceHistoryQuickPanel(workspace = latestProjectWorkspace) {
             return `
                 <div class="section-block" id="projectWorkspaceHistoryPanel" data-project-history-ux-marker="Project Workspace history UX bundle">
@@ -17490,6 +17590,7 @@
                         <button class="btn-secondary" id="copyProjectWorkspaceJsonPackBtn" type="button" data-project-workspace-export-pack="json" onclick="copyProjectWorkspaceExportPack('json')">${escapeHTML(t('copyProjectWorkspaceJsonPack'))}</button>
                     </div>
                     <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceSafetyChainHistorySummary(workspace)}
                         ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_runs', 'recentProjectRunsQuickLink', 'projectHistoryNoRuns', 'runs')}
                         ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_jobs', 'recentProjectJobsQuickLink', 'projectHistoryNoJobs', 'jobs')}
                         ${renderProjectWorkspaceHistoryGroup(workspace, 'recent_artifacts', 'recentProjectArtifactsQuickLink', 'projectHistoryNoArtifacts', 'artifacts')}
@@ -21332,6 +21433,31 @@
             realExecutionSafetyChainAuditCopied: '\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6\u5df2\u590d\u5236\u3002',
             realExecutionSafetyChainAuditCopyFailed: '\u590d\u5236\u5b89\u5168\u94fe\u8def\u5ba1\u8ba1 / \u4e8b\u4ef6\u5931\u8d25\u3002',
             safeToContinue: '\u662f\u5426\u53ef\u7ee7\u7eed'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceSafetyChainHistorySummaryBundleMarker: 'Project Workspace safety chain history summary bundle',
+            safetyChainHistoryPanelTitle: 'Latest safety chain event',
+            safetyChainHistoryPanelHelper: 'Latest real execution safety chain event summarized from graph summary and event ledger preview.',
+            copySafetyChainHistorySummary: 'Copy safety chain event summary',
+            safetyChainHistoryCopyTitle: 'Project Workspace latest safety chain event summary',
+            safetyChainHistoryCopied: 'Safety chain event summary copied.',
+            safetyChainHistoryCopyFailed: 'Could not copy safety chain event summary.',
+            safetyChainHistoryNotRefreshedYet: 'No safety chain event has been refreshed yet.',
+            realExecutionSafetyChainEventId: 'Safety chain event ID'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceSafetyChainHistorySummaryBundleMarker: 'Project Workspace safety chain history summary bundle',
+            safetyChainHistoryPanelTitle: '\u6700\u65b0\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6',
+            safetyChainHistoryPanelHelper: '\u4ece graph summary \u548c event ledger \u9884\u89c8\u4e2d\u63d0\u53d6\u7684\u6700\u65b0\u771f\u5b9e\u6267\u884c\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u6458\u8981\u3002',
+            copySafetyChainHistorySummary: '\u590d\u5236\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u6458\u8981',
+            safetyChainHistoryCopyTitle: 'Project Workspace \u6700\u65b0\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u6458\u8981',
+            safetyChainHistoryCopied: '\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u6458\u8981\u5df2\u590d\u5236\u3002',
+            safetyChainHistoryCopyFailed: '\u590d\u5236\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u6458\u8981\u5931\u8d25\u3002',
+            safetyChainHistoryNotRefreshedYet: '\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6\u5c1a\u672a\u5237\u65b0\u3002',
+            realExecutionSafetyChainEventId: '\u5b89\u5168\u94fe\u8def\u4e8b\u4ef6 ID'
         });
 
 

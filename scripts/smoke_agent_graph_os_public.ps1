@@ -98,6 +98,7 @@ Add-Check "project_workspace_real_execution_launch_monitor_panel_marker" ($page.
 Add-Check "project_workspace_real_execution_incident_response_panel_marker" ($page.Content -match "Project Workspace real execution incident response panel bundle")
 Add-Check "project_workspace_real_execution_safety_chain_action_marker" ($page.Content -match "Project Workspace real execution safety chain action")
 Add-Check "project_workspace_real_execution_safety_chain_audit_panel_marker" ($page.Content -match "Project Workspace real execution safety chain audit panel bundle")
+Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
 Add-Check "project_workspace_authorization_manifest_panel_marker" ($page.Content -match "Project Workspace authorization manifest panel bundle")
