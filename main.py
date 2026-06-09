@@ -12615,6 +12615,158 @@ def _runner_real_execution_launch_denial_receipt_preview(
     }
 
 
+def _runner_real_execution_launch_monitor_preview(launch_payload: dict) -> dict:
+    authorization = dict(launch_payload.get("runner_real_execution_launch_authorization_preview") or {})
+    launch_lock = dict(launch_payload.get("runner_real_execution_launch_lock_preview") or {})
+    denial_receipt = dict(launch_payload.get("runner_real_execution_launch_denial_receipt_preview") or {})
+    project_id = str(launch_payload.get("project", {}).get("project_id") or launch_payload.get("project_id") or "demo_project_default")
+
+    tripwire_signals = [
+        {
+            "tripwire_signal_id": "launch_authorization_denied",
+            "triggered": str(authorization.get("real_execution_launch_authorization_status") or "") != "launch_authorized",
+            "blocking": True,
+            "reason": "Launch authorization is not approved.",
+        },
+        {
+            "tripwire_signal_id": "launch_lock_active",
+            "triggered": str(launch_lock.get("real_execution_launch_lock_status") or "") == "launch_locked",
+            "blocking": True,
+            "reason": "Launch lock remains active.",
+        },
+        {
+            "tripwire_signal_id": "denial_receipt_recorded",
+            "triggered": bool(denial_receipt.get("real_execution_launch_denial_receipt_version")),
+            "blocking": True,
+            "reason": "Launch denial receipt is present.",
+        },
+        {
+            "tripwire_signal_id": "provider_call_attempted",
+            "triggered": bool(launch_payload.get("provider_call_performed")),
+            "blocking": True,
+            "reason": "Provider calls must remain disabled during dry-run.",
+        },
+        {
+            "tripwire_signal_id": "external_api_attempted",
+            "triggered": bool(launch_payload.get("external_api_called")),
+            "blocking": True,
+            "reason": "External API calls must remain disabled during dry-run.",
+        },
+        {
+            "tripwire_signal_id": "agent_execution_attempted",
+            "triggered": bool(launch_payload.get("agent_execution_performed")),
+            "blocking": True,
+            "reason": "Real Agent execution must remain disabled during dry-run.",
+        },
+        {
+            "tripwire_signal_id": "dry_run_boundary_active",
+            "triggered": bool(launch_payload.get("dry_run")),
+            "blocking": False,
+            "reason": "Dry-run boundary is active and expected.",
+        },
+    ]
+    blocking_tripwire_signal_ids = [
+        item["tripwire_signal_id"]
+        for item in tripwire_signals
+        if item.get("blocking") and item.get("triggered")
+    ]
+
+    health_probe_checks = [
+        {
+            "health_probe_id": "dry_run_boundary",
+            "status": "passed" if launch_payload.get("dry_run") else "failed",
+            "message": "Dry-run boundary remains active.",
+        },
+        {
+            "health_probe_id": "provider_call_guard",
+            "status": "passed" if not launch_payload.get("provider_call_performed") else "failed",
+            "message": "No provider call was performed.",
+        },
+        {
+            "health_probe_id": "external_api_guard",
+            "status": "passed" if not launch_payload.get("external_api_called") else "failed",
+            "message": "No external API call was performed.",
+        },
+        {
+            "health_probe_id": "agent_execution_guard",
+            "status": "passed" if not launch_payload.get("agent_execution_performed") else "failed",
+            "message": "No real Agent execution was performed.",
+        },
+        {
+            "health_probe_id": "manual_review_required",
+            "status": "passed" if launch_payload.get("manual_review_required") else "failed",
+            "message": "Manual review remains required before execution.",
+        },
+    ]
+    failed_health_probe_ids = [
+        item["health_probe_id"]
+        for item in health_probe_checks
+        if item.get("status") != "passed"
+    ]
+
+    abort_plan_steps = [
+        {
+            "abort_step_id": "keep_launch_lock_active",
+            "status": "ready",
+            "action": "Keep launch lock active and do not authorize execution.",
+        },
+        {
+            "abort_step_id": "block_provider_and_tool_calls",
+            "status": "ready",
+            "action": "Keep provider, tool, and external API calls disabled.",
+        },
+        {
+            "abort_step_id": "record_monitor_receipt",
+            "status": "ready",
+            "action": "Record monitor output in Workspace graph summary for audit.",
+        },
+        {
+            "abort_step_id": "require_operator_review",
+            "status": "ready",
+            "action": "Require operator review before any future real execution attempt.",
+        },
+    ]
+
+    monitor_status = "launch_monitor_blocked_safely"
+    abort_recommended = bool(blocking_tripwire_signal_ids or failed_health_probe_ids)
+
+    return {
+        "real_execution_launch_monitor_version": "runner_real_execution_launch_monitor_preview_v1",
+        "real_execution_launch_monitor_status": monitor_status,
+        "project_id": project_id,
+        "launch_authorization_status": authorization.get("real_execution_launch_authorization_status", ""),
+        "launch_lock_status": launch_lock.get("real_execution_launch_lock_status", ""),
+        "launch_denial_receipt_status": denial_receipt.get("real_execution_launch_denial_receipt_status", ""),
+        "tripwire_signals": tripwire_signals,
+        "tripwire_signal_count": len(tripwire_signals),
+        "blocking_tripwire_signal_ids": blocking_tripwire_signal_ids,
+        "blocking_tripwire_signal_count": len(blocking_tripwire_signal_ids),
+        "health_probe_checks": health_probe_checks,
+        "health_probe_check_count": len(health_probe_checks),
+        "failed_health_probe_ids": failed_health_probe_ids,
+        "failed_health_probe_count": len(failed_health_probe_ids),
+        "health_probe_summary": "dry_run_safe_but_launch_blocked",
+        "abort_plan_steps": abort_plan_steps,
+        "abort_plan_step_count": len(abort_plan_steps),
+        "abort_recommended": abort_recommended,
+        "monitoring_started": True,
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "dry_run": True,
+    }
+
+
 @app.post("/api/v1/projects/{project_id}/runner/real-execution-approval-decision/dry-run")
 async def dry_run_project_agent_real_execution_approval_decision(project_id: str, http_request: Request):
     approval_payload = await dry_run_project_agent_real_execution_approval_request(project_id, http_request)
@@ -12702,6 +12854,51 @@ async def dry_run_project_agent_real_execution_launch_authorization(project_id: 
         "runner_real_execution_launch_lock_preview": runner_real_execution_launch_lock_preview,
         "runner_real_execution_launch_denial_receipt_preview": runner_real_execution_launch_denial_receipt_preview,
         "dry_run": True,
+        "launch_authorized": False,
+        "launch_allowed": False,
+        "operator_approval_captured": False,
+        "real_execution_mode_allowed": False,
+        "real_execution_enabled": False,
+        "release_allowed": False,
+        "capability_invocation_allowed": False,
+        "tool_invocation_allowed": False,
+        "provider_call_performed": False,
+        "external_api_called": False,
+        "agent_execution_performed": False,
+        "manual_review_required": True,
+        "safe_to_continue": False,
+        "request_id": http_request.state.request_id,
+    }
+
+
+@app.post("/api/v1/projects/{project_id}/runner/real-execution-launch-monitor/dry-run")
+async def dry_run_project_agent_real_execution_launch_monitor(project_id: str, http_request: Request):
+    launch_payload = await dry_run_project_agent_real_execution_launch_authorization(project_id, http_request)
+
+    runner_real_execution_launch_monitor_preview = _runner_real_execution_launch_monitor_preview(launch_payload)
+
+    project = launch_payload["project"]
+    graph_summary = dict(project.get("graph_summary") or {})
+    graph_summary.update({
+        "latest_runner_real_execution_launch_monitor_status": runner_real_execution_launch_monitor_preview["real_execution_launch_monitor_status"],
+        "latest_runner_real_execution_blocking_tripwire_signal_count": runner_real_execution_launch_monitor_preview["blocking_tripwire_signal_count"],
+        "latest_runner_real_execution_failed_health_probe_count": runner_real_execution_launch_monitor_preview["failed_health_probe_count"],
+        "latest_runner_real_execution_abort_recommended": runner_real_execution_launch_monitor_preview["abort_recommended"],
+        "latest_runner_real_execution_health_probe_summary": runner_real_execution_launch_monitor_preview["health_probe_summary"],
+    })
+    project["graph_summary"] = graph_summary
+    try:
+        project = save_project_snapshot(project)
+    except Exception:
+        pass
+
+    return {
+        **launch_payload,
+        "project": project,
+        "runner_real_execution_launch_monitor_preview": runner_real_execution_launch_monitor_preview,
+        "dry_run": True,
+        "monitoring_started": True,
+        "abort_recommended": runner_real_execution_launch_monitor_preview["abort_recommended"],
         "launch_authorized": False,
         "launch_allowed": False,
         "operator_approval_captured": False,
