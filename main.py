@@ -65,6 +65,7 @@ from agent_runs import (
     build_agent_contract_summary,
     build_agent_contract_completeness_report,
     build_source_adapter_contract_report,
+    build_multi_agent_output_chain_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6218,6 +6219,12 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
     agent_contract_summary = build_agent_contract_summary(agent_contract_registry)
     agent_contract_completeness_report = build_agent_contract_completeness_report(agent_contract_registry)
     source_adapter_contract_report = build_source_adapter_contract_report()
+    multi_agent_output_chain_report = build_multi_agent_output_chain_report(
+        agent_contract_report=agent_contract_completeness_report,
+        source_adapter_contract_report=source_adapter_contract_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6254,6 +6261,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_source_adapter_contract_complete_count": int(source_adapter_contract_report.get("complete_adapter_count") or 0),
         "latest_source_adapter_contract_missing_count": int(source_adapter_contract_report.get("missing_adapter_count") or 0),
         "latest_source_adapter_contract_supports_external_crawler_dry_run": bool(source_adapter_contract_report.get("supports_external_crawler_dry_run")),
+        "latest_multi_agent_output_chain_status": multi_agent_output_chain_report.get("report_status", ""),
+        "latest_multi_agent_output_complete_stage_count": int(multi_agent_output_chain_report.get("complete_stage_count") or 0),
+        "latest_multi_agent_output_missing_stage_count": int(multi_agent_output_chain_report.get("missing_stage_count") or 0),
+        "latest_multi_agent_output_supports_creative_to_video": bool(multi_agent_output_chain_report.get("supports_creative_to_video")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6275,6 +6286,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "agent_contract_summary": agent_contract_summary,
         "agent_contract_completeness_report": agent_contract_completeness_report,
         "source_adapter_contract_report": source_adapter_contract_report,
+        "multi_agent_output_chain_report": multi_agent_output_chain_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

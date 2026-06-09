@@ -1839,6 +1839,164 @@ def build_source_adapter_contract_report() -> dict[str, Any]:
     }
 
 
+
+MULTI_AGENT_OUTPUT_CHAIN_REPORT_VERSION = "multi_agent_output_chain_report_v1"
+
+MULTI_AGENT_OUTPUT_CHAIN_MATRIX = [
+    {
+        "stage_id": "evidence",
+        "stage_label": "Evidence Agent",
+        "agent_id": "evidence_agent",
+        "required_inputs": ["SourceEvidence", "ReviewRecord", "pasted_reviews_v1", "review_workspace_v1"],
+        "expected_outputs": ["llm_evidence_packet", "evidence_quotes", "source_breakdown"],
+        "downstream_agents": ["strategy_agent"],
+        "safety_boundaries": ["use_supplied_evidence_only", "preserve_quote_trace", "no_unseen_review_claims"],
+    },
+    {
+        "stage_id": "strategy",
+        "stage_label": "Strategy Agent",
+        "agent_id": "strategy_agent",
+        "required_inputs": ["llm_evidence_packet", "evidence_quotes"],
+        "expected_outputs": ["creative_strategy", "creative_angles", "audience_strategy"],
+        "downstream_agents": ["storyboard_agent", "risk_agent"],
+        "safety_boundaries": ["evidence_bound_claims", "no_population_statistics_without_source", "keep_strategy_traceable"],
+    },
+    {
+        "stage_id": "creative_storyboard",
+        "stage_label": "Creative / Storyboard Agent",
+        "agent_id": "storyboard_agent",
+        "required_inputs": ["creative_strategy", "llm_evidence_packet"],
+        "expected_outputs": ["storyboard", "video_script_pack", "video_generation_packet"],
+        "downstream_agents": ["risk_agent", "keyframe_agent", "prompt_handoff_agent"],
+        "safety_boundaries": ["avoid_unsupported_absolute_claims", "cite_evidence_quotes", "keep_scenes_actionable"],
+    },
+    {
+        "stage_id": "risk_approval",
+        "stage_label": "Risk / Approval Agent",
+        "agent_id": "risk_agent",
+        "required_inputs": ["storyboard", "video_generation_packet", "evaluation"],
+        "expected_outputs": ["risk_validation", "storyboard_rework_request", "approval_boundary"],
+        "downstream_agents": ["storyboard_agent", "finalizer_agent", "human_approval_agent"],
+        "safety_boundaries": ["block_unsafe_claims", "human_review_required", "real_execution_stays_locked"],
+    },
+    {
+        "stage_id": "video_generation",
+        "stage_label": "Video / Generation Agents",
+        "agent_id": "keyframe_agent",
+        "required_inputs": ["storyboard", "video_generation_packet", "product_asset_lock_v2"],
+        "expected_outputs": ["keyframe_plan", "external_video_tool_handoff", "provider_job_dry_run_packet"],
+        "downstream_agents": ["prompt_handoff_agent", "provider_job_agent", "experiment_agent"],
+        "safety_boundaries": ["manual_external_tool_handoff", "provider_call_blocked", "one_short_test_before_full_generation"],
+    },
+    {
+        "stage_id": "finalizer",
+        "stage_label": "Finalizer Agent",
+        "agent_id": "finalizer_agent",
+        "required_inputs": ["all_generated_artifacts", "risk_validation", "audit_trail"],
+        "expected_outputs": ["final_product_result", "workspace_export_summary", "copy_ready_pack"],
+        "downstream_agents": [],
+        "safety_boundaries": ["preserve_audit_trail", "export_safe_outputs_only", "no_hidden_source_claims"],
+    },
+]
+
+
+def build_multi_agent_output_chain_report(
+    *,
+    agent_contract_report: dict[str, Any] | None = None,
+    source_adapter_contract_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "multi_agent_output_chain_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run readiness report for the ecommerce multi-Agent output chain.
+
+    This report connects source evidence, strategy, creative/storyboard, video
+    handoff, risk approval, and finalizer responsibilities. It does not execute
+    agents, call providers, call external APIs, generate video, mutate state, or
+    unlock real execution.
+    """
+
+    agent_report = agent_contract_report if isinstance(agent_contract_report, dict) else {}
+    source_report = source_adapter_contract_report if isinstance(source_adapter_contract_report, dict) else {}
+
+    agent_registry_ready = bool(agent_report.get("supervisor_can_use_registry")) and int(agent_report.get("missing_role_count") or 0) == 0
+    source_contracts_ready = str(source_report.get("report_status") or "") == "source_adapter_contracts_complete"
+    source_visible_sample_ready = bool(source_report.get("supports_amazon_visible_reviews") or source_report.get("supports_pasted_reviews"))
+
+    stage_reports: list[dict[str, Any]] = []
+    for index, stage in enumerate(MULTI_AGENT_OUTPUT_CHAIN_MATRIX, start=1):
+        safety_boundaries = list(stage.get("safety_boundaries") or [])
+        required_inputs = list(stage.get("required_inputs") or [])
+        expected_outputs = list(stage.get("expected_outputs") or [])
+        downstream_agents = list(stage.get("downstream_agents") or [])
+
+        complete = bool(required_inputs and expected_outputs and safety_boundaries)
+        if stage.get("stage_id") == "evidence":
+            complete = complete and source_contracts_ready and source_visible_sample_ready
+        else:
+            complete = complete and agent_registry_ready
+
+        stage_reports.append({
+            "stage_index": index,
+            "stage_id": str(stage.get("stage_id") or ""),
+            "stage_label": str(stage.get("stage_label") or ""),
+            "agent_id": str(stage.get("agent_id") or ""),
+            "required_inputs": required_inputs,
+            "expected_outputs": expected_outputs,
+            "downstream_agents": downstream_agents,
+            "safety_boundaries": safety_boundaries,
+            "complete": complete,
+            "ready_for_dry_run": complete,
+            "agent_contract_ready": agent_registry_ready,
+            "source_contract_ready": source_contracts_ready if stage.get("stage_id") == "evidence" else True,
+            "real_execution_allowed": False,
+            "provider_call_allowed": False,
+            "external_api_call_allowed": False,
+            "agent_execution_allowed": False,
+            "dry_run": True,
+        })
+
+    missing_stages = [item["stage_id"] for item in stage_reports if not item["complete"]]
+    complete_stages = [item["stage_id"] for item in stage_reports if item["complete"]]
+
+    report_status = "multi_agent_output_chain_ready_dry_run" if not missing_stages else "multi_agent_output_chain_incomplete"
+    recommended_next_state = (
+        "show_multi_agent_output_chain_in_workspace"
+        if not missing_stages
+        else "inspect_multi_agent_output_chain_contract_gaps"
+    )
+
+    return {
+        "multi_agent_output_chain_report_version": MULTI_AGENT_OUTPUT_CHAIN_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "multi_agent_output_chain_report_builder"),
+        "stage_count": len(stage_reports),
+        "complete_stage_count": len(complete_stages),
+        "missing_stage_count": len(missing_stages),
+        "complete_stages": complete_stages,
+        "missing_stages": missing_stages,
+        "stage_reports": stage_reports,
+        "agent_registry_ready": agent_registry_ready,
+        "source_adapter_contracts_ready": source_contracts_ready,
+        "source_visible_sample_ready": source_visible_sample_ready,
+        "supports_evidence_to_strategy": "evidence" in complete_stages and "strategy" in complete_stages,
+        "supports_strategy_to_creative": "strategy" in complete_stages and "creative_storyboard" in complete_stages,
+        "supports_creative_to_video": "creative_storyboard" in complete_stages and "video_generation" in complete_stages,
+        "supports_risk_to_finalizer": "risk_approval" in complete_stages and "finalizer" in complete_stages,
+        "recommended_next_state": recommended_next_state,
+        "manual_review_required": True,
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "agent_execution_allowed": False,
+        "video_generation_performed": False,
+        "creative_output_generated": False,
+        "evidence_claims_invented": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

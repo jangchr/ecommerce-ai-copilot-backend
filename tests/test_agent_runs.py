@@ -4143,6 +4143,48 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
         self.assertIn("waiting_for_user", completion_ledger["completion_ledger_status"])
 
 
+
+    def test_multi_agent_output_chain_report_connects_ecommerce_output_stages(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_multi_agent_output_chain_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_multi_agent_output_chain",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            report["multi_agent_output_chain_report_version"],
+            "multi_agent_output_chain_report_v1",
+        )
+        self.assertEqual(report["report_status"], "multi_agent_output_chain_ready_dry_run")
+        self.assertGreaterEqual(report["stage_count"], 6)
+        self.assertEqual(report["missing_stage_count"], 0)
+        self.assertTrue(report["agent_registry_ready"])
+        self.assertTrue(report["source_adapter_contracts_ready"])
+        self.assertTrue(report["source_visible_sample_ready"])
+        self.assertTrue(report["supports_evidence_to_strategy"])
+        self.assertTrue(report["supports_strategy_to_creative"])
+        self.assertTrue(report["supports_creative_to_video"])
+        self.assertTrue(report["supports_risk_to_finalizer"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["agent_execution_allowed"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["creative_output_generated"])
+        self.assertFalse(report["evidence_claims_invented"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_source_adapter_contract_report_covers_ecommerce_inputs(self):
         from agent_runs import build_source_adapter_contract_report
 

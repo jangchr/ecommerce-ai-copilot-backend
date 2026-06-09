@@ -482,6 +482,34 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(
             payload["project"]["graph_summary"]["latest_source_adapter_contract_supports_external_crawler_dry_run"]
         )
+        self.assertIn("multi_agent_output_chain_report", payload)
+        output_chain = payload["multi_agent_output_chain_report"]
+        self.assertEqual(
+            output_chain["multi_agent_output_chain_report_version"],
+            "multi_agent_output_chain_report_v1",
+        )
+        self.assertEqual(output_chain["report_status"], "multi_agent_output_chain_ready_dry_run")
+        self.assertEqual(output_chain["missing_stage_count"], 0)
+        self.assertTrue(output_chain["supports_evidence_to_strategy"])
+        self.assertTrue(output_chain["supports_strategy_to_creative"])
+        self.assertTrue(output_chain["supports_creative_to_video"])
+        self.assertTrue(output_chain["supports_risk_to_finalizer"])
+        self.assertFalse(output_chain["real_execution_allowed"])
+        self.assertFalse(output_chain["provider_call_allowed"])
+        self.assertFalse(output_chain["external_api_call_allowed"])
+        self.assertFalse(output_chain["agent_execution_allowed"])
+        self.assertFalse(output_chain["video_generation_performed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_multi_agent_output_chain_status"],
+            "multi_agent_output_chain_ready_dry_run",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_multi_agent_output_missing_stage_count"],
+            0,
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_multi_agent_output_supports_creative_to_video"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],
