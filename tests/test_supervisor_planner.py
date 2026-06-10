@@ -1142,6 +1142,92 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_worker_finalization_external_api_called"]
         )
+        self.assertIn("provider_artifact_lineage_report", payload)
+        lineage = payload["provider_artifact_lineage_report"]
+        self.assertEqual(
+            lineage["provider_artifact_lineage_report_version"],
+            "provider_artifact_lineage_report_v1",
+        )
+        self.assertEqual(
+            lineage["report_status"],
+            "provider_artifact_lineage_ready_dry_run",
+        )
+        self.assertTrue(lineage["provider_worker_finalization_ready"])
+        self.assertTrue(lineage["operator_review_required"])
+        self.assertTrue(lineage["source_provenance_chain"])
+        self.assertTrue(lineage["prompt_generation_lineage"])
+        self.assertTrue(lineage["worker_lineage"])
+        self.assertTrue(lineage["artifact_version_policy"])
+        self.assertTrue(lineage["versioned_audit_snapshot"])
+        self.assertTrue(lineage["reproducibility_packet"])
+        self.assertTrue(lineage["tamper_drift_guard"])
+        self.assertTrue(lineage["export_manifest"])
+        self.assertTrue(lineage["lineage_audit_receipt"])
+        self.assertGreater(lineage["source_node_count"], 0)
+        self.assertGreater(lineage["prompt_node_count"], 0)
+        self.assertGreater(lineage["worker_node_count"], 0)
+        self.assertGreater(lineage["version_label_count"], 0)
+        self.assertGreater(lineage["snapshot_section_count"], 0)
+        self.assertGreater(lineage["rebuild_input_count"], 0)
+        self.assertGreater(lineage["manual_rebuild_step_count"], 0)
+        self.assertGreater(lineage["export_section_count"], 0)
+        self.assertTrue(lineage["supports_source_provenance_chain"])
+        self.assertTrue(lineage["supports_prompt_generation_lineage"])
+        self.assertTrue(lineage["supports_worker_lineage"])
+        self.assertTrue(lineage["supports_artifact_version_policy"])
+        self.assertTrue(lineage["supports_versioned_audit_snapshot"])
+        self.assertTrue(lineage["supports_reproducibility_packet"])
+        self.assertTrue(lineage["supports_tamper_drift_guard"])
+        self.assertTrue(lineage["supports_lineage_export_manifest"])
+        self.assertTrue(lineage["supports_lineage_audit_receipt"])
+        self.assertTrue(lineage["workspace_export_ready"])
+        self.assertTrue(lineage["json_export_ready"])
+        self.assertTrue(lineage["markdown_export_ready"])
+        self.assertFalse(lineage["lineage_recorded"])
+        self.assertFalse(lineage["lineage_persisted"])
+        self.assertFalse(lineage["provenance_persisted"])
+        self.assertFalse(lineage["versioned_snapshot_recorded"])
+        self.assertFalse(lineage["versioned_snapshot_persisted"])
+        self.assertFalse(lineage["audit_snapshot_recorded"])
+        self.assertFalse(lineage["audit_snapshot_persisted"])
+        self.assertFalse(lineage["reproducibility_packet_recorded"])
+        self.assertFalse(lineage["tamper_check_recorded"])
+        self.assertFalse(lineage["drift_check_recorded"])
+        self.assertFalse(lineage["real_hash_computed"])
+        self.assertFalse(lineage["artifact_mutation_allowed"])
+        self.assertFalse(lineage["artifact_storage_enabled"])
+        self.assertFalse(lineage["artifact_manifest_persisted"])
+        self.assertFalse(lineage["artifact_handoff_ready"])
+        self.assertFalse(lineage["result_validated"])
+        self.assertFalse(lineage["output_contract_valid"])
+        self.assertFalse(lineage["downstream_handoff_allowed"])
+        self.assertFalse(lineage["run_finalized"])
+        self.assertFalse(lineage["replay_allowed"])
+        self.assertFalse(lineage["provider_replay_allowed"])
+        self.assertFalse(lineage["external_api_call_allowed"])
+        self.assertFalse(lineage["external_api_called"])
+        self.assertFalse(lineage["provider_secret_read"])
+        self.assertFalse(lineage["provider_secret_exported"])
+        self.assertFalse(lineage["media_uploaded"])
+        self.assertFalse(lineage["media_downloaded"])
+        self.assertFalse(lineage["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_artifact_lineage_status"],
+            "provider_artifact_lineage_ready_dry_run",
+        )
+        self.assertGreater(
+            payload["project"]["graph_summary"]["latest_provider_artifact_lineage_blocking_failure_count"],
+            0,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_artifact_lineage_versioned_snapshot_persisted"]
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_provider_artifact_lineage_workspace_export_ready"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_artifact_lineage_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

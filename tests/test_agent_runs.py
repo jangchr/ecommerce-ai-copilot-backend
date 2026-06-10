@@ -4155,6 +4155,168 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_artifact_lineage_report_models_provenance_versioned_audit_and_safety(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_artifact_lineage_report,
+            build_provider_failure_recovery_report,
+            build_provider_observability_report,
+            build_provider_queue_lease_worker_report,
+            build_provider_sandbox_runtime_report,
+            build_provider_worker_checkpoint_resume_report,
+            build_provider_worker_finalization_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        real_gate = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        failure_report = build_provider_failure_recovery_report(
+            real_provider_execution_gate_report=real_gate,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        observability_report = build_provider_observability_report(
+            provider_failure_recovery_report=failure_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        queue_worker_report = build_provider_queue_lease_worker_report(
+            provider_observability_report=observability_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        checkpoint_report = build_provider_worker_checkpoint_resume_report(
+            provider_queue_lease_worker_report=queue_worker_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        finalization_report = build_provider_worker_finalization_report(
+            provider_worker_checkpoint_resume_report=checkpoint_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+        report = build_provider_artifact_lineage_report(
+            provider_worker_finalization_report=finalization_report,
+            project_id="project_provider_artifact_lineage",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_artifact_lineage_report_version"], "provider_artifact_lineage_report_v1")
+        self.assertEqual(report["report_status"], "provider_artifact_lineage_ready_dry_run")
+        self.assertTrue(report["provider_worker_finalization_ready"])
+        self.assertTrue(report["operator_review_required"])
+        self.assertGreater(report["stage_count"], 0)
+        self.assertTrue(report["source_provenance_chain"])
+        self.assertTrue(report["prompt_generation_lineage"])
+        self.assertTrue(report["worker_lineage"])
+        self.assertTrue(report["artifact_version_policy"])
+        self.assertTrue(report["versioned_audit_snapshot"])
+        self.assertTrue(report["reproducibility_packet"])
+        self.assertTrue(report["tamper_drift_guard"])
+        self.assertTrue(report["export_manifest"])
+        self.assertTrue(report["lineage_audit_receipt"])
+        self.assertGreater(report["source_node_count"], 0)
+        self.assertGreater(report["prompt_node_count"], 0)
+        self.assertGreater(report["worker_node_count"], 0)
+        self.assertGreater(report["version_label_count"], 0)
+        self.assertGreater(report["snapshot_section_count"], 0)
+        self.assertGreater(report["rebuild_input_count"], 0)
+        self.assertGreater(report["manual_rebuild_step_count"], 0)
+        self.assertGreater(report["export_section_count"], 0)
+        self.assertTrue(report["supports_source_provenance_chain"])
+        self.assertTrue(report["supports_prompt_generation_lineage"])
+        self.assertTrue(report["supports_worker_lineage"])
+        self.assertTrue(report["supports_artifact_version_policy"])
+        self.assertTrue(report["supports_versioned_audit_snapshot"])
+        self.assertTrue(report["supports_reproducibility_packet"])
+        self.assertTrue(report["supports_tamper_drift_guard"])
+        self.assertTrue(report["supports_lineage_export_manifest"])
+        self.assertTrue(report["supports_lineage_audit_receipt"])
+        self.assertTrue(report["dry_run"])
+        self.assertTrue(report["lineage_required"])
+        self.assertTrue(report["workspace_export_ready"])
+        self.assertTrue(report["json_export_ready"])
+        self.assertTrue(report["markdown_export_ready"])
+        self.assertFalse(report["lineage_recorded"])
+        self.assertFalse(report["lineage_persisted"])
+        self.assertFalse(report["provenance_persisted"])
+        self.assertFalse(report["versioned_snapshot_recorded"])
+        self.assertFalse(report["versioned_snapshot_persisted"])
+        self.assertFalse(report["audit_snapshot_recorded"])
+        self.assertFalse(report["audit_snapshot_persisted"])
+        self.assertFalse(report["reproducibility_packet_recorded"])
+        self.assertFalse(report["tamper_check_recorded"])
+        self.assertFalse(report["drift_check_recorded"])
+        self.assertFalse(report["real_hash_computed"])
+        self.assertFalse(report["lineage_drift_detected"])
+        self.assertFalse(report["artifact_mutation_allowed"])
+        self.assertFalse(report["artifact_storage_enabled"])
+        self.assertFalse(report["artifact_manifest_persisted"])
+        self.assertFalse(report["artifact_handoff_ready"])
+        self.assertFalse(report["result_validated"])
+        self.assertFalse(report["output_contract_valid"])
+        self.assertFalse(report["downstream_handoff_allowed"])
+        self.assertFalse(report["run_finalized"])
+        self.assertFalse(report["replay_allowed"])
+        self.assertFalse(report["provider_replay_allowed"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["quota_reserved"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["paid_generation_allowed"])
+
+
     def test_provider_worker_finalization_report_models_result_validation_artifacts_and_handoff_safety(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

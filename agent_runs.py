@@ -4870,6 +4870,347 @@ def build_provider_worker_finalization_report(
     }
 
 
+
+PROVIDER_ARTIFACT_LINEAGE_REPORT_VERSION = "provider_artifact_lineage_report_v1"
+
+PROVIDER_ARTIFACT_LINEAGE_STAGES = [
+    {
+        "stage_id": "collect_source_provenance",
+        "stage_label": "Collect source provenance",
+        "required_inputs": ["source_evidence_artifact", "evidence_quotes", "source_adapter_contract"],
+        "expected_outputs": ["source_provenance_chain", "evidence_reference_map", "source_boundary"],
+    },
+    {
+        "stage_id": "collect_prompt_generation_lineage",
+        "stage_label": "Collect prompt and generation lineage",
+        "required_inputs": ["keyframe_prompt_pack_report", "manual_generation_result_report", "provider_api_readiness_report"],
+        "expected_outputs": ["prompt_lineage", "generation_lineage", "provider_boundary_map"],
+    },
+    {
+        "stage_id": "collect_worker_execution_lineage",
+        "stage_label": "Collect worker execution lineage",
+        "required_inputs": ["provider_worker_finalization_report", "checkpoint_resume_report", "queue_lease_worker_report"],
+        "expected_outputs": ["worker_lineage", "checkpoint_lineage", "finalization_lineage"],
+    },
+    {
+        "stage_id": "build_artifact_version_policy",
+        "stage_label": "Build artifact version policy",
+        "required_inputs": ["artifact_manifest", "artifact_handoff", "run_finalization_policy"],
+        "expected_outputs": ["artifact_version_policy", "version_labels", "snapshot_policy"],
+    },
+    {
+        "stage_id": "build_versioned_audit_snapshot",
+        "stage_label": "Build versioned audit snapshot",
+        "required_inputs": ["source_provenance_chain", "prompt_lineage", "worker_lineage", "artifact_version_policy"],
+        "expected_outputs": ["versioned_audit_snapshot", "snapshot_sections", "export_safe_snapshot"],
+    },
+    {
+        "stage_id": "prepare_reproducibility_packet",
+        "stage_label": "Prepare reproducibility packet",
+        "required_inputs": ["versioned_audit_snapshot", "evidence_reference_map", "prompt_lineage"],
+        "expected_outputs": ["reproducibility_packet", "replay_boundaries", "manual_rebuild_steps"],
+    },
+    {
+        "stage_id": "record_lineage_audit_receipt",
+        "stage_label": "Record lineage audit receipt",
+        "required_inputs": ["versioned_audit_snapshot", "tamper_drift_guard", "export_manifest"],
+        "expected_outputs": ["lineage_audit_receipt", "workspace_preview", "export_pack_snapshot"],
+    },
+]
+
+
+def build_provider_artifact_lineage_report(
+    *,
+    provider_worker_finalization_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_artifact_lineage_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run artifact lineage / provenance / versioned audit snapshot report.
+
+    This report models where an artifact came from, which evidence and prompt
+    chain produced it, which worker/finalization chain handled it, how versions
+    are labeled, and what can be exported for audit and reproducibility. It does
+    not persist lineage, write artifact storage, upload/download media, compute
+    real file hashes, call providers, or unlock real execution.
+    """
+
+    finalization = provider_worker_finalization_report if isinstance(provider_worker_finalization_report, dict) else {}
+    finalization_ready = str(finalization.get("report_status") or "") == "provider_worker_finalization_ready_dry_run"
+    operator_review_required = bool(finalization.get("operator_review_required", True))
+    artifact_manifest = finalization.get("artifact_manifest") if isinstance(finalization.get("artifact_manifest"), dict) else {}
+    artifact_handoff = finalization.get("artifact_handoff") if isinstance(finalization.get("artifact_handoff"), dict) else {}
+    result_validation_gate = finalization.get("result_validation_gate") if isinstance(finalization.get("result_validation_gate"), dict) else {}
+    run_finalization_policy = finalization.get("run_finalization_policy") if isinstance(finalization.get("run_finalization_policy"), dict) else {}
+
+    source_provenance_chain = {
+        "source_provenance_chain_version": "provider_artifact_source_provenance_chain_v1",
+        "source_provenance_status": "source_provenance_ready_dry_run",
+        "source_nodes": [
+            {"node_id": "source_adapter_contract", "included": True, "persisted": False},
+            {"node_id": "source_evidence_artifact", "included": True, "persisted": False},
+            {"node_id": "evidence_quotes", "included": True, "persisted": False},
+            {"node_id": "source_breakdown", "included": True, "persisted": False},
+        ],
+        "source_node_count": 4,
+        "evidence_reference_map_ready": True,
+        "source_boundary": "visible_or_user_provided_evidence_only",
+        "external_api_called": False,
+    }
+
+    prompt_generation_lineage = {
+        "prompt_generation_lineage_version": "provider_artifact_prompt_generation_lineage_v1",
+        "prompt_generation_lineage_status": "prompt_generation_lineage_ready_dry_run",
+        "prompt_nodes": [
+            {"node_id": "keyframe_video_asset_chain_report", "included": True, "persisted": False},
+            {"node_id": "keyframe_prompt_pack_report", "included": True, "persisted": False},
+            {"node_id": "manual_generation_result_report", "included": True, "persisted": False},
+            {"node_id": "provider_api_readiness_report", "included": True, "persisted": False},
+        ],
+        "prompt_node_count": 4,
+        "generation_boundary": "manual_or_dry_run_generation_only",
+        "provider_boundary_map_ready": True,
+        "external_api_called": False,
+    }
+
+    worker_lineage = {
+        "worker_lineage_version": "provider_artifact_worker_lineage_v1",
+        "worker_lineage_status": "worker_lineage_ready_dry_run" if finalization_ready else "worker_lineage_waiting_for_finalization",
+        "worker_nodes": [
+            {"node_id": "provider_queue_lease_worker_report", "included": True, "persisted": False},
+            {"node_id": "provider_worker_checkpoint_resume_report", "included": True, "persisted": False},
+            {"node_id": "provider_worker_finalization_report", "included": bool(finalization), "persisted": False},
+            {"node_id": "result_validation_gate", "included": bool(result_validation_gate), "persisted": False},
+            {"node_id": "run_finalization_policy", "included": bool(run_finalization_policy), "persisted": False},
+        ],
+        "worker_node_count": 5,
+        "worker_result_validated": bool(finalization.get("result_validated")),
+        "artifact_handoff_ready": bool(finalization.get("artifact_handoff_ready")),
+        "external_api_called": False,
+    }
+
+    artifact_version_policy = {
+        "artifact_version_policy_version": "provider_artifact_version_policy_v1",
+        "artifact_version_policy_status": "artifact_version_policy_ready_dry_run",
+        "version_labels": [
+            {"version_label_id": "source_snapshot_version", "required": True, "recorded": False},
+            {"version_label_id": "prompt_pack_version", "required": True, "recorded": False},
+            {"version_label_id": "worker_checkpoint_version", "required": True, "recorded": False},
+            {"version_label_id": "finalization_receipt_version", "required": True, "recorded": False},
+            {"version_label_id": "workspace_export_version", "required": True, "recorded": False},
+        ],
+        "version_label_count": 5,
+        "artifact_manifest_version": str(artifact_manifest.get("artifact_manifest_version") or ""),
+        "artifact_handoff_version": str(artifact_handoff.get("artifact_handoff_version") or ""),
+        "lineage_version_recorded": False,
+        "versioned_snapshot_persisted": False,
+        "external_api_called": False,
+    }
+
+    versioned_audit_snapshot = {
+        "versioned_audit_snapshot_version": "provider_artifact_versioned_audit_snapshot_v1",
+        "versioned_audit_snapshot_status": "versioned_audit_snapshot_ready_dry_run" if finalization_ready else "versioned_audit_snapshot_waiting_for_finalization",
+        "snapshot_sections": [
+            {"section_id": "source_provenance", "included": True},
+            {"section_id": "prompt_generation_lineage", "included": True},
+            {"section_id": "worker_execution_lineage", "included": True},
+            {"section_id": "artifact_manifest", "included": bool(artifact_manifest)},
+            {"section_id": "artifact_handoff", "included": bool(artifact_handoff)},
+            {"section_id": "finalization_audit_receipt", "included": bool(finalization.get("finalization_audit_receipt"))},
+        ],
+        "snapshot_section_count": 6,
+        "export_safe_snapshot_ready": True,
+        "audit_snapshot_recorded": False,
+        "audit_snapshot_persisted": False,
+        "external_api_called": False,
+    }
+
+    reproducibility_packet = {
+        "reproducibility_packet_version": "provider_artifact_reproducibility_packet_v1",
+        "reproducibility_packet_status": "reproducibility_packet_ready_dry_run",
+        "rebuild_inputs": [
+            {"input_id": "source_evidence_reference", "available": True},
+            {"input_id": "prompt_pack_reference", "available": True},
+            {"input_id": "worker_lineage_reference", "available": finalization_ready},
+            {"input_id": "artifact_manifest_reference", "available": bool(artifact_manifest)},
+            {"input_id": "versioned_audit_snapshot", "available": True},
+        ],
+        "rebuild_input_count": 5,
+        "manual_rebuild_steps": [
+            {"step_id": "inspect_source_snapshot", "ready": True, "executed": False},
+            {"step_id": "inspect_prompt_pack", "ready": True, "executed": False},
+            {"step_id": "inspect_worker_finalization", "ready": finalization_ready, "executed": False},
+            {"step_id": "compare_artifact_manifest", "ready": bool(artifact_manifest), "executed": False},
+            {"step_id": "export_versioned_audit_snapshot", "ready": True, "executed": False},
+        ],
+        "manual_rebuild_step_count": 5,
+        "replay_allowed": False,
+        "provider_replay_allowed": False,
+        "external_api_called": False,
+    }
+
+    tamper_drift_guard = {
+        "tamper_drift_guard_version": "provider_artifact_tamper_drift_guard_v1",
+        "tamper_drift_guard_status": "tamper_drift_guard_ready_dry_run",
+        "tamper_check_required": True,
+        "tamper_check_recorded": False,
+        "drift_check_required": True,
+        "drift_check_recorded": False,
+        "hash_preview_only": True,
+        "real_hash_computed": False,
+        "lineage_drift_detected": False,
+        "artifact_mutation_allowed": False,
+        "external_api_called": False,
+    }
+
+    export_manifest = {
+        "lineage_export_manifest_version": "provider_artifact_lineage_export_manifest_v1",
+        "lineage_export_manifest_status": "lineage_export_manifest_ready_dry_run",
+        "export_sections": [
+            {"export_section_id": "source_provenance_chain", "included": True},
+            {"export_section_id": "prompt_generation_lineage", "included": True},
+            {"export_section_id": "worker_lineage", "included": True},
+            {"export_section_id": "artifact_version_policy", "included": True},
+            {"export_section_id": "versioned_audit_snapshot", "included": True},
+            {"export_section_id": "reproducibility_packet", "included": True},
+            {"export_section_id": "tamper_drift_guard", "included": True},
+        ],
+        "export_section_count": 7,
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "external_api_called": False,
+    }
+
+    lineage_audit_receipt = {
+        "lineage_audit_receipt_version": "provider_artifact_lineage_audit_receipt_v1",
+        "receipt_status": "artifact_lineage_dry_run_recorded",
+        "source_provenance_included": True,
+        "prompt_generation_lineage_included": True,
+        "worker_lineage_included": True,
+        "artifact_version_policy_included": True,
+        "versioned_audit_snapshot_included": True,
+        "reproducibility_packet_included": True,
+        "tamper_drift_guard_included": True,
+        "export_manifest_included": True,
+        "audit_receipt_recorded": False,
+        "lineage_audit_recorded": False,
+        "snapshot_audit_recorded": False,
+        "provenance_persisted": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not finalization_ready:
+        blocking_failures.append("provider_worker_finalization_report_not_ready")
+    blocking_failures.extend([
+        "lineage_persistence_disabled",
+        "versioned_snapshot_not_persisted",
+        "real_hash_not_computed",
+        "artifact_storage_disabled",
+        "artifact_mutation_blocked",
+        "provider_replay_blocked",
+    ])
+    if operator_review_required:
+        blocking_failures.append("operator_review_required")
+
+    report_status = (
+        "provider_artifact_lineage_ready_dry_run"
+        if finalization_ready
+        else "provider_artifact_lineage_incomplete"
+    )
+
+    return {
+        "provider_artifact_lineage_report_version": PROVIDER_ARTIFACT_LINEAGE_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_artifact_lineage_report_builder"),
+        "provider_worker_finalization_ready": finalization_ready,
+        "operator_review_required": operator_review_required,
+        "stage_count": len(PROVIDER_ARTIFACT_LINEAGE_STAGES),
+        "artifact_lineage_stage_matrix": [dict(item, complete=finalization_ready) for item in PROVIDER_ARTIFACT_LINEAGE_STAGES],
+        "source_provenance_chain": source_provenance_chain,
+        "prompt_generation_lineage": prompt_generation_lineage,
+        "worker_lineage": worker_lineage,
+        "artifact_version_policy": artifact_version_policy,
+        "versioned_audit_snapshot": versioned_audit_snapshot,
+        "reproducibility_packet": reproducibility_packet,
+        "tamper_drift_guard": tamper_drift_guard,
+        "export_manifest": export_manifest,
+        "lineage_audit_receipt": lineage_audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "source_node_count": source_provenance_chain["source_node_count"],
+        "prompt_node_count": prompt_generation_lineage["prompt_node_count"],
+        "worker_node_count": worker_lineage["worker_node_count"],
+        "version_label_count": artifact_version_policy["version_label_count"],
+        "snapshot_section_count": versioned_audit_snapshot["snapshot_section_count"],
+        "rebuild_input_count": reproducibility_packet["rebuild_input_count"],
+        "manual_rebuild_step_count": reproducibility_packet["manual_rebuild_step_count"],
+        "export_section_count": export_manifest["export_section_count"],
+        "supports_source_provenance_chain": True,
+        "supports_prompt_generation_lineage": True,
+        "supports_worker_lineage": True,
+        "supports_artifact_version_policy": True,
+        "supports_versioned_audit_snapshot": True,
+        "supports_reproducibility_packet": True,
+        "supports_tamper_drift_guard": True,
+        "supports_lineage_export_manifest": True,
+        "supports_lineage_audit_receipt": True,
+        "recommended_next_state": "show_provider_artifact_lineage_in_workspace",
+        "dry_run": True,
+        "lineage_required": True,
+        "lineage_recorded": False,
+        "lineage_persisted": False,
+        "provenance_persisted": False,
+        "versioned_snapshot_recorded": False,
+        "versioned_snapshot_persisted": False,
+        "audit_snapshot_recorded": False,
+        "audit_snapshot_persisted": False,
+        "reproducibility_packet_recorded": False,
+        "tamper_check_recorded": False,
+        "drift_check_recorded": False,
+        "real_hash_computed": False,
+        "lineage_drift_detected": False,
+        "artifact_mutation_allowed": False,
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "artifact_storage_enabled": False,
+        "artifact_manifest_persisted": False,
+        "artifact_handoff_ready": False,
+        "result_validated": False,
+        "output_contract_valid": False,
+        "downstream_handoff_allowed": False,
+        "run_finalized": False,
+        "checkpoint_recorded": False,
+        "resume_allowed": False,
+        "replay_allowed": False,
+        "provider_replay_allowed": False,
+        "queue_persisted": False,
+        "lease_acquired": False,
+        "heartbeat_recorded": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "worker_invocation_performed": False,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "quota_reserved": False,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+        "incident_opened": False,
+        "rollback_ready": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
