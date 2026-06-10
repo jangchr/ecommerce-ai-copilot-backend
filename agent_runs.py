@@ -2394,6 +2394,190 @@ def build_keyframe_prompt_pack_report(
     }
 
 
+
+MANUAL_GENERATION_RESULT_REPORT_VERSION = "manual_generation_result_report_v1"
+
+MANUAL_GENERATION_RESULT_REQUIRED_FIELDS = [
+    {
+        "field": "tool_name",
+        "required": True,
+        "example": "gemini",
+        "description": "External manual tool used by the operator, such as gemini, doubao, runway, pika, or manual_export.",
+    },
+    {
+        "field": "prompt_source",
+        "required": True,
+        "example": "keyframe_prompt_pack_report",
+        "description": "Prompt source copied from CrossGrowth, for example keyframe_prompt_pack_report or revised_external_video_handoff.",
+    },
+    {
+        "field": "result_url",
+        "required": False,
+        "example": "https://example.com/generated-video.mp4",
+        "description": "External result URL pasted manually by the operator. CrossGrowth does not fetch or download it.",
+    },
+    {
+        "field": "preview_url",
+        "required": False,
+        "example": "https://example.com/preview.jpg",
+        "description": "External preview URL pasted manually by the operator. CrossGrowth does not fetch or download it.",
+    },
+    {
+        "field": "operator_notes",
+        "required": False,
+        "example": "Product shape drifted in shot 2; CTA was good.",
+        "description": "Human notes about product drift, storyboard mismatch, evidence issue, or quality.",
+    },
+    {
+        "field": "product_consistency_score",
+        "required": False,
+        "example": "0.70",
+        "description": "Manual score for whether generated media preserves product identity.",
+    },
+    {
+        "field": "storyboard_following_score",
+        "required": False,
+        "example": "0.80",
+        "description": "Manual score for whether generated media follows the planned storyboard.",
+    },
+    {
+        "field": "evidence_consistency_score",
+        "required": False,
+        "example": "0.85",
+        "description": "Manual score for whether generated media and text stay aligned with evidence.",
+    },
+]
+
+
+def build_manual_generation_result_report(
+    *,
+    keyframe_prompt_pack_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "manual_generation_result_report_builder",
+) -> dict[str, Any]:
+    """Build the dry-run manual generation result intake report.
+
+    This report describes how manually generated external media results can be
+    pasted back into CrossGrowth for experiment tracking, product-drift review,
+    evidence-consistency review, and revised prompt handoff. It does not call
+    providers, fetch result URLs, upload media, download media, spend money, or
+    unlock real execution.
+    """
+
+    prompt_pack = keyframe_prompt_pack_report if isinstance(keyframe_prompt_pack_report, dict) else {}
+    prompt_pack_ready = (
+        str(prompt_pack.get("report_status") or "") == "keyframe_prompt_pack_ready_dry_run"
+        and int(prompt_pack.get("shot_prompt_count") or 0) > 0
+        and int(prompt_pack.get("provider_variant_count") or 0) > 0
+        and bool(prompt_pack.get("manual_copy_paste_only"))
+    )
+
+    provider_ids = prompt_pack.get("provider_ids") if isinstance(prompt_pack.get("provider_ids"), list) else []
+    if not provider_ids:
+        provider_ids = ["gemini", "doubao", "runway", "pika"]
+
+    product_drift_checklist = [
+        "Compare generated product shape, color, packaging, logo placement, material, and scale against the reference image.",
+        "Flag any shot where the product becomes a different item or variant.",
+        "Reject outputs with distorted hands, changed packaging, added accessories, or missing product details.",
+        "Require rework when product identity differs from the product asset lock.",
+    ]
+    evidence_consistency_checklist = [
+        "Confirm generated on-screen text and narration do not invent reviews, ratings, medical claims, or hidden marketplace data.",
+        "Confirm the storyboard still matches buyer pain points, objections, liked points, and use cases from evidence.",
+        "Reject outputs that introduce unsupported before/after claims or impossible performance.",
+        "Route to revised prompt handoff when media quality is acceptable but evidence wording needs tightening.",
+    ]
+    rework_recommendation_rules = [
+        {
+            "condition": "product_drift_detected",
+            "recommended_route": "product_identity_validator_to_keyframe_agent",
+            "next_artifact": "revised_keyframe_plan",
+            "reason": "Product identity must be locked before another generation attempt.",
+        },
+        {
+            "condition": "storyboard_not_followed",
+            "recommended_route": "prompt_handoff_agent",
+            "next_artifact": "revised_external_video_handoff",
+            "reason": "Prompt needs clearer shot order, camera direction, and manual generation instructions.",
+        },
+        {
+            "condition": "evidence_inconsistency_detected",
+            "recommended_route": "evidence_agent_to_prompt_handoff_agent",
+            "next_artifact": "revised_external_video_handoff",
+            "reason": "Claims and overlays must be corrected to stay evidence-safe.",
+        },
+        {
+            "condition": "result_good_enough",
+            "recommended_route": "finalizer_agent",
+            "next_artifact": "video_asset_export_pack",
+            "reason": "Manual result can proceed to export after human review.",
+        },
+    ]
+
+    missing_items: list[str] = []
+    if not prompt_pack_ready:
+        missing_items.append("keyframe_prompt_pack_ready_dry_run")
+
+    report_status = "manual_generation_result_intake_ready_dry_run" if not missing_items else "manual_generation_result_intake_incomplete"
+
+    return {
+        "manual_generation_result_report_version": MANUAL_GENERATION_RESULT_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "manual_generation_result_report_builder"),
+        "keyframe_prompt_pack_ready": prompt_pack_ready,
+        "missing_item_count": len(missing_items),
+        "missing_items": missing_items,
+        "supported_manual_tools": provider_ids + ["manual_export", "generic"],
+        "result_intake_required_fields": MANUAL_GENERATION_RESULT_REQUIRED_FIELDS,
+        "external_result_input_schema_ready": True,
+        "supports_result_url_intake": True,
+        "supports_preview_url_intake": True,
+        "supports_operator_notes": True,
+        "supports_product_drift_checklist": True,
+        "supports_evidence_consistency_checklist": True,
+        "supports_rework_recommendation": True,
+        "supports_revised_prompt_handoff": True,
+        "supports_second_experiment_comparison": True,
+        "can_record_external_experiment": prompt_pack_ready,
+        "product_drift_checklist": product_drift_checklist,
+        "evidence_consistency_checklist": evidence_consistency_checklist,
+        "rework_recommendation_rules": rework_recommendation_rules,
+        "manual_result_workflow": [
+            "Copy prompt pack from CrossGrowth.",
+            "Run one manual generation attempt in the external tool.",
+            "Paste result_url, preview_url, tool_name, prompt_source, scores, and operator notes back into CrossGrowth.",
+            "Review product drift and evidence consistency.",
+            "Create revised prompt handoff when drift, storyboard mismatch, or evidence inconsistency is detected.",
+            "Run a second manual experiment and compare against the baseline result.",
+        ],
+        "existing_endpoint_contracts": [
+            "/api/v1/video-generation/jobs/{job_id}/external-experiments",
+            "/api/v1/video-generation/jobs/{job_id}/external-experiments/{experiment_id}/feedback",
+            "/api/v1/video-generation/jobs/{job_id}/complete",
+        ],
+        "recommended_next_state": "show_manual_generation_result_intake_in_workspace" if not missing_items else "inspect_manual_generation_result_prerequisites",
+        "manual_copy_paste_only": True,
+        "manual_review_required": True,
+        "human_approval_required_before_generation": True,
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "result_url_fetched": False,
+        "preview_url_fetched": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "provider_secret_required": False,
+        "provider_secret_exported": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

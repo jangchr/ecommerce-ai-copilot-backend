@@ -4146,6 +4146,85 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_manual_generation_result_report_prepares_external_result_intake(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_manual_generation_result",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_manual_generation_result",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_manual_generation_result",
+            requested_by="unit_test",
+        )
+        report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_manual_generation_result",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["manual_generation_result_report_version"], "manual_generation_result_report_v1")
+        self.assertEqual(report["report_status"], "manual_generation_result_intake_ready_dry_run")
+        self.assertTrue(report["keyframe_prompt_pack_ready"])
+        self.assertEqual(report["missing_item_count"], 0)
+        self.assertTrue(report["external_result_input_schema_ready"])
+        self.assertTrue(report["supports_result_url_intake"])
+        self.assertTrue(report["supports_preview_url_intake"])
+        self.assertTrue(report["supports_operator_notes"])
+        self.assertTrue(report["supports_product_drift_checklist"])
+        self.assertTrue(report["supports_evidence_consistency_checklist"])
+        self.assertTrue(report["supports_rework_recommendation"])
+        self.assertTrue(report["supports_revised_prompt_handoff"])
+        self.assertTrue(report["supports_second_experiment_comparison"])
+        self.assertTrue(report["can_record_external_experiment"])
+        self.assertIn("gemini", report["supported_manual_tools"])
+        self.assertIn("runway", report["supported_manual_tools"])
+        fields = {item["field"] for item in report["result_intake_required_fields"]}
+        self.assertIn("tool_name", fields)
+        self.assertIn("prompt_source", fields)
+        self.assertIn("result_url", fields)
+        self.assertIn("preview_url", fields)
+        self.assertTrue(report["product_drift_checklist"])
+        self.assertTrue(report["evidence_consistency_checklist"])
+        self.assertTrue(report["rework_recommendation_rules"])
+        self.assertIn(
+            "/api/v1/video-generation/jobs/{job_id}/external-experiments",
+            report["existing_endpoint_contracts"],
+        )
+        self.assertTrue(report["manual_copy_paste_only"])
+        self.assertTrue(report["manual_review_required"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["result_url_fetched"])
+        self.assertFalse(report["preview_url_fetched"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_keyframe_prompt_pack_report_builds_copy_ready_provider_variants(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

@@ -579,6 +579,47 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(
             payload["project"]["graph_summary"]["latest_keyframe_prompt_pack_manual_copy_only"]
         )
+        self.assertIn("manual_generation_result_report", payload)
+        result_report = payload["manual_generation_result_report"]
+        self.assertEqual(
+            result_report["manual_generation_result_report_version"],
+            "manual_generation_result_report_v1",
+        )
+        self.assertEqual(
+            result_report["report_status"],
+            "manual_generation_result_intake_ready_dry_run",
+        )
+        self.assertTrue(result_report["keyframe_prompt_pack_ready"])
+        self.assertEqual(result_report["missing_item_count"], 0)
+        self.assertTrue(result_report["supports_result_url_intake"])
+        self.assertTrue(result_report["supports_preview_url_intake"])
+        self.assertTrue(result_report["supports_product_drift_checklist"])
+        self.assertTrue(result_report["supports_evidence_consistency_checklist"])
+        self.assertTrue(result_report["supports_rework_recommendation"])
+        self.assertTrue(result_report["supports_revised_prompt_handoff"])
+        self.assertTrue(result_report["can_record_external_experiment"])
+        self.assertTrue(result_report["manual_copy_paste_only"])
+        self.assertTrue(result_report["manual_review_required"])
+        self.assertFalse(result_report["real_execution_allowed"])
+        self.assertFalse(result_report["provider_call_allowed"])
+        self.assertFalse(result_report["external_api_call_allowed"])
+        self.assertFalse(result_report["result_url_fetched"])
+        self.assertFalse(result_report["preview_url_fetched"])
+        self.assertFalse(result_report["video_generation_performed"])
+        self.assertFalse(result_report["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_manual_generation_result_status"],
+            "manual_generation_result_intake_ready_dry_run",
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_manual_generation_result_can_record_external_experiment"]
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_manual_generation_result_supports_rework"]
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_manual_generation_result_manual_review_required"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

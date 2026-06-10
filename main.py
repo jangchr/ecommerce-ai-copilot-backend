@@ -68,6 +68,7 @@ from agent_runs import (
     build_multi_agent_output_chain_report,
     build_keyframe_video_asset_chain_report,
     build_keyframe_prompt_pack_report,
+    build_manual_generation_result_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6237,6 +6238,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    manual_generation_result_report = build_manual_generation_result_report(
+        keyframe_prompt_pack_report=keyframe_prompt_pack_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6285,6 +6291,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_keyframe_prompt_pack_shot_prompt_count": int(keyframe_prompt_pack_report.get("shot_prompt_count") or 0),
         "latest_keyframe_prompt_pack_provider_variant_count": int(keyframe_prompt_pack_report.get("provider_variant_count") or 0),
         "latest_keyframe_prompt_pack_manual_copy_only": bool(keyframe_prompt_pack_report.get("manual_copy_paste_only")),
+        "latest_manual_generation_result_status": manual_generation_result_report.get("report_status", ""),
+        "latest_manual_generation_result_can_record_external_experiment": bool(manual_generation_result_report.get("can_record_external_experiment")),
+        "latest_manual_generation_result_supports_rework": bool(manual_generation_result_report.get("supports_rework_recommendation")),
+        "latest_manual_generation_result_manual_review_required": bool(manual_generation_result_report.get("manual_review_required")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6309,6 +6319,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "multi_agent_output_chain_report": multi_agent_output_chain_report,
         "keyframe_video_asset_chain_report": keyframe_video_asset_chain_report,
         "keyframe_prompt_pack_report": keyframe_prompt_pack_report,
+        "manual_generation_result_report": manual_generation_result_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
