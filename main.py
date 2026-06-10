@@ -71,6 +71,7 @@ from agent_runs import (
     build_manual_generation_result_report,
     build_provider_api_readiness_report,
     build_provider_sandbox_runtime_report,
+    build_real_provider_execution_gate_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6255,6 +6256,12 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    real_provider_execution_gate_report = build_real_provider_execution_gate_report(
+        provider_api_readiness_report=provider_api_readiness_report,
+        provider_sandbox_runtime_report=provider_sandbox_runtime_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6315,6 +6322,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_provider_sandbox_runtime_fake_provider_count": int(provider_sandbox_runtime_report.get("fake_provider_count") or 0),
         "latest_provider_sandbox_runtime_real_execution_enabled": bool(provider_sandbox_runtime_report.get("real_execution_enabled")),
         "latest_provider_sandbox_runtime_external_api_called": bool(provider_sandbox_runtime_report.get("external_api_called")),
+        "latest_real_provider_execution_gate_status": real_provider_execution_gate_report.get("report_status", ""),
+        "latest_real_provider_execution_blocking_failure_count": int(real_provider_execution_gate_report.get("blocking_failure_count") or 0),
+        "latest_real_provider_execution_enabled": bool(real_provider_execution_gate_report.get("real_execution_enabled")),
+        "latest_real_provider_external_api_called": bool(real_provider_execution_gate_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6342,6 +6353,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "manual_generation_result_report": manual_generation_result_report,
         "provider_api_readiness_report": provider_api_readiness_report,
         "provider_sandbox_runtime_report": provider_sandbox_runtime_report,
+        "real_provider_execution_gate_report": real_provider_execution_gate_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

@@ -3047,6 +3047,289 @@ def build_provider_sandbox_runtime_report(
     }
 
 
+
+REAL_PROVIDER_EXECUTION_GATE_REPORT_VERSION = "real_provider_execution_gate_report_v1"
+
+REAL_PROVIDER_EXECUTION_GATE_CHECKS = [
+    {
+        "gate_id": "provider_api_readiness_ready",
+        "gate_label": "Provider API readiness report is ready",
+        "required": True,
+        "blocking": True,
+        "expected_input": "provider_api_readiness_report.report_status",
+    },
+    {
+        "gate_id": "provider_sandbox_runtime_ready",
+        "gate_label": "Provider sandbox runtime report is ready",
+        "required": True,
+        "blocking": True,
+        "expected_input": "provider_sandbox_runtime_report.report_status",
+    },
+    {
+        "gate_id": "credential_secret_boundary_ready",
+        "gate_label": "Credential and secret boundary is defined",
+        "required": True,
+        "blocking": True,
+        "expected_input": "secret boundary / api_key boundary",
+    },
+    {
+        "gate_id": "quota_budget_policy_ready",
+        "gate_label": "Quota and budget policy is present",
+        "required": True,
+        "blocking": True,
+        "expected_input": "quota policy / budget limit",
+    },
+    {
+        "gate_id": "cost_estimate_ready",
+        "gate_label": "Cost estimate must exist before submit",
+        "required": True,
+        "blocking": True,
+        "expected_input": "provider_payload.cost_estimate",
+    },
+    {
+        "gate_id": "operator_approval_captured",
+        "gate_label": "Explicit operator approval is captured",
+        "required": True,
+        "blocking": True,
+        "expected_input": "operator_approval_id",
+    },
+    {
+        "gate_id": "idempotency_key_ready",
+        "gate_label": "Idempotency key is ready",
+        "required": True,
+        "blocking": True,
+        "expected_input": "provider idempotency key",
+    },
+    {
+        "gate_id": "rollback_plan_ready",
+        "gate_label": "Rollback plan is ready",
+        "required": True,
+        "blocking": True,
+        "expected_input": "rollback_plan_id",
+    },
+    {
+        "gate_id": "real_execution_adapter_enabled",
+        "gate_label": "Real execution adapter is explicitly enabled",
+        "required": True,
+        "blocking": True,
+        "expected_input": "real provider adapter flag",
+    },
+]
+
+
+def build_real_provider_execution_gate_report(
+    *,
+    provider_api_readiness_report: dict[str, Any] | None = None,
+    provider_sandbox_runtime_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "real_provider_execution_gate_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run real provider execution gate report.
+
+    This is the final safety gate before any future real provider API call.
+    It intentionally keeps real execution locked. It does not read secrets,
+    call providers, upload/download media, submit provider jobs, spend money,
+    persist approval, reserve quota, or enable real execution.
+    """
+
+    api_report = provider_api_readiness_report if isinstance(provider_api_readiness_report, dict) else {}
+    sandbox_report = provider_sandbox_runtime_report if isinstance(provider_sandbox_runtime_report, dict) else {}
+
+    provider_api_ready = str(api_report.get("report_status") or "") == "provider_api_readiness_ready_dry_run"
+    sandbox_ready = str(sandbox_report.get("report_status") or "") == "provider_sandbox_runtime_ready_dry_run"
+
+    gate_context = {
+        "provider_api_ready": provider_api_ready,
+        "sandbox_ready": sandbox_ready,
+        "supports_secret_boundary": bool(api_report.get("supports_secret_boundary")),
+        "supports_cost_estimate_before_submit": bool(api_report.get("supports_cost_estimate_before_submit")),
+        "supports_approval_gate_before_submit": bool(api_report.get("supports_approval_gate_before_submit")),
+        "supports_idempotency_boundary": bool(api_report.get("supports_idempotency_boundary")),
+        "supports_fake_provider_submit": bool(sandbox_report.get("supports_fake_provider_submit")),
+        "supports_provider_result_handoff": bool(sandbox_report.get("supports_provider_result_handoff")),
+    }
+
+    check_results = []
+    for check in REAL_PROVIDER_EXECUTION_GATE_CHECKS:
+        gate_id = check["gate_id"]
+        if gate_id == "provider_api_readiness_ready":
+            passed = provider_api_ready
+            message = "Provider API readiness dry-run report is ready." if passed else "Provider API readiness report is missing or incomplete."
+        elif gate_id == "provider_sandbox_runtime_ready":
+            passed = sandbox_ready
+            message = "Provider sandbox runtime dry-run report is ready." if passed else "Provider sandbox runtime report is missing or incomplete."
+        elif gate_id == "credential_secret_boundary_ready":
+            passed = bool(api_report.get("supports_secret_boundary"))
+            message = "Secret boundary is defined, but secret access remains disabled."
+        elif gate_id == "cost_estimate_ready":
+            passed = bool(api_report.get("supports_cost_estimate_before_submit"))
+            message = "Cost estimate contract exists, but no real cost is reserved."
+        elif gate_id == "idempotency_key_ready":
+            passed = bool(api_report.get("supports_idempotency_boundary"))
+            message = "Idempotency boundary exists for future provider submit."
+        elif gate_id == "rollback_plan_ready":
+            passed = True
+            message = "Rollback gate is structurally required; actual rollback approval is not captured in dry-run."
+        elif gate_id == "quota_budget_policy_ready":
+            passed = False
+            message = "Quota and budget are intentionally zero until operator approval."
+        elif gate_id == "operator_approval_captured":
+            passed = False
+            message = "Operator approval is not captured in dry-run."
+        elif gate_id == "real_execution_adapter_enabled":
+            passed = False
+            message = "Real provider adapter remains disabled."
+        else:
+            passed = False
+            message = "Unknown gate check."
+
+        check_results.append({
+            **check,
+            "passed": passed,
+            "message": message,
+        })
+
+    blocking_failures = [
+        item["gate_id"]
+        for item in check_results
+        if item.get("blocking") and not item.get("passed")
+    ]
+
+    credential_preflight = {
+        "credential_preflight_version": "real_provider_credential_preflight_v1",
+        "credential_preflight_status": "credential_preflight_locked",
+        "secret_names_visible": ["GEMINI_API_KEY", "DOUBAO_API_KEY", "RUNWAY_API_KEY", "PIKA_API_KEY"],
+        "secret_values_read": False,
+        "secret_values_exported": False,
+        "secret_access_enabled": False,
+        "secret_redaction_required": True,
+        "secret_boundary_passed": bool(api_report.get("supports_secret_boundary")),
+    }
+
+    quota_budget_gate = {
+        "quota_budget_gate_version": "real_provider_quota_budget_gate_v1",
+        "quota_budget_gate_status": "quota_budget_blocked_zero_budget",
+        "quota_enabled": False,
+        "quota_reserved": False,
+        "budget_limit_cents": 0,
+        "budget_reserved_cents": 0,
+        "provider_call_limit": 0,
+        "cost_estimate_required": True,
+        "cost_estimate_ready": bool(api_report.get("supports_cost_estimate_before_submit")),
+    }
+
+    approval_gate = {
+        "approval_gate_version": "real_provider_operator_approval_gate_v1",
+        "approval_gate_status": "operator_approval_missing",
+        "operator_approval_required": True,
+        "operator_approval_captured": False,
+        "operator_approval_id": "",
+        "approval_scope": "real_provider_api_call",
+        "approval_required_fields": [
+            "operator_approval_id",
+            "approval_reason",
+            "provider_id",
+            "budget_limit",
+            "rollback_owner",
+            "risk_acknowledgement",
+        ],
+    }
+
+    invocation_contract = {
+        "invocation_contract_version": "real_provider_invocation_contract_v1",
+        "invocation_contract_status": "real_invocation_blocked_by_gate",
+        "required_fields": [
+            "provider_id",
+            "provider_payload",
+            "cost_estimate",
+            "operator_approval_id",
+            "quota_reservation_id",
+            "idempotency_key",
+            "rollback_plan_id",
+            "credential_reference",
+        ],
+        "present_fields": ["provider_id", "provider_payload", "cost_estimate", "idempotency_key"],
+        "missing_fields": ["operator_approval_id", "quota_reservation_id", "rollback_plan_id", "credential_reference"],
+        "idempotency_required": True,
+        "rollback_required": True,
+        "real_provider_client_allowed": False,
+        "external_api_call_allowed": False,
+    }
+
+    dry_run_receipt = {
+        "dry_run_receipt_version": "real_provider_execution_gate_receipt_v1",
+        "receipt_status": "real_provider_execution_blocked_safely",
+        "blocked_by": blocking_failures,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_called": False,
+        "provider_job_submitted": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "secret_values_read": False,
+        "quota_reserved": False,
+        "operator_approval_captured": False,
+    }
+
+    report_status = (
+        "real_provider_execution_gate_locked_ready_dry_run"
+        if provider_api_ready and sandbox_ready
+        else "real_provider_execution_gate_incomplete"
+    )
+
+    return {
+        "real_provider_execution_gate_report_version": REAL_PROVIDER_EXECUTION_GATE_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "real_provider_execution_gate_report_builder"),
+        "provider_api_ready": provider_api_ready,
+        "provider_sandbox_ready": sandbox_ready,
+        "gate_context": gate_context,
+        "gate_check_count": len(check_results),
+        "passed_gate_check_count": sum(1 for item in check_results if item.get("passed")),
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "gate_checks": check_results,
+        "credential_preflight": credential_preflight,
+        "quota_budget_gate": quota_budget_gate,
+        "approval_gate": approval_gate,
+        "invocation_contract": invocation_contract,
+        "dry_run_receipt": dry_run_receipt,
+        "recommended_next_state": "show_real_provider_execution_gate_in_workspace",
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "real_provider_client_allowed": False,
+        "real_provider_client_constructed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_job_submitted": False,
+        "provider_polling_performed": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "secret_access_enabled": False,
+        "quota_enabled": False,
+        "quota_reserved": False,
+        "budget_reserved_cents": 0,
+        "operator_approval_required": True,
+        "operator_approval_captured": False,
+        "rollback_required": True,
+        "rollback_ready": False,
+        "idempotency_required": True,
+        "idempotency_key_ready": bool(api_report.get("supports_idempotency_boundary")),
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "result_url_fetched": False,
+        "preview_url_fetched": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

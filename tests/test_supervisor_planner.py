@@ -717,6 +717,62 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_sandbox_runtime_external_api_called"]
         )
+        self.assertIn("real_provider_execution_gate_report", payload)
+        real_gate = payload["real_provider_execution_gate_report"]
+        self.assertEqual(
+            real_gate["real_provider_execution_gate_report_version"],
+            "real_provider_execution_gate_report_v1",
+        )
+        self.assertEqual(
+            real_gate["report_status"],
+            "real_provider_execution_gate_locked_ready_dry_run",
+        )
+        self.assertTrue(real_gate["provider_api_ready"])
+        self.assertTrue(real_gate["provider_sandbox_ready"])
+        self.assertGreater(real_gate["blocking_failure_count"], 0)
+        self.assertIn("operator_approval_captured", real_gate["blocking_failures"])
+        self.assertIn("quota_budget_policy_ready", real_gate["blocking_failures"])
+        self.assertIn("real_execution_adapter_enabled", real_gate["blocking_failures"])
+        self.assertTrue(real_gate["credential_preflight"])
+        self.assertTrue(real_gate["quota_budget_gate"])
+        self.assertTrue(real_gate["approval_gate"])
+        self.assertTrue(real_gate["invocation_contract"])
+        self.assertTrue(real_gate["dry_run_receipt"])
+        self.assertTrue(real_gate["operator_approval_required"])
+        self.assertTrue(real_gate["rollback_required"])
+        self.assertTrue(real_gate["idempotency_required"])
+        self.assertFalse(real_gate["real_execution_allowed"])
+        self.assertFalse(real_gate["real_execution_enabled"])
+        self.assertFalse(real_gate["real_provider_client_allowed"])
+        self.assertFalse(real_gate["real_provider_client_constructed"])
+        self.assertFalse(real_gate["provider_call_allowed"])
+        self.assertFalse(real_gate["external_api_call_allowed"])
+        self.assertFalse(real_gate["external_api_called"])
+        self.assertFalse(real_gate["provider_job_submitted"])
+        self.assertFalse(real_gate["provider_polling_performed"])
+        self.assertFalse(real_gate["provider_secret_read"])
+        self.assertFalse(real_gate["provider_secret_exported"])
+        self.assertFalse(real_gate["secret_access_enabled"])
+        self.assertFalse(real_gate["quota_enabled"])
+        self.assertFalse(real_gate["quota_reserved"])
+        self.assertFalse(real_gate["operator_approval_captured"])
+        self.assertFalse(real_gate["rollback_ready"])
+        self.assertFalse(real_gate["media_uploaded"])
+        self.assertFalse(real_gate["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_real_provider_execution_gate_status"],
+            "real_provider_execution_gate_locked_ready_dry_run",
+        )
+        self.assertGreater(
+            payload["project"]["graph_summary"]["latest_real_provider_execution_blocking_failure_count"],
+            0,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_real_provider_execution_enabled"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_real_provider_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

@@ -4149,6 +4149,105 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_real_provider_execution_gate_report_blocks_real_provider_calls(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_sandbox_runtime_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_real_provider_gate",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_real_provider_gate",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_real_provider_gate",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_real_provider_gate",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_real_provider_gate",
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_real_provider_gate",
+            requested_by="unit_test",
+        )
+        report = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id="project_real_provider_gate",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["real_provider_execution_gate_report_version"], "real_provider_execution_gate_report_v1")
+        self.assertEqual(report["report_status"], "real_provider_execution_gate_locked_ready_dry_run")
+        self.assertTrue(report["provider_api_ready"])
+        self.assertTrue(report["provider_sandbox_ready"])
+        self.assertGreater(report["gate_check_count"], 0)
+        self.assertGreater(report["blocking_failure_count"], 0)
+        self.assertIn("operator_approval_captured", report["blocking_failures"])
+        self.assertIn("quota_budget_policy_ready", report["blocking_failures"])
+        self.assertIn("real_execution_adapter_enabled", report["blocking_failures"])
+        self.assertTrue(report["credential_preflight"])
+        self.assertTrue(report["quota_budget_gate"])
+        self.assertTrue(report["approval_gate"])
+        self.assertTrue(report["invocation_contract"])
+        self.assertTrue(report["dry_run_receipt"])
+        self.assertTrue(report["operator_approval_required"])
+        self.assertTrue(report["rollback_required"])
+        self.assertTrue(report["idempotency_required"])
+        self.assertTrue(report["idempotency_key_ready"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["real_provider_client_allowed"])
+        self.assertFalse(report["real_provider_client_constructed"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["provider_job_submitted"])
+        self.assertFalse(report["provider_polling_performed"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["secret_access_enabled"])
+        self.assertFalse(report["quota_enabled"])
+        self.assertFalse(report["quota_reserved"])
+        self.assertFalse(report["operator_approval_captured"])
+        self.assertFalse(report["rollback_ready"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["result_url_fetched"])
+        self.assertFalse(report["preview_url_fetched"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_provider_sandbox_runtime_report_models_fake_submit_poll_and_result_handoff(self):
         from agent_runs import (
             build_agent_contract_completeness_report,
