@@ -73,6 +73,7 @@ from agent_runs import (
     build_provider_sandbox_runtime_report,
     build_real_provider_execution_gate_report,
     build_provider_failure_recovery_report,
+    build_provider_observability_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6268,6 +6269,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    provider_observability_report = build_provider_observability_report(
+        provider_failure_recovery_report=provider_failure_recovery_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6336,6 +6342,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_provider_failure_recovery_blocking_failure_count": int(provider_failure_recovery_report.get("blocking_failure_count") or 0),
         "latest_provider_failure_recovery_operator_review_required": bool(provider_failure_recovery_report.get("operator_review_required")),
         "latest_provider_failure_recovery_external_api_called": bool(provider_failure_recovery_report.get("external_api_called")),
+        "latest_provider_observability_status": provider_observability_report.get("report_status", ""),
+        "latest_provider_observability_dashboard_ready": bool(provider_observability_report.get("dashboard_ready")),
+        "latest_provider_observability_alerts_triggered": bool(provider_observability_report.get("alert_policy", {}).get("alerts_triggered")),
+        "latest_provider_observability_operator_review_required": bool(provider_observability_report.get("operator_review_required")),
+        "latest_provider_observability_external_api_called": bool(provider_observability_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6365,6 +6376,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "provider_sandbox_runtime_report": provider_sandbox_runtime_report,
         "real_provider_execution_gate_report": real_provider_execution_gate_report,
         "provider_failure_recovery_report": provider_failure_recovery_report,
+        "provider_observability_report": provider_observability_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

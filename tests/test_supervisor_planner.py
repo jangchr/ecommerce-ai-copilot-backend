@@ -841,6 +841,78 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_failure_recovery_external_api_called"]
         )
+        self.assertIn("provider_observability_report", payload)
+        observability = payload["provider_observability_report"]
+        self.assertEqual(
+            observability["provider_observability_report_version"],
+            "provider_observability_report_v1",
+        )
+        self.assertEqual(
+            observability["report_status"],
+            "provider_observability_ready_dry_run",
+        )
+        self.assertTrue(observability["provider_failure_recovery_ready"])
+        self.assertTrue(observability["health_snapshot"])
+        self.assertTrue(observability["metric_rollup"])
+        self.assertTrue(observability["alert_policy"])
+        self.assertTrue(observability["trace_summary"])
+        self.assertTrue(observability["operator_control_center"])
+        self.assertTrue(observability["dashboard"])
+        self.assertTrue(observability["observability_receipt"])
+        self.assertGreater(observability["dashboard_card_count"], 0)
+        self.assertGreater(observability["trace_event_count"], 0)
+        self.assertGreater(observability["metric_count"], 0)
+        self.assertGreater(observability["alert_rule_count"], 0)
+        self.assertTrue(observability["supports_health_snapshot"])
+        self.assertTrue(observability["supports_metric_rollup"])
+        self.assertTrue(observability["supports_alert_policy"])
+        self.assertTrue(observability["supports_trace_summary"])
+        self.assertTrue(observability["supports_operator_control_center"])
+        self.assertTrue(observability["supports_observability_dashboard"])
+        self.assertTrue(observability["supports_observability_receipt"])
+        self.assertTrue(observability["supports_audit_preview"])
+        self.assertTrue(observability["dashboard_ready"])
+        self.assertTrue(observability["audit_preview_ready"])
+        self.assertTrue(observability["export_safe_snapshot_ready"])
+        self.assertTrue(observability["operator_review_required"])
+        self.assertFalse(observability["observability_receipt_recorded"])
+        self.assertFalse(observability["real_observability_backend_enabled"])
+        self.assertFalse(observability["real_alert_delivery_enabled"])
+        self.assertFalse(observability["real_metrics_persisted"])
+        self.assertFalse(observability["real_trace_persisted"])
+        self.assertFalse(observability["real_execution_allowed"])
+        self.assertFalse(observability["real_execution_enabled"])
+        self.assertFalse(observability["provider_call_allowed"])
+        self.assertFalse(observability["external_api_call_allowed"])
+        self.assertFalse(observability["external_api_called"])
+        self.assertFalse(observability["real_retry_performed"])
+        self.assertFalse(observability["provider_job_submitted"])
+        self.assertFalse(observability["provider_polling_performed"])
+        self.assertFalse(observability["provider_secret_read"])
+        self.assertFalse(observability["provider_secret_exported"])
+        self.assertFalse(observability["quota_reserved"])
+        self.assertFalse(observability["operator_review_captured"])
+        self.assertFalse(observability["operator_approval_captured"])
+        self.assertFalse(observability["incident_detected"])
+        self.assertFalse(observability["incident_opened"])
+        self.assertFalse(observability["rollback_ready"])
+        self.assertFalse(observability["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_observability_status"],
+            "provider_observability_ready_dry_run",
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_provider_observability_dashboard_ready"]
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_provider_observability_alerts_triggered"]
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_provider_observability_operator_review_required"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_observability_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

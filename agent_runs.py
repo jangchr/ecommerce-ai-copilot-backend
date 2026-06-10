@@ -3669,6 +3669,284 @@ def build_provider_failure_recovery_report(
     }
 
 
+
+PROVIDER_OBSERVABILITY_REPORT_VERSION = "provider_observability_report_v1"
+
+PROVIDER_OBSERVABILITY_STAGES = [
+    {
+        "stage_id": "provider_health_snapshot",
+        "stage_label": "Provider health snapshot",
+        "required_inputs": ["provider_failure_recovery_report", "provider_status", "circuit_state"],
+        "expected_outputs": ["overall_health", "blocked_provider_count", "operator_review_required"],
+    },
+    {
+        "stage_id": "provider_metric_rollup",
+        "stage_label": "Provider metric rollup",
+        "required_inputs": ["health_snapshot", "failure_taxonomy", "alert_policy"],
+        "expected_outputs": ["metrics", "provider_failures_total", "provider_circuit_open_total"],
+    },
+    {
+        "stage_id": "provider_alert_policy",
+        "stage_label": "Provider alert policy",
+        "required_inputs": ["metric_rollup", "operator_review_required", "external_api_called"],
+        "expected_outputs": ["alert_rules", "triggered_alert_count", "alerts_triggered"],
+    },
+    {
+        "stage_id": "provider_trace_summary",
+        "stage_label": "Provider trace summary",
+        "required_inputs": ["alert_policy", "audit_receipt", "dry_run_receipt"],
+        "expected_outputs": ["trace_events", "trace_event_count", "audit_trail_ready"],
+    },
+    {
+        "stage_id": "operator_control_center_handoff",
+        "stage_label": "Operator control center handoff",
+        "required_inputs": ["trace_summary", "alert_policy", "failure_recovery_report"],
+        "expected_outputs": ["operator_cards", "review_queue_items", "control_center_ready"],
+    },
+    {
+        "stage_id": "observability_receipt",
+        "stage_label": "Observability receipt",
+        "required_inputs": ["dashboard", "trace_summary", "operator_control_center"],
+        "expected_outputs": ["observability_receipt", "audit_preview", "export_safe_snapshot"],
+    },
+]
+
+
+def build_provider_observability_report(
+    *,
+    provider_failure_recovery_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_observability_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run provider observability report.
+
+    This report models provider health, metrics, alerts, trace, operator
+    control center handoff, dashboard cards, and observability receipt. It
+    does not read secrets, call providers, mutate monitoring state, emit real
+    alerts, open incidents, retry providers, upload/download media, or unlock
+    real execution.
+    """
+
+    failure = provider_failure_recovery_report if isinstance(provider_failure_recovery_report, dict) else {}
+    failure_ready = str(failure.get("report_status") or "") == "provider_failure_recovery_ready_dry_run"
+    operator_review_required = bool(failure.get("operator_review_required", True))
+    alerts_triggered = bool(failure.get("alert_policy", {}).get("alerts_triggered", True)) if isinstance(failure.get("alert_policy"), dict) else True
+
+    health_snapshot = {
+        "provider_health_snapshot_version": "provider_health_snapshot_v1",
+        "provider_health_snapshot_status": "provider_health_blocked_by_dry_run",
+        "overall_provider_health": "blocked_by_dry_run",
+        "real_provider_execution_gate_ready": bool(failure.get("real_provider_execution_gate_ready")),
+        "failure_recovery_ready": failure_ready,
+        "blocked_provider_count": 2,
+        "observed_provider_ids": ["runway", "pika"],
+        "provider_health_items": [
+            {"provider_id": "runway", "health": "blocked_by_dry_run", "external_api_called": False, "operator_review_required": operator_review_required},
+            {"provider_id": "pika", "health": "blocked_by_dry_run", "external_api_called": False, "operator_review_required": operator_review_required},
+        ],
+        "operator_review_required": operator_review_required,
+        "external_api_called": False,
+    }
+
+    metric_rollup = {
+        "provider_metric_rollup_version": "provider_metric_rollup_v1",
+        "provider_metric_rollup_status": "provider_metric_rollup_dry_run",
+        "metrics": [
+            {"metric_id": "provider_failures_total", "value": 0, "unit": "failures"},
+            {"metric_id": "provider_retry_attempts_total", "value": 0, "unit": "attempts"},
+            {"metric_id": "provider_circuit_open_total", "value": 0, "unit": "providers"},
+            {"metric_id": "provider_external_api_calls_total", "value": 0, "unit": "calls"},
+            {"metric_id": "provider_secret_reads_total", "value": 0, "unit": "reads"},
+            {"metric_id": "provider_paid_generation_total", "value": 0, "unit": "jobs"},
+        ],
+        "metric_count": 6,
+        "provider_failures_total": 0,
+        "provider_retry_attempts_total": 0,
+        "provider_circuit_open_total": 0,
+        "provider_external_api_calls_total": 0,
+        "provider_secret_reads_total": 0,
+        "provider_paid_generation_total": 0,
+        "external_api_called": False,
+    }
+
+    alert_policy = {
+        "provider_observability_alert_policy_version": "provider_observability_alert_policy_v1",
+        "provider_observability_alert_policy_status": "alert_policy_ready_dry_run",
+        "alert_rules": [
+            {"alert_rule_id": "provider_failure_rate_high", "enabled": True, "triggered": False},
+            {"alert_rule_id": "provider_latency_high", "enabled": True, "triggered": False},
+            {"alert_rule_id": "provider_cost_limit_reached", "enabled": True, "triggered": False},
+            {"alert_rule_id": "provider_circuit_open", "enabled": True, "triggered": False},
+            {"alert_rule_id": "secret_boundary_violation", "enabled": True, "triggered": False},
+            {"alert_rule_id": "operator_review_required", "enabled": True, "triggered": operator_review_required},
+            {"alert_rule_id": "external_api_called_without_gate", "enabled": True, "triggered": False},
+        ],
+        "alert_rule_count": 7,
+        "triggered_alert_count": 1 if operator_review_required else 0,
+        "alerts_triggered": alerts_triggered,
+        "operator_review_required": operator_review_required,
+        "real_alert_emitted": False,
+        "external_api_called": False,
+    }
+
+    trace_summary = {
+        "provider_trace_summary_version": "provider_trace_summary_v1",
+        "provider_trace_summary_status": "provider_trace_summary_ready_dry_run",
+        "trace_events": [
+            {"trace_event_id": "provider_api_readiness_checked", "recorded": True},
+            {"trace_event_id": "provider_sandbox_runtime_checked", "recorded": True},
+            {"trace_event_id": "real_provider_execution_gate_checked", "recorded": True},
+            {"trace_event_id": "provider_failure_recovery_checked", "recorded": failure_ready},
+            {"trace_event_id": "provider_health_snapshot_previewed", "recorded": True},
+            {"trace_event_id": "provider_metric_rollup_previewed", "recorded": True},
+            {"trace_event_id": "provider_alert_policy_previewed", "recorded": True},
+            {"trace_event_id": "operator_control_center_handoff_previewed", "recorded": True},
+        ],
+        "trace_event_count": 8,
+        "audit_trail_ready": True,
+        "trace_persisted": False,
+        "external_api_called": False,
+    }
+
+    operator_control_center = {
+        "operator_control_center_handoff_version": "provider_operator_control_center_handoff_v1",
+        "operator_control_center_handoff_status": "operator_control_center_handoff_ready_dry_run",
+        "target_panel": "operator_control_center",
+        "review_queue_items": [
+            {"queue_item_id": "provider_operator_review_required", "required": operator_review_required, "captured": False},
+            {"queue_item_id": "provider_circuit_state_review", "required": True, "captured": False},
+            {"queue_item_id": "provider_budget_and_quota_review", "required": True, "captured": False},
+            {"queue_item_id": "provider_rollback_readiness_review", "required": True, "captured": False},
+        ],
+        "review_queue_count": 4,
+        "operator_control_ready": True,
+        "operator_review_required": operator_review_required,
+        "operator_review_captured": False,
+        "external_api_called": False,
+    }
+
+    dashboard = {
+        "provider_observability_dashboard_version": "provider_observability_dashboard_v1",
+        "provider_observability_dashboard_status": "provider_observability_dashboard_ready_dry_run",
+        "dashboard_cards": [
+            {"card_id": "overall_provider_health", "value": health_snapshot["overall_provider_health"]},
+            {"card_id": "provider_failures_total", "value": metric_rollup["provider_failures_total"]},
+            {"card_id": "provider_retry_attempts_total", "value": metric_rollup["provider_retry_attempts_total"]},
+            {"card_id": "provider_circuit_open_total", "value": metric_rollup["provider_circuit_open_total"]},
+            {"card_id": "alerts_triggered", "value": alert_policy["alerts_triggered"]},
+            {"card_id": "operator_review_required", "value": operator_review_required},
+            {"card_id": "external_api_called", "value": False},
+            {"card_id": "real_execution_enabled", "value": False},
+        ],
+        "dashboard_card_count": 8,
+        "dashboard_ready": True,
+        "external_api_called": False,
+    }
+
+    observability_receipt = {
+        "provider_observability_receipt_version": "provider_observability_receipt_v1",
+        "provider_observability_receipt_status": "provider_observability_receipt_ready_dry_run",
+        "receipt_items": [
+            {"receipt_item_id": "provider_health_snapshot", "included": True},
+            {"receipt_item_id": "provider_metric_rollup", "included": True},
+            {"receipt_item_id": "provider_alert_policy", "included": True},
+            {"receipt_item_id": "provider_trace_summary", "included": True},
+            {"receipt_item_id": "operator_control_center_handoff", "included": True},
+            {"receipt_item_id": "provider_observability_dashboard", "included": True},
+        ],
+        "receipt_item_count": 6,
+        "observability_receipt_recorded": False,
+        "audit_preview_ready": True,
+        "export_safe_snapshot_ready": True,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not failure_ready:
+        blocking_failures.append("provider_failure_recovery_report_not_ready")
+    if operator_review_required:
+        blocking_failures.append("operator_review_required")
+    blocking_failures.extend([
+        "real_observability_backend_not_enabled",
+        "real_alert_delivery_disabled",
+    ])
+
+    report_status = (
+        "provider_observability_ready_dry_run"
+        if failure_ready
+        else "provider_observability_incomplete"
+    )
+
+    return {
+        "provider_observability_report_version": PROVIDER_OBSERVABILITY_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_observability_report_builder"),
+        "provider_failure_recovery_ready": failure_ready,
+        "stage_count": len(PROVIDER_OBSERVABILITY_STAGES),
+        "observability_stage_matrix": [dict(item, complete=failure_ready) for item in PROVIDER_OBSERVABILITY_STAGES],
+        "health_snapshot": health_snapshot,
+        "metric_rollup": metric_rollup,
+        "alert_policy": alert_policy,
+        "trace_summary": trace_summary,
+        "operator_control_center": operator_control_center,
+        "dashboard": dashboard,
+        "observability_receipt": observability_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "dashboard_card_count": dashboard["dashboard_card_count"],
+        "trace_event_count": trace_summary["trace_event_count"],
+        "metric_count": metric_rollup["metric_count"],
+        "alert_rule_count": alert_policy["alert_rule_count"],
+        "triggered_alert_count": alert_policy["triggered_alert_count"],
+        "review_queue_count": operator_control_center["review_queue_count"],
+        "supports_health_snapshot": True,
+        "supports_metric_rollup": True,
+        "supports_alert_policy": True,
+        "supports_trace_summary": True,
+        "supports_operator_control_center": True,
+        "supports_observability_dashboard": True,
+        "supports_observability_receipt": True,
+        "supports_audit_preview": True,
+        "recommended_next_state": "show_provider_observability_in_workspace",
+        "dry_run": True,
+        "dashboard_ready": True,
+        "audit_preview_ready": True,
+        "export_safe_snapshot_ready": True,
+        "observability_receipt_recorded": False,
+        "real_observability_backend_enabled": False,
+        "real_alert_delivery_enabled": False,
+        "real_metrics_persisted": False,
+        "real_trace_persisted": False,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "real_retry_performed": False,
+        "provider_job_submitted": False,
+        "provider_polling_performed": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "quota_reserved": False,
+        "operator_review_required": operator_review_required,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+        "incident_detected": False,
+        "incident_opened": False,
+        "rollback_ready": False,
+        "rollback_executed": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "result_url_fetched": False,
+        "preview_url_fetched": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

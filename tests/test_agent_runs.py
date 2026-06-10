@@ -4151,6 +4151,132 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_observability_report_models_health_trace_dashboard_and_receipt(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_failure_recovery_report,
+            build_provider_observability_report,
+            build_provider_sandbox_runtime_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        real_gate = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        failure_report = build_provider_failure_recovery_report(
+            real_provider_execution_gate_report=real_gate,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+        report = build_provider_observability_report(
+            provider_failure_recovery_report=failure_report,
+            project_id="project_provider_observability",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_observability_report_version"], "provider_observability_report_v1")
+        self.assertEqual(report["report_status"], "provider_observability_ready_dry_run")
+        self.assertTrue(report["provider_failure_recovery_ready"])
+        self.assertTrue(report["health_snapshot"])
+        self.assertTrue(report["metric_rollup"])
+        self.assertTrue(report["alert_policy"])
+        self.assertTrue(report["trace_summary"])
+        self.assertTrue(report["operator_control_center"])
+        self.assertTrue(report["dashboard"])
+        self.assertTrue(report["observability_receipt"])
+        self.assertGreater(report["stage_count"], 0)
+        self.assertGreater(report["dashboard_card_count"], 0)
+        self.assertGreater(report["trace_event_count"], 0)
+        self.assertGreater(report["metric_count"], 0)
+        self.assertGreater(report["alert_rule_count"], 0)
+        self.assertTrue(report["supports_health_snapshot"])
+        self.assertTrue(report["supports_metric_rollup"])
+        self.assertTrue(report["supports_alert_policy"])
+        self.assertTrue(report["supports_trace_summary"])
+        self.assertTrue(report["supports_operator_control_center"])
+        self.assertTrue(report["supports_observability_dashboard"])
+        self.assertTrue(report["supports_observability_receipt"])
+        self.assertTrue(report["supports_audit_preview"])
+        self.assertTrue(report["dashboard_ready"])
+        self.assertTrue(report["audit_preview_ready"])
+        self.assertTrue(report["export_safe_snapshot_ready"])
+        self.assertTrue(report["operator_review_required"])
+        self.assertFalse(report["observability_receipt_recorded"])
+        self.assertFalse(report["real_observability_backend_enabled"])
+        self.assertFalse(report["real_alert_delivery_enabled"])
+        self.assertFalse(report["real_metrics_persisted"])
+        self.assertFalse(report["real_trace_persisted"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["real_retry_performed"])
+        self.assertFalse(report["provider_job_submitted"])
+        self.assertFalse(report["provider_polling_performed"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["quota_reserved"])
+        self.assertFalse(report["operator_review_captured"])
+        self.assertFalse(report["operator_approval_captured"])
+        self.assertFalse(report["incident_detected"])
+        self.assertFalse(report["incident_opened"])
+        self.assertFalse(report["rollback_ready"])
+        self.assertFalse(report["rollback_executed"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["result_url_fetched"])
+        self.assertFalse(report["preview_url_fetched"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_provider_failure_recovery_report_blocks_real_retry_and_models_incident_policy(self):
         from agent_runs import (
             build_agent_contract_completeness_report,
