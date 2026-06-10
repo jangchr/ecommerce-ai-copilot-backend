@@ -543,6 +543,42 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(
             payload["project"]["graph_summary"]["latest_keyframe_video_asset_supports_manual_handoff"]
         )
+        self.assertIn("keyframe_prompt_pack_report", payload)
+        prompt_pack = payload["keyframe_prompt_pack_report"]
+        self.assertEqual(
+            prompt_pack["keyframe_prompt_pack_report_version"],
+            "keyframe_prompt_pack_report_v1",
+        )
+        self.assertEqual(prompt_pack["report_status"], "keyframe_prompt_pack_ready_dry_run")
+        self.assertEqual(prompt_pack["missing_item_count"], 0)
+        self.assertEqual(prompt_pack["shot_prompt_count"], 4)
+        self.assertEqual(prompt_pack["provider_variant_count"], 4)
+        self.assertEqual(set(prompt_pack["provider_ids"]), {"gemini", "doubao", "runway", "pika"})
+        self.assertTrue(prompt_pack["supports_negative_prompt"])
+        self.assertTrue(prompt_pack["supports_image_reference_checklist"])
+        self.assertTrue(prompt_pack["manual_copy_paste_only"])
+        self.assertTrue(prompt_pack["image_reference_required"])
+        self.assertFalse(prompt_pack["real_execution_allowed"])
+        self.assertFalse(prompt_pack["provider_call_allowed"])
+        self.assertFalse(prompt_pack["external_api_call_allowed"])
+        self.assertFalse(prompt_pack["video_generation_performed"])
+        self.assertFalse(prompt_pack["image_generation_performed"])
+        self.assertFalse(prompt_pack["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_keyframe_prompt_pack_status"],
+            "keyframe_prompt_pack_ready_dry_run",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_keyframe_prompt_pack_shot_prompt_count"],
+            4,
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_keyframe_prompt_pack_provider_variant_count"],
+            4,
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_keyframe_prompt_pack_manual_copy_only"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

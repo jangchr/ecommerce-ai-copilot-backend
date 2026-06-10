@@ -4145,6 +4145,70 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_keyframe_prompt_pack_report_builds_copy_ready_provider_variants(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_multi_agent_output_chain_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_keyframe_prompt_pack",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_keyframe_prompt_pack",
+            requested_by="unit_test",
+        )
+        report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_keyframe_prompt_pack",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["keyframe_prompt_pack_report_version"], "keyframe_prompt_pack_report_v1")
+        self.assertEqual(report["report_status"], "keyframe_prompt_pack_ready_dry_run")
+        self.assertTrue(report["keyframe_video_asset_chain_ready"])
+        self.assertEqual(report["missing_item_count"], 0)
+        self.assertEqual(report["shot_prompt_count"], 4)
+        self.assertEqual(report["provider_variant_count"], 4)
+        self.assertEqual(set(report["provider_ids"]), {"gemini", "doubao", "runway", "pika"})
+        self.assertTrue(report["supports_product_identity_lock_prompt"])
+        self.assertTrue(report["supports_shot_by_shot_keyframe_prompts"])
+        self.assertTrue(report["supports_negative_prompt"])
+        self.assertTrue(report["supports_image_reference_checklist"])
+        self.assertTrue(report["supports_gemini_prompt"])
+        self.assertTrue(report["supports_doubao_prompt"])
+        self.assertTrue(report["supports_runway_prompt"])
+        self.assertTrue(report["supports_pika_prompt"])
+        self.assertIn("[PRODUCT_NAME]", report["product_identity_lock_prompt"])
+        self.assertIn("Do not alter product shape", report["negative_prompt"])
+        self.assertTrue(report["image_reference_checklist"])
+        self.assertTrue(report["shot_prompts"][0]["copy_ready"])
+        self.assertIn("Negative prompt:", report["shot_prompts"][0]["prompt"])
+        self.assertTrue(all(item["manual_copy_paste_only"] for item in report["provider_prompt_variants"]))
+        self.assertFalse(any(item["external_api_enabled"] for item in report["provider_prompt_variants"]))
+        self.assertTrue(report["manual_copy_paste_only"])
+        self.assertTrue(report["image_reference_required"])
+        self.assertTrue(report["manual_review_required"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_keyframe_video_asset_chain_report_connects_prompt_pack_and_manual_handoff(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

@@ -2152,6 +2152,248 @@ def build_keyframe_video_asset_chain_report(
     }
 
 
+
+KEYFRAME_PROMPT_PACK_REPORT_VERSION = "keyframe_prompt_pack_report_v1"
+
+KEYFRAME_PROMPT_PACK_PROVIDERS = [
+    {
+        "provider_id": "gemini",
+        "display_name": "Gemini manual video prompt",
+        "prompt_key": "gemini_video_prompt",
+        "mode": "manual_copy_paste",
+        "external_api_enabled": False,
+    },
+    {
+        "provider_id": "doubao",
+        "display_name": "Doubao manual video prompt",
+        "prompt_key": "doubao_video_prompt",
+        "mode": "manual_copy_paste",
+        "external_api_enabled": False,
+    },
+    {
+        "provider_id": "runway",
+        "display_name": "Runway-style visual prompt",
+        "prompt_key": "runway_style_prompt",
+        "mode": "manual_copy_paste",
+        "external_api_enabled": False,
+    },
+    {
+        "provider_id": "pika",
+        "display_name": "Pika-style motion prompt",
+        "prompt_key": "pika_style_prompt",
+        "mode": "manual_copy_paste",
+        "external_api_enabled": False,
+    },
+]
+
+
+def _build_default_keyframe_prompt_scenes() -> list[dict[str, Any]]:
+    return [
+        {
+            "shot_id": "shot_01_hook",
+            "shot_label": "Hook / problem reveal",
+            "duration_seconds": 3,
+            "visual_goal": "Open with the buyer pain point or desired outcome in a tight vertical composition.",
+            "camera_direction": "Close-up product-in-context shot, quick push-in, 9:16 vertical frame.",
+            "prompt_template": (
+                "Create a 9:16 keyframe for [PRODUCT_NAME]. Show the product clearly in [USE_CONTEXT], "
+                "with the buyer problem visible before the product solves it. Preserve all product identity details."
+            ),
+            "motion_prompt": "Short push-in, quick reveal, no product shape changes.",
+            "overlay_text_template": "[BUYER_PAIN_POINT]",
+            "evidence_requirement": "Use only supplied review evidence or user-provided product claims.",
+        },
+        {
+            "shot_id": "shot_02_product_proof",
+            "shot_label": "Product proof / feature demonstration",
+            "duration_seconds": 4,
+            "visual_goal": "Show the product feature that directly addresses the buyer concern.",
+            "camera_direction": "Medium close-up, hand interaction or simple before/after setup.",
+            "prompt_template": (
+                "Create a clean product demonstration keyframe for [PRODUCT_NAME]. Highlight [FEATURE_OR_BENEFIT] "
+                "without exaggerating performance. Product must match the reference image exactly."
+            ),
+            "motion_prompt": "Smooth hand movement, simple product interaction, stable lighting.",
+            "overlay_text_template": "[FEATURE_OR_BENEFIT]",
+            "evidence_requirement": "Tie the feature to an evidence quote or known product description field.",
+        },
+        {
+            "shot_id": "shot_03_lifestyle_use",
+            "shot_label": "Lifestyle use / buyer scenario",
+            "duration_seconds": 4,
+            "visual_goal": "Place the product in a realistic buyer scenario that fits the target audience.",
+            "camera_direction": "Lifestyle scene, natural light, product remains the hero object.",
+            "prompt_template": (
+                "Create a realistic lifestyle keyframe for [PRODUCT_NAME] used by [TARGET_AUDIENCE] in [USE_CONTEXT]. "
+                "Keep composition simple and avoid adding unverified features."
+            ),
+            "motion_prompt": "Gentle pan or small user action, product remains centered.",
+            "overlay_text_template": "[USE_CASE]",
+            "evidence_requirement": "Use the selected use case from the strategy or review workspace.",
+        },
+        {
+            "shot_id": "shot_04_cta",
+            "shot_label": "CTA / conversion frame",
+            "duration_seconds": 4,
+            "visual_goal": "End with the product, the main buyer benefit, and a safe call to action.",
+            "camera_direction": "Hero product shot with clean background and readable CTA space.",
+            "prompt_template": (
+                "Create a final 9:16 product hero keyframe for [PRODUCT_NAME]. Keep the product visually consistent, "
+                "show [PRIMARY_BENEFIT], and leave clean space for CTA text."
+            ),
+            "motion_prompt": "Slow settle, product hero framing, no extra claims.",
+            "overlay_text_template": "[CTA]",
+            "evidence_requirement": "CTA must stay evidence-safe and avoid unsupported absolute claims.",
+        },
+    ]
+
+
+def build_keyframe_prompt_pack_report(
+    *,
+    keyframe_video_asset_chain_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "keyframe_prompt_pack_report_builder",
+) -> dict[str, Any]:
+    """Build a copy-ready keyframe prompt pack scaffold.
+
+    This produces provider-neutral and provider-shaped prompt text for manual
+    Gemini/Doubao/Runway/Pika workflows. It does not generate images or video,
+    call providers, call external APIs, upload files, spend money, or unlock
+    real execution.
+    """
+
+    asset_report = keyframe_video_asset_chain_report if isinstance(keyframe_video_asset_chain_report, dict) else {}
+    asset_chain_ready = (
+        str(asset_report.get("report_status") or "") == "keyframe_video_asset_chain_ready_dry_run"
+        and int(asset_report.get("missing_stage_count") or 0) == 0
+        and bool(asset_report.get("supports_keyframe_scene_plan"))
+        and bool(asset_report.get("supports_prompt_handoff_pack"))
+    )
+
+    scenes = _build_default_keyframe_prompt_scenes()
+    product_identity_lock_prompt = (
+        "Product identity lock: preserve [PRODUCT_NAME], category [PRODUCT_CATEGORY], packaging, color, "
+        "shape, material, logo placement, scale, and visible accessories from the provided product reference. "
+        "Do not change the product into a different item. Use manual image references before any paid generation."
+    )
+    negative_prompt = (
+        "Do not alter product shape, packaging, color, logo, material, or scale. Do not add unsupported claims, "
+        "fake reviews, fake ratings, medical claims, hidden Amazon data, impossible before/after results, "
+        "extra accessories, distorted hands, unreadable text, watermark, low-resolution blur, or mismatched product variants."
+    )
+    image_reference_checklist = [
+        "Upload or review at least one clear product reference image before generation.",
+        "Check product shape, color, packaging, logo placement, and size against the reference.",
+        "Reject outputs where the product identity drifts from the reference.",
+        "Run one short test clip before full-length or paid generation.",
+        "Keep human review required before using any generated media publicly.",
+    ]
+
+    shot_prompts: list[dict[str, Any]] = []
+    for index, scene in enumerate(scenes, start=1):
+        prompt = "\n".join([
+            f"Shot {index}: {scene['shot_label']}",
+            scene["prompt_template"],
+            f"Camera: {scene['camera_direction']}",
+            f"Motion: {scene['motion_prompt']}",
+            f"Overlay text: {scene['overlay_text_template']}",
+            f"Evidence requirement: {scene['evidence_requirement']}",
+            product_identity_lock_prompt,
+            f"Negative prompt: {negative_prompt}",
+        ])
+        shot_prompts.append({
+            **scene,
+            "prompt": prompt,
+            "copy_ready": True,
+            "requires_image_reference": True,
+            "requires_human_review": True,
+            "external_api_call_allowed": False,
+            "provider_call_allowed": False,
+        })
+
+    combined_shot_brief = "\n\n".join(item["prompt"] for item in shot_prompts)
+    provider_prompt_variants: list[dict[str, Any]] = []
+    for provider in KEYFRAME_PROMPT_PACK_PROVIDERS:
+        provider_id = str(provider["provider_id"])
+        provider_prompt = "\n".join([
+            f"{provider['display_name']}",
+            "Use vertical 9:16 ecommerce short-video framing.",
+            "Generate or prepare only the visual plan for manual review.",
+            product_identity_lock_prompt,
+            "",
+            "Shot-by-shot prompt pack:",
+            combined_shot_brief,
+            "",
+            f"Negative prompt: {negative_prompt}",
+            "",
+            "Manual workflow: copy this prompt into the external tool manually. CrossGrowth does not call provider APIs.",
+        ])
+        provider_prompt_variants.append({
+            **provider,
+            "prompt": provider_prompt,
+            "copy_ready": True,
+            "manual_copy_paste_only": True,
+            "external_api_enabled": False,
+            "provider_call_allowed": False,
+            "paid_generation_allowed": False,
+            "requires_human_review": True,
+        })
+
+    missing_items: list[str] = []
+    if not asset_chain_ready:
+        missing_items.append("keyframe_video_asset_chain_ready_dry_run")
+
+    report_status = "keyframe_prompt_pack_ready_dry_run" if not missing_items else "keyframe_prompt_pack_incomplete"
+
+    return {
+        "keyframe_prompt_pack_report_version": KEYFRAME_PROMPT_PACK_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "keyframe_prompt_pack_report_builder"),
+        "keyframe_video_asset_chain_ready": asset_chain_ready,
+        "missing_item_count": len(missing_items),
+        "missing_items": missing_items,
+        "shot_prompt_count": len(shot_prompts),
+        "provider_variant_count": len(provider_prompt_variants),
+        "provider_ids": [item["provider_id"] for item in provider_prompt_variants],
+        "supports_product_identity_lock_prompt": True,
+        "supports_shot_by_shot_keyframe_prompts": True,
+        "supports_negative_prompt": True,
+        "supports_image_reference_checklist": True,
+        "supports_gemini_prompt": True,
+        "supports_doubao_prompt": True,
+        "supports_runway_prompt": True,
+        "supports_pika_prompt": True,
+        "product_identity_lock_prompt": product_identity_lock_prompt,
+        "negative_prompt": negative_prompt,
+        "image_reference_checklist": image_reference_checklist,
+        "shot_prompts": shot_prompts,
+        "provider_prompt_variants": provider_prompt_variants,
+        "manual_generation_instructions": [
+            "Review product identity lock before copying prompts.",
+            "Upload or compare a product reference image in the external tool.",
+            "Generate one keyframe or short test clip first.",
+            "Reject outputs with product drift or unsupported claims.",
+            "Only continue to paid/full generation after human approval.",
+        ],
+        "recommended_next_state": "show_keyframe_prompt_pack_in_workspace" if not missing_items else "inspect_keyframe_prompt_pack_prerequisites",
+        "image_reference_required": True,
+        "manual_review_required": True,
+        "human_approval_required_before_generation": True,
+        "manual_copy_paste_only": True,
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "provider_secret_required": False,
+        "provider_secret_exported": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
