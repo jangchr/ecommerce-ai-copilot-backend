@@ -4147,6 +4147,87 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_api_readiness_report_keeps_real_provider_calls_locked(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_api_readiness",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_api_readiness",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_api_readiness",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_api_readiness",
+            requested_by="unit_test",
+        )
+        report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_api_readiness",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_api_readiness_report_version"], "provider_api_readiness_report_v1")
+        self.assertEqual(report["report_status"], "provider_api_readiness_ready_dry_run")
+        self.assertTrue(report["manual_generation_result_ready"])
+        self.assertEqual(report["missing_item_count"], 0)
+        self.assertEqual(report["provider_count"], 4)
+        self.assertEqual(set(report["provider_ids"]), {"gemini", "doubao", "runway", "pika"})
+        self.assertTrue(report["supports_gemini_contract"])
+        self.assertTrue(report["supports_doubao_contract"])
+        self.assertTrue(report["supports_runway_contract"])
+        self.assertTrue(report["supports_pika_contract"])
+        self.assertTrue(report["supports_fake_provider_clients"])
+        self.assertTrue(report["supports_provider_polling_scaffold"])
+        self.assertTrue(report["supports_cost_estimate_before_submit"])
+        self.assertTrue(report["supports_approval_gate_before_submit"])
+        self.assertTrue(report["supports_timeout_failure_contract"])
+        self.assertTrue(report["supports_idempotency_boundary"])
+        self.assertTrue(report["supports_secret_boundary"])
+        self.assertTrue(report["api_key_boundary"])
+        self.assertTrue(report["async_job_schema"])
+        self.assertTrue(report["polling_contract"])
+        self.assertTrue(report["failure_handling_contract"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["provider_job_submitted"])
+        self.assertFalse(report["provider_polling_performed"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertTrue(report["human_approval_required_before_provider_submit"])
+        self.assertFalse(report["operator_approval_captured"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_manual_generation_result_report_prepares_external_result_intake(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

@@ -69,6 +69,7 @@ from agent_runs import (
     build_keyframe_video_asset_chain_report,
     build_keyframe_prompt_pack_report,
     build_manual_generation_result_report,
+    build_provider_api_readiness_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6243,6 +6244,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    provider_api_readiness_report = build_provider_api_readiness_report(
+        manual_generation_result_report=manual_generation_result_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6295,6 +6301,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_manual_generation_result_can_record_external_experiment": bool(manual_generation_result_report.get("can_record_external_experiment")),
         "latest_manual_generation_result_supports_rework": bool(manual_generation_result_report.get("supports_rework_recommendation")),
         "latest_manual_generation_result_manual_review_required": bool(manual_generation_result_report.get("manual_review_required")),
+        "latest_provider_api_readiness_status": provider_api_readiness_report.get("report_status", ""),
+        "latest_provider_api_readiness_provider_count": int(provider_api_readiness_report.get("provider_count") or 0),
+        "latest_provider_api_readiness_real_execution_enabled": bool(provider_api_readiness_report.get("real_execution_enabled")),
+        "latest_provider_api_readiness_provider_call_allowed": bool(provider_api_readiness_report.get("provider_call_allowed")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6320,6 +6330,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "keyframe_video_asset_chain_report": keyframe_video_asset_chain_report,
         "keyframe_prompt_pack_report": keyframe_prompt_pack_report,
         "manual_generation_result_report": manual_generation_result_report,
+        "provider_api_readiness_report": provider_api_readiness_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

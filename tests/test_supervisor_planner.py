@@ -620,6 +620,51 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(
             payload["project"]["graph_summary"]["latest_manual_generation_result_manual_review_required"]
         )
+        self.assertIn("provider_api_readiness_report", payload)
+        provider_api = payload["provider_api_readiness_report"]
+        self.assertEqual(
+            provider_api["provider_api_readiness_report_version"],
+            "provider_api_readiness_report_v1",
+        )
+        self.assertEqual(
+            provider_api["report_status"],
+            "provider_api_readiness_ready_dry_run",
+        )
+        self.assertTrue(provider_api["manual_generation_result_ready"])
+        self.assertEqual(provider_api["missing_item_count"], 0)
+        self.assertEqual(provider_api["provider_count"], 4)
+        self.assertEqual(set(provider_api["provider_ids"]), {"gemini", "doubao", "runway", "pika"})
+        self.assertTrue(provider_api["supports_fake_provider_clients"])
+        self.assertTrue(provider_api["supports_provider_polling_scaffold"])
+        self.assertTrue(provider_api["supports_cost_estimate_before_submit"])
+        self.assertTrue(provider_api["supports_approval_gate_before_submit"])
+        self.assertTrue(provider_api["supports_timeout_failure_contract"])
+        self.assertTrue(provider_api["supports_secret_boundary"])
+        self.assertFalse(provider_api["real_execution_allowed"])
+        self.assertFalse(provider_api["real_execution_enabled"])
+        self.assertFalse(provider_api["provider_call_allowed"])
+        self.assertFalse(provider_api["external_api_call_allowed"])
+        self.assertFalse(provider_api["provider_job_submitted"])
+        self.assertFalse(provider_api["provider_polling_performed"])
+        self.assertFalse(provider_api["provider_secret_read"])
+        self.assertFalse(provider_api["video_generation_performed"])
+        self.assertFalse(provider_api["paid_generation_allowed"])
+        self.assertTrue(provider_api["human_approval_required_before_provider_submit"])
+        self.assertFalse(provider_api["operator_approval_captured"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_api_readiness_status"],
+            "provider_api_readiness_ready_dry_run",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_api_readiness_provider_count"],
+            4,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_api_readiness_real_execution_enabled"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_api_readiness_provider_call_allowed"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

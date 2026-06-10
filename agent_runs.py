@@ -2578,6 +2578,250 @@ def build_manual_generation_result_report(
     }
 
 
+
+PROVIDER_API_READINESS_REPORT_VERSION = "provider_api_readiness_report_v1"
+
+PROVIDER_API_READINESS_MATRIX = [
+    {
+        "provider_id": "gemini",
+        "display_name": "Gemini video / image generation",
+        "provider_category": "manual_or_future_api_provider",
+        "env_key_name": "GEMINI_API_KEY",
+        "current_mode": "manual_copy_paste_or_future_adapter",
+        "planned_prompt_source": "keyframe_prompt_pack_report.provider_prompt_variants.gemini",
+        "supports_fake_client": False,
+        "supports_polling_scaffold": False,
+        "real_api_enabled": False,
+    },
+    {
+        "provider_id": "doubao",
+        "display_name": "Doubao video / image generation",
+        "provider_category": "manual_or_future_api_provider",
+        "env_key_name": "DOUBAO_API_KEY",
+        "current_mode": "manual_copy_paste_or_future_adapter",
+        "planned_prompt_source": "keyframe_prompt_pack_report.provider_prompt_variants.doubao",
+        "supports_fake_client": False,
+        "supports_polling_scaffold": False,
+        "real_api_enabled": False,
+    },
+    {
+        "provider_id": "runway",
+        "display_name": "Runway video generation",
+        "provider_category": "planned_video_provider",
+        "env_key_name": "RUNWAY_API_KEY",
+        "current_mode": "fake_provider_client_and_polling_scaffold",
+        "planned_prompt_source": "video_generation_packet.export_formats.runway_style_prompt",
+        "supports_fake_client": True,
+        "supports_polling_scaffold": True,
+        "real_api_enabled": False,
+    },
+    {
+        "provider_id": "pika",
+        "display_name": "Pika video generation",
+        "provider_category": "planned_video_provider",
+        "env_key_name": "PIKA_API_KEY",
+        "current_mode": "fake_provider_client_and_polling_scaffold",
+        "planned_prompt_source": "video_generation_packet.export_formats.pika_style_prompt",
+        "supports_fake_client": True,
+        "supports_polling_scaffold": True,
+        "real_api_enabled": False,
+    },
+]
+
+
+def build_provider_api_readiness_report(
+    *,
+    manual_generation_result_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_api_readiness_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run provider API readiness report.
+
+    This describes what must be true before CrossGrowth can safely move from
+    manual prompt handoff / fake provider scaffolds to real provider API calls.
+    It does not read secrets, call providers, upload media, download media,
+    submit jobs, poll real providers, spend money, or unlock real execution.
+    """
+
+    result_report = manual_generation_result_report if isinstance(manual_generation_result_report, dict) else {}
+    manual_result_ready = (
+        str(result_report.get("report_status") or "") == "manual_generation_result_intake_ready_dry_run"
+        and bool(result_report.get("can_record_external_experiment"))
+        and bool(result_report.get("supports_rework_recommendation"))
+    )
+
+    provider_contracts = []
+    for provider in PROVIDER_API_READINESS_MATRIX:
+        provider_id = str(provider["provider_id"])
+        supports_fake = bool(provider.get("supports_fake_client"))
+        supports_polling = bool(provider.get("supports_polling_scaffold"))
+        provider_contracts.append({
+            **provider,
+            "contract_status": "api_contract_ready_dry_run",
+            "real_api_enabled": False,
+            "real_execution_allowed": False,
+            "provider_call_allowed": False,
+            "secret_required_for_real_mode": True,
+            "secret_read_in_dry_run": False,
+            "secret_exported": False,
+            "approval_required_before_submit": True,
+            "cost_estimate_required_before_submit": True,
+            "quota_check_required_before_submit": True,
+            "idempotency_key_required": True,
+            "timeout_policy_required": True,
+            "failure_contract_required": True,
+            "sandbox_or_fake_client_required": True,
+            "supports_fake_client": supports_fake,
+            "supports_polling_scaffold": supports_polling,
+            "ready_for_manual_result_intake": manual_result_ready,
+            "next_build_step": (
+                "wire_fake_client_contract_before_real_api"
+                if supports_fake
+                else "define_provider_adapter_contract_before_real_api"
+            ),
+        })
+
+    api_key_boundary = [
+        {
+            "boundary_id": "secret_not_read_in_dry_run",
+            "passed": True,
+            "description": "Dry-run readiness report must not read provider API keys or include secret values.",
+        },
+        {
+            "boundary_id": "secret_names_only",
+            "passed": True,
+            "description": "Reports may show env var names such as RUNWAY_API_KEY or PIKA_API_KEY, but never secret values.",
+        },
+        {
+            "boundary_id": "explicit_operator_approval_required",
+            "passed": True,
+            "description": "Real provider calls require explicit operator approval before submit.",
+        },
+        {
+            "boundary_id": "real_execution_locked",
+            "passed": True,
+            "description": "Real execution remains disabled until approval, quota, sandbox, rollback, and provider contract checks pass.",
+        },
+    ]
+
+    async_job_schema = [
+        {"field": "provider_job_id", "required": True, "purpose": "Track the provider-side async job id."},
+        {"field": "provider", "required": True, "purpose": "Normalize gemini, doubao, runway, pika, manual_export, or generic."},
+        {"field": "provider_status", "required": True, "purpose": "Track queued, processing, external_result_ready, failed, or blocked status."},
+        {"field": "idempotency_key", "required": True, "purpose": "Prevent duplicate paid submits."},
+        {"field": "cost_estimate", "required": True, "purpose": "Show expected provider cost before approval."},
+        {"field": "approval_gate_id", "required": True, "purpose": "Bind provider submit to human approval."},
+        {"field": "result_url", "required": False, "purpose": "Store provider or manually pasted result URL after completion."},
+        {"field": "preview_url", "required": False, "purpose": "Store preview URL after completion."},
+        {"field": "error_contract", "required": False, "purpose": "Normalize timeout, provider_error, policy_block, or retryable failure."},
+    ]
+
+    polling_contract = [
+        "Polling must be async-job based, never blocking a request until media is complete.",
+        "Polling must normalize queued, processing, result_ready, failed, timeout, and cancelled states.",
+        "Polling must never expose provider secrets.",
+        "Polling must write an audit event for every state transition.",
+        "Polling must stop after timeout, max retries, cancellation, or circuit breaker trip.",
+    ]
+
+    failure_handling_contract = [
+        {
+            "failure_type": "timeout",
+            "retryable": True,
+            "requires_operator_review": False,
+            "next_state": "retry_or_record_manual_result",
+        },
+        {
+            "failure_type": "provider_error",
+            "retryable": True,
+            "requires_operator_review": True,
+            "next_state": "inspect_provider_error_contract",
+        },
+        {
+            "failure_type": "policy_block",
+            "retryable": False,
+            "requires_operator_review": True,
+            "next_state": "revise_prompt_or_claims",
+        },
+        {
+            "failure_type": "product_drift",
+            "retryable": True,
+            "requires_operator_review": True,
+            "next_state": "revised_external_video_handoff",
+        },
+        {
+            "failure_type": "quota_or_budget_blocked",
+            "retryable": False,
+            "requires_operator_review": True,
+            "next_state": "operator_approval_or_budget_update",
+        },
+    ]
+
+    readiness_checklist = [
+        {"check_id": "manual_result_intake_ready", "passed": manual_result_ready},
+        {"check_id": "provider_contracts_defined", "passed": True},
+        {"check_id": "api_key_boundary_defined", "passed": True},
+        {"check_id": "cost_estimate_required", "passed": True},
+        {"check_id": "async_job_schema_defined", "passed": True},
+        {"check_id": "polling_contract_defined", "passed": True},
+        {"check_id": "timeout_failure_contract_defined", "passed": True},
+        {"check_id": "human_approval_gate_required", "passed": True},
+        {"check_id": "fake_provider_path_kept_available", "passed": True},
+        {"check_id": "real_execution_locked", "passed": True},
+        {"check_id": "real_provider_call_disabled", "passed": True},
+    ]
+
+    missing_items = [item["check_id"] for item in readiness_checklist if not item.get("passed")]
+    report_status = "provider_api_readiness_ready_dry_run" if not missing_items else "provider_api_readiness_incomplete"
+
+    return {
+        "provider_api_readiness_report_version": PROVIDER_API_READINESS_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_api_readiness_report_builder"),
+        "manual_generation_result_ready": manual_result_ready,
+        "missing_item_count": len(missing_items),
+        "missing_items": missing_items,
+        "provider_count": len(provider_contracts),
+        "provider_ids": [item["provider_id"] for item in provider_contracts],
+        "provider_contracts": provider_contracts,
+        "api_key_boundary": api_key_boundary,
+        "async_job_schema": async_job_schema,
+        "polling_contract": polling_contract,
+        "failure_handling_contract": failure_handling_contract,
+        "readiness_checklist": readiness_checklist,
+        "supports_gemini_contract": True,
+        "supports_doubao_contract": True,
+        "supports_runway_contract": True,
+        "supports_pika_contract": True,
+        "supports_fake_provider_clients": True,
+        "supports_provider_polling_scaffold": True,
+        "supports_cost_estimate_before_submit": True,
+        "supports_approval_gate_before_submit": True,
+        "supports_timeout_failure_contract": True,
+        "supports_idempotency_boundary": True,
+        "supports_secret_boundary": True,
+        "recommended_next_state": "show_provider_api_readiness_in_workspace" if not missing_items else "inspect_provider_api_readiness_prerequisites",
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "provider_job_submitted": False,
+        "provider_polling_performed": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "human_approval_required_before_provider_submit": True,
+        "operator_approval_captured": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
