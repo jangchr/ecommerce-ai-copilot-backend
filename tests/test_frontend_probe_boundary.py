@@ -6679,6 +6679,39 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_real_provider_execution_gate_marker", script)
 
 
+    def test_project_workspace_provider_failure_recovery_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider failure recovery bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_FAILURE_RECOVERY_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceProviderFailureRecoveryPanel", html)
+        self.assertIn("copyProjectWorkspaceProviderFailureRecovery", html)
+        self.assertIn("provider_failure_recovery_report", html)
+        self.assertIn("projectWorkspaceExportProviderFailureRecoveryMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderFailureRecoverySnapshot", html)
+        self.assertIn("failure_taxonomy", html)
+        self.assertIn("retry_policy", html)
+        self.assertIn("fallback_plan", html)
+        self.assertIn("circuit_breaker", html)
+        self.assertIn("incident_policy", html)
+        self.assertIn("alert_policy", html)
+        self.assertIn("operator_review_packet", html)
+        self.assertIn("rollback_pause_policy", html)
+        self.assertIn("dry_run_receipt", html)
+        self.assertIn("real_retry_performed", html)
+        self.assertIn("block_followup_real_execution", html)
+        self.assertIn("external_api_called", html)
+
+    def test_project_workspace_provider_failure_recovery_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_failure_recovery_marker", script)
+        self.assertIn("Project Workspace provider failure recovery bundle", script)
+
+    def test_project_workspace_provider_failure_recovery_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider failure recovery bundle", script)
+        self.assertIn("project_workspace_provider_failure_recovery_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))

@@ -115,6 +115,7 @@ Add-Check "project_workspace_manual_generation_result_marker" ($page.Content -ma
 Add-Check "project_workspace_provider_api_readiness_marker" ($page.Content -match "Project Workspace provider API readiness bundle")
 Add-Check "project_workspace_provider_sandbox_runtime_marker" ($page.Content -match "Project Workspace provider sandbox runtime bundle")
 Add-Check "project_workspace_real_provider_execution_gate_marker" ($page.Content -match "Project Workspace real provider execution gate bundle")
+Add-Check "project_workspace_provider_failure_recovery_marker" ($page.Content -match "Project Workspace provider failure recovery bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

@@ -11666,6 +11666,162 @@
 
 
 
+
+        function projectWorkspaceExportProviderFailureRecoverySnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderFailureRecoveryReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider failure recovery bundle',
+                report_status: report.report_status || '',
+                provider_failure_recovery_report_version: report.provider_failure_recovery_report_version || '',
+                real_provider_execution_gate_ready: Boolean(report.real_provider_execution_gate_ready),
+                failure_type_count: Number(report.failure_type_count || 0),
+                retryable_failure_count: Number(report.retryable_failure_count || 0),
+                operator_review_failure_count: Number(report.operator_review_failure_count || 0),
+                failure_taxonomy: Array.isArray(report.failure_taxonomy) ? report.failure_taxonomy : [],
+                stage_count: Number(report.stage_count || 0),
+                recovery_stage_matrix: Array.isArray(report.recovery_stage_matrix) ? report.recovery_stage_matrix : [],
+                retry_policy: report.retry_policy || {},
+                fallback_plan: report.fallback_plan || {},
+                circuit_breaker: report.circuit_breaker || {},
+                incident_policy: report.incident_policy || {},
+                alert_policy: report.alert_policy || {},
+                operator_review_packet: report.operator_review_packet || {},
+                rollback_pause_policy: report.rollback_pause_policy || {},
+                dry_run_receipt: report.dry_run_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                supports_failure_taxonomy: Boolean(report.supports_failure_taxonomy),
+                supports_retry_policy: Boolean(report.supports_retry_policy),
+                supports_fallback_plan: Boolean(report.supports_fallback_plan),
+                supports_circuit_breaker: Boolean(report.supports_circuit_breaker),
+                supports_incident_policy: Boolean(report.supports_incident_policy),
+                supports_alert_policy: Boolean(report.supports_alert_policy),
+                supports_operator_review_packet: Boolean(report.supports_operator_review_packet),
+                supports_rollback_pause_policy: Boolean(report.supports_rollback_pause_policy),
+                supports_manual_result_intake_fallback: Boolean(report.supports_manual_result_intake_fallback),
+                dry_run: Boolean(report.dry_run),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                real_retry_performed: Boolean(report.real_retry_performed),
+                provider_job_submitted: Boolean(report.provider_job_submitted),
+                provider_polling_performed: Boolean(report.provider_polling_performed),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                quota_reserved: Boolean(report.quota_reserved),
+                budget_reserved_cents: Number(report.budget_reserved_cents || 0),
+                operator_review_required: Boolean(report.operator_review_required),
+                operator_review_captured: Boolean(report.operator_review_captured),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                circuit_state_mutated: Boolean(report.circuit_state_mutated),
+                incident_detected: Boolean(report.incident_detected),
+                incident_opened: Boolean(report.incident_opened),
+                abort_recommended: Boolean(report.abort_recommended),
+                rollback_required: Boolean(report.rollback_required),
+                rollback_ready: Boolean(report.rollback_ready),
+                rollback_executed: Boolean(report.rollback_executed),
+                pause_followup_execution: Boolean(report.pause_followup_execution),
+                block_followup_real_execution: Boolean(report.block_followup_real_execution),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                result_url_fetched: Boolean(report.result_url_fetched),
+                preview_url_fetched: Boolean(report.preview_url_fetched),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                has_provider_failure_recovery_report: Boolean(report.report_status || report.provider_failure_recovery_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderFailureRecoveryMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderFailureRecoverySnapshot(workspace);
+            if (!report.has_provider_failure_recovery_report) {
+                return `## ${t('projectWorkspaceExportProviderFailureRecoveryTitle')}\n${t('providerFailureRecoveryNotRefreshedYet')}`;
+            }
+            const blockerLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const failureLines = report.failure_taxonomy.length
+                ? report.failure_taxonomy.map((item, index) => `${index + 1}. ${item.failure_type || ''} | retryable=${Boolean(item.retryable)} | operator_review=${Boolean(item.requires_operator_review)} | severity=${item.severity || ''} | ${item.default_action || ''}`)
+                : ['none'];
+            const stageLines = report.recovery_stage_matrix.length
+                ? report.recovery_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderFailureRecoveryTitle')}`,
+                `${t('providerFailureRecoveryStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('realProviderExecutionGateReady')}: ${report.real_provider_execution_gate_ready}`,
+                `${t('failureTypeCount')}: ${report.failure_type_count}`,
+                `${t('retryableFailureCount')}: ${report.retryable_failure_count}`,
+                `${t('operatorReviewFailureCount')}: ${report.operator_review_failure_count}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('pauseFollowupExecution')}: ${report.pause_followup_execution}`,
+                `${t('blockFollowupRealExecution')}: ${report.block_followup_real_execution}`,
+                `${t('realExecutionEnabled')}: ${report.real_execution_enabled}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${report.external_api_call_allowed}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('realRetryPerformed')}: ${report.real_retry_performed}`,
+                `${t('circuitStateMutated')}: ${report.circuit_state_mutated}`,
+                `${t('incidentOpened')}: ${report.incident_opened}`,
+                `${t('rollbackReady')}: ${report.rollback_ready}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockerLines,
+                '',
+                `### ${t('providerFailureTaxonomy')}`,
+                ...failureLines,
+                '',
+                `### ${t('providerFailureRecoveryStages')}`,
+                ...stageLines,
+                '',
+                `### ${t('providerRetryPolicy')}`,
+                '```json',
+                JSON.stringify(report.retry_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerFailureFallbackPlan')}`,
+                '```json',
+                JSON.stringify(report.fallback_plan, null, 2),
+                '```',
+                '',
+                `### ${t('providerCircuitBreaker')}`,
+                '```json',
+                JSON.stringify(report.circuit_breaker, null, 2),
+                '```',
+                '',
+                `### ${t('providerIncidentPolicy')}`,
+                '```json',
+                JSON.stringify(report.incident_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerAlertPolicy')}`,
+                '```json',
+                JSON.stringify(report.alert_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerOperatorReviewPacket')}`,
+                '```json',
+                JSON.stringify(report.operator_review_packet, null, 2),
+                '```',
+                '',
+                `### ${t('providerRollbackPausePolicy')}`,
+                '```json',
+                JSON.stringify(report.rollback_pause_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerFailureDryRunReceipt')}`,
+                '```json',
+                JSON.stringify(report.dry_run_receipt, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportRealProviderExecutionGateSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceRealProviderExecutionGateReportFromWorkspace(workspace);
             return {
@@ -12596,6 +12752,8 @@
                 '',
                 projectWorkspaceExportRealProviderExecutionGateMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderFailureRecoveryMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12625,6 +12783,7 @@
                 provider_api_readiness_report: projectWorkspaceExportProviderApiReadinessSnapshot(workspace),
                 provider_sandbox_runtime_report: projectWorkspaceExportProviderSandboxRuntimeSnapshot(workspace),
                 real_provider_execution_gate_report: projectWorkspaceExportRealProviderExecutionGateSnapshot(workspace),
+                provider_failure_recovery_report: projectWorkspaceExportProviderFailureRecoverySnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12754,6 +12913,7 @@
                 latestProjectProviderApiReadinessReport = payload.provider_api_readiness_report || {};
                 latestProjectProviderSandboxRuntimeReport = payload.provider_sandbox_runtime_report || {};
                 latestProjectRealProviderExecutionGateReport = payload.real_provider_execution_gate_report || {};
+                latestProjectProviderFailureRecoveryReport = payload.provider_failure_recovery_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16605,6 +16765,307 @@
         let latestProjectProviderSandboxRuntimeReport = {};
         const PROJECT_WORKSPACE_REAL_PROVIDER_EXECUTION_GATE_BUNDLE_MARKER = 'Project Workspace real provider execution gate bundle';
         let latestProjectRealProviderExecutionGateReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_FAILURE_RECOVERY_BUNDLE_MARKER = 'Project Workspace provider failure recovery bundle';
+        let latestProjectProviderFailureRecoveryReport = {};
+
+        function projectWorkspaceProviderFailureRecoveryReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderFailureRecoveryReport || {}).length
+                ? latestProjectProviderFailureRecoveryReport
+                : workspace?.provider_failure_recovery_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_failure_recovery_report_version: '',
+                report_status: graphSummary.latest_provider_failure_recovery_status || '',
+                blocking_failure_count: Number(graphSummary.latest_provider_failure_recovery_blocking_failure_count || 0),
+                operator_review_required: Boolean(graphSummary.latest_provider_failure_recovery_operator_review_required),
+                external_api_called: Boolean(graphSummary.latest_provider_failure_recovery_external_api_called),
+                real_provider_execution_gate_ready: false,
+                failure_type_count: 0,
+                retryable_failure_count: 0,
+                operator_review_failure_count: 0,
+                failure_taxonomy: [],
+                stage_count: 0,
+                recovery_stage_matrix: [],
+                retry_policy: {},
+                fallback_plan: {},
+                circuit_breaker: {},
+                incident_policy: {},
+                alert_policy: {},
+                operator_review_packet: {},
+                rollback_pause_policy: {},
+                dry_run_receipt: {},
+                blocking_failures: [],
+                supports_failure_taxonomy: false,
+                supports_retry_policy: false,
+                supports_fallback_plan: false,
+                supports_circuit_breaker: false,
+                supports_incident_policy: false,
+                supports_alert_policy: false,
+                supports_operator_review_packet: false,
+                supports_rollback_pause_policy: false,
+                supports_manual_result_intake_fallback: false,
+                dry_run: true,
+                real_execution_allowed: false,
+                real_execution_enabled: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                real_retry_performed: false,
+                provider_job_submitted: false,
+                provider_polling_performed: false,
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                quota_reserved: false,
+                budget_reserved_cents: 0,
+                operator_review_captured: false,
+                operator_approval_captured: false,
+                circuit_state_mutated: false,
+                incident_detected: false,
+                incident_opened: false,
+                abort_recommended: false,
+                rollback_required: true,
+                rollback_ready: false,
+                rollback_executed: false,
+                pause_followup_execution: true,
+                block_followup_real_execution: true,
+                media_uploaded: false,
+                media_downloaded: false,
+                result_url_fetched: false,
+                preview_url_fetched: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceProviderFailureRecoveryCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderFailureRecoveryReportFromWorkspace(workspace);
+            const failures = Array.isArray(report.failure_taxonomy) ? report.failure_taxonomy : [];
+            const stages = Array.isArray(report.recovery_stage_matrix) ? report.recovery_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            return [
+                t('providerFailureRecoveryCopyTitle'),
+                `${t('providerFailureRecoveryStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('realProviderExecutionGateReady')}: ${Boolean(report.real_provider_execution_gate_ready)}`,
+                `${t('failureTypeCount')}: ${Number(report.failure_type_count || failures.length || 0)}`,
+                `${t('retryableFailureCount')}: ${Number(report.retryable_failure_count || 0)}`,
+                `${t('operatorReviewFailureCount')}: ${Number(report.operator_review_failure_count || 0)}`,
+                `${t('blockingFailureCount')}: ${Number(report.blocking_failure_count || blockers.length || 0)}`,
+                `${t('operatorReviewRequired')}: ${Boolean(report.operator_review_required)}`,
+                `${t('pauseFollowupExecution')}: ${Boolean(report.pause_followup_execution)}`,
+                `${t('blockFollowupRealExecution')}: ${Boolean(report.block_followup_real_execution)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(report.real_execution_enabled)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('realRetryPerformed')}: ${Boolean(report.real_retry_performed)}`,
+                `${t('providerJobSubmitted')}: ${Boolean(report.provider_job_submitted)}`,
+                `${t('providerPollingPerformed')}: ${Boolean(report.provider_polling_performed)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('quotaReserved')}: ${Boolean(report.quota_reserved)}`,
+                `${t('operatorReviewCaptured')}: ${Boolean(report.operator_review_captured)}`,
+                `${t('operatorApprovalCaptured')}: ${Boolean(report.operator_approval_captured)}`,
+                `${t('circuitStateMutated')}: ${Boolean(report.circuit_state_mutated)}`,
+                `${t('incidentDetected')}: ${Boolean(report.incident_detected)}`,
+                `${t('incidentOpened')}: ${Boolean(report.incident_opened)}`,
+                `${t('rollbackReady')}: ${Boolean(report.rollback_ready)}`,
+                `${t('rollbackExecuted')}: ${Boolean(report.rollback_executed)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('blockingFailures')}:`,
+                blockers.length ? blockers.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('providerFailureTaxonomy')}:`,
+                failures.length ? failures.map((item, index) => `${index + 1}. ${item.failure_type || ''} | retryable=${Boolean(item.retryable)} | operator_review=${Boolean(item.requires_operator_review)} | severity=${item.severity || ''} | ${item.default_action || ''}`).join('\n') : t('none'),
+                '',
+                `${t('providerFailureRecoveryStages')}:`,
+                stages.length ? stages.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`).join('\n') : t('none'),
+                '',
+                `${t('providerRetryPolicy')}:`,
+                JSON.stringify(report.retry_policy || {}, null, 2),
+                '',
+                `${t('providerFailureFallbackPlan')}:`,
+                JSON.stringify(report.fallback_plan || {}, null, 2),
+                '',
+                `${t('providerCircuitBreaker')}:`,
+                JSON.stringify(report.circuit_breaker || {}, null, 2),
+                '',
+                `${t('providerIncidentPolicy')}:`,
+                JSON.stringify(report.incident_policy || {}, null, 2),
+                '',
+                `${t('providerAlertPolicy')}:`,
+                JSON.stringify(report.alert_policy || {}, null, 2),
+                '',
+                `${t('providerOperatorReviewPacket')}:`,
+                JSON.stringify(report.operator_review_packet || {}, null, 2),
+                '',
+                `${t('providerRollbackPausePolicy')}:`,
+                JSON.stringify(report.rollback_pause_policy || {}, null, 2),
+                '',
+                `${t('providerFailureDryRunReceipt')}:`,
+                JSON.stringify(report.dry_run_receipt || {}, null, 2),
+                '',
+                JSON.stringify({ provider_failure_recovery_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderFailureRecovery() {
+            const status = document.getElementById('projectWorkspaceProviderFailureRecoveryStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderFailureRecoveryCopyText());
+                if (status) status.textContent = t('providerFailureRecoveryCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerFailureRecoveryCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderFailureRecoveryPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderFailureRecoveryReportFromWorkspace(workspace);
+            const failures = Array.isArray(report.failure_taxonomy) ? report.failure_taxonomy : [];
+            const stages = Array.isArray(report.recovery_stage_matrix) ? report.recovery_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const retry = report.retry_policy || {};
+            const fallback = report.fallback_plan || {};
+            const circuit = report.circuit_breaker || {};
+            const incident = report.incident_policy || {};
+            const alert = report.alert_policy || {};
+            const review = report.operator_review_packet || {};
+            const rollback = report.rollback_pause_policy || {};
+            const receipt = report.dry_run_receipt || {};
+            const hasReport = Boolean(report.report_status || report.provider_failure_recovery_report_version || failures.length || stages.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderFailureRecoveryPanel" data-project-provider-failure-recovery-marker="Project Workspace provider failure recovery bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerFailureRecoveryPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerFailureRecoveryPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderFailureRecoveryBtn" type="button" onclick="copyProjectWorkspaceProviderFailureRecovery()">${escapeHTML(t('copyProviderFailureRecovery'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerFailureRecoveryStatus'))}</div>
+                            <strong data-provider-failure-recovery-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerFailureRecoveryNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('failureTypeCount'))}</div>
+                            <strong>${escapeHTML(String(Number(report.failure_type_count || failures.length || 0)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('operatorReviewRequired'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.operator_review_required)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('externalApiCalled'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realProviderExecutionGateReady'))}</div><strong>${escapeHTML(String(Boolean(report.real_provider_execution_gate_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('retryableFailureCount'))}</div><strong>${escapeHTML(String(Number(report.retryable_failure_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewFailureCount'))}</div><strong>${escapeHTML(String(Number(report.operator_review_failure_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerFailureTaxonomy'))}</div>
+                        ${failures.length ? failures.map((item) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(item.failure_type || '')} ? ${escapeHTML(item.severity || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('retryable'))}: ${escapeHTML(String(Boolean(item.retryable)))}</span>
+                                    <span class="badge">${escapeHTML(t('operatorReviewRequired'))}: ${escapeHTML(String(Boolean(item.requires_operator_review)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(item.default_action || '')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerFailureRecoveryStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} ? ${escapeHTML(stage.stage_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('requiredInputs'))}: ${(stage.required_inputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedOutputs'))}: ${(stage.expected_outputs || []).map(escapeHTML).join(', ')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerRetryPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(retry, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerFailureFallbackPlan'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(fallback, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerCircuitBreaker'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(circuit, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerIncidentPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(incident, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerAlertPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(alert, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerOperatorReviewPacket'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(review, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerRollbackPausePolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(rollback, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerFailureDryRunReceipt'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(receipt, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsFailureTaxonomy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_failure_taxonomy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsRetryPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_retry_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsCircuitBreaker'))}</div><strong>${escapeHTML(String(Boolean(report.supports_circuit_breaker)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsIncidentPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_incident_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsOperatorReviewPacket'))}</div><strong>${escapeHTML(String(Boolean(report.supports_operator_review_packet)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsRollbackPausePolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_rollback_pause_policy)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realRetryPerformed'))}</div><strong>${escapeHTML(String(Boolean(report.real_retry_performed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('circuitStateMutated'))}</div><strong>${escapeHTML(String(Boolean(report.circuit_state_mutated)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('incidentOpened'))}</div><strong>${escapeHTML(String(Boolean(report.incident_opened)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewCaptured'))}</div><strong>${escapeHTML(String(Boolean(report.operator_review_captured)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('pauseFollowupExecution'))}</div><strong>${escapeHTML(String(Boolean(report.pause_followup_execution)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockFollowupRealExecution'))}</div><strong>${escapeHTML(String(Boolean(report.block_followup_real_execution)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerFailureRecoveryAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-failure-recovery-audit-preview="Project Workspace provider failure recovery bundle">${escapeHTML(projectWorkspaceProviderFailureRecoveryCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerFailureRecoveryNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderFailureRecoveryStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceRealProviderExecutionGateReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectRealProviderExecutionGateReport || {}).length
@@ -19250,6 +19711,8 @@
                 if (providerSandboxRuntimePanel) providerSandboxRuntimePanel.outerHTML = renderProjectWorkspaceProviderSandboxRuntimePanel(latestProjectWorkspace);
                 const realProviderExecutionGatePanel = document.getElementById('projectWorkspaceRealProviderExecutionGatePanel');
                 if (realProviderExecutionGatePanel) realProviderExecutionGatePanel.outerHTML = renderProjectWorkspaceRealProviderExecutionGatePanel(latestProjectWorkspace);
+                const providerFailureRecoveryPanel = document.getElementById('projectWorkspaceProviderFailureRecoveryPanel');
+                if (providerFailureRecoveryPanel) providerFailureRecoveryPanel.outerHTML = renderProjectWorkspaceProviderFailureRecoveryPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -21436,6 +21899,7 @@
                     ${renderProjectWorkspaceProviderApiReadinessPanel(workspace)}
                     ${renderProjectWorkspaceProviderSandboxRuntimePanel(workspace)}
                     ${renderProjectWorkspaceRealProviderExecutionGatePanel(workspace)}
+                    ${renderProjectWorkspaceProviderFailureRecoveryPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -26084,6 +26548,93 @@
             idempotencyKeyReady: 'Idempotency key ready',
             realProviderExecutionGateAuditPreview: '\u771f\u5b9e Provider execution gate \u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportRealProviderExecutionGateTitle: 'Real Provider Execution Gate / \u771f\u5b9e Provider \u8c03\u7528\u603b\u95f8'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderFailureRecoveryBundleMarker: 'Project Workspace provider failure recovery bundle',
+            providerFailureRecoveryPanelTitle: 'Provider Failure Recovery',
+            providerFailureRecoveryPanelHelper: 'Dry-run failure governance for provider timeout, rate limits, quota exceeded, secret boundary violation, missing results, retry policy, fallback, circuit breaker, incident/alert policy, operator review, rollback, pause, and block follow-up execution.',
+            copyProviderFailureRecovery: 'Copy provider failure recovery report',
+            providerFailureRecoveryCopyTitle: 'Project provider failure recovery report',
+            providerFailureRecoveryStatus: 'Provider failure recovery status',
+            providerFailureRecoveryNotRefreshedYet: 'Provider failure recovery report has not been refreshed yet.',
+            providerFailureRecoveryCopied: 'Provider failure recovery report copied.',
+            providerFailureRecoveryCopyFailed: 'Could not copy provider failure recovery report.',
+            realProviderExecutionGateReady: 'Real provider execution gate ready',
+            failureTypeCount: 'Failure type count',
+            retryableFailureCount: 'Retryable failure count',
+            operatorReviewFailureCount: 'Operator review failure count',
+            providerFailureTaxonomy: 'Provider failure taxonomy',
+            providerFailureRecoveryStages: 'Provider failure recovery stages',
+            providerRetryPolicy: 'Provider retry policy',
+            providerFailureFallbackPlan: 'Provider failure fallback plan',
+            providerCircuitBreaker: 'Provider circuit breaker',
+            providerIncidentPolicy: 'Provider incident policy',
+            providerAlertPolicy: 'Provider alert policy',
+            providerOperatorReviewPacket: 'Provider operator review packet',
+            providerRollbackPausePolicy: 'Provider rollback / pause policy',
+            providerFailureDryRunReceipt: 'Provider failure dry-run receipt',
+            retryable: 'Retryable',
+            realRetryPerformed: 'Real retry performed',
+            operatorReviewCaptured: 'Operator review captured',
+            circuitStateMutated: 'Circuit state mutated',
+            incidentDetected: 'Incident detected',
+            incidentOpened: 'Incident opened',
+            rollbackExecuted: 'Rollback executed',
+            pauseFollowupExecution: 'Pause follow-up execution',
+            blockFollowupRealExecution: 'Block follow-up real execution',
+            supportsFailureTaxonomy: 'Supports failure taxonomy',
+            supportsRetryPolicy: 'Supports retry policy',
+            supportsCircuitBreaker: 'Supports circuit breaker',
+            supportsIncidentPolicy: 'Supports incident policy',
+            supportsOperatorReviewPacket: 'Supports operator review packet',
+            supportsRollbackPausePolicy: 'Supports rollback / pause policy',
+            providerFailureRecoveryAuditPreview: 'Provider failure recovery audit preview',
+            projectWorkspaceExportProviderFailureRecoveryTitle: 'Provider Failure Recovery'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderFailureRecoveryBundleMarker: 'Project Workspace provider failure recovery bundle',
+            providerFailureRecoveryPanelTitle: 'Provider Failure Recovery / Provider \u5931\u8d25\u6cbb\u7406',
+            providerFailureRecoveryPanelHelper: 'Dry-run provider \u5931\u8d25\u6cbb\u7406\uff1a\u8986\u76d6 timeout\u3001rate limit\u3001quota exceeded\u3001secret boundary violation\u3001result missing\u3001retry policy\u3001fallback\u3001circuit breaker\u3001incident/alert policy\u3001operator review\u3001rollback\u3001pause \u548c block follow-up execution\u3002',
+            copyProviderFailureRecovery: '\u590d\u5236 provider \u5931\u8d25\u6cbb\u7406\u62a5\u544a',
+            providerFailureRecoveryCopyTitle: '\u9879\u76ee Provider Failure Recovery \u62a5\u544a',
+            providerFailureRecoveryStatus: 'Provider failure recovery \u72b6\u6001',
+            providerFailureRecoveryNotRefreshedYet: 'Provider failure recovery \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerFailureRecoveryCopied: 'Provider failure recovery \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerFailureRecoveryCopyFailed: '\u590d\u5236 provider failure recovery \u62a5\u544a\u5931\u8d25\u3002',
+            realProviderExecutionGateReady: 'Real provider execution gate ready',
+            failureTypeCount: '\u5931\u8d25\u7c7b\u578b\u6570',
+            retryableFailureCount: '\u53ef retry \u5931\u8d25\u6570',
+            operatorReviewFailureCount: '\u9700 operator review \u5931\u8d25\u6570',
+            providerFailureTaxonomy: 'Provider failure taxonomy',
+            providerFailureRecoveryStages: 'Provider failure recovery \u9636\u6bb5',
+            providerRetryPolicy: 'Provider retry policy',
+            providerFailureFallbackPlan: 'Provider failure fallback plan',
+            providerCircuitBreaker: 'Provider circuit breaker',
+            providerIncidentPolicy: 'Provider incident policy',
+            providerAlertPolicy: 'Provider alert policy',
+            providerOperatorReviewPacket: 'Provider operator review packet',
+            providerRollbackPausePolicy: 'Provider rollback / pause policy',
+            providerFailureDryRunReceipt: 'Provider failure dry-run receipt',
+            retryable: '\u53ef retry',
+            realRetryPerformed: '\u5df2\u6267\u884c\u771f\u5b9e retry',
+            operatorReviewCaptured: 'Operator review \u5df2\u6355\u83b7',
+            circuitStateMutated: 'Circuit state \u5df2\u4fee\u6539',
+            incidentDetected: '\u5df2\u68c0\u6d4b incident',
+            incidentOpened: '\u5df2\u6253\u5f00 incident',
+            rollbackExecuted: 'Rollback \u5df2\u6267\u884c',
+            pauseFollowupExecution: '\u6682\u505c follow-up execution',
+            blockFollowupRealExecution: '\u963b\u65ad follow-up real execution',
+            supportsFailureTaxonomy: '\u652f\u6301 failure taxonomy',
+            supportsRetryPolicy: '\u652f\u6301 retry policy',
+            supportsCircuitBreaker: '\u652f\u6301 circuit breaker',
+            supportsIncidentPolicy: '\u652f\u6301 incident policy',
+            supportsOperatorReviewPacket: '\u652f\u6301 operator review packet',
+            supportsRollbackPausePolicy: '\u652f\u6301 rollback / pause policy',
+            providerFailureRecoveryAuditPreview: 'Provider failure recovery \u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderFailureRecoveryTitle: 'Provider Failure Recovery / Provider \u5931\u8d25\u6cbb\u7406'
         });
 
 
