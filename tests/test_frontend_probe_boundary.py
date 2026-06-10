@@ -6621,6 +6621,35 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_api_readiness_marker", script)
 
 
+    def test_project_workspace_provider_sandbox_runtime_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider sandbox runtime bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_SANDBOX_RUNTIME_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceProviderSandboxRuntimePanel", html)
+        self.assertIn("copyProjectWorkspaceProviderSandboxRuntime", html)
+        self.assertIn("provider_sandbox_runtime_report", html)
+        self.assertIn("projectWorkspaceExportProviderSandboxRuntimeMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderSandboxRuntimeSnapshot", html)
+        self.assertIn("fake_runtime_matrix", html)
+        self.assertIn("submit_contract", html)
+        self.assertIn("polling_contract", html)
+        self.assertIn("normalized_result_contract", html)
+        self.assertIn("result_handoff_contract", html)
+        self.assertIn("fake_no_network", html)
+        self.assertIn("external_api_called", html)
+        self.assertIn("real_provider_client_constructed", html)
+
+    def test_project_workspace_provider_sandbox_runtime_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_sandbox_runtime_marker", script)
+        self.assertIn("Project Workspace provider sandbox runtime bundle", script)
+
+    def test_project_workspace_provider_sandbox_runtime_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider sandbox runtime bundle", script)
+        self.assertIn("project_workspace_provider_sandbox_runtime_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))

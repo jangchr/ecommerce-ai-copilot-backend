@@ -11664,6 +11664,123 @@
 
 
 
+
+        function projectWorkspaceExportProviderSandboxRuntimeSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderSandboxRuntimeReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider sandbox runtime bundle',
+                report_status: report.report_status || '',
+                provider_sandbox_runtime_report_version: report.provider_sandbox_runtime_report_version || '',
+                provider_api_readiness_ready: Boolean(report.provider_api_readiness_ready),
+                missing_item_count: Number(report.missing_item_count || 0),
+                missing_items: Array.isArray(report.missing_items) ? report.missing_items : [],
+                stage_count: Number(report.stage_count || 0),
+                complete_stage_count: Number(report.complete_stage_count || 0),
+                missing_stage_count: Number(report.missing_stage_count || 0),
+                sandbox_stage_matrix: Array.isArray(report.sandbox_stage_matrix) ? report.sandbox_stage_matrix : [],
+                fake_provider_count: Number(report.fake_provider_count || 0),
+                fake_provider_ids: Array.isArray(report.fake_provider_ids) ? report.fake_provider_ids : [],
+                fake_runtime_matrix: Array.isArray(report.fake_runtime_matrix) ? report.fake_runtime_matrix : [],
+                submit_contract: report.submit_contract || {},
+                polling_contract: report.polling_contract || {},
+                normalized_result_contract: report.normalized_result_contract || {},
+                result_handoff_contract: report.result_handoff_contract || {},
+                supports_fake_runway_client: Boolean(report.supports_fake_runway_client),
+                supports_fake_pika_client: Boolean(report.supports_fake_pika_client),
+                supports_fake_provider_submit: Boolean(report.supports_fake_provider_submit),
+                supports_simulated_provider_polling: Boolean(report.supports_simulated_provider_polling),
+                supports_normalized_provider_result: Boolean(report.supports_normalized_provider_result),
+                supports_provider_result_handoff: Boolean(report.supports_provider_result_handoff),
+                supports_experiment_feedback_bridge: Boolean(report.supports_experiment_feedback_bridge),
+                client_mode: report.client_mode || 'fake_no_network',
+                dry_run: Boolean(report.dry_run),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                real_provider_client_constructed: Boolean(report.real_provider_client_constructed),
+                provider_job_submitted: Boolean(report.provider_job_submitted),
+                fake_provider_job_submittable: Boolean(report.fake_provider_job_submittable),
+                provider_polling_performed: Boolean(report.provider_polling_performed),
+                fake_provider_polling_submittable: Boolean(report.fake_provider_polling_submittable),
+                external_api_called: Boolean(report.external_api_called),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                result_url_fetched: Boolean(report.result_url_fetched),
+                preview_url_fetched: Boolean(report.preview_url_fetched),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                manual_review_required: Boolean(report.manual_review_required),
+                human_approval_required_before_provider_submit: Boolean(report.human_approval_required_before_provider_submit),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                has_provider_sandbox_runtime_report: Boolean(report.report_status || report.provider_sandbox_runtime_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderSandboxRuntimeMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderSandboxRuntimeSnapshot(workspace);
+            if (!report.has_provider_sandbox_runtime_report) {
+                return `## ${t('projectWorkspaceExportProviderSandboxRuntimeTitle')}\n${t('providerSandboxRuntimeNotRefreshedYet')}`;
+            }
+            const stageLines = report.sandbox_stage_matrix.length
+                ? report.sandbox_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const providerLines = report.fake_runtime_matrix.length
+                ? report.fake_runtime_matrix.map((provider, index) => `${index + 1}. ${provider.provider_id || ''} | ${provider.fake_client_class || ''} | ${provider.client_mode || ''} | submit=${provider.submit_status || ''} | result=${provider.fake_result_url_pattern || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderSandboxRuntimeTitle')}`,
+                `${t('providerSandboxRuntimeStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('fakeProviderCount')}: ${report.fake_provider_count}`,
+                `${t('clientMode')}: ${report.client_mode}`,
+                `${t('supportsFakeRunwayClient')}: ${report.supports_fake_runway_client}`,
+                `${t('supportsFakePikaClient')}: ${report.supports_fake_pika_client}`,
+                `${t('supportsFakeProviderSubmit')}: ${report.supports_fake_provider_submit}`,
+                `${t('supportsSimulatedProviderPolling')}: ${report.supports_simulated_provider_polling}`,
+                `${t('supportsNormalizedProviderResult')}: ${report.supports_normalized_provider_result}`,
+                `${t('supportsProviderResultHandoff')}: ${report.supports_provider_result_handoff}`,
+                `${t('supportsExperimentFeedbackBridge')}: ${report.supports_experiment_feedback_bridge}`,
+                `${t('realExecutionEnabled')}: ${report.real_execution_enabled}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('providerJobSubmitted')}: ${report.provider_job_submitted}`,
+                `${t('providerPollingPerformed')}: ${report.provider_polling_performed}`,
+                `${t('resultUrlFetched')}: ${report.result_url_fetched}`,
+                `${t('previewUrlFetched')}: ${report.preview_url_fetched}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('providerSandboxStages')}`,
+                ...stageLines,
+                '',
+                `### ${t('fakeProviderRuntimeMatrix')}`,
+                ...providerLines,
+                '',
+                `### ${t('fakeSubmitContract')}`,
+                '```json',
+                JSON.stringify(report.submit_contract, null, 2),
+                '```',
+                '',
+                `### ${t('simulatedPollingContract')}`,
+                '```json',
+                JSON.stringify(report.polling_contract, null, 2),
+                '```',
+                '',
+                `### ${t('normalizedProviderResultContract')}`,
+                '```json',
+                JSON.stringify(report.normalized_result_contract, null, 2),
+                '```',
+                '',
+                `### ${t('providerResultHandoffContract')}`,
+                '```json',
+                JSON.stringify(report.result_handoff_contract, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderApiReadinessSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderApiReadinessReportFromWorkspace(workspace);
             return {
@@ -12358,6 +12475,8 @@
                 '',
                 projectWorkspaceExportProviderApiReadinessMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderSandboxRuntimeMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12385,6 +12504,7 @@
                 keyframe_prompt_pack_report: projectWorkspaceExportKeyframePromptPackSnapshot(workspace),
                 manual_generation_result_report: projectWorkspaceExportManualGenerationResultSnapshot(workspace),
                 provider_api_readiness_report: projectWorkspaceExportProviderApiReadinessSnapshot(workspace),
+                provider_sandbox_runtime_report: projectWorkspaceExportProviderSandboxRuntimeSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12512,6 +12632,7 @@
                 latestProjectKeyframePromptPackReport = payload.keyframe_prompt_pack_report || {};
                 latestProjectManualGenerationResultReport = payload.manual_generation_result_report || {};
                 latestProjectProviderApiReadinessReport = payload.provider_api_readiness_report || {};
+                latestProjectProviderSandboxRuntimeReport = payload.provider_sandbox_runtime_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16359,6 +16480,257 @@
         let latestProjectManualGenerationResultReport = {};
         const PROJECT_WORKSPACE_PROVIDER_API_READINESS_BUNDLE_MARKER = 'Project Workspace provider API readiness bundle';
         let latestProjectProviderApiReadinessReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_SANDBOX_RUNTIME_BUNDLE_MARKER = 'Project Workspace provider sandbox runtime bundle';
+        let latestProjectProviderSandboxRuntimeReport = {};
+
+        function projectWorkspaceProviderSandboxRuntimeReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderSandboxRuntimeReport || {}).length
+                ? latestProjectProviderSandboxRuntimeReport
+                : workspace?.provider_sandbox_runtime_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_sandbox_runtime_report_version: '',
+                report_status: graphSummary.latest_provider_sandbox_runtime_status || '',
+                fake_provider_count: Number(graphSummary.latest_provider_sandbox_runtime_fake_provider_count || 0),
+                real_execution_enabled: Boolean(graphSummary.latest_provider_sandbox_runtime_real_execution_enabled),
+                external_api_called: Boolean(graphSummary.latest_provider_sandbox_runtime_external_api_called),
+                sandbox_stage_matrix: [],
+                fake_runtime_matrix: [],
+                submit_contract: {},
+                polling_contract: {},
+                normalized_result_contract: {},
+                result_handoff_contract: {},
+                supports_fake_runway_client: false,
+                supports_fake_pika_client: false,
+                supports_fake_provider_submit: false,
+                supports_simulated_provider_polling: false,
+                supports_normalized_provider_result: false,
+                supports_provider_result_handoff: false,
+                supports_experiment_feedback_bridge: false,
+                client_mode: 'fake_no_network',
+                dry_run: true,
+                real_execution_allowed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                real_provider_client_constructed: false,
+                provider_job_submitted: false,
+                fake_provider_job_submittable: false,
+                provider_polling_performed: false,
+                fake_provider_polling_submittable: false,
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                result_url_fetched: false,
+                preview_url_fetched: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false,
+                manual_review_required: true,
+                human_approval_required_before_provider_submit: true,
+                operator_approval_captured: false
+            };
+        }
+
+        function projectWorkspaceProviderSandboxRuntimeCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderSandboxRuntimeReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.sandbox_stage_matrix) ? report.sandbox_stage_matrix : [];
+            const providers = Array.isArray(report.fake_runtime_matrix) ? report.fake_runtime_matrix : [];
+            const submit = report.submit_contract || {};
+            const polling = report.polling_contract || {};
+            const normalized = report.normalized_result_contract || {};
+            const handoff = report.result_handoff_contract || {};
+            return [
+                t('providerSandboxRuntimeCopyTitle'),
+                `${t('providerSandboxRuntimeStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('fakeProviderCount')}: ${Number(report.fake_provider_count || providers.length || 0)}`,
+                `${t('clientMode')}: ${report.client_mode || 'fake_no_network'}`,
+                `${t('supportsFakeRunwayClient')}: ${Boolean(report.supports_fake_runway_client)}`,
+                `${t('supportsFakePikaClient')}: ${Boolean(report.supports_fake_pika_client)}`,
+                `${t('supportsFakeProviderSubmit')}: ${Boolean(report.supports_fake_provider_submit)}`,
+                `${t('supportsSimulatedProviderPolling')}: ${Boolean(report.supports_simulated_provider_polling)}`,
+                `${t('supportsNormalizedProviderResult')}: ${Boolean(report.supports_normalized_provider_result)}`,
+                `${t('supportsProviderResultHandoff')}: ${Boolean(report.supports_provider_result_handoff)}`,
+                `${t('supportsExperimentFeedbackBridge')}: ${Boolean(report.supports_experiment_feedback_bridge)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(report.real_execution_enabled)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('realProviderClientConstructed')}: ${Boolean(report.real_provider_client_constructed)}`,
+                `${t('providerJobSubmitted')}: ${Boolean(report.provider_job_submitted)}`,
+                `${t('providerPollingPerformed')}: ${Boolean(report.provider_polling_performed)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('mediaUploaded')}: ${Boolean(report.media_uploaded)}`,
+                `${t('mediaDownloaded')}: ${Boolean(report.media_downloaded)}`,
+                `${t('resultUrlFetched')}: ${Boolean(report.result_url_fetched)}`,
+                `${t('previewUrlFetched')}: ${Boolean(report.preview_url_fetched)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('manualReviewRequired')}: ${Boolean(report.manual_review_required)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('providerSandboxStages')}:`,
+                stages.length ? stages.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`).join('\n') : t('none'),
+                '',
+                `${t('fakeProviderRuntimeMatrix')}:`,
+                providers.length ? providers.map((provider, index) => [
+                    `${index + 1}. ${provider.provider_id || ''} / ${provider.fake_client_class || ''}`,
+                    `   ${t('clientMode')}: ${provider.client_mode || ''}`,
+                    `   ${t('submitStatus')}: ${provider.submit_status || ''}`,
+                    `   ${t('pollSequence')}: ${(provider.poll_sequence || []).join(' -> ')}`,
+                    `   ${t('fakeResultUrlPattern')}: ${provider.fake_result_url_pattern || ''}`,
+                    `   ${t('fakePreviewUrlPattern')}: ${provider.fake_preview_url_pattern || ''}`,
+                    `   ${t('externalApiCalled')}: ${Boolean(provider.external_api_called)}`
+                ].join('\n')).join('\n') : t('none'),
+                '',
+                `${t('fakeSubmitContract')}:`,
+                JSON.stringify(submit, null, 2),
+                '',
+                `${t('simulatedPollingContract')}:`,
+                JSON.stringify(polling, null, 2),
+                '',
+                `${t('normalizedProviderResultContract')}:`,
+                JSON.stringify(normalized, null, 2),
+                '',
+                `${t('providerResultHandoffContract')}:`,
+                JSON.stringify(handoff, null, 2),
+                '',
+                JSON.stringify({ provider_sandbox_runtime_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderSandboxRuntime() {
+            const status = document.getElementById('projectWorkspaceProviderSandboxRuntimeStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderSandboxRuntimeCopyText());
+                if (status) status.textContent = t('providerSandboxRuntimeCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerSandboxRuntimeCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderSandboxRuntimePanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderSandboxRuntimeReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.sandbox_stage_matrix) ? report.sandbox_stage_matrix : [];
+            const providers = Array.isArray(report.fake_runtime_matrix) ? report.fake_runtime_matrix : [];
+            const submit = report.submit_contract || {};
+            const polling = report.polling_contract || {};
+            const normalized = report.normalized_result_contract || {};
+            const handoff = report.result_handoff_contract || {};
+            const hasReport = Boolean(report.report_status || report.provider_sandbox_runtime_report_version || providers.length || stages.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderSandboxRuntimePanel" data-project-provider-sandbox-runtime-marker="Project Workspace provider sandbox runtime bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerSandboxRuntimePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerSandboxRuntimePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderSandboxRuntimeBtn" type="button" onclick="copyProjectWorkspaceProviderSandboxRuntime()">${escapeHTML(t('copyProviderSandboxRuntime'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerSandboxRuntimeStatus'))}</div>
+                            <strong data-provider-sandbox-runtime-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerSandboxRuntimeNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('fakeProviderCount'))}</div>
+                            <strong>${escapeHTML(String(Number(report.fake_provider_count || providers.length || 0)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('clientMode'))}</div>
+                            <strong>${escapeHTML(report.client_mode || 'fake_no_network')}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('externalApiCalled'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerSandboxStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} ? ${escapeHTML(stage.stage_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('requiredInputs'))}: ${(stage.required_inputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedOutputs'))}: ${(stage.expected_outputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('safetyBoundaries'))}: ${(stage.safety_boundaries || []).map(escapeHTML).join(', ')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('fakeProviderRuntimeMatrix'))}</div>
+                        ${providers.length ? providers.map((provider) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(provider.provider_id || '')} ? ${escapeHTML(provider.fake_client_class || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('clientMode'))}: ${escapeHTML(provider.client_mode || '')}</span>
+                                    <span class="badge">${escapeHTML(t('submitStatus'))}: ${escapeHTML(provider.submit_status || '')}</span>
+                                    <span class="badge">${escapeHTML(t('failureStatus'))}: ${escapeHTML(provider.failure_status || '')}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('pollSequence'))}: ${((provider.poll_sequence || []).map(escapeHTML)).join(' -> ')}</div>
+                                <div class="field-helper">${escapeHTML(t('fakeResultUrlPattern'))}: ${escapeHTML(provider.fake_result_url_pattern || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('fakePreviewUrlPattern'))}: ${escapeHTML(provider.fake_preview_url_pattern || '')}</div>
+                                <div class="graph-os-compact-grid">
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('externalApiCalled'))}</div><strong>${escapeHTML(String(Boolean(provider.external_api_called)))}</strong></div>
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretRead'))}</div><strong>${escapeHTML(String(Boolean(provider.provider_secret_read)))}</strong></div>
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('mediaUploaded'))}</div><strong>${escapeHTML(String(Boolean(provider.media_uploaded)))}</strong></div>
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('paidGenerationAllowed'))}</div><strong>${escapeHTML(String(Boolean(provider.paid_generation_allowed)))}</strong></div>
+                                </div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('fakeSubmitContract'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(submit, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('simulatedPollingContract'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(polling, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('normalizedProviderResultContract'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(normalized, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerResultHandoffContract'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(handoff, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsFakeRunwayClient'))}</div><strong>${escapeHTML(String(Boolean(report.supports_fake_runway_client)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsFakePikaClient'))}</div><strong>${escapeHTML(String(Boolean(report.supports_fake_pika_client)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsFakeProviderSubmit'))}</div><strong>${escapeHTML(String(Boolean(report.supports_fake_provider_submit)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsSimulatedProviderPolling'))}</div><strong>${escapeHTML(String(Boolean(report.supports_simulated_provider_polling)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsNormalizedProviderResult'))}</div><strong>${escapeHTML(String(Boolean(report.supports_normalized_provider_result)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsProviderResultHandoff'))}</div><strong>${escapeHTML(String(Boolean(report.supports_provider_result_handoff)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realProviderClientConstructed'))}</div><strong>${escapeHTML(String(Boolean(report.real_provider_client_constructed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerJobSubmitted'))}</div><strong>${escapeHTML(String(Boolean(report.provider_job_submitted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerPollingPerformed'))}</div><strong>${escapeHTML(String(Boolean(report.provider_polling_performed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('resultUrlFetched'))}</div><strong>${escapeHTML(String(Boolean(report.result_url_fetched)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('previewUrlFetched'))}</div><strong>${escapeHTML(String(Boolean(report.preview_url_fetched)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('paidGenerationAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.paid_generation_allowed)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerSandboxRuntimeAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-sandbox-runtime-audit-preview="Project Workspace provider sandbox runtime bundle">${escapeHTML(projectWorkspaceProviderSandboxRuntimeCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerSandboxRuntimeNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderSandboxRuntimeStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceProviderApiReadinessReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderApiReadinessReport || {}).length
@@ -18512,6 +18884,8 @@
                 if (manualGenerationResultPanel) manualGenerationResultPanel.outerHTML = renderProjectWorkspaceManualGenerationResultPanel(latestProjectWorkspace);
                 const providerApiReadinessPanel = document.getElementById('projectWorkspaceProviderApiReadinessPanel');
                 if (providerApiReadinessPanel) providerApiReadinessPanel.outerHTML = renderProjectWorkspaceProviderApiReadinessPanel(latestProjectWorkspace);
+                const providerSandboxRuntimePanel = document.getElementById('projectWorkspaceProviderSandboxRuntimePanel');
+                if (providerSandboxRuntimePanel) providerSandboxRuntimePanel.outerHTML = renderProjectWorkspaceProviderSandboxRuntimePanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -20696,6 +21070,7 @@
                     ${renderProjectWorkspaceKeyframePromptPackPanel(workspace)}
                     ${renderProjectWorkspaceManualGenerationResultPanel(workspace)}
                     ${renderProjectWorkspaceProviderApiReadinessPanel(workspace)}
+                    ${renderProjectWorkspaceProviderSandboxRuntimePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -25184,6 +25559,91 @@
             providerApiReadinessCopied: 'Provider API readiness \u62a5\u544a\u5df2\u590d\u5236\u3002',
             providerApiReadinessCopyFailed: '\u590d\u5236 Provider API readiness \u62a5\u544a\u5931\u8d25\u3002',
             projectWorkspaceExportProviderApiReadinessTitle: 'Provider API Integration Readiness / \u89c6\u9891\u751f\u6210 API \u63a5\u5165\u51c6\u5907'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderSandboxRuntimeBundleMarker: 'Project Workspace provider sandbox runtime bundle',
+            providerSandboxRuntimePanelTitle: 'Provider Sandbox Runtime',
+            providerSandboxRuntimePanelHelper: 'Dry-run fake provider execution loop: prompt payload to fake provider submit, simulated polling, normalized provider result, result handoff, and experiment feedback bridge. No secret read, no real provider call, no media upload/download, no cost.',
+            copyProviderSandboxRuntime: 'Copy sandbox runtime report',
+            providerSandboxRuntimeCopyTitle: 'Project provider sandbox runtime report',
+            providerSandboxRuntimeStatus: 'Provider sandbox runtime status',
+            providerSandboxRuntimeNotRefreshedYet: 'Provider sandbox runtime report has not been refreshed yet.',
+            providerSandboxRuntimeCopied: 'Provider sandbox runtime report copied.',
+            providerSandboxRuntimeCopyFailed: 'Could not copy provider sandbox runtime report.',
+            providerSandboxStages: 'Provider sandbox stages',
+            fakeProviderRuntimeMatrix: 'Fake provider runtime matrix',
+            fakeProviderCount: 'Fake provider count',
+            clientMode: 'Client mode',
+            fakeSubmitContract: 'Fake submit contract',
+            simulatedPollingContract: 'Simulated polling contract',
+            normalizedProviderResultContract: 'Normalized provider result contract',
+            providerResultHandoffContract: 'Provider result handoff contract',
+            supportsFakeRunwayClient: 'Supports FakeRunwayClient',
+            supportsFakePikaClient: 'Supports FakePikaClient',
+            supportsFakeProviderSubmit: 'Supports fake provider submit',
+            supportsSimulatedProviderPolling: 'Supports simulated provider polling',
+            supportsNormalizedProviderResult: 'Supports normalized provider result',
+            supportsProviderResultHandoff: 'Supports provider result handoff',
+            supportsExperimentFeedbackBridge: 'Supports experiment feedback bridge',
+            realProviderClientConstructed: 'Real provider client constructed',
+            externalApiCalled: 'External API called',
+            fakeProviderJobSubmittable: 'Fake provider job submittable',
+            fakeProviderPollingSubmittable: 'Fake provider polling submittable',
+            submitStatus: 'Submit status',
+            failureStatus: 'Failure status',
+            pollSequence: 'Poll sequence',
+            fakeResultUrlPattern: 'Fake result URL pattern',
+            fakePreviewUrlPattern: 'Fake preview URL pattern',
+            complete: 'Complete',
+            requiredInputs: 'Required inputs',
+            expectedOutputs: 'Expected outputs',
+            safetyBoundaries: 'Safety boundaries',
+            providerSandboxRuntimeAuditPreview: 'Provider sandbox runtime audit preview',
+            projectWorkspaceExportProviderSandboxRuntimeTitle: 'Provider Sandbox Runtime'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderSandboxRuntimeBundleMarker: 'Project Workspace provider sandbox runtime bundle',
+            providerSandboxRuntimePanelTitle: 'Provider Sandbox Runtime / Fake Provider \u6267\u884c\u95ed\u73af',
+            providerSandboxRuntimePanelHelper: 'Dry-run fake provider \u6267\u884c\u95ed\u73af\uff1aprompt payload \u2192 fake provider submit \u2192 simulated polling \u2192 normalized provider result \u2192 result handoff \u2192 experiment feedback bridge\u3002\u4e0d\u8bfb secret\u3001\u4e0d\u8c03\u771f\u5b9e provider\u3001\u4e0d\u4e0a\u4f20/\u4e0b\u8f7d\u5a92\u4f53\u3001\u4e0d\u6263\u8d39\u3002',
+            copyProviderSandboxRuntime: '\u590d\u5236 sandbox runtime \u62a5\u544a',
+            providerSandboxRuntimeCopyTitle: '\u9879\u76ee Provider Sandbox Runtime \u62a5\u544a',
+            providerSandboxRuntimeStatus: 'Provider sandbox runtime \u72b6\u6001',
+            providerSandboxRuntimeNotRefreshedYet: 'Provider sandbox runtime \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerSandboxRuntimeCopied: 'Provider sandbox runtime \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerSandboxRuntimeCopyFailed: '\u590d\u5236 Provider sandbox runtime \u62a5\u544a\u5931\u8d25\u3002',
+            providerSandboxStages: 'Provider sandbox \u9636\u6bb5',
+            fakeProviderRuntimeMatrix: 'Fake provider runtime matrix',
+            fakeProviderCount: 'Fake provider \u6570\u91cf',
+            clientMode: 'Client mode',
+            fakeSubmitContract: 'Fake submit contract',
+            simulatedPollingContract: 'Simulated polling contract',
+            normalizedProviderResultContract: 'Normalized provider result contract',
+            providerResultHandoffContract: 'Provider result handoff contract',
+            supportsFakeRunwayClient: '\u652f\u6301 FakeRunwayClient',
+            supportsFakePikaClient: '\u652f\u6301 FakePikaClient',
+            supportsFakeProviderSubmit: '\u652f\u6301 fake provider submit',
+            supportsSimulatedProviderPolling: '\u652f\u6301 simulated provider polling',
+            supportsNormalizedProviderResult: '\u652f\u6301 normalized provider result',
+            supportsProviderResultHandoff: '\u652f\u6301 provider result handoff',
+            supportsExperimentFeedbackBridge: '\u652f\u6301 experiment feedback bridge',
+            realProviderClientConstructed: '\u5df2\u6784\u9020\u771f\u5b9e provider client',
+            externalApiCalled: '\u5df2\u8c03\u7528\u5916\u90e8 API',
+            fakeProviderJobSubmittable: '\u53ef\u63d0\u4ea4 fake provider job',
+            fakeProviderPollingSubmittable: '\u53ef\u6267\u884c fake provider polling',
+            submitStatus: '\u63d0\u4ea4\u72b6\u6001',
+            failureStatus: '\u5931\u8d25\u72b6\u6001',
+            pollSequence: 'Poll sequence',
+            fakeResultUrlPattern: 'Fake result URL pattern',
+            fakePreviewUrlPattern: 'Fake preview URL pattern',
+            complete: '\u5b8c\u6210',
+            requiredInputs: '\u5fc5\u8981\u8f93\u5165',
+            expectedOutputs: '\u9884\u671f\u8f93\u51fa',
+            safetyBoundaries: '\u5b89\u5168\u8fb9\u754c',
+            providerSandboxRuntimeAuditPreview: 'Provider sandbox runtime \u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderSandboxRuntimeTitle: 'Provider Sandbox Runtime / Fake Provider \u6267\u884c\u95ed\u73af'
         });
 
 
