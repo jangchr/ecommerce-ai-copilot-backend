@@ -1070,6 +1070,78 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_worker_checkpoint_resume_external_api_called"]
         )
+        self.assertIn("provider_worker_finalization_report", payload)
+        finalization = payload["provider_worker_finalization_report"]
+        self.assertEqual(
+            finalization["provider_worker_finalization_report_version"],
+            "provider_worker_finalization_report_v1",
+        )
+        self.assertEqual(
+            finalization["report_status"],
+            "provider_worker_finalization_ready_dry_run",
+        )
+        self.assertTrue(finalization["provider_worker_checkpoint_resume_ready"])
+        self.assertTrue(finalization["operator_review_required"])
+        self.assertTrue(finalization["result_validation_gate"])
+        self.assertTrue(finalization["artifact_manifest"])
+        self.assertTrue(finalization["artifact_handoff"])
+        self.assertTrue(finalization["output_contract_validation"])
+        self.assertTrue(finalization["downstream_handoff_policy"])
+        self.assertTrue(finalization["run_finalization_policy"])
+        self.assertTrue(finalization["finalization_audit_receipt"])
+        self.assertGreater(finalization["validation_finding_count"], 0)
+        self.assertGreater(finalization["artifact_item_count"], 0)
+        self.assertGreater(finalization["handoff_target_count"], 0)
+        self.assertGreater(finalization["contract_gap_count"], 0)
+        self.assertGreater(finalization["downstream_target_count"], 0)
+        self.assertGreater(finalization["finalization_item_count"], 0)
+        self.assertTrue(finalization["supports_result_validation_gate"])
+        self.assertTrue(finalization["supports_artifact_manifest"])
+        self.assertTrue(finalization["supports_artifact_handoff"])
+        self.assertTrue(finalization["supports_output_contract_validation"])
+        self.assertTrue(finalization["supports_downstream_handoff_policy"])
+        self.assertTrue(finalization["supports_run_finalization_policy"])
+        self.assertTrue(finalization["supports_finalization_audit_receipt"])
+        self.assertTrue(finalization["workspace_export_ready"])
+        self.assertFalse(finalization["result_validated"])
+        self.assertFalse(finalization["result_accepted"])
+        self.assertFalse(finalization["worker_result_present"])
+        self.assertFalse(finalization["artifact_manifest_recorded"])
+        self.assertFalse(finalization["artifact_manifest_persisted"])
+        self.assertFalse(finalization["artifact_storage_enabled"])
+        self.assertFalse(finalization["artifact_handoff_ready"])
+        self.assertFalse(finalization["artifact_handoff_recorded"])
+        self.assertFalse(finalization["artifact_handoff_persisted"])
+        self.assertFalse(finalization["output_contract_valid"])
+        self.assertFalse(finalization["handoff_allowed"])
+        self.assertFalse(finalization["downstream_handoff_allowed"])
+        self.assertFalse(finalization["downstream_handoff_recorded"])
+        self.assertFalse(finalization["run_finalized"])
+        self.assertFalse(finalization["finalization_recorded"])
+        self.assertFalse(finalization["audit_receipt_recorded"])
+        self.assertFalse(finalization["external_api_call_allowed"])
+        self.assertFalse(finalization["external_api_called"])
+        self.assertFalse(finalization["provider_secret_read"])
+        self.assertFalse(finalization["provider_secret_exported"])
+        self.assertFalse(finalization["quota_reserved"])
+        self.assertFalse(finalization["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_worker_finalization_status"],
+            "provider_worker_finalization_ready_dry_run",
+        )
+        self.assertGreater(
+            payload["project"]["graph_summary"]["latest_provider_worker_finalization_blocking_failure_count"],
+            0,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_worker_finalization_result_validated"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_worker_finalization_artifact_handoff_ready"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_worker_finalization_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

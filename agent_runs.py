@@ -4569,6 +4569,307 @@ def build_provider_worker_checkpoint_resume_report(
     }
 
 
+
+PROVIDER_WORKER_FINALIZATION_REPORT_VERSION = "provider_worker_finalization_report_v1"
+
+PROVIDER_WORKER_FINALIZATION_STAGES = [
+    {
+        "stage_id": "validate_worker_result",
+        "stage_label": "Validate worker result",
+        "required_inputs": ["worker_checkpoint_resume_report", "checkpoint_bundle", "resume_cursor_policy"],
+        "expected_outputs": ["result_validation_gate", "validation_findings", "result_accepted"],
+    },
+    {
+        "stage_id": "build_artifact_manifest",
+        "stage_label": "Build artifact manifest",
+        "required_inputs": ["result_validation_gate", "worker_result", "export_safe_snapshot"],
+        "expected_outputs": ["artifact_manifest", "artifact_items", "artifact_storage_policy"],
+    },
+    {
+        "stage_id": "prepare_artifact_handoff",
+        "stage_label": "Prepare artifact handoff",
+        "required_inputs": ["artifact_manifest", "handoff_target", "audit_receipt"],
+        "expected_outputs": ["artifact_handoff", "workspace_preview", "export_snapshot"],
+    },
+    {
+        "stage_id": "validate_output_contract",
+        "stage_label": "Validate output contract",
+        "required_inputs": ["artifact_handoff", "agent_contract_registry", "output_contract"],
+        "expected_outputs": ["output_contract_validation", "contract_gaps", "handoff_allowed"],
+    },
+    {
+        "stage_id": "prepare_downstream_handoff",
+        "stage_label": "Prepare downstream handoff",
+        "required_inputs": ["output_contract_validation", "downstream_agent_targets", "operator_review_state"],
+        "expected_outputs": ["downstream_handoff_policy", "handoff_targets", "handoff_blockers"],
+    },
+    {
+        "stage_id": "finalize_run_audit_receipt",
+        "stage_label": "Finalize run audit receipt",
+        "required_inputs": ["artifact_manifest", "artifact_handoff", "output_contract_validation", "downstream_handoff_policy"],
+        "expected_outputs": ["run_finalization_policy", "finalization_audit_receipt", "workspace_export_ready"],
+    },
+]
+
+
+def build_provider_worker_finalization_report(
+    *,
+    provider_worker_checkpoint_resume_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_worker_finalization_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run worker finalization / result validation / artifact handoff report.
+
+    This report models final result validation, export-safe artifact manifests,
+    artifact handoff, output contract validation, downstream handoff planning,
+    run finalization, and audit receipts. It does not persist artifacts, start
+    workers, call providers, upload/download media, unlock downstream Agents, or
+    enable real execution.
+    """
+
+    checkpoint_resume = provider_worker_checkpoint_resume_report if isinstance(provider_worker_checkpoint_resume_report, dict) else {}
+    checkpoint_resume_ready = str(checkpoint_resume.get("report_status") or "") == "provider_worker_checkpoint_resume_ready_dry_run"
+    operator_review_required = bool(checkpoint_resume.get("operator_review_required", True))
+
+    result_validation_gate = {
+        "result_validation_gate_version": "provider_worker_result_validation_gate_v1",
+        "result_validation_gate_status": "result_validation_ready_dry_run" if checkpoint_resume_ready else "result_validation_waiting_for_checkpoint_resume",
+        "result_validation_required": True,
+        "result_validated": False,
+        "result_accepted": False,
+        "worker_result_present": False,
+        "validation_findings": [
+            {"finding_id": "checkpoint_resume_ready", "passed": checkpoint_resume_ready},
+            {"finding_id": "external_api_not_called", "passed": not bool(checkpoint_resume.get("external_api_called"))},
+            {"finding_id": "provider_replay_blocked", "passed": bool(checkpoint_resume.get("provider_replay_blocked", True))},
+            {"finding_id": "real_execution_disabled", "passed": not bool(checkpoint_resume.get("real_execution_enabled"))},
+            {"finding_id": "operator_review_pending", "passed": False},
+        ],
+        "validation_finding_count": 5,
+        "external_api_called": False,
+    }
+
+    artifact_manifest = {
+        "artifact_manifest_version": "provider_worker_artifact_manifest_v1",
+        "artifact_manifest_status": "artifact_manifest_ready_dry_run" if checkpoint_resume_ready else "artifact_manifest_waiting_for_result_validation",
+        "artifact_items": [
+            {"artifact_item_id": "worker_result_summary", "included": True, "persisted": False},
+            {"artifact_item_id": "result_validation_gate", "included": True, "persisted": False},
+            {"artifact_item_id": "checkpoint_resume_snapshot", "included": bool(checkpoint_resume), "persisted": False},
+            {"artifact_item_id": "export_safe_workspace_preview", "included": True, "persisted": False},
+            {"artifact_item_id": "audit_receipt", "included": True, "persisted": False},
+        ],
+        "artifact_item_count": 5,
+        "artifact_manifest_recorded": False,
+        "artifact_manifest_persisted": False,
+        "artifact_storage_enabled": False,
+        "export_safe_snapshot_ready": True,
+        "external_api_called": False,
+    }
+
+    artifact_handoff = {
+        "artifact_handoff_version": "provider_worker_artifact_handoff_v1",
+        "artifact_handoff_status": "artifact_handoff_ready_dry_run" if checkpoint_resume_ready else "artifact_handoff_waiting_for_manifest",
+        "handoff_ready": False,
+        "handoff_recorded": False,
+        "handoff_targets": [
+            {"handoff_target_id": "workspace_review", "ready": True},
+            {"handoff_target_id": "export_pack", "ready": True},
+            {"handoff_target_id": "finalizer_agent", "ready": False},
+            {"handoff_target_id": "downstream_agent", "ready": False},
+        ],
+        "handoff_target_count": 4,
+        "artifact_handoff_persisted": False,
+        "external_api_called": False,
+    }
+
+    output_contract_validation = {
+        "output_contract_validation_version": "provider_worker_output_contract_validation_v1",
+        "output_contract_validation_status": "output_contract_validation_ready_dry_run",
+        "output_contract_valid": False,
+        "handoff_allowed": False,
+        "expected_output_contract": [
+            "worker_result_summary",
+            "result_validation_gate",
+            "artifact_manifest",
+            "artifact_handoff",
+            "finalization_audit_receipt",
+        ],
+        "present_output_contract": [
+            "result_validation_gate",
+            "artifact_manifest",
+            "artifact_handoff",
+        ],
+        "contract_gaps": [
+            "worker_result_summary_not_persisted",
+            "finalization_audit_receipt_not_recorded",
+            "operator_review_pending",
+        ],
+        "contract_gap_count": 3,
+        "external_api_called": False,
+    }
+
+    downstream_handoff_policy = {
+        "downstream_handoff_policy_version": "provider_worker_downstream_handoff_policy_v1",
+        "downstream_handoff_status": "downstream_handoff_blocked_by_dry_run",
+        "downstream_handoff_allowed": False,
+        "downstream_handoff_recorded": False,
+        "downstream_targets": [
+            {"target_agent_id": "finalizer_agent", "ready": False},
+            {"target_agent_id": "experiment_agent", "ready": False},
+            {"target_agent_id": "workspace_review", "ready": True},
+            {"target_agent_id": "operator_review", "ready": True},
+        ],
+        "downstream_target_count": 4,
+        "handoff_blockers": [
+            "result_not_validated",
+            "output_contract_not_valid",
+            "operator_review_required",
+            "real_execution_disabled",
+        ],
+        "handoff_blocker_count": 4,
+        "external_api_called": False,
+    }
+
+    run_finalization_policy = {
+        "run_finalization_policy_version": "provider_worker_run_finalization_policy_v1",
+        "run_finalization_status": "run_finalization_ready_dry_run",
+        "run_finalized": False,
+        "finalization_recorded": False,
+        "finalization_items": [
+            {"finalization_item_id": "no_external_api_called", "complete": True},
+            {"finalization_item_id": "no_cost_confirmed", "complete": True},
+            {"finalization_item_id": "artifact_manifest_previewed", "complete": True},
+            {"finalization_item_id": "operator_review_pending", "complete": False},
+            {"finalization_item_id": "downstream_handoff_locked", "complete": True},
+        ],
+        "finalization_item_count": 5,
+        "workspace_export_ready": True,
+        "external_api_called": False,
+    }
+
+    finalization_audit_receipt = {
+        "finalization_audit_receipt_version": "provider_worker_finalization_audit_receipt_v1",
+        "receipt_status": "worker_finalization_dry_run_recorded",
+        "result_validation_gate_included": True,
+        "artifact_manifest_included": True,
+        "artifact_handoff_included": True,
+        "output_contract_validation_included": True,
+        "downstream_handoff_policy_included": True,
+        "run_finalization_policy_included": True,
+        "audit_receipt_recorded": False,
+        "artifact_audit_recorded": False,
+        "handoff_audit_recorded": False,
+        "finalization_audit_recorded": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not checkpoint_resume_ready:
+        blocking_failures.append("provider_worker_checkpoint_resume_report_not_ready")
+    blocking_failures.extend([
+        "worker_result_not_persisted",
+        "result_validation_not_passed",
+        "artifact_storage_disabled",
+        "output_contract_not_valid",
+        "downstream_handoff_blocked",
+        "real_execution_disabled",
+    ])
+    if operator_review_required:
+        blocking_failures.append("operator_review_required")
+
+    report_status = (
+        "provider_worker_finalization_ready_dry_run"
+        if checkpoint_resume_ready
+        else "provider_worker_finalization_incomplete"
+    )
+
+    return {
+        "provider_worker_finalization_report_version": PROVIDER_WORKER_FINALIZATION_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_worker_finalization_report_builder"),
+        "provider_worker_checkpoint_resume_ready": checkpoint_resume_ready,
+        "operator_review_required": operator_review_required,
+        "stage_count": len(PROVIDER_WORKER_FINALIZATION_STAGES),
+        "worker_finalization_stage_matrix": [dict(item, complete=checkpoint_resume_ready) for item in PROVIDER_WORKER_FINALIZATION_STAGES],
+        "result_validation_gate": result_validation_gate,
+        "artifact_manifest": artifact_manifest,
+        "artifact_handoff": artifact_handoff,
+        "output_contract_validation": output_contract_validation,
+        "downstream_handoff_policy": downstream_handoff_policy,
+        "run_finalization_policy": run_finalization_policy,
+        "finalization_audit_receipt": finalization_audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "validation_finding_count": result_validation_gate["validation_finding_count"],
+        "artifact_item_count": artifact_manifest["artifact_item_count"],
+        "handoff_target_count": artifact_handoff["handoff_target_count"],
+        "contract_gap_count": output_contract_validation["contract_gap_count"],
+        "downstream_target_count": downstream_handoff_policy["downstream_target_count"],
+        "handoff_blocker_count": downstream_handoff_policy["handoff_blocker_count"],
+        "finalization_item_count": run_finalization_policy["finalization_item_count"],
+        "supports_result_validation_gate": True,
+        "supports_artifact_manifest": True,
+        "supports_artifact_handoff": True,
+        "supports_output_contract_validation": True,
+        "supports_downstream_handoff_policy": True,
+        "supports_run_finalization_policy": True,
+        "supports_finalization_audit_receipt": True,
+        "recommended_next_state": "show_provider_worker_finalization_in_workspace",
+        "dry_run": True,
+        "result_validation_required": True,
+        "result_validated": False,
+        "result_accepted": False,
+        "worker_result_present": False,
+        "artifact_manifest_recorded": False,
+        "artifact_manifest_persisted": False,
+        "artifact_storage_enabled": False,
+        "artifact_handoff_ready": False,
+        "artifact_handoff_recorded": False,
+        "artifact_handoff_persisted": False,
+        "output_contract_valid": False,
+        "handoff_allowed": False,
+        "downstream_handoff_allowed": False,
+        "downstream_handoff_recorded": False,
+        "run_finalized": False,
+        "finalization_recorded": False,
+        "audit_receipt_recorded": False,
+        "artifact_audit_recorded": False,
+        "handoff_audit_recorded": False,
+        "finalization_audit_recorded": False,
+        "workspace_export_ready": True,
+        "checkpoint_recorded": False,
+        "resume_allowed": False,
+        "replay_allowed": False,
+        "queue_persisted": False,
+        "lease_acquired": False,
+        "heartbeat_recorded": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "worker_invocation_performed": False,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "real_retry_performed": False,
+        "provider_job_submitted": False,
+        "provider_polling_performed": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "quota_reserved": False,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+        "incident_opened": False,
+        "rollback_ready": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

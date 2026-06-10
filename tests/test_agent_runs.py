@@ -4154,6 +4154,158 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_worker_finalization_report_models_result_validation_artifacts_and_handoff_safety(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_failure_recovery_report,
+            build_provider_observability_report,
+            build_provider_queue_lease_worker_report,
+            build_provider_sandbox_runtime_report,
+            build_provider_worker_checkpoint_resume_report,
+            build_provider_worker_finalization_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        real_gate = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        failure_report = build_provider_failure_recovery_report(
+            real_provider_execution_gate_report=real_gate,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        observability_report = build_provider_observability_report(
+            provider_failure_recovery_report=failure_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        queue_worker_report = build_provider_queue_lease_worker_report(
+            provider_observability_report=observability_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        checkpoint_report = build_provider_worker_checkpoint_resume_report(
+            provider_queue_lease_worker_report=queue_worker_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+        report = build_provider_worker_finalization_report(
+            provider_worker_checkpoint_resume_report=checkpoint_report,
+            project_id="project_provider_worker_finalization",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_worker_finalization_report_version"], "provider_worker_finalization_report_v1")
+        self.assertEqual(report["report_status"], "provider_worker_finalization_ready_dry_run")
+        self.assertTrue(report["provider_worker_checkpoint_resume_ready"])
+        self.assertTrue(report["operator_review_required"])
+        self.assertGreater(report["stage_count"], 0)
+        self.assertTrue(report["result_validation_gate"])
+        self.assertTrue(report["artifact_manifest"])
+        self.assertTrue(report["artifact_handoff"])
+        self.assertTrue(report["output_contract_validation"])
+        self.assertTrue(report["downstream_handoff_policy"])
+        self.assertTrue(report["run_finalization_policy"])
+        self.assertTrue(report["finalization_audit_receipt"])
+        self.assertGreater(report["validation_finding_count"], 0)
+        self.assertGreater(report["artifact_item_count"], 0)
+        self.assertGreater(report["handoff_target_count"], 0)
+        self.assertGreater(report["contract_gap_count"], 0)
+        self.assertGreater(report["downstream_target_count"], 0)
+        self.assertGreater(report["handoff_blocker_count"], 0)
+        self.assertGreater(report["finalization_item_count"], 0)
+        self.assertTrue(report["supports_result_validation_gate"])
+        self.assertTrue(report["supports_artifact_manifest"])
+        self.assertTrue(report["supports_artifact_handoff"])
+        self.assertTrue(report["supports_output_contract_validation"])
+        self.assertTrue(report["supports_downstream_handoff_policy"])
+        self.assertTrue(report["supports_run_finalization_policy"])
+        self.assertTrue(report["supports_finalization_audit_receipt"])
+        self.assertTrue(report["dry_run"])
+        self.assertTrue(report["result_validation_required"])
+        self.assertTrue(report["workspace_export_ready"])
+        self.assertFalse(report["result_validated"])
+        self.assertFalse(report["result_accepted"])
+        self.assertFalse(report["worker_result_present"])
+        self.assertFalse(report["artifact_manifest_recorded"])
+        self.assertFalse(report["artifact_manifest_persisted"])
+        self.assertFalse(report["artifact_storage_enabled"])
+        self.assertFalse(report["artifact_handoff_ready"])
+        self.assertFalse(report["artifact_handoff_recorded"])
+        self.assertFalse(report["artifact_handoff_persisted"])
+        self.assertFalse(report["output_contract_valid"])
+        self.assertFalse(report["handoff_allowed"])
+        self.assertFalse(report["downstream_handoff_allowed"])
+        self.assertFalse(report["downstream_handoff_recorded"])
+        self.assertFalse(report["run_finalized"])
+        self.assertFalse(report["finalization_recorded"])
+        self.assertFalse(report["audit_receipt_recorded"])
+        self.assertFalse(report["artifact_audit_recorded"])
+        self.assertFalse(report["handoff_audit_recorded"])
+        self.assertFalse(report["finalization_audit_recorded"])
+        self.assertFalse(report["checkpoint_recorded"])
+        self.assertFalse(report["resume_allowed"])
+        self.assertFalse(report["replay_allowed"])
+        self.assertFalse(report["queue_persisted"])
+        self.assertFalse(report["lease_acquired"])
+        self.assertFalse(report["worker_started"])
+        self.assertFalse(report["worker_loop_started"])
+        self.assertFalse(report["worker_invocation_performed"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["quota_reserved"])
+        self.assertFalse(report["paid_generation_allowed"])
+
+
     def test_provider_worker_checkpoint_resume_report_models_checkpoint_resume_recovery_and_replay_safety(self):
         from agent_runs import (
             build_agent_contract_completeness_report,
