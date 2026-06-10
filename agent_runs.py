@@ -3330,6 +3330,345 @@ def build_real_provider_execution_gate_report(
     }
 
 
+
+PROVIDER_FAILURE_RECOVERY_REPORT_VERSION = "provider_failure_recovery_report_v1"
+
+PROVIDER_FAILURE_TAXONOMY = [
+    {
+        "failure_type": "provider_timeout",
+        "retryable": True,
+        "requires_operator_review": False,
+        "severity": "medium",
+        "default_action": "retry_with_backoff_after_idempotency_check",
+    },
+    {
+        "failure_type": "provider_rate_limited",
+        "retryable": True,
+        "requires_operator_review": False,
+        "severity": "medium",
+        "default_action": "pause_until_rate_window_resets",
+    },
+    {
+        "failure_type": "provider_unavailable",
+        "retryable": True,
+        "requires_operator_review": False,
+        "severity": "medium",
+        "default_action": "fallback_to_manual_export_or_retry_later",
+    },
+    {
+        "failure_type": "provider_result_missing",
+        "retryable": True,
+        "requires_operator_review": True,
+        "severity": "high",
+        "default_action": "operator_review_before_retry_or_manual_result_intake",
+    },
+    {
+        "failure_type": "quota_exceeded",
+        "retryable": False,
+        "requires_operator_review": True,
+        "severity": "high",
+        "default_action": "block_retry_until_quota_budget_update",
+    },
+    {
+        "failure_type": "secret_boundary_violation",
+        "retryable": False,
+        "requires_operator_review": True,
+        "severity": "critical",
+        "default_action": "open_incident_and_keep_real_execution_locked",
+    },
+    {
+        "failure_type": "schema_mismatch",
+        "retryable": False,
+        "requires_operator_review": True,
+        "severity": "high",
+        "default_action": "repair_provider_contract_before_retry",
+    },
+    {
+        "failure_type": "policy_blocked",
+        "retryable": False,
+        "requires_operator_review": True,
+        "severity": "high",
+        "default_action": "operator_review_and_policy_resolution",
+    },
+]
+
+PROVIDER_FAILURE_RECOVERY_STAGES = [
+    {
+        "stage_id": "classify_provider_failure",
+        "stage_label": "Classify provider failure",
+        "required_inputs": ["provider_status", "error_category", "provider_result"],
+        "expected_outputs": ["failure_type", "retryable", "severity", "operator_review_required"],
+    },
+    {
+        "stage_id": "apply_retry_policy",
+        "stage_label": "Apply retry policy",
+        "required_inputs": ["failure_type", "idempotency_key", "quota_state"],
+        "expected_outputs": ["retry_allowed", "backoff_window", "retry_blockers"],
+    },
+    {
+        "stage_id": "evaluate_circuit_breaker",
+        "stage_label": "Evaluate circuit breaker",
+        "required_inputs": ["failure_type", "recent_failure_count", "secret_boundary_state"],
+        "expected_outputs": ["circuit_state", "block_followup_execution"],
+    },
+    {
+        "stage_id": "open_incident_or_operator_review",
+        "stage_label": "Open incident or operator review",
+        "required_inputs": ["circuit_state", "severity", "operator_review_required"],
+        "expected_outputs": ["incident_policy", "operator_review_packet", "alert_policy"],
+    },
+    {
+        "stage_id": "handoff_recovery_plan",
+        "stage_label": "Handoff recovery plan",
+        "required_inputs": ["retry_policy", "fallback_plan", "rollback_policy"],
+        "expected_outputs": ["pause_plan", "rollback_reference", "recovery_receipt"],
+    },
+]
+
+
+def build_provider_failure_recovery_report(
+    *,
+    real_provider_execution_gate_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_failure_recovery_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run provider failure recovery report.
+
+    This report models failure taxonomy, retry rules, circuit breaker,
+    incident/alert policy, operator review, rollback, and safe recovery
+    handoff. It does not retry real providers, call external APIs, reserve
+    quota, mutate circuit state, upload/download media, or unlock real execution.
+    """
+
+    real_gate = real_provider_execution_gate_report if isinstance(real_provider_execution_gate_report, dict) else {}
+    real_gate_ready = str(real_gate.get("report_status") or "") == "real_provider_execution_gate_locked_ready_dry_run"
+
+    retry_policy = {
+        "retry_policy_version": "provider_retry_policy_v1",
+        "retry_policy_status": "retry_policy_dry_run_blocked_until_gate_and_quota",
+        "max_retry_attempts": 2,
+        "backoff_strategy": "exponential_backoff_preview_only",
+        "requires_idempotency_key": True,
+        "requires_quota_check_before_retry": True,
+        "requires_operator_review_for_non_retryable": True,
+        "retry_executes_external_api": False,
+        "retry_steps": [
+            {"retry_step_id": "classify_failure", "ready": True, "executed": False},
+            {"retry_step_id": "check_idempotency_key", "ready": bool(real_gate.get("idempotency_key_ready")), "executed": False},
+            {"retry_step_id": "check_quota_before_retry", "ready": False, "executed": False},
+            {"retry_step_id": "apply_backoff_window", "ready": False, "executed": False},
+            {"retry_step_id": "request_operator_review_for_non_retryable", "ready": True, "executed": False},
+            {"retry_step_id": "record_retry_audit", "ready": True, "executed": False},
+        ],
+    }
+
+    fallback_plan = {
+        "fallback_plan_version": "provider_failure_fallback_plan_v1",
+        "fallback_plan_status": "fallback_plan_available_dry_run",
+        "fallback_options": [
+            {"fallback_id": "manual_export", "available": True, "selected": False},
+            {"fallback_id": "manual_generation_result_intake", "available": True, "selected": False},
+            {"fallback_id": "pause_dependent_agent", "available": True, "selected": False},
+            {"fallback_id": "switch_to_fake_provider_runtime", "available": True, "selected": False},
+        ],
+        "pause_dependent_work": True,
+        "manual_result_intake_available": True,
+        "external_api_called": False,
+    }
+
+    circuit_breaker = {
+        "circuit_breaker_version": "provider_circuit_breaker_policy_v1",
+        "circuit_breaker_status": "circuit_breaker_preview_only",
+        "circuit_state": "closed_preview",
+        "circuit_state_recorded": False,
+        "block_followup_execution": True,
+        "operator_can_open_circuit": True,
+        "automatic_open_rules": [
+            {"circuit_rule_id": "open_after_repeated_timeouts", "failure_type": "provider_timeout", "threshold": 3, "active": False},
+            {"circuit_rule_id": "open_after_rate_limit_burst", "failure_type": "provider_rate_limited", "threshold": 3, "active": False},
+            {"circuit_rule_id": "open_after_quota_exceeded", "failure_type": "quota_exceeded", "threshold": 1, "active": True},
+            {"circuit_rule_id": "open_after_secret_boundary_violation", "failure_type": "secret_boundary_violation", "threshold": 1, "active": True},
+            {"circuit_rule_id": "open_after_schema_mismatch", "failure_type": "schema_mismatch", "threshold": 2, "active": False},
+        ],
+        "circuit_rule_count": 5,
+        "external_api_called": False,
+    }
+
+    incident_policy = {
+        "incident_policy_version": "provider_failure_incident_policy_v1",
+        "incident_policy_status": "incident_policy_ready_dry_run",
+        "incident_triggers": [
+            {"trigger_id": "secret_boundary_violation", "severity": "critical", "opens_incident": True},
+            {"trigger_id": "quota_exceeded", "severity": "high", "opens_incident": True},
+            {"trigger_id": "provider_result_missing", "severity": "high", "opens_incident": True},
+            {"trigger_id": "external_api_called_without_gate", "severity": "critical", "opens_incident": True},
+        ],
+        "incident_detected": False,
+        "incident_opened": False,
+        "abort_recommended": False,
+        "external_api_called": False,
+    }
+
+    alert_policy = {
+        "alert_policy_version": "provider_failure_alert_policy_v1",
+        "alert_policy_status": "alert_policy_ready_dry_run",
+        "alert_rules": [
+            {"alert_rule_id": "provider_failure_rate_high", "enabled": True, "triggered": False},
+            {"alert_rule_id": "provider_latency_high", "enabled": True, "triggered": False},
+            {"alert_rule_id": "provider_cost_limit_reached", "enabled": True, "triggered": False},
+            {"alert_rule_id": "provider_circuit_open", "enabled": True, "triggered": False},
+            {"alert_rule_id": "secret_boundary_violation", "enabled": True, "triggered": False},
+            {"alert_rule_id": "operator_review_required", "enabled": True, "triggered": True},
+        ],
+        "alert_rule_count": 6,
+        "triggered_alert_count": 1,
+        "alerts_triggered": True,
+        "operator_review_required": True,
+    }
+
+    operator_review_packet = {
+        "operator_review_packet_version": "provider_failure_operator_review_packet_v1",
+        "operator_review_packet_status": "operator_review_required",
+        "review_reasons": [
+            "non_retryable_failures_require_operator_review",
+            "quota_or_secret_failures_block_retry",
+            "provider_result_missing_requires_manual_review",
+            "circuit_breaker_changes_require_operator_review",
+        ],
+        "required_review_fields": [
+            "failure_type",
+            "retry_decision",
+            "quota_acknowledgement",
+            "rollback_plan_id",
+            "operator_note",
+        ],
+        "operator_review_required": True,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+    }
+
+    rollback_pause_policy = {
+        "rollback_pause_policy_version": "provider_failure_rollback_pause_policy_v1",
+        "rollback_pause_policy_status": "rollback_pause_policy_ready_dry_run",
+        "rollback_required": True,
+        "rollback_ready": False,
+        "rollback_executed": False,
+        "pause_followup_execution": True,
+        "pause_runner_queue": True,
+        "block_followup_real_execution": True,
+        "recovery_steps": [
+            {"recovery_step_id": "freeze_followup_provider_jobs", "ready": True, "executed": False},
+            {"recovery_step_id": "record_failure_receipt", "ready": True, "executed": False},
+            {"recovery_step_id": "request_operator_review", "ready": True, "executed": False},
+            {"recovery_step_id": "prepare_manual_result_intake", "ready": True, "executed": False},
+            {"recovery_step_id": "confirm_rollback_plan_before_real_retry", "ready": False, "executed": False},
+        ],
+    }
+
+    dry_run_receipt = {
+        "provider_failure_recovery_receipt_version": "provider_failure_recovery_receipt_v1",
+        "receipt_status": "provider_failure_recovery_dry_run_recorded",
+        "real_gate_ready": real_gate_ready,
+        "failure_taxonomy_included": True,
+        "retry_policy_included": True,
+        "fallback_plan_included": True,
+        "circuit_breaker_included": True,
+        "incident_policy_included": True,
+        "alert_policy_included": True,
+        "operator_review_packet_included": True,
+        "rollback_pause_policy_included": True,
+        "external_api_called": False,
+        "real_retry_performed": False,
+        "circuit_state_mutated": False,
+        "incident_opened": False,
+        "quota_reserved": False,
+        "operator_review_captured": False,
+    }
+
+    blocking_failures = []
+    if not real_gate_ready:
+        blocking_failures.append("real_provider_execution_gate_report_not_ready")
+    blocking_failures.extend([
+        "operator_review_not_captured",
+        "quota_not_reserved",
+        "rollback_not_ready",
+        "real_retry_disabled",
+    ])
+
+    report_status = (
+        "provider_failure_recovery_ready_dry_run"
+        if real_gate_ready
+        else "provider_failure_recovery_incomplete"
+    )
+
+    return {
+        "provider_failure_recovery_report_version": PROVIDER_FAILURE_RECOVERY_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_failure_recovery_report_builder"),
+        "real_provider_execution_gate_ready": real_gate_ready,
+        "failure_type_count": len(PROVIDER_FAILURE_TAXONOMY),
+        "retryable_failure_count": sum(1 for item in PROVIDER_FAILURE_TAXONOMY if item.get("retryable")),
+        "operator_review_failure_count": sum(1 for item in PROVIDER_FAILURE_TAXONOMY if item.get("requires_operator_review")),
+        "failure_taxonomy": [dict(item) for item in PROVIDER_FAILURE_TAXONOMY],
+        "stage_count": len(PROVIDER_FAILURE_RECOVERY_STAGES),
+        "recovery_stage_matrix": [dict(item, complete=real_gate_ready) for item in PROVIDER_FAILURE_RECOVERY_STAGES],
+        "retry_policy": retry_policy,
+        "fallback_plan": fallback_plan,
+        "circuit_breaker": circuit_breaker,
+        "incident_policy": incident_policy,
+        "alert_policy": alert_policy,
+        "operator_review_packet": operator_review_packet,
+        "rollback_pause_policy": rollback_pause_policy,
+        "dry_run_receipt": dry_run_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "supports_failure_taxonomy": True,
+        "supports_retry_policy": True,
+        "supports_fallback_plan": True,
+        "supports_circuit_breaker": True,
+        "supports_incident_policy": True,
+        "supports_alert_policy": True,
+        "supports_operator_review_packet": True,
+        "supports_rollback_pause_policy": True,
+        "supports_manual_result_intake_fallback": True,
+        "recommended_next_state": "show_provider_failure_recovery_in_workspace",
+        "dry_run": True,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "real_retry_performed": False,
+        "provider_job_submitted": False,
+        "provider_polling_performed": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "quota_reserved": False,
+        "budget_reserved_cents": 0,
+        "operator_review_required": True,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+        "circuit_state_mutated": False,
+        "incident_detected": False,
+        "incident_opened": False,
+        "abort_recommended": False,
+        "rollback_required": True,
+        "rollback_ready": False,
+        "rollback_executed": False,
+        "pause_followup_execution": True,
+        "block_followup_real_execution": True,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "result_url_fetched": False,
+        "preview_url_fetched": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

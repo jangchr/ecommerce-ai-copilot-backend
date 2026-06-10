@@ -4150,6 +4150,124 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_failure_recovery_report_blocks_real_retry_and_models_incident_policy(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_failure_recovery_report,
+            build_provider_sandbox_runtime_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+        real_gate = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+        report = build_provider_failure_recovery_report(
+            real_provider_execution_gate_report=real_gate,
+            project_id="project_provider_failure_recovery",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_failure_recovery_report_version"], "provider_failure_recovery_report_v1")
+        self.assertEqual(report["report_status"], "provider_failure_recovery_ready_dry_run")
+        self.assertTrue(report["real_provider_execution_gate_ready"])
+        self.assertGreaterEqual(report["failure_type_count"], 8)
+        self.assertGreater(report["retryable_failure_count"], 0)
+        self.assertGreater(report["operator_review_failure_count"], 0)
+        failure_types = {item["failure_type"] for item in report["failure_taxonomy"]}
+        self.assertIn("provider_timeout", failure_types)
+        self.assertIn("provider_rate_limited", failure_types)
+        self.assertIn("provider_result_missing", failure_types)
+        self.assertIn("quota_exceeded", failure_types)
+        self.assertIn("secret_boundary_violation", failure_types)
+        self.assertTrue(report["retry_policy"])
+        self.assertTrue(report["fallback_plan"])
+        self.assertTrue(report["circuit_breaker"])
+        self.assertTrue(report["incident_policy"])
+        self.assertTrue(report["alert_policy"])
+        self.assertTrue(report["operator_review_packet"])
+        self.assertTrue(report["rollback_pause_policy"])
+        self.assertTrue(report["dry_run_receipt"])
+        self.assertTrue(report["supports_failure_taxonomy"])
+        self.assertTrue(report["supports_retry_policy"])
+        self.assertTrue(report["supports_circuit_breaker"])
+        self.assertTrue(report["supports_incident_policy"])
+        self.assertTrue(report["supports_operator_review_packet"])
+        self.assertTrue(report["operator_review_required"])
+        self.assertTrue(report["rollback_required"])
+        self.assertTrue(report["pause_followup_execution"])
+        self.assertTrue(report["block_followup_real_execution"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["real_retry_performed"])
+        self.assertFalse(report["provider_job_submitted"])
+        self.assertFalse(report["provider_polling_performed"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["quota_reserved"])
+        self.assertFalse(report["operator_review_captured"])
+        self.assertFalse(report["operator_approval_captured"])
+        self.assertFalse(report["circuit_state_mutated"])
+        self.assertFalse(report["incident_detected"])
+        self.assertFalse(report["incident_opened"])
+        self.assertFalse(report["rollback_ready"])
+        self.assertFalse(report["rollback_executed"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["result_url_fetched"])
+        self.assertFalse(report["preview_url_fetched"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_real_provider_execution_gate_report_blocks_real_provider_calls(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

@@ -773,6 +773,74 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_real_provider_external_api_called"]
         )
+        self.assertIn("provider_failure_recovery_report", payload)
+        failure = payload["provider_failure_recovery_report"]
+        self.assertEqual(
+            failure["provider_failure_recovery_report_version"],
+            "provider_failure_recovery_report_v1",
+        )
+        self.assertEqual(
+            failure["report_status"],
+            "provider_failure_recovery_ready_dry_run",
+        )
+        self.assertTrue(failure["real_provider_execution_gate_ready"])
+        self.assertGreaterEqual(failure["failure_type_count"], 8)
+        self.assertGreater(failure["operator_review_failure_count"], 0)
+        failure_types = {item["failure_type"] for item in failure["failure_taxonomy"]}
+        self.assertIn("provider_timeout", failure_types)
+        self.assertIn("provider_rate_limited", failure_types)
+        self.assertIn("provider_result_missing", failure_types)
+        self.assertIn("quota_exceeded", failure_types)
+        self.assertIn("secret_boundary_violation", failure_types)
+        self.assertTrue(failure["retry_policy"])
+        self.assertTrue(failure["fallback_plan"])
+        self.assertTrue(failure["circuit_breaker"])
+        self.assertTrue(failure["incident_policy"])
+        self.assertTrue(failure["alert_policy"])
+        self.assertTrue(failure["operator_review_packet"])
+        self.assertTrue(failure["rollback_pause_policy"])
+        self.assertTrue(failure["dry_run_receipt"])
+        self.assertTrue(failure["supports_failure_taxonomy"])
+        self.assertTrue(failure["supports_retry_policy"])
+        self.assertTrue(failure["supports_circuit_breaker"])
+        self.assertTrue(failure["supports_incident_policy"])
+        self.assertTrue(failure["supports_operator_review_packet"])
+        self.assertTrue(failure["operator_review_required"])
+        self.assertTrue(failure["rollback_required"])
+        self.assertTrue(failure["pause_followup_execution"])
+        self.assertTrue(failure["block_followup_real_execution"])
+        self.assertFalse(failure["real_execution_allowed"])
+        self.assertFalse(failure["real_execution_enabled"])
+        self.assertFalse(failure["provider_call_allowed"])
+        self.assertFalse(failure["external_api_call_allowed"])
+        self.assertFalse(failure["external_api_called"])
+        self.assertFalse(failure["real_retry_performed"])
+        self.assertFalse(failure["provider_job_submitted"])
+        self.assertFalse(failure["provider_polling_performed"])
+        self.assertFalse(failure["provider_secret_read"])
+        self.assertFalse(failure["provider_secret_exported"])
+        self.assertFalse(failure["quota_reserved"])
+        self.assertFalse(failure["operator_review_captured"])
+        self.assertFalse(failure["operator_approval_captured"])
+        self.assertFalse(failure["circuit_state_mutated"])
+        self.assertFalse(failure["incident_detected"])
+        self.assertFalse(failure["incident_opened"])
+        self.assertFalse(failure["rollback_ready"])
+        self.assertFalse(failure["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_failure_recovery_status"],
+            "provider_failure_recovery_ready_dry_run",
+        )
+        self.assertGreater(
+            payload["project"]["graph_summary"]["latest_provider_failure_recovery_blocking_failure_count"],
+            0,
+        )
+        self.assertTrue(
+            payload["project"]["graph_summary"]["latest_provider_failure_recovery_operator_review_required"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_failure_recovery_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

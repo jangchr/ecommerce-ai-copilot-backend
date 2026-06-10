@@ -72,6 +72,7 @@ from agent_runs import (
     build_provider_api_readiness_report,
     build_provider_sandbox_runtime_report,
     build_real_provider_execution_gate_report,
+    build_provider_failure_recovery_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6262,6 +6263,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    provider_failure_recovery_report = build_provider_failure_recovery_report(
+        real_provider_execution_gate_report=real_provider_execution_gate_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6326,6 +6332,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_real_provider_execution_blocking_failure_count": int(real_provider_execution_gate_report.get("blocking_failure_count") or 0),
         "latest_real_provider_execution_enabled": bool(real_provider_execution_gate_report.get("real_execution_enabled")),
         "latest_real_provider_external_api_called": bool(real_provider_execution_gate_report.get("external_api_called")),
+        "latest_provider_failure_recovery_status": provider_failure_recovery_report.get("report_status", ""),
+        "latest_provider_failure_recovery_blocking_failure_count": int(provider_failure_recovery_report.get("blocking_failure_count") or 0),
+        "latest_provider_failure_recovery_operator_review_required": bool(provider_failure_recovery_report.get("operator_review_required")),
+        "latest_provider_failure_recovery_external_api_called": bool(provider_failure_recovery_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6354,6 +6364,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "provider_api_readiness_report": provider_api_readiness_report,
         "provider_sandbox_runtime_report": provider_sandbox_runtime_report,
         "real_provider_execution_gate_report": real_provider_execution_gate_report,
+        "provider_failure_recovery_report": provider_failure_recovery_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
