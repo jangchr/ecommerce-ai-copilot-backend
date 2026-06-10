@@ -11665,6 +11665,123 @@
 
 
 
+
+        function projectWorkspaceExportRealProviderExecutionGateSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceRealProviderExecutionGateReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack real provider execution gate bundle',
+                report_status: report.report_status || '',
+                real_provider_execution_gate_report_version: report.real_provider_execution_gate_report_version || '',
+                provider_api_ready: Boolean(report.provider_api_ready),
+                provider_sandbox_ready: Boolean(report.provider_sandbox_ready),
+                gate_check_count: Number(report.gate_check_count || 0),
+                passed_gate_check_count: Number(report.passed_gate_check_count || 0),
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                gate_checks: Array.isArray(report.gate_checks) ? report.gate_checks : [],
+                credential_preflight: report.credential_preflight || {},
+                quota_budget_gate: report.quota_budget_gate || {},
+                approval_gate: report.approval_gate || {},
+                invocation_contract: report.invocation_contract || {},
+                dry_run_receipt: report.dry_run_receipt || {},
+                dry_run: Boolean(report.dry_run),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                real_provider_client_allowed: Boolean(report.real_provider_client_allowed),
+                real_provider_client_constructed: Boolean(report.real_provider_client_constructed),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                provider_job_submitted: Boolean(report.provider_job_submitted),
+                provider_polling_performed: Boolean(report.provider_polling_performed),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                secret_access_enabled: Boolean(report.secret_access_enabled),
+                quota_enabled: Boolean(report.quota_enabled),
+                quota_reserved: Boolean(report.quota_reserved),
+                budget_reserved_cents: Number(report.budget_reserved_cents || 0),
+                operator_approval_required: Boolean(report.operator_approval_required),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                rollback_required: Boolean(report.rollback_required),
+                rollback_ready: Boolean(report.rollback_ready),
+                idempotency_required: Boolean(report.idempotency_required),
+                idempotency_key_ready: Boolean(report.idempotency_key_ready),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                result_url_fetched: Boolean(report.result_url_fetched),
+                preview_url_fetched: Boolean(report.preview_url_fetched),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                has_real_provider_execution_gate_report: Boolean(report.report_status || report.real_provider_execution_gate_report_version)
+            };
+        }
+
+        function projectWorkspaceExportRealProviderExecutionGateMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportRealProviderExecutionGateSnapshot(workspace);
+            if (!report.has_real_provider_execution_gate_report) {
+                return `## ${t('projectWorkspaceExportRealProviderExecutionGateTitle')}\n${t('realProviderExecutionGateNotRefreshedYet')}`;
+            }
+            const failureLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const checkLines = report.gate_checks.length
+                ? report.gate_checks.map((check, index) => `${index + 1}. ${check.gate_id || ''} | passed=${Boolean(check.passed)} | blocking=${Boolean(check.blocking)} | ${check.message || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportRealProviderExecutionGateTitle')}`,
+                `${t('realProviderExecutionGateStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerApiReady')}: ${report.provider_api_ready}`,
+                `${t('providerSandboxReady')}: ${report.provider_sandbox_ready}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('realExecutionEnabled')}: ${report.real_execution_enabled}`,
+                `${t('realProviderClientAllowed')}: ${report.real_provider_client_allowed}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${report.external_api_call_allowed}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('providerJobSubmitted')}: ${report.provider_job_submitted}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('secretAccessEnabled')}: ${report.secret_access_enabled}`,
+                `${t('quotaEnabled')}: ${report.quota_enabled}`,
+                `${t('quotaReserved')}: ${report.quota_reserved}`,
+                `${t('operatorApprovalCaptured')}: ${report.operator_approval_captured}`,
+                `${t('rollbackReady')}: ${report.rollback_ready}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...failureLines,
+                '',
+                `### ${t('realProviderGateChecks')}`,
+                ...checkLines,
+                '',
+                `### ${t('credentialSecretPreflight')}`,
+                '```json',
+                JSON.stringify(report.credential_preflight, null, 2),
+                '```',
+                '',
+                `### ${t('quotaBudgetGate')}`,
+                '```json',
+                JSON.stringify(report.quota_budget_gate, null, 2),
+                '```',
+                '',
+                `### ${t('operatorApprovalGate')}`,
+                '```json',
+                JSON.stringify(report.approval_gate, null, 2),
+                '```',
+                '',
+                `### ${t('realProviderInvocationContract')}`,
+                '```json',
+                JSON.stringify(report.invocation_contract, null, 2),
+                '```',
+                '',
+                `### ${t('realProviderDryRunReceipt')}`,
+                '```json',
+                JSON.stringify(report.dry_run_receipt, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderSandboxRuntimeSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderSandboxRuntimeReportFromWorkspace(workspace);
             return {
@@ -12477,6 +12594,8 @@
                 '',
                 projectWorkspaceExportProviderSandboxRuntimeMarkdown(workspace),
                 '',
+                projectWorkspaceExportRealProviderExecutionGateMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12505,6 +12624,7 @@
                 manual_generation_result_report: projectWorkspaceExportManualGenerationResultSnapshot(workspace),
                 provider_api_readiness_report: projectWorkspaceExportProviderApiReadinessSnapshot(workspace),
                 provider_sandbox_runtime_report: projectWorkspaceExportProviderSandboxRuntimeSnapshot(workspace),
+                real_provider_execution_gate_report: projectWorkspaceExportRealProviderExecutionGateSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12633,6 +12753,7 @@
                 latestProjectManualGenerationResultReport = payload.manual_generation_result_report || {};
                 latestProjectProviderApiReadinessReport = payload.provider_api_readiness_report || {};
                 latestProjectProviderSandboxRuntimeReport = payload.provider_sandbox_runtime_report || {};
+                latestProjectRealProviderExecutionGateReport = payload.real_provider_execution_gate_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16482,6 +16603,247 @@
         let latestProjectProviderApiReadinessReport = {};
         const PROJECT_WORKSPACE_PROVIDER_SANDBOX_RUNTIME_BUNDLE_MARKER = 'Project Workspace provider sandbox runtime bundle';
         let latestProjectProviderSandboxRuntimeReport = {};
+        const PROJECT_WORKSPACE_REAL_PROVIDER_EXECUTION_GATE_BUNDLE_MARKER = 'Project Workspace real provider execution gate bundle';
+        let latestProjectRealProviderExecutionGateReport = {};
+
+        function projectWorkspaceRealProviderExecutionGateReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectRealProviderExecutionGateReport || {}).length
+                ? latestProjectRealProviderExecutionGateReport
+                : workspace?.real_provider_execution_gate_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                real_provider_execution_gate_report_version: '',
+                report_status: graphSummary.latest_real_provider_execution_gate_status || '',
+                blocking_failure_count: Number(graphSummary.latest_real_provider_execution_blocking_failure_count || 0),
+                real_execution_enabled: Boolean(graphSummary.latest_real_provider_execution_enabled),
+                external_api_called: Boolean(graphSummary.latest_real_provider_external_api_called),
+                provider_api_ready: false,
+                provider_sandbox_ready: false,
+                gate_check_count: 0,
+                passed_gate_check_count: 0,
+                blocking_failures: [],
+                gate_checks: [],
+                credential_preflight: {},
+                quota_budget_gate: {},
+                approval_gate: {},
+                invocation_contract: {},
+                dry_run_receipt: {},
+                dry_run: true,
+                real_execution_allowed: false,
+                real_provider_client_allowed: false,
+                real_provider_client_constructed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                provider_job_submitted: false,
+                provider_polling_performed: false,
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                secret_access_enabled: false,
+                quota_enabled: false,
+                quota_reserved: false,
+                budget_reserved_cents: 0,
+                operator_approval_required: true,
+                operator_approval_captured: false,
+                rollback_required: true,
+                rollback_ready: false,
+                idempotency_required: true,
+                idempotency_key_ready: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                result_url_fetched: false,
+                preview_url_fetched: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceRealProviderExecutionGateCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceRealProviderExecutionGateReportFromWorkspace(workspace);
+            const checks = Array.isArray(report.gate_checks) ? report.gate_checks : [];
+            const failures = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            return [
+                t('realProviderExecutionGateCopyTitle'),
+                `${t('realProviderExecutionGateStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerApiReady')}: ${Boolean(report.provider_api_ready)}`,
+                `${t('providerSandboxReady')}: ${Boolean(report.provider_sandbox_ready)}`,
+                `${t('gateCheckCount')}: ${Number(report.gate_check_count || checks.length || 0)}`,
+                `${t('passedGateCheckCount')}: ${Number(report.passed_gate_check_count || 0)}`,
+                `${t('blockingFailureCount')}: ${Number(report.blocking_failure_count || failures.length || 0)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(report.real_execution_enabled)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('realProviderClientAllowed')}: ${Boolean(report.real_provider_client_allowed)}`,
+                `${t('realProviderClientConstructed')}: ${Boolean(report.real_provider_client_constructed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('providerJobSubmitted')}: ${Boolean(report.provider_job_submitted)}`,
+                `${t('providerPollingPerformed')}: ${Boolean(report.provider_polling_performed)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('secretAccessEnabled')}: ${Boolean(report.secret_access_enabled)}`,
+                `${t('quotaEnabled')}: ${Boolean(report.quota_enabled)}`,
+                `${t('quotaReserved')}: ${Boolean(report.quota_reserved)}`,
+                `${t('budgetReservedCents')}: ${Number(report.budget_reserved_cents || 0)}`,
+                `${t('operatorApprovalRequired')}: ${Boolean(report.operator_approval_required)}`,
+                `${t('operatorApprovalCaptured')}: ${Boolean(report.operator_approval_captured)}`,
+                `${t('rollbackRequired')}: ${Boolean(report.rollback_required)}`,
+                `${t('rollbackReady')}: ${Boolean(report.rollback_ready)}`,
+                `${t('idempotencyRequired')}: ${Boolean(report.idempotency_required)}`,
+                `${t('idempotencyKeyReady')}: ${Boolean(report.idempotency_key_ready)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('blockingFailures')}:`,
+                failures.length ? failures.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('realProviderGateChecks')}:`,
+                checks.length ? checks.map((check, index) => `${index + 1}. ${check.gate_id || ''} | passed=${Boolean(check.passed)} | blocking=${Boolean(check.blocking)} | ${check.message || ''}`).join('\n') : t('none'),
+                '',
+                `${t('credentialSecretPreflight')}:`,
+                JSON.stringify(report.credential_preflight || {}, null, 2),
+                '',
+                `${t('quotaBudgetGate')}:`,
+                JSON.stringify(report.quota_budget_gate || {}, null, 2),
+                '',
+                `${t('operatorApprovalGate')}:`,
+                JSON.stringify(report.approval_gate || {}, null, 2),
+                '',
+                `${t('realProviderInvocationContract')}:`,
+                JSON.stringify(report.invocation_contract || {}, null, 2),
+                '',
+                `${t('realProviderDryRunReceipt')}:`,
+                JSON.stringify(report.dry_run_receipt || {}, null, 2),
+                '',
+                JSON.stringify({ real_provider_execution_gate_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRealProviderExecutionGate() {
+            const status = document.getElementById('projectWorkspaceRealProviderExecutionGateStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceRealProviderExecutionGateCopyText());
+                if (status) status.textContent = t('realProviderExecutionGateCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('realProviderExecutionGateCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceRealProviderExecutionGatePanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceRealProviderExecutionGateReportFromWorkspace(workspace);
+            const checks = Array.isArray(report.gate_checks) ? report.gate_checks : [];
+            const failures = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const credential = report.credential_preflight || {};
+            const quota = report.quota_budget_gate || {};
+            const approval = report.approval_gate || {};
+            const invocation = report.invocation_contract || {};
+            const receipt = report.dry_run_receipt || {};
+            const hasReport = Boolean(report.report_status || report.real_provider_execution_gate_report_version || checks.length || failures.length);
+            return `
+                <div class="section-block" id="projectWorkspaceRealProviderExecutionGatePanel" data-project-real-provider-execution-gate-marker="Project Workspace real provider execution gate bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('realProviderExecutionGatePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('realProviderExecutionGatePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceRealProviderExecutionGateBtn" type="button" onclick="copyProjectWorkspaceRealProviderExecutionGate()">${escapeHTML(t('copyRealProviderExecutionGate'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realProviderExecutionGateStatus'))}</div>
+                            <strong data-real-provider-execution-gate-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('realProviderExecutionGateNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div>
+                            <strong>${escapeHTML(String(Number(report.blocking_failure_count || failures.length || 0)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionEnabled'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.real_execution_enabled)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('externalApiCalled'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerApiReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_api_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSandboxReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_sandbox_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('passedGateCheckCount'))}</div><strong>${escapeHTML(String(Number(report.passed_gate_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('gateCheckCount'))}</div><strong>${escapeHTML(String(Number(report.gate_check_count || checks.length || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${failures.length ? failures.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realProviderGateChecks'))}</div>
+                        ${checks.length ? checks.map((check) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(check.gate_id || '')} ? ${escapeHTML(check.gate_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('passed'))}: ${escapeHTML(String(Boolean(check.passed)))}</span>
+                                    <span class="badge">blocking=${escapeHTML(String(Boolean(check.blocking)))}</span>
+                                    <span class="badge">required=${escapeHTML(String(Boolean(check.required)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(check.message || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedInput'))}: ${escapeHTML(check.expected_input || '')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('credentialSecretPreflight'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(credential, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('quotaBudgetGate'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(quota, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('operatorApprovalGate'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(approval, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realProviderInvocationContract'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(invocation, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realProviderDryRunReceipt'))}</div>
+                        <pre class="debug">${escapeHTML(JSON.stringify(receipt, null, 2))}</pre>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realProviderClientAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.real_provider_client_allowed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realProviderClientConstructed'))}</div><strong>${escapeHTML(String(Boolean(report.real_provider_client_constructed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerCallAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.provider_call_allowed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('externalApiCallAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.external_api_call_allowed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerJobSubmitted'))}</div><strong>${escapeHTML(String(Boolean(report.provider_job_submitted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerPollingPerformed'))}</div><strong>${escapeHTML(String(Boolean(report.provider_polling_performed)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('secretAccessEnabled'))}</div><strong>${escapeHTML(String(Boolean(report.secret_access_enabled)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('quotaEnabled'))}</div><strong>${escapeHTML(String(Boolean(report.quota_enabled)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('quotaReserved'))}</div><strong>${escapeHTML(String(Boolean(report.quota_reserved)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorApprovalCaptured'))}</div><strong>${escapeHTML(String(Boolean(report.operator_approval_captured)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('rollbackReady'))}</div><strong>${escapeHTML(String(Boolean(report.rollback_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('paidGenerationAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.paid_generation_allowed)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('realProviderExecutionGateAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-real-provider-execution-gate-audit-preview="Project Workspace real provider execution gate bundle">${escapeHTML(projectWorkspaceRealProviderExecutionGateCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('realProviderExecutionGateNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRealProviderExecutionGateStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceProviderSandboxRuntimeReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderSandboxRuntimeReport || {}).length
@@ -18886,6 +19248,8 @@
                 if (providerApiReadinessPanel) providerApiReadinessPanel.outerHTML = renderProjectWorkspaceProviderApiReadinessPanel(latestProjectWorkspace);
                 const providerSandboxRuntimePanel = document.getElementById('projectWorkspaceProviderSandboxRuntimePanel');
                 if (providerSandboxRuntimePanel) providerSandboxRuntimePanel.outerHTML = renderProjectWorkspaceProviderSandboxRuntimePanel(latestProjectWorkspace);
+                const realProviderExecutionGatePanel = document.getElementById('projectWorkspaceRealProviderExecutionGatePanel');
+                if (realProviderExecutionGatePanel) realProviderExecutionGatePanel.outerHTML = renderProjectWorkspaceRealProviderExecutionGatePanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -21071,6 +21435,7 @@
                     ${renderProjectWorkspaceManualGenerationResultPanel(workspace)}
                     ${renderProjectWorkspaceProviderApiReadinessPanel(workspace)}
                     ${renderProjectWorkspaceProviderSandboxRuntimePanel(workspace)}
+                    ${renderProjectWorkspaceRealProviderExecutionGatePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -25644,6 +26009,81 @@
             safetyBoundaries: '\u5b89\u5168\u8fb9\u754c',
             providerSandboxRuntimeAuditPreview: 'Provider sandbox runtime \u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderSandboxRuntimeTitle: 'Provider Sandbox Runtime / Fake Provider \u6267\u884c\u95ed\u73af'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealProviderExecutionGateBundleMarker: 'Project Workspace real provider execution gate bundle',
+            realProviderExecutionGatePanelTitle: 'Real Provider Execution Gate',
+            realProviderExecutionGatePanelHelper: 'Final dry-run gate before any future real provider API call. It checks provider readiness, sandbox readiness, credential/secret boundary, quota and budget, cost estimate, operator approval, idempotency, rollback, invocation contract, and receipt. Real execution remains locked.',
+            copyRealProviderExecutionGate: 'Copy real provider gate report',
+            realProviderExecutionGateCopyTitle: 'Project real provider execution gate report',
+            realProviderExecutionGateStatus: 'Real provider execution gate status',
+            realProviderExecutionGateNotRefreshedYet: 'Real provider execution gate report has not been refreshed yet.',
+            realProviderExecutionGateCopied: 'Real provider execution gate report copied.',
+            realProviderExecutionGateCopyFailed: 'Could not copy real provider execution gate report.',
+            providerApiReady: 'Provider API ready',
+            providerSandboxReady: 'Provider sandbox ready',
+            gateCheckCount: 'Gate check count',
+            passedGateCheckCount: 'Passed gate checks',
+            blockingFailureCount: 'Blocking failure count',
+            blockingFailures: 'Blocking failures',
+            realProviderGateChecks: 'Real provider gate checks',
+            expectedInput: 'Expected input',
+            credentialSecretPreflight: 'Credential / secret preflight',
+            quotaBudgetGate: 'Quota / budget gate',
+            operatorApprovalGate: 'Operator approval gate',
+            realProviderInvocationContract: 'Real provider invocation contract',
+            realProviderDryRunReceipt: 'Real provider dry-run receipt',
+            realProviderClientAllowed: 'Real provider client allowed',
+            secretAccessEnabled: 'Secret access enabled',
+            quotaEnabled: 'Quota enabled',
+            quotaReserved: 'Quota reserved',
+            budgetReservedCents: 'Budget reserved cents',
+            operatorApprovalRequired: 'Operator approval required',
+            rollbackRequired: 'Rollback required',
+            rollbackReady: 'Rollback ready',
+            idempotencyRequired: 'Idempotency required',
+            idempotencyKeyReady: 'Idempotency key ready',
+            realProviderExecutionGateAuditPreview: 'Real provider execution gate audit preview',
+            projectWorkspaceExportRealProviderExecutionGateTitle: 'Real Provider Execution Gate'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealProviderExecutionGateBundleMarker: 'Project Workspace real provider execution gate bundle',
+            realProviderExecutionGatePanelTitle: 'Real Provider Execution Gate / \u771f\u5b9e Provider \u8c03\u7528\u603b\u95f8',
+            realProviderExecutionGatePanelHelper: '\u672a\u6765\u4efb\u4f55\u771f\u5b9e provider API \u8c03\u7528\u524d\u7684\u6700\u540e dry-run \u603b\u95f8\uff1a\u68c0\u67e5 provider readiness\u3001sandbox readiness\u3001credential/secret \u8fb9\u754c\u3001quota/budget\u3001cost estimate\u3001operator approval\u3001idempotency\u3001rollback\u3001invocation contract \u548c receipt\u3002Real execution \u4ecd\u7136\u9501\u5b9a\u3002',
+            copyRealProviderExecutionGate: '\u590d\u5236\u771f\u5b9e Provider \u603b\u95f8\u62a5\u544a',
+            realProviderExecutionGateCopyTitle: '\u9879\u76ee\u771f\u5b9e Provider Execution Gate \u62a5\u544a',
+            realProviderExecutionGateStatus: '\u771f\u5b9e Provider \u603b\u95f8\u72b6\u6001',
+            realProviderExecutionGateNotRefreshedYet: '\u771f\u5b9e Provider execution gate \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            realProviderExecutionGateCopied: '\u771f\u5b9e Provider execution gate \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            realProviderExecutionGateCopyFailed: '\u590d\u5236\u771f\u5b9e Provider execution gate \u62a5\u544a\u5931\u8d25\u3002',
+            providerApiReady: 'Provider API ready',
+            providerSandboxReady: 'Provider sandbox ready',
+            gateCheckCount: 'Gate \u68c0\u67e5\u6570',
+            passedGateCheckCount: '\u5df2\u901a\u8fc7 Gate \u68c0\u67e5',
+            blockingFailureCount: '\u963b\u65ad\u9879\u6570',
+            blockingFailures: '\u963b\u65ad\u9879',
+            realProviderGateChecks: '\u771f\u5b9e Provider Gate \u68c0\u67e5',
+            expectedInput: '\u9884\u671f\u8f93\u5165',
+            credentialSecretPreflight: 'Credential / secret preflight',
+            quotaBudgetGate: 'Quota / budget gate',
+            operatorApprovalGate: 'Operator approval gate',
+            realProviderInvocationContract: 'Real provider invocation contract',
+            realProviderDryRunReceipt: 'Real provider dry-run receipt',
+            realProviderClientAllowed: '\u5141\u8bb8\u771f\u5b9e provider client',
+            secretAccessEnabled: 'Secret access \u5df2\u542f\u7528',
+            quotaEnabled: 'Quota \u5df2\u542f\u7528',
+            quotaReserved: 'Quota \u5df2\u9884\u7559',
+            budgetReservedCents: '\u5df2\u9884\u7559\u9884\u7b97\uff08cents\uff09',
+            operatorApprovalRequired: '\u9700\u8981\u64cd\u4f5c\u5458\u5ba1\u6279',
+            rollbackRequired: '\u9700\u8981 rollback',
+            rollbackReady: 'Rollback ready',
+            idempotencyRequired: '\u9700\u8981 idempotency',
+            idempotencyKeyReady: 'Idempotency key ready',
+            realProviderExecutionGateAuditPreview: '\u771f\u5b9e Provider execution gate \u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportRealProviderExecutionGateTitle: 'Real Provider Execution Gate / \u771f\u5b9e Provider \u8c03\u7528\u603b\u95f8'
         });
 
 

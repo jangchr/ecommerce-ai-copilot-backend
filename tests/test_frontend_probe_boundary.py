@@ -6650,6 +6650,35 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_sandbox_runtime_marker", script)
 
 
+    def test_project_workspace_real_provider_execution_gate_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace real provider execution gate bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_REAL_PROVIDER_EXECUTION_GATE_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceRealProviderExecutionGatePanel", html)
+        self.assertIn("copyProjectWorkspaceRealProviderExecutionGate", html)
+        self.assertIn("real_provider_execution_gate_report", html)
+        self.assertIn("projectWorkspaceExportRealProviderExecutionGateMarkdown", html)
+        self.assertIn("projectWorkspaceExportRealProviderExecutionGateSnapshot", html)
+        self.assertIn("credential_preflight", html)
+        self.assertIn("quota_budget_gate", html)
+        self.assertIn("approval_gate", html)
+        self.assertIn("invocation_contract", html)
+        self.assertIn("dry_run_receipt", html)
+        self.assertIn("blocking_failures", html)
+        self.assertIn("real_provider_client_constructed", html)
+        self.assertIn("external_api_called", html)
+
+    def test_project_workspace_real_provider_execution_gate_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_real_provider_execution_gate_marker", script)
+        self.assertIn("Project Workspace real provider execution gate bundle", script)
+
+    def test_project_workspace_real_provider_execution_gate_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace real provider execution gate bundle", script)
+        self.assertIn("project_workspace_real_provider_execution_gate_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
