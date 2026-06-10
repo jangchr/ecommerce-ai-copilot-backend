@@ -6712,6 +6712,40 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_failure_recovery_marker", script)
 
 
+    def test_project_workspace_provider_observability_report_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider observability report bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_OBSERVABILITY_REPORT_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceProviderObservabilityReportPanel", html)
+        self.assertIn("copyProjectWorkspaceProviderObservabilityReport", html)
+        self.assertIn("provider_observability_report", html)
+        self.assertIn("projectWorkspaceExportProviderObservabilityReportMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderObservabilityReportSnapshot", html)
+        self.assertIn("health_snapshot", html)
+        self.assertIn("metric_rollup", html)
+        self.assertIn("alert_policy", html)
+        self.assertIn("trace_summary", html)
+        self.assertIn("operator_control_center", html)
+        self.assertIn("dashboard_cards", html)
+        self.assertIn("observability_receipt", html)
+        self.assertIn("audit_preview_ready", html)
+        self.assertIn("real_observability_backend_enabled", html)
+        self.assertIn("real_alert_delivery_enabled", html)
+        self.assertIn("real_metrics_persisted", html)
+        self.assertIn("real_trace_persisted", html)
+        self.assertIn("external_api_called", html)
+
+    def test_project_workspace_provider_observability_report_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_observability_report_marker", script)
+        self.assertIn("Project Workspace provider observability report bundle", script)
+
+    def test_project_workspace_provider_observability_report_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider observability report bundle", script)
+        self.assertIn("project_workspace_provider_observability_report_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))

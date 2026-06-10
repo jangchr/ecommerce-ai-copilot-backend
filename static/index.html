@@ -11667,6 +11667,157 @@
 
 
 
+
+        function projectWorkspaceExportProviderObservabilityReportSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderObservabilityReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider observability report bundle',
+                report_status: report.report_status || '',
+                provider_observability_report_version: report.provider_observability_report_version || '',
+                provider_failure_recovery_ready: Boolean(report.provider_failure_recovery_ready),
+                stage_count: Number(report.stage_count || 0),
+                observability_stage_matrix: Array.isArray(report.observability_stage_matrix) ? report.observability_stage_matrix : [],
+                health_snapshot: report.health_snapshot || {},
+                metric_rollup: report.metric_rollup || {},
+                alert_policy: report.alert_policy || {},
+                trace_summary: report.trace_summary || {},
+                operator_control_center: report.operator_control_center || {},
+                dashboard: report.dashboard || {},
+                observability_receipt: report.observability_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                dashboard_card_count: Number(report.dashboard_card_count || 0),
+                trace_event_count: Number(report.trace_event_count || 0),
+                metric_count: Number(report.metric_count || 0),
+                alert_rule_count: Number(report.alert_rule_count || 0),
+                triggered_alert_count: Number(report.triggered_alert_count || 0),
+                review_queue_count: Number(report.review_queue_count || 0),
+                supports_health_snapshot: Boolean(report.supports_health_snapshot),
+                supports_metric_rollup: Boolean(report.supports_metric_rollup),
+                supports_alert_policy: Boolean(report.supports_alert_policy),
+                supports_trace_summary: Boolean(report.supports_trace_summary),
+                supports_operator_control_center: Boolean(report.supports_operator_control_center),
+                supports_observability_dashboard: Boolean(report.supports_observability_dashboard),
+                supports_observability_receipt: Boolean(report.supports_observability_receipt),
+                supports_audit_preview: Boolean(report.supports_audit_preview),
+                dry_run: Boolean(report.dry_run),
+                dashboard_ready: Boolean(report.dashboard_ready),
+                audit_preview_ready: Boolean(report.audit_preview_ready),
+                export_safe_snapshot_ready: Boolean(report.export_safe_snapshot_ready),
+                observability_receipt_recorded: Boolean(report.observability_receipt_recorded),
+                real_observability_backend_enabled: Boolean(report.real_observability_backend_enabled),
+                real_alert_delivery_enabled: Boolean(report.real_alert_delivery_enabled),
+                real_metrics_persisted: Boolean(report.real_metrics_persisted),
+                real_trace_persisted: Boolean(report.real_trace_persisted),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                real_retry_performed: Boolean(report.real_retry_performed),
+                provider_job_submitted: Boolean(report.provider_job_submitted),
+                provider_polling_performed: Boolean(report.provider_polling_performed),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                quota_reserved: Boolean(report.quota_reserved),
+                operator_review_required: Boolean(report.operator_review_required),
+                operator_review_captured: Boolean(report.operator_review_captured),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                incident_detected: Boolean(report.incident_detected),
+                incident_opened: Boolean(report.incident_opened),
+                rollback_ready: Boolean(report.rollback_ready),
+                rollback_executed: Boolean(report.rollback_executed),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                result_url_fetched: Boolean(report.result_url_fetched),
+                preview_url_fetched: Boolean(report.preview_url_fetched),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                has_provider_observability_report: Boolean(report.report_status || report.provider_observability_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderObservabilityReportMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderObservabilityReportSnapshot(workspace);
+            if (!report.has_provider_observability_report) {
+                return `## ${t('projectWorkspaceExportProviderObservabilityReportTitle')}\n${t('providerObservabilityReportNotRefreshedYet')}`;
+            }
+            const blockerLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stageLines = report.observability_stage_matrix.length
+                ? report.observability_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const dashboardCards = Array.isArray(report.dashboard.dashboard_cards) ? report.dashboard.dashboard_cards : [];
+            const dashboardLines = dashboardCards.length
+                ? dashboardCards.map((card, index) => `${index + 1}. ${card.card_id || ''}: ${String(card.value)}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderObservabilityReportTitle')}`,
+                `${t('providerObservabilityReportStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerFailureRecoveryReady')}: ${report.provider_failure_recovery_ready}`,
+                `${t('dashboardReady')}: ${report.dashboard_ready}`,
+                `${t('alertsTriggered')}: ${Boolean(report.alert_policy.alerts_triggered)}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('dashboardCardCount')}: ${report.dashboard_card_count}`,
+                `${t('traceEventCount')}: ${report.trace_event_count}`,
+                `${t('metricCount')}: ${report.metric_count}`,
+                `${t('alertRuleCount')}: ${report.alert_rule_count}`,
+                `${t('triggeredAlertCount')}: ${report.triggered_alert_count}`,
+                `${t('reviewQueueCount')}: ${report.review_queue_count}`,
+                `${t('auditPreviewReady')}: ${report.audit_preview_ready}`,
+                `${t('exportSafeSnapshotReady')}: ${report.export_safe_snapshot_ready}`,
+                `${t('realObservabilityBackendEnabled')}: ${report.real_observability_backend_enabled}`,
+                `${t('realAlertDeliveryEnabled')}: ${report.real_alert_delivery_enabled}`,
+                `${t('realMetricsPersisted')}: ${report.real_metrics_persisted}`,
+                `${t('realTracePersisted')}: ${report.real_trace_persisted}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockerLines,
+                '',
+                `### ${t('providerObservabilityDashboardCards')}`,
+                ...dashboardLines,
+                '',
+                `### ${t('providerObservabilityStages')}`,
+                ...stageLines,
+                '',
+                `### ${t('providerHealthSnapshot')}`,
+                '```json',
+                JSON.stringify(report.health_snapshot, null, 2),
+                '```',
+                '',
+                `### ${t('providerMetricRollup')}`,
+                '```json',
+                JSON.stringify(report.metric_rollup, null, 2),
+                '```',
+                '',
+                `### ${t('providerObservabilityAlertPolicy')}`,
+                '```json',
+                JSON.stringify(report.alert_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerTraceSummary')}`,
+                '```json',
+                JSON.stringify(report.trace_summary, null, 2),
+                '```',
+                '',
+                `### ${t('providerOperatorControlCenterHandoff')}`,
+                '```json',
+                JSON.stringify(report.operator_control_center, null, 2),
+                '```',
+                '',
+                `### ${t('providerObservabilityReceipt')}`,
+                '```json',
+                JSON.stringify(report.observability_receipt, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderFailureRecoverySnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderFailureRecoveryReportFromWorkspace(workspace);
             return {
@@ -12754,6 +12905,8 @@
                 '',
                 projectWorkspaceExportProviderFailureRecoveryMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderObservabilityReportMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12784,6 +12937,7 @@
                 provider_sandbox_runtime_report: projectWorkspaceExportProviderSandboxRuntimeSnapshot(workspace),
                 real_provider_execution_gate_report: projectWorkspaceExportRealProviderExecutionGateSnapshot(workspace),
                 provider_failure_recovery_report: projectWorkspaceExportProviderFailureRecoverySnapshot(workspace),
+                provider_observability_report: projectWorkspaceExportProviderObservabilityReportSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12914,6 +13068,7 @@
                 latestProjectProviderSandboxRuntimeReport = payload.provider_sandbox_runtime_report || {};
                 latestProjectRealProviderExecutionGateReport = payload.real_provider_execution_gate_report || {};
                 latestProjectProviderFailureRecoveryReport = payload.provider_failure_recovery_report || {};
+                latestProjectProviderObservabilityReport = payload.provider_observability_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16767,6 +16922,334 @@
         let latestProjectRealProviderExecutionGateReport = {};
         const PROJECT_WORKSPACE_PROVIDER_FAILURE_RECOVERY_BUNDLE_MARKER = 'Project Workspace provider failure recovery bundle';
         let latestProjectProviderFailureRecoveryReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_OBSERVABILITY_REPORT_BUNDLE_MARKER = 'Project Workspace provider observability report bundle';
+        let latestProjectProviderObservabilityReport = {};
+
+        function projectWorkspaceProviderObservabilityReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderObservabilityReport || {}).length
+                ? latestProjectProviderObservabilityReport
+                : workspace?.provider_observability_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_observability_report_version: '',
+                report_status: graphSummary.latest_provider_observability_status || '',
+                provider_failure_recovery_ready: false,
+                dashboard_ready: Boolean(graphSummary.latest_provider_observability_dashboard_ready),
+                alerts_triggered: Boolean(graphSummary.latest_provider_observability_alerts_triggered),
+                operator_review_required: Boolean(graphSummary.latest_provider_observability_operator_review_required),
+                external_api_called: Boolean(graphSummary.latest_provider_observability_external_api_called),
+                stage_count: 0,
+                observability_stage_matrix: [],
+                health_snapshot: {},
+                metric_rollup: {},
+                alert_policy: {},
+                trace_summary: {},
+                operator_control_center: {},
+                dashboard: {},
+                observability_receipt: {},
+                blocking_failure_count: 0,
+                blocking_failures: [],
+                dashboard_card_count: 0,
+                trace_event_count: 0,
+                metric_count: 0,
+                alert_rule_count: 0,
+                triggered_alert_count: 0,
+                review_queue_count: 0,
+                supports_health_snapshot: false,
+                supports_metric_rollup: false,
+                supports_alert_policy: false,
+                supports_trace_summary: false,
+                supports_operator_control_center: false,
+                supports_observability_dashboard: false,
+                supports_observability_receipt: false,
+                supports_audit_preview: false,
+                dry_run: true,
+                audit_preview_ready: false,
+                export_safe_snapshot_ready: false,
+                observability_receipt_recorded: false,
+                real_observability_backend_enabled: false,
+                real_alert_delivery_enabled: false,
+                real_metrics_persisted: false,
+                real_trace_persisted: false,
+                real_execution_allowed: false,
+                real_execution_enabled: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                real_retry_performed: false,
+                provider_job_submitted: false,
+                provider_polling_performed: false,
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                quota_reserved: false,
+                operator_review_captured: false,
+                operator_approval_captured: false,
+                incident_detected: false,
+                incident_opened: false,
+                rollback_ready: false,
+                rollback_executed: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                result_url_fetched: false,
+                preview_url_fetched: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceProviderObservabilityReportCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderObservabilityReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.observability_stage_matrix) ? report.observability_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const health = report.health_snapshot || {};
+            const metrics = report.metric_rollup || {};
+            const alert = report.alert_policy || {};
+            const trace = report.trace_summary || {};
+            const control = report.operator_control_center || {};
+            const dashboard = report.dashboard || {};
+            const receipt = report.observability_receipt || {};
+            return [
+                t('providerObservabilityReportCopyTitle'),
+                `${t('providerObservabilityReportStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerFailureRecoveryReady')}: ${Boolean(report.provider_failure_recovery_ready)}`,
+                `${t('dashboardReady')}: ${Boolean(report.dashboard_ready)}`,
+                `${t('alertsTriggered')}: ${Boolean(report.alerts_triggered || alert.alerts_triggered)}`,
+                `${t('operatorReviewRequired')}: ${Boolean(report.operator_review_required)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('dashboardCardCount')}: ${Number(report.dashboard_card_count || 0)}`,
+                `${t('traceEventCount')}: ${Number(report.trace_event_count || 0)}`,
+                `${t('metricCount')}: ${Number(report.metric_count || 0)}`,
+                `${t('alertRuleCount')}: ${Number(report.alert_rule_count || 0)}`,
+                `${t('triggeredAlertCount')}: ${Number(report.triggered_alert_count || 0)}`,
+                `${t('reviewQueueCount')}: ${Number(report.review_queue_count || 0)}`,
+                `${t('blockingFailureCount')}: ${Number(report.blocking_failure_count || blockers.length || 0)}`,
+                `${t('auditPreviewReady')}: ${Boolean(report.audit_preview_ready)}`,
+                `${t('exportSafeSnapshotReady')}: ${Boolean(report.export_safe_snapshot_ready)}`,
+                `${t('observabilityReceiptRecorded')}: ${Boolean(report.observability_receipt_recorded)}`,
+                `${t('realObservabilityBackendEnabled')}: ${Boolean(report.real_observability_backend_enabled)}`,
+                `${t('realAlertDeliveryEnabled')}: ${Boolean(report.real_alert_delivery_enabled)}`,
+                `${t('realMetricsPersisted')}: ${Boolean(report.real_metrics_persisted)}`,
+                `${t('realTracePersisted')}: ${Boolean(report.real_trace_persisted)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(report.real_execution_enabled)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('realRetryPerformed')}: ${Boolean(report.real_retry_performed)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('quotaReserved')}: ${Boolean(report.quota_reserved)}`,
+                `${t('operatorReviewCaptured')}: ${Boolean(report.operator_review_captured)}`,
+                `${t('operatorApprovalCaptured')}: ${Boolean(report.operator_approval_captured)}`,
+                `${t('incidentOpened')}: ${Boolean(report.incident_opened)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('blockingFailures')}:`,
+                blockers.length ? blockers.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('providerObservabilityStages')}:`,
+                stages.length ? stages.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`).join('\n') : t('none'),
+                '',
+                `${t('providerHealthSnapshot')}:`,
+                JSON.stringify(health, null, 2),
+                '',
+                `${t('providerMetricRollup')}:`,
+                JSON.stringify(metrics, null, 2),
+                '',
+                `${t('providerObservabilityAlertPolicy')}:`,
+                JSON.stringify(alert, null, 2),
+                '',
+                `${t('providerTraceSummary')}:`,
+                JSON.stringify(trace, null, 2),
+                '',
+                `${t('providerOperatorControlCenterHandoff')}:`,
+                JSON.stringify(control, null, 2),
+                '',
+                `${t('providerObservabilityDashboard')}:`,
+                JSON.stringify(dashboard, null, 2),
+                '',
+                `${t('providerObservabilityReceipt')}:`,
+                JSON.stringify(receipt, null, 2),
+                '',
+                JSON.stringify({ provider_observability_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderObservabilityReport() {
+            const status = document.getElementById('projectWorkspaceProviderObservabilityReportStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderObservabilityReportCopyText());
+                if (status) status.textContent = t('providerObservabilityReportCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerObservabilityReportCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderObservabilityReportPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderObservabilityReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.observability_stage_matrix) ? report.observability_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const health = report.health_snapshot || {};
+            const metrics = report.metric_rollup || {};
+            const alert = report.alert_policy || {};
+            const trace = report.trace_summary || {};
+            const control = report.operator_control_center || {};
+            const dashboard = report.dashboard || {};
+            const receipt = report.observability_receipt || {};
+            const metricItems = Array.isArray(metrics.metrics) ? metrics.metrics : [];
+            const alertRules = Array.isArray(alert.alert_rules) ? alert.alert_rules : [];
+            const traceEvents = Array.isArray(trace.trace_events) ? trace.trace_events : [];
+            const dashboardCards = Array.isArray(dashboard.dashboard_cards) ? dashboard.dashboard_cards : [];
+            const reviewItems = Array.isArray(control.review_queue_items) ? control.review_queue_items : [];
+            const hasReport = Boolean(report.report_status || report.provider_observability_report_version || stages.length || dashboardCards.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderObservabilityReportPanel" data-project-provider-observability-report-marker="Project Workspace provider observability report bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerObservabilityReportPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerObservabilityReportPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderObservabilityReportBtn" type="button" onclick="copyProjectWorkspaceProviderObservabilityReport()">${escapeHTML(t('copyProviderObservabilityReport'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerObservabilityReportStatus'))}</div>
+                            <strong data-provider-observability-report-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerObservabilityReportNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('dashboardReady'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.dashboard_ready)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('alertsTriggered'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.alerts_triggered || alert.alerts_triggered)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('externalApiCalled'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerFailureRecoveryReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_failure_recovery_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('dashboardCardCount'))}</div><strong>${escapeHTML(String(Number(report.dashboard_card_count || dashboardCards.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('traceEventCount'))}</div><strong>${escapeHTML(String(Number(report.trace_event_count || traceEvents.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('metricCount'))}</div><strong>${escapeHTML(String(Number(report.metric_count || metricItems.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('alertRuleCount'))}</div><strong>${escapeHTML(String(Number(report.alert_rule_count || alertRules.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('reviewQueueCount'))}</div><strong>${escapeHTML(String(Number(report.review_queue_count || reviewItems.length || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerObservabilityDashboardCards'))}</div>
+                        ${dashboardCards.length ? dashboardCards.map((card) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(card.card_id || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('value'))}: ${escapeHTML(String(card.value))}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerObservabilityStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} ? ${escapeHTML(stage.stage_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('requiredInputs'))}: ${(stage.required_inputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedOutputs'))}: ${(stage.expected_outputs || []).map(escapeHTML).join(', ')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerTraceEvents'))}</div>
+                        ${traceEvents.length ? traceEvents.map((event) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(event.trace_event_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('recorded'))}: ${escapeHTML(String(Boolean(event.recorded)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerAlertRules'))}</div>
+                        ${alertRules.length ? alertRules.map((rule) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(rule.alert_rule_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('enabled'))}: ${escapeHTML(String(Boolean(rule.enabled)))}</span>
+                                <span class="badge">${escapeHTML(t('triggered'))}: ${escapeHTML(String(Boolean(rule.triggered)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerOperatorReviewQueue'))}</div>
+                        ${reviewItems.length ? reviewItems.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.queue_item_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('required'))}: ${escapeHTML(String(Boolean(item.required)))}</span>
+                                <span class="badge">${escapeHTML(t('captured'))}: ${escapeHTML(String(Boolean(item.captured)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerHealthSnapshot'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(health, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerMetricRollup'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(metrics, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerObservabilityAlertPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(alert, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerTraceSummary'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(trace, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerOperatorControlCenterHandoff'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(control, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerObservabilityReceipt'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(receipt, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsHealthSnapshot'))}</div><strong>${escapeHTML(String(Boolean(report.supports_health_snapshot)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsMetricRollup'))}</div><strong>${escapeHTML(String(Boolean(report.supports_metric_rollup)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsAlertPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_alert_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsTraceSummary'))}</div><strong>${escapeHTML(String(Boolean(report.supports_trace_summary)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsOperatorControlCenter'))}</div><strong>${escapeHTML(String(Boolean(report.supports_operator_control_center)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsObservabilityReceipt'))}</div><strong>${escapeHTML(String(Boolean(report.supports_observability_receipt)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realObservabilityBackendEnabled'))}</div><strong>${escapeHTML(String(Boolean(report.real_observability_backend_enabled)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realAlertDeliveryEnabled'))}</div><strong>${escapeHTML(String(Boolean(report.real_alert_delivery_enabled)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realMetricsPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.real_metrics_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realTracePersisted'))}</div><strong>${escapeHTML(String(Boolean(report.real_trace_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('observabilityReceiptRecorded'))}</div><strong>${escapeHTML(String(Boolean(report.observability_receipt_recorded)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretRead'))}</div><strong>${escapeHTML(String(Boolean(report.provider_secret_read)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerObservabilityReportAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-observability-report-audit-preview="Project Workspace provider observability report bundle">${escapeHTML(projectWorkspaceProviderObservabilityReportCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerObservabilityReportNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderObservabilityReportStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceProviderFailureRecoveryReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderFailureRecoveryReport || {}).length
@@ -19713,6 +20196,8 @@
                 if (realProviderExecutionGatePanel) realProviderExecutionGatePanel.outerHTML = renderProjectWorkspaceRealProviderExecutionGatePanel(latestProjectWorkspace);
                 const providerFailureRecoveryPanel = document.getElementById('projectWorkspaceProviderFailureRecoveryPanel');
                 if (providerFailureRecoveryPanel) providerFailureRecoveryPanel.outerHTML = renderProjectWorkspaceProviderFailureRecoveryPanel(latestProjectWorkspace);
+                const providerObservabilityReportPanel = document.getElementById('projectWorkspaceProviderObservabilityReportPanel');
+                if (providerObservabilityReportPanel) providerObservabilityReportPanel.outerHTML = renderProjectWorkspaceProviderObservabilityReportPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -21900,6 +22385,7 @@
                     ${renderProjectWorkspaceProviderSandboxRuntimePanel(workspace)}
                     ${renderProjectWorkspaceRealProviderExecutionGatePanel(workspace)}
                     ${renderProjectWorkspaceProviderFailureRecoveryPanel(workspace)}
+                    ${renderProjectWorkspaceProviderObservabilityReportPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -26635,6 +27121,115 @@
             supportsRollbackPausePolicy: '\u652f\u6301 rollback / pause policy',
             providerFailureRecoveryAuditPreview: 'Provider failure recovery \u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderFailureRecoveryTitle: 'Provider Failure Recovery / Provider \u5931\u8d25\u6cbb\u7406'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderObservabilityReportBundleMarker: 'Project Workspace provider observability report bundle',
+            providerObservabilityReportPanelTitle: 'Provider Observability Report',
+            providerObservabilityReportPanelHelper: 'Dry-run provider observability report for health, metrics, alerts, trace, operator control handoff, dashboard cards, receipt, and audit preview. It does not emit real alerts, persist metrics, read secrets, or call providers.',
+            copyProviderObservabilityReport: 'Copy provider observability report',
+            providerObservabilityReportCopyTitle: 'Project provider observability report',
+            providerObservabilityReportStatus: 'Provider observability report status',
+            providerObservabilityReportNotRefreshedYet: 'Provider observability report has not been refreshed yet.',
+            providerObservabilityReportCopied: 'Provider observability report copied.',
+            providerObservabilityReportCopyFailed: 'Could not copy provider observability report.',
+            providerFailureRecoveryReady: 'Provider failure recovery ready',
+            dashboardReady: 'Dashboard ready',
+            alertsTriggered: 'Alerts triggered',
+            dashboardCardCount: 'Dashboard card count',
+            traceEventCount: 'Trace event count',
+            metricCount: 'Metric count',
+            alertRuleCount: 'Alert rule count',
+            triggeredAlertCount: 'Triggered alert count',
+            reviewQueueCount: 'Review queue count',
+            auditPreviewReady: 'Audit preview ready',
+            exportSafeSnapshotReady: 'Export-safe snapshot ready',
+            observabilityReceiptRecorded: 'Observability receipt recorded',
+            realObservabilityBackendEnabled: 'Real observability backend enabled',
+            realAlertDeliveryEnabled: 'Real alert delivery enabled',
+            realMetricsPersisted: 'Real metrics persisted',
+            realTracePersisted: 'Real trace persisted',
+            providerObservabilityStages: 'Provider observability stages',
+            providerHealthSnapshot: 'Provider health snapshot',
+            providerMetricRollup: 'Provider metric rollup',
+            providerObservabilityAlertPolicy: 'Provider observability alert policy',
+            providerTraceSummary: 'Provider trace summary',
+            providerOperatorControlCenterHandoff: 'Provider operator control center handoff',
+            providerObservabilityDashboard: 'Provider observability dashboard',
+            providerObservabilityDashboardCards: 'Provider observability dashboard cards',
+            providerObservabilityReceipt: 'Provider observability receipt',
+            providerTraceEvents: 'Provider trace events',
+            providerAlertRules: 'Provider alert rules',
+            providerOperatorReviewQueue: 'Provider operator review queue',
+            supportsHealthSnapshot: 'Supports health snapshot',
+            supportsMetricRollup: 'Supports metric rollup',
+            supportsAlertPolicy: 'Supports alert policy',
+            supportsTraceSummary: 'Supports trace summary',
+            supportsOperatorControlCenter: 'Supports operator control center',
+            supportsObservabilityReceipt: 'Supports observability receipt',
+            providerObservabilityReportAuditPreview: 'Provider observability report audit preview',
+            recorded: 'Recorded',
+            enabled: 'Enabled',
+            triggered: 'Triggered',
+            required: 'Required',
+            captured: 'Captured',
+            value: 'Value',
+            projectWorkspaceExportProviderObservabilityReportTitle: 'Provider Observability Report'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderObservabilityReportBundleMarker: 'Project Workspace provider observability report bundle',
+            providerObservabilityReportPanelTitle: 'Provider Observability Report / Provider \u89c2\u6d4b\u62a5\u544a',
+            providerObservabilityReportPanelHelper: 'Dry-run provider \u89c2\u6d4b\u62a5\u544a\uff1a\u8986\u76d6 health\u3001metrics\u3001alerts\u3001trace\u3001operator control handoff\u3001dashboard cards\u3001receipt \u548c audit preview\u3002\u4e0d\u4f1a\u53d1\u9001\u771f\u5b9e alert\uff0c\u4e0d\u4f1a\u5199\u5165\u771f\u5b9e metrics\uff0c\u4e0d\u4f1a\u8bfb\u53d6 secret\uff0c\u4e0d\u4f1a\u8c03 provider\u3002',
+            copyProviderObservabilityReport: '\u590d\u5236 provider \u89c2\u6d4b\u62a5\u544a',
+            providerObservabilityReportCopyTitle: '\u9879\u76ee Provider Observability \u62a5\u544a',
+            providerObservabilityReportStatus: 'Provider observability \u62a5\u544a\u72b6\u6001',
+            providerObservabilityReportNotRefreshedYet: 'Provider observability \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerObservabilityReportCopied: 'Provider observability \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerObservabilityReportCopyFailed: '\u590d\u5236 provider observability \u62a5\u544a\u5931\u8d25\u3002',
+            providerFailureRecoveryReady: 'Provider failure recovery ready',
+            dashboardReady: 'Dashboard ready',
+            alertsTriggered: 'Alerts triggered',
+            dashboardCardCount: 'Dashboard card \u6570',
+            traceEventCount: 'Trace event \u6570',
+            metricCount: 'Metric \u6570',
+            alertRuleCount: 'Alert rule \u6570',
+            triggeredAlertCount: '\u5df2\u89e6\u53d1 alert \u6570',
+            reviewQueueCount: 'Review queue \u6570',
+            auditPreviewReady: 'Audit preview ready',
+            exportSafeSnapshotReady: 'Export-safe snapshot ready',
+            observabilityReceiptRecorded: 'Observability receipt \u5df2\u8bb0\u5f55',
+            realObservabilityBackendEnabled: '\u771f\u5b9e observability \u540e\u7aef\u5df2\u542f\u7528',
+            realAlertDeliveryEnabled: '\u771f\u5b9e alert delivery \u5df2\u542f\u7528',
+            realMetricsPersisted: '\u771f\u5b9e metrics \u5df2\u5199\u5165',
+            realTracePersisted: '\u771f\u5b9e trace \u5df2\u5199\u5165',
+            providerObservabilityStages: 'Provider observability \u9636\u6bb5',
+            providerHealthSnapshot: 'Provider health snapshot',
+            providerMetricRollup: 'Provider metric rollup',
+            providerObservabilityAlertPolicy: 'Provider observability alert policy',
+            providerTraceSummary: 'Provider trace summary',
+            providerOperatorControlCenterHandoff: 'Provider operator control center handoff',
+            providerObservabilityDashboard: 'Provider observability dashboard',
+            providerObservabilityDashboardCards: 'Provider observability dashboard cards',
+            providerObservabilityReceipt: 'Provider observability receipt',
+            providerTraceEvents: 'Provider trace events',
+            providerAlertRules: 'Provider alert rules',
+            providerOperatorReviewQueue: 'Provider operator review queue',
+            supportsHealthSnapshot: '\u652f\u6301 health snapshot',
+            supportsMetricRollup: '\u652f\u6301 metric rollup',
+            supportsAlertPolicy: '\u652f\u6301 alert policy',
+            supportsTraceSummary: '\u652f\u6301 trace summary',
+            supportsOperatorControlCenter: '\u652f\u6301 operator control center',
+            supportsObservabilityReceipt: '\u652f\u6301 observability receipt',
+            providerObservabilityReportAuditPreview: 'Provider observability \u62a5\u544a\u5ba1\u8ba1\u9884\u89c8',
+            recorded: '\u5df2\u8bb0\u5f55',
+            enabled: '\u5df2\u542f\u7528',
+            triggered: '\u5df2\u89e6\u53d1',
+            required: '\u5fc5\u9700',
+            captured: '\u5df2\u6355\u83b7',
+            value: '\u503c',
+            projectWorkspaceExportProviderObservabilityReportTitle: 'Provider Observability Report / Provider \u89c2\u6d4b\u62a5\u544a'
         });
 
 
