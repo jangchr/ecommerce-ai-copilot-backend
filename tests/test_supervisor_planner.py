@@ -1228,6 +1228,99 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_artifact_lineage_external_api_called"]
         )
+        self.assertIn("provider_artifact_registry_restore_report", payload)
+        registry_restore = payload["provider_artifact_registry_restore_report"]
+        self.assertEqual(
+            registry_restore["provider_artifact_registry_restore_report_version"],
+            "provider_artifact_registry_restore_report_v1",
+        )
+        self.assertEqual(
+            registry_restore["report_status"],
+            "provider_artifact_registry_restore_ready_dry_run",
+        )
+        self.assertTrue(registry_restore["provider_artifact_lineage_ready"])
+        self.assertTrue(registry_restore["operator_review_required"])
+        self.assertTrue(registry_restore["artifact_registry_model"])
+        self.assertTrue(registry_restore["versioned_snapshot_catalog"])
+        self.assertTrue(registry_restore["snapshot_diff_preview"])
+        self.assertTrue(registry_restore["restore_plan"])
+        self.assertTrue(registry_restore["rollback_plan"])
+        self.assertTrue(registry_restore["retention_policy"])
+        self.assertTrue(registry_restore["persist_gate"])
+        self.assertTrue(registry_restore["restore_audit_ledger"])
+        self.assertTrue(registry_restore["registry_receipt"])
+        self.assertGreater(registry_restore["registry_item_count"], 0)
+        self.assertGreater(registry_restore["snapshot_ref_count"], 0)
+        self.assertGreater(registry_restore["diff_section_count"], 0)
+        self.assertGreater(registry_restore["restore_step_count"], 0)
+        self.assertGreater(registry_restore["restore_blocker_count"], 0)
+        self.assertGreater(registry_restore["rollback_step_count"], 0)
+        self.assertGreater(registry_restore["retention_action_count"], 0)
+        self.assertGreater(registry_restore["delete_blocker_count"], 0)
+        self.assertGreater(registry_restore["ledger_item_count"], 0)
+        self.assertTrue(registry_restore["supports_artifact_registry_model"])
+        self.assertTrue(registry_restore["supports_versioned_snapshot_catalog"])
+        self.assertTrue(registry_restore["supports_snapshot_diff_preview"])
+        self.assertTrue(registry_restore["supports_restore_plan"])
+        self.assertTrue(registry_restore["supports_rollback_plan"])
+        self.assertTrue(registry_restore["supports_retention_policy"])
+        self.assertTrue(registry_restore["supports_registry_restore_persist_gate"])
+        self.assertTrue(registry_restore["supports_restore_audit_ledger"])
+        self.assertTrue(registry_restore["supports_registry_receipt"])
+        self.assertTrue(registry_restore["workspace_export_ready"])
+        self.assertTrue(registry_restore["json_export_ready"])
+        self.assertTrue(registry_restore["markdown_export_ready"])
+        self.assertFalse(registry_restore["registry_recorded"])
+        self.assertFalse(registry_restore["registry_persisted"])
+        self.assertFalse(registry_restore["snapshot_catalog_recorded"])
+        self.assertFalse(registry_restore["snapshot_catalog_persisted"])
+        self.assertFalse(registry_restore["diff_preview_recorded"])
+        self.assertFalse(registry_restore["diff_preview_persisted"])
+        self.assertFalse(registry_restore["restore_available"])
+        self.assertFalse(registry_restore["restore_applied"])
+        self.assertFalse(registry_restore["workspace_restored"])
+        self.assertFalse(registry_restore["rollback_available"])
+        self.assertFalse(registry_restore["rollback_applied"])
+        self.assertFalse(registry_restore["rollback_recorded"])
+        self.assertFalse(registry_restore["artifact_delete_allowed"])
+        self.assertFalse(registry_restore["artifact_deleted"])
+        self.assertFalse(registry_restore["persist_allowed"])
+        self.assertFalse(registry_restore["persist_gate_recorded"])
+        self.assertFalse(registry_restore["registry_write_allowed"])
+        self.assertFalse(registry_restore["snapshot_write_allowed"])
+        self.assertFalse(registry_restore["restore_write_allowed"])
+        self.assertFalse(registry_restore["rollback_write_allowed"])
+        self.assertFalse(registry_restore["restore_audit_recorded"])
+        self.assertFalse(registry_restore["audit_ledger_persisted"])
+        self.assertFalse(registry_restore["registry_receipt_recorded"])
+        self.assertFalse(registry_restore["project_snapshot_saved"])
+        self.assertFalse(registry_restore["versioned_snapshot_persisted"])
+        self.assertFalse(registry_restore["real_hash_computed"])
+        self.assertFalse(registry_restore["artifact_mutation_allowed"])
+        self.assertFalse(registry_restore["external_api_call_allowed"])
+        self.assertFalse(registry_restore["external_api_called"])
+        self.assertFalse(registry_restore["provider_secret_read"])
+        self.assertFalse(registry_restore["provider_secret_exported"])
+        self.assertFalse(registry_restore["media_uploaded"])
+        self.assertFalse(registry_restore["media_downloaded"])
+        self.assertFalse(registry_restore["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_artifact_registry_restore_status"],
+            "provider_artifact_registry_restore_ready_dry_run",
+        )
+        self.assertGreater(
+            payload["project"]["graph_summary"]["latest_provider_artifact_registry_restore_blocking_failure_count"],
+            0,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_artifact_registry_restore_registry_persisted"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_artifact_registry_restore_restore_available"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_artifact_registry_restore_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

@@ -78,6 +78,7 @@ from agent_runs import (
     build_provider_worker_checkpoint_resume_report,
     build_provider_worker_finalization_report,
     build_provider_artifact_lineage_report,
+    build_provider_artifact_registry_restore_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6298,6 +6299,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    provider_artifact_registry_restore_report = build_provider_artifact_registry_restore_report(
+        provider_artifact_lineage_report=provider_artifact_lineage_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6391,6 +6397,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_provider_artifact_lineage_versioned_snapshot_persisted": bool(provider_artifact_lineage_report.get("versioned_snapshot_persisted")),
         "latest_provider_artifact_lineage_workspace_export_ready": bool(provider_artifact_lineage_report.get("workspace_export_ready")),
         "latest_provider_artifact_lineage_external_api_called": bool(provider_artifact_lineage_report.get("external_api_called")),
+        "latest_provider_artifact_registry_restore_status": provider_artifact_registry_restore_report.get("report_status", ""),
+        "latest_provider_artifact_registry_restore_blocking_failure_count": int(provider_artifact_registry_restore_report.get("blocking_failure_count") or 0),
+        "latest_provider_artifact_registry_restore_registry_persisted": bool(provider_artifact_registry_restore_report.get("registry_persisted")),
+        "latest_provider_artifact_registry_restore_restore_available": bool(provider_artifact_registry_restore_report.get("restore_available")),
+        "latest_provider_artifact_registry_restore_external_api_called": bool(provider_artifact_registry_restore_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6425,6 +6436,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "provider_worker_checkpoint_resume_report": provider_worker_checkpoint_resume_report,
         "provider_worker_finalization_report": provider_worker_finalization_report,
         "provider_artifact_lineage_report": provider_artifact_lineage_report,
+        "provider_artifact_registry_restore_report": provider_artifact_registry_restore_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

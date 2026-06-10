@@ -5211,6 +5211,374 @@ def build_provider_artifact_lineage_report(
     }
 
 
+
+PROVIDER_ARTIFACT_REGISTRY_RESTORE_REPORT_VERSION = "provider_artifact_registry_restore_report_v1"
+
+PROVIDER_ARTIFACT_REGISTRY_RESTORE_STAGES = [
+    {
+        "stage_id": "build_artifact_registry_model",
+        "stage_label": "Build artifact registry model",
+        "required_inputs": ["provider_artifact_lineage_report", "artifact_manifest", "lineage_export_manifest"],
+        "expected_outputs": ["artifact_registry_model", "registry_items", "registry_key_policy"],
+    },
+    {
+        "stage_id": "catalog_versioned_snapshots",
+        "stage_label": "Catalog versioned snapshots",
+        "required_inputs": ["versioned_audit_snapshot", "workspace_export", "source_snapshot"],
+        "expected_outputs": ["versioned_snapshot_catalog", "snapshot_refs", "snapshot_retention_labels"],
+    },
+    {
+        "stage_id": "preview_snapshot_diff",
+        "stage_label": "Preview snapshot diff",
+        "required_inputs": ["versioned_snapshot_catalog", "artifact_registry_model", "tamper_drift_guard"],
+        "expected_outputs": ["snapshot_diff_preview", "changed_sections", "diff_safety_flags"],
+    },
+    {
+        "stage_id": "prepare_restore_plan",
+        "stage_label": "Prepare restore plan",
+        "required_inputs": ["snapshot_diff_preview", "selected_snapshot", "lineage_audit_receipt"],
+        "expected_outputs": ["restore_plan", "restore_steps", "restore_blockers"],
+    },
+    {
+        "stage_id": "prepare_rollback_plan",
+        "stage_label": "Prepare rollback plan",
+        "required_inputs": ["restore_plan", "rollback_policy", "persist_gate"],
+        "expected_outputs": ["rollback_plan", "rollback_steps", "rollback_safety_checks"],
+    },
+    {
+        "stage_id": "apply_retention_policy",
+        "stage_label": "Apply retention policy",
+        "required_inputs": ["artifact_registry_model", "versioned_snapshot_catalog", "operator_review_state"],
+        "expected_outputs": ["retention_policy", "retention_actions", "delete_blockers"],
+    },
+    {
+        "stage_id": "record_restore_audit_ledger",
+        "stage_label": "Record restore audit ledger",
+        "required_inputs": ["restore_plan", "rollback_plan", "retention_policy"],
+        "expected_outputs": ["restore_audit_ledger", "registry_receipt", "workspace_preview"],
+    },
+]
+
+
+def build_provider_artifact_registry_restore_report(
+    *,
+    provider_artifact_lineage_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_artifact_registry_restore_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run artifact registry / snapshot diff / restore / rollback report.
+
+    This report models registry registration, versioned snapshot catalogs,
+    snapshot diff previews, restore plans, rollback plans, retention policy,
+    persist gates, and audit ledgers. It does not persist registry records,
+    restore workspace state, delete artifacts, apply rollback, call providers,
+    upload/download media, or enable real execution.
+    """
+
+    lineage = provider_artifact_lineage_report if isinstance(provider_artifact_lineage_report, dict) else {}
+    lineage_ready = str(lineage.get("report_status") or "") == "provider_artifact_lineage_ready_dry_run"
+    operator_review_required = bool(lineage.get("operator_review_required", True))
+    versioned_snapshot = lineage.get("versioned_audit_snapshot") if isinstance(lineage.get("versioned_audit_snapshot"), dict) else {}
+    export_manifest = lineage.get("export_manifest") if isinstance(lineage.get("export_manifest"), dict) else {}
+    lineage_receipt = lineage.get("lineage_audit_receipt") if isinstance(lineage.get("lineage_audit_receipt"), dict) else {}
+    tamper_drift_guard = lineage.get("tamper_drift_guard") if isinstance(lineage.get("tamper_drift_guard"), dict) else {}
+
+    artifact_registry_model = {
+        "artifact_registry_model_version": "provider_artifact_registry_model_v1",
+        "artifact_registry_status": "artifact_registry_ready_dry_run" if lineage_ready else "artifact_registry_waiting_for_lineage",
+        "registry_id": f"dry_run_artifact_registry::{project_id}",
+        "registry_scope": "project_scoped_artifact_snapshots",
+        "registry_items": [
+            {"registry_item_id": "source_provenance_chain", "included": bool(lineage.get("source_provenance_chain")), "persisted": False},
+            {"registry_item_id": "prompt_generation_lineage", "included": bool(lineage.get("prompt_generation_lineage")), "persisted": False},
+            {"registry_item_id": "worker_lineage", "included": bool(lineage.get("worker_lineage")), "persisted": False},
+            {"registry_item_id": "versioned_audit_snapshot", "included": bool(versioned_snapshot), "persisted": False},
+            {"registry_item_id": "lineage_audit_receipt", "included": bool(lineage_receipt), "persisted": False},
+        ],
+        "registry_item_count": 5,
+        "registry_recorded": False,
+        "registry_persisted": False,
+        "external_api_called": False,
+    }
+
+    versioned_snapshot_catalog = {
+        "versioned_snapshot_catalog_version": "provider_versioned_snapshot_catalog_v1",
+        "versioned_snapshot_catalog_status": "snapshot_catalog_ready_dry_run" if lineage_ready else "snapshot_catalog_waiting_for_lineage",
+        "snapshot_refs": [
+            {"snapshot_ref_id": "source_snapshot", "available": True, "persisted": False},
+            {"snapshot_ref_id": "prompt_pack_snapshot", "available": True, "persisted": False},
+            {"snapshot_ref_id": "worker_finalization_snapshot", "available": lineage_ready, "persisted": False},
+            {"snapshot_ref_id": "versioned_audit_snapshot", "available": bool(versioned_snapshot), "persisted": False},
+            {"snapshot_ref_id": "workspace_export_snapshot", "available": bool(lineage.get("workspace_export_ready")), "persisted": False},
+        ],
+        "snapshot_ref_count": 5,
+        "selected_snapshot_id": f"dry_run_snapshot::{project_id}::latest",
+        "snapshot_catalog_recorded": False,
+        "snapshot_catalog_persisted": False,
+        "external_api_called": False,
+    }
+
+    snapshot_diff_preview = {
+        "snapshot_diff_preview_version": "provider_snapshot_diff_preview_v1",
+        "snapshot_diff_status": "snapshot_diff_ready_dry_run" if lineage_ready else "snapshot_diff_waiting_for_catalog",
+        "diff_sections": [
+            {"diff_section_id": "source_provenance", "changed": False, "review_required": True},
+            {"diff_section_id": "prompt_generation_lineage", "changed": False, "review_required": True},
+            {"diff_section_id": "worker_lineage", "changed": False, "review_required": True},
+            {"diff_section_id": "artifact_manifest", "changed": False, "review_required": True},
+            {"diff_section_id": "versioned_audit_snapshot", "changed": False, "review_required": True},
+        ],
+        "diff_section_count": 5,
+        "diff_preview_recorded": False,
+        "diff_preview_persisted": False,
+        "tamper_check_required": True,
+        "tamper_check_recorded": bool(tamper_drift_guard.get("tamper_check_recorded")),
+        "drift_check_required": True,
+        "drift_check_recorded": bool(tamper_drift_guard.get("drift_check_recorded")),
+        "external_api_called": False,
+    }
+
+    restore_plan = {
+        "restore_plan_version": "provider_artifact_restore_plan_v1",
+        "restore_plan_status": "restore_plan_ready_dry_run" if lineage_ready else "restore_plan_waiting_for_snapshot_diff",
+        "restore_target": "workspace_export_preview",
+        "restore_steps": [
+            {"restore_step_id": "select_versioned_snapshot", "ready": True, "executed": False},
+            {"restore_step_id": "compare_snapshot_diff", "ready": lineage_ready, "executed": False},
+            {"restore_step_id": "confirm_lineage_receipt", "ready": bool(lineage_receipt), "executed": False},
+            {"restore_step_id": "preview_workspace_restore", "ready": True, "executed": False},
+            {"restore_step_id": "require_operator_approval", "ready": False, "executed": False},
+        ],
+        "restore_step_count": 5,
+        "restore_blockers": [
+            "operator_approval_required",
+            "persist_gate_not_open",
+            "restore_is_preview_only",
+            "artifact_storage_disabled",
+        ],
+        "restore_blocker_count": 4,
+        "restore_available": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "external_api_called": False,
+    }
+
+    rollback_plan = {
+        "rollback_plan_version": "provider_artifact_registry_rollback_plan_v1",
+        "rollback_plan_status": "rollback_plan_ready_dry_run" if lineage_ready else "rollback_plan_waiting_for_restore_plan",
+        "rollback_steps": [
+            {"rollback_step_id": "capture_current_registry_preview", "ready": True, "executed": False},
+            {"rollback_step_id": "capture_current_workspace_preview", "ready": True, "executed": False},
+            {"rollback_step_id": "restore_previous_registry_pointer", "ready": False, "executed": False},
+            {"rollback_step_id": "restore_previous_workspace_snapshot", "ready": False, "executed": False},
+            {"rollback_step_id": "record_rollback_receipt", "ready": False, "executed": False},
+        ],
+        "rollback_step_count": 5,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "rollback_recorded": False,
+        "project_snapshot_saved": False,
+        "external_api_called": False,
+    }
+
+    retention_policy = {
+        "retention_policy_version": "provider_artifact_retention_policy_v1",
+        "retention_policy_status": "retention_policy_ready_dry_run",
+        "retention_actions": [
+            {"retention_action_id": "keep_latest_versioned_snapshot", "allowed": True, "executed": False},
+            {"retention_action_id": "keep_latest_lineage_receipt", "allowed": True, "executed": False},
+            {"retention_action_id": "archive_old_preview_snapshots", "allowed": False, "executed": False},
+            {"retention_action_id": "delete_unreferenced_artifacts", "allowed": False, "executed": False},
+        ],
+        "retention_action_count": 4,
+        "delete_blockers": [
+            "delete_disabled_in_dry_run",
+            "operator_approval_required",
+            "lineage_retention_required",
+        ],
+        "delete_blocker_count": 3,
+        "artifact_delete_allowed": False,
+        "artifact_deleted": False,
+        "external_api_called": False,
+    }
+
+    persist_gate = {
+        "registry_restore_persist_gate_version": "provider_artifact_registry_restore_persist_gate_v1",
+        "persist_gate_status": "persist_gate_blocked_by_dry_run",
+        "persist_gate_required": True,
+        "persist_allowed": False,
+        "persist_gate_recorded": False,
+        "registry_write_allowed": False,
+        "snapshot_write_allowed": False,
+        "restore_write_allowed": False,
+        "rollback_write_allowed": False,
+        "external_api_called": False,
+    }
+
+    restore_audit_ledger = {
+        "restore_audit_ledger_version": "provider_artifact_restore_audit_ledger_v1",
+        "restore_audit_ledger_status": "restore_audit_ledger_ready_dry_run",
+        "ledger_items": [
+            {"ledger_item_id": "artifact_registry_model", "included": True, "recorded": False},
+            {"ledger_item_id": "versioned_snapshot_catalog", "included": True, "recorded": False},
+            {"ledger_item_id": "snapshot_diff_preview", "included": True, "recorded": False},
+            {"ledger_item_id": "restore_plan", "included": True, "recorded": False},
+            {"ledger_item_id": "rollback_plan", "included": True, "recorded": False},
+            {"ledger_item_id": "retention_policy", "included": True, "recorded": False},
+            {"ledger_item_id": "persist_gate", "included": True, "recorded": False},
+        ],
+        "ledger_item_count": 7,
+        "restore_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    registry_receipt = {
+        "registry_receipt_version": "provider_artifact_registry_restore_receipt_v1",
+        "receipt_status": "artifact_registry_restore_dry_run_recorded",
+        "artifact_registry_model_included": True,
+        "versioned_snapshot_catalog_included": True,
+        "snapshot_diff_preview_included": True,
+        "restore_plan_included": True,
+        "rollback_plan_included": True,
+        "retention_policy_included": True,
+        "persist_gate_included": True,
+        "restore_audit_ledger_included": True,
+        "registry_receipt_recorded": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not lineage_ready:
+        blocking_failures.append("provider_artifact_lineage_report_not_ready")
+    blocking_failures.extend([
+        "registry_persistence_disabled",
+        "snapshot_catalog_not_persisted",
+        "diff_preview_not_persisted",
+        "restore_blocked_by_dry_run",
+        "rollback_blocked_by_dry_run",
+        "artifact_delete_disabled",
+        "persist_gate_blocked",
+    ])
+    if operator_review_required:
+        blocking_failures.append("operator_review_required")
+
+    report_status = (
+        "provider_artifact_registry_restore_ready_dry_run"
+        if lineage_ready
+        else "provider_artifact_registry_restore_incomplete"
+    )
+
+    return {
+        "provider_artifact_registry_restore_report_version": PROVIDER_ARTIFACT_REGISTRY_RESTORE_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_artifact_registry_restore_report_builder"),
+        "provider_artifact_lineage_ready": lineage_ready,
+        "operator_review_required": operator_review_required,
+        "stage_count": len(PROVIDER_ARTIFACT_REGISTRY_RESTORE_STAGES),
+        "artifact_registry_restore_stage_matrix": [dict(item, complete=lineage_ready) for item in PROVIDER_ARTIFACT_REGISTRY_RESTORE_STAGES],
+        "artifact_registry_model": artifact_registry_model,
+        "versioned_snapshot_catalog": versioned_snapshot_catalog,
+        "snapshot_diff_preview": snapshot_diff_preview,
+        "restore_plan": restore_plan,
+        "rollback_plan": rollback_plan,
+        "retention_policy": retention_policy,
+        "persist_gate": persist_gate,
+        "restore_audit_ledger": restore_audit_ledger,
+        "registry_receipt": registry_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "registry_item_count": artifact_registry_model["registry_item_count"],
+        "snapshot_ref_count": versioned_snapshot_catalog["snapshot_ref_count"],
+        "diff_section_count": snapshot_diff_preview["diff_section_count"],
+        "restore_step_count": restore_plan["restore_step_count"],
+        "restore_blocker_count": restore_plan["restore_blocker_count"],
+        "rollback_step_count": rollback_plan["rollback_step_count"],
+        "retention_action_count": retention_policy["retention_action_count"],
+        "delete_blocker_count": retention_policy["delete_blocker_count"],
+        "ledger_item_count": restore_audit_ledger["ledger_item_count"],
+        "supports_artifact_registry_model": True,
+        "supports_versioned_snapshot_catalog": True,
+        "supports_snapshot_diff_preview": True,
+        "supports_restore_plan": True,
+        "supports_rollback_plan": True,
+        "supports_retention_policy": True,
+        "supports_registry_restore_persist_gate": True,
+        "supports_restore_audit_ledger": True,
+        "supports_registry_receipt": True,
+        "recommended_next_state": "show_provider_artifact_registry_restore_in_workspace",
+        "dry_run": True,
+        "registry_required": True,
+        "registry_recorded": False,
+        "registry_persisted": False,
+        "snapshot_catalog_recorded": False,
+        "snapshot_catalog_persisted": False,
+        "diff_preview_recorded": False,
+        "diff_preview_persisted": False,
+        "restore_available": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "rollback_available": False,
+        "rollback_applied": False,
+        "rollback_recorded": False,
+        "retention_policy_recorded": False,
+        "artifact_delete_allowed": False,
+        "artifact_deleted": False,
+        "persist_gate_required": True,
+        "persist_allowed": False,
+        "persist_gate_recorded": False,
+        "registry_write_allowed": False,
+        "snapshot_write_allowed": False,
+        "restore_write_allowed": False,
+        "rollback_write_allowed": False,
+        "restore_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "registry_receipt_recorded": False,
+        "project_snapshot_saved": False,
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "lineage_persisted": False,
+        "versioned_snapshot_persisted": False,
+        "audit_snapshot_persisted": False,
+        "real_hash_computed": False,
+        "artifact_mutation_allowed": False,
+        "artifact_storage_enabled": False,
+        "artifact_manifest_persisted": False,
+        "artifact_handoff_ready": False,
+        "result_validated": False,
+        "output_contract_valid": False,
+        "downstream_handoff_allowed": False,
+        "run_finalized": False,
+        "checkpoint_recorded": False,
+        "resume_allowed": False,
+        "replay_allowed": False,
+        "provider_replay_allowed": False,
+        "queue_persisted": False,
+        "lease_acquired": False,
+        "heartbeat_recorded": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "worker_invocation_performed": False,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "quota_reserved": False,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+        "incident_opened": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

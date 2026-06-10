@@ -4156,6 +4156,193 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_artifact_registry_restore_report_models_registry_diff_restore_rollback_and_safety(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_artifact_lineage_report,
+            build_provider_artifact_registry_restore_report,
+            build_provider_failure_recovery_report,
+            build_provider_observability_report,
+            build_provider_queue_lease_worker_report,
+            build_provider_sandbox_runtime_report,
+            build_provider_worker_checkpoint_resume_report,
+            build_provider_worker_finalization_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        real_gate = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        failure_report = build_provider_failure_recovery_report(
+            real_provider_execution_gate_report=real_gate,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        observability_report = build_provider_observability_report(
+            provider_failure_recovery_report=failure_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        queue_worker_report = build_provider_queue_lease_worker_report(
+            provider_observability_report=observability_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        checkpoint_report = build_provider_worker_checkpoint_resume_report(
+            provider_queue_lease_worker_report=queue_worker_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        finalization_report = build_provider_worker_finalization_report(
+            provider_worker_checkpoint_resume_report=checkpoint_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        lineage_report = build_provider_artifact_lineage_report(
+            provider_worker_finalization_report=finalization_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+        report = build_provider_artifact_registry_restore_report(
+            provider_artifact_lineage_report=lineage_report,
+            project_id="project_provider_artifact_registry_restore",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_artifact_registry_restore_report_version"], "provider_artifact_registry_restore_report_v1")
+        self.assertEqual(report["report_status"], "provider_artifact_registry_restore_ready_dry_run")
+        self.assertTrue(report["provider_artifact_lineage_ready"])
+        self.assertTrue(report["operator_review_required"])
+        self.assertGreater(report["stage_count"], 0)
+        self.assertTrue(report["artifact_registry_model"])
+        self.assertTrue(report["versioned_snapshot_catalog"])
+        self.assertTrue(report["snapshot_diff_preview"])
+        self.assertTrue(report["restore_plan"])
+        self.assertTrue(report["rollback_plan"])
+        self.assertTrue(report["retention_policy"])
+        self.assertTrue(report["persist_gate"])
+        self.assertTrue(report["restore_audit_ledger"])
+        self.assertTrue(report["registry_receipt"])
+        self.assertGreater(report["registry_item_count"], 0)
+        self.assertGreater(report["snapshot_ref_count"], 0)
+        self.assertGreater(report["diff_section_count"], 0)
+        self.assertGreater(report["restore_step_count"], 0)
+        self.assertGreater(report["restore_blocker_count"], 0)
+        self.assertGreater(report["rollback_step_count"], 0)
+        self.assertGreater(report["retention_action_count"], 0)
+        self.assertGreater(report["delete_blocker_count"], 0)
+        self.assertGreater(report["ledger_item_count"], 0)
+        self.assertTrue(report["supports_artifact_registry_model"])
+        self.assertTrue(report["supports_versioned_snapshot_catalog"])
+        self.assertTrue(report["supports_snapshot_diff_preview"])
+        self.assertTrue(report["supports_restore_plan"])
+        self.assertTrue(report["supports_rollback_plan"])
+        self.assertTrue(report["supports_retention_policy"])
+        self.assertTrue(report["supports_registry_restore_persist_gate"])
+        self.assertTrue(report["supports_restore_audit_ledger"])
+        self.assertTrue(report["supports_registry_receipt"])
+        self.assertTrue(report["dry_run"])
+        self.assertTrue(report["registry_required"])
+        self.assertTrue(report["persist_gate_required"])
+        self.assertTrue(report["workspace_export_ready"])
+        self.assertTrue(report["json_export_ready"])
+        self.assertTrue(report["markdown_export_ready"])
+        self.assertFalse(report["registry_recorded"])
+        self.assertFalse(report["registry_persisted"])
+        self.assertFalse(report["snapshot_catalog_recorded"])
+        self.assertFalse(report["snapshot_catalog_persisted"])
+        self.assertFalse(report["diff_preview_recorded"])
+        self.assertFalse(report["diff_preview_persisted"])
+        self.assertFalse(report["restore_available"])
+        self.assertFalse(report["restore_applied"])
+        self.assertFalse(report["workspace_restored"])
+        self.assertFalse(report["rollback_available"])
+        self.assertFalse(report["rollback_applied"])
+        self.assertFalse(report["rollback_recorded"])
+        self.assertFalse(report["retention_policy_recorded"])
+        self.assertFalse(report["artifact_delete_allowed"])
+        self.assertFalse(report["artifact_deleted"])
+        self.assertFalse(report["persist_allowed"])
+        self.assertFalse(report["persist_gate_recorded"])
+        self.assertFalse(report["registry_write_allowed"])
+        self.assertFalse(report["snapshot_write_allowed"])
+        self.assertFalse(report["restore_write_allowed"])
+        self.assertFalse(report["rollback_write_allowed"])
+        self.assertFalse(report["restore_audit_recorded"])
+        self.assertFalse(report["audit_ledger_persisted"])
+        self.assertFalse(report["registry_receipt_recorded"])
+        self.assertFalse(report["project_snapshot_saved"])
+        self.assertFalse(report["lineage_persisted"])
+        self.assertFalse(report["versioned_snapshot_persisted"])
+        self.assertFalse(report["audit_snapshot_persisted"])
+        self.assertFalse(report["real_hash_computed"])
+        self.assertFalse(report["artifact_mutation_allowed"])
+        self.assertFalse(report["artifact_storage_enabled"])
+        self.assertFalse(report["artifact_manifest_persisted"])
+        self.assertFalse(report["artifact_handoff_ready"])
+        self.assertFalse(report["result_validated"])
+        self.assertFalse(report["output_contract_valid"])
+        self.assertFalse(report["downstream_handoff_allowed"])
+        self.assertFalse(report["run_finalized"])
+        self.assertFalse(report["replay_allowed"])
+        self.assertFalse(report["provider_replay_allowed"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["quota_reserved"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["paid_generation_allowed"])
+
+
     def test_provider_artifact_lineage_report_models_provenance_versioned_audit_and_safety(self):
         from agent_runs import (
             build_agent_contract_completeness_report,
