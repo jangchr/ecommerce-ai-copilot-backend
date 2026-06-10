@@ -6568,6 +6568,31 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_keyframe_prompt_pack_marker", script)
 
 
+    def test_project_workspace_manual_generation_result_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace manual generation result bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_MANUAL_GENERATION_RESULT_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceManualGenerationResultPanel", html)
+        self.assertIn("copyProjectWorkspaceManualGenerationResult", html)
+        self.assertIn("manual_generation_result_report", html)
+        self.assertIn("projectWorkspaceExportManualGenerationResultMarkdown", html)
+        self.assertIn("projectWorkspaceExportManualGenerationResultSnapshot", html)
+        self.assertIn("result_url_fetched", html)
+        self.assertIn("product_drift_checklist", html)
+        self.assertIn("evidence_consistency_checklist", html)
+        self.assertIn("rework_recommendation_rules", html)
+
+    def test_project_workspace_manual_generation_result_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_manual_generation_result_marker", script)
+        self.assertIn("Project Workspace manual generation result bundle", script)
+
+    def test_project_workspace_manual_generation_result_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace manual generation result bundle", script)
+        self.assertIn("project_workspace_manual_generation_result_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))

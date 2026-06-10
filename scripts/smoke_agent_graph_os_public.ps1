@@ -111,6 +111,7 @@ Add-Check "project_workspace_source_adapter_contract_marker" ($page.Content -mat
 Add-Check "project_workspace_multi_agent_output_chain_marker" ($page.Content -match "Project Workspace multi-agent output chain bundle")
 Add-Check "project_workspace_keyframe_video_asset_chain_marker" ($page.Content -match "Project Workspace keyframe video asset chain bundle")
 Add-Check "project_workspace_keyframe_prompt_pack_marker" ($page.Content -match "Project Workspace keyframe prompt pack bundle")
+Add-Check "project_workspace_manual_generation_result_marker" ($page.Content -match "Project Workspace manual generation result bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

@@ -11662,6 +11662,103 @@
 
 
 
+
+        function projectWorkspaceExportManualGenerationResultSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceManualGenerationResultReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack manual generation result bundle',
+                report_status: report.report_status || '',
+                manual_generation_result_report_version: report.manual_generation_result_report_version || '',
+                keyframe_prompt_pack_ready: Boolean(report.keyframe_prompt_pack_ready),
+                missing_item_count: Number(report.missing_item_count || 0),
+                missing_items: Array.isArray(report.missing_items) ? report.missing_items : [],
+                supported_manual_tools: Array.isArray(report.supported_manual_tools) ? report.supported_manual_tools : [],
+                result_intake_required_fields: Array.isArray(report.result_intake_required_fields) ? report.result_intake_required_fields : [],
+                external_result_input_schema_ready: Boolean(report.external_result_input_schema_ready),
+                supports_result_url_intake: Boolean(report.supports_result_url_intake),
+                supports_preview_url_intake: Boolean(report.supports_preview_url_intake),
+                supports_operator_notes: Boolean(report.supports_operator_notes),
+                supports_product_drift_checklist: Boolean(report.supports_product_drift_checklist),
+                supports_evidence_consistency_checklist: Boolean(report.supports_evidence_consistency_checklist),
+                supports_rework_recommendation: Boolean(report.supports_rework_recommendation),
+                supports_revised_prompt_handoff: Boolean(report.supports_revised_prompt_handoff),
+                supports_second_experiment_comparison: Boolean(report.supports_second_experiment_comparison),
+                can_record_external_experiment: Boolean(report.can_record_external_experiment),
+                product_drift_checklist: Array.isArray(report.product_drift_checklist) ? report.product_drift_checklist : [],
+                evidence_consistency_checklist: Array.isArray(report.evidence_consistency_checklist) ? report.evidence_consistency_checklist : [],
+                rework_recommendation_rules: Array.isArray(report.rework_recommendation_rules) ? report.rework_recommendation_rules : [],
+                manual_result_workflow: Array.isArray(report.manual_result_workflow) ? report.manual_result_workflow : [],
+                existing_endpoint_contracts: Array.isArray(report.existing_endpoint_contracts) ? report.existing_endpoint_contracts : [],
+                manual_copy_paste_only: Boolean(report.manual_copy_paste_only),
+                manual_review_required: Boolean(report.manual_review_required),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                result_url_fetched: Boolean(report.result_url_fetched),
+                preview_url_fetched: Boolean(report.preview_url_fetched),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                dry_run: Boolean(report.dry_run),
+                has_manual_generation_result_report: Boolean(report.report_status || report.manual_generation_result_report_version)
+            };
+        }
+
+        function projectWorkspaceExportManualGenerationResultMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportManualGenerationResultSnapshot(workspace);
+            if (!report.has_manual_generation_result_report) {
+                return `## ${t('projectWorkspaceExportManualGenerationResultTitle')}\n${t('manualGenerationResultNotRefreshedYet')}`;
+            }
+            const fieldLines = report.result_intake_required_fields.length
+                ? report.result_intake_required_fields.map((field, index) => `${index + 1}. ${field.field} | required=${Boolean(field.required)} | example=${field.example || ''} | ${field.description || ''}`)
+                : ['none'];
+            const driftLines = report.product_drift_checklist.length
+                ? report.product_drift_checklist.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const evidenceLines = report.evidence_consistency_checklist.length
+                ? report.evidence_consistency_checklist.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const ruleLines = report.rework_recommendation_rules.length
+                ? report.rework_recommendation_rules.map((rule, index) => `${index + 1}. ${rule.condition || ''} -> ${rule.recommended_route || ''} -> ${rule.next_artifact || ''}: ${rule.reason || ''}`)
+                : ['none'];
+            const workflowLines = report.manual_result_workflow.length
+                ? report.manual_result_workflow.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportManualGenerationResultTitle')}`,
+                `${t('manualGenerationResultStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('canRecordExternalExperiment')}: ${report.can_record_external_experiment}`,
+                `${t('supportsReworkRecommendation')}: ${report.supports_rework_recommendation}`,
+                `${t('manualReviewRequired')}: ${report.manual_review_required}`,
+                `${t('realExecutionAllowed')}: ${report.real_execution_allowed}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${report.external_api_call_allowed}`,
+                `${t('resultUrlFetched')}: ${report.result_url_fetched}`,
+                `${t('previewUrlFetched')}: ${report.preview_url_fetched}`,
+                `${t('mediaDownloaded')}: ${report.media_downloaded}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                `${t('supportedManualTools')}: ${report.supported_manual_tools.join(', ')}`,
+                '',
+                `### ${t('resultIntakeFields')}`,
+                ...fieldLines,
+                '',
+                `### ${t('productDriftChecklist')}`,
+                ...driftLines,
+                '',
+                `### ${t('evidenceConsistencyChecklist')}`,
+                ...evidenceLines,
+                '',
+                `### ${t('reworkRecommendationRules')}`,
+                ...ruleLines,
+                '',
+                `### ${t('manualResultWorkflow')}`,
+                ...workflowLines
+            ].join('\n');
+        }
+
         function projectWorkspaceExportKeyframePromptPackSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceKeyframePromptPackReportFromWorkspace(workspace);
             return {
@@ -12161,6 +12258,8 @@
                 '',
                 projectWorkspaceExportKeyframePromptPackMarkdown(workspace),
                 '',
+                projectWorkspaceExportManualGenerationResultMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12186,6 +12285,7 @@
                 multi_agent_output_chain_report: projectWorkspaceExportMultiAgentOutputChainSnapshot(workspace),
                 keyframe_video_asset_chain_report: projectWorkspaceExportKeyframeVideoAssetChainSnapshot(workspace),
                 keyframe_prompt_pack_report: projectWorkspaceExportKeyframePromptPackSnapshot(workspace),
+                manual_generation_result_report: projectWorkspaceExportManualGenerationResultSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12311,6 +12411,7 @@
                 latestProjectMultiAgentOutputChainReport = payload.multi_agent_output_chain_report || {};
                 latestProjectKeyframeVideoAssetChainReport = payload.keyframe_video_asset_chain_report || {};
                 latestProjectKeyframePromptPackReport = payload.keyframe_prompt_pack_report || {};
+                latestProjectManualGenerationResultReport = payload.manual_generation_result_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16154,6 +16255,214 @@
         let latestProjectKeyframeVideoAssetChainReport = {};
         const PROJECT_WORKSPACE_KEYFRAME_PROMPT_PACK_BUNDLE_MARKER = 'Project Workspace keyframe prompt pack bundle';
         let latestProjectKeyframePromptPackReport = {};
+        const PROJECT_WORKSPACE_MANUAL_GENERATION_RESULT_BUNDLE_MARKER = 'Project Workspace manual generation result bundle';
+        let latestProjectManualGenerationResultReport = {};
+
+        function projectWorkspaceManualGenerationResultReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectManualGenerationResultReport || {}).length
+                ? latestProjectManualGenerationResultReport
+                : workspace?.manual_generation_result_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                manual_generation_result_report_version: '',
+                report_status: graphSummary.latest_manual_generation_result_status || '',
+                can_record_external_experiment: Boolean(graphSummary.latest_manual_generation_result_can_record_external_experiment),
+                supports_rework_recommendation: Boolean(graphSummary.latest_manual_generation_result_supports_rework),
+                manual_review_required: Boolean(graphSummary.latest_manual_generation_result_manual_review_required),
+                supported_manual_tools: [],
+                result_intake_required_fields: [],
+                product_drift_checklist: [],
+                evidence_consistency_checklist: [],
+                rework_recommendation_rules: [],
+                manual_result_workflow: [],
+                existing_endpoint_contracts: [],
+                manual_copy_paste_only: true,
+                dry_run: true,
+                real_execution_allowed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                result_url_fetched: false,
+                preview_url_fetched: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceManualGenerationResultCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceManualGenerationResultReportFromWorkspace(workspace);
+            const fields = Array.isArray(report.result_intake_required_fields) ? report.result_intake_required_fields : [];
+            const tools = Array.isArray(report.supported_manual_tools) ? report.supported_manual_tools : [];
+            const drift = Array.isArray(report.product_drift_checklist) ? report.product_drift_checklist : [];
+            const evidence = Array.isArray(report.evidence_consistency_checklist) ? report.evidence_consistency_checklist : [];
+            const rules = Array.isArray(report.rework_recommendation_rules) ? report.rework_recommendation_rules : [];
+            const workflow = Array.isArray(report.manual_result_workflow) ? report.manual_result_workflow : [];
+            const endpoints = Array.isArray(report.existing_endpoint_contracts) ? report.existing_endpoint_contracts : [];
+            return [
+                t('manualGenerationResultCopyTitle'),
+                `${t('manualGenerationResultStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('canRecordExternalExperiment')}: ${Boolean(report.can_record_external_experiment)}`,
+                `${t('supportsReworkRecommendation')}: ${Boolean(report.supports_rework_recommendation)}`,
+                `${t('manualCopyPasteOnly')}: ${Boolean(report.manual_copy_paste_only)}`,
+                `${t('manualReviewRequired')}: ${Boolean(report.manual_review_required)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('resultUrlFetched')}: ${Boolean(report.result_url_fetched)}`,
+                `${t('previewUrlFetched')}: ${Boolean(report.preview_url_fetched)}`,
+                `${t('mediaUploaded')}: ${Boolean(report.media_uploaded)}`,
+                `${t('mediaDownloaded')}: ${Boolean(report.media_downloaded)}`,
+                `${t('videoGenerationPerformed')}: ${Boolean(report.video_generation_performed)}`,
+                `${t('imageGenerationPerformed')}: ${Boolean(report.image_generation_performed)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('supportedManualTools')}: ${tools.join(', ') || t('none')}`,
+                '',
+                `${t('resultIntakeFields')}:`,
+                fields.length ? fields.map((field, index) => `${index + 1}. ${field.field} | required=${Boolean(field.required)} | example=${field.example || ''} | ${field.description || ''}`).join('\n') : t('none'),
+                '',
+                `${t('productDriftChecklist')}:`,
+                drift.length ? drift.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('evidenceConsistencyChecklist')}:`,
+                evidence.length ? evidence.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('reworkRecommendationRules')}:`,
+                rules.length ? rules.map((rule, index) => `${index + 1}. ${rule.condition || ''} -> ${rule.recommended_route || ''} -> ${rule.next_artifact || ''}: ${rule.reason || ''}`).join('\n') : t('none'),
+                '',
+                `${t('manualResultWorkflow')}:`,
+                workflow.length ? workflow.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('existingEndpointContracts')}:`,
+                endpoints.length ? endpoints.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                JSON.stringify({ manual_generation_result_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceManualGenerationResult() {
+            const status = document.getElementById('projectWorkspaceManualGenerationResultStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceManualGenerationResultCopyText());
+                if (status) status.textContent = t('manualGenerationResultCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('manualGenerationResultCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceManualGenerationResultPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceManualGenerationResultReportFromWorkspace(workspace);
+            const tools = Array.isArray(report.supported_manual_tools) ? report.supported_manual_tools : [];
+            const fields = Array.isArray(report.result_intake_required_fields) ? report.result_intake_required_fields : [];
+            const drift = Array.isArray(report.product_drift_checklist) ? report.product_drift_checklist : [];
+            const evidence = Array.isArray(report.evidence_consistency_checklist) ? report.evidence_consistency_checklist : [];
+            const rules = Array.isArray(report.rework_recommendation_rules) ? report.rework_recommendation_rules : [];
+            const workflow = Array.isArray(report.manual_result_workflow) ? report.manual_result_workflow : [];
+            const endpoints = Array.isArray(report.existing_endpoint_contracts) ? report.existing_endpoint_contracts : [];
+            const hasReport = Boolean(report.report_status || report.manual_generation_result_report_version || fields.length || drift.length || evidence.length);
+            return `
+                <div class="section-block" id="projectWorkspaceManualGenerationResultPanel" data-project-manual-generation-result-marker="Project Workspace manual generation result bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('manualGenerationResultPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('manualGenerationResultPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceManualGenerationResultBtn" type="button" onclick="copyProjectWorkspaceManualGenerationResult()">${escapeHTML(t('copyManualGenerationResultGuide'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('manualGenerationResultStatus'))}</div>
+                            <strong data-manual-generation-result-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('manualGenerationResultNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('canRecordExternalExperiment'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.can_record_external_experiment)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('supportsReworkRecommendation'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.supports_rework_recommendation)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('supportedManualTools'))}</div>
+                        <div class="tag-list">${tools.length ? tools.map((tool) => `<span class="badge">${escapeHTML(tool)}</span>`).join('') : `<span class="badge">${escapeHTML(t('none'))}</span>`}</div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('resultIntakeFields'))}</div>
+                        ${fields.length ? fields.map((field) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(field.field || '')}</strong>
+                                <span class="badge">${escapeHTML(t('required'))}: ${escapeHTML(String(Boolean(field.required)))}</span>
+                                <div class="field-helper">${escapeHTML(field.description || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('example'))}: ${escapeHTML(field.example || '')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('productDriftChecklist'))}</div>
+                            ${drift.length ? drift.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. ${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('evidenceConsistencyChecklist'))}</div>
+                            ${evidence.length ? evidence.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. ${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('reworkRecommendationRules'))}</div>
+                        ${rules.length ? rules.map((rule) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(rule.condition || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('recommendedRoute'))}: ${escapeHTML(rule.recommended_route || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('nextArtifact'))}: ${escapeHTML(rule.next_artifact || '')}</div>
+                                <p>${escapeHTML(rule.reason || '')}</p>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('manualResultWorkflow'))}</div>
+                            ${workflow.length ? workflow.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. ${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('existingEndpointContracts'))}</div>
+                            ${endpoints.length ? endpoints.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <code>${escapeHTML(item)}</code></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('resultUrlFetched'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.result_url_fetched)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('previewUrlFetched'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.preview_url_fetched)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('mediaDownloaded'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.media_downloaded)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('paidGenerationAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.paid_generation_allowed)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('manualGenerationResultAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-manual-generation-result-audit-preview="Project Workspace manual generation result bundle">${escapeHTML(projectWorkspaceManualGenerationResultCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('manualGenerationResultNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceManualGenerationResultStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceKeyframePromptPackReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectKeyframePromptPackReport || {}).length
@@ -17876,6 +18185,8 @@
                 if (keyframeVideoAssetPanel) keyframeVideoAssetPanel.outerHTML = renderProjectWorkspaceKeyframeVideoAssetChainPanel(latestProjectWorkspace);
                 const keyframePromptPackPanel = document.getElementById('projectWorkspaceKeyframePromptPackPanel');
                 if (keyframePromptPackPanel) keyframePromptPackPanel.outerHTML = renderProjectWorkspaceKeyframePromptPackPanel(latestProjectWorkspace);
+                const manualGenerationResultPanel = document.getElementById('projectWorkspaceManualGenerationResultPanel');
+                if (manualGenerationResultPanel) manualGenerationResultPanel.outerHTML = renderProjectWorkspaceManualGenerationResultPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -20058,6 +20369,7 @@
                     ${renderProjectWorkspaceMultiAgentOutputChainPanel(workspace)}
                     ${renderProjectWorkspaceKeyframeVideoAssetChainPanel(workspace)}
                     ${renderProjectWorkspaceKeyframePromptPackPanel(workspace)}
+                    ${renderProjectWorkspaceManualGenerationResultPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -24406,6 +24718,69 @@
             providerPromptCopied: 'Provider Prompt \u5df2\u590d\u5236\u3002',
             providerPromptCopyFailed: '\u590d\u5236 Provider Prompt \u5931\u8d25\u3002',
             projectWorkspaceExportKeyframePromptPackTitle: 'Actual Keyframe Prompt Pack / \u771f\u5b9e\u5173\u952e\u5e27 Prompt \u5305'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceManualGenerationResultBundleMarker: 'Project Workspace manual generation result bundle',
+            manualGenerationResultPanelTitle: 'Manual Generation Result Intake',
+            manualGenerationResultPanelHelper: 'Dry-run intake guide for manually generated external results. Paste result URL, preview URL, tool name, prompt source, scores, and notes back into CrossGrowth, then review product drift, evidence consistency, and rework recommendations. No provider call, no URL fetch, no media download, no cost.',
+            copyManualGenerationResultGuide: 'Copy result intake guide',
+            manualGenerationResultCopyTitle: 'Project manual generation result intake guide',
+            manualGenerationResultStatus: 'Manual generation result status',
+            canRecordExternalExperiment: 'Can record external experiment',
+            supportsReworkRecommendation: 'Supports rework recommendation',
+            supportedManualTools: 'Supported manual tools',
+            resultIntakeFields: 'Result intake fields',
+            productDriftChecklist: 'Product drift checklist',
+            evidenceConsistencyChecklist: 'Evidence consistency checklist',
+            reworkRecommendationRules: 'Rework recommendation rules',
+            manualResultWorkflow: 'Manual result workflow',
+            existingEndpointContracts: 'Existing endpoint contracts',
+            recommendedRoute: 'Recommended route',
+            nextArtifact: 'Next artifact',
+            resultUrlFetched: 'Result URL fetched',
+            previewUrlFetched: 'Preview URL fetched',
+            mediaUploaded: 'Media uploaded',
+            mediaDownloaded: 'Media downloaded',
+            required: 'Required',
+            example: 'Example',
+            manualGenerationResultAuditPreview: 'Manual generation result audit preview',
+            manualGenerationResultNotRefreshedYet: 'Manual generation result report has not been refreshed yet.',
+            manualGenerationResultCopied: 'Manual generation result guide copied.',
+            manualGenerationResultCopyFailed: 'Could not copy manual generation result guide.',
+            projectWorkspaceExportManualGenerationResultTitle: 'Manual Generation Result Intake'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceManualGenerationResultBundleMarker: 'Project Workspace manual generation result bundle',
+            manualGenerationResultPanelTitle: 'Manual Generation Result Intake / \u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41',
+            manualGenerationResultPanelHelper: '\u624b\u52a8\u5916\u90e8\u751f\u6210\u7ed3\u679c\u7684 dry-run \u56de\u6d41\u6307\u5f15\uff1a\u628a result URL\u3001preview URL\u3001tool name\u3001prompt source\u3001\u8bc4\u5206\u548c\u5907\u6ce8\u8d34\u56de CrossGrowth\uff0c\u7136\u540e\u68c0\u67e5\u4ea7\u54c1\u6f02\u79fb\u3001\u8bc1\u636e\u4e00\u81f4\u6027\u548c rework \u5efa\u8bae\u3002\u4e0d\u8c03 provider\u3001\u4e0d\u6293 URL\u3001\u4e0d\u4e0b\u8f7d\u5a92\u4f53\u3001\u4e0d\u6263\u8d39\u3002',
+            copyManualGenerationResultGuide: '\u590d\u5236\u7ed3\u679c\u56de\u6d41\u6307\u5f15',
+            manualGenerationResultCopyTitle: '\u9879\u76ee\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u6307\u5f15',
+            manualGenerationResultStatus: '\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u72b6\u6001',
+            canRecordExternalExperiment: '\u53ef\u8bb0\u5f55\u5916\u90e8\u5b9e\u9a8c',
+            supportsReworkRecommendation: '\u652f\u6301 Rework \u5efa\u8bae',
+            supportedManualTools: '\u652f\u6301\u7684\u624b\u52a8\u5de5\u5177',
+            resultIntakeFields: '\u7ed3\u679c\u56de\u6d41\u5b57\u6bb5',
+            productDriftChecklist: '\u4ea7\u54c1\u6f02\u79fb\u68c0\u67e5\u6e05\u5355',
+            evidenceConsistencyChecklist: '\u8bc1\u636e\u4e00\u81f4\u6027\u68c0\u67e5\u6e05\u5355',
+            reworkRecommendationRules: 'Rework \u5efa\u8bae\u89c4\u5219',
+            manualResultWorkflow: '\u624b\u52a8\u7ed3\u679c\u56de\u6d41\u6d41\u7a0b',
+            existingEndpointContracts: '\u5df2\u6709 Endpoint Contracts',
+            recommendedRoute: '\u63a8\u8350\u8def\u7531',
+            nextArtifact: '\u4e0b\u4e00\u4e2a Artifact',
+            resultUrlFetched: '\u662f\u5426\u6293\u53d6 result URL',
+            previewUrlFetched: '\u662f\u5426\u6293\u53d6 preview URL',
+            mediaUploaded: '\u662f\u5426\u4e0a\u4f20\u5a92\u4f53',
+            mediaDownloaded: '\u662f\u5426\u4e0b\u8f7d\u5a92\u4f53',
+            required: '\u5fc5\u586b',
+            example: '\u793a\u4f8b',
+            manualGenerationResultAuditPreview: '\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u5ba1\u8ba1\u9884\u89c8',
+            manualGenerationResultNotRefreshedYet: '\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            manualGenerationResultCopied: '\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u6307\u5f15\u5df2\u590d\u5236\u3002',
+            manualGenerationResultCopyFailed: '\u590d\u5236\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u6307\u5f15\u5931\u8d25\u3002',
+            projectWorkspaceExportManualGenerationResultTitle: 'Manual Generation Result Intake / \u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41'
         });
 
 
