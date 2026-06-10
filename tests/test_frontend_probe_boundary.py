@@ -6814,6 +6814,40 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_worker_checkpoint_resume_marker", script)
 
 
+    def test_project_workspace_provider_worker_finalization_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider worker finalization bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_WORKER_FINALIZATION_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceProviderWorkerFinalizationPanel", html)
+        self.assertIn("copyProjectWorkspaceProviderWorkerFinalization", html)
+        self.assertIn("provider_worker_finalization_report", html)
+        self.assertIn("projectWorkspaceExportProviderWorkerFinalizationMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderWorkerFinalizationSnapshot", html)
+        self.assertIn("result_validation_gate", html)
+        self.assertIn("artifact_manifest", html)
+        self.assertIn("artifact_handoff", html)
+        self.assertIn("output_contract_validation", html)
+        self.assertIn("downstream_handoff_policy", html)
+        self.assertIn("run_finalization_policy", html)
+        self.assertIn("finalization_audit_receipt", html)
+        self.assertIn("result_validated", html)
+        self.assertIn("artifact_handoff_ready", html)
+        self.assertIn("workspace_export_ready", html)
+        self.assertIn("media_uploaded", html)
+        self.assertIn("media_downloaded", html)
+        self.assertIn("external_api_called", html)
+
+    def test_project_workspace_provider_worker_finalization_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_worker_finalization_marker", script)
+        self.assertIn("Project Workspace provider worker finalization bundle", script)
+
+    def test_project_workspace_provider_worker_finalization_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider worker finalization bundle", script)
+        self.assertIn("project_workspace_provider_worker_finalization_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))

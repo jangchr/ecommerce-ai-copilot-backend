@@ -11670,6 +11670,171 @@
 
 
 
+
+        function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider worker finalization bundle',
+                report_status: report.report_status || '',
+                provider_worker_finalization_report_version: report.provider_worker_finalization_report_version || '',
+                provider_worker_checkpoint_resume_ready: Boolean(report.provider_worker_checkpoint_resume_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                worker_finalization_stage_matrix: Array.isArray(report.worker_finalization_stage_matrix) ? report.worker_finalization_stage_matrix : [],
+                result_validation_gate: report.result_validation_gate || {},
+                artifact_manifest: report.artifact_manifest || {},
+                artifact_handoff: report.artifact_handoff || {},
+                output_contract_validation: report.output_contract_validation || {},
+                downstream_handoff_policy: report.downstream_handoff_policy || {},
+                run_finalization_policy: report.run_finalization_policy || {},
+                finalization_audit_receipt: report.finalization_audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                validation_finding_count: Number(report.validation_finding_count || 0),
+                artifact_item_count: Number(report.artifact_item_count || 0),
+                handoff_target_count: Number(report.handoff_target_count || 0),
+                contract_gap_count: Number(report.contract_gap_count || 0),
+                downstream_target_count: Number(report.downstream_target_count || 0),
+                handoff_blocker_count: Number(report.handoff_blocker_count || 0),
+                finalization_item_count: Number(report.finalization_item_count || 0),
+                supports_result_validation_gate: Boolean(report.supports_result_validation_gate),
+                supports_artifact_manifest: Boolean(report.supports_artifact_manifest),
+                supports_artifact_handoff: Boolean(report.supports_artifact_handoff),
+                supports_output_contract_validation: Boolean(report.supports_output_contract_validation),
+                supports_downstream_handoff_policy: Boolean(report.supports_downstream_handoff_policy),
+                supports_run_finalization_policy: Boolean(report.supports_run_finalization_policy),
+                supports_finalization_audit_receipt: Boolean(report.supports_finalization_audit_receipt),
+                dry_run: Boolean(report.dry_run),
+                result_validation_required: Boolean(report.result_validation_required),
+                result_validated: Boolean(report.result_validated),
+                result_accepted: Boolean(report.result_accepted),
+                worker_result_present: Boolean(report.worker_result_present),
+                artifact_manifest_recorded: Boolean(report.artifact_manifest_recorded),
+                artifact_manifest_persisted: Boolean(report.artifact_manifest_persisted),
+                artifact_storage_enabled: Boolean(report.artifact_storage_enabled),
+                artifact_handoff_ready: Boolean(report.artifact_handoff_ready),
+                artifact_handoff_recorded: Boolean(report.artifact_handoff_recorded),
+                artifact_handoff_persisted: Boolean(report.artifact_handoff_persisted),
+                output_contract_valid: Boolean(report.output_contract_valid),
+                handoff_allowed: Boolean(report.handoff_allowed),
+                downstream_handoff_allowed: Boolean(report.downstream_handoff_allowed),
+                downstream_handoff_recorded: Boolean(report.downstream_handoff_recorded),
+                run_finalized: Boolean(report.run_finalized),
+                finalization_recorded: Boolean(report.finalization_recorded),
+                audit_receipt_recorded: Boolean(report.audit_receipt_recorded),
+                artifact_audit_recorded: Boolean(report.artifact_audit_recorded),
+                handoff_audit_recorded: Boolean(report.handoff_audit_recorded),
+                finalization_audit_recorded: Boolean(report.finalization_audit_recorded),
+                workspace_export_ready: Boolean(report.workspace_export_ready),
+                checkpoint_recorded: Boolean(report.checkpoint_recorded),
+                resume_allowed: Boolean(report.resume_allowed),
+                replay_allowed: Boolean(report.replay_allowed),
+                queue_persisted: Boolean(report.queue_persisted),
+                lease_acquired: Boolean(report.lease_acquired),
+                heartbeat_recorded: Boolean(report.heartbeat_recorded),
+                worker_started: Boolean(report.worker_started),
+                worker_loop_started: Boolean(report.worker_loop_started),
+                worker_invocation_performed: Boolean(report.worker_invocation_performed),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                quota_reserved: Boolean(report.quota_reserved),
+                operator_review_captured: Boolean(report.operator_review_captured),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                has_provider_worker_finalization_report: Boolean(report.report_status || report.provider_worker_finalization_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderWorkerFinalizationMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace);
+            if (!report.has_provider_worker_finalization_report) {
+                return `## ${t('projectWorkspaceExportProviderWorkerFinalizationTitle')}\n${t('providerWorkerFinalizationNotRefreshedYet')}`;
+            }
+            const blockerLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stageLines = report.worker_finalization_stage_matrix.length
+                ? report.worker_finalization_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderWorkerFinalizationTitle')}`,
+                `${t('providerWorkerFinalizationStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerWorkerCheckpointResumeReady')}: ${report.provider_worker_checkpoint_resume_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('validationFindingCount')}: ${report.validation_finding_count}`,
+                `${t('artifactItemCount')}: ${report.artifact_item_count}`,
+                `${t('handoffTargetCount')}: ${report.handoff_target_count}`,
+                `${t('contractGapCount')}: ${report.contract_gap_count}`,
+                `${t('downstreamTargetCount')}: ${report.downstream_target_count}`,
+                `${t('handoffBlockerCount')}: ${report.handoff_blocker_count}`,
+                `${t('finalizationItemCount')}: ${report.finalization_item_count}`,
+                `${t('resultValidated')}: ${report.result_validated}`,
+                `${t('resultAccepted')}: ${report.result_accepted}`,
+                `${t('artifactManifestPersisted')}: ${report.artifact_manifest_persisted}`,
+                `${t('artifactStorageEnabled')}: ${report.artifact_storage_enabled}`,
+                `${t('artifactHandoffReady')}: ${report.artifact_handoff_ready}`,
+                `${t('outputContractValid')}: ${report.output_contract_valid}`,
+                `${t('downstreamHandoffAllowed')}: ${report.downstream_handoff_allowed}`,
+                `${t('runFinalized')}: ${report.run_finalized}`,
+                `${t('workspaceExportReady')}: ${report.workspace_export_ready}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('mediaUploaded')}: ${report.media_uploaded}`,
+                `${t('mediaDownloaded')}: ${report.media_downloaded}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockerLines,
+                '',
+                `### ${t('providerWorkerFinalizationStages')}`,
+                ...stageLines,
+                '',
+                `### ${t('providerResultValidationGate')}`,
+                '```json',
+                JSON.stringify(report.result_validation_gate, null, 2),
+                '```',
+                '',
+                `### ${t('providerArtifactManifest')}`,
+                '```json',
+                JSON.stringify(report.artifact_manifest, null, 2),
+                '```',
+                '',
+                `### ${t('providerArtifactHandoff')}`,
+                '```json',
+                JSON.stringify(report.artifact_handoff, null, 2),
+                '```',
+                '',
+                `### ${t('providerOutputContractValidation')}`,
+                '```json',
+                JSON.stringify(report.output_contract_validation, null, 2),
+                '```',
+                '',
+                `### ${t('providerDownstreamHandoffPolicy')}`,
+                '```json',
+                JSON.stringify(report.downstream_handoff_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerRunFinalizationPolicy')}`,
+                '```json',
+                JSON.stringify(report.run_finalization_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerFinalizationAuditReceipt')}`,
+                '```json',
+                JSON.stringify(report.finalization_audit_receipt, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerCheckpointResumeReportFromWorkspace(workspace);
             return {
@@ -13236,6 +13401,8 @@
                 '',
                 projectWorkspaceExportProviderWorkerCheckpointResumeMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderWorkerFinalizationMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -13269,6 +13436,7 @@
                 provider_observability_report: projectWorkspaceExportProviderObservabilityReportSnapshot(workspace),
                 provider_queue_lease_worker_report: projectWorkspaceExportProviderQueueLeaseWorkerSnapshot(workspace),
                 provider_worker_checkpoint_resume_report: projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot(workspace),
+                provider_worker_finalization_report: projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -13402,6 +13570,7 @@
                 latestProjectProviderObservabilityReport = payload.provider_observability_report || {};
                 latestProjectProviderQueueLeaseWorkerReport = payload.provider_queue_lease_worker_report || {};
                 latestProjectProviderWorkerCheckpointResumeReport = payload.provider_worker_checkpoint_resume_report || {};
+                latestProjectProviderWorkerFinalizationReport = payload.provider_worker_finalization_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -17261,6 +17430,367 @@
         let latestProjectProviderQueueLeaseWorkerReport = {};
         const PROJECT_WORKSPACE_PROVIDER_WORKER_CHECKPOINT_RESUME_BUNDLE_MARKER = 'Project Workspace provider worker checkpoint resume bundle';
         let latestProjectProviderWorkerCheckpointResumeReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_WORKER_FINALIZATION_BUNDLE_MARKER = 'Project Workspace provider worker finalization bundle';
+        let latestProjectProviderWorkerFinalizationReport = {};
+
+        function projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderWorkerFinalizationReport || {}).length
+                ? latestProjectProviderWorkerFinalizationReport
+                : workspace?.provider_worker_finalization_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_worker_finalization_report_version: '',
+                report_status: graphSummary.latest_provider_worker_finalization_status || '',
+                provider_worker_checkpoint_resume_ready: false,
+                operator_review_required: false,
+                stage_count: 0,
+                worker_finalization_stage_matrix: [],
+                result_validation_gate: {},
+                artifact_manifest: {},
+                artifact_handoff: {},
+                output_contract_validation: {},
+                downstream_handoff_policy: {},
+                run_finalization_policy: {},
+                finalization_audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_worker_finalization_blocking_failure_count || 0),
+                blocking_failures: [],
+                validation_finding_count: 0,
+                artifact_item_count: 0,
+                handoff_target_count: 0,
+                contract_gap_count: 0,
+                downstream_target_count: 0,
+                handoff_blocker_count: 0,
+                finalization_item_count: 0,
+                supports_result_validation_gate: false,
+                supports_artifact_manifest: false,
+                supports_artifact_handoff: false,
+                supports_output_contract_validation: false,
+                supports_downstream_handoff_policy: false,
+                supports_run_finalization_policy: false,
+                supports_finalization_audit_receipt: false,
+                dry_run: true,
+                result_validation_required: true,
+                result_validated: Boolean(graphSummary.latest_provider_worker_finalization_result_validated),
+                result_accepted: false,
+                worker_result_present: false,
+                artifact_manifest_recorded: false,
+                artifact_manifest_persisted: false,
+                artifact_storage_enabled: false,
+                artifact_handoff_ready: Boolean(graphSummary.latest_provider_worker_finalization_artifact_handoff_ready),
+                artifact_handoff_recorded: false,
+                artifact_handoff_persisted: false,
+                output_contract_valid: false,
+                handoff_allowed: false,
+                downstream_handoff_allowed: false,
+                downstream_handoff_recorded: false,
+                run_finalized: false,
+                finalization_recorded: false,
+                audit_receipt_recorded: false,
+                artifact_audit_recorded: false,
+                handoff_audit_recorded: false,
+                finalization_audit_recorded: false,
+                workspace_export_ready: false,
+                checkpoint_recorded: false,
+                resume_allowed: false,
+                replay_allowed: false,
+                queue_persisted: false,
+                lease_acquired: false,
+                heartbeat_recorded: false,
+                worker_started: false,
+                worker_loop_started: false,
+                worker_invocation_performed: false,
+                real_execution_allowed: false,
+                real_execution_enabled: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_worker_finalization_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                quota_reserved: false,
+                operator_review_captured: false,
+                operator_approval_captured: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceProviderWorkerFinalizationCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.worker_finalization_stage_matrix) ? report.worker_finalization_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            return [
+                t('providerWorkerFinalizationCopyTitle'),
+                `${t('providerWorkerFinalizationStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerWorkerCheckpointResumeReady')}: ${Boolean(report.provider_worker_checkpoint_resume_ready)}`,
+                `${t('operatorReviewRequired')}: ${Boolean(report.operator_review_required)}`,
+                `${t('blockingFailureCount')}: ${Number(report.blocking_failure_count || blockers.length || 0)}`,
+                `${t('validationFindingCount')}: ${Number(report.validation_finding_count || 0)}`,
+                `${t('artifactItemCount')}: ${Number(report.artifact_item_count || 0)}`,
+                `${t('handoffTargetCount')}: ${Number(report.handoff_target_count || 0)}`,
+                `${t('contractGapCount')}: ${Number(report.contract_gap_count || 0)}`,
+                `${t('downstreamTargetCount')}: ${Number(report.downstream_target_count || 0)}`,
+                `${t('handoffBlockerCount')}: ${Number(report.handoff_blocker_count || 0)}`,
+                `${t('finalizationItemCount')}: ${Number(report.finalization_item_count || 0)}`,
+                `${t('resultValidationRequired')}: ${Boolean(report.result_validation_required)}`,
+                `${t('resultValidated')}: ${Boolean(report.result_validated)}`,
+                `${t('resultAccepted')}: ${Boolean(report.result_accepted)}`,
+                `${t('workerResultPresent')}: ${Boolean(report.worker_result_present)}`,
+                `${t('artifactManifestRecorded')}: ${Boolean(report.artifact_manifest_recorded)}`,
+                `${t('artifactManifestPersisted')}: ${Boolean(report.artifact_manifest_persisted)}`,
+                `${t('artifactStorageEnabled')}: ${Boolean(report.artifact_storage_enabled)}`,
+                `${t('artifactHandoffReady')}: ${Boolean(report.artifact_handoff_ready)}`,
+                `${t('artifactHandoffRecorded')}: ${Boolean(report.artifact_handoff_recorded)}`,
+                `${t('artifactHandoffPersisted')}: ${Boolean(report.artifact_handoff_persisted)}`,
+                `${t('outputContractValid')}: ${Boolean(report.output_contract_valid)}`,
+                `${t('handoffAllowed')}: ${Boolean(report.handoff_allowed)}`,
+                `${t('downstreamHandoffAllowed')}: ${Boolean(report.downstream_handoff_allowed)}`,
+                `${t('downstreamHandoffRecorded')}: ${Boolean(report.downstream_handoff_recorded)}`,
+                `${t('runFinalized')}: ${Boolean(report.run_finalized)}`,
+                `${t('finalizationRecorded')}: ${Boolean(report.finalization_recorded)}`,
+                `${t('auditReceiptRecorded')}: ${Boolean(report.audit_receipt_recorded)}`,
+                `${t('artifactAuditRecorded')}: ${Boolean(report.artifact_audit_recorded)}`,
+                `${t('handoffAuditRecorded')}: ${Boolean(report.handoff_audit_recorded)}`,
+                `${t('finalizationAuditRecorded')}: ${Boolean(report.finalization_audit_recorded)}`,
+                `${t('workspaceExportReady')}: ${Boolean(report.workspace_export_ready)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('mediaUploaded')}: ${Boolean(report.media_uploaded)}`,
+                `${t('mediaDownloaded')}: ${Boolean(report.media_downloaded)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('blockingFailures')}:`,
+                blockers.length ? blockers.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('providerWorkerFinalizationStages')}:`,
+                stages.length ? stages.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`).join('\n') : t('none'),
+                '',
+                `${t('providerResultValidationGate')}:`,
+                JSON.stringify(report.result_validation_gate || {}, null, 2),
+                '',
+                `${t('providerArtifactManifest')}:`,
+                JSON.stringify(report.artifact_manifest || {}, null, 2),
+                '',
+                `${t('providerArtifactHandoff')}:`,
+                JSON.stringify(report.artifact_handoff || {}, null, 2),
+                '',
+                `${t('providerOutputContractValidation')}:`,
+                JSON.stringify(report.output_contract_validation || {}, null, 2),
+                '',
+                `${t('providerDownstreamHandoffPolicy')}:`,
+                JSON.stringify(report.downstream_handoff_policy || {}, null, 2),
+                '',
+                `${t('providerRunFinalizationPolicy')}:`,
+                JSON.stringify(report.run_finalization_policy || {}, null, 2),
+                '',
+                `${t('providerFinalizationAuditReceipt')}:`,
+                JSON.stringify(report.finalization_audit_receipt || {}, null, 2),
+                '',
+                JSON.stringify({ provider_worker_finalization_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderWorkerFinalization() {
+            const status = document.getElementById('projectWorkspaceProviderWorkerFinalizationStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderWorkerFinalizationCopyText());
+                if (status) status.textContent = t('providerWorkerFinalizationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerWorkerFinalizationCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderWorkerFinalizationPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.worker_finalization_stage_matrix) ? report.worker_finalization_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const resultGate = report.result_validation_gate || {};
+            const artifactManifest = report.artifact_manifest || {};
+            const artifactHandoff = report.artifact_handoff || {};
+            const contractValidation = report.output_contract_validation || {};
+            const downstreamPolicy = report.downstream_handoff_policy || {};
+            const finalizationPolicy = report.run_finalization_policy || {};
+            const receipt = report.finalization_audit_receipt || {};
+            const validationFindings = Array.isArray(resultGate.validation_findings) ? resultGate.validation_findings : [];
+            const artifactItems = Array.isArray(artifactManifest.artifact_items) ? artifactManifest.artifact_items : [];
+            const handoffTargets = Array.isArray(artifactHandoff.handoff_targets) ? artifactHandoff.handoff_targets : [];
+            const expectedContracts = Array.isArray(contractValidation.expected_output_contract) ? contractValidation.expected_output_contract : [];
+            const contractGaps = Array.isArray(contractValidation.contract_gaps) ? contractValidation.contract_gaps : [];
+            const downstreamTargets = Array.isArray(downstreamPolicy.downstream_targets) ? downstreamPolicy.downstream_targets : [];
+            const handoffBlockers = Array.isArray(downstreamPolicy.handoff_blockers) ? downstreamPolicy.handoff_blockers : [];
+            const finalizationItems = Array.isArray(finalizationPolicy.finalization_items) ? finalizationPolicy.finalization_items : [];
+            const hasReport = Boolean(report.report_status || report.provider_worker_finalization_report_version || stages.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderWorkerFinalizationPanel" data-project-provider-worker-finalization-marker="Project Workspace provider worker finalization bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerWorkerFinalizationPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerWorkerFinalizationPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderWorkerFinalizationBtn" type="button" onclick="copyProjectWorkspaceProviderWorkerFinalization()">${escapeHTML(t('copyProviderWorkerFinalization'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerWorkerFinalizationStatus'))}</div>
+                            <strong data-provider-worker-finalization-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerWorkerFinalizationNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerWorkerCheckpointResumeReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_worker_checkpoint_resume_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('resultValidated'))}</div><strong>${escapeHTML(String(Boolean(report.result_validated)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('artifactHandoffReady'))}</div><strong>${escapeHTML(String(Boolean(report.artifact_handoff_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('workspaceExportReady'))}</div><strong>${escapeHTML(String(Boolean(report.workspace_export_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('externalApiCalled'))}</div><strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('validationFindingCount'))}</div><strong>${escapeHTML(String(Number(report.validation_finding_count || validationFindings.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('artifactItemCount'))}</div><strong>${escapeHTML(String(Number(report.artifact_item_count || artifactItems.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('handoffTargetCount'))}</div><strong>${escapeHTML(String(Number(report.handoff_target_count || handoffTargets.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('contractGapCount'))}</div><strong>${escapeHTML(String(Number(report.contract_gap_count || contractGaps.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('downstreamTargetCount'))}</div><strong>${escapeHTML(String(Number(report.downstream_target_count || downstreamTargets.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerWorkerFinalizationStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} ? ${escapeHTML(stage.stage_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('requiredInputs'))}: ${(stage.required_inputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedOutputs'))}: ${(stage.expected_outputs || []).map(escapeHTML).join(', ')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerValidationFindings'))}</div>
+                        ${validationFindings.length ? validationFindings.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.finding_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('passed'))}: ${escapeHTML(String(Boolean(item.passed)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerArtifactItems'))}</div>
+                        ${artifactItems.length ? artifactItems.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.artifact_item_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('included'))}: ${escapeHTML(String(Boolean(item.included)))}</span>
+                                <span class="badge">${escapeHTML(t('persisted'))}: ${escapeHTML(String(Boolean(item.persisted)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerArtifactHandoffTargets'))}</div>
+                        ${handoffTargets.length ? handoffTargets.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.handoff_target_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('ready'))}: ${escapeHTML(String(Boolean(item.ready)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerExpectedOutputContract'))}</div>
+                            ${expectedContracts.length ? expectedContracts.map((item) => `<div class="artifact-timeline-row"><strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerContractGaps'))}</div>
+                            ${contractGaps.length ? contractGaps.map((item) => `<div class="artifact-timeline-row"><strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerDownstreamTargets'))}</div>
+                        ${downstreamTargets.length ? downstreamTargets.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.target_agent_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('ready'))}: ${escapeHTML(String(Boolean(item.ready)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerHandoffBlockers'))}</div>
+                        ${handoffBlockers.length ? handoffBlockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerFinalizationItems'))}</div>
+                        ${finalizationItems.length ? finalizationItems.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.finalization_item_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(item.complete)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsResultValidationGate'))}</div><strong>${escapeHTML(String(Boolean(report.supports_result_validation_gate)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsArtifactManifest'))}</div><strong>${escapeHTML(String(Boolean(report.supports_artifact_manifest)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsArtifactHandoff'))}</div><strong>${escapeHTML(String(Boolean(report.supports_artifact_handoff)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsOutputContractValidation'))}</div><strong>${escapeHTML(String(Boolean(report.supports_output_contract_validation)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsDownstreamHandoffPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_downstream_handoff_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsRunFinalizationPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_run_finalization_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsFinalizationAuditReceipt'))}</div><strong>${escapeHTML(String(Boolean(report.supports_finalization_audit_receipt)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerResultValidationGate'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(resultGate, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerArtifactManifest'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(artifactManifest, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerArtifactHandoff'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(artifactHandoff, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerOutputContractValidation'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(contractValidation, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerDownstreamHandoffPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(downstreamPolicy, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerRunFinalizationPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(finalizationPolicy, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerFinalizationAuditReceipt'))}</div>
+                        <pre class="debug">${escapeHTML(JSON.stringify(receipt, null, 2))}</pre>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('resultValidated'))}</div><strong>${escapeHTML(String(Boolean(report.result_validated)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('artifactManifestPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.artifact_manifest_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('artifactStorageEnabled'))}</div><strong>${escapeHTML(String(Boolean(report.artifact_storage_enabled)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('outputContractValid'))}</div><strong>${escapeHTML(String(Boolean(report.output_contract_valid)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('downstreamHandoffAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.downstream_handoff_allowed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretRead'))}</div><strong>${escapeHTML(String(Boolean(report.provider_secret_read)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerWorkerFinalizationAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-worker-finalization-audit-preview="Project Workspace provider worker finalization bundle">${escapeHTML(projectWorkspaceProviderWorkerFinalizationCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerWorkerFinalizationNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderWorkerFinalizationStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceProviderWorkerCheckpointResumeReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderWorkerCheckpointResumeReport || {}).length
@@ -21212,6 +21742,8 @@
                 if (providerQueueLeaseWorkerPanel) providerQueueLeaseWorkerPanel.outerHTML = renderProjectWorkspaceProviderQueueLeaseWorkerPanel(latestProjectWorkspace);
                 const providerWorkerCheckpointResumePanel = document.getElementById('projectWorkspaceProviderWorkerCheckpointResumePanel');
                 if (providerWorkerCheckpointResumePanel) providerWorkerCheckpointResumePanel.outerHTML = renderProjectWorkspaceProviderWorkerCheckpointResumePanel(latestProjectWorkspace);
+                const providerWorkerFinalizationPanel = document.getElementById('projectWorkspaceProviderWorkerFinalizationPanel');
+                if (providerWorkerFinalizationPanel) providerWorkerFinalizationPanel.outerHTML = renderProjectWorkspaceProviderWorkerFinalizationPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -23402,6 +23934,7 @@
                     ${renderProjectWorkspaceProviderObservabilityReportPanel(workspace)}
                     ${renderProjectWorkspaceProviderQueueLeaseWorkerPanel(workspace)}
                     ${renderProjectWorkspaceProviderWorkerCheckpointResumePanel(workspace)}
+                    ${renderProjectWorkspaceProviderWorkerFinalizationPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -28496,6 +29029,145 @@
             providerWorkerCheckpointResumeAuditPreview: 'Worker checkpoint / resume \u5ba1\u8ba1\u9884\u89c8',
             included: '\u5df2\u5305\u542b',
             projectWorkspaceExportProviderWorkerCheckpointResumeTitle: 'Worker Checkpoint / Resume / Recovery / Replay / Worker \u68c0\u67e5\u70b9\u6062\u590d\u56de\u653e'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderWorkerFinalizationBundleMarker: 'Project Workspace provider worker finalization bundle',
+            providerWorkerFinalizationPanelTitle: 'Worker Finalization / Result Validation / Artifact Handoff',
+            providerWorkerFinalizationPanelHelper: 'Dry-run worker finalization, result validation, artifact manifest, artifact handoff, output contract validation, downstream handoff policy, run finalization, and audit receipt. It does not persist artifacts, unlock downstream Agents, call providers, upload/download media, or enable paid generation.',
+            copyProviderWorkerFinalization: 'Copy worker finalization report',
+            providerWorkerFinalizationCopyTitle: 'Project worker finalization / result validation / artifact handoff report',
+            providerWorkerFinalizationStatus: 'Worker finalization status',
+            providerWorkerFinalizationNotRefreshedYet: 'Worker finalization report has not been refreshed yet.',
+            providerWorkerFinalizationCopied: 'Worker finalization report copied.',
+            providerWorkerFinalizationCopyFailed: 'Could not copy worker finalization report.',
+            providerWorkerCheckpointResumeReady: 'Worker checkpoint / resume ready',
+            validationFindingCount: 'Validation finding count',
+            artifactItemCount: 'Artifact item count',
+            handoffTargetCount: 'Handoff target count',
+            contractGapCount: 'Contract gap count',
+            downstreamTargetCount: 'Downstream target count',
+            handoffBlockerCount: 'Handoff blocker count',
+            finalizationItemCount: 'Finalization item count',
+            resultValidationRequired: 'Result validation required',
+            resultValidated: 'Result validated',
+            resultAccepted: 'Result accepted',
+            workerResultPresent: 'Worker result present',
+            artifactManifestRecorded: 'Artifact manifest recorded',
+            artifactManifestPersisted: 'Artifact manifest persisted',
+            artifactStorageEnabled: 'Artifact storage enabled',
+            artifactHandoffReady: 'Artifact handoff ready',
+            artifactHandoffRecorded: 'Artifact handoff recorded',
+            artifactHandoffPersisted: 'Artifact handoff persisted',
+            outputContractValid: 'Output contract valid',
+            handoffAllowed: 'Handoff allowed',
+            downstreamHandoffAllowed: 'Downstream handoff allowed',
+            downstreamHandoffRecorded: 'Downstream handoff recorded',
+            runFinalized: 'Run finalized',
+            finalizationRecorded: 'Finalization recorded',
+            artifactAuditRecorded: 'Artifact audit recorded',
+            handoffAuditRecorded: 'Handoff audit recorded',
+            finalizationAuditRecorded: 'Finalization audit recorded',
+            workspaceExportReady: 'Workspace export ready',
+            mediaUploaded: 'Media uploaded',
+            mediaDownloaded: 'Media downloaded',
+            providerWorkerFinalizationStages: 'Worker finalization stages',
+            providerResultValidationGate: 'Provider result validation gate',
+            providerArtifactManifest: 'Provider artifact manifest',
+            providerArtifactHandoff: 'Provider artifact handoff',
+            providerOutputContractValidation: 'Provider output contract validation',
+            providerDownstreamHandoffPolicy: 'Provider downstream handoff policy',
+            providerRunFinalizationPolicy: 'Provider run finalization policy',
+            providerFinalizationAuditReceipt: 'Provider finalization audit receipt',
+            providerValidationFindings: 'Provider validation findings',
+            providerArtifactItems: 'Provider artifact items',
+            providerArtifactHandoffTargets: 'Provider artifact handoff targets',
+            providerExpectedOutputContract: 'Provider expected output contract',
+            providerContractGaps: 'Provider contract gaps',
+            providerDownstreamTargets: 'Provider downstream targets',
+            providerHandoffBlockers: 'Provider handoff blockers',
+            providerFinalizationItems: 'Provider finalization items',
+            supportsResultValidationGate: 'Supports result validation gate',
+            supportsArtifactManifest: 'Supports artifact manifest',
+            supportsArtifactHandoff: 'Supports artifact handoff',
+            supportsOutputContractValidation: 'Supports output contract validation',
+            supportsDownstreamHandoffPolicy: 'Supports downstream handoff policy',
+            supportsRunFinalizationPolicy: 'Supports run finalization policy',
+            supportsFinalizationAuditReceipt: 'Supports finalization audit receipt',
+            providerWorkerFinalizationAuditPreview: 'Worker finalization audit preview',
+            passed: 'Passed',
+            persisted: 'Persisted',
+            projectWorkspaceExportProviderWorkerFinalizationTitle: 'Worker Finalization / Result Validation / Artifact Handoff'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderWorkerFinalizationBundleMarker: 'Project Workspace provider worker finalization bundle',
+            providerWorkerFinalizationPanelTitle: 'Worker Finalization / Result Validation / Artifact Handoff / Worker \u6700\u7ec8\u5316\u7ed3\u679c\u6821\u9a8c\u4ea7\u7269\u4ea4\u63a5',
+            providerWorkerFinalizationPanelHelper: 'Dry-run worker finalization\u3001result validation\u3001artifact manifest\u3001artifact handoff\u3001output contract validation\u3001downstream handoff policy\u3001run finalization \u548c audit receipt\u3002\u4e0d\u4f1a\u6301\u4e45\u5316 artifact\uff0c\u4e0d\u4f1a\u89e3\u9501 downstream Agent\uff0c\u4e0d\u4f1a\u8c03 provider\uff0c\u4e0d\u4f1a\u4e0a\u4f20/\u4e0b\u8f7d\u5a92\u4f53\uff0c\u4e0d\u4f1a\u5f00\u542f\u4ed8\u8d39\u751f\u6210\u3002',
+            copyProviderWorkerFinalization: '\u590d\u5236 worker finalization \u62a5\u544a',
+            providerWorkerFinalizationCopyTitle: '\u9879\u76ee Worker Finalization / Result Validation / Artifact Handoff \u62a5\u544a',
+            providerWorkerFinalizationStatus: 'Worker finalization \u72b6\u6001',
+            providerWorkerFinalizationNotRefreshedYet: 'Worker finalization \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerWorkerFinalizationCopied: 'Worker finalization \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerWorkerFinalizationCopyFailed: '\u590d\u5236 worker finalization \u62a5\u544a\u5931\u8d25\u3002',
+            providerWorkerCheckpointResumeReady: 'Worker checkpoint / resume ready',
+            validationFindingCount: 'Validation finding \u6570',
+            artifactItemCount: 'Artifact item \u6570',
+            handoffTargetCount: 'Handoff target \u6570',
+            contractGapCount: 'Contract gap \u6570',
+            downstreamTargetCount: 'Downstream target \u6570',
+            handoffBlockerCount: 'Handoff blocker \u6570',
+            finalizationItemCount: 'Finalization item \u6570',
+            resultValidationRequired: '\u5fc5\u987b\u6821\u9a8c\u7ed3\u679c',
+            resultValidated: '\u7ed3\u679c\u5df2\u6821\u9a8c',
+            resultAccepted: '\u7ed3\u679c\u5df2\u63a5\u53d7',
+            workerResultPresent: 'Worker result \u5df2\u5b58\u5728',
+            artifactManifestRecorded: 'Artifact manifest \u5df2\u8bb0\u5f55',
+            artifactManifestPersisted: 'Artifact manifest \u5df2\u6301\u4e45\u5316',
+            artifactStorageEnabled: 'Artifact storage \u5df2\u5f00\u542f',
+            artifactHandoffReady: 'Artifact handoff ready',
+            artifactHandoffRecorded: 'Artifact handoff \u5df2\u8bb0\u5f55',
+            artifactHandoffPersisted: 'Artifact handoff \u5df2\u6301\u4e45\u5316',
+            outputContractValid: 'Output contract \u6709\u6548',
+            handoffAllowed: '\u5141\u8bb8 handoff',
+            downstreamHandoffAllowed: '\u5141\u8bb8 downstream handoff',
+            downstreamHandoffRecorded: 'Downstream handoff \u5df2\u8bb0\u5f55',
+            runFinalized: 'Run \u5df2 finalization',
+            finalizationRecorded: 'Finalization \u5df2\u8bb0\u5f55',
+            artifactAuditRecorded: 'Artifact audit \u5df2\u8bb0\u5f55',
+            handoffAuditRecorded: 'Handoff audit \u5df2\u8bb0\u5f55',
+            finalizationAuditRecorded: 'Finalization audit \u5df2\u8bb0\u5f55',
+            workspaceExportReady: 'Workspace export ready',
+            mediaUploaded: '\u5a92\u4f53\u5df2\u4e0a\u4f20',
+            mediaDownloaded: '\u5a92\u4f53\u5df2\u4e0b\u8f7d',
+            providerWorkerFinalizationStages: 'Worker finalization \u9636\u6bb5',
+            providerResultValidationGate: 'Provider result validation gate',
+            providerArtifactManifest: 'Provider artifact manifest',
+            providerArtifactHandoff: 'Provider artifact handoff',
+            providerOutputContractValidation: 'Provider output contract validation',
+            providerDownstreamHandoffPolicy: 'Provider downstream handoff policy',
+            providerRunFinalizationPolicy: 'Provider run finalization policy',
+            providerFinalizationAuditReceipt: 'Provider finalization audit receipt',
+            providerValidationFindings: 'Provider validation findings',
+            providerArtifactItems: 'Provider artifact items',
+            providerArtifactHandoffTargets: 'Provider artifact handoff targets',
+            providerExpectedOutputContract: 'Provider expected output contract',
+            providerContractGaps: 'Provider contract gaps',
+            providerDownstreamTargets: 'Provider downstream targets',
+            providerHandoffBlockers: 'Provider handoff blockers',
+            providerFinalizationItems: 'Provider finalization items',
+            supportsResultValidationGate: '\u652f\u6301 result validation gate',
+            supportsArtifactManifest: '\u652f\u6301 artifact manifest',
+            supportsArtifactHandoff: '\u652f\u6301 artifact handoff',
+            supportsOutputContractValidation: '\u652f\u6301 output contract validation',
+            supportsDownstreamHandoffPolicy: '\u652f\u6301 downstream handoff policy',
+            supportsRunFinalizationPolicy: '\u652f\u6301 run finalization policy',
+            supportsFinalizationAuditReceipt: '\u652f\u6301 finalization audit receipt',
+            providerWorkerFinalizationAuditPreview: 'Worker finalization \u5ba1\u8ba1\u9884\u89c8',
+            passed: 'Passed',
+            persisted: 'Persisted',
+            projectWorkspaceExportProviderWorkerFinalizationTitle: 'Worker Finalization / Result Validation / Artifact Handoff / Worker \u6700\u7ec8\u5316\u7ed3\u679c\u6821\u9a8c\u4ea7\u7269\u4ea4\u63a5'
         });
 
 
