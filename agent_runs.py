@@ -3947,6 +3947,334 @@ def build_provider_observability_report(
     }
 
 
+
+PROVIDER_QUEUE_LEASE_WORKER_REPORT_VERSION = "provider_queue_lease_worker_report_v1"
+
+PROVIDER_QUEUE_LEASE_WORKER_STAGES = [
+    {
+        "stage_id": "normalize_provider_job_request",
+        "stage_label": "Normalize provider job request",
+        "required_inputs": ["provider_observability_report", "provider_id", "generation_payload"],
+        "expected_outputs": ["provider_job_request", "queue_item_key", "idempotency_key"],
+    },
+    {
+        "stage_id": "dedupe_provider_job",
+        "stage_label": "Dedupe provider job",
+        "required_inputs": ["queue_item_key", "idempotency_key", "project_id"],
+        "expected_outputs": ["dedupe_decision", "duplicate_blocked", "queue_insert_allowed"],
+    },
+    {
+        "stage_id": "enqueue_provider_job",
+        "stage_label": "Enqueue provider job",
+        "required_inputs": ["dedupe_decision", "operator_review_state", "quota_state"],
+        "expected_outputs": ["queue_item", "queue_status", "queue_audit_event"],
+    },
+    {
+        "stage_id": "claim_provider_job",
+        "stage_label": "Claim provider job",
+        "required_inputs": ["queue_item", "worker_id", "claim_policy"],
+        "expected_outputs": ["claim_preview", "claim_status", "claim_token"],
+    },
+    {
+        "stage_id": "acquire_worker_lease",
+        "stage_label": "Acquire worker lease",
+        "required_inputs": ["claim_preview", "lease_seconds", "worker_id"],
+        "expected_outputs": ["lease_preview", "lease_token", "lease_expiry"],
+    },
+    {
+        "stage_id": "record_worker_heartbeat",
+        "stage_label": "Record worker heartbeat",
+        "required_inputs": ["lease_preview", "heartbeat_interval_seconds"],
+        "expected_outputs": ["heartbeat_preview", "worker_alive", "stale_lease_state"],
+    },
+    {
+        "stage_id": "prepare_worker_invocation_envelope",
+        "stage_label": "Prepare worker invocation envelope",
+        "required_inputs": ["lease_preview", "idempotency_key", "provider_gate_state"],
+        "expected_outputs": ["worker_invocation_envelope", "provider_call_allowed", "external_api_called"],
+    },
+    {
+        "stage_id": "complete_or_release_lease",
+        "stage_label": "Complete or release lease",
+        "required_inputs": ["worker_invocation_result", "lease_preview", "completion_policy"],
+        "expected_outputs": ["completion_ack", "lease_released", "queue_audit_receipt"],
+    },
+]
+
+
+def build_provider_queue_lease_worker_report(
+    *,
+    provider_observability_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_queue_lease_worker_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run provider queue / lease / worker orchestration report.
+
+    This report models provider queue insertion, idempotency dedupe, worker
+    claim, lease, heartbeat, stale lease recovery, worker invocation envelope,
+    completion acknowledgement, and audit receipt. It does not persist queue
+    items, acquire real leases, start workers, call providers, read secrets,
+    upload/download media, or unlock real execution.
+    """
+
+    observability = provider_observability_report if isinstance(provider_observability_report, dict) else {}
+    observability_ready = str(observability.get("report_status") or "") == "provider_observability_ready_dry_run"
+    operator_review_required = bool(observability.get("operator_review_required", True))
+
+    queue_model = {
+        "queue_model_version": "provider_queue_model_v1",
+        "queue_model_status": "provider_queue_model_ready_dry_run" if observability_ready else "provider_queue_model_waiting_for_observability",
+        "queue_name": "provider_generation_jobs_dry_run",
+        "queue_item_schema": [
+            {"field_id": "project_id", "required": True},
+            {"field_id": "provider_id", "required": True},
+            {"field_id": "provider_job_type", "required": True},
+            {"field_id": "idempotency_key", "required": True},
+            {"field_id": "operator_approval_id", "required": True},
+            {"field_id": "quota_reservation_id", "required": True},
+            {"field_id": "rollback_plan_id", "required": True},
+            {"field_id": "observability_trace_id", "required": True},
+        ],
+        "queue_item_schema_count": 8,
+        "queue_insert_allowed": False,
+        "queue_item_created": False,
+        "queue_persisted": False,
+        "queue_item_status": "queue_insert_blocked_by_dry_run",
+        "external_api_called": False,
+    }
+
+    idempotency_dedupe_policy = {
+        "idempotency_dedupe_policy_version": "provider_queue_idempotency_dedupe_policy_v1",
+        "idempotency_dedupe_policy_status": "idempotency_dedupe_ready_dry_run",
+        "idempotency_required": True,
+        "dedupe_key_fields": ["project_id", "provider_id", "provider_job_type", "idempotency_key"],
+        "duplicate_detection_enabled": True,
+        "duplicate_blocked": True,
+        "duplicate_job_submitted": False,
+        "dedupe_record_persisted": False,
+        "idempotency_key_ready": True,
+        "external_api_called": False,
+    }
+
+    claim_policy = {
+        "claim_policy_version": "provider_queue_claim_policy_v1",
+        "claim_policy_status": "claim_policy_ready_dry_run",
+        "worker_id": "provider_worker_dry_run",
+        "claim_allowed": False,
+        "claim_persisted": False,
+        "claim_token": "dry_run_claim_token_preview",
+        "claim_ttl_seconds": 60,
+        "claim_blockers": [
+            "queue_not_persisted",
+            "real_worker_disabled",
+            "operator_review_required",
+        ],
+        "external_api_called": False,
+    }
+
+    lease_policy = {
+        "lease_policy_version": "provider_worker_lease_policy_v1",
+        "lease_policy_status": "lease_policy_ready_dry_run",
+        "lease_seconds": 300,
+        "lease_renewal_seconds": 120,
+        "lease_allowed": False,
+        "lease_acquired": False,
+        "lease_persisted": False,
+        "lease_token": "dry_run_lease_token_preview",
+        "lease_expiry_recorded": False,
+        "lease_blockers": [
+            "claim_not_persisted",
+            "real_worker_loop_disabled",
+            "external_provider_call_disabled",
+        ],
+        "external_api_called": False,
+    }
+
+    heartbeat_policy = {
+        "heartbeat_policy_version": "provider_worker_heartbeat_policy_v1",
+        "heartbeat_policy_status": "heartbeat_policy_ready_dry_run",
+        "heartbeat_interval_seconds": 30,
+        "heartbeat_recorded": False,
+        "worker_alive": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "stale_after_seconds": 180,
+        "external_api_called": False,
+    }
+
+    stale_lease_recovery = {
+        "stale_lease_recovery_version": "provider_stale_lease_recovery_v1",
+        "stale_lease_recovery_status": "stale_lease_recovery_ready_dry_run",
+        "stale_lease_detection_enabled": True,
+        "stale_lease_detected": False,
+        "lease_released": False,
+        "queue_item_requeued": False,
+        "requeue_allowed": False,
+        "recovery_steps": [
+            {"recovery_step_id": "detect_stale_heartbeat", "ready": True, "executed": False},
+            {"recovery_step_id": "mark_lease_stale", "ready": True, "executed": False},
+            {"recovery_step_id": "release_lease", "ready": False, "executed": False},
+            {"recovery_step_id": "requeue_provider_job", "ready": False, "executed": False},
+            {"recovery_step_id": "record_operator_review_event", "ready": True, "executed": False},
+        ],
+        "external_api_called": False,
+    }
+
+    worker_invocation_envelope = {
+        "worker_invocation_envelope_version": "provider_worker_invocation_envelope_v1",
+        "worker_invocation_envelope_status": "worker_invocation_blocked_by_dry_run",
+        "worker_invocation_allowed": False,
+        "worker_invocation_performed": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "idempotency_key": f"dry_run_provider_queue::{project_id}",
+        "required_gate_references": [
+            "real_provider_execution_gate_report",
+            "provider_failure_recovery_report",
+            "provider_observability_report",
+            "operator_approval_id",
+            "quota_reservation_id",
+            "rollback_plan_id",
+        ],
+        "missing_gate_references": [
+            "operator_approval_id",
+            "quota_reservation_id",
+            "rollback_plan_id",
+            "real_worker_lease",
+        ],
+    }
+
+    completion_ack = {
+        "completion_ack_version": "provider_queue_completion_ack_v1",
+        "completion_ack_status": "completion_ack_preview_only",
+        "completion_recorded": False,
+        "queue_item_completed": False,
+        "lease_released": False,
+        "worker_result_persisted": False,
+        "provider_result_handoff_ready": False,
+        "external_api_called": False,
+    }
+
+    audit_receipt = {
+        "provider_queue_lease_worker_receipt_version": "provider_queue_lease_worker_receipt_v1",
+        "receipt_status": "provider_queue_lease_worker_dry_run_recorded",
+        "queue_model_included": True,
+        "idempotency_dedupe_policy_included": True,
+        "claim_policy_included": True,
+        "lease_policy_included": True,
+        "heartbeat_policy_included": True,
+        "stale_lease_recovery_included": True,
+        "worker_invocation_envelope_included": True,
+        "completion_ack_included": True,
+        "queue_audit_recorded": False,
+        "lease_audit_recorded": False,
+        "worker_audit_recorded": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not observability_ready:
+        blocking_failures.append("provider_observability_report_not_ready")
+    blocking_failures.extend([
+        "queue_persistence_disabled",
+        "claim_not_persisted",
+        "lease_not_acquired",
+        "worker_loop_disabled",
+        "external_provider_call_disabled",
+    ])
+    if operator_review_required:
+        blocking_failures.append("operator_review_required")
+
+    report_status = (
+        "provider_queue_lease_worker_ready_dry_run"
+        if observability_ready
+        else "provider_queue_lease_worker_incomplete"
+    )
+
+    return {
+        "provider_queue_lease_worker_report_version": PROVIDER_QUEUE_LEASE_WORKER_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_queue_lease_worker_report_builder"),
+        "provider_observability_ready": observability_ready,
+        "operator_review_required": operator_review_required,
+        "stage_count": len(PROVIDER_QUEUE_LEASE_WORKER_STAGES),
+        "queue_lease_worker_stage_matrix": [dict(item, complete=observability_ready) for item in PROVIDER_QUEUE_LEASE_WORKER_STAGES],
+        "queue_model": queue_model,
+        "idempotency_dedupe_policy": idempotency_dedupe_policy,
+        "claim_policy": claim_policy,
+        "lease_policy": lease_policy,
+        "heartbeat_policy": heartbeat_policy,
+        "stale_lease_recovery": stale_lease_recovery,
+        "worker_invocation_envelope": worker_invocation_envelope,
+        "completion_ack": completion_ack,
+        "audit_receipt": audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "queue_item_schema_count": queue_model["queue_item_schema_count"],
+        "recovery_step_count": len(stale_lease_recovery["recovery_steps"]),
+        "required_gate_reference_count": len(worker_invocation_envelope["required_gate_references"]),
+        "missing_gate_reference_count": len(worker_invocation_envelope["missing_gate_references"]),
+        "supports_provider_queue": True,
+        "supports_idempotency_dedupe": True,
+        "supports_queue_claim": True,
+        "supports_worker_lease": True,
+        "supports_worker_heartbeat": True,
+        "supports_stale_lease_recovery": True,
+        "supports_worker_invocation_envelope": True,
+        "supports_completion_ack": True,
+        "supports_queue_worker_audit_receipt": True,
+        "recommended_next_state": "show_provider_queue_lease_worker_in_workspace",
+        "dry_run": True,
+        "queue_insert_allowed": False,
+        "queue_item_created": False,
+        "queue_persisted": False,
+        "duplicate_job_submitted": False,
+        "dedupe_record_persisted": False,
+        "claim_allowed": False,
+        "claim_persisted": False,
+        "lease_allowed": False,
+        "lease_acquired": False,
+        "lease_persisted": False,
+        "heartbeat_recorded": False,
+        "worker_alive": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "worker_invocation_allowed": False,
+        "worker_invocation_performed": False,
+        "completion_recorded": False,
+        "queue_item_completed": False,
+        "lease_released": False,
+        "queue_item_requeued": False,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "real_retry_performed": False,
+        "provider_job_submitted": False,
+        "provider_polling_performed": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "quota_reserved": False,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+        "incident_detected": False,
+        "incident_opened": False,
+        "rollback_ready": False,
+        "rollback_executed": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "result_url_fetched": False,
+        "preview_url_fetched": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

@@ -74,6 +74,7 @@ from agent_runs import (
     build_real_provider_execution_gate_report,
     build_provider_failure_recovery_report,
     build_provider_observability_report,
+    build_provider_queue_lease_worker_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6274,6 +6275,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    provider_queue_lease_worker_report = build_provider_queue_lease_worker_report(
+        provider_observability_report=provider_observability_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6347,6 +6353,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_provider_observability_alerts_triggered": bool(provider_observability_report.get("alert_policy", {}).get("alerts_triggered")),
         "latest_provider_observability_operator_review_required": bool(provider_observability_report.get("operator_review_required")),
         "latest_provider_observability_external_api_called": bool(provider_observability_report.get("external_api_called")),
+        "latest_provider_queue_lease_worker_status": provider_queue_lease_worker_report.get("report_status", ""),
+        "latest_provider_queue_lease_worker_blocking_failure_count": int(provider_queue_lease_worker_report.get("blocking_failure_count") or 0),
+        "latest_provider_queue_lease_worker_lease_acquired": bool(provider_queue_lease_worker_report.get("lease_acquired")),
+        "latest_provider_queue_lease_worker_worker_started": bool(provider_queue_lease_worker_report.get("worker_started")),
+        "latest_provider_queue_lease_worker_external_api_called": bool(provider_queue_lease_worker_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6377,6 +6388,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "real_provider_execution_gate_report": real_provider_execution_gate_report,
         "provider_failure_recovery_report": provider_failure_recovery_report,
         "provider_observability_report": provider_observability_report,
+        "provider_queue_lease_worker_report": provider_queue_lease_worker_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

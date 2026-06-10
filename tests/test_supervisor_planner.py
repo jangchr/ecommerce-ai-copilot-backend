@@ -913,6 +913,84 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_observability_external_api_called"]
         )
+        self.assertIn("provider_queue_lease_worker_report", payload)
+        queue_worker = payload["provider_queue_lease_worker_report"]
+        self.assertEqual(
+            queue_worker["provider_queue_lease_worker_report_version"],
+            "provider_queue_lease_worker_report_v1",
+        )
+        self.assertEqual(
+            queue_worker["report_status"],
+            "provider_queue_lease_worker_ready_dry_run",
+        )
+        self.assertTrue(queue_worker["provider_observability_ready"])
+        self.assertTrue(queue_worker["operator_review_required"])
+        self.assertTrue(queue_worker["queue_model"])
+        self.assertTrue(queue_worker["idempotency_dedupe_policy"])
+        self.assertTrue(queue_worker["claim_policy"])
+        self.assertTrue(queue_worker["lease_policy"])
+        self.assertTrue(queue_worker["heartbeat_policy"])
+        self.assertTrue(queue_worker["stale_lease_recovery"])
+        self.assertTrue(queue_worker["worker_invocation_envelope"])
+        self.assertTrue(queue_worker["completion_ack"])
+        self.assertTrue(queue_worker["audit_receipt"])
+        self.assertGreater(queue_worker["queue_item_schema_count"], 0)
+        self.assertGreater(queue_worker["recovery_step_count"], 0)
+        self.assertTrue(queue_worker["supports_provider_queue"])
+        self.assertTrue(queue_worker["supports_idempotency_dedupe"])
+        self.assertTrue(queue_worker["supports_queue_claim"])
+        self.assertTrue(queue_worker["supports_worker_lease"])
+        self.assertTrue(queue_worker["supports_worker_heartbeat"])
+        self.assertTrue(queue_worker["supports_stale_lease_recovery"])
+        self.assertTrue(queue_worker["supports_worker_invocation_envelope"])
+        self.assertTrue(queue_worker["supports_completion_ack"])
+        self.assertTrue(queue_worker["supports_queue_worker_audit_receipt"])
+        self.assertFalse(queue_worker["queue_insert_allowed"])
+        self.assertFalse(queue_worker["queue_item_created"])
+        self.assertFalse(queue_worker["queue_persisted"])
+        self.assertFalse(queue_worker["duplicate_job_submitted"])
+        self.assertFalse(queue_worker["dedupe_record_persisted"])
+        self.assertFalse(queue_worker["claim_allowed"])
+        self.assertFalse(queue_worker["claim_persisted"])
+        self.assertFalse(queue_worker["lease_allowed"])
+        self.assertFalse(queue_worker["lease_acquired"])
+        self.assertFalse(queue_worker["lease_persisted"])
+        self.assertFalse(queue_worker["heartbeat_recorded"])
+        self.assertFalse(queue_worker["worker_alive"])
+        self.assertFalse(queue_worker["worker_started"])
+        self.assertFalse(queue_worker["worker_loop_started"])
+        self.assertFalse(queue_worker["worker_invocation_allowed"])
+        self.assertFalse(queue_worker["worker_invocation_performed"])
+        self.assertFalse(queue_worker["completion_recorded"])
+        self.assertFalse(queue_worker["queue_item_completed"])
+        self.assertFalse(queue_worker["lease_released"])
+        self.assertFalse(queue_worker["queue_item_requeued"])
+        self.assertFalse(queue_worker["real_execution_allowed"])
+        self.assertFalse(queue_worker["real_execution_enabled"])
+        self.assertFalse(queue_worker["provider_call_allowed"])
+        self.assertFalse(queue_worker["external_api_call_allowed"])
+        self.assertFalse(queue_worker["external_api_called"])
+        self.assertFalse(queue_worker["provider_secret_read"])
+        self.assertFalse(queue_worker["provider_secret_exported"])
+        self.assertFalse(queue_worker["quota_reserved"])
+        self.assertFalse(queue_worker["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_queue_lease_worker_status"],
+            "provider_queue_lease_worker_ready_dry_run",
+        )
+        self.assertGreater(
+            payload["project"]["graph_summary"]["latest_provider_queue_lease_worker_blocking_failure_count"],
+            0,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_queue_lease_worker_lease_acquired"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_queue_lease_worker_worker_started"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_queue_lease_worker_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],
