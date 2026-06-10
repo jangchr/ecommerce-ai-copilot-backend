@@ -11669,6 +11669,167 @@
 
 
 
+
+        function projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderWorkerCheckpointResumeReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider worker checkpoint resume bundle',
+                report_status: report.report_status || '',
+                provider_worker_checkpoint_resume_report_version: report.provider_worker_checkpoint_resume_report_version || '',
+                provider_queue_lease_worker_ready: Boolean(report.provider_queue_lease_worker_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                checkpoint_resume_stage_matrix: Array.isArray(report.checkpoint_resume_stage_matrix) ? report.checkpoint_resume_stage_matrix : [],
+                checkpoint_policy: report.checkpoint_policy || {},
+                checkpoint_bundle: report.checkpoint_bundle || {},
+                resume_cursor_policy: report.resume_cursor_policy || {},
+                replay_policy: report.replay_policy || {},
+                recovery_policy: report.recovery_policy || {},
+                dead_letter_policy: report.dead_letter_policy || {},
+                idempotency_replay_guard: report.idempotency_replay_guard || {},
+                audit_receipt: report.audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                checkpoint_point_count: Number(report.checkpoint_point_count || 0),
+                checkpoint_item_count: Number(report.checkpoint_item_count || 0),
+                safe_replay_target_count: Number(report.safe_replay_target_count || 0),
+                recovery_step_count: Number(report.recovery_step_count || 0),
+                dead_letter_reason_count: Number(report.dead_letter_reason_count || 0),
+                supports_checkpoint_policy: Boolean(report.supports_checkpoint_policy),
+                supports_checkpoint_bundle: Boolean(report.supports_checkpoint_bundle),
+                supports_resume_cursor: Boolean(report.supports_resume_cursor),
+                supports_replay_policy: Boolean(report.supports_replay_policy),
+                supports_recovery_policy: Boolean(report.supports_recovery_policy),
+                supports_dead_letter_policy: Boolean(report.supports_dead_letter_policy),
+                supports_idempotency_replay_guard: Boolean(report.supports_idempotency_replay_guard),
+                supports_checkpoint_audit_receipt: Boolean(report.supports_checkpoint_audit_receipt),
+                dry_run: Boolean(report.dry_run),
+                checkpoint_required: Boolean(report.checkpoint_required),
+                checkpoint_recorded: Boolean(report.checkpoint_recorded),
+                checkpoint_persisted: Boolean(report.checkpoint_persisted),
+                resume_allowed: Boolean(report.resume_allowed),
+                resume_cursor_recorded: Boolean(report.resume_cursor_recorded),
+                resume_cursor_persisted: Boolean(report.resume_cursor_persisted),
+                replay_allowed: Boolean(report.replay_allowed),
+                provider_replay_allowed: Boolean(report.provider_replay_allowed),
+                provider_replay_blocked: Boolean(report.provider_replay_blocked),
+                duplicate_resume_blocked: Boolean(report.duplicate_resume_blocked),
+                duplicate_provider_call_blocked: Boolean(report.duplicate_provider_call_blocked),
+                recovery_allowed: Boolean(report.recovery_allowed),
+                recovery_complete: Boolean(report.recovery_complete),
+                dead_letter_recorded: Boolean(report.dead_letter_recorded),
+                dead_letter_persisted: Boolean(report.dead_letter_persisted),
+                audit_receipt_recorded: Boolean(report.audit_receipt_recorded),
+                checkpoint_audit_recorded: Boolean(report.checkpoint_audit_recorded),
+                resume_audit_recorded: Boolean(report.resume_audit_recorded),
+                replay_audit_recorded: Boolean(report.replay_audit_recorded),
+                queue_persisted: Boolean(report.queue_persisted),
+                lease_acquired: Boolean(report.lease_acquired),
+                heartbeat_recorded: Boolean(report.heartbeat_recorded),
+                worker_started: Boolean(report.worker_started),
+                worker_loop_started: Boolean(report.worker_loop_started),
+                worker_invocation_performed: Boolean(report.worker_invocation_performed),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                quota_reserved: Boolean(report.quota_reserved),
+                operator_review_captured: Boolean(report.operator_review_captured),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                has_provider_worker_checkpoint_resume_report: Boolean(report.report_status || report.provider_worker_checkpoint_resume_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderWorkerCheckpointResumeMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot(workspace);
+            if (!report.has_provider_worker_checkpoint_resume_report) {
+                return `## ${t('projectWorkspaceExportProviderWorkerCheckpointResumeTitle')}\n${t('providerWorkerCheckpointResumeNotRefreshedYet')}`;
+            }
+            const blockerLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stageLines = report.checkpoint_resume_stage_matrix.length
+                ? report.checkpoint_resume_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderWorkerCheckpointResumeTitle')}`,
+                `${t('providerWorkerCheckpointResumeStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerQueueLeaseWorkerReady')}: ${report.provider_queue_lease_worker_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('checkpointPointCount')}: ${report.checkpoint_point_count}`,
+                `${t('checkpointItemCount')}: ${report.checkpoint_item_count}`,
+                `${t('safeReplayTargetCount')}: ${report.safe_replay_target_count}`,
+                `${t('recoveryStepCount')}: ${report.recovery_step_count}`,
+                `${t('deadLetterReasonCount')}: ${report.dead_letter_reason_count}`,
+                `${t('checkpointRecorded')}: ${report.checkpoint_recorded}`,
+                `${t('checkpointPersisted')}: ${report.checkpoint_persisted}`,
+                `${t('resumeAllowed')}: ${report.resume_allowed}`,
+                `${t('resumeCursorPersisted')}: ${report.resume_cursor_persisted}`,
+                `${t('replayAllowed')}: ${report.replay_allowed}`,
+                `${t('providerReplayBlocked')}: ${report.provider_replay_blocked}`,
+                `${t('duplicateResumeBlocked')}: ${report.duplicate_resume_blocked}`,
+                `${t('duplicateProviderCallBlocked')}: ${report.duplicate_provider_call_blocked}`,
+                `${t('recoveryComplete')}: ${report.recovery_complete}`,
+                `${t('deadLetterPersisted')}: ${report.dead_letter_persisted}`,
+                `${t('auditReceiptRecorded')}: ${report.audit_receipt_recorded}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockerLines,
+                '',
+                `### ${t('providerWorkerCheckpointResumeStages')}`,
+                ...stageLines,
+                '',
+                `### ${t('providerCheckpointPolicy')}`,
+                '```json',
+                JSON.stringify(report.checkpoint_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerCheckpointBundle')}`,
+                '```json',
+                JSON.stringify(report.checkpoint_bundle, null, 2),
+                '```',
+                '',
+                `### ${t('providerResumeCursorPolicy')}`,
+                '```json',
+                JSON.stringify(report.resume_cursor_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerReplayPolicy')}`,
+                '```json',
+                JSON.stringify(report.replay_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerRecoveryPolicy')}`,
+                '```json',
+                JSON.stringify(report.recovery_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerDeadLetterPolicy')}`,
+                '```json',
+                JSON.stringify(report.dead_letter_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerIdempotencyReplayGuard')}`,
+                '```json',
+                JSON.stringify(report.idempotency_replay_guard, null, 2),
+                '```',
+                '',
+                `### ${t('providerWorkerCheckpointResumeAuditReceipt')}`,
+                '```json',
+                JSON.stringify(report.audit_receipt, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderQueueLeaseWorkerSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderQueueLeaseWorkerReportFromWorkspace(workspace);
             return {
@@ -13073,6 +13234,8 @@
                 '',
                 projectWorkspaceExportProviderQueueLeaseWorkerMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderWorkerCheckpointResumeMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -13105,6 +13268,7 @@
                 provider_failure_recovery_report: projectWorkspaceExportProviderFailureRecoverySnapshot(workspace),
                 provider_observability_report: projectWorkspaceExportProviderObservabilityReportSnapshot(workspace),
                 provider_queue_lease_worker_report: projectWorkspaceExportProviderQueueLeaseWorkerSnapshot(workspace),
+                provider_worker_checkpoint_resume_report: projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -13237,6 +13401,7 @@
                 latestProjectProviderFailureRecoveryReport = payload.provider_failure_recovery_report || {};
                 latestProjectProviderObservabilityReport = payload.provider_observability_report || {};
                 latestProjectProviderQueueLeaseWorkerReport = payload.provider_queue_lease_worker_report || {};
+                latestProjectProviderWorkerCheckpointResumeReport = payload.provider_worker_checkpoint_resume_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -17094,6 +17259,347 @@
         let latestProjectProviderObservabilityReport = {};
         const PROJECT_WORKSPACE_PROVIDER_QUEUE_LEASE_WORKER_BUNDLE_MARKER = 'Project Workspace provider queue lease worker bundle';
         let latestProjectProviderQueueLeaseWorkerReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_WORKER_CHECKPOINT_RESUME_BUNDLE_MARKER = 'Project Workspace provider worker checkpoint resume bundle';
+        let latestProjectProviderWorkerCheckpointResumeReport = {};
+
+        function projectWorkspaceProviderWorkerCheckpointResumeReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderWorkerCheckpointResumeReport || {}).length
+                ? latestProjectProviderWorkerCheckpointResumeReport
+                : workspace?.provider_worker_checkpoint_resume_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_worker_checkpoint_resume_report_version: '',
+                report_status: graphSummary.latest_provider_worker_checkpoint_resume_status || '',
+                provider_queue_lease_worker_ready: false,
+                operator_review_required: false,
+                stage_count: 0,
+                checkpoint_resume_stage_matrix: [],
+                checkpoint_policy: {},
+                checkpoint_bundle: {},
+                resume_cursor_policy: {},
+                replay_policy: {},
+                recovery_policy: {},
+                dead_letter_policy: {},
+                idempotency_replay_guard: {},
+                audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_worker_checkpoint_resume_blocking_failure_count || 0),
+                blocking_failures: [],
+                checkpoint_point_count: 0,
+                checkpoint_item_count: 0,
+                safe_replay_target_count: 0,
+                recovery_step_count: 0,
+                dead_letter_reason_count: 0,
+                supports_checkpoint_policy: false,
+                supports_checkpoint_bundle: false,
+                supports_resume_cursor: false,
+                supports_replay_policy: false,
+                supports_recovery_policy: false,
+                supports_dead_letter_policy: false,
+                supports_idempotency_replay_guard: false,
+                supports_checkpoint_audit_receipt: false,
+                dry_run: true,
+                checkpoint_required: true,
+                checkpoint_recorded: Boolean(graphSummary.latest_provider_worker_checkpoint_resume_checkpoint_recorded),
+                checkpoint_persisted: false,
+                resume_allowed: Boolean(graphSummary.latest_provider_worker_checkpoint_resume_resume_allowed),
+                resume_cursor_recorded: false,
+                resume_cursor_persisted: false,
+                replay_allowed: false,
+                provider_replay_allowed: false,
+                provider_replay_blocked: true,
+                duplicate_resume_blocked: true,
+                duplicate_provider_call_blocked: true,
+                recovery_allowed: false,
+                recovery_complete: false,
+                dead_letter_recorded: false,
+                dead_letter_persisted: false,
+                audit_receipt_recorded: false,
+                checkpoint_audit_recorded: false,
+                resume_audit_recorded: false,
+                replay_audit_recorded: false,
+                queue_persisted: false,
+                lease_acquired: false,
+                heartbeat_recorded: false,
+                worker_started: false,
+                worker_loop_started: false,
+                worker_invocation_performed: false,
+                real_execution_allowed: false,
+                real_execution_enabled: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_worker_checkpoint_resume_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                quota_reserved: false,
+                operator_review_captured: false,
+                operator_approval_captured: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceProviderWorkerCheckpointResumeCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderWorkerCheckpointResumeReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.checkpoint_resume_stage_matrix) ? report.checkpoint_resume_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            return [
+                t('providerWorkerCheckpointResumeCopyTitle'),
+                `${t('providerWorkerCheckpointResumeStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerQueueLeaseWorkerReady')}: ${Boolean(report.provider_queue_lease_worker_ready)}`,
+                `${t('operatorReviewRequired')}: ${Boolean(report.operator_review_required)}`,
+                `${t('blockingFailureCount')}: ${Number(report.blocking_failure_count || blockers.length || 0)}`,
+                `${t('checkpointPointCount')}: ${Number(report.checkpoint_point_count || 0)}`,
+                `${t('checkpointItemCount')}: ${Number(report.checkpoint_item_count || 0)}`,
+                `${t('safeReplayTargetCount')}: ${Number(report.safe_replay_target_count || 0)}`,
+                `${t('recoveryStepCount')}: ${Number(report.recovery_step_count || 0)}`,
+                `${t('deadLetterReasonCount')}: ${Number(report.dead_letter_reason_count || 0)}`,
+                `${t('checkpointRequired')}: ${Boolean(report.checkpoint_required)}`,
+                `${t('checkpointRecorded')}: ${Boolean(report.checkpoint_recorded)}`,
+                `${t('checkpointPersisted')}: ${Boolean(report.checkpoint_persisted)}`,
+                `${t('resumeAllowed')}: ${Boolean(report.resume_allowed)}`,
+                `${t('resumeCursorRecorded')}: ${Boolean(report.resume_cursor_recorded)}`,
+                `${t('resumeCursorPersisted')}: ${Boolean(report.resume_cursor_persisted)}`,
+                `${t('replayAllowed')}: ${Boolean(report.replay_allowed)}`,
+                `${t('providerReplayAllowed')}: ${Boolean(report.provider_replay_allowed)}`,
+                `${t('providerReplayBlocked')}: ${Boolean(report.provider_replay_blocked)}`,
+                `${t('duplicateResumeBlocked')}: ${Boolean(report.duplicate_resume_blocked)}`,
+                `${t('duplicateProviderCallBlocked')}: ${Boolean(report.duplicate_provider_call_blocked)}`,
+                `${t('recoveryAllowed')}: ${Boolean(report.recovery_allowed)}`,
+                `${t('recoveryComplete')}: ${Boolean(report.recovery_complete)}`,
+                `${t('deadLetterRecorded')}: ${Boolean(report.dead_letter_recorded)}`,
+                `${t('deadLetterPersisted')}: ${Boolean(report.dead_letter_persisted)}`,
+                `${t('auditReceiptRecorded')}: ${Boolean(report.audit_receipt_recorded)}`,
+                `${t('checkpointAuditRecorded')}: ${Boolean(report.checkpoint_audit_recorded)}`,
+                `${t('resumeAuditRecorded')}: ${Boolean(report.resume_audit_recorded)}`,
+                `${t('replayAuditRecorded')}: ${Boolean(report.replay_audit_recorded)}`,
+                `${t('queuePersisted')}: ${Boolean(report.queue_persisted)}`,
+                `${t('leaseAcquired')}: ${Boolean(report.lease_acquired)}`,
+                `${t('heartbeatRecorded')}: ${Boolean(report.heartbeat_recorded)}`,
+                `${t('workerStarted')}: ${Boolean(report.worker_started)}`,
+                `${t('workerLoopStarted')}: ${Boolean(report.worker_loop_started)}`,
+                `${t('workerInvocationPerformed')}: ${Boolean(report.worker_invocation_performed)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('blockingFailures')}:`,
+                blockers.length ? blockers.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('providerWorkerCheckpointResumeStages')}:`,
+                stages.length ? stages.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`).join('\n') : t('none'),
+                '',
+                `${t('providerCheckpointPolicy')}:`,
+                JSON.stringify(report.checkpoint_policy || {}, null, 2),
+                '',
+                `${t('providerCheckpointBundle')}:`,
+                JSON.stringify(report.checkpoint_bundle || {}, null, 2),
+                '',
+                `${t('providerResumeCursorPolicy')}:`,
+                JSON.stringify(report.resume_cursor_policy || {}, null, 2),
+                '',
+                `${t('providerReplayPolicy')}:`,
+                JSON.stringify(report.replay_policy || {}, null, 2),
+                '',
+                `${t('providerRecoveryPolicy')}:`,
+                JSON.stringify(report.recovery_policy || {}, null, 2),
+                '',
+                `${t('providerDeadLetterPolicy')}:`,
+                JSON.stringify(report.dead_letter_policy || {}, null, 2),
+                '',
+                `${t('providerIdempotencyReplayGuard')}:`,
+                JSON.stringify(report.idempotency_replay_guard || {}, null, 2),
+                '',
+                `${t('providerWorkerCheckpointResumeAuditReceipt')}:`,
+                JSON.stringify(report.audit_receipt || {}, null, 2),
+                '',
+                JSON.stringify({ provider_worker_checkpoint_resume_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderWorkerCheckpointResume() {
+            const status = document.getElementById('projectWorkspaceProviderWorkerCheckpointResumeStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderWorkerCheckpointResumeCopyText());
+                if (status) status.textContent = t('providerWorkerCheckpointResumeCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerWorkerCheckpointResumeCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderWorkerCheckpointResumePanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderWorkerCheckpointResumeReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.checkpoint_resume_stage_matrix) ? report.checkpoint_resume_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const checkpointPolicy = report.checkpoint_policy || {};
+            const checkpointBundle = report.checkpoint_bundle || {};
+            const resumeCursor = report.resume_cursor_policy || {};
+            const replayPolicy = report.replay_policy || {};
+            const recoveryPolicy = report.recovery_policy || {};
+            const deadLetterPolicy = report.dead_letter_policy || {};
+            const replayGuard = report.idempotency_replay_guard || {};
+            const receipt = report.audit_receipt || {};
+            const checkpointPoints = Array.isArray(checkpointPolicy.checkpoint_points) ? checkpointPolicy.checkpoint_points : [];
+            const checkpointItems = Array.isArray(checkpointBundle.checkpoint_items) ? checkpointBundle.checkpoint_items : [];
+            const safeReplayTargets = Array.isArray(replayPolicy.safe_replay_targets) ? replayPolicy.safe_replay_targets : [];
+            const recoverySteps = Array.isArray(recoveryPolicy.recovery_steps) ? recoveryPolicy.recovery_steps : [];
+            const deadLetterReasons = Array.isArray(deadLetterPolicy.dead_letter_reasons) ? deadLetterPolicy.dead_letter_reasons : [];
+            const hasReport = Boolean(report.report_status || report.provider_worker_checkpoint_resume_report_version || stages.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderWorkerCheckpointResumePanel" data-project-provider-worker-checkpoint-resume-marker="Project Workspace provider worker checkpoint resume bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerWorkerCheckpointResumePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerWorkerCheckpointResumePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderWorkerCheckpointResumeBtn" type="button" onclick="copyProjectWorkspaceProviderWorkerCheckpointResume()">${escapeHTML(t('copyProviderWorkerCheckpointResume'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerWorkerCheckpointResumeStatus'))}</div>
+                            <strong data-provider-worker-checkpoint-resume-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerWorkerCheckpointResumeNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerQueueLeaseWorkerReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_queue_lease_worker_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('checkpointRecorded'))}</div><strong>${escapeHTML(String(Boolean(report.checkpoint_recorded)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('externalApiCalled'))}</div><strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('checkpointPointCount'))}</div><strong>${escapeHTML(String(Number(report.checkpoint_point_count || checkpointPoints.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('checkpointItemCount'))}</div><strong>${escapeHTML(String(Number(report.checkpoint_item_count || checkpointItems.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('safeReplayTargetCount'))}</div><strong>${escapeHTML(String(Number(report.safe_replay_target_count || safeReplayTargets.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('recoveryStepCount'))}</div><strong>${escapeHTML(String(Number(report.recovery_step_count || recoverySteps.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('deadLetterReasonCount'))}</div><strong>${escapeHTML(String(Number(report.dead_letter_reason_count || deadLetterReasons.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('resumeAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.resume_allowed)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerWorkerCheckpointResumeStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} ? ${escapeHTML(stage.stage_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('requiredInputs'))}: ${(stage.required_inputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedOutputs'))}: ${(stage.expected_outputs || []).map(escapeHTML).join(', ')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerCheckpointPoints'))}</div>
+                        ${checkpointPoints.length ? checkpointPoints.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.checkpoint_point_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('required'))}: ${escapeHTML(String(Boolean(item.required)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerCheckpointItems'))}</div>
+                        ${checkpointItems.length ? checkpointItems.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.checkpoint_item_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('included'))}: ${escapeHTML(String(Boolean(item.included)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerSafeReplayTargets'))}</div>
+                        ${safeReplayTargets.length ? safeReplayTargets.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.target_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('replayAllowed'))}: ${escapeHTML(String(Boolean(item.replay_allowed)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerRecoverySteps'))}</div>
+                        ${recoverySteps.length ? recoverySteps.map((step) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(step.recovery_step_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('ready'))}: ${escapeHTML(String(Boolean(step.ready)))}</span>
+                                <span class="badge">${escapeHTML(t('executed'))}: ${escapeHTML(String(Boolean(step.executed)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerDeadLetterReasons'))}</div>
+                        ${deadLetterReasons.length ? deadLetterReasons.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerCheckpointPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(checkpointPolicy, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerCheckpointBundle'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(checkpointBundle, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerResumeCursorPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(resumeCursor, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerReplayPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(replayPolicy, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerRecoveryPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(recoveryPolicy, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerDeadLetterPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(deadLetterPolicy, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerIdempotencyReplayGuard'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(replayGuard, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerWorkerCheckpointResumeAuditReceipt'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(receipt, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsCheckpointPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_checkpoint_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsCheckpointBundle'))}</div><strong>${escapeHTML(String(Boolean(report.supports_checkpoint_bundle)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsResumeCursor'))}</div><strong>${escapeHTML(String(Boolean(report.supports_resume_cursor)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsReplayPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_replay_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsRecoveryPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_recovery_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsDeadLetterPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_dead_letter_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsIdempotencyReplayGuard'))}</div><strong>${escapeHTML(String(Boolean(report.supports_idempotency_replay_guard)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsCheckpointAuditReceipt'))}</div><strong>${escapeHTML(String(Boolean(report.supports_checkpoint_audit_receipt)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerReplayBlocked'))}</div><strong>${escapeHTML(String(Boolean(report.provider_replay_blocked)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('duplicateResumeBlocked'))}</div><strong>${escapeHTML(String(Boolean(report.duplicate_resume_blocked)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('duplicateProviderCallBlocked'))}</div><strong>${escapeHTML(String(Boolean(report.duplicate_provider_call_blocked)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('checkpointPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.checkpoint_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('resumeCursorPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.resume_cursor_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretRead'))}</div><strong>${escapeHTML(String(Boolean(report.provider_secret_read)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerWorkerCheckpointResumeAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-worker-checkpoint-resume-audit-preview="Project Workspace provider worker checkpoint resume bundle">${escapeHTML(projectWorkspaceProviderWorkerCheckpointResumeCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerWorkerCheckpointResumeNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderWorkerCheckpointResumeStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceProviderQueueLeaseWorkerReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderQueueLeaseWorkerReport || {}).length
@@ -20704,6 +21210,8 @@
                 if (providerObservabilityReportPanel) providerObservabilityReportPanel.outerHTML = renderProjectWorkspaceProviderObservabilityReportPanel(latestProjectWorkspace);
                 const providerQueueLeaseWorkerPanel = document.getElementById('projectWorkspaceProviderQueueLeaseWorkerPanel');
                 if (providerQueueLeaseWorkerPanel) providerQueueLeaseWorkerPanel.outerHTML = renderProjectWorkspaceProviderQueueLeaseWorkerPanel(latestProjectWorkspace);
+                const providerWorkerCheckpointResumePanel = document.getElementById('projectWorkspaceProviderWorkerCheckpointResumePanel');
+                if (providerWorkerCheckpointResumePanel) providerWorkerCheckpointResumePanel.outerHTML = renderProjectWorkspaceProviderWorkerCheckpointResumePanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -22893,6 +23401,7 @@
                     ${renderProjectWorkspaceProviderFailureRecoveryPanel(workspace)}
                     ${renderProjectWorkspaceProviderObservabilityReportPanel(workspace)}
                     ${renderProjectWorkspaceProviderQueueLeaseWorkerPanel(workspace)}
+                    ${renderProjectWorkspaceProviderWorkerCheckpointResumePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -27864,6 +28373,129 @@
             ready: 'Ready',
             executed: 'Executed',
             projectWorkspaceExportProviderQueueLeaseWorkerTitle: 'Provider Queue / Lease / Worker / Provider \u961f\u5217\u79df\u7ea6\u5de5\u4f5c\u5668'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderWorkerCheckpointResumeBundleMarker: 'Project Workspace provider worker checkpoint resume bundle',
+            providerWorkerCheckpointResumePanelTitle: 'Worker Checkpoint / Resume / Recovery / Replay',
+            providerWorkerCheckpointResumePanelHelper: 'Dry-run worker checkpoint, resume cursor, replay guard, recovery policy, dead-letter routing, idempotency replay guard, and audit receipt. It does not persist checkpoints, resume workers, replay provider calls, or unlock real execution.',
+            copyProviderWorkerCheckpointResume: 'Copy worker checkpoint / resume report',
+            providerWorkerCheckpointResumeCopyTitle: 'Project worker checkpoint / resume / recovery / replay report',
+            providerWorkerCheckpointResumeStatus: 'Worker checkpoint / resume status',
+            providerWorkerCheckpointResumeNotRefreshedYet: 'Worker checkpoint / resume report has not been refreshed yet.',
+            providerWorkerCheckpointResumeCopied: 'Worker checkpoint / resume report copied.',
+            providerWorkerCheckpointResumeCopyFailed: 'Could not copy worker checkpoint / resume report.',
+            providerQueueLeaseWorkerReady: 'Provider queue / lease / worker ready',
+            checkpointPointCount: 'Checkpoint point count',
+            checkpointItemCount: 'Checkpoint item count',
+            safeReplayTargetCount: 'Safe replay target count',
+            deadLetterReasonCount: 'Dead letter reason count',
+            checkpointRequired: 'Checkpoint required',
+            checkpointRecorded: 'Checkpoint recorded',
+            checkpointPersisted: 'Checkpoint persisted',
+            resumeAllowed: 'Resume allowed',
+            resumeCursorRecorded: 'Resume cursor recorded',
+            resumeCursorPersisted: 'Resume cursor persisted',
+            replayAllowed: 'Replay allowed',
+            providerReplayAllowed: 'Provider replay allowed',
+            providerReplayBlocked: 'Provider replay blocked',
+            duplicateResumeBlocked: 'Duplicate resume blocked',
+            duplicateProviderCallBlocked: 'Duplicate provider call blocked',
+            recoveryAllowed: 'Recovery allowed',
+            recoveryComplete: 'Recovery complete',
+            deadLetterRecorded: 'Dead letter recorded',
+            deadLetterPersisted: 'Dead letter persisted',
+            auditReceiptRecorded: 'Audit receipt recorded',
+            checkpointAuditRecorded: 'Checkpoint audit recorded',
+            resumeAuditRecorded: 'Resume audit recorded',
+            replayAuditRecorded: 'Replay audit recorded',
+            providerWorkerCheckpointResumeStages: 'Worker checkpoint / resume stages',
+            providerCheckpointPolicy: 'Provider checkpoint policy',
+            providerCheckpointBundle: 'Provider checkpoint bundle',
+            providerResumeCursorPolicy: 'Provider resume cursor policy',
+            providerReplayPolicy: 'Provider replay policy',
+            providerRecoveryPolicy: 'Provider recovery policy',
+            providerDeadLetterPolicy: 'Provider dead letter policy',
+            providerIdempotencyReplayGuard: 'Provider idempotency replay guard',
+            providerWorkerCheckpointResumeAuditReceipt: 'Worker checkpoint / resume audit receipt',
+            providerCheckpointPoints: 'Provider checkpoint points',
+            providerCheckpointItems: 'Provider checkpoint items',
+            providerSafeReplayTargets: 'Provider safe replay targets',
+            providerRecoverySteps: 'Provider recovery steps',
+            providerDeadLetterReasons: 'Provider dead letter reasons',
+            supportsCheckpointPolicy: 'Supports checkpoint policy',
+            supportsCheckpointBundle: 'Supports checkpoint bundle',
+            supportsResumeCursor: 'Supports resume cursor',
+            supportsReplayPolicy: 'Supports replay policy',
+            supportsRecoveryPolicy: 'Supports recovery policy',
+            supportsDeadLetterPolicy: 'Supports dead letter policy',
+            supportsIdempotencyReplayGuard: 'Supports idempotency replay guard',
+            supportsCheckpointAuditReceipt: 'Supports checkpoint audit receipt',
+            providerWorkerCheckpointResumeAuditPreview: 'Worker checkpoint / resume audit preview',
+            included: 'Included',
+            projectWorkspaceExportProviderWorkerCheckpointResumeTitle: 'Worker Checkpoint / Resume / Recovery / Replay'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderWorkerCheckpointResumeBundleMarker: 'Project Workspace provider worker checkpoint resume bundle',
+            providerWorkerCheckpointResumePanelTitle: 'Worker Checkpoint / Resume / Recovery / Replay / Worker \u68c0\u67e5\u70b9\u6062\u590d\u56de\u653e',
+            providerWorkerCheckpointResumePanelHelper: 'Dry-run worker checkpoint\u3001resume cursor\u3001replay guard\u3001recovery policy\u3001dead-letter routing\u3001idempotency replay guard \u548c audit receipt\u3002\u4e0d\u4f1a\u6301\u4e45\u5316 checkpoint\uff0c\u4e0d\u4f1a\u6062\u590d worker\uff0c\u4e0d\u4f1a replay provider call\uff0c\u4e0d\u4f1a\u89e3\u9501\u771f\u5b9e\u6267\u884c\u3002',
+            copyProviderWorkerCheckpointResume: '\u590d\u5236 worker checkpoint / resume \u62a5\u544a',
+            providerWorkerCheckpointResumeCopyTitle: '\u9879\u76ee Worker Checkpoint / Resume / Recovery / Replay \u62a5\u544a',
+            providerWorkerCheckpointResumeStatus: 'Worker checkpoint / resume \u72b6\u6001',
+            providerWorkerCheckpointResumeNotRefreshedYet: 'Worker checkpoint / resume \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerWorkerCheckpointResumeCopied: 'Worker checkpoint / resume \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerWorkerCheckpointResumeCopyFailed: '\u590d\u5236 worker checkpoint / resume \u62a5\u544a\u5931\u8d25\u3002',
+            providerQueueLeaseWorkerReady: 'Provider queue / lease / worker ready',
+            checkpointPointCount: 'Checkpoint point \u6570',
+            checkpointItemCount: 'Checkpoint item \u6570',
+            safeReplayTargetCount: 'Safe replay target \u6570',
+            deadLetterReasonCount: 'Dead letter reason \u6570',
+            checkpointRequired: '\u5fc5\u9700 checkpoint',
+            checkpointRecorded: 'Checkpoint \u5df2\u8bb0\u5f55',
+            checkpointPersisted: 'Checkpoint \u5df2\u6301\u4e45\u5316',
+            resumeAllowed: '\u5141\u8bb8 resume',
+            resumeCursorRecorded: 'Resume cursor \u5df2\u8bb0\u5f55',
+            resumeCursorPersisted: 'Resume cursor \u5df2\u6301\u4e45\u5316',
+            replayAllowed: '\u5141\u8bb8 replay',
+            providerReplayAllowed: '\u5141\u8bb8 provider replay',
+            providerReplayBlocked: 'Provider replay \u5df2\u963b\u65ad',
+            duplicateResumeBlocked: '\u91cd\u590d resume \u5df2\u963b\u65ad',
+            duplicateProviderCallBlocked: '\u91cd\u590d provider call \u5df2\u963b\u65ad',
+            recoveryAllowed: '\u5141\u8bb8 recovery',
+            recoveryComplete: 'Recovery \u5df2\u5b8c\u6210',
+            deadLetterRecorded: 'Dead letter \u5df2\u8bb0\u5f55',
+            deadLetterPersisted: 'Dead letter \u5df2\u6301\u4e45\u5316',
+            auditReceiptRecorded: 'Audit receipt \u5df2\u8bb0\u5f55',
+            checkpointAuditRecorded: 'Checkpoint audit \u5df2\u8bb0\u5f55',
+            resumeAuditRecorded: 'Resume audit \u5df2\u8bb0\u5f55',
+            replayAuditRecorded: 'Replay audit \u5df2\u8bb0\u5f55',
+            providerWorkerCheckpointResumeStages: 'Worker checkpoint / resume \u9636\u6bb5',
+            providerCheckpointPolicy: 'Provider checkpoint policy',
+            providerCheckpointBundle: 'Provider checkpoint bundle',
+            providerResumeCursorPolicy: 'Provider resume cursor policy',
+            providerReplayPolicy: 'Provider replay policy',
+            providerRecoveryPolicy: 'Provider recovery policy',
+            providerDeadLetterPolicy: 'Provider dead letter policy',
+            providerIdempotencyReplayGuard: 'Provider idempotency replay guard',
+            providerWorkerCheckpointResumeAuditReceipt: 'Worker checkpoint / resume audit receipt',
+            providerCheckpointPoints: 'Provider checkpoint points',
+            providerCheckpointItems: 'Provider checkpoint items',
+            providerSafeReplayTargets: 'Provider safe replay targets',
+            providerRecoverySteps: 'Provider recovery steps',
+            providerDeadLetterReasons: 'Provider dead letter reasons',
+            supportsCheckpointPolicy: '\u652f\u6301 checkpoint policy',
+            supportsCheckpointBundle: '\u652f\u6301 checkpoint bundle',
+            supportsResumeCursor: '\u652f\u6301 resume cursor',
+            supportsReplayPolicy: '\u652f\u6301 replay policy',
+            supportsRecoveryPolicy: '\u652f\u6301 recovery policy',
+            supportsDeadLetterPolicy: '\u652f\u6301 dead letter policy',
+            supportsIdempotencyReplayGuard: '\u652f\u6301 idempotency replay guard',
+            supportsCheckpointAuditReceipt: '\u652f\u6301 checkpoint audit receipt',
+            providerWorkerCheckpointResumeAuditPreview: 'Worker checkpoint / resume \u5ba1\u8ba1\u9884\u89c8',
+            included: '\u5df2\u5305\u542b',
+            projectWorkspaceExportProviderWorkerCheckpointResumeTitle: 'Worker Checkpoint / Resume / Recovery / Replay / Worker \u68c0\u67e5\u70b9\u6062\u590d\u56de\u653e'
         });
 
 

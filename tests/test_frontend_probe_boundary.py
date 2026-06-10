@@ -6780,6 +6780,40 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_queue_lease_worker_marker", script)
 
 
+    def test_project_workspace_provider_worker_checkpoint_resume_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider worker checkpoint resume bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_WORKER_CHECKPOINT_RESUME_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceProviderWorkerCheckpointResumePanel", html)
+        self.assertIn("copyProjectWorkspaceProviderWorkerCheckpointResume", html)
+        self.assertIn("provider_worker_checkpoint_resume_report", html)
+        self.assertIn("projectWorkspaceExportProviderWorkerCheckpointResumeMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot", html)
+        self.assertIn("checkpoint_policy", html)
+        self.assertIn("checkpoint_bundle", html)
+        self.assertIn("resume_cursor_policy", html)
+        self.assertIn("replay_policy", html)
+        self.assertIn("recovery_policy", html)
+        self.assertIn("dead_letter_policy", html)
+        self.assertIn("idempotency_replay_guard", html)
+        self.assertIn("provider_replay_blocked", html)
+        self.assertIn("duplicate_resume_blocked", html)
+        self.assertIn("duplicate_provider_call_blocked", html)
+        self.assertIn("checkpoint_recorded", html)
+        self.assertIn("resume_allowed", html)
+        self.assertIn("external_api_called", html)
+
+    def test_project_workspace_provider_worker_checkpoint_resume_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_worker_checkpoint_resume_marker", script)
+        self.assertIn("Project Workspace provider worker checkpoint resume bundle", script)
+
+    def test_project_workspace_provider_worker_checkpoint_resume_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider worker checkpoint resume bundle", script)
+        self.assertIn("project_workspace_provider_worker_checkpoint_resume_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
