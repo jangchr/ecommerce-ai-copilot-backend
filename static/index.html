@@ -11663,6 +11663,102 @@
 
 
 
+
+        function projectWorkspaceExportProviderApiReadinessSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderApiReadinessReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider API readiness bundle',
+                report_status: report.report_status || '',
+                provider_api_readiness_report_version: report.provider_api_readiness_report_version || '',
+                manual_generation_result_ready: Boolean(report.manual_generation_result_ready),
+                missing_item_count: Number(report.missing_item_count || 0),
+                missing_items: Array.isArray(report.missing_items) ? report.missing_items : [],
+                provider_count: Number(report.provider_count || 0),
+                provider_ids: Array.isArray(report.provider_ids) ? report.provider_ids : [],
+                provider_contracts: Array.isArray(report.provider_contracts) ? report.provider_contracts : [],
+                api_key_boundary: Array.isArray(report.api_key_boundary) ? report.api_key_boundary : [],
+                async_job_schema: Array.isArray(report.async_job_schema) ? report.async_job_schema : [],
+                polling_contract: Array.isArray(report.polling_contract) ? report.polling_contract : [],
+                failure_handling_contract: Array.isArray(report.failure_handling_contract) ? report.failure_handling_contract : [],
+                readiness_checklist: Array.isArray(report.readiness_checklist) ? report.readiness_checklist : [],
+                supports_fake_provider_clients: Boolean(report.supports_fake_provider_clients),
+                supports_provider_polling_scaffold: Boolean(report.supports_provider_polling_scaffold),
+                supports_cost_estimate_before_submit: Boolean(report.supports_cost_estimate_before_submit),
+                supports_approval_gate_before_submit: Boolean(report.supports_approval_gate_before_submit),
+                supports_timeout_failure_contract: Boolean(report.supports_timeout_failure_contract),
+                supports_secret_boundary: Boolean(report.supports_secret_boundary),
+                dry_run: Boolean(report.dry_run),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                provider_job_submitted: Boolean(report.provider_job_submitted),
+                provider_polling_performed: Boolean(report.provider_polling_performed),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                human_approval_required_before_provider_submit: Boolean(report.human_approval_required_before_provider_submit),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                has_provider_api_readiness_report: Boolean(report.report_status || report.provider_api_readiness_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderApiReadinessMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderApiReadinessSnapshot(workspace);
+            if (!report.has_provider_api_readiness_report) {
+                return `## ${t('projectWorkspaceExportProviderApiReadinessTitle')}\n${t('providerApiReadinessNotRefreshedYet')}`;
+            }
+            const providerLines = report.provider_contracts.length
+                ? report.provider_contracts.map((provider, index) => `${index + 1}. ${provider.provider_id || ''} | ${provider.current_mode || ''} | env=${provider.env_key_name || ''} | real_api_enabled=${Boolean(provider.real_api_enabled)}`)
+                : ['none'];
+            const boundaryLines = report.api_key_boundary.length
+                ? report.api_key_boundary.map((item, index) => `${index + 1}. ${item.boundary_id || ''} | passed=${Boolean(item.passed)} | ${item.description || ''}`)
+                : ['none'];
+            const schemaLines = report.async_job_schema.length
+                ? report.async_job_schema.map((item, index) => `${index + 1}. ${item.field || ''} | required=${Boolean(item.required)} | ${item.purpose || ''}`)
+                : ['none'];
+            const pollingLines = report.polling_contract.length
+                ? report.polling_contract.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const failureLines = report.failure_handling_contract.length
+                ? report.failure_handling_contract.map((item, index) => `${index + 1}. ${item.failure_type || ''} | retryable=${Boolean(item.retryable)} | review=${Boolean(item.requires_operator_review)} | ${item.next_state || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderApiReadinessTitle')}`,
+                `${t('providerApiReadinessStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerApiProviderCount')}: ${report.provider_count}`,
+                `${t('realExecutionEnabled')}: ${report.real_execution_enabled}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${report.external_api_call_allowed}`,
+                `${t('providerJobSubmitted')}: ${report.provider_job_submitted}`,
+                `${t('providerPollingPerformed')}: ${report.provider_polling_performed}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('providerSecretExported')}: ${report.provider_secret_exported}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('operatorApprovalCaptured')}: ${report.operator_approval_captured}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('providerReadinessMatrix')}`,
+                ...providerLines,
+                '',
+                `### ${t('apiKeySecretBoundary')}`,
+                ...boundaryLines,
+                '',
+                `### ${t('asyncJobSchema')}`,
+                ...schemaLines,
+                '',
+                `### ${t('pollingContract')}`,
+                ...pollingLines,
+                '',
+                `### ${t('failureHandlingContract')}`,
+                ...failureLines
+            ].join('\n');
+        }
+
         function projectWorkspaceExportManualGenerationResultSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceManualGenerationResultReportFromWorkspace(workspace);
             return {
@@ -12260,6 +12356,8 @@
                 '',
                 projectWorkspaceExportManualGenerationResultMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderApiReadinessMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12286,6 +12384,7 @@
                 keyframe_video_asset_chain_report: projectWorkspaceExportKeyframeVideoAssetChainSnapshot(workspace),
                 keyframe_prompt_pack_report: projectWorkspaceExportKeyframePromptPackSnapshot(workspace),
                 manual_generation_result_report: projectWorkspaceExportManualGenerationResultSnapshot(workspace),
+                provider_api_readiness_report: projectWorkspaceExportProviderApiReadinessSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12412,6 +12511,7 @@
                 latestProjectKeyframeVideoAssetChainReport = payload.keyframe_video_asset_chain_report || {};
                 latestProjectKeyframePromptPackReport = payload.keyframe_prompt_pack_report || {};
                 latestProjectManualGenerationResultReport = payload.manual_generation_result_report || {};
+                latestProjectProviderApiReadinessReport = payload.provider_api_readiness_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16257,6 +16357,229 @@
         let latestProjectKeyframePromptPackReport = {};
         const PROJECT_WORKSPACE_MANUAL_GENERATION_RESULT_BUNDLE_MARKER = 'Project Workspace manual generation result bundle';
         let latestProjectManualGenerationResultReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_API_READINESS_BUNDLE_MARKER = 'Project Workspace provider API readiness bundle';
+        let latestProjectProviderApiReadinessReport = {};
+
+        function projectWorkspaceProviderApiReadinessReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderApiReadinessReport || {}).length
+                ? latestProjectProviderApiReadinessReport
+                : workspace?.provider_api_readiness_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_api_readiness_report_version: '',
+                report_status: graphSummary.latest_provider_api_readiness_status || '',
+                provider_count: Number(graphSummary.latest_provider_api_readiness_provider_count || 0),
+                real_execution_enabled: Boolean(graphSummary.latest_provider_api_readiness_real_execution_enabled),
+                provider_call_allowed: Boolean(graphSummary.latest_provider_api_readiness_provider_call_allowed),
+                provider_ids: [],
+                provider_contracts: [],
+                api_key_boundary: [],
+                async_job_schema: [],
+                polling_contract: [],
+                failure_handling_contract: [],
+                readiness_checklist: [],
+                supports_fake_provider_clients: false,
+                supports_provider_polling_scaffold: false,
+                supports_cost_estimate_before_submit: false,
+                supports_approval_gate_before_submit: false,
+                supports_timeout_failure_contract: false,
+                supports_secret_boundary: false,
+                dry_run: true,
+                real_execution_allowed: false,
+                external_api_call_allowed: false,
+                provider_job_submitted: false,
+                provider_polling_performed: false,
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false,
+                human_approval_required_before_provider_submit: true,
+                operator_approval_captured: false
+            };
+        }
+
+        function projectWorkspaceProviderApiReadinessCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderApiReadinessReportFromWorkspace(workspace);
+            const providers = Array.isArray(report.provider_contracts) ? report.provider_contracts : [];
+            const boundaries = Array.isArray(report.api_key_boundary) ? report.api_key_boundary : [];
+            const schema = Array.isArray(report.async_job_schema) ? report.async_job_schema : [];
+            const polling = Array.isArray(report.polling_contract) ? report.polling_contract : [];
+            const failures = Array.isArray(report.failure_handling_contract) ? report.failure_handling_contract : [];
+            const checks = Array.isArray(report.readiness_checklist) ? report.readiness_checklist : [];
+            return [
+                t('providerApiReadinessCopyTitle'),
+                `${t('providerApiReadinessStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerApiProviderCount')}: ${Number(report.provider_count || providers.length || 0)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(report.real_execution_enabled)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('providerJobSubmitted')}: ${Boolean(report.provider_job_submitted)}`,
+                `${t('providerPollingPerformed')}: ${Boolean(report.provider_polling_performed)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('mediaUploaded')}: ${Boolean(report.media_uploaded)}`,
+                `${t('mediaDownloaded')}: ${Boolean(report.media_downloaded)}`,
+                `${t('videoGenerationPerformed')}: ${Boolean(report.video_generation_performed)}`,
+                `${t('imageGenerationPerformed')}: ${Boolean(report.image_generation_performed)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('humanApprovalRequiredBeforeProviderSubmit')}: ${Boolean(report.human_approval_required_before_provider_submit)}`,
+                `${t('operatorApprovalCaptured')}: ${Boolean(report.operator_approval_captured)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('providerReadinessMatrix')}:`,
+                providers.length ? providers.map((provider, index) => [
+                    `${index + 1}. ${provider.provider_id || ''} / ${provider.display_name || ''}`,
+                    `   ${t('providerCategory')}: ${provider.provider_category || ''}`,
+                    `   ${t('envKeyName')}: ${provider.env_key_name || ''}`,
+                    `   ${t('currentMode')}: ${provider.current_mode || ''}`,
+                    `   ${t('plannedPromptSource')}: ${provider.planned_prompt_source || ''}`,
+                    `   ${t('supportsFakeClient')}: ${Boolean(provider.supports_fake_client)}`,
+                    `   ${t('supportsPollingScaffold')}: ${Boolean(provider.supports_polling_scaffold)}`,
+                    `   ${t('realApiEnabled')}: ${Boolean(provider.real_api_enabled)}`,
+                    `   ${t('approvalRequiredBeforeSubmit')}: ${Boolean(provider.approval_required_before_submit)}`
+                ].join('\n')).join('\n') : t('none'),
+                '',
+                `${t('apiKeySecretBoundary')}:`,
+                boundaries.length ? boundaries.map((item, index) => `${index + 1}. ${item.boundary_id || ''} | passed=${Boolean(item.passed)} | ${item.description || ''}`).join('\n') : t('none'),
+                '',
+                `${t('asyncJobSchema')}:`,
+                schema.length ? schema.map((item, index) => `${index + 1}. ${item.field || ''} | required=${Boolean(item.required)} | ${item.purpose || ''}`).join('\n') : t('none'),
+                '',
+                `${t('pollingContract')}:`,
+                polling.length ? polling.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('failureHandlingContract')}:`,
+                failures.length ? failures.map((item, index) => `${index + 1}. ${item.failure_type || ''} | retryable=${Boolean(item.retryable)} | review=${Boolean(item.requires_operator_review)} | ${item.next_state || ''}`).join('\n') : t('none'),
+                '',
+                `${t('readinessChecklist')}:`,
+                checks.length ? checks.map((item, index) => `${index + 1}. ${item.check_id || ''} | passed=${Boolean(item.passed)}`).join('\n') : t('none'),
+                '',
+                JSON.stringify({ provider_api_readiness_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderApiReadiness() {
+            const status = document.getElementById('projectWorkspaceProviderApiReadinessStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderApiReadinessCopyText());
+                if (status) status.textContent = t('providerApiReadinessCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerApiReadinessCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderApiReadinessPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderApiReadinessReportFromWorkspace(workspace);
+            const providers = Array.isArray(report.provider_contracts) ? report.provider_contracts : [];
+            const boundaries = Array.isArray(report.api_key_boundary) ? report.api_key_boundary : [];
+            const schema = Array.isArray(report.async_job_schema) ? report.async_job_schema : [];
+            const polling = Array.isArray(report.polling_contract) ? report.polling_contract : [];
+            const failures = Array.isArray(report.failure_handling_contract) ? report.failure_handling_contract : [];
+            const checks = Array.isArray(report.readiness_checklist) ? report.readiness_checklist : [];
+            const hasReport = Boolean(report.report_status || report.provider_api_readiness_report_version || providers.length || checks.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderApiReadinessPanel" data-project-provider-api-readiness-marker="Project Workspace provider API readiness bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerApiReadinessPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerApiReadinessPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderApiReadinessBtn" type="button" onclick="copyProjectWorkspaceProviderApiReadiness()">${escapeHTML(t('copyProviderApiReadiness'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerApiReadinessStatus'))}</div>
+                            <strong data-provider-api-readiness-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerApiReadinessNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerApiProviderCount'))}</div>
+                            <strong>${escapeHTML(String(Number(report.provider_count || providers.length || 0)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('realExecutionEnabled'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.real_execution_enabled)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerCallAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.provider_call_allowed)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerReadinessMatrix'))}</div>
+                        ${providers.length ? providers.map((provider) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(provider.provider_id || '')} ? ${escapeHTML(provider.display_name || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('providerCategory'))}: ${escapeHTML(provider.provider_category || '')}</span>
+                                    <span class="badge">${escapeHTML(t('envKeyName'))}: ${escapeHTML(provider.env_key_name || '')}</span>
+                                    <span class="badge">${escapeHTML(t('currentMode'))}: ${escapeHTML(provider.current_mode || '')}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('plannedPromptSource'))}: ${escapeHTML(provider.planned_prompt_source || '')}</div>
+                                <div class="graph-os-compact-grid">
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsFakeClient'))}</div><strong>${escapeHTML(String(Boolean(provider.supports_fake_client)))}</strong></div>
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsPollingScaffold'))}</div><strong>${escapeHTML(String(Boolean(provider.supports_polling_scaffold)))}</strong></div>
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realApiEnabled'))}</div><strong>${escapeHTML(String(Boolean(provider.real_api_enabled)))}</strong></div>
+                                    <div class="graph-os-card"><div class="json-key">${escapeHTML(t('approvalRequiredBeforeSubmit'))}</div><strong>${escapeHTML(String(Boolean(provider.approval_required_before_submit)))}</strong></div>
+                                </div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('apiKeySecretBoundary'))}</div>
+                            ${boundaries.length ? boundaries.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item.boundary_id || '')}</strong> ? ${escapeHTML(t('passed'))}: ${escapeHTML(String(Boolean(item.passed)))}<div class="field-helper">${escapeHTML(item.description || '')}</div></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('asyncJobSchema'))}</div>
+                            ${schema.length ? schema.map((item) => `<div class="artifact-timeline-row"><strong>${escapeHTML(item.field || '')}</strong> ? ${escapeHTML(t('required'))}: ${escapeHTML(String(Boolean(item.required)))}<div class="field-helper">${escapeHTML(item.purpose || '')}</div></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('pollingContract'))}</div>
+                        ${polling.length ? polling.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. ${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('failureHandlingContract'))}</div>
+                        ${failures.length ? failures.map((item) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(item.failure_type || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">retryable=${escapeHTML(String(Boolean(item.retryable)))}</span>
+                                    <span class="badge">review=${escapeHTML(String(Boolean(item.requires_operator_review)))}</span>
+                                    <span class="badge">${escapeHTML(t('nextState'))}: ${escapeHTML(item.next_state || '')}</span>
+                                </div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('readinessChecklist'))}</div>
+                        ${checks.length ? checks.map((item) => `<div class="artifact-timeline-row"><strong>${escapeHTML(item.check_id || '')}</strong> ? ${escapeHTML(t('passed'))}: ${escapeHTML(String(Boolean(item.passed)))}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretRead'))}</div><strong>${escapeHTML(String(Boolean(report.provider_secret_read)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretExported'))}</div><strong>${escapeHTML(String(Boolean(report.provider_secret_exported)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerJobSubmitted'))}</div><strong>${escapeHTML(String(Boolean(report.provider_job_submitted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerPollingPerformed'))}</div><strong>${escapeHTML(String(Boolean(report.provider_polling_performed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('paidGenerationAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.paid_generation_allowed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorApprovalCaptured'))}</div><strong>${escapeHTML(String(Boolean(report.operator_approval_captured)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerApiReadinessAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-api-readiness-audit-preview="Project Workspace provider API readiness bundle">${escapeHTML(projectWorkspaceProviderApiReadinessCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerApiReadinessNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderApiReadinessStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceManualGenerationResultReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectManualGenerationResultReport || {}).length
@@ -18187,6 +18510,8 @@
                 if (keyframePromptPackPanel) keyframePromptPackPanel.outerHTML = renderProjectWorkspaceKeyframePromptPackPanel(latestProjectWorkspace);
                 const manualGenerationResultPanel = document.getElementById('projectWorkspaceManualGenerationResultPanel');
                 if (manualGenerationResultPanel) manualGenerationResultPanel.outerHTML = renderProjectWorkspaceManualGenerationResultPanel(latestProjectWorkspace);
+                const providerApiReadinessPanel = document.getElementById('projectWorkspaceProviderApiReadinessPanel');
+                if (providerApiReadinessPanel) providerApiReadinessPanel.outerHTML = renderProjectWorkspaceProviderApiReadinessPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -20370,6 +20695,7 @@
                     ${renderProjectWorkspaceKeyframeVideoAssetChainPanel(workspace)}
                     ${renderProjectWorkspaceKeyframePromptPackPanel(workspace)}
                     ${renderProjectWorkspaceManualGenerationResultPanel(workspace)}
+                    ${renderProjectWorkspaceProviderApiReadinessPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -24781,6 +25107,83 @@
             manualGenerationResultCopied: '\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u6307\u5f15\u5df2\u590d\u5236\u3002',
             manualGenerationResultCopyFailed: '\u590d\u5236\u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41\u6307\u5f15\u5931\u8d25\u3002',
             projectWorkspaceExportManualGenerationResultTitle: 'Manual Generation Result Intake / \u624b\u52a8\u751f\u6210\u7ed3\u679c\u56de\u6d41'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderApiReadinessBundleMarker: 'Project Workspace provider API readiness bundle',
+            providerApiReadinessPanelTitle: 'Provider API Integration Readiness',
+            providerApiReadinessPanelHelper: 'Dry-run readiness report for future Gemini / Doubao / Runway / Pika API integration. It shows provider contracts, API key boundaries, async job schema, polling contract, timeout and failure handling, approval gate, and real execution lock. No provider call, no secret read, no media upload, no polling real providers, no cost.',
+            copyProviderApiReadiness: 'Copy provider API readiness',
+            providerApiReadinessCopyTitle: 'Project provider API integration readiness report',
+            providerApiReadinessStatus: 'Provider API readiness status',
+            providerApiProviderCount: 'Provider count',
+            providerReadinessMatrix: 'Provider readiness matrix',
+            providerCategory: 'Provider category',
+            envKeyName: 'Env key name',
+            currentMode: 'Current mode',
+            plannedPromptSource: 'Planned prompt source',
+            supportsFakeClient: 'Supports fake client',
+            supportsPollingScaffold: 'Supports polling scaffold',
+            realApiEnabled: 'Real API enabled',
+            approvalRequiredBeforeSubmit: 'Approval required before submit',
+            apiKeySecretBoundary: 'API key / secret boundary',
+            asyncJobSchema: 'Async job schema',
+            pollingContract: 'Polling contract',
+            failureHandlingContract: 'Failure handling contract',
+            readinessChecklist: 'Readiness checklist',
+            passed: 'Passed',
+            nextState: 'Next state',
+            realExecutionEnabled: 'Real execution enabled',
+            providerJobSubmitted: 'Provider job submitted',
+            providerPollingPerformed: 'Provider polling performed',
+            providerSecretRead: 'Provider secret read',
+            providerSecretExported: 'Provider secret exported',
+            humanApprovalRequiredBeforeProviderSubmit: 'Human approval required before provider submit',
+            operatorApprovalCaptured: 'Operator approval captured',
+            providerApiReadinessAuditPreview: 'Provider API readiness audit preview',
+            providerApiReadinessNotRefreshedYet: 'Provider API readiness report has not been refreshed yet.',
+            providerApiReadinessCopied: 'Provider API readiness report copied.',
+            providerApiReadinessCopyFailed: 'Could not copy provider API readiness report.',
+            projectWorkspaceExportProviderApiReadinessTitle: 'Provider API Integration Readiness'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderApiReadinessBundleMarker: 'Project Workspace provider API readiness bundle',
+            providerApiReadinessPanelTitle: 'Provider API Integration Readiness / \u89c6\u9891\u751f\u6210 API \u63a5\u5165\u51c6\u5907',
+            providerApiReadinessPanelHelper: '\u672a\u6765\u63a5 Gemini / Doubao / Runway / Pika API \u524d\u7684 dry-run readiness \u62a5\u544a\uff1a\u5c55\u793a provider contract\u3001API key \u8fb9\u754c\u3001\u5f02\u6b65 job schema\u3001polling contract\u3001timeout / failure handling\u3001approval gate \u548c real execution lock\u3002\u4e0d\u8c03 provider\u3001\u4e0d\u8bfb secret\u3001\u4e0d\u4e0a\u4f20\u5a92\u4f53\u3001\u4e0d polling \u771f\u5b9e provider\u3001\u4e0d\u6263\u8d39\u3002',
+            copyProviderApiReadiness: '\u590d\u5236 Provider API readiness',
+            providerApiReadinessCopyTitle: '\u9879\u76ee Provider API \u63a5\u5165\u51c6\u5907\u62a5\u544a',
+            providerApiReadinessStatus: 'Provider API readiness \u72b6\u6001',
+            providerApiProviderCount: 'Provider \u6570\u91cf',
+            providerReadinessMatrix: 'Provider readiness matrix',
+            providerCategory: 'Provider \u7c7b\u522b',
+            envKeyName: 'Env key \u540d\u79f0',
+            currentMode: '\u5f53\u524d\u6a21\u5f0f',
+            plannedPromptSource: '\u8ba1\u5212\u4f7f\u7528\u7684 Prompt \u6765\u6e90',
+            supportsFakeClient: '\u652f\u6301 fake client',
+            supportsPollingScaffold: '\u652f\u6301 polling scaffold',
+            realApiEnabled: '\u771f\u5b9e API \u5df2\u542f\u7528',
+            approvalRequiredBeforeSubmit: '\u63d0\u4ea4\u524d\u9700\u8981\u5ba1\u6279',
+            apiKeySecretBoundary: 'API key / secret \u8fb9\u754c',
+            asyncJobSchema: '\u5f02\u6b65 job schema',
+            pollingContract: 'Polling contract',
+            failureHandlingContract: '\u5931\u8d25\u5904\u7406 contract',
+            readinessChecklist: 'Readiness \u68c0\u67e5\u6e05\u5355',
+            passed: '\u901a\u8fc7',
+            nextState: '\u4e0b\u4e00\u72b6\u6001',
+            realExecutionEnabled: 'Real execution \u5df2\u542f\u7528',
+            providerJobSubmitted: 'Provider job \u5df2\u63d0\u4ea4',
+            providerPollingPerformed: '\u5df2 polling provider',
+            providerSecretRead: '\u5df2\u8bfb\u53d6 provider secret',
+            providerSecretExported: '\u5df2\u5bfc\u51fa provider secret',
+            humanApprovalRequiredBeforeProviderSubmit: 'Provider \u63d0\u4ea4\u524d\u9700\u8981\u4eba\u5de5\u5ba1\u6279',
+            operatorApprovalCaptured: '\u5df2\u8bb0\u5f55\u64cd\u4f5c\u5458\u5ba1\u6279',
+            providerApiReadinessAuditPreview: 'Provider API readiness \u5ba1\u8ba1\u9884\u89c8',
+            providerApiReadinessNotRefreshedYet: 'Provider API readiness \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerApiReadinessCopied: 'Provider API readiness \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerApiReadinessCopyFailed: '\u590d\u5236 Provider API readiness \u62a5\u544a\u5931\u8d25\u3002',
+            projectWorkspaceExportProviderApiReadinessTitle: 'Provider API Integration Readiness / \u89c6\u9891\u751f\u6210 API \u63a5\u5165\u51c6\u5907'
         });
 
 
