@@ -11668,6 +11668,170 @@
 
 
 
+
+        function projectWorkspaceExportProviderQueueLeaseWorkerSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderQueueLeaseWorkerReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider queue lease worker bundle',
+                report_status: report.report_status || '',
+                provider_queue_lease_worker_report_version: report.provider_queue_lease_worker_report_version || '',
+                provider_observability_ready: Boolean(report.provider_observability_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                queue_lease_worker_stage_matrix: Array.isArray(report.queue_lease_worker_stage_matrix) ? report.queue_lease_worker_stage_matrix : [],
+                queue_model: report.queue_model || {},
+                idempotency_dedupe_policy: report.idempotency_dedupe_policy || {},
+                claim_policy: report.claim_policy || {},
+                lease_policy: report.lease_policy || {},
+                heartbeat_policy: report.heartbeat_policy || {},
+                stale_lease_recovery: report.stale_lease_recovery || {},
+                worker_invocation_envelope: report.worker_invocation_envelope || {},
+                completion_ack: report.completion_ack || {},
+                audit_receipt: report.audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                queue_item_schema_count: Number(report.queue_item_schema_count || 0),
+                recovery_step_count: Number(report.recovery_step_count || 0),
+                required_gate_reference_count: Number(report.required_gate_reference_count || 0),
+                missing_gate_reference_count: Number(report.missing_gate_reference_count || 0),
+                supports_provider_queue: Boolean(report.supports_provider_queue),
+                supports_idempotency_dedupe: Boolean(report.supports_idempotency_dedupe),
+                supports_queue_claim: Boolean(report.supports_queue_claim),
+                supports_worker_lease: Boolean(report.supports_worker_lease),
+                supports_worker_heartbeat: Boolean(report.supports_worker_heartbeat),
+                supports_stale_lease_recovery: Boolean(report.supports_stale_lease_recovery),
+                supports_worker_invocation_envelope: Boolean(report.supports_worker_invocation_envelope),
+                supports_completion_ack: Boolean(report.supports_completion_ack),
+                supports_queue_worker_audit_receipt: Boolean(report.supports_queue_worker_audit_receipt),
+                dry_run: Boolean(report.dry_run),
+                queue_insert_allowed: Boolean(report.queue_insert_allowed),
+                queue_item_created: Boolean(report.queue_item_created),
+                queue_persisted: Boolean(report.queue_persisted),
+                duplicate_job_submitted: Boolean(report.duplicate_job_submitted),
+                dedupe_record_persisted: Boolean(report.dedupe_record_persisted),
+                claim_allowed: Boolean(report.claim_allowed),
+                claim_persisted: Boolean(report.claim_persisted),
+                lease_allowed: Boolean(report.lease_allowed),
+                lease_acquired: Boolean(report.lease_acquired),
+                lease_persisted: Boolean(report.lease_persisted),
+                heartbeat_recorded: Boolean(report.heartbeat_recorded),
+                worker_alive: Boolean(report.worker_alive),
+                worker_started: Boolean(report.worker_started),
+                worker_loop_started: Boolean(report.worker_loop_started),
+                worker_invocation_allowed: Boolean(report.worker_invocation_allowed),
+                worker_invocation_performed: Boolean(report.worker_invocation_performed),
+                completion_recorded: Boolean(report.completion_recorded),
+                queue_item_completed: Boolean(report.queue_item_completed),
+                lease_released: Boolean(report.lease_released),
+                queue_item_requeued: Boolean(report.queue_item_requeued),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                real_retry_performed: Boolean(report.real_retry_performed),
+                provider_job_submitted: Boolean(report.provider_job_submitted),
+                provider_polling_performed: Boolean(report.provider_polling_performed),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                quota_reserved: Boolean(report.quota_reserved),
+                operator_review_captured: Boolean(report.operator_review_captured),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                incident_opened: Boolean(report.incident_opened),
+                rollback_ready: Boolean(report.rollback_ready),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                has_provider_queue_lease_worker_report: Boolean(report.report_status || report.provider_queue_lease_worker_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderQueueLeaseWorkerMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderQueueLeaseWorkerSnapshot(workspace);
+            if (!report.has_provider_queue_lease_worker_report) {
+                return `## ${t('projectWorkspaceExportProviderQueueLeaseWorkerTitle')}\n${t('providerQueueLeaseWorkerNotRefreshedYet')}`;
+            }
+            const blockerLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stageLines = report.queue_lease_worker_stage_matrix.length
+                ? report.queue_lease_worker_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderQueueLeaseWorkerTitle')}`,
+                `${t('providerQueueLeaseWorkerStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerObservabilityReady')}: ${report.provider_observability_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('queueItemSchemaCount')}: ${report.queue_item_schema_count}`,
+                `${t('recoveryStepCount')}: ${report.recovery_step_count}`,
+                `${t('requiredGateReferenceCount')}: ${report.required_gate_reference_count}`,
+                `${t('missingGateReferenceCount')}: ${report.missing_gate_reference_count}`,
+                `${t('queuePersisted')}: ${report.queue_persisted}`,
+                `${t('claimPersisted')}: ${report.claim_persisted}`,
+                `${t('leaseAcquired')}: ${report.lease_acquired}`,
+                `${t('leasePersisted')}: ${report.lease_persisted}`,
+                `${t('heartbeatRecorded')}: ${report.heartbeat_recorded}`,
+                `${t('workerStarted')}: ${report.worker_started}`,
+                `${t('workerLoopStarted')}: ${report.worker_loop_started}`,
+                `${t('workerInvocationPerformed')}: ${report.worker_invocation_performed}`,
+                `${t('completionRecorded')}: ${report.completion_recorded}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockerLines,
+                '',
+                `### ${t('providerQueueLeaseWorkerStages')}`,
+                ...stageLines,
+                '',
+                `### ${t('providerQueueModel')}`,
+                '```json',
+                JSON.stringify(report.queue_model, null, 2),
+                '```',
+                '',
+                `### ${t('providerIdempotencyDedupePolicy')}`,
+                '```json',
+                JSON.stringify(report.idempotency_dedupe_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerClaimPolicy')}`,
+                '```json',
+                JSON.stringify(report.claim_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerLeasePolicy')}`,
+                '```json',
+                JSON.stringify(report.lease_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerHeartbeatPolicy')}`,
+                '```json',
+                JSON.stringify(report.heartbeat_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerStaleLeaseRecovery')}`,
+                '```json',
+                JSON.stringify(report.stale_lease_recovery, null, 2),
+                '```',
+                '',
+                `### ${t('providerWorkerInvocationEnvelope')}`,
+                '```json',
+                JSON.stringify(report.worker_invocation_envelope, null, 2),
+                '```',
+                '',
+                `### ${t('providerCompletionAck')}`,
+                '```json',
+                JSON.stringify(report.completion_ack, null, 2),
+                '```',
+                '',
+                `### ${t('providerQueueWorkerAuditReceipt')}`,
+                '```json',
+                JSON.stringify(report.audit_receipt, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderObservabilityReportSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderObservabilityReportFromWorkspace(workspace);
             return {
@@ -12907,6 +13071,8 @@
                 '',
                 projectWorkspaceExportProviderObservabilityReportMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderQueueLeaseWorkerMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12938,6 +13104,7 @@
                 real_provider_execution_gate_report: projectWorkspaceExportRealProviderExecutionGateSnapshot(workspace),
                 provider_failure_recovery_report: projectWorkspaceExportProviderFailureRecoverySnapshot(workspace),
                 provider_observability_report: projectWorkspaceExportProviderObservabilityReportSnapshot(workspace),
+                provider_queue_lease_worker_report: projectWorkspaceExportProviderQueueLeaseWorkerSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -13069,6 +13236,7 @@
                 latestProjectRealProviderExecutionGateReport = payload.real_provider_execution_gate_report || {};
                 latestProjectProviderFailureRecoveryReport = payload.provider_failure_recovery_report || {};
                 latestProjectProviderObservabilityReport = payload.provider_observability_report || {};
+                latestProjectProviderQueueLeaseWorkerReport = payload.provider_queue_lease_worker_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16924,6 +17092,342 @@
         let latestProjectProviderFailureRecoveryReport = {};
         const PROJECT_WORKSPACE_PROVIDER_OBSERVABILITY_REPORT_BUNDLE_MARKER = 'Project Workspace provider observability report bundle';
         let latestProjectProviderObservabilityReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_QUEUE_LEASE_WORKER_BUNDLE_MARKER = 'Project Workspace provider queue lease worker bundle';
+        let latestProjectProviderQueueLeaseWorkerReport = {};
+
+        function projectWorkspaceProviderQueueLeaseWorkerReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderQueueLeaseWorkerReport || {}).length
+                ? latestProjectProviderQueueLeaseWorkerReport
+                : workspace?.provider_queue_lease_worker_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_queue_lease_worker_report_version: '',
+                report_status: graphSummary.latest_provider_queue_lease_worker_status || '',
+                provider_observability_ready: false,
+                operator_review_required: false,
+                stage_count: 0,
+                queue_lease_worker_stage_matrix: [],
+                queue_model: {},
+                idempotency_dedupe_policy: {},
+                claim_policy: {},
+                lease_policy: {},
+                heartbeat_policy: {},
+                stale_lease_recovery: {},
+                worker_invocation_envelope: {},
+                completion_ack: {},
+                audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_queue_lease_worker_blocking_failure_count || 0),
+                blocking_failures: [],
+                queue_item_schema_count: 0,
+                recovery_step_count: 0,
+                required_gate_reference_count: 0,
+                missing_gate_reference_count: 0,
+                supports_provider_queue: false,
+                supports_idempotency_dedupe: false,
+                supports_queue_claim: false,
+                supports_worker_lease: false,
+                supports_worker_heartbeat: false,
+                supports_stale_lease_recovery: false,
+                supports_worker_invocation_envelope: false,
+                supports_completion_ack: false,
+                supports_queue_worker_audit_receipt: false,
+                dry_run: true,
+                queue_insert_allowed: false,
+                queue_item_created: false,
+                queue_persisted: false,
+                duplicate_job_submitted: false,
+                dedupe_record_persisted: false,
+                claim_allowed: false,
+                claim_persisted: false,
+                lease_allowed: false,
+                lease_acquired: Boolean(graphSummary.latest_provider_queue_lease_worker_lease_acquired),
+                lease_persisted: false,
+                heartbeat_recorded: false,
+                worker_alive: false,
+                worker_started: Boolean(graphSummary.latest_provider_queue_lease_worker_worker_started),
+                worker_loop_started: false,
+                worker_invocation_allowed: false,
+                worker_invocation_performed: false,
+                completion_recorded: false,
+                queue_item_completed: false,
+                lease_released: false,
+                queue_item_requeued: false,
+                real_execution_allowed: false,
+                real_execution_enabled: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_queue_lease_worker_external_api_called),
+                real_retry_performed: false,
+                provider_job_submitted: false,
+                provider_polling_performed: false,
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                quota_reserved: false,
+                operator_review_captured: false,
+                operator_approval_captured: false,
+                incident_opened: false,
+                rollback_ready: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceProviderQueueLeaseWorkerCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderQueueLeaseWorkerReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.queue_lease_worker_stage_matrix) ? report.queue_lease_worker_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            return [
+                t('providerQueueLeaseWorkerCopyTitle'),
+                `${t('providerQueueLeaseWorkerStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerObservabilityReady')}: ${Boolean(report.provider_observability_ready)}`,
+                `${t('operatorReviewRequired')}: ${Boolean(report.operator_review_required)}`,
+                `${t('blockingFailureCount')}: ${Number(report.blocking_failure_count || blockers.length || 0)}`,
+                `${t('queueItemSchemaCount')}: ${Number(report.queue_item_schema_count || 0)}`,
+                `${t('recoveryStepCount')}: ${Number(report.recovery_step_count || 0)}`,
+                `${t('requiredGateReferenceCount')}: ${Number(report.required_gate_reference_count || 0)}`,
+                `${t('missingGateReferenceCount')}: ${Number(report.missing_gate_reference_count || 0)}`,
+                `${t('queueInsertAllowed')}: ${Boolean(report.queue_insert_allowed)}`,
+                `${t('queueItemCreated')}: ${Boolean(report.queue_item_created)}`,
+                `${t('queuePersisted')}: ${Boolean(report.queue_persisted)}`,
+                `${t('duplicateJobSubmitted')}: ${Boolean(report.duplicate_job_submitted)}`,
+                `${t('dedupeRecordPersisted')}: ${Boolean(report.dedupe_record_persisted)}`,
+                `${t('claimAllowed')}: ${Boolean(report.claim_allowed)}`,
+                `${t('claimPersisted')}: ${Boolean(report.claim_persisted)}`,
+                `${t('leaseAllowed')}: ${Boolean(report.lease_allowed)}`,
+                `${t('leaseAcquired')}: ${Boolean(report.lease_acquired)}`,
+                `${t('leasePersisted')}: ${Boolean(report.lease_persisted)}`,
+                `${t('heartbeatRecorded')}: ${Boolean(report.heartbeat_recorded)}`,
+                `${t('workerAlive')}: ${Boolean(report.worker_alive)}`,
+                `${t('workerStarted')}: ${Boolean(report.worker_started)}`,
+                `${t('workerLoopStarted')}: ${Boolean(report.worker_loop_started)}`,
+                `${t('workerInvocationAllowed')}: ${Boolean(report.worker_invocation_allowed)}`,
+                `${t('workerInvocationPerformed')}: ${Boolean(report.worker_invocation_performed)}`,
+                `${t('completionRecorded')}: ${Boolean(report.completion_recorded)}`,
+                `${t('queueItemCompleted')}: ${Boolean(report.queue_item_completed)}`,
+                `${t('leaseReleased')}: ${Boolean(report.lease_released)}`,
+                `${t('queueItemRequeued')}: ${Boolean(report.queue_item_requeued)}`,
+                `${t('realExecutionEnabled')}: ${Boolean(report.real_execution_enabled)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('providerJobSubmitted')}: ${Boolean(report.provider_job_submitted)}`,
+                `${t('providerPollingPerformed')}: ${Boolean(report.provider_polling_performed)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('blockingFailures')}:`,
+                blockers.length ? blockers.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('providerQueueLeaseWorkerStages')}:`,
+                stages.length ? stages.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`).join('\n') : t('none'),
+                '',
+                `${t('providerQueueModel')}:`,
+                JSON.stringify(report.queue_model || {}, null, 2),
+                '',
+                `${t('providerIdempotencyDedupePolicy')}:`,
+                JSON.stringify(report.idempotency_dedupe_policy || {}, null, 2),
+                '',
+                `${t('providerClaimPolicy')}:`,
+                JSON.stringify(report.claim_policy || {}, null, 2),
+                '',
+                `${t('providerLeasePolicy')}:`,
+                JSON.stringify(report.lease_policy || {}, null, 2),
+                '',
+                `${t('providerHeartbeatPolicy')}:`,
+                JSON.stringify(report.heartbeat_policy || {}, null, 2),
+                '',
+                `${t('providerStaleLeaseRecovery')}:`,
+                JSON.stringify(report.stale_lease_recovery || {}, null, 2),
+                '',
+                `${t('providerWorkerInvocationEnvelope')}:`,
+                JSON.stringify(report.worker_invocation_envelope || {}, null, 2),
+                '',
+                `${t('providerCompletionAck')}:`,
+                JSON.stringify(report.completion_ack || {}, null, 2),
+                '',
+                `${t('providerQueueWorkerAuditReceipt')}:`,
+                JSON.stringify(report.audit_receipt || {}, null, 2),
+                '',
+                JSON.stringify({ provider_queue_lease_worker_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderQueueLeaseWorker() {
+            const status = document.getElementById('projectWorkspaceProviderQueueLeaseWorkerStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderQueueLeaseWorkerCopyText());
+                if (status) status.textContent = t('providerQueueLeaseWorkerCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerQueueLeaseWorkerCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderQueueLeaseWorkerPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderQueueLeaseWorkerReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.queue_lease_worker_stage_matrix) ? report.queue_lease_worker_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const queueModel = report.queue_model || {};
+            const dedupe = report.idempotency_dedupe_policy || {};
+            const claim = report.claim_policy || {};
+            const lease = report.lease_policy || {};
+            const heartbeat = report.heartbeat_policy || {};
+            const stale = report.stale_lease_recovery || {};
+            const envelope = report.worker_invocation_envelope || {};
+            const completion = report.completion_ack || {};
+            const receipt = report.audit_receipt || {};
+            const queueSchema = Array.isArray(queueModel.queue_item_schema) ? queueModel.queue_item_schema : [];
+            const recoverySteps = Array.isArray(stale.recovery_steps) ? stale.recovery_steps : [];
+            const gateRefs = Array.isArray(envelope.required_gate_references) ? envelope.required_gate_references : [];
+            const missingRefs = Array.isArray(envelope.missing_gate_references) ? envelope.missing_gate_references : [];
+            const hasReport = Boolean(report.report_status || report.provider_queue_lease_worker_report_version || stages.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderQueueLeaseWorkerPanel" data-project-provider-queue-lease-worker-marker="Project Workspace provider queue lease worker bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerQueueLeaseWorkerPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerQueueLeaseWorkerPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderQueueLeaseWorkerBtn" type="button" onclick="copyProjectWorkspaceProviderQueueLeaseWorker()">${escapeHTML(t('copyProviderQueueLeaseWorker'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerQueueLeaseWorkerStatus'))}</div>
+                            <strong data-provider-queue-lease-worker-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerQueueLeaseWorkerNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerObservabilityReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_observability_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('leaseAcquired'))}</div><strong>${escapeHTML(String(Boolean(report.lease_acquired)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('externalApiCalled'))}</div><strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('queueItemSchemaCount'))}</div><strong>${escapeHTML(String(Number(report.queue_item_schema_count || queueSchema.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('recoveryStepCount'))}</div><strong>${escapeHTML(String(Number(report.recovery_step_count || recoverySteps.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('requiredGateReferenceCount'))}</div><strong>${escapeHTML(String(Number(report.required_gate_reference_count || gateRefs.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('missingGateReferenceCount'))}</div><strong>${escapeHTML(String(Number(report.missing_gate_reference_count || missingRefs.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('workerStarted'))}</div><strong>${escapeHTML(String(Boolean(report.worker_started)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerQueueLeaseWorkerStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} ? ${escapeHTML(stage.stage_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('requiredInputs'))}: ${(stage.required_inputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedOutputs'))}: ${(stage.expected_outputs || []).map(escapeHTML).join(', ')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerQueueItemSchema'))}</div>
+                        ${queueSchema.length ? queueSchema.map((field) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(field.field_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('required'))}: ${escapeHTML(String(Boolean(field.required)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerStaleLeaseRecoverySteps'))}</div>
+                        ${recoverySteps.length ? recoverySteps.map((step) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(step.recovery_step_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('ready'))}: ${escapeHTML(String(Boolean(step.ready)))}</span>
+                                <span class="badge">${escapeHTML(t('executed'))}: ${escapeHTML(String(Boolean(step.executed)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerRequiredGateReferences'))}</div>
+                            ${gateRefs.length ? gateRefs.map((item) => `<div class="artifact-timeline-row"><strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerMissingGateReferences'))}</div>
+                            ${missingRefs.length ? missingRefs.map((item) => `<div class="artifact-timeline-row"><strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerQueueModel'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(queueModel, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerIdempotencyDedupePolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(dedupe, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerClaimPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(claim, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerLeasePolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(lease, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerHeartbeatPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(heartbeat, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerStaleLeaseRecovery'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(stale, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerWorkerInvocationEnvelope'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(envelope, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerQueueWorkerAuditReceipt'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(receipt, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerCompletionAck'))}</div>
+                        <pre class="debug">${escapeHTML(JSON.stringify(completion, null, 2))}</pre>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsProviderQueue'))}</div><strong>${escapeHTML(String(Boolean(report.supports_provider_queue)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsIdempotencyDedupe'))}</div><strong>${escapeHTML(String(Boolean(report.supports_idempotency_dedupe)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsQueueClaim'))}</div><strong>${escapeHTML(String(Boolean(report.supports_queue_claim)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsWorkerLease'))}</div><strong>${escapeHTML(String(Boolean(report.supports_worker_lease)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsWorkerHeartbeat'))}</div><strong>${escapeHTML(String(Boolean(report.supports_worker_heartbeat)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsStaleLeaseRecovery'))}</div><strong>${escapeHTML(String(Boolean(report.supports_stale_lease_recovery)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsWorkerInvocationEnvelope'))}</div><strong>${escapeHTML(String(Boolean(report.supports_worker_invocation_envelope)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsCompletionAck'))}</div><strong>${escapeHTML(String(Boolean(report.supports_completion_ack)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('queuePersisted'))}</div><strong>${escapeHTML(String(Boolean(report.queue_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('claimPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.claim_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('leasePersisted'))}</div><strong>${escapeHTML(String(Boolean(report.lease_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('heartbeatRecorded'))}</div><strong>${escapeHTML(String(Boolean(report.heartbeat_recorded)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('workerInvocationPerformed'))}</div><strong>${escapeHTML(String(Boolean(report.worker_invocation_performed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretRead'))}</div><strong>${escapeHTML(String(Boolean(report.provider_secret_read)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerQueueLeaseWorkerAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-queue-lease-worker-audit-preview="Project Workspace provider queue lease worker bundle">${escapeHTML(projectWorkspaceProviderQueueLeaseWorkerCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerQueueLeaseWorkerNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderQueueLeaseWorkerStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceProviderObservabilityReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderObservabilityReport || {}).length
@@ -20198,6 +20702,8 @@
                 if (providerFailureRecoveryPanel) providerFailureRecoveryPanel.outerHTML = renderProjectWorkspaceProviderFailureRecoveryPanel(latestProjectWorkspace);
                 const providerObservabilityReportPanel = document.getElementById('projectWorkspaceProviderObservabilityReportPanel');
                 if (providerObservabilityReportPanel) providerObservabilityReportPanel.outerHTML = renderProjectWorkspaceProviderObservabilityReportPanel(latestProjectWorkspace);
+                const providerQueueLeaseWorkerPanel = document.getElementById('projectWorkspaceProviderQueueLeaseWorkerPanel');
+                if (providerQueueLeaseWorkerPanel) providerQueueLeaseWorkerPanel.outerHTML = renderProjectWorkspaceProviderQueueLeaseWorkerPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -22386,6 +22892,7 @@
                     ${renderProjectWorkspaceRealProviderExecutionGatePanel(workspace)}
                     ${renderProjectWorkspaceProviderFailureRecoveryPanel(workspace)}
                     ${renderProjectWorkspaceProviderObservabilityReportPanel(workspace)}
+                    ${renderProjectWorkspaceProviderQueueLeaseWorkerPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -27230,6 +27737,133 @@
             captured: '\u5df2\u6355\u83b7',
             value: '\u503c',
             projectWorkspaceExportProviderObservabilityReportTitle: 'Provider Observability Report / Provider \u89c2\u6d4b\u62a5\u544a'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderQueueLeaseWorkerBundleMarker: 'Project Workspace provider queue lease worker bundle',
+            providerQueueLeaseWorkerPanelTitle: 'Provider Queue / Lease / Worker',
+            providerQueueLeaseWorkerPanelHelper: 'Dry-run provider queue, idempotency dedupe, worker claim, lease, heartbeat, stale lease recovery, invocation envelope, completion ack, and audit receipt. It does not persist queues, acquire real leases, start workers, or call providers.',
+            copyProviderQueueLeaseWorker: 'Copy provider queue / lease / worker report',
+            providerQueueLeaseWorkerCopyTitle: 'Project provider queue / lease / worker report',
+            providerQueueLeaseWorkerStatus: 'Provider queue / lease / worker status',
+            providerQueueLeaseWorkerNotRefreshedYet: 'Provider queue / lease / worker report has not been refreshed yet.',
+            providerQueueLeaseWorkerCopied: 'Provider queue / lease / worker report copied.',
+            providerQueueLeaseWorkerCopyFailed: 'Could not copy provider queue / lease / worker report.',
+            providerObservabilityReady: 'Provider observability ready',
+            queueItemSchemaCount: 'Queue item schema count',
+            recoveryStepCount: 'Recovery step count',
+            requiredGateReferenceCount: 'Required gate reference count',
+            missingGateReferenceCount: 'Missing gate reference count',
+            queueInsertAllowed: 'Queue insert allowed',
+            queueItemCreated: 'Queue item created',
+            queuePersisted: 'Queue persisted',
+            duplicateJobSubmitted: 'Duplicate job submitted',
+            dedupeRecordPersisted: 'Dedupe record persisted',
+            claimAllowed: 'Claim allowed',
+            claimPersisted: 'Claim persisted',
+            leaseAllowed: 'Lease allowed',
+            leaseAcquired: 'Lease acquired',
+            leasePersisted: 'Lease persisted',
+            heartbeatRecorded: 'Heartbeat recorded',
+            workerAlive: 'Worker alive',
+            workerStarted: 'Worker started',
+            workerLoopStarted: 'Worker loop started',
+            workerInvocationAllowed: 'Worker invocation allowed',
+            workerInvocationPerformed: 'Worker invocation performed',
+            completionRecorded: 'Completion recorded',
+            queueItemCompleted: 'Queue item completed',
+            leaseReleased: 'Lease released',
+            queueItemRequeued: 'Queue item requeued',
+            providerQueueLeaseWorkerStages: 'Provider queue / lease / worker stages',
+            providerQueueModel: 'Provider queue model',
+            providerQueueItemSchema: 'Provider queue item schema',
+            providerIdempotencyDedupePolicy: 'Provider idempotency / dedupe policy',
+            providerClaimPolicy: 'Provider claim policy',
+            providerLeasePolicy: 'Provider lease policy',
+            providerHeartbeatPolicy: 'Provider heartbeat policy',
+            providerStaleLeaseRecovery: 'Provider stale lease recovery',
+            providerStaleLeaseRecoverySteps: 'Provider stale lease recovery steps',
+            providerWorkerInvocationEnvelope: 'Provider worker invocation envelope',
+            providerCompletionAck: 'Provider completion ack',
+            providerQueueWorkerAuditReceipt: 'Provider queue worker audit receipt',
+            providerRequiredGateReferences: 'Provider required gate references',
+            providerMissingGateReferences: 'Provider missing gate references',
+            supportsProviderQueue: 'Supports provider queue',
+            supportsIdempotencyDedupe: 'Supports idempotency dedupe',
+            supportsQueueClaim: 'Supports queue claim',
+            supportsWorkerLease: 'Supports worker lease',
+            supportsWorkerHeartbeat: 'Supports worker heartbeat',
+            supportsStaleLeaseRecovery: 'Supports stale lease recovery',
+            supportsWorkerInvocationEnvelope: 'Supports worker invocation envelope',
+            supportsCompletionAck: 'Supports completion ack',
+            providerQueueLeaseWorkerAuditPreview: 'Provider queue / lease / worker audit preview',
+            ready: 'Ready',
+            executed: 'Executed',
+            projectWorkspaceExportProviderQueueLeaseWorkerTitle: 'Provider Queue / Lease / Worker'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderQueueLeaseWorkerBundleMarker: 'Project Workspace provider queue lease worker bundle',
+            providerQueueLeaseWorkerPanelTitle: 'Provider Queue / Lease / Worker / Provider \u961f\u5217\u79df\u7ea6\u5de5\u4f5c\u5668',
+            providerQueueLeaseWorkerPanelHelper: 'Dry-run provider queue\u3001idempotency dedupe\u3001worker claim\u3001lease\u3001heartbeat\u3001stale lease recovery\u3001invocation envelope\u3001completion ack \u548c audit receipt\u3002\u4e0d\u4f1a\u6301\u4e45\u5316\u961f\u5217\uff0c\u4e0d\u4f1a\u83b7\u53d6\u771f\u5b9e lease\uff0c\u4e0d\u4f1a\u542f\u52a8 worker\uff0c\u4e0d\u4f1a\u8c03 provider\u3002',
+            copyProviderQueueLeaseWorker: '\u590d\u5236 provider queue / lease / worker \u62a5\u544a',
+            providerQueueLeaseWorkerCopyTitle: '\u9879\u76ee Provider Queue / Lease / Worker \u62a5\u544a',
+            providerQueueLeaseWorkerStatus: 'Provider queue / lease / worker \u72b6\u6001',
+            providerQueueLeaseWorkerNotRefreshedYet: 'Provider queue / lease / worker \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerQueueLeaseWorkerCopied: 'Provider queue / lease / worker \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerQueueLeaseWorkerCopyFailed: '\u590d\u5236 provider queue / lease / worker \u62a5\u544a\u5931\u8d25\u3002',
+            providerObservabilityReady: 'Provider observability ready',
+            queueItemSchemaCount: 'Queue item schema \u6570',
+            recoveryStepCount: 'Recovery step \u6570',
+            requiredGateReferenceCount: 'Required gate reference \u6570',
+            missingGateReferenceCount: 'Missing gate reference \u6570',
+            queueInsertAllowed: '\u5141\u8bb8 queue insert',
+            queueItemCreated: 'Queue item \u5df2\u521b\u5efa',
+            queuePersisted: 'Queue \u5df2\u6301\u4e45\u5316',
+            duplicateJobSubmitted: '\u91cd\u590d job \u5df2\u63d0\u4ea4',
+            dedupeRecordPersisted: 'Dedupe record \u5df2\u6301\u4e45\u5316',
+            claimAllowed: '\u5141\u8bb8 claim',
+            claimPersisted: 'Claim \u5df2\u6301\u4e45\u5316',
+            leaseAllowed: '\u5141\u8bb8 lease',
+            leaseAcquired: 'Lease \u5df2\u83b7\u53d6',
+            leasePersisted: 'Lease \u5df2\u6301\u4e45\u5316',
+            heartbeatRecorded: 'Heartbeat \u5df2\u8bb0\u5f55',
+            workerAlive: 'Worker alive',
+            workerStarted: 'Worker \u5df2\u542f\u52a8',
+            workerLoopStarted: 'Worker loop \u5df2\u542f\u52a8',
+            workerInvocationAllowed: '\u5141\u8bb8 worker invocation',
+            workerInvocationPerformed: 'Worker invocation \u5df2\u6267\u884c',
+            completionRecorded: 'Completion \u5df2\u8bb0\u5f55',
+            queueItemCompleted: 'Queue item \u5df2\u5b8c\u6210',
+            leaseReleased: 'Lease \u5df2\u91ca\u653e',
+            queueItemRequeued: 'Queue item \u5df2 requeue',
+            providerQueueLeaseWorkerStages: 'Provider queue / lease / worker \u9636\u6bb5',
+            providerQueueModel: 'Provider queue model',
+            providerQueueItemSchema: 'Provider queue item schema',
+            providerIdempotencyDedupePolicy: 'Provider idempotency / dedupe policy',
+            providerClaimPolicy: 'Provider claim policy',
+            providerLeasePolicy: 'Provider lease policy',
+            providerHeartbeatPolicy: 'Provider heartbeat policy',
+            providerStaleLeaseRecovery: 'Provider stale lease recovery',
+            providerStaleLeaseRecoverySteps: 'Provider stale lease recovery steps',
+            providerWorkerInvocationEnvelope: 'Provider worker invocation envelope',
+            providerCompletionAck: 'Provider completion ack',
+            providerQueueWorkerAuditReceipt: 'Provider queue worker audit receipt',
+            providerRequiredGateReferences: 'Provider required gate references',
+            providerMissingGateReferences: 'Provider missing gate references',
+            supportsProviderQueue: '\u652f\u6301 provider queue',
+            supportsIdempotencyDedupe: '\u652f\u6301 idempotency dedupe',
+            supportsQueueClaim: '\u652f\u6301 queue claim',
+            supportsWorkerLease: '\u652f\u6301 worker lease',
+            supportsWorkerHeartbeat: '\u652f\u6301 worker heartbeat',
+            supportsStaleLeaseRecovery: '\u652f\u6301 stale lease recovery',
+            supportsWorkerInvocationEnvelope: '\u652f\u6301 worker invocation envelope',
+            supportsCompletionAck: '\u652f\u6301 completion ack',
+            providerQueueLeaseWorkerAuditPreview: 'Provider queue / lease / worker \u5ba1\u8ba1\u9884\u89c8',
+            ready: 'Ready',
+            executed: 'Executed',
+            projectWorkspaceExportProviderQueueLeaseWorkerTitle: 'Provider Queue / Lease / Worker / Provider \u961f\u5217\u79df\u7ea6\u5de5\u4f5c\u5668'
         });
 
 

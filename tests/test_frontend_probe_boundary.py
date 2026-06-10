@@ -6746,6 +6746,40 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_observability_report_marker", script)
 
 
+    def test_project_workspace_provider_queue_lease_worker_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider queue lease worker bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_QUEUE_LEASE_WORKER_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceProviderQueueLeaseWorkerPanel", html)
+        self.assertIn("copyProjectWorkspaceProviderQueueLeaseWorker", html)
+        self.assertIn("provider_queue_lease_worker_report", html)
+        self.assertIn("projectWorkspaceExportProviderQueueLeaseWorkerMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderQueueLeaseWorkerSnapshot", html)
+        self.assertIn("queue_model", html)
+        self.assertIn("idempotency_dedupe_policy", html)
+        self.assertIn("claim_policy", html)
+        self.assertIn("lease_policy", html)
+        self.assertIn("heartbeat_policy", html)
+        self.assertIn("stale_lease_recovery", html)
+        self.assertIn("worker_invocation_envelope", html)
+        self.assertIn("completion_ack", html)
+        self.assertIn("audit_receipt", html)
+        self.assertIn("queue_insert_allowed", html)
+        self.assertIn("lease_acquired", html)
+        self.assertIn("worker_started", html)
+        self.assertIn("external_api_called", html)
+
+    def test_project_workspace_provider_queue_lease_worker_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_queue_lease_worker_marker", script)
+        self.assertIn("Project Workspace provider queue lease worker bundle", script)
+
+    def test_project_workspace_provider_queue_lease_worker_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider queue lease worker bundle", script)
+        self.assertIn("project_workspace_provider_queue_lease_worker_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
