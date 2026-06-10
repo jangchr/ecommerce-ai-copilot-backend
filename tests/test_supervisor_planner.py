@@ -991,6 +991,85 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_queue_lease_worker_external_api_called"]
         )
+        self.assertIn("provider_worker_checkpoint_resume_report", payload)
+        checkpoint = payload["provider_worker_checkpoint_resume_report"]
+        self.assertEqual(
+            checkpoint["provider_worker_checkpoint_resume_report_version"],
+            "provider_worker_checkpoint_resume_report_v1",
+        )
+        self.assertEqual(
+            checkpoint["report_status"],
+            "provider_worker_checkpoint_resume_ready_dry_run",
+        )
+        self.assertTrue(checkpoint["provider_queue_lease_worker_ready"])
+        self.assertTrue(checkpoint["operator_review_required"])
+        self.assertTrue(checkpoint["checkpoint_policy"])
+        self.assertTrue(checkpoint["checkpoint_bundle"])
+        self.assertTrue(checkpoint["resume_cursor_policy"])
+        self.assertTrue(checkpoint["replay_policy"])
+        self.assertTrue(checkpoint["recovery_policy"])
+        self.assertTrue(checkpoint["dead_letter_policy"])
+        self.assertTrue(checkpoint["idempotency_replay_guard"])
+        self.assertTrue(checkpoint["audit_receipt"])
+        self.assertGreater(checkpoint["checkpoint_point_count"], 0)
+        self.assertGreater(checkpoint["checkpoint_item_count"], 0)
+        self.assertGreater(checkpoint["safe_replay_target_count"], 0)
+        self.assertGreater(checkpoint["recovery_step_count"], 0)
+        self.assertTrue(checkpoint["supports_checkpoint_policy"])
+        self.assertTrue(checkpoint["supports_checkpoint_bundle"])
+        self.assertTrue(checkpoint["supports_resume_cursor"])
+        self.assertTrue(checkpoint["supports_replay_policy"])
+        self.assertTrue(checkpoint["supports_recovery_policy"])
+        self.assertTrue(checkpoint["supports_dead_letter_policy"])
+        self.assertTrue(checkpoint["supports_idempotency_replay_guard"])
+        self.assertTrue(checkpoint["supports_checkpoint_audit_receipt"])
+        self.assertTrue(checkpoint["provider_replay_blocked"])
+        self.assertTrue(checkpoint["duplicate_resume_blocked"])
+        self.assertTrue(checkpoint["duplicate_provider_call_blocked"])
+        self.assertFalse(checkpoint["checkpoint_recorded"])
+        self.assertFalse(checkpoint["checkpoint_persisted"])
+        self.assertFalse(checkpoint["resume_allowed"])
+        self.assertFalse(checkpoint["resume_cursor_recorded"])
+        self.assertFalse(checkpoint["resume_cursor_persisted"])
+        self.assertFalse(checkpoint["replay_allowed"])
+        self.assertFalse(checkpoint["provider_replay_allowed"])
+        self.assertFalse(checkpoint["recovery_allowed"])
+        self.assertFalse(checkpoint["recovery_complete"])
+        self.assertFalse(checkpoint["dead_letter_recorded"])
+        self.assertFalse(checkpoint["dead_letter_persisted"])
+        self.assertFalse(checkpoint["audit_receipt_recorded"])
+        self.assertFalse(checkpoint["queue_persisted"])
+        self.assertFalse(checkpoint["lease_acquired"])
+        self.assertFalse(checkpoint["heartbeat_recorded"])
+        self.assertFalse(checkpoint["worker_started"])
+        self.assertFalse(checkpoint["worker_loop_started"])
+        self.assertFalse(checkpoint["worker_invocation_performed"])
+        self.assertFalse(checkpoint["real_execution_allowed"])
+        self.assertFalse(checkpoint["real_execution_enabled"])
+        self.assertFalse(checkpoint["provider_call_allowed"])
+        self.assertFalse(checkpoint["external_api_call_allowed"])
+        self.assertFalse(checkpoint["external_api_called"])
+        self.assertFalse(checkpoint["provider_secret_read"])
+        self.assertFalse(checkpoint["provider_secret_exported"])
+        self.assertFalse(checkpoint["quota_reserved"])
+        self.assertFalse(checkpoint["paid_generation_allowed"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_worker_checkpoint_resume_status"],
+            "provider_worker_checkpoint_resume_ready_dry_run",
+        )
+        self.assertGreater(
+            payload["project"]["graph_summary"]["latest_provider_worker_checkpoint_resume_blocking_failure_count"],
+            0,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_worker_checkpoint_resume_checkpoint_recorded"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_worker_checkpoint_resume_resume_allowed"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_worker_checkpoint_resume_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

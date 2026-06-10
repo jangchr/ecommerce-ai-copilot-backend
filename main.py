@@ -75,6 +75,7 @@ from agent_runs import (
     build_provider_failure_recovery_report,
     build_provider_observability_report,
     build_provider_queue_lease_worker_report,
+    build_provider_worker_checkpoint_resume_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6280,6 +6281,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    provider_worker_checkpoint_resume_report = build_provider_worker_checkpoint_resume_report(
+        provider_queue_lease_worker_report=provider_queue_lease_worker_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6358,6 +6364,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_provider_queue_lease_worker_lease_acquired": bool(provider_queue_lease_worker_report.get("lease_acquired")),
         "latest_provider_queue_lease_worker_worker_started": bool(provider_queue_lease_worker_report.get("worker_started")),
         "latest_provider_queue_lease_worker_external_api_called": bool(provider_queue_lease_worker_report.get("external_api_called")),
+        "latest_provider_worker_checkpoint_resume_status": provider_worker_checkpoint_resume_report.get("report_status", ""),
+        "latest_provider_worker_checkpoint_resume_blocking_failure_count": int(provider_worker_checkpoint_resume_report.get("blocking_failure_count") or 0),
+        "latest_provider_worker_checkpoint_resume_checkpoint_recorded": bool(provider_worker_checkpoint_resume_report.get("checkpoint_recorded")),
+        "latest_provider_worker_checkpoint_resume_resume_allowed": bool(provider_worker_checkpoint_resume_report.get("resume_allowed")),
+        "latest_provider_worker_checkpoint_resume_external_api_called": bool(provider_worker_checkpoint_resume_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6389,6 +6400,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "provider_failure_recovery_report": provider_failure_recovery_report,
         "provider_observability_report": provider_observability_report,
         "provider_queue_lease_worker_report": provider_queue_lease_worker_report,
+        "provider_worker_checkpoint_resume_report": provider_worker_checkpoint_resume_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

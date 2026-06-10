@@ -4153,6 +4153,155 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_worker_checkpoint_resume_report_models_checkpoint_resume_recovery_and_replay_safety(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_failure_recovery_report,
+            build_provider_observability_report,
+            build_provider_queue_lease_worker_report,
+            build_provider_sandbox_runtime_report,
+            build_provider_worker_checkpoint_resume_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        real_gate = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        failure_report = build_provider_failure_recovery_report(
+            real_provider_execution_gate_report=real_gate,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        observability_report = build_provider_observability_report(
+            provider_failure_recovery_report=failure_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        queue_worker_report = build_provider_queue_lease_worker_report(
+            provider_observability_report=observability_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+        report = build_provider_worker_checkpoint_resume_report(
+            provider_queue_lease_worker_report=queue_worker_report,
+            project_id="project_provider_worker_checkpoint_resume",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_worker_checkpoint_resume_report_version"], "provider_worker_checkpoint_resume_report_v1")
+        self.assertEqual(report["report_status"], "provider_worker_checkpoint_resume_ready_dry_run")
+        self.assertTrue(report["provider_queue_lease_worker_ready"])
+        self.assertTrue(report["operator_review_required"])
+        self.assertGreater(report["stage_count"], 0)
+        self.assertTrue(report["checkpoint_policy"])
+        self.assertTrue(report["checkpoint_bundle"])
+        self.assertTrue(report["resume_cursor_policy"])
+        self.assertTrue(report["replay_policy"])
+        self.assertTrue(report["recovery_policy"])
+        self.assertTrue(report["dead_letter_policy"])
+        self.assertTrue(report["idempotency_replay_guard"])
+        self.assertTrue(report["audit_receipt"])
+        self.assertGreater(report["checkpoint_point_count"], 0)
+        self.assertGreater(report["checkpoint_item_count"], 0)
+        self.assertGreater(report["safe_replay_target_count"], 0)
+        self.assertGreater(report["recovery_step_count"], 0)
+        self.assertGreater(report["dead_letter_reason_count"], 0)
+        self.assertTrue(report["supports_checkpoint_policy"])
+        self.assertTrue(report["supports_checkpoint_bundle"])
+        self.assertTrue(report["supports_resume_cursor"])
+        self.assertTrue(report["supports_replay_policy"])
+        self.assertTrue(report["supports_recovery_policy"])
+        self.assertTrue(report["supports_dead_letter_policy"])
+        self.assertTrue(report["supports_idempotency_replay_guard"])
+        self.assertTrue(report["supports_checkpoint_audit_receipt"])
+        self.assertTrue(report["dry_run"])
+        self.assertTrue(report["checkpoint_required"])
+        self.assertTrue(report["provider_replay_blocked"])
+        self.assertTrue(report["duplicate_resume_blocked"])
+        self.assertTrue(report["duplicate_provider_call_blocked"])
+        self.assertFalse(report["checkpoint_recorded"])
+        self.assertFalse(report["checkpoint_persisted"])
+        self.assertFalse(report["resume_allowed"])
+        self.assertFalse(report["resume_cursor_recorded"])
+        self.assertFalse(report["resume_cursor_persisted"])
+        self.assertFalse(report["replay_allowed"])
+        self.assertFalse(report["provider_replay_allowed"])
+        self.assertFalse(report["recovery_allowed"])
+        self.assertFalse(report["recovery_complete"])
+        self.assertFalse(report["dead_letter_recorded"])
+        self.assertFalse(report["dead_letter_persisted"])
+        self.assertFalse(report["audit_receipt_recorded"])
+        self.assertFalse(report["checkpoint_audit_recorded"])
+        self.assertFalse(report["resume_audit_recorded"])
+        self.assertFalse(report["replay_audit_recorded"])
+        self.assertFalse(report["queue_persisted"])
+        self.assertFalse(report["lease_acquired"])
+        self.assertFalse(report["heartbeat_recorded"])
+        self.assertFalse(report["worker_started"])
+        self.assertFalse(report["worker_loop_started"])
+        self.assertFalse(report["worker_invocation_performed"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["real_retry_performed"])
+        self.assertFalse(report["provider_job_submitted"])
+        self.assertFalse(report["provider_polling_performed"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["quota_reserved"])
+        self.assertFalse(report["operator_review_captured"])
+        self.assertFalse(report["operator_approval_captured"])
+        self.assertFalse(report["incident_opened"])
+        self.assertFalse(report["rollback_ready"])
+        self.assertFalse(report["paid_generation_allowed"])
+
+
     def test_provider_queue_lease_worker_report_models_queue_claim_lease_and_worker_safety(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

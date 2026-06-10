@@ -4275,6 +4275,300 @@ def build_provider_queue_lease_worker_report(
     }
 
 
+
+PROVIDER_WORKER_CHECKPOINT_RESUME_REPORT_VERSION = "provider_worker_checkpoint_resume_report_v1"
+
+PROVIDER_WORKER_CHECKPOINT_RESUME_STAGES = [
+    {
+        "stage_id": "capture_worker_checkpoint",
+        "stage_label": "Capture worker checkpoint",
+        "required_inputs": ["queue_lease_worker_report", "worker_invocation_envelope", "completion_ack"],
+        "expected_outputs": ["checkpoint_bundle", "checkpoint_items", "checkpoint_policy"],
+    },
+    {
+        "stage_id": "build_resume_cursor",
+        "stage_label": "Build resume cursor",
+        "required_inputs": ["checkpoint_bundle", "idempotency_key", "worker_stage"],
+        "expected_outputs": ["resume_cursor", "resume_position", "resume_allowed"],
+    },
+    {
+        "stage_id": "evaluate_replay_guard",
+        "stage_label": "Evaluate replay guard",
+        "required_inputs": ["resume_cursor", "idempotency_dedupe_policy", "provider_call_state"],
+        "expected_outputs": ["replay_allowed", "provider_replay_blocked", "duplicate_call_blocked"],
+    },
+    {
+        "stage_id": "prepare_recovery_plan",
+        "stage_label": "Prepare recovery plan",
+        "required_inputs": ["resume_cursor", "stale_lease_recovery", "operator_review_state"],
+        "expected_outputs": ["recovery_policy", "resume_plan", "operator_review_packet"],
+    },
+    {
+        "stage_id": "route_dead_letter_policy",
+        "stage_label": "Route dead letter policy",
+        "required_inputs": ["recovery_policy", "retry_exhaustion_state", "manual_review_state"],
+        "expected_outputs": ["dead_letter_policy", "manual_result_intake_fallback", "audit_reason"],
+    },
+    {
+        "stage_id": "record_checkpoint_audit_receipt",
+        "stage_label": "Record checkpoint audit receipt",
+        "required_inputs": ["checkpoint_bundle", "resume_cursor", "replay_policy", "recovery_policy"],
+        "expected_outputs": ["checkpoint_audit_receipt", "export_safe_snapshot", "workspace_preview"],
+    },
+]
+
+
+def build_provider_worker_checkpoint_resume_report(
+    *,
+    provider_queue_lease_worker_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_worker_checkpoint_resume_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run worker checkpoint / resume / recovery / replay report.
+
+    This report models checkpoint capture, resume cursor creation, replay
+    safety, recovery planning, dead-letter routing, idempotency replay guards,
+    and audit receipts. It does not persist checkpoints, resume real workers,
+    replay provider calls, read secrets, upload/download media, or unlock real
+    execution.
+    """
+
+    queue_worker = provider_queue_lease_worker_report if isinstance(provider_queue_lease_worker_report, dict) else {}
+    queue_worker_ready = str(queue_worker.get("report_status") or "") == "provider_queue_lease_worker_ready_dry_run"
+    operator_review_required = bool(queue_worker.get("operator_review_required", True))
+
+    checkpoint_policy = {
+        "checkpoint_policy_version": "provider_worker_checkpoint_policy_v1",
+        "checkpoint_policy_status": "checkpoint_policy_ready_dry_run",
+        "checkpoint_required": True,
+        "checkpoint_points": [
+            {"checkpoint_point_id": "before_provider_queue_insert", "required": True},
+            {"checkpoint_point_id": "after_queue_claim_preview", "required": True},
+            {"checkpoint_point_id": "after_lease_preview", "required": True},
+            {"checkpoint_point_id": "before_provider_invocation", "required": True},
+            {"checkpoint_point_id": "after_worker_result_validation", "required": True},
+        ],
+        "checkpoint_point_count": 5,
+        "checkpoint_recorded": False,
+        "checkpoint_persisted": False,
+        "external_api_called": False,
+    }
+
+    checkpoint_bundle = {
+        "checkpoint_bundle_version": "provider_worker_checkpoint_bundle_v1",
+        "checkpoint_bundle_status": "checkpoint_bundle_ready_dry_run" if queue_worker_ready else "checkpoint_bundle_waiting_for_queue_worker",
+        "checkpoint_items": [
+            {"checkpoint_item_id": "queue_model", "included": bool(queue_worker.get("queue_model"))},
+            {"checkpoint_item_id": "idempotency_dedupe_policy", "included": bool(queue_worker.get("idempotency_dedupe_policy"))},
+            {"checkpoint_item_id": "claim_policy", "included": bool(queue_worker.get("claim_policy"))},
+            {"checkpoint_item_id": "lease_policy", "included": bool(queue_worker.get("lease_policy"))},
+            {"checkpoint_item_id": "heartbeat_policy", "included": bool(queue_worker.get("heartbeat_policy"))},
+            {"checkpoint_item_id": "stale_lease_recovery", "included": bool(queue_worker.get("stale_lease_recovery"))},
+            {"checkpoint_item_id": "worker_invocation_envelope", "included": bool(queue_worker.get("worker_invocation_envelope"))},
+            {"checkpoint_item_id": "completion_ack", "included": bool(queue_worker.get("completion_ack"))},
+        ],
+        "checkpoint_item_count": 8,
+        "checkpoint_recorded": False,
+        "checkpoint_persisted": False,
+        "checkpoint_export_safe": True,
+        "external_api_called": False,
+    }
+
+    resume_cursor_policy = {
+        "resume_cursor_policy_version": "provider_worker_resume_cursor_policy_v1",
+        "resume_cursor_status": "resume_cursor_ready_dry_run" if queue_worker_ready else "resume_cursor_waiting_for_checkpoint",
+        "resume_cursor_id": f"dry_run_resume_cursor::{project_id}",
+        "resume_position": "before_real_provider_invocation",
+        "resume_allowed": False,
+        "resume_cursor_recorded": False,
+        "resume_cursor_persisted": False,
+        "resume_requires_operator_review": True,
+        "external_api_called": False,
+    }
+
+    replay_policy = {
+        "replay_policy_version": "provider_worker_replay_policy_v1",
+        "replay_policy_status": "replay_policy_ready_dry_run",
+        "replay_allowed": False,
+        "provider_replay_allowed": False,
+        "provider_replay_blocked": True,
+        "duplicate_call_blocked": True,
+        "safe_replay_targets": [
+            {"target_id": "workspace_preview", "replay_allowed": True},
+            {"target_id": "audit_export", "replay_allowed": True},
+            {"target_id": "operator_review_packet", "replay_allowed": True},
+            {"target_id": "provider_external_call", "replay_allowed": False},
+            {"target_id": "paid_generation_submit", "replay_allowed": False},
+        ],
+        "safe_replay_target_count": 5,
+        "external_api_called": False,
+    }
+
+    recovery_policy = {
+        "worker_recovery_policy_version": "provider_worker_recovery_policy_v1",
+        "worker_recovery_policy_status": "worker_recovery_ready_dry_run",
+        "recovery_allowed": False,
+        "recovery_complete": False,
+        "resume_plan_ready": True,
+        "operator_review_required": operator_review_required,
+        "operator_review_captured": False,
+        "recovery_steps": [
+            {"recovery_step_id": "inspect_last_checkpoint", "ready": True, "executed": False},
+            {"recovery_step_id": "verify_idempotency_guard", "ready": True, "executed": False},
+            {"recovery_step_id": "confirm_no_external_api_called", "ready": True, "executed": False},
+            {"recovery_step_id": "prepare_resume_cursor", "ready": True, "executed": False},
+            {"recovery_step_id": "request_operator_review_before_real_resume", "ready": True, "executed": False},
+        ],
+        "recovery_step_count": 5,
+        "external_api_called": False,
+    }
+
+    dead_letter_policy = {
+        "dead_letter_policy_version": "provider_worker_dead_letter_policy_v1",
+        "dead_letter_policy_status": "dead_letter_policy_ready_dry_run",
+        "dead_letter_routing_enabled": True,
+        "dead_letter_recorded": False,
+        "dead_letter_persisted": False,
+        "manual_result_intake_fallback_ready": True,
+        "dead_letter_reasons": [
+            "checkpoint_missing",
+            "resume_guard_failed",
+            "idempotency_conflict",
+            "operator_review_required",
+            "real_worker_disabled",
+            "external_provider_call_disabled",
+        ],
+        "dead_letter_reason_count": 6,
+        "external_api_called": False,
+    }
+
+    idempotency_replay_guard = {
+        "idempotency_replay_guard_version": "provider_worker_idempotency_replay_guard_v1",
+        "idempotency_replay_guard_status": "idempotency_replay_guard_ready_dry_run",
+        "idempotency_required": True,
+        "idempotency_key_ready": True,
+        "idempotency_key": f"dry_run_worker_checkpoint::{project_id}",
+        "duplicate_resume_blocked": True,
+        "duplicate_provider_call_blocked": True,
+        "replay_requires_same_idempotency_key": True,
+        "external_api_called": False,
+    }
+
+    audit_receipt = {
+        "worker_checkpoint_resume_receipt_version": "provider_worker_checkpoint_resume_receipt_v1",
+        "receipt_status": "worker_checkpoint_resume_dry_run_recorded",
+        "checkpoint_policy_included": True,
+        "checkpoint_bundle_included": True,
+        "resume_cursor_policy_included": True,
+        "replay_policy_included": True,
+        "recovery_policy_included": True,
+        "dead_letter_policy_included": True,
+        "idempotency_replay_guard_included": True,
+        "audit_receipt_recorded": False,
+        "checkpoint_audit_recorded": False,
+        "resume_audit_recorded": False,
+        "replay_audit_recorded": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not queue_worker_ready:
+        blocking_failures.append("provider_queue_lease_worker_report_not_ready")
+    blocking_failures.extend([
+        "checkpoint_persistence_disabled",
+        "resume_execution_disabled",
+        "provider_replay_blocked",
+        "real_worker_disabled",
+        "external_provider_call_disabled",
+    ])
+    if operator_review_required:
+        blocking_failures.append("operator_review_required")
+
+    report_status = (
+        "provider_worker_checkpoint_resume_ready_dry_run"
+        if queue_worker_ready
+        else "provider_worker_checkpoint_resume_incomplete"
+    )
+
+    return {
+        "provider_worker_checkpoint_resume_report_version": PROVIDER_WORKER_CHECKPOINT_RESUME_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_worker_checkpoint_resume_report_builder"),
+        "provider_queue_lease_worker_ready": queue_worker_ready,
+        "operator_review_required": operator_review_required,
+        "stage_count": len(PROVIDER_WORKER_CHECKPOINT_RESUME_STAGES),
+        "checkpoint_resume_stage_matrix": [dict(item, complete=queue_worker_ready) for item in PROVIDER_WORKER_CHECKPOINT_RESUME_STAGES],
+        "checkpoint_policy": checkpoint_policy,
+        "checkpoint_bundle": checkpoint_bundle,
+        "resume_cursor_policy": resume_cursor_policy,
+        "replay_policy": replay_policy,
+        "recovery_policy": recovery_policy,
+        "dead_letter_policy": dead_letter_policy,
+        "idempotency_replay_guard": idempotency_replay_guard,
+        "audit_receipt": audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "checkpoint_point_count": checkpoint_policy["checkpoint_point_count"],
+        "checkpoint_item_count": checkpoint_bundle["checkpoint_item_count"],
+        "safe_replay_target_count": replay_policy["safe_replay_target_count"],
+        "recovery_step_count": recovery_policy["recovery_step_count"],
+        "dead_letter_reason_count": dead_letter_policy["dead_letter_reason_count"],
+        "supports_checkpoint_policy": True,
+        "supports_checkpoint_bundle": True,
+        "supports_resume_cursor": True,
+        "supports_replay_policy": True,
+        "supports_recovery_policy": True,
+        "supports_dead_letter_policy": True,
+        "supports_idempotency_replay_guard": True,
+        "supports_checkpoint_audit_receipt": True,
+        "recommended_next_state": "show_provider_worker_checkpoint_resume_in_workspace",
+        "dry_run": True,
+        "checkpoint_required": True,
+        "checkpoint_recorded": False,
+        "checkpoint_persisted": False,
+        "resume_allowed": False,
+        "resume_cursor_recorded": False,
+        "resume_cursor_persisted": False,
+        "replay_allowed": False,
+        "provider_replay_allowed": False,
+        "provider_replay_blocked": True,
+        "duplicate_resume_blocked": True,
+        "duplicate_provider_call_blocked": True,
+        "recovery_allowed": False,
+        "recovery_complete": False,
+        "dead_letter_recorded": False,
+        "dead_letter_persisted": False,
+        "audit_receipt_recorded": False,
+        "checkpoint_audit_recorded": False,
+        "resume_audit_recorded": False,
+        "replay_audit_recorded": False,
+        "queue_persisted": False,
+        "lease_acquired": False,
+        "heartbeat_recorded": False,
+        "worker_started": False,
+        "worker_loop_started": False,
+        "worker_invocation_performed": False,
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "real_retry_performed": False,
+        "provider_job_submitted": False,
+        "provider_polling_performed": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "quota_reserved": False,
+        "operator_review_captured": False,
+        "operator_approval_captured": False,
+        "incident_opened": False,
+        "rollback_ready": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
