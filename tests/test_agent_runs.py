@@ -4148,6 +4148,100 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
 
 
 
+
+    def test_provider_sandbox_runtime_report_models_fake_submit_poll_and_result_handoff(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_sandbox_runtime_report,
+            build_source_adapter_contract_report,
+        )
+
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id="project_provider_sandbox_runtime",
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id="project_provider_sandbox_runtime",
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id="project_provider_sandbox_runtime",
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id="project_provider_sandbox_runtime",
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id="project_provider_sandbox_runtime",
+            requested_by="unit_test",
+        )
+        report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id="project_provider_sandbox_runtime",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(report["provider_sandbox_runtime_report_version"], "provider_sandbox_runtime_report_v1")
+        self.assertEqual(report["report_status"], "provider_sandbox_runtime_ready_dry_run")
+        self.assertTrue(report["provider_api_readiness_ready"])
+        self.assertEqual(report["missing_item_count"], 0)
+        self.assertEqual(report["stage_count"], 5)
+        self.assertEqual(report["complete_stage_count"], 5)
+        self.assertEqual(report["missing_stage_count"], 0)
+        self.assertEqual(set(report["fake_provider_ids"]), {"runway", "pika"})
+        self.assertEqual(report["fake_provider_count"], 2)
+        self.assertTrue(report["supports_fake_runway_client"])
+        self.assertTrue(report["supports_fake_pika_client"])
+        self.assertTrue(report["supports_fake_provider_submit"])
+        self.assertTrue(report["supports_simulated_provider_polling"])
+        self.assertTrue(report["supports_normalized_provider_result"])
+        self.assertTrue(report["supports_provider_result_handoff"])
+        self.assertTrue(report["supports_experiment_feedback_bridge"])
+        self.assertEqual(report["client_mode"], "fake_no_network")
+        self.assertTrue(report["submit_contract"])
+        self.assertTrue(report["polling_contract"])
+        self.assertTrue(report["normalized_result_contract"])
+        self.assertTrue(report["result_handoff_contract"])
+        self.assertFalse(report["real_execution_allowed"])
+        self.assertFalse(report["real_execution_enabled"])
+        self.assertFalse(report["provider_call_allowed"])
+        self.assertFalse(report["external_api_call_allowed"])
+        self.assertFalse(report["real_provider_client_constructed"])
+        self.assertFalse(report["provider_job_submitted"])
+        self.assertTrue(report["fake_provider_job_submittable"])
+        self.assertFalse(report["provider_polling_performed"])
+        self.assertTrue(report["fake_provider_polling_submittable"])
+        self.assertFalse(report["external_api_called"])
+        self.assertFalse(report["provider_secret_read"])
+        self.assertFalse(report["provider_secret_exported"])
+        self.assertFalse(report["media_uploaded"])
+        self.assertFalse(report["media_downloaded"])
+        self.assertFalse(report["result_url_fetched"])
+        self.assertFalse(report["preview_url_fetched"])
+        self.assertFalse(report["video_generation_performed"])
+        self.assertFalse(report["image_generation_performed"])
+        self.assertFalse(report["paid_generation_allowed"])
+        self.assertTrue(report["manual_review_required"])
+        self.assertTrue(report["human_approval_required_before_provider_submit"])
+        self.assertFalse(report["operator_approval_captured"])
+        self.assertTrue(report["dry_run"])
+
+
     def test_provider_api_readiness_report_keeps_real_provider_calls_locked(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

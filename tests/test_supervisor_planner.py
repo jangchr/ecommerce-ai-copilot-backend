@@ -665,6 +665,58 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_api_readiness_provider_call_allowed"]
         )
+        self.assertIn("provider_sandbox_runtime_report", payload)
+        sandbox = payload["provider_sandbox_runtime_report"]
+        self.assertEqual(
+            sandbox["provider_sandbox_runtime_report_version"],
+            "provider_sandbox_runtime_report_v1",
+        )
+        self.assertEqual(
+            sandbox["report_status"],
+            "provider_sandbox_runtime_ready_dry_run",
+        )
+        self.assertTrue(sandbox["provider_api_readiness_ready"])
+        self.assertEqual(sandbox["missing_item_count"], 0)
+        self.assertEqual(sandbox["fake_provider_count"], 2)
+        self.assertEqual(set(sandbox["fake_provider_ids"]), {"runway", "pika"})
+        self.assertTrue(sandbox["supports_fake_runway_client"])
+        self.assertTrue(sandbox["supports_fake_pika_client"])
+        self.assertTrue(sandbox["supports_fake_provider_submit"])
+        self.assertTrue(sandbox["supports_simulated_provider_polling"])
+        self.assertTrue(sandbox["supports_normalized_provider_result"])
+        self.assertTrue(sandbox["supports_provider_result_handoff"])
+        self.assertTrue(sandbox["supports_experiment_feedback_bridge"])
+        self.assertFalse(sandbox["real_execution_allowed"])
+        self.assertFalse(sandbox["real_execution_enabled"])
+        self.assertFalse(sandbox["provider_call_allowed"])
+        self.assertFalse(sandbox["external_api_call_allowed"])
+        self.assertFalse(sandbox["real_provider_client_constructed"])
+        self.assertFalse(sandbox["provider_job_submitted"])
+        self.assertFalse(sandbox["provider_polling_performed"])
+        self.assertFalse(sandbox["external_api_called"])
+        self.assertFalse(sandbox["provider_secret_read"])
+        self.assertFalse(sandbox["provider_secret_exported"])
+        self.assertFalse(sandbox["media_uploaded"])
+        self.assertFalse(sandbox["media_downloaded"])
+        self.assertFalse(sandbox["result_url_fetched"])
+        self.assertFalse(sandbox["preview_url_fetched"])
+        self.assertFalse(sandbox["video_generation_performed"])
+        self.assertFalse(sandbox["paid_generation_allowed"])
+        self.assertTrue(sandbox["manual_review_required"])
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_sandbox_runtime_status"],
+            "provider_sandbox_runtime_ready_dry_run",
+        )
+        self.assertEqual(
+            payload["project"]["graph_summary"]["latest_provider_sandbox_runtime_fake_provider_count"],
+            2,
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_sandbox_runtime_real_execution_enabled"]
+        )
+        self.assertFalse(
+            payload["project"]["graph_summary"]["latest_provider_sandbox_runtime_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

@@ -2822,6 +2822,231 @@ def build_provider_api_readiness_report(
     }
 
 
+
+PROVIDER_SANDBOX_RUNTIME_REPORT_VERSION = "provider_sandbox_runtime_report_v1"
+
+PROVIDER_SANDBOX_RUNTIME_STAGES = [
+    {
+        "stage_id": "fake_provider_client_factory",
+        "stage_label": "Fake provider client factory",
+        "required_inputs": ["provider_id", "provider_payload", "provider_api_readiness_report"],
+        "expected_outputs": ["FakeRunwayClient", "FakePikaClient", "fake_no_network_client"],
+        "safety_boundaries": ["real_provider_client_not_constructed", "network_disabled", "secret_not_read"],
+    },
+    {
+        "stage_id": "fake_provider_submit",
+        "stage_label": "Fake provider submit",
+        "required_inputs": ["provider_payload", "approval_boundary", "idempotency_key"],
+        "expected_outputs": ["provider_job_id", "provider_status_queued", "provider_runtime"],
+        "safety_boundaries": ["external_api_called_false", "paid_generation_false", "media_upload_false"],
+    },
+    {
+        "stage_id": "simulated_provider_polling",
+        "stage_label": "Simulated provider polling",
+        "required_inputs": ["provider_job_id", "provider_status", "polling_contract"],
+        "expected_outputs": ["processing", "external_result_ready", "failed"],
+        "safety_boundaries": ["real_provider_polling_false", "timeout_contract_present", "max_poll_attempts_present"],
+    },
+    {
+        "stage_id": "normalized_provider_result",
+        "stage_label": "Normalized provider result",
+        "required_inputs": ["provider_status_response"],
+        "expected_outputs": ["normalized_provider_result", "result_url", "preview_url", "error_message"],
+        "safety_boundaries": ["fake_result_urls_only", "result_url_not_fetched", "preview_url_not_fetched"],
+    },
+    {
+        "stage_id": "provider_result_handoff",
+        "stage_label": "Provider result handoff",
+        "required_inputs": ["normalized_provider_result", "provider_runtime", "video_job"],
+        "expected_outputs": ["provider_result_handoff", "experiment_feedback_ready", "audit_receipt"],
+        "safety_boundaries": ["manual_review_required", "product_drift_review_required", "evidence_consistency_review_required"],
+    },
+]
+
+
+def build_provider_sandbox_runtime_report(
+    *,
+    provider_api_readiness_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_sandbox_runtime_report_builder",
+) -> dict[str, Any]:
+    """Build the provider sandbox runtime dry-run report.
+
+    This report describes a fake no-network provider runtime loop:
+    prompt payload -> fake provider submit -> simulated polling ->
+    normalized result -> result handoff -> experiment feedback bridge.
+    It does not read secrets, call real providers, upload/download media,
+    submit real jobs, poll real providers, spend money, or unlock real execution.
+    """
+
+    api_report = provider_api_readiness_report if isinstance(provider_api_readiness_report, dict) else {}
+    api_ready = (
+        str(api_report.get("report_status") or "") == "provider_api_readiness_ready_dry_run"
+        and bool(api_report.get("supports_fake_provider_clients"))
+        and bool(api_report.get("supports_provider_polling_scaffold"))
+        and not bool(api_report.get("real_execution_enabled"))
+        and not bool(api_report.get("provider_call_allowed"))
+    )
+
+    provider_contracts = api_report.get("provider_contracts") if isinstance(api_report.get("provider_contracts"), list) else []
+    fake_provider_contracts = [
+        item for item in provider_contracts
+        if isinstance(item, dict) and item.get("provider_id") in {"runway", "pika"} and bool(item.get("supports_fake_client"))
+    ]
+    if not fake_provider_contracts:
+        fake_provider_contracts = [
+            {
+                "provider_id": "runway",
+                "display_name": "Runway fake provider",
+                "fake_client_class": "FakeRunwayClient",
+                "client_mode": "fake_no_network",
+                "supports_fake_client": True,
+                "supports_polling_scaffold": True,
+            },
+            {
+                "provider_id": "pika",
+                "display_name": "Pika fake provider",
+                "fake_client_class": "FakePikaClient",
+                "client_mode": "fake_no_network",
+                "supports_fake_client": True,
+                "supports_polling_scaffold": True,
+            },
+        ]
+
+    fake_runtime_matrix = []
+    for provider in fake_provider_contracts:
+        provider_id = str(provider.get("provider_id") or "")
+        fake_runtime_matrix.append({
+            "provider_id": provider_id,
+            "display_name": str(provider.get("display_name") or provider_id),
+            "fake_client_class": "FakeRunwayClient" if provider_id == "runway" else "FakePikaClient",
+            "client_mode": "fake_no_network",
+            "submit_function": "create_video_job",
+            "poll_function": "get_video_job",
+            "normalized_response_function": "normalize_provider_status_response",
+            "provider_job_id_pattern": f"{provider_id}_fake_<uuid>",
+            "submit_status": "queued",
+            "poll_sequence": ["queued", "processing", "external_result_ready"],
+            "failure_status": "failed",
+            "fake_result_url_pattern": f"https://example.com/{provider_id}/<provider_job_id>.mp4",
+            "fake_preview_url_pattern": f"https://example.com/{provider_id}/<provider_job_id>.jpg",
+            "supports_result_url": True,
+            "supports_preview_url": True,
+            "external_api_called": False,
+            "real_external_api_call_enabled": False,
+            "provider_secret_read": False,
+            "media_uploaded": False,
+            "media_downloaded": False,
+            "paid_generation_allowed": False,
+        })
+
+    submit_contract = {
+        "contract_version": "fake_provider_submit_contract_v1",
+        "input_fields": ["provider", "provider_payload.prompt", "provider_payload.scenes", "provider_payload.aspect_ratio", "provider_payload.recommended_duration_seconds"],
+        "output_fields": ["provider_job_id", "provider_status", "result_url", "preview_url", "client_mode"],
+        "default_status": "queued",
+        "client_mode": "fake_no_network",
+        "external_api_called": False,
+        "real_external_api_call_enabled": False,
+        "provider_secret_required": False,
+    }
+    polling_contract = {
+        "contract_version": "fake_provider_polling_contract_v1",
+        "requires_provider_job_id": True,
+        "default_poll_sequence": ["queued", "processing"],
+        "completion_statuses": ["external_result_ready", "failed"],
+        "timeout_seconds": 30,
+        "max_poll_attempts": 20,
+        "polls_real_provider": False,
+        "external_api_called": False,
+    }
+    normalized_result_contract = {
+        "contract_version": "normalized_provider_result_contract_v1",
+        "normalized_fields": ["provider", "provider_job_id", "provider_status", "result_url", "preview_url", "download_url", "error_message", "client_mode"],
+        "ready_status": "external_result_ready",
+        "failure_status": "failed",
+        "result_url_fetched": False,
+        "preview_url_fetched": False,
+        "download_url_fetched": False,
+    }
+    result_handoff_contract = {
+        "contract_version": "provider_result_handoff_contract_v1",
+        "handoff_artifacts": ["normalized_provider_result", "provider_runtime", "provider_result_handoff", "experiment_feedback_decision"],
+        "next_agents": ["experiment_agent", "risk_approval_agent", "finalizer_agent"],
+        "requires_product_drift_review": True,
+        "requires_evidence_consistency_review": True,
+        "requires_manual_review": True,
+        "supports_revised_prompt_handoff": True,
+    }
+
+    stage_ids = [item["stage_id"] for item in PROVIDER_SANDBOX_RUNTIME_STAGES]
+    complete_stages = set(stage_ids if api_ready and len(fake_runtime_matrix) >= 2 else [])
+    missing_items = []
+    if not api_ready:
+        missing_items.append("provider_api_readiness_ready_dry_run")
+    if len(fake_runtime_matrix) < 2:
+        missing_items.append("fake_provider_runtime_matrix")
+
+    report_status = "provider_sandbox_runtime_ready_dry_run" if not missing_items else "provider_sandbox_runtime_incomplete"
+
+    return {
+        "provider_sandbox_runtime_report_version": PROVIDER_SANDBOX_RUNTIME_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_sandbox_runtime_report_builder"),
+        "provider_api_readiness_ready": api_ready,
+        "missing_item_count": len(missing_items),
+        "missing_items": missing_items,
+        "stage_count": len(PROVIDER_SANDBOX_RUNTIME_STAGES),
+        "complete_stage_count": len(complete_stages),
+        "missing_stage_count": len(PROVIDER_SANDBOX_RUNTIME_STAGES) - len(complete_stages),
+        "sandbox_stage_matrix": [
+            {**stage, "complete": stage["stage_id"] in complete_stages}
+            for stage in PROVIDER_SANDBOX_RUNTIME_STAGES
+        ],
+        "fake_provider_count": len(fake_runtime_matrix),
+        "fake_provider_ids": [item["provider_id"] for item in fake_runtime_matrix],
+        "fake_runtime_matrix": fake_runtime_matrix,
+        "submit_contract": submit_contract,
+        "polling_contract": polling_contract,
+        "normalized_result_contract": normalized_result_contract,
+        "result_handoff_contract": result_handoff_contract,
+        "supports_fake_runway_client": any(item["provider_id"] == "runway" for item in fake_runtime_matrix),
+        "supports_fake_pika_client": any(item["provider_id"] == "pika" for item in fake_runtime_matrix),
+        "supports_fake_provider_submit": True,
+        "supports_simulated_provider_polling": True,
+        "supports_normalized_provider_result": True,
+        "supports_provider_result_handoff": True,
+        "supports_experiment_feedback_bridge": True,
+        "recommended_next_state": "show_provider_sandbox_runtime_in_workspace" if not missing_items else "inspect_provider_sandbox_runtime_prerequisites",
+        "dry_run": True,
+        "client_mode": "fake_no_network",
+        "real_execution_allowed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "real_provider_client_constructed": False,
+        "provider_job_submitted": False,
+        "fake_provider_job_submittable": api_ready,
+        "provider_polling_performed": False,
+        "fake_provider_polling_submittable": api_ready,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "result_url_fetched": False,
+        "preview_url_fetched": False,
+        "video_generation_performed": False,
+        "image_generation_performed": False,
+        "paid_generation_allowed": False,
+        "manual_review_required": True,
+        "human_approval_required_before_provider_submit": True,
+        "operator_approval_captured": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
