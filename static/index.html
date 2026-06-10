@@ -11661,6 +11661,94 @@
         }
 
 
+
+        function projectWorkspaceExportKeyframePromptPackSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceKeyframePromptPackReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack keyframe prompt pack bundle',
+                report_status: report.report_status || '',
+                keyframe_prompt_pack_report_version: report.keyframe_prompt_pack_report_version || '',
+                keyframe_video_asset_chain_ready: Boolean(report.keyframe_video_asset_chain_ready),
+                missing_item_count: Number(report.missing_item_count || 0),
+                missing_items: Array.isArray(report.missing_items) ? report.missing_items : [],
+                shot_prompt_count: Number(report.shot_prompt_count || 0),
+                provider_variant_count: Number(report.provider_variant_count || 0),
+                provider_ids: Array.isArray(report.provider_ids) ? report.provider_ids : [],
+                supports_product_identity_lock_prompt: Boolean(report.supports_product_identity_lock_prompt),
+                supports_shot_by_shot_keyframe_prompts: Boolean(report.supports_shot_by_shot_keyframe_prompts),
+                supports_negative_prompt: Boolean(report.supports_negative_prompt),
+                supports_image_reference_checklist: Boolean(report.supports_image_reference_checklist),
+                product_identity_lock_prompt: String(report.product_identity_lock_prompt || ''),
+                negative_prompt: String(report.negative_prompt || ''),
+                image_reference_checklist: Array.isArray(report.image_reference_checklist) ? report.image_reference_checklist : [],
+                shot_prompts: Array.isArray(report.shot_prompts) ? report.shot_prompts : [],
+                provider_prompt_variants: Array.isArray(report.provider_prompt_variants) ? report.provider_prompt_variants : [],
+                manual_generation_instructions: Array.isArray(report.manual_generation_instructions) ? report.manual_generation_instructions : [],
+                manual_copy_paste_only: Boolean(report.manual_copy_paste_only),
+                image_reference_required: Boolean(report.image_reference_required),
+                manual_review_required: Boolean(report.manual_review_required),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                video_generation_performed: Boolean(report.video_generation_performed),
+                image_generation_performed: Boolean(report.image_generation_performed),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                dry_run: Boolean(report.dry_run),
+                has_keyframe_prompt_pack_report: Boolean(report.report_status || report.keyframe_prompt_pack_report_version)
+            };
+        }
+
+        function projectWorkspaceExportKeyframePromptPackMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportKeyframePromptPackSnapshot(workspace);
+            if (!report.has_keyframe_prompt_pack_report) {
+                return `## ${t('projectWorkspaceExportKeyframePromptPackTitle')}\n${t('keyframePromptPackNotRefreshedYet')}`;
+            }
+            const checklistLines = report.image_reference_checklist.length
+                ? report.image_reference_checklist.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const shotLines = report.shot_prompts.length
+                ? report.shot_prompts.map((shot, index) => [
+                    `### ${t('shotPrompt')} ${index + 1}: ${shot.shot_label || shot.shot_id || ''}`,
+                    shot.prompt || ''
+                ].join('\n'))
+                : ['none'];
+            const providerLines = report.provider_prompt_variants.length
+                ? report.provider_prompt_variants.map((provider) => [
+                    `### ${provider.display_name || provider.provider_id || ''}`,
+                    provider.prompt || ''
+                ].join('\n'))
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportKeyframePromptPackTitle')}`,
+                `${t('keyframePromptPackStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('keyframePromptPackShotPromptCount')}: ${report.shot_prompt_count}`,
+                `${t('keyframePromptPackProviderVariantCount')}: ${report.provider_variant_count}`,
+                `${t('manualCopyPasteOnly')}: ${report.manual_copy_paste_only}`,
+                `${t('imageReferenceRequired')}: ${report.image_reference_required}`,
+                `${t('manualReviewRequired')}: ${report.manual_review_required}`,
+                `${t('realExecutionAllowed')}: ${report.real_execution_allowed}`,
+                `${t('providerCallAllowed')}: ${report.provider_call_allowed}`,
+                `${t('externalApiCallAllowed')}: ${report.external_api_call_allowed}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('productIdentityLockPrompt')}`,
+                report.product_identity_lock_prompt || 'none',
+                '',
+                `### ${t('negativePrompt')}`,
+                report.negative_prompt || 'none',
+                '',
+                `### ${t('imageReferenceChecklist')}`,
+                ...checklistLines,
+                '',
+                `### ${t('shotByShotKeyframePrompts')}`,
+                ...shotLines,
+                '',
+                `### ${t('providerPromptVariants')}`,
+                ...providerLines
+            ].join('\n');
+        }
+
         function projectWorkspaceExportKeyframeVideoAssetChainSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceKeyframeVideoAssetChainReportFromWorkspace(workspace);
             return {
@@ -12071,6 +12159,8 @@
                 '',
                 projectWorkspaceExportKeyframeVideoAssetChainMarkdown(workspace),
                 '',
+                projectWorkspaceExportKeyframePromptPackMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -12095,6 +12185,7 @@
                 source_adapter_contract_report: projectWorkspaceExportSourceAdapterContractSnapshot(workspace),
                 multi_agent_output_chain_report: projectWorkspaceExportMultiAgentOutputChainSnapshot(workspace),
                 keyframe_video_asset_chain_report: projectWorkspaceExportKeyframeVideoAssetChainSnapshot(workspace),
+                keyframe_prompt_pack_report: projectWorkspaceExportKeyframePromptPackSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -12219,6 +12310,7 @@
                 latestProjectSourceAdapterContractReport = payload.source_adapter_contract_report || {};
                 latestProjectMultiAgentOutputChainReport = payload.multi_agent_output_chain_report || {};
                 latestProjectKeyframeVideoAssetChainReport = payload.keyframe_video_asset_chain_report || {};
+                latestProjectKeyframePromptPackReport = payload.keyframe_prompt_pack_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -16060,6 +16152,241 @@
         let latestProjectMultiAgentOutputChainReport = {};
         const PROJECT_WORKSPACE_KEYFRAME_VIDEO_ASSET_CHAIN_BUNDLE_MARKER = 'Project Workspace keyframe video asset chain bundle';
         let latestProjectKeyframeVideoAssetChainReport = {};
+        const PROJECT_WORKSPACE_KEYFRAME_PROMPT_PACK_BUNDLE_MARKER = 'Project Workspace keyframe prompt pack bundle';
+        let latestProjectKeyframePromptPackReport = {};
+
+        function projectWorkspaceKeyframePromptPackReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectKeyframePromptPackReport || {}).length
+                ? latestProjectKeyframePromptPackReport
+                : workspace?.keyframe_prompt_pack_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                keyframe_prompt_pack_report_version: '',
+                report_status: graphSummary.latest_keyframe_prompt_pack_status || '',
+                shot_prompt_count: Number(graphSummary.latest_keyframe_prompt_pack_shot_prompt_count || 0),
+                provider_variant_count: Number(graphSummary.latest_keyframe_prompt_pack_provider_variant_count || 0),
+                manual_copy_paste_only: Boolean(graphSummary.latest_keyframe_prompt_pack_manual_copy_only),
+                product_identity_lock_prompt: '',
+                negative_prompt: '',
+                image_reference_checklist: [],
+                shot_prompts: [],
+                provider_prompt_variants: [],
+                manual_generation_instructions: [],
+                image_reference_required: true,
+                manual_review_required: true,
+                dry_run: true,
+                real_execution_allowed: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                video_generation_performed: false,
+                image_generation_performed: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceKeyframePromptPackCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceKeyframePromptPackReportFromWorkspace(workspace);
+            const shots = Array.isArray(report.shot_prompts) ? report.shot_prompts : [];
+            const providers = Array.isArray(report.provider_prompt_variants) ? report.provider_prompt_variants : [];
+            const checklist = Array.isArray(report.image_reference_checklist) ? report.image_reference_checklist : [];
+            const instructions = Array.isArray(report.manual_generation_instructions) ? report.manual_generation_instructions : [];
+            return [
+                t('keyframePromptPackCopyTitle'),
+                `${t('keyframePromptPackStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('keyframePromptPackShotPromptCount')}: ${Number(report.shot_prompt_count || shots.length || 0)}`,
+                `${t('keyframePromptPackProviderVariantCount')}: ${Number(report.provider_variant_count || providers.length || 0)}`,
+                `${t('manualCopyPasteOnly')}: ${Boolean(report.manual_copy_paste_only)}`,
+                `${t('imageReferenceRequired')}: ${Boolean(report.image_reference_required)}`,
+                `${t('manualReviewRequired')}: ${Boolean(report.manual_review_required)}`,
+                `${t('realExecutionAllowed')}: ${Boolean(report.real_execution_allowed)}`,
+                `${t('providerCallAllowed')}: ${Boolean(report.provider_call_allowed)}`,
+                `${t('externalApiCallAllowed')}: ${Boolean(report.external_api_call_allowed)}`,
+                `${t('videoGenerationPerformed')}: ${Boolean(report.video_generation_performed)}`,
+                `${t('imageGenerationPerformed')}: ${Boolean(report.image_generation_performed)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('productIdentityLockPrompt')}:`,
+                report.product_identity_lock_prompt || t('none'),
+                '',
+                `${t('negativePrompt')}:`,
+                report.negative_prompt || t('none'),
+                '',
+                `${t('imageReferenceChecklist')}:`,
+                checklist.length ? checklist.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('manualGenerationInstructions')}:`,
+                instructions.length ? instructions.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('shotByShotKeyframePrompts')}:`,
+                shots.length ? shots.map((shot, index) => [
+                    `Shot ${index + 1}: ${shot.shot_label || shot.shot_id || ''}`,
+                    shot.prompt || ''
+                ].join('\n')).join('\n\n') : t('none'),
+                '',
+                `${t('providerPromptVariants')}:`,
+                providers.length ? providers.map((provider) => [
+                    `${provider.display_name || provider.provider_id || ''}`,
+                    provider.prompt || ''
+                ].join('\n')).join('\n\n') : t('none'),
+                '',
+                JSON.stringify({ keyframe_prompt_pack_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        function projectWorkspaceKeyframePromptPackShotCopyText(index) {
+            const report = projectWorkspaceKeyframePromptPackReportFromWorkspace();
+            const shots = Array.isArray(report.shot_prompts) ? report.shot_prompts : [];
+            const shot = shots[index] || {};
+            return [
+                `${t('shotPrompt')} ${index + 1}: ${shot.shot_label || shot.shot_id || ''}`,
+                shot.prompt || '',
+                '',
+                `${t('negativePrompt')}:`,
+                report.negative_prompt || t('none')
+            ].join('\n');
+        }
+
+        function projectWorkspaceKeyframePromptPackProviderCopyText(index) {
+            const report = projectWorkspaceKeyframePromptPackReportFromWorkspace();
+            const providers = Array.isArray(report.provider_prompt_variants) ? report.provider_prompt_variants : [];
+            const provider = providers[index] || {};
+            return [
+                provider.display_name || provider.provider_id || `${t('providerPrompt')} ${index + 1}`,
+                provider.prompt || ''
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceKeyframePromptPack() {
+            const status = document.getElementById('projectWorkspaceKeyframePromptPackStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceKeyframePromptPackCopyText());
+                if (status) status.textContent = t('keyframePromptPackCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('keyframePromptPackCopyFailed');
+            }
+        }
+
+        async function copyProjectWorkspaceKeyframePromptShot(index) {
+            const status = document.getElementById('projectWorkspaceKeyframePromptPackStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceKeyframePromptPackShotCopyText(index));
+                if (status) status.textContent = t('shotPromptCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('shotPromptCopyFailed');
+            }
+        }
+
+        async function copyProjectWorkspaceKeyframeProviderPrompt(index) {
+            const status = document.getElementById('projectWorkspaceKeyframePromptPackStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceKeyframePromptPackProviderCopyText(index));
+                if (status) status.textContent = t('providerPromptCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerPromptCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceKeyframePromptPackPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceKeyframePromptPackReportFromWorkspace(workspace);
+            const shots = Array.isArray(report.shot_prompts) ? report.shot_prompts : [];
+            const providers = Array.isArray(report.provider_prompt_variants) ? report.provider_prompt_variants : [];
+            const checklist = Array.isArray(report.image_reference_checklist) ? report.image_reference_checklist : [];
+            const instructions = Array.isArray(report.manual_generation_instructions) ? report.manual_generation_instructions : [];
+            const hasReport = Boolean(report.report_status || report.keyframe_prompt_pack_report_version || shots.length || providers.length);
+            return `
+                <div class="section-block" id="projectWorkspaceKeyframePromptPackPanel" data-project-keyframe-prompt-pack-marker="Project Workspace keyframe prompt pack bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('keyframePromptPackPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('keyframePromptPackPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceKeyframePromptPackBtn" type="button" onclick="copyProjectWorkspaceKeyframePromptPack()">${escapeHTML(t('copyKeyframePromptPack'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('keyframePromptPackStatus'))}</div>
+                            <strong data-keyframe-prompt-pack-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('keyframePromptPackNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('keyframePromptPackShotPromptCount'))}</div>
+                            <strong data-keyframe-prompt-pack-shot-count="${escapeHTML(String(Number(report.shot_prompt_count || shots.length || 0)))}">${escapeHTML(String(Number(report.shot_prompt_count || shots.length || 0)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('keyframePromptPackProviderVariantCount'))}</div>
+                            <strong data-keyframe-prompt-pack-provider-count="${escapeHTML(String(Number(report.provider_variant_count || providers.length || 0)))}">${escapeHTML(String(Number(report.provider_variant_count || providers.length || 0)))}</strong>
+                            <div class="field-helper">${escapeHTML(t('manualCopyPasteOnly'))}: ${escapeHTML(String(Boolean(report.manual_copy_paste_only)))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('productIdentityLockPrompt'))}</div>
+                        <pre class="debug">${escapeHTML(report.product_identity_lock_prompt || t('keyframePromptPackNotRefreshedYet'))}</pre>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('negativePrompt'))}</div>
+                        <pre class="debug">${escapeHTML(report.negative_prompt || t('keyframePromptPackNotRefreshedYet'))}</pre>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('imageReferenceChecklist'))}</div>
+                            ${checklist.length ? checklist.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. ${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('manualGenerationInstructions'))}</div>
+                            ${instructions.length ? instructions.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. ${escapeHTML(item)}</div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('shotByShotKeyframePrompts'))}</div>
+                        ${shots.length ? shots.map((shot, index) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(t('shotPrompt'))} ${escapeHTML(String(index + 1))}: ${escapeHTML(shot.shot_label || shot.shot_id || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('durationSeconds'))}: ${escapeHTML(String(shot.duration_seconds || ''))}</div>
+                                <pre class="debug">${escapeHTML(shot.prompt || '')}</pre>
+                                <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceKeyframePromptShot(${index})">${escapeHTML(t('copyShotPrompt'))}</button>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('keyframePromptPackNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerPromptVariants'))}</div>
+                        ${providers.length ? providers.map((provider, index) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(provider.display_name || provider.provider_id || '')}</div>
+                                <div class="field-helper">${escapeHTML(t('manualCopyPasteOnly'))}: ${escapeHTML(String(Boolean(provider.manual_copy_paste_only)))}</div>
+                                <pre class="debug">${escapeHTML(provider.prompt || '')}</pre>
+                                <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceKeyframeProviderPrompt(${index})">${escapeHTML(t('copyProviderPrompt'))}</button>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('keyframePromptPackNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('imageReferenceRequired'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.image_reference_required)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('manualReviewRequired'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.manual_review_required)))}</strong>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('paidGenerationAllowed'))}</div>
+                            <strong>${escapeHTML(String(Boolean(report.paid_generation_allowed)))}</strong>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('keyframePromptPackAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-keyframe-prompt-pack-audit-preview="Project Workspace keyframe prompt pack bundle">${escapeHTML(projectWorkspaceKeyframePromptPackCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('keyframePromptPackNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceKeyframePromptPackStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceKeyframeVideoAssetChainReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectKeyframeVideoAssetChainReport || {}).length
@@ -17547,6 +17874,8 @@
                 if (multiAgentOutputPanel) multiAgentOutputPanel.outerHTML = renderProjectWorkspaceMultiAgentOutputChainPanel(latestProjectWorkspace);
                 const keyframeVideoAssetPanel = document.getElementById('projectWorkspaceKeyframeVideoAssetChainPanel');
                 if (keyframeVideoAssetPanel) keyframeVideoAssetPanel.outerHTML = renderProjectWorkspaceKeyframeVideoAssetChainPanel(latestProjectWorkspace);
+                const keyframePromptPackPanel = document.getElementById('projectWorkspaceKeyframePromptPackPanel');
+                if (keyframePromptPackPanel) keyframePromptPackPanel.outerHTML = renderProjectWorkspaceKeyframePromptPackPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -19728,6 +20057,7 @@
                     ${renderProjectWorkspaceSourceAdapterContractPanel(workspace)}
                     ${renderProjectWorkspaceMultiAgentOutputChainPanel(workspace)}
                     ${renderProjectWorkspaceKeyframeVideoAssetChainPanel(workspace)}
+                    ${renderProjectWorkspaceKeyframePromptPackPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -24011,6 +24341,71 @@
             keyframeVideoAssetChainCopied: '\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def\u5df2\u590d\u5236\u3002',
             keyframeVideoAssetChainCopyFailed: '\u590d\u5236\u5173\u952e\u5e27 / \u89c6\u9891\u7d20\u6750\u94fe\u8def\u5931\u8d25\u3002',
             projectWorkspaceExportKeyframeVideoAssetTitle: 'Keyframe / Video Asset Chain / \u5173\u952e\u5e27\u4e0e\u89c6\u9891\u7d20\u6750\u94fe\u8def'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceKeyframePromptPackBundleMarker: 'Project Workspace keyframe prompt pack bundle',
+            keyframePromptPackPanelTitle: 'Actual Keyframe Prompt Pack',
+            keyframePromptPackPanelHelper: 'Copy-ready prompt pack for product identity lock, negative prompt, image reference checklist, shot-by-shot keyframes, and Gemini / Doubao / Runway / Pika manual prompt variants. Dry-run only: no provider call, no media generation, no cost.',
+            copyKeyframePromptPack: 'Copy full prompt pack',
+            keyframePromptPackCopyTitle: 'Project actual keyframe prompt pack',
+            keyframePromptPackStatus: 'Keyframe prompt pack status',
+            keyframePromptPackShotPromptCount: 'Shot prompt count',
+            keyframePromptPackProviderVariantCount: 'Provider prompt variants',
+            manualCopyPasteOnly: 'Manual copy/paste only',
+            productIdentityLockPrompt: 'Product identity lock prompt',
+            negativePrompt: 'Negative prompt',
+            imageReferenceChecklist: 'Image reference checklist',
+            manualGenerationInstructions: 'Manual generation instructions',
+            shotByShotKeyframePrompts: 'Shot-by-shot keyframe prompts',
+            providerPromptVariants: 'Provider prompt variants',
+            shotPrompt: 'Shot prompt',
+            providerPrompt: 'Provider prompt',
+            durationSeconds: 'Duration seconds',
+            copyShotPrompt: 'Copy shot prompt',
+            copyProviderPrompt: 'Copy provider prompt',
+            keyframePromptPackAuditPreview: 'Keyframe prompt pack audit preview',
+            keyframePromptPackNotRefreshedYet: 'Keyframe prompt pack has not been refreshed yet.',
+            keyframePromptPackCopied: 'Keyframe prompt pack copied.',
+            keyframePromptPackCopyFailed: 'Could not copy keyframe prompt pack.',
+            shotPromptCopied: 'Shot prompt copied.',
+            shotPromptCopyFailed: 'Could not copy shot prompt.',
+            providerPromptCopied: 'Provider prompt copied.',
+            providerPromptCopyFailed: 'Could not copy provider prompt.',
+            projectWorkspaceExportKeyframePromptPackTitle: 'Actual Keyframe Prompt Pack'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceKeyframePromptPackBundleMarker: 'Project Workspace keyframe prompt pack bundle',
+            keyframePromptPackPanelTitle: 'Actual Keyframe Prompt Pack / \u771f\u5b9e\u5173\u952e\u5e27 Prompt \u5305',
+            keyframePromptPackPanelHelper: '\u53ef\u590d\u5236\u7684 prompt pack\uff1a\u4ea7\u54c1\u89c6\u89c9\u9501\u5b9a\u3001negative prompt\u3001\u56fe\u50cf\u53c2\u8003\u68c0\u67e5\u6e05\u5355\u3001\u9010\u955c\u5934 keyframe prompt\u3001Gemini / Doubao / Runway / Pika \u624b\u52a8\u590d\u5236\u7248\u672c\u3002\u4ec5 dry-run\uff1a\u4e0d\u8c03 provider\u3001\u4e0d\u751f\u6210\u5a92\u4f53\u3001\u4e0d\u6263\u8d39\u3002',
+            copyKeyframePromptPack: '\u590d\u5236\u5b8c\u6574 Prompt \u5305',
+            keyframePromptPackCopyTitle: '\u9879\u76ee\u771f\u5b9e\u5173\u952e\u5e27 Prompt \u5305',
+            keyframePromptPackStatus: '\u5173\u952e\u5e27 Prompt \u5305\u72b6\u6001',
+            keyframePromptPackShotPromptCount: '\u955c\u5934 Prompt \u6570',
+            keyframePromptPackProviderVariantCount: 'Provider Prompt \u7248\u672c\u6570',
+            manualCopyPasteOnly: '\u4ec5\u624b\u52a8\u590d\u5236 / \u7c98\u8d34',
+            productIdentityLockPrompt: '\u4ea7\u54c1\u89c6\u89c9\u9501\u5b9a Prompt',
+            negativePrompt: 'Negative prompt / \u53cd\u5411 Prompt',
+            imageReferenceChecklist: '\u56fe\u50cf\u53c2\u8003\u68c0\u67e5\u6e05\u5355',
+            manualGenerationInstructions: '\u624b\u52a8\u751f\u6210\u6307\u5f15',
+            shotByShotKeyframePrompts: '\u9010\u955c\u5934 Keyframe Prompts',
+            providerPromptVariants: 'Provider Prompt \u7248\u672c',
+            shotPrompt: '\u955c\u5934 Prompt',
+            providerPrompt: 'Provider Prompt',
+            durationSeconds: '\u65f6\u957f\u79d2\u6570',
+            copyShotPrompt: '\u590d\u5236\u8be5\u955c\u5934 Prompt',
+            copyProviderPrompt: '\u590d\u5236 Provider Prompt',
+            keyframePromptPackAuditPreview: '\u5173\u952e\u5e27 Prompt \u5305\u5ba1\u8ba1\u9884\u89c8',
+            keyframePromptPackNotRefreshedYet: '\u5173\u952e\u5e27 Prompt \u5305\u5c1a\u672a\u5237\u65b0\u3002',
+            keyframePromptPackCopied: '\u5173\u952e\u5e27 Prompt \u5305\u5df2\u590d\u5236\u3002',
+            keyframePromptPackCopyFailed: '\u590d\u5236\u5173\u952e\u5e27 Prompt \u5305\u5931\u8d25\u3002',
+            shotPromptCopied: '\u955c\u5934 Prompt \u5df2\u590d\u5236\u3002',
+            shotPromptCopyFailed: '\u590d\u5236\u955c\u5934 Prompt \u5931\u8d25\u3002',
+            providerPromptCopied: 'Provider Prompt \u5df2\u590d\u5236\u3002',
+            providerPromptCopyFailed: '\u590d\u5236 Provider Prompt \u5931\u8d25\u3002',
+            projectWorkspaceExportKeyframePromptPackTitle: 'Actual Keyframe Prompt Pack / \u771f\u5b9e\u5173\u952e\u5e27 Prompt \u5305'
         });
 
 

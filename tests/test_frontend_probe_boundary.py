@@ -6545,6 +6545,29 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_keyframe_video_asset_chain_marker", script)
 
 
+    def test_project_workspace_keyframe_prompt_pack_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace keyframe prompt pack bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_KEYFRAME_PROMPT_PACK_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceKeyframePromptPackPanel", html)
+        self.assertIn("copyProjectWorkspaceKeyframePromptPack", html)
+        self.assertIn("copyProjectWorkspaceKeyframePromptShot", html)
+        self.assertIn("copyProjectWorkspaceKeyframeProviderPrompt", html)
+        self.assertIn("keyframe_prompt_pack_report", html)
+        self.assertIn("projectWorkspaceExportKeyframePromptPackMarkdown", html)
+        self.assertIn("projectWorkspaceExportKeyframePromptPackSnapshot", html)
+
+    def test_project_workspace_keyframe_prompt_pack_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_keyframe_prompt_pack_marker", script)
+        self.assertIn("Project Workspace keyframe prompt pack bundle", script)
+
+    def test_project_workspace_keyframe_prompt_pack_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace keyframe prompt pack bundle", script)
+        self.assertIn("project_workspace_keyframe_prompt_pack_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
