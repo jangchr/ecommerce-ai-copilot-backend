@@ -11671,6 +11671,196 @@
 
 
 
+
+        function projectWorkspaceExportProviderArtifactLineageSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider artifact lineage bundle',
+                report_status: report.report_status || '',
+                provider_artifact_lineage_report_version: report.provider_artifact_lineage_report_version || '',
+                provider_worker_finalization_ready: Boolean(report.provider_worker_finalization_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                artifact_lineage_stage_matrix: Array.isArray(report.artifact_lineage_stage_matrix) ? report.artifact_lineage_stage_matrix : [],
+                source_provenance_chain: report.source_provenance_chain || {},
+                prompt_generation_lineage: report.prompt_generation_lineage || {},
+                worker_lineage: report.worker_lineage || {},
+                artifact_version_policy: report.artifact_version_policy || {},
+                versioned_audit_snapshot: report.versioned_audit_snapshot || {},
+                reproducibility_packet: report.reproducibility_packet || {},
+                tamper_drift_guard: report.tamper_drift_guard || {},
+                export_manifest: report.export_manifest || {},
+                lineage_audit_receipt: report.lineage_audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                source_node_count: Number(report.source_node_count || 0),
+                prompt_node_count: Number(report.prompt_node_count || 0),
+                worker_node_count: Number(report.worker_node_count || 0),
+                version_label_count: Number(report.version_label_count || 0),
+                snapshot_section_count: Number(report.snapshot_section_count || 0),
+                rebuild_input_count: Number(report.rebuild_input_count || 0),
+                manual_rebuild_step_count: Number(report.manual_rebuild_step_count || 0),
+                export_section_count: Number(report.export_section_count || 0),
+                supports_source_provenance_chain: Boolean(report.supports_source_provenance_chain),
+                supports_prompt_generation_lineage: Boolean(report.supports_prompt_generation_lineage),
+                supports_worker_lineage: Boolean(report.supports_worker_lineage),
+                supports_artifact_version_policy: Boolean(report.supports_artifact_version_policy),
+                supports_versioned_audit_snapshot: Boolean(report.supports_versioned_audit_snapshot),
+                supports_reproducibility_packet: Boolean(report.supports_reproducibility_packet),
+                supports_tamper_drift_guard: Boolean(report.supports_tamper_drift_guard),
+                supports_lineage_export_manifest: Boolean(report.supports_lineage_export_manifest),
+                supports_lineage_audit_receipt: Boolean(report.supports_lineage_audit_receipt),
+                dry_run: Boolean(report.dry_run),
+                lineage_required: Boolean(report.lineage_required),
+                lineage_recorded: Boolean(report.lineage_recorded),
+                lineage_persisted: Boolean(report.lineage_persisted),
+                provenance_persisted: Boolean(report.provenance_persisted),
+                versioned_snapshot_recorded: Boolean(report.versioned_snapshot_recorded),
+                versioned_snapshot_persisted: Boolean(report.versioned_snapshot_persisted),
+                audit_snapshot_recorded: Boolean(report.audit_snapshot_recorded),
+                audit_snapshot_persisted: Boolean(report.audit_snapshot_persisted),
+                reproducibility_packet_recorded: Boolean(report.reproducibility_packet_recorded),
+                tamper_check_recorded: Boolean(report.tamper_check_recorded),
+                drift_check_recorded: Boolean(report.drift_check_recorded),
+                real_hash_computed: Boolean(report.real_hash_computed),
+                lineage_drift_detected: Boolean(report.lineage_drift_detected),
+                artifact_mutation_allowed: Boolean(report.artifact_mutation_allowed),
+                workspace_export_ready: Boolean(report.workspace_export_ready),
+                json_export_ready: Boolean(report.json_export_ready),
+                markdown_export_ready: Boolean(report.markdown_export_ready),
+                artifact_storage_enabled: Boolean(report.artifact_storage_enabled),
+                artifact_manifest_persisted: Boolean(report.artifact_manifest_persisted),
+                artifact_handoff_ready: Boolean(report.artifact_handoff_ready),
+                result_validated: Boolean(report.result_validated),
+                output_contract_valid: Boolean(report.output_contract_valid),
+                downstream_handoff_allowed: Boolean(report.downstream_handoff_allowed),
+                run_finalized: Boolean(report.run_finalized),
+                checkpoint_recorded: Boolean(report.checkpoint_recorded),
+                resume_allowed: Boolean(report.resume_allowed),
+                replay_allowed: Boolean(report.replay_allowed),
+                provider_replay_allowed: Boolean(report.provider_replay_allowed),
+                queue_persisted: Boolean(report.queue_persisted),
+                lease_acquired: Boolean(report.lease_acquired),
+                heartbeat_recorded: Boolean(report.heartbeat_recorded),
+                worker_started: Boolean(report.worker_started),
+                worker_loop_started: Boolean(report.worker_loop_started),
+                worker_invocation_performed: Boolean(report.worker_invocation_performed),
+                real_execution_allowed: Boolean(report.real_execution_allowed),
+                real_execution_enabled: Boolean(report.real_execution_enabled),
+                provider_call_allowed: Boolean(report.provider_call_allowed),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                quota_reserved: Boolean(report.quota_reserved),
+                operator_review_captured: Boolean(report.operator_review_captured),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                has_provider_artifact_lineage_report: Boolean(report.report_status || report.provider_artifact_lineage_report_version)
+            };
+        }
+
+        function projectWorkspaceExportProviderArtifactLineageMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderArtifactLineageSnapshot(workspace);
+            if (!report.has_provider_artifact_lineage_report) {
+                return `## ${t('projectWorkspaceExportProviderArtifactLineageTitle')}\n${t('providerArtifactLineageNotRefreshedYet')}`;
+            }
+            const blockerLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stageLines = report.artifact_lineage_stage_matrix.length
+                ? report.artifact_lineage_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            return [
+                `## ${t('projectWorkspaceExportProviderArtifactLineageTitle')}`,
+                `${t('providerArtifactLineageStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerWorkerFinalizationReady')}: ${report.provider_worker_finalization_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('sourceNodeCount')}: ${report.source_node_count}`,
+                `${t('promptNodeCount')}: ${report.prompt_node_count}`,
+                `${t('workerNodeCount')}: ${report.worker_node_count}`,
+                `${t('versionLabelCount')}: ${report.version_label_count}`,
+                `${t('snapshotSectionCount')}: ${report.snapshot_section_count}`,
+                `${t('rebuildInputCount')}: ${report.rebuild_input_count}`,
+                `${t('manualRebuildStepCount')}: ${report.manual_rebuild_step_count}`,
+                `${t('exportSectionCount')}: ${report.export_section_count}`,
+                `${t('lineageRecorded')}: ${report.lineage_recorded}`,
+                `${t('lineagePersisted')}: ${report.lineage_persisted}`,
+                `${t('provenancePersisted')}: ${report.provenance_persisted}`,
+                `${t('versionedSnapshotPersisted')}: ${report.versioned_snapshot_persisted}`,
+                `${t('auditSnapshotPersisted')}: ${report.audit_snapshot_persisted}`,
+                `${t('reproducibilityPacketRecorded')}: ${report.reproducibility_packet_recorded}`,
+                `${t('tamperCheckRecorded')}: ${report.tamper_check_recorded}`,
+                `${t('driftCheckRecorded')}: ${report.drift_check_recorded}`,
+                `${t('realHashComputed')}: ${report.real_hash_computed}`,
+                `${t('artifactMutationAllowed')}: ${report.artifact_mutation_allowed}`,
+                `${t('workspaceExportReady')}: ${report.workspace_export_ready}`,
+                `${t('jsonExportReady')}: ${report.json_export_ready}`,
+                `${t('markdownExportReady')}: ${report.markdown_export_ready}`,
+                `${t('artifactStorageEnabled')}: ${report.artifact_storage_enabled}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('mediaUploaded')}: ${report.media_uploaded}`,
+                `${t('mediaDownloaded')}: ${report.media_downloaded}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockerLines,
+                '',
+                `### ${t('providerArtifactLineageStages')}`,
+                ...stageLines,
+                '',
+                `### ${t('providerSourceProvenanceChain')}`,
+                '```json',
+                JSON.stringify(report.source_provenance_chain, null, 2),
+                '```',
+                '',
+                `### ${t('providerPromptGenerationLineage')}`,
+                '```json',
+                JSON.stringify(report.prompt_generation_lineage, null, 2),
+                '```',
+                '',
+                `### ${t('providerWorkerLineage')}`,
+                '```json',
+                JSON.stringify(report.worker_lineage, null, 2),
+                '```',
+                '',
+                `### ${t('providerArtifactVersionPolicy')}`,
+                '```json',
+                JSON.stringify(report.artifact_version_policy, null, 2),
+                '```',
+                '',
+                `### ${t('providerVersionedAuditSnapshot')}`,
+                '```json',
+                JSON.stringify(report.versioned_audit_snapshot, null, 2),
+                '```',
+                '',
+                `### ${t('providerReproducibilityPacket')}`,
+                '```json',
+                JSON.stringify(report.reproducibility_packet, null, 2),
+                '```',
+                '',
+                `### ${t('providerTamperDriftGuard')}`,
+                '```json',
+                JSON.stringify(report.tamper_drift_guard, null, 2),
+                '```',
+                '',
+                `### ${t('providerLineageExportManifest')}`,
+                '```json',
+                JSON.stringify(report.export_manifest, null, 2),
+                '```',
+                '',
+                `### ${t('providerLineageAuditReceipt')}`,
+                '```json',
+                JSON.stringify(report.lineage_audit_receipt, null, 2),
+                '```'
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
             return {
@@ -13403,6 +13593,8 @@
                 '',
                 projectWorkspaceExportProviderWorkerFinalizationMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderArtifactLineageMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -13437,6 +13629,7 @@
                 provider_queue_lease_worker_report: projectWorkspaceExportProviderQueueLeaseWorkerSnapshot(workspace),
                 provider_worker_checkpoint_resume_report: projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot(workspace),
                 provider_worker_finalization_report: projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace),
+                provider_artifact_lineage_report: projectWorkspaceExportProviderArtifactLineageSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -13571,6 +13764,7 @@
                 latestProjectProviderQueueLeaseWorkerReport = payload.provider_queue_lease_worker_report || {};
                 latestProjectProviderWorkerCheckpointResumeReport = payload.provider_worker_checkpoint_resume_report || {};
                 latestProjectProviderWorkerFinalizationReport = payload.provider_worker_finalization_report || {};
+                latestProjectProviderArtifactLineageReport = payload.provider_artifact_lineage_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -17432,6 +17626,420 @@
         let latestProjectProviderWorkerCheckpointResumeReport = {};
         const PROJECT_WORKSPACE_PROVIDER_WORKER_FINALIZATION_BUNDLE_MARKER = 'Project Workspace provider worker finalization bundle';
         let latestProjectProviderWorkerFinalizationReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_ARTIFACT_LINEAGE_BUNDLE_MARKER = 'Project Workspace provider artifact lineage bundle';
+        let latestProjectProviderArtifactLineageReport = {};
+
+        function projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderArtifactLineageReport || {}).length
+                ? latestProjectProviderArtifactLineageReport
+                : workspace?.provider_artifact_lineage_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_artifact_lineage_report_version: '',
+                report_status: graphSummary.latest_provider_artifact_lineage_status || '',
+                provider_worker_finalization_ready: false,
+                operator_review_required: false,
+                stage_count: 0,
+                artifact_lineage_stage_matrix: [],
+                source_provenance_chain: {},
+                prompt_generation_lineage: {},
+                worker_lineage: {},
+                artifact_version_policy: {},
+                versioned_audit_snapshot: {},
+                reproducibility_packet: {},
+                tamper_drift_guard: {},
+                export_manifest: {},
+                lineage_audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_artifact_lineage_blocking_failure_count || 0),
+                blocking_failures: [],
+                source_node_count: 0,
+                prompt_node_count: 0,
+                worker_node_count: 0,
+                version_label_count: 0,
+                snapshot_section_count: 0,
+                rebuild_input_count: 0,
+                manual_rebuild_step_count: 0,
+                export_section_count: 0,
+                supports_source_provenance_chain: false,
+                supports_prompt_generation_lineage: false,
+                supports_worker_lineage: false,
+                supports_artifact_version_policy: false,
+                supports_versioned_audit_snapshot: false,
+                supports_reproducibility_packet: false,
+                supports_tamper_drift_guard: false,
+                supports_lineage_export_manifest: false,
+                supports_lineage_audit_receipt: false,
+                dry_run: true,
+                lineage_required: true,
+                lineage_recorded: false,
+                lineage_persisted: false,
+                provenance_persisted: false,
+                versioned_snapshot_recorded: false,
+                versioned_snapshot_persisted: Boolean(graphSummary.latest_provider_artifact_lineage_versioned_snapshot_persisted),
+                audit_snapshot_recorded: false,
+                audit_snapshot_persisted: false,
+                reproducibility_packet_recorded: false,
+                tamper_check_recorded: false,
+                drift_check_recorded: false,
+                real_hash_computed: false,
+                lineage_drift_detected: false,
+                artifact_mutation_allowed: false,
+                workspace_export_ready: Boolean(graphSummary.latest_provider_artifact_lineage_workspace_export_ready),
+                json_export_ready: false,
+                markdown_export_ready: false,
+                artifact_storage_enabled: false,
+                artifact_manifest_persisted: false,
+                artifact_handoff_ready: false,
+                result_validated: false,
+                output_contract_valid: false,
+                downstream_handoff_allowed: false,
+                run_finalized: false,
+                checkpoint_recorded: false,
+                resume_allowed: false,
+                replay_allowed: false,
+                provider_replay_allowed: false,
+                queue_persisted: false,
+                lease_acquired: false,
+                heartbeat_recorded: false,
+                worker_started: false,
+                worker_loop_started: false,
+                worker_invocation_performed: false,
+                real_execution_allowed: false,
+                real_execution_enabled: false,
+                provider_call_allowed: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_artifact_lineage_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                quota_reserved: false,
+                operator_review_captured: false,
+                operator_approval_captured: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceProviderArtifactLineageCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.artifact_lineage_stage_matrix) ? report.artifact_lineage_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            return [
+                t('providerArtifactLineageCopyTitle'),
+                `${t('providerArtifactLineageStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerWorkerFinalizationReady')}: ${Boolean(report.provider_worker_finalization_ready)}`,
+                `${t('operatorReviewRequired')}: ${Boolean(report.operator_review_required)}`,
+                `${t('blockingFailureCount')}: ${Number(report.blocking_failure_count || blockers.length || 0)}`,
+                `${t('sourceNodeCount')}: ${Number(report.source_node_count || 0)}`,
+                `${t('promptNodeCount')}: ${Number(report.prompt_node_count || 0)}`,
+                `${t('workerNodeCount')}: ${Number(report.worker_node_count || 0)}`,
+                `${t('versionLabelCount')}: ${Number(report.version_label_count || 0)}`,
+                `${t('snapshotSectionCount')}: ${Number(report.snapshot_section_count || 0)}`,
+                `${t('rebuildInputCount')}: ${Number(report.rebuild_input_count || 0)}`,
+                `${t('manualRebuildStepCount')}: ${Number(report.manual_rebuild_step_count || 0)}`,
+                `${t('exportSectionCount')}: ${Number(report.export_section_count || 0)}`,
+                `${t('lineageRequired')}: ${Boolean(report.lineage_required)}`,
+                `${t('lineageRecorded')}: ${Boolean(report.lineage_recorded)}`,
+                `${t('lineagePersisted')}: ${Boolean(report.lineage_persisted)}`,
+                `${t('provenancePersisted')}: ${Boolean(report.provenance_persisted)}`,
+                `${t('versionedSnapshotRecorded')}: ${Boolean(report.versioned_snapshot_recorded)}`,
+                `${t('versionedSnapshotPersisted')}: ${Boolean(report.versioned_snapshot_persisted)}`,
+                `${t('auditSnapshotRecorded')}: ${Boolean(report.audit_snapshot_recorded)}`,
+                `${t('auditSnapshotPersisted')}: ${Boolean(report.audit_snapshot_persisted)}`,
+                `${t('reproducibilityPacketRecorded')}: ${Boolean(report.reproducibility_packet_recorded)}`,
+                `${t('tamperCheckRecorded')}: ${Boolean(report.tamper_check_recorded)}`,
+                `${t('driftCheckRecorded')}: ${Boolean(report.drift_check_recorded)}`,
+                `${t('realHashComputed')}: ${Boolean(report.real_hash_computed)}`,
+                `${t('lineageDriftDetected')}: ${Boolean(report.lineage_drift_detected)}`,
+                `${t('artifactMutationAllowed')}: ${Boolean(report.artifact_mutation_allowed)}`,
+                `${t('workspaceExportReady')}: ${Boolean(report.workspace_export_ready)}`,
+                `${t('jsonExportReady')}: ${Boolean(report.json_export_ready)}`,
+                `${t('markdownExportReady')}: ${Boolean(report.markdown_export_ready)}`,
+                `${t('artifactStorageEnabled')}: ${Boolean(report.artifact_storage_enabled)}`,
+                `${t('artifactManifestPersisted')}: ${Boolean(report.artifact_manifest_persisted)}`,
+                `${t('artifactHandoffReady')}: ${Boolean(report.artifact_handoff_ready)}`,
+                `${t('resultValidated')}: ${Boolean(report.result_validated)}`,
+                `${t('outputContractValid')}: ${Boolean(report.output_contract_valid)}`,
+                `${t('downstreamHandoffAllowed')}: ${Boolean(report.downstream_handoff_allowed)}`,
+                `${t('runFinalized')}: ${Boolean(report.run_finalized)}`,
+                `${t('providerReplayAllowed')}: ${Boolean(report.provider_replay_allowed)}`,
+                `${t('externalApiCalled')}: ${Boolean(report.external_api_called)}`,
+                `${t('providerSecretRead')}: ${Boolean(report.provider_secret_read)}`,
+                `${t('providerSecretExported')}: ${Boolean(report.provider_secret_exported)}`,
+                `${t('mediaUploaded')}: ${Boolean(report.media_uploaded)}`,
+                `${t('mediaDownloaded')}: ${Boolean(report.media_downloaded)}`,
+                `${t('paidGenerationAllowed')}: ${Boolean(report.paid_generation_allowed)}`,
+                `${t('dryRun')}: ${Boolean(report.dry_run)}`,
+                '',
+                `${t('blockingFailures')}:`,
+                blockers.length ? blockers.map((item, index) => `${index + 1}. ${item}`).join('\n') : t('none'),
+                '',
+                `${t('providerArtifactLineageStages')}:`,
+                stages.length ? stages.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`).join('\n') : t('none'),
+                '',
+                `${t('providerSourceProvenanceChain')}:`,
+                JSON.stringify(report.source_provenance_chain || {}, null, 2),
+                '',
+                `${t('providerPromptGenerationLineage')}:`,
+                JSON.stringify(report.prompt_generation_lineage || {}, null, 2),
+                '',
+                `${t('providerWorkerLineage')}:`,
+                JSON.stringify(report.worker_lineage || {}, null, 2),
+                '',
+                `${t('providerArtifactVersionPolicy')}:`,
+                JSON.stringify(report.artifact_version_policy || {}, null, 2),
+                '',
+                `${t('providerVersionedAuditSnapshot')}:`,
+                JSON.stringify(report.versioned_audit_snapshot || {}, null, 2),
+                '',
+                `${t('providerReproducibilityPacket')}:`,
+                JSON.stringify(report.reproducibility_packet || {}, null, 2),
+                '',
+                `${t('providerTamperDriftGuard')}:`,
+                JSON.stringify(report.tamper_drift_guard || {}, null, 2),
+                '',
+                `${t('providerLineageExportManifest')}:`,
+                JSON.stringify(report.export_manifest || {}, null, 2),
+                '',
+                `${t('providerLineageAuditReceipt')}:`,
+                JSON.stringify(report.lineage_audit_receipt || {}, null, 2),
+                '',
+                JSON.stringify({ provider_artifact_lineage_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderArtifactLineage() {
+            const status = document.getElementById('projectWorkspaceProviderArtifactLineageStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderArtifactLineageCopyText());
+                if (status) status.textContent = t('providerArtifactLineageCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerArtifactLineageCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderArtifactLineagePanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.artifact_lineage_stage_matrix) ? report.artifact_lineage_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const sourceChain = report.source_provenance_chain || {};
+            const promptLineage = report.prompt_generation_lineage || {};
+            const workerLineage = report.worker_lineage || {};
+            const versionPolicy = report.artifact_version_policy || {};
+            const auditSnapshot = report.versioned_audit_snapshot || {};
+            const reproducibilityPacket = report.reproducibility_packet || {};
+            const tamperDriftGuard = report.tamper_drift_guard || {};
+            const exportManifest = report.export_manifest || {};
+            const receipt = report.lineage_audit_receipt || {};
+            const sourceNodes = Array.isArray(sourceChain.source_nodes) ? sourceChain.source_nodes : [];
+            const promptNodes = Array.isArray(promptLineage.prompt_nodes) ? promptLineage.prompt_nodes : [];
+            const workerNodes = Array.isArray(workerLineage.worker_nodes) ? workerLineage.worker_nodes : [];
+            const versionLabels = Array.isArray(versionPolicy.version_labels) ? versionPolicy.version_labels : [];
+            const snapshotSections = Array.isArray(auditSnapshot.snapshot_sections) ? auditSnapshot.snapshot_sections : [];
+            const rebuildInputs = Array.isArray(reproducibilityPacket.rebuild_inputs) ? reproducibilityPacket.rebuild_inputs : [];
+            const manualRebuildSteps = Array.isArray(reproducibilityPacket.manual_rebuild_steps) ? reproducibilityPacket.manual_rebuild_steps : [];
+            const exportSections = Array.isArray(exportManifest.export_sections) ? exportManifest.export_sections : [];
+            const hasReport = Boolean(report.report_status || report.provider_artifact_lineage_report_version || stages.length);
+            return `
+                <div class="section-block" id="projectWorkspaceProviderArtifactLineagePanel" data-project-provider-artifact-lineage-marker="Project Workspace provider artifact lineage bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerArtifactLineagePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerArtifactLineagePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderArtifactLineageBtn" type="button" onclick="copyProjectWorkspaceProviderArtifactLineage()">${escapeHTML(t('copyProviderArtifactLineage'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerArtifactLineageStatus'))}</div>
+                            <strong data-provider-artifact-lineage-status="${escapeHTML(report.report_status || 'not_refreshed')}">${escapeHTML(report.report_status || t('providerArtifactLineageNotRefreshedYet'))}</strong>
+                        </div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerWorkerFinalizationReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_worker_finalization_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('versionedSnapshotPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.versioned_snapshot_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('workspaceExportReady'))}</div><strong>${escapeHTML(String(Boolean(report.workspace_export_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realHashComputed'))}</div><strong>${escapeHTML(String(Boolean(report.real_hash_computed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('externalApiCalled'))}</div><strong>${escapeHTML(String(Boolean(report.external_api_called)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('sourceNodeCount'))}</div><strong>${escapeHTML(String(Number(report.source_node_count || sourceNodes.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('promptNodeCount'))}</div><strong>${escapeHTML(String(Number(report.prompt_node_count || promptNodes.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('workerNodeCount'))}</div><strong>${escapeHTML(String(Number(report.worker_node_count || workerNodes.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('versionLabelCount'))}</div><strong>${escapeHTML(String(Number(report.version_label_count || versionLabels.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('snapshotSectionCount'))}</div><strong>${escapeHTML(String(Number(report.snapshot_section_count || snapshotSections.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerArtifactLineageStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} ? ${escapeHTML(stage.stage_label || '')}</div>
+                                <div class="tag-list">
+                                    <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                                </div>
+                                <div class="field-helper">${escapeHTML(t('requiredInputs'))}: ${(stage.required_inputs || []).map(escapeHTML).join(', ')}</div>
+                                <div class="field-helper">${escapeHTML(t('expectedOutputs'))}: ${(stage.expected_outputs || []).map(escapeHTML).join(', ')}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerSourceNodes'))}</div>
+                        ${sourceNodes.length ? sourceNodes.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.node_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('included'))}: ${escapeHTML(String(Boolean(item.included)))}</span>
+                                <span class="badge">${escapeHTML(t('persisted'))}: ${escapeHTML(String(Boolean(item.persisted)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerPromptNodes'))}</div>
+                        ${promptNodes.length ? promptNodes.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.node_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('included'))}: ${escapeHTML(String(Boolean(item.included)))}</span>
+                                <span class="badge">${escapeHTML(t('persisted'))}: ${escapeHTML(String(Boolean(item.persisted)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerWorkerNodes'))}</div>
+                        ${workerNodes.length ? workerNodes.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.node_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('included'))}: ${escapeHTML(String(Boolean(item.included)))}</span>
+                                <span class="badge">${escapeHTML(t('persisted'))}: ${escapeHTML(String(Boolean(item.persisted)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerVersionLabels'))}</div>
+                        ${versionLabels.length ? versionLabels.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.version_label_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('required'))}: ${escapeHTML(String(Boolean(item.required)))}</span>
+                                <span class="badge">${escapeHTML(t('recorded'))}: ${escapeHTML(String(Boolean(item.recorded)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerSnapshotSections'))}</div>
+                        ${snapshotSections.length ? snapshotSections.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.section_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('included'))}: ${escapeHTML(String(Boolean(item.included)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerRebuildInputs'))}</div>
+                            ${rebuildInputs.length ? rebuildInputs.map((item) => `
+                                <div class="artifact-timeline-row">
+                                    <strong>${escapeHTML(item.input_id || '')}</strong>
+                                    <span class="badge">${escapeHTML(t('available'))}: ${escapeHTML(String(Boolean(item.available)))}</span>
+                                </div>
+                            `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerManualRebuildSteps'))}</div>
+                            ${manualRebuildSteps.length ? manualRebuildSteps.map((item) => `
+                                <div class="artifact-timeline-row">
+                                    <strong>${escapeHTML(item.step_id || '')}</strong>
+                                    <span class="badge">${escapeHTML(t('ready'))}: ${escapeHTML(String(Boolean(item.ready)))}</span>
+                                    <span class="badge">${escapeHTML(t('executed'))}: ${escapeHTML(String(Boolean(item.executed)))}</span>
+                                </div>
+                            `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerLineageExportSections'))}</div>
+                        ${exportSections.length ? exportSections.map((item) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(item.export_section_id || '')}</strong>
+                                <span class="badge">${escapeHTML(t('included'))}: ${escapeHTML(String(Boolean(item.included)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsSourceProvenanceChain'))}</div><strong>${escapeHTML(String(Boolean(report.supports_source_provenance_chain)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsPromptGenerationLineage'))}</div><strong>${escapeHTML(String(Boolean(report.supports_prompt_generation_lineage)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsWorkerLineage'))}</div><strong>${escapeHTML(String(Boolean(report.supports_worker_lineage)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsArtifactVersionPolicy'))}</div><strong>${escapeHTML(String(Boolean(report.supports_artifact_version_policy)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsVersionedAuditSnapshot'))}</div><strong>${escapeHTML(String(Boolean(report.supports_versioned_audit_snapshot)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsReproducibilityPacket'))}</div><strong>${escapeHTML(String(Boolean(report.supports_reproducibility_packet)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsTamperDriftGuard'))}</div><strong>${escapeHTML(String(Boolean(report.supports_tamper_drift_guard)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsLineageExportManifest'))}</div><strong>${escapeHTML(String(Boolean(report.supports_lineage_export_manifest)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('supportsLineageAuditReceipt'))}</div><strong>${escapeHTML(String(Boolean(report.supports_lineage_audit_receipt)))}</strong></div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerSourceProvenanceChain'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(sourceChain, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerPromptGenerationLineage'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(promptLineage, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerWorkerLineage'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(workerLineage, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerArtifactVersionPolicy'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(versionPolicy, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerVersionedAuditSnapshot'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(auditSnapshot, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerReproducibilityPacket'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(reproducibilityPacket, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerTamperDriftGuard'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(tamperDriftGuard, null, 2))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <div class="json-key">${escapeHTML(t('providerLineageExportManifest'))}</div>
+                            <pre class="debug">${escapeHTML(JSON.stringify(exportManifest, null, 2))}</pre>
+                        </div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerLineageAuditReceipt'))}</div>
+                        <pre class="debug">${escapeHTML(JSON.stringify(receipt, null, 2))}</pre>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('lineagePersisted'))}</div><strong>${escapeHTML(String(Boolean(report.lineage_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('versionedSnapshotPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.versioned_snapshot_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('auditSnapshotPersisted'))}</div><strong>${escapeHTML(String(Boolean(report.audit_snapshot_persisted)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('realHashComputed'))}</div><strong>${escapeHTML(String(Boolean(report.real_hash_computed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('artifactMutationAllowed'))}</div><strong>${escapeHTML(String(Boolean(report.artifact_mutation_allowed)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerSecretRead'))}</div><strong>${escapeHTML(String(Boolean(report.provider_secret_read)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerArtifactLineageAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-artifact-lineage-audit-preview="Project Workspace provider artifact lineage bundle">${escapeHTML(projectWorkspaceProviderArtifactLineageCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerArtifactLineageNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderArtifactLineageStatus"></div>
+                </div>
+            `;
+        }
+
 
         function projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderWorkerFinalizationReport || {}).length
@@ -21744,6 +22352,8 @@
                 if (providerWorkerCheckpointResumePanel) providerWorkerCheckpointResumePanel.outerHTML = renderProjectWorkspaceProviderWorkerCheckpointResumePanel(latestProjectWorkspace);
                 const providerWorkerFinalizationPanel = document.getElementById('projectWorkspaceProviderWorkerFinalizationPanel');
                 if (providerWorkerFinalizationPanel) providerWorkerFinalizationPanel.outerHTML = renderProjectWorkspaceProviderWorkerFinalizationPanel(latestProjectWorkspace);
+                const providerArtifactLineagePanel = document.getElementById('projectWorkspaceProviderArtifactLineagePanel');
+                if (providerArtifactLineagePanel) providerArtifactLineagePanel.outerHTML = renderProjectWorkspaceProviderArtifactLineagePanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -23935,6 +24545,7 @@
                     ${renderProjectWorkspaceProviderQueueLeaseWorkerPanel(workspace)}
                     ${renderProjectWorkspaceProviderWorkerCheckpointResumePanel(workspace)}
                     ${renderProjectWorkspaceProviderWorkerFinalizationPanel(workspace)}
+                    ${renderProjectWorkspaceProviderArtifactLineagePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -29168,6 +29779,143 @@
             passed: 'Passed',
             persisted: 'Persisted',
             projectWorkspaceExportProviderWorkerFinalizationTitle: 'Worker Finalization / Result Validation / Artifact Handoff / Worker \u6700\u7ec8\u5316\u7ed3\u679c\u6821\u9a8c\u4ea7\u7269\u4ea4\u63a5'
+        });
+
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderArtifactLineageBundleMarker: 'Project Workspace provider artifact lineage bundle',
+            providerArtifactLineagePanelTitle: 'Artifact Lineage / Provenance / Versioned Audit Snapshot',
+            providerArtifactLineagePanelHelper: 'Dry-run artifact lineage, provenance, prompt and worker lineage, version policy, versioned audit snapshot, reproducibility packet, tamper/drift guard, export manifest, and lineage audit receipt. It does not persist lineage, compute real hashes, write artifact storage, upload/download media, call providers, or enable paid generation.',
+            copyProviderArtifactLineage: 'Copy artifact lineage report',
+            providerArtifactLineageCopyTitle: 'Project artifact lineage / provenance / versioned audit snapshot report',
+            providerArtifactLineageStatus: 'Artifact lineage status',
+            providerArtifactLineageNotRefreshedYet: 'Artifact lineage report has not been refreshed yet.',
+            providerArtifactLineageCopied: 'Artifact lineage report copied.',
+            providerArtifactLineageCopyFailed: 'Could not copy artifact lineage report.',
+            providerWorkerFinalizationReady: 'Worker finalization ready',
+            sourceNodeCount: 'Source node count',
+            promptNodeCount: 'Prompt node count',
+            workerNodeCount: 'Worker node count',
+            versionLabelCount: 'Version label count',
+            snapshotSectionCount: 'Snapshot section count',
+            rebuildInputCount: 'Rebuild input count',
+            manualRebuildStepCount: 'Manual rebuild step count',
+            exportSectionCount: 'Export section count',
+            lineageRequired: 'Lineage required',
+            lineageRecorded: 'Lineage recorded',
+            lineagePersisted: 'Lineage persisted',
+            provenancePersisted: 'Provenance persisted',
+            versionedSnapshotRecorded: 'Versioned snapshot recorded',
+            versionedSnapshotPersisted: 'Versioned snapshot persisted',
+            auditSnapshotRecorded: 'Audit snapshot recorded',
+            auditSnapshotPersisted: 'Audit snapshot persisted',
+            reproducibilityPacketRecorded: 'Reproducibility packet recorded',
+            tamperCheckRecorded: 'Tamper check recorded',
+            driftCheckRecorded: 'Drift check recorded',
+            realHashComputed: 'Real hash computed',
+            lineageDriftDetected: 'Lineage drift detected',
+            artifactMutationAllowed: 'Artifact mutation allowed',
+            jsonExportReady: 'JSON export ready',
+            markdownExportReady: 'Markdown export ready',
+            providerArtifactLineageStages: 'Artifact lineage stages',
+            providerSourceProvenanceChain: 'Provider source provenance chain',
+            providerPromptGenerationLineage: 'Provider prompt generation lineage',
+            providerWorkerLineage: 'Provider worker lineage',
+            providerArtifactVersionPolicy: 'Provider artifact version policy',
+            providerVersionedAuditSnapshot: 'Provider versioned audit snapshot',
+            providerReproducibilityPacket: 'Provider reproducibility packet',
+            providerTamperDriftGuard: 'Provider tamper / drift guard',
+            providerLineageExportManifest: 'Provider lineage export manifest',
+            providerLineageAuditReceipt: 'Provider lineage audit receipt',
+            providerSourceNodes: 'Provider source nodes',
+            providerPromptNodes: 'Provider prompt nodes',
+            providerWorkerNodes: 'Provider worker nodes',
+            providerVersionLabels: 'Provider version labels',
+            providerSnapshotSections: 'Provider snapshot sections',
+            providerRebuildInputs: 'Provider rebuild inputs',
+            providerManualRebuildSteps: 'Provider manual rebuild steps',
+            providerLineageExportSections: 'Provider lineage export sections',
+            supportsSourceProvenanceChain: 'Supports source provenance chain',
+            supportsPromptGenerationLineage: 'Supports prompt generation lineage',
+            supportsWorkerLineage: 'Supports worker lineage',
+            supportsArtifactVersionPolicy: 'Supports artifact version policy',
+            supportsVersionedAuditSnapshot: 'Supports versioned audit snapshot',
+            supportsReproducibilityPacket: 'Supports reproducibility packet',
+            supportsTamperDriftGuard: 'Supports tamper / drift guard',
+            supportsLineageExportManifest: 'Supports lineage export manifest',
+            supportsLineageAuditReceipt: 'Supports lineage audit receipt',
+            providerArtifactLineageAuditPreview: 'Artifact lineage audit preview',
+            available: 'Available',
+            recorded: 'Recorded',
+            projectWorkspaceExportProviderArtifactLineageTitle: 'Artifact Lineage / Provenance / Versioned Audit Snapshot'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderArtifactLineageBundleMarker: 'Project Workspace provider artifact lineage bundle',
+            providerArtifactLineagePanelTitle: 'Artifact Lineage / Provenance / Versioned Audit Snapshot / \u4ea7\u7269\u8840\u7edf\u6765\u6e90\u7248\u672c\u5316\u5ba1\u8ba1\u5feb\u7167',
+            providerArtifactLineagePanelHelper: 'Dry-run artifact lineage\u3001provenance\u3001prompt/worker lineage\u3001version policy\u3001versioned audit snapshot\u3001reproducibility packet\u3001tamper/drift guard\u3001export manifest \u548c lineage audit receipt\u3002\u4e0d\u4f1a\u6301\u4e45\u5316 lineage\uff0c\u4e0d\u4f1a\u751f\u6210\u771f\u5b9e hash\uff0c\u4e0d\u4f1a\u5199 artifact storage\uff0c\u4e0d\u4f1a\u4e0a\u4f20/\u4e0b\u8f7d\u5a92\u4f53\uff0c\u4e0d\u4f1a\u8c03 provider\uff0c\u4e0d\u4f1a\u5f00\u542f\u4ed8\u8d39\u751f\u6210\u3002',
+            copyProviderArtifactLineage: '\u590d\u5236 artifact lineage \u62a5\u544a',
+            providerArtifactLineageCopyTitle: '\u9879\u76ee Artifact Lineage / Provenance / Versioned Audit Snapshot \u62a5\u544a',
+            providerArtifactLineageStatus: 'Artifact lineage \u72b6\u6001',
+            providerArtifactLineageNotRefreshedYet: 'Artifact lineage \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerArtifactLineageCopied: 'Artifact lineage \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerArtifactLineageCopyFailed: '\u590d\u5236 artifact lineage \u62a5\u544a\u5931\u8d25\u3002',
+            providerWorkerFinalizationReady: 'Worker finalization ready',
+            sourceNodeCount: 'Source node \u6570',
+            promptNodeCount: 'Prompt node \u6570',
+            workerNodeCount: 'Worker node \u6570',
+            versionLabelCount: 'Version label \u6570',
+            snapshotSectionCount: 'Snapshot section \u6570',
+            rebuildInputCount: 'Rebuild input \u6570',
+            manualRebuildStepCount: 'Manual rebuild step \u6570',
+            exportSectionCount: 'Export section \u6570',
+            lineageRequired: '\u5fc5\u987b\u8bb0\u5f55 lineage',
+            lineageRecorded: 'Lineage \u5df2\u8bb0\u5f55',
+            lineagePersisted: 'Lineage \u5df2\u6301\u4e45\u5316',
+            provenancePersisted: 'Provenance \u5df2\u6301\u4e45\u5316',
+            versionedSnapshotRecorded: 'Versioned snapshot \u5df2\u8bb0\u5f55',
+            versionedSnapshotPersisted: 'Versioned snapshot \u5df2\u6301\u4e45\u5316',
+            auditSnapshotRecorded: 'Audit snapshot \u5df2\u8bb0\u5f55',
+            auditSnapshotPersisted: 'Audit snapshot \u5df2\u6301\u4e45\u5316',
+            reproducibilityPacketRecorded: 'Reproducibility packet \u5df2\u8bb0\u5f55',
+            tamperCheckRecorded: 'Tamper check \u5df2\u8bb0\u5f55',
+            driftCheckRecorded: 'Drift check \u5df2\u8bb0\u5f55',
+            realHashComputed: '\u771f\u5b9e hash \u5df2\u8ba1\u7b97',
+            lineageDriftDetected: 'Lineage drift \u5df2\u68c0\u51fa',
+            artifactMutationAllowed: '\u5141\u8bb8 artifact mutation',
+            jsonExportReady: 'JSON export ready',
+            markdownExportReady: 'Markdown export ready',
+            providerArtifactLineageStages: 'Artifact lineage \u9636\u6bb5',
+            providerSourceProvenanceChain: 'Provider source provenance chain',
+            providerPromptGenerationLineage: 'Provider prompt generation lineage',
+            providerWorkerLineage: 'Provider worker lineage',
+            providerArtifactVersionPolicy: 'Provider artifact version policy',
+            providerVersionedAuditSnapshot: 'Provider versioned audit snapshot',
+            providerReproducibilityPacket: 'Provider reproducibility packet',
+            providerTamperDriftGuard: 'Provider tamper / drift guard',
+            providerLineageExportManifest: 'Provider lineage export manifest',
+            providerLineageAuditReceipt: 'Provider lineage audit receipt',
+            providerSourceNodes: 'Provider source nodes',
+            providerPromptNodes: 'Provider prompt nodes',
+            providerWorkerNodes: 'Provider worker nodes',
+            providerVersionLabels: 'Provider version labels',
+            providerSnapshotSections: 'Provider snapshot sections',
+            providerRebuildInputs: 'Provider rebuild inputs',
+            providerManualRebuildSteps: 'Provider manual rebuild steps',
+            providerLineageExportSections: 'Provider lineage export sections',
+            supportsSourceProvenanceChain: '\u652f\u6301 source provenance chain',
+            supportsPromptGenerationLineage: '\u652f\u6301 prompt generation lineage',
+            supportsWorkerLineage: '\u652f\u6301 worker lineage',
+            supportsArtifactVersionPolicy: '\u652f\u6301 artifact version policy',
+            supportsVersionedAuditSnapshot: '\u652f\u6301 versioned audit snapshot',
+            supportsReproducibilityPacket: '\u652f\u6301 reproducibility packet',
+            supportsTamperDriftGuard: '\u652f\u6301 tamper / drift guard',
+            supportsLineageExportManifest: '\u652f\u6301 lineage export manifest',
+            supportsLineageAuditReceipt: '\u652f\u6301 lineage audit receipt',
+            providerArtifactLineageAuditPreview: 'Artifact lineage \u5ba1\u8ba1\u9884\u89c8',
+            available: 'Available',
+            recorded: 'Recorded',
+            projectWorkspaceExportProviderArtifactLineageTitle: 'Artifact Lineage / Provenance / Versioned Audit Snapshot / \u4ea7\u7269\u8840\u7edf\u6765\u6e90\u7248\u672c\u5316\u5ba1\u8ba1\u5feb\u7167'
         });
 
 

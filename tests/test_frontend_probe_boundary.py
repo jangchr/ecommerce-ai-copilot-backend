@@ -6848,6 +6848,40 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_worker_finalization_marker", script)
 
 
+    def test_project_workspace_provider_artifact_lineage_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider artifact lineage bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_ARTIFACT_LINEAGE_BUNDLE_MARKER", html)
+        self.assertIn("renderProjectWorkspaceProviderArtifactLineagePanel", html)
+        self.assertIn("copyProjectWorkspaceProviderArtifactLineage", html)
+        self.assertIn("provider_artifact_lineage_report", html)
+        self.assertIn("projectWorkspaceExportProviderArtifactLineageMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderArtifactLineageSnapshot", html)
+        self.assertIn("source_provenance_chain", html)
+        self.assertIn("prompt_generation_lineage", html)
+        self.assertIn("worker_lineage", html)
+        self.assertIn("artifact_version_policy", html)
+        self.assertIn("versioned_audit_snapshot", html)
+        self.assertIn("reproducibility_packet", html)
+        self.assertIn("tamper_drift_guard", html)
+        self.assertIn("lineage_audit_receipt", html)
+        self.assertIn("lineage_persisted", html)
+        self.assertIn("versioned_snapshot_persisted", html)
+        self.assertIn("real_hash_computed", html)
+        self.assertIn("artifact_mutation_allowed", html)
+        self.assertIn("external_api_called", html)
+
+    def test_project_workspace_provider_artifact_lineage_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_artifact_lineage_marker", script)
+        self.assertIn("Project Workspace provider artifact lineage bundle", script)
+
+    def test_project_workspace_provider_artifact_lineage_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider artifact lineage bundle", script)
+        self.assertIn("project_workspace_provider_artifact_lineage_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
