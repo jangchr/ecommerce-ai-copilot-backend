@@ -5579,6 +5579,536 @@ def build_provider_artifact_registry_restore_report(
     }
 
 
+PROVIDER_REGISTRY_OPERATION_APPROVAL_REPORT_VERSION = "provider_registry_operation_approval_report_v1"
+
+PROVIDER_REGISTRY_OPERATION_APPROVAL_STAGES = [
+    {
+        "stage_id": "prepare_operator_approval_request",
+        "stage_label": "Prepare operator approval request",
+        "required_inputs": ["provider_artifact_registry_restore_report", "operator_review_state"],
+        "expected_outputs": ["operator_approval_request", "approval_checks"],
+    },
+    {
+        "stage_id": "simulate_registry_operation_apply",
+        "stage_label": "Simulate registry operation apply",
+        "required_inputs": ["artifact_registry_model", "snapshot_diff_preview", "restore_plan"],
+        "expected_outputs": ["apply_simulation", "simulation_steps"],
+    },
+    {
+        "stage_id": "define_persistence_boundary",
+        "stage_label": "Define persistence boundary",
+        "required_inputs": ["persist_gate", "registry_write_policy", "snapshot_write_policy"],
+        "expected_outputs": ["persistence_boundary", "persistence_boundaries"],
+    },
+    {
+        "stage_id": "preview_restore_rollback_authorization",
+        "stage_label": "Preview restore and rollback authorization",
+        "required_inputs": ["restore_plan", "rollback_plan", "operator_approval_request"],
+        "expected_outputs": ["authorization_preview", "authorization_checks"],
+    },
+    {
+        "stage_id": "enforce_destructive_action_guard",
+        "stage_label": "Enforce destructive action guard",
+        "required_inputs": ["retention_policy", "delete_blockers", "authorization_preview"],
+        "expected_outputs": ["destructive_action_guard", "destructive_guards"],
+    },
+    {
+        "stage_id": "prepare_registry_write_plan",
+        "stage_label": "Prepare registry write plan",
+        "required_inputs": ["artifact_registry_model", "persistence_boundary"],
+        "expected_outputs": ["registry_write_plan", "registry_write_steps"],
+    },
+    {
+        "stage_id": "prepare_snapshot_write_plan",
+        "stage_label": "Prepare snapshot write plan",
+        "required_inputs": ["versioned_snapshot_catalog", "persistence_boundary"],
+        "expected_outputs": ["snapshot_write_plan", "snapshot_write_steps"],
+    },
+    {
+        "stage_id": "prepare_restore_write_plan",
+        "stage_label": "Prepare restore write plan",
+        "required_inputs": ["restore_plan", "authorization_preview"],
+        "expected_outputs": ["restore_write_plan", "restore_write_steps"],
+    },
+    {
+        "stage_id": "prepare_rollback_write_plan",
+        "stage_label": "Prepare rollback write plan",
+        "required_inputs": ["rollback_plan", "authorization_preview"],
+        "expected_outputs": ["rollback_write_plan", "rollback_write_steps"],
+    },
+    {
+        "stage_id": "prepare_abort_noop_plan",
+        "stage_label": "Prepare abort and no-op plan",
+        "required_inputs": ["operator_approval_request", "persistence_boundary", "destructive_action_guard"],
+        "expected_outputs": ["abort_noop_plan", "abort_conditions"],
+    },
+    {
+        "stage_id": "prepare_operation_audit_receipt",
+        "stage_label": "Prepare operation audit receipt",
+        "required_inputs": ["apply_simulation", "write_plans", "abort_noop_plan"],
+        "expected_outputs": ["operation_audit_receipt", "audit_receipt_items"],
+    },
+]
+
+
+def build_provider_registry_operation_approval_report(
+    *,
+    provider_artifact_registry_restore_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_registry_operation_approval_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run approval and persistence-boundary report.
+
+    The report models operator approval, apply simulation, persistence
+    boundaries, restore/rollback authorization, destructive action guards,
+    write plans, abort/no-op behavior, and an audit receipt. It never captures
+    approval, writes registry or snapshots, restores a workspace, applies a
+    rollback, deletes artifacts, calls providers, reads secrets, transfers
+    media, or enables paid generation.
+    """
+
+    registry_restore = (
+        provider_artifact_registry_restore_report
+        if isinstance(provider_artifact_registry_restore_report, dict)
+        else {}
+    )
+    registry_restore_ready = (
+        str(registry_restore.get("report_status") or "")
+        == "provider_artifact_registry_restore_ready_dry_run"
+    )
+    artifact_registry_model = (
+        registry_restore.get("artifact_registry_model")
+        if isinstance(registry_restore.get("artifact_registry_model"), dict)
+        else {}
+    )
+    versioned_snapshot_catalog = (
+        registry_restore.get("versioned_snapshot_catalog")
+        if isinstance(registry_restore.get("versioned_snapshot_catalog"), dict)
+        else {}
+    )
+    snapshot_diff_preview = (
+        registry_restore.get("snapshot_diff_preview")
+        if isinstance(registry_restore.get("snapshot_diff_preview"), dict)
+        else {}
+    )
+    restore_plan_source = (
+        registry_restore.get("restore_plan")
+        if isinstance(registry_restore.get("restore_plan"), dict)
+        else {}
+    )
+    rollback_plan_source = (
+        registry_restore.get("rollback_plan")
+        if isinstance(registry_restore.get("rollback_plan"), dict)
+        else {}
+    )
+    retention_policy = (
+        registry_restore.get("retention_policy")
+        if isinstance(registry_restore.get("retention_policy"), dict)
+        else {}
+    )
+    persist_gate_source = (
+        registry_restore.get("persist_gate")
+        if isinstance(registry_restore.get("persist_gate"), dict)
+        else {}
+    )
+
+    operator_approval_request = {
+        "operator_approval_request_version": "provider_registry_operator_approval_request_v1",
+        "approval_request_status": (
+            "operator_approval_request_ready_dry_run"
+            if registry_restore_ready
+            else "operator_approval_request_waiting_for_registry_restore"
+        ),
+        "approval_request_id": f"dry_run_registry_operation_approval::{project_id}",
+        "requested_operation": "artifact_registry_snapshot_restore_or_rollback",
+        "approval_checks": [
+            {
+                "approval_check_id": "registry_restore_report_ready",
+                "passed": registry_restore_ready,
+                "required": True,
+            },
+            {
+                "approval_check_id": "operator_identity_present",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "approval_check_id": "explicit_operator_approval_present",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "approval_check_id": "restore_scope_acknowledged",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "approval_check_id": "destructive_action_acknowledged",
+                "passed": False,
+                "required": True,
+            },
+        ],
+        "approval_check_count": 5,
+        "operator_approval_required": True,
+        "operator_approval_captured": False,
+        "approval_granted": False,
+        "external_api_called": False,
+    }
+
+    apply_simulation = {
+        "apply_simulation_version": "provider_registry_operation_apply_simulation_v1",
+        "apply_simulation_status": (
+            "apply_simulation_ready_dry_run"
+            if registry_restore_ready
+            else "apply_simulation_waiting_for_registry_restore"
+        ),
+        "simulation_steps": [
+            {
+                "simulation_step_id": "read_registry_model_preview",
+                "source_ready": bool(artifact_registry_model),
+                "executed": False,
+            },
+            {
+                "simulation_step_id": "read_snapshot_catalog_preview",
+                "source_ready": bool(versioned_snapshot_catalog),
+                "executed": False,
+            },
+            {
+                "simulation_step_id": "read_snapshot_diff_preview",
+                "source_ready": bool(snapshot_diff_preview),
+                "executed": False,
+            },
+            {
+                "simulation_step_id": "preview_registry_pointer_update",
+                "source_ready": registry_restore_ready,
+                "executed": False,
+            },
+            {
+                "simulation_step_id": "preview_workspace_restore",
+                "source_ready": bool(restore_plan_source),
+                "executed": False,
+            },
+            {
+                "simulation_step_id": "preview_rollback_recovery",
+                "source_ready": bool(rollback_plan_source),
+                "executed": False,
+            },
+        ],
+        "simulation_step_count": 6,
+        "apply_simulation_recorded": False,
+        "apply_simulation_persisted": False,
+        "registry_written": False,
+        "snapshot_written": False,
+        "restore_applied": False,
+        "rollback_applied": False,
+        "external_api_called": False,
+    }
+
+    persistence_boundary = {
+        "persistence_boundary_version": "provider_registry_operation_persistence_boundary_v1",
+        "persistence_boundary_status": "persistence_boundary_closed_dry_run",
+        "persistence_boundaries": [
+            {
+                "boundary_id": "registry_write_boundary",
+                "operation": "write_artifact_registry",
+                "allowed": False,
+                "persisted": False,
+            },
+            {
+                "boundary_id": "snapshot_write_boundary",
+                "operation": "write_versioned_snapshot",
+                "allowed": False,
+                "persisted": False,
+            },
+            {
+                "boundary_id": "restore_write_boundary",
+                "operation": "restore_workspace",
+                "allowed": False,
+                "persisted": False,
+            },
+            {
+                "boundary_id": "rollback_write_boundary",
+                "operation": "apply_rollback",
+                "allowed": False,
+                "persisted": False,
+            },
+        ],
+        "persistence_boundary_count": 4,
+        "upstream_persist_gate_status": str(persist_gate_source.get("persist_gate_status") or ""),
+        "persist_allowed": False,
+        "persist_gate_recorded": False,
+        "project_snapshot_saved": False,
+        "audit_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    authorization_preview = {
+        "authorization_preview_version": "provider_registry_operation_authorization_preview_v1",
+        "authorization_preview_status": "authorization_preview_blocked_dry_run",
+        "authorization_checks": [
+            {
+                "authorization_check_id": "registry_restore_report_ready",
+                "passed": registry_restore_ready,
+                "required": True,
+            },
+            {
+                "authorization_check_id": "operator_approval_captured",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "authorization_check_id": "persist_gate_open",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "authorization_check_id": "restore_write_authorized",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "authorization_check_id": "rollback_write_authorized",
+                "passed": False,
+                "required": True,
+            },
+        ],
+        "authorization_check_count": 5,
+        "restore_available": bool(registry_restore.get("restore_available")),
+        "rollback_available": bool(registry_restore.get("rollback_available")),
+        "restore_authorized": False,
+        "rollback_authorized": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+    }
+
+    destructive_action_guard = {
+        "destructive_action_guard_version": "provider_registry_destructive_action_guard_v1",
+        "destructive_action_guard_status": "destructive_actions_blocked_dry_run",
+        "destructive_guards": [
+            {
+                "guard_id": "block_artifact_delete_without_approval",
+                "protected_operation": "delete_artifact",
+                "allowed": False,
+            },
+            {
+                "guard_id": "block_registry_overwrite_without_snapshot",
+                "protected_operation": "overwrite_registry",
+                "allowed": False,
+            },
+            {
+                "guard_id": "block_workspace_restore_without_diff_review",
+                "protected_operation": "restore_workspace",
+                "allowed": False,
+            },
+            {
+                "guard_id": "block_rollback_without_audit_receipt",
+                "protected_operation": "apply_rollback",
+                "allowed": False,
+            },
+        ],
+        "destructive_guard_count": 4,
+        "delete_blockers": list(retention_policy.get("delete_blockers") or []),
+        "artifact_delete_allowed": False,
+        "artifact_deleted": False,
+        "destructive_action_allowed": False,
+        "external_api_called": False,
+    }
+
+    registry_write_plan = {
+        "write_plan_version": "provider_registry_write_plan_v1",
+        "write_plan_status": "registry_write_plan_preview_only",
+        "write_steps": [
+            {"write_step_id": "validate_registry_item_keys", "ready": registry_restore_ready, "executed": False},
+            {"write_step_id": "stage_registry_pointer_update", "ready": False, "executed": False},
+            {"write_step_id": "record_registry_receipt", "ready": False, "executed": False},
+        ],
+        "write_step_count": 3,
+        "registry_write_allowed": False,
+        "registry_written": False,
+    }
+    snapshot_write_plan = {
+        "write_plan_version": "provider_snapshot_write_plan_v1",
+        "write_plan_status": "snapshot_write_plan_preview_only",
+        "write_steps": [
+            {"write_step_id": "validate_snapshot_reference", "ready": registry_restore_ready, "executed": False},
+            {"write_step_id": "stage_versioned_snapshot", "ready": False, "executed": False},
+            {"write_step_id": "record_snapshot_receipt", "ready": False, "executed": False},
+        ],
+        "write_step_count": 3,
+        "snapshot_write_allowed": False,
+        "snapshot_written": False,
+    }
+    restore_write_plan = {
+        "write_plan_version": "provider_restore_write_plan_v1",
+        "write_plan_status": "restore_write_plan_preview_only",
+        "source_restore_plan_status": str(restore_plan_source.get("restore_plan_status") or ""),
+        "write_steps": [
+            {"write_step_id": "verify_selected_snapshot", "ready": registry_restore_ready, "executed": False},
+            {"write_step_id": "stage_workspace_restore", "ready": False, "executed": False},
+            {"write_step_id": "record_restore_receipt", "ready": False, "executed": False},
+        ],
+        "write_step_count": 3,
+        "restore_write_allowed": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+    }
+    rollback_write_plan = {
+        "write_plan_version": "provider_rollback_write_plan_v1",
+        "write_plan_status": "rollback_write_plan_preview_only",
+        "source_rollback_plan_status": str(rollback_plan_source.get("rollback_plan_status") or ""),
+        "write_steps": [
+            {"write_step_id": "capture_pre_rollback_preview", "ready": registry_restore_ready, "executed": False},
+            {"write_step_id": "stage_registry_rollback", "ready": False, "executed": False},
+            {"write_step_id": "record_rollback_receipt", "ready": False, "executed": False},
+        ],
+        "write_step_count": 3,
+        "rollback_write_allowed": False,
+        "rollback_applied": False,
+    }
+
+    abort_noop_plan = {
+        "abort_noop_plan_version": "provider_registry_operation_abort_noop_plan_v1",
+        "abort_noop_plan_status": "no_op_required_until_approval",
+        "abort_conditions": [
+            "provider_artifact_registry_restore_report_not_ready",
+            "operator_approval_not_captured",
+            "persist_gate_not_recorded",
+            "registry_write_not_allowed",
+            "snapshot_write_not_allowed",
+            "restore_write_not_allowed",
+            "rollback_write_not_allowed",
+            "destructive_action_not_allowed",
+        ],
+        "abort_condition_count": 8,
+        "default_action": "no_op",
+        "operation_aborted": False,
+        "write_performed": False,
+        "external_api_called": False,
+    }
+
+    operation_audit_receipt = {
+        "operation_audit_receipt_version": "provider_registry_operation_audit_receipt_v1",
+        "operation_audit_receipt_status": "operation_audit_receipt_ready_dry_run",
+        "audit_receipt_items": [
+            {"audit_item_id": "operator_approval_request", "included": True, "recorded": False},
+            {"audit_item_id": "apply_simulation", "included": True, "recorded": False},
+            {"audit_item_id": "persistence_boundary", "included": True, "recorded": False},
+            {"audit_item_id": "authorization_preview", "included": True, "recorded": False},
+            {"audit_item_id": "destructive_action_guard", "included": True, "recorded": False},
+            {"audit_item_id": "registry_write_plan", "included": True, "recorded": False},
+            {"audit_item_id": "snapshot_write_plan", "included": True, "recorded": False},
+            {"audit_item_id": "restore_write_plan", "included": True, "recorded": False},
+            {"audit_item_id": "rollback_write_plan", "included": True, "recorded": False},
+            {"audit_item_id": "abort_noop_plan", "included": True, "recorded": False},
+        ],
+        "audit_receipt_item_count": 10,
+        "operation_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    write_plan_count = 4
+    blocking_failures = []
+    if not registry_restore_ready:
+        blocking_failures.append("provider_artifact_registry_restore_report_not_ready")
+    blocking_failures.extend(
+        [
+            "operator_approval_not_captured",
+            "persist_gate_not_recorded",
+            "registry_write_disabled",
+            "snapshot_write_disabled",
+            "restore_write_disabled",
+            "rollback_write_disabled",
+            "destructive_actions_disabled",
+        ]
+    )
+    report_status = (
+        "provider_registry_operation_approval_ready_dry_run"
+        if registry_restore_ready
+        else "provider_registry_operation_approval_incomplete"
+    )
+
+    return {
+        "provider_registry_operation_approval_report_version": PROVIDER_REGISTRY_OPERATION_APPROVAL_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_registry_operation_approval_report_builder"),
+        "provider_artifact_registry_restore_ready": registry_restore_ready,
+        "operator_review_required": True,
+        "stage_count": len(PROVIDER_REGISTRY_OPERATION_APPROVAL_STAGES),
+        "registry_operation_approval_stage_matrix": [
+            dict(item, complete=registry_restore_ready)
+            for item in PROVIDER_REGISTRY_OPERATION_APPROVAL_STAGES
+        ],
+        "operator_approval_request": operator_approval_request,
+        "apply_simulation": apply_simulation,
+        "persistence_boundary": persistence_boundary,
+        "authorization_preview": authorization_preview,
+        "destructive_action_guard": destructive_action_guard,
+        "registry_write_plan": registry_write_plan,
+        "snapshot_write_plan": snapshot_write_plan,
+        "restore_write_plan": restore_write_plan,
+        "rollback_write_plan": rollback_write_plan,
+        "abort_noop_plan": abort_noop_plan,
+        "operation_audit_receipt": operation_audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "approval_check_count": operator_approval_request["approval_check_count"],
+        "simulation_step_count": apply_simulation["simulation_step_count"],
+        "persistence_boundary_count": persistence_boundary["persistence_boundary_count"],
+        "authorization_check_count": authorization_preview["authorization_check_count"],
+        "destructive_guard_count": destructive_action_guard["destructive_guard_count"],
+        "write_plan_count": write_plan_count,
+        "abort_condition_count": abort_noop_plan["abort_condition_count"],
+        "audit_receipt_item_count": operation_audit_receipt["audit_receipt_item_count"],
+        "supports_operator_approval_request": True,
+        "supports_apply_simulation": True,
+        "supports_persistence_boundary": True,
+        "supports_authorization_preview": True,
+        "supports_destructive_action_guard": True,
+        "supports_registry_write_plan": True,
+        "supports_snapshot_write_plan": True,
+        "supports_restore_write_plan": True,
+        "supports_rollback_write_plan": True,
+        "supports_abort_noop_plan": True,
+        "supports_operation_audit_receipt": True,
+        "recommended_next_state": "show_provider_registry_operation_approval_in_workspace",
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "dry_run": True,
+        "operator_approval_captured": False,
+        "operator_approval_required": True,
+        "apply_simulation_recorded": False,
+        "apply_simulation_persisted": False,
+        "persist_allowed": False,
+        "persist_gate_recorded": False,
+        "registry_write_allowed": False,
+        "registry_written": False,
+        "snapshot_write_allowed": False,
+        "snapshot_written": False,
+        "restore_write_allowed": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "rollback_write_allowed": False,
+        "rollback_applied": False,
+        "artifact_delete_allowed": False,
+        "artifact_deleted": False,
+        "destructive_action_allowed": False,
+        "project_snapshot_saved": False,
+        "audit_ledger_persisted": False,
+        "operation_audit_recorded": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

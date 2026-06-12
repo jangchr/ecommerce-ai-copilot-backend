@@ -1321,6 +1321,106 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             payload["project"]["graph_summary"]["latest_provider_artifact_registry_restore_external_api_called"]
         )
+        self.assertIn("provider_registry_operation_approval_report", payload)
+        registry_operation = payload["provider_registry_operation_approval_report"]
+        self.assertEqual(
+            registry_operation["provider_registry_operation_approval_report_version"],
+            "provider_registry_operation_approval_report_v1",
+        )
+        self.assertEqual(
+            registry_operation["report_status"],
+            "provider_registry_operation_approval_ready_dry_run",
+        )
+        self.assertTrue(registry_operation["provider_artifact_registry_restore_ready"])
+        self.assertTrue(registry_operation["operator_review_required"])
+        for section in [
+            "operator_approval_request",
+            "apply_simulation",
+            "persistence_boundary",
+            "authorization_preview",
+            "destructive_action_guard",
+            "registry_write_plan",
+            "snapshot_write_plan",
+            "restore_write_plan",
+            "rollback_write_plan",
+            "abort_noop_plan",
+            "operation_audit_receipt",
+        ]:
+            self.assertTrue(registry_operation[section])
+        for count_field in [
+            "approval_check_count",
+            "simulation_step_count",
+            "persistence_boundary_count",
+            "authorization_check_count",
+            "destructive_guard_count",
+            "write_plan_count",
+            "abort_condition_count",
+            "audit_receipt_item_count",
+        ]:
+            self.assertGreater(registry_operation[count_field], 0)
+        for support_field in [
+            "supports_operator_approval_request",
+            "supports_apply_simulation",
+            "supports_persistence_boundary",
+            "supports_authorization_preview",
+            "supports_destructive_action_guard",
+            "supports_registry_write_plan",
+            "supports_snapshot_write_plan",
+            "supports_restore_write_plan",
+            "supports_rollback_write_plan",
+            "supports_abort_noop_plan",
+            "supports_operation_audit_receipt",
+        ]:
+            self.assertTrue(registry_operation[support_field])
+        self.assertTrue(registry_operation["dry_run"])
+        for disabled_field in [
+            "operator_approval_captured",
+            "apply_simulation_recorded",
+            "apply_simulation_persisted",
+            "persist_allowed",
+            "persist_gate_recorded",
+            "registry_write_allowed",
+            "registry_written",
+            "snapshot_write_allowed",
+            "snapshot_written",
+            "restore_write_allowed",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_write_allowed",
+            "rollback_applied",
+            "artifact_delete_allowed",
+            "artifact_deleted",
+            "destructive_action_allowed",
+            "project_snapshot_saved",
+            "audit_ledger_persisted",
+            "operation_audit_recorded",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+        ]:
+            self.assertFalse(registry_operation[disabled_field])
+        graph_summary = payload["project"]["graph_summary"]
+        self.assertEqual(
+            graph_summary["latest_provider_registry_operation_approval_status"],
+            "provider_registry_operation_approval_ready_dry_run",
+        )
+        self.assertGreater(
+            graph_summary["latest_provider_registry_operation_approval_blocking_failure_count"],
+            0,
+        )
+        self.assertFalse(
+            graph_summary["latest_provider_registry_operation_approval_persist_allowed"]
+        )
+        self.assertFalse(
+            graph_summary["latest_provider_registry_operation_approval_restore_applied"]
+        )
+        self.assertFalse(
+            graph_summary["latest_provider_registry_operation_approval_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],
