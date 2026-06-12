@@ -11998,6 +11998,163 @@
             ].join('\n');
         }
 
+        function projectWorkspaceExportProviderRegistryOperationApprovalSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderRegistryOperationApprovalReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider registry operation approval bundle',
+                report_status: report.report_status || '',
+                provider_registry_operation_approval_report_version: report.provider_registry_operation_approval_report_version || '',
+                provider_artifact_registry_restore_ready: Boolean(report.provider_artifact_registry_restore_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                registry_operation_approval_stage_matrix: Array.isArray(report.registry_operation_approval_stage_matrix) ? report.registry_operation_approval_stage_matrix : [],
+                operator_approval_request: report.operator_approval_request || {},
+                apply_simulation: report.apply_simulation || {},
+                persistence_boundary: report.persistence_boundary || {},
+                authorization_preview: report.authorization_preview || {},
+                destructive_action_guard: report.destructive_action_guard || {},
+                registry_write_plan: report.registry_write_plan || {},
+                snapshot_write_plan: report.snapshot_write_plan || {},
+                restore_write_plan: report.restore_write_plan || {},
+                rollback_write_plan: report.rollback_write_plan || {},
+                abort_noop_plan: report.abort_noop_plan || {},
+                operation_audit_receipt: report.operation_audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                approval_check_count: Number(report.approval_check_count || 0),
+                simulation_step_count: Number(report.simulation_step_count || 0),
+                persistence_boundary_count: Number(report.persistence_boundary_count || 0),
+                authorization_check_count: Number(report.authorization_check_count || 0),
+                destructive_guard_count: Number(report.destructive_guard_count || 0),
+                write_plan_count: Number(report.write_plan_count || 0),
+                abort_condition_count: Number(report.abort_condition_count || 0),
+                audit_receipt_item_count: Number(report.audit_receipt_item_count || 0),
+                supports_operator_approval_request: Boolean(report.supports_operator_approval_request),
+                supports_apply_simulation: Boolean(report.supports_apply_simulation),
+                supports_persistence_boundary: Boolean(report.supports_persistence_boundary),
+                supports_authorization_preview: Boolean(report.supports_authorization_preview),
+                supports_destructive_action_guard: Boolean(report.supports_destructive_action_guard),
+                supports_registry_write_plan: Boolean(report.supports_registry_write_plan),
+                supports_snapshot_write_plan: Boolean(report.supports_snapshot_write_plan),
+                supports_restore_write_plan: Boolean(report.supports_restore_write_plan),
+                supports_rollback_write_plan: Boolean(report.supports_rollback_write_plan),
+                supports_abort_noop_plan: Boolean(report.supports_abort_noop_plan),
+                supports_operation_audit_receipt: Boolean(report.supports_operation_audit_receipt),
+                operator_approval_captured: Boolean(report.operator_approval_captured),
+                operator_approval_required: Boolean(report.operator_approval_required),
+                apply_simulation_recorded: Boolean(report.apply_simulation_recorded),
+                apply_simulation_persisted: Boolean(report.apply_simulation_persisted),
+                persist_allowed: Boolean(report.persist_allowed),
+                persist_gate_recorded: Boolean(report.persist_gate_recorded),
+                registry_write_allowed: Boolean(report.registry_write_allowed),
+                registry_written: Boolean(report.registry_written),
+                snapshot_write_allowed: Boolean(report.snapshot_write_allowed),
+                snapshot_written: Boolean(report.snapshot_written),
+                restore_write_allowed: Boolean(report.restore_write_allowed),
+                restore_applied: Boolean(report.restore_applied),
+                workspace_restored: Boolean(report.workspace_restored),
+                rollback_write_allowed: Boolean(report.rollback_write_allowed),
+                rollback_applied: Boolean(report.rollback_applied),
+                artifact_delete_allowed: Boolean(report.artifact_delete_allowed),
+                artifact_deleted: Boolean(report.artifact_deleted),
+                destructive_action_allowed: Boolean(report.destructive_action_allowed),
+                project_snapshot_saved: Boolean(report.project_snapshot_saved),
+                audit_ledger_persisted: Boolean(report.audit_ledger_persisted),
+                operation_audit_recorded: Boolean(report.operation_audit_recorded),
+                workspace_export_ready: Boolean(report.workspace_export_ready),
+                json_export_ready: Boolean(report.json_export_ready),
+                markdown_export_ready: Boolean(report.markdown_export_ready),
+                external_api_call_allowed: Boolean(report.external_api_call_allowed),
+                external_api_called: Boolean(report.external_api_called),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                dry_run: Boolean(report.dry_run),
+                has_provider_registry_operation_approval_report: Boolean(
+                    report.report_status || report.provider_registry_operation_approval_report_version
+                )
+            };
+        }
+
+        function projectWorkspaceExportProviderRegistryOperationApprovalMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderRegistryOperationApprovalSnapshot(workspace);
+            if (!report.has_provider_registry_operation_approval_report) {
+                return `## ${t('projectWorkspaceExportProviderRegistryOperationApprovalTitle')}\n${t('providerRegistryOperationApprovalNotRefreshedYet')}`;
+            }
+            const blockers = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stages = report.registry_operation_approval_stage_matrix.length
+                ? report.registry_operation_approval_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const statusKeys = [
+                'operator_approval_captured', 'operator_approval_required',
+                'apply_simulation_recorded', 'apply_simulation_persisted',
+                'persist_allowed', 'persist_gate_recorded', 'registry_write_allowed',
+                'registry_written', 'snapshot_write_allowed', 'snapshot_written',
+                'restore_write_allowed', 'restore_applied', 'workspace_restored',
+                'rollback_write_allowed', 'rollback_applied', 'artifact_delete_allowed',
+                'artifact_deleted', 'destructive_action_allowed', 'project_snapshot_saved',
+                'audit_ledger_persisted', 'operation_audit_recorded',
+                'workspace_export_ready', 'json_export_ready', 'markdown_export_ready',
+                'external_api_call_allowed', 'external_api_called', 'provider_secret_read',
+                'provider_secret_exported', 'media_uploaded', 'media_downloaded',
+                'paid_generation_allowed'
+            ];
+            const supportKeys = [
+                'supports_operator_approval_request', 'supports_apply_simulation',
+                'supports_persistence_boundary', 'supports_authorization_preview',
+                'supports_destructive_action_guard', 'supports_registry_write_plan',
+                'supports_snapshot_write_plan', 'supports_restore_write_plan',
+                'supports_rollback_write_plan', 'supports_abort_noop_plan',
+                'supports_operation_audit_receipt'
+            ];
+            return [
+                `## ${t('projectWorkspaceExportProviderRegistryOperationApprovalTitle')}`,
+                `${t('providerRegistryOperationApprovalStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerArtifactRegistryRestoreReady')}: ${report.provider_artifact_registry_restore_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('approvalCheckCount')}: ${report.approval_check_count}`,
+                `${t('simulationStepCount')}: ${report.simulation_step_count}`,
+                `${t('persistenceBoundaryCount')}: ${report.persistence_boundary_count}`,
+                `${t('authorizationCheckCount')}: ${report.authorization_check_count}`,
+                `${t('destructiveGuardCount')}: ${report.destructive_guard_count}`,
+                `${t('writePlanCount')}: ${report.write_plan_count}`,
+                `${t('abortConditionCount')}: ${report.abort_condition_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                ...supportKeys.map((key) => `${key}: ${report[key]}`),
+                ...statusKeys.map((key) => `${key}: ${report[key]}`),
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockers,
+                '',
+                `### ${t('providerRegistryOperationApprovalStages')}`,
+                ...stages,
+                ...[
+                    ['operatorApprovalRequest', report.operator_approval_request],
+                    ['applySimulation', report.apply_simulation],
+                    ['persistenceBoundary', report.persistence_boundary],
+                    ['authorizationPreview', report.authorization_preview],
+                    ['destructiveActionGuard', report.destructive_action_guard],
+                    ['registryWritePlan', report.registry_write_plan],
+                    ['snapshotWritePlan', report.snapshot_write_plan],
+                    ['restoreWritePlan', report.restore_write_plan],
+                    ['rollbackWritePlan', report.rollback_write_plan],
+                    ['abortNoopPlan', report.abort_noop_plan],
+                    ['operationAuditReceipt', report.operation_audit_receipt]
+                ].flatMap(([labelKey, value]) => [
+                    '',
+                    `### ${t(labelKey)}`,
+                    '```json',
+                    JSON.stringify(value, null, 2),
+                    '```'
+                ])
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
             return {
@@ -13734,6 +13891,8 @@
                 '',
                 projectWorkspaceExportProviderArtifactRegistryRestoreMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderRegistryOperationApprovalMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -13770,6 +13929,7 @@
                 provider_worker_finalization_report: projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace),
                 provider_artifact_lineage_report: projectWorkspaceExportProviderArtifactLineageSnapshot(workspace),
                 provider_artifact_registry_restore_report: projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot(workspace),
+                provider_registry_operation_approval_report: projectWorkspaceExportProviderRegistryOperationApprovalSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -13906,6 +14066,7 @@
                 latestProjectProviderWorkerFinalizationReport = payload.provider_worker_finalization_report || {};
                 latestProjectProviderArtifactLineageReport = payload.provider_artifact_lineage_report || {};
                 latestProjectProviderArtifactRegistryRestoreReport = payload.provider_artifact_registry_restore_report || {};
+                latestProjectProviderRegistryOperationApprovalReport = payload.provider_registry_operation_approval_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -17771,6 +17932,8 @@
         let latestProjectProviderArtifactLineageReport = {};
         const PROJECT_WORKSPACE_PROVIDER_ARTIFACT_REGISTRY_RESTORE_BUNDLE_MARKER = 'Project Workspace provider artifact registry restore bundle';
         let latestProjectProviderArtifactRegistryRestoreReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_REGISTRY_OPERATION_APPROVAL_BUNDLE_MARKER = 'Project Workspace provider registry operation approval bundle';
+        let latestProjectProviderRegistryOperationApprovalReport = {};
 
         function projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderArtifactLineageReport || {}).length
@@ -18435,6 +18598,253 @@
                         ${hasReport ? `<pre class="debug" data-provider-artifact-registry-restore-preview="Project Workspace provider artifact registry restore bundle">${escapeHTML(projectWorkspaceProviderArtifactRegistryRestoreCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerArtifactRegistryRestoreNotRefreshedYet'))}</div>`}
                     </div>
                     <div class="quick-use-copy-status" id="projectWorkspaceProviderArtifactRegistryRestoreStatus"></div>
+                </div>
+            `;
+        }
+
+        function projectWorkspaceProviderRegistryOperationApprovalReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderRegistryOperationApprovalReport || {}).length
+                ? latestProjectProviderRegistryOperationApprovalReport
+                : workspace?.provider_registry_operation_approval_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_registry_operation_approval_report_version: '',
+                report_status: graphSummary.latest_provider_registry_operation_approval_status || '',
+                provider_artifact_registry_restore_ready: false,
+                operator_review_required: true,
+                stage_count: 0,
+                registry_operation_approval_stage_matrix: [],
+                operator_approval_request: {},
+                apply_simulation: {},
+                persistence_boundary: {},
+                authorization_preview: {},
+                destructive_action_guard: {},
+                registry_write_plan: {},
+                snapshot_write_plan: {},
+                restore_write_plan: {},
+                rollback_write_plan: {},
+                abort_noop_plan: {},
+                operation_audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_registry_operation_approval_blocking_failure_count || 0),
+                blocking_failures: [],
+                approval_check_count: 0,
+                simulation_step_count: 0,
+                persistence_boundary_count: 0,
+                authorization_check_count: 0,
+                destructive_guard_count: 0,
+                write_plan_count: 0,
+                abort_condition_count: 0,
+                audit_receipt_item_count: 0,
+                supports_operator_approval_request: false,
+                supports_apply_simulation: false,
+                supports_persistence_boundary: false,
+                supports_authorization_preview: false,
+                supports_destructive_action_guard: false,
+                supports_registry_write_plan: false,
+                supports_snapshot_write_plan: false,
+                supports_restore_write_plan: false,
+                supports_rollback_write_plan: false,
+                supports_abort_noop_plan: false,
+                supports_operation_audit_receipt: false,
+                operator_approval_captured: false,
+                operator_approval_required: true,
+                apply_simulation_recorded: false,
+                apply_simulation_persisted: false,
+                persist_allowed: Boolean(graphSummary.latest_provider_registry_operation_approval_persist_allowed),
+                persist_gate_recorded: false,
+                registry_write_allowed: false,
+                registry_written: false,
+                snapshot_write_allowed: false,
+                snapshot_written: false,
+                restore_write_allowed: false,
+                restore_applied: Boolean(graphSummary.latest_provider_registry_operation_approval_restore_applied),
+                workspace_restored: false,
+                rollback_write_allowed: false,
+                rollback_applied: false,
+                artifact_delete_allowed: false,
+                artifact_deleted: false,
+                destructive_action_allowed: false,
+                project_snapshot_saved: false,
+                audit_ledger_persisted: false,
+                operation_audit_recorded: false,
+                workspace_export_ready: false,
+                json_export_ready: false,
+                markdown_export_ready: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_registry_operation_approval_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false,
+                dry_run: true
+            };
+        }
+
+        function projectWorkspaceProviderRegistryOperationApprovalCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderRegistryOperationApprovalSnapshot(workspace);
+            return [
+                t('providerRegistryOperationApprovalCopyTitle'),
+                `${t('providerRegistryOperationApprovalStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerArtifactRegistryRestoreReady')}: ${report.provider_artifact_registry_restore_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('operatorApprovalRequired')}: ${report.operator_approval_required}`,
+                `${t('approvalCheckCount')}: ${report.approval_check_count}`,
+                `${t('simulationStepCount')}: ${report.simulation_step_count}`,
+                `${t('persistenceBoundaryCount')}: ${report.persistence_boundary_count}`,
+                `${t('authorizationCheckCount')}: ${report.authorization_check_count}`,
+                `${t('destructiveGuardCount')}: ${report.destructive_guard_count}`,
+                `${t('writePlanCount')}: ${report.write_plan_count}`,
+                `${t('abortConditionCount')}: ${report.abort_condition_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('blockingFailures')}:`,
+                report.blocking_failures.length
+                    ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : t('none'),
+                '',
+                JSON.stringify({ provider_registry_operation_approval_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderRegistryOperationApproval() {
+            const status = document.getElementById('projectWorkspaceProviderRegistryOperationApprovalStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderRegistryOperationApprovalCopyText());
+                if (status) status.textContent = t('providerRegistryOperationApprovalCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerRegistryOperationApprovalCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection(labelKey, value) {
+            return `
+                <div class="graph-os-card">
+                    <div class="json-key">${escapeHTML(t(labelKey))}</div>
+                    <pre class="debug">${escapeHTML(JSON.stringify(value || {}, null, 2))}</pre>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderRegistryOperationApprovalPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderRegistryOperationApprovalReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.registry_operation_approval_stage_matrix) ? report.registry_operation_approval_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const supportFields = [
+                ['supportsOperatorApprovalRequest', report.supports_operator_approval_request],
+                ['supportsApplySimulation', report.supports_apply_simulation],
+                ['supportsPersistenceBoundary', report.supports_persistence_boundary],
+                ['supportsAuthorizationPreview', report.supports_authorization_preview],
+                ['supportsDestructiveActionGuard', report.supports_destructive_action_guard],
+                ['supportsRegistryWritePlan', report.supports_registry_write_plan],
+                ['supportsSnapshotWritePlan', report.supports_snapshot_write_plan],
+                ['supportsRestoreWritePlan', report.supports_restore_write_plan],
+                ['supportsRollbackWritePlan', report.supports_rollback_write_plan],
+                ['supportsAbortNoopPlan', report.supports_abort_noop_plan],
+                ['supportsOperationAuditReceipt', report.supports_operation_audit_receipt]
+            ];
+            const statusFields = [
+                ['operatorApprovalCaptured', report.operator_approval_captured],
+                ['operatorApprovalRequired', report.operator_approval_required],
+                ['applySimulationRecorded', report.apply_simulation_recorded],
+                ['applySimulationPersisted', report.apply_simulation_persisted],
+                ['persistAllowed', report.persist_allowed],
+                ['persistGateRecorded', report.persist_gate_recorded],
+                ['registryWriteAllowed', report.registry_write_allowed],
+                ['registryWritten', report.registry_written],
+                ['snapshotWriteAllowed', report.snapshot_write_allowed],
+                ['snapshotWritten', report.snapshot_written],
+                ['restoreWriteAllowed', report.restore_write_allowed],
+                ['restoreApplied', report.restore_applied],
+                ['workspaceRestored', report.workspace_restored],
+                ['rollbackWriteAllowed', report.rollback_write_allowed],
+                ['rollbackApplied', report.rollback_applied],
+                ['artifactDeleteAllowed', report.artifact_delete_allowed],
+                ['artifactDeleted', report.artifact_deleted],
+                ['destructiveActionAllowed', report.destructive_action_allowed],
+                ['projectSnapshotSaved', report.project_snapshot_saved],
+                ['auditLedgerPersisted', report.audit_ledger_persisted],
+                ['operationAuditRecorded', report.operation_audit_recorded],
+                ['workspaceExportReady', report.workspace_export_ready],
+                ['jsonExportReady', report.json_export_ready],
+                ['markdownExportReady', report.markdown_export_ready],
+                ['externalApiCallAllowed', report.external_api_call_allowed],
+                ['externalApiCalled', report.external_api_called],
+                ['providerSecretRead', report.provider_secret_read],
+                ['providerSecretExported', report.provider_secret_exported],
+                ['mediaUploaded', report.media_uploaded],
+                ['mediaDownloaded', report.media_downloaded],
+                ['paidGenerationAllowed', report.paid_generation_allowed],
+                ['dryRun', report.dry_run]
+            ];
+            const hasReport = Boolean(
+                report.report_status || report.provider_registry_operation_approval_report_version || stages.length
+            );
+            return `
+                <div class="section-block" id="projectWorkspaceProviderRegistryOperationApprovalPanel" data-project-provider-registry-operation-approval-marker="Project Workspace provider registry operation approval bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerRegistryOperationApprovalPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerRegistryOperationApprovalPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderRegistryOperationApprovalBtn" type="button" onclick="copyProjectWorkspaceProviderRegistryOperationApproval()">${escapeHTML(t('copyProviderRegistryOperationApproval'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerRegistryOperationApprovalStatus'))}</div><strong>${escapeHTML(report.report_status || t('providerRegistryOperationApprovalNotRefreshedYet'))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerArtifactRegistryRestoreReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_artifact_registry_restore_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewRequired'))}</div><strong>${escapeHTML(String(Boolean(report.operator_review_required)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorApprovalRequired'))}</div><strong>${escapeHTML(String(Boolean(report.operator_approval_required)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('approvalCheckCount'))}</div><strong>${escapeHTML(String(Number(report.approval_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('simulationStepCount'))}</div><strong>${escapeHTML(String(Number(report.simulation_step_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('persistenceBoundaryCount'))}</div><strong>${escapeHTML(String(Number(report.persistence_boundary_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('authorizationCheckCount'))}</div><strong>${escapeHTML(String(Number(report.authorization_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('destructiveGuardCount'))}</div><strong>${escapeHTML(String(Number(report.destructive_guard_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('writePlanCount'))}</div><strong>${escapeHTML(String(Number(report.write_plan_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('abortConditionCount'))}</div><strong>${escapeHTML(String(Number(report.abort_condition_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('auditReceiptItemCount'))}</div><strong>${escapeHTML(String(Number(report.audit_receipt_item_count || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerRegistryOperationApprovalStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} - ${escapeHTML(stage.stage_label || '')}</div>
+                                <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('operatorApprovalRequest', report.operator_approval_request)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('applySimulation', report.apply_simulation)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('persistenceBoundary', report.persistence_boundary)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('authorizationPreview', report.authorization_preview)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('destructiveActionGuard', report.destructive_action_guard)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('registryWritePlan', report.registry_write_plan)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('snapshotWritePlan', report.snapshot_write_plan)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('restoreWritePlan', report.restore_write_plan)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('rollbackWritePlan', report.rollback_write_plan)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('abortNoopPlan', report.abort_noop_plan)}
+                        ${renderProjectWorkspaceProviderRegistryOperationApprovalJsonSection('operationAuditReceipt', report.operation_audit_receipt)}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${supportFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${statusFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerRegistryOperationApprovalAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-registry-operation-approval-preview="Project Workspace provider registry operation approval bundle">${escapeHTML(projectWorkspaceProviderRegistryOperationApprovalCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerRegistryOperationApprovalNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderRegistryOperationApprovalStatus"></div>
                 </div>
             `;
         }
@@ -22755,6 +23165,8 @@
                 if (providerArtifactLineagePanel) providerArtifactLineagePanel.outerHTML = renderProjectWorkspaceProviderArtifactLineagePanel(latestProjectWorkspace);
                 const providerArtifactRegistryRestorePanel = document.getElementById('projectWorkspaceProviderArtifactRegistryRestorePanel');
                 if (providerArtifactRegistryRestorePanel) providerArtifactRegistryRestorePanel.outerHTML = renderProjectWorkspaceProviderArtifactRegistryRestorePanel(latestProjectWorkspace);
+                const providerRegistryOperationApprovalPanel = document.getElementById('projectWorkspaceProviderRegistryOperationApprovalPanel');
+                if (providerRegistryOperationApprovalPanel) providerRegistryOperationApprovalPanel.outerHTML = renderProjectWorkspaceProviderRegistryOperationApprovalPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -24948,6 +25360,7 @@
                     ${renderProjectWorkspaceProviderWorkerFinalizationPanel(workspace)}
                     ${renderProjectWorkspaceProviderArtifactLineagePanel(workspace)}
                     ${renderProjectWorkspaceProviderArtifactRegistryRestorePanel(workspace)}
+                    ${renderProjectWorkspaceProviderRegistryOperationApprovalPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -30438,6 +30851,116 @@
             projectSnapshotSaved: '\u9879\u76ee\u5feb\u7167\u5df2\u4fdd\u5b58',
             providerArtifactRegistryRestoreAuditPreview: 'Artifact registry restore \u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderArtifactRegistryRestoreTitle: 'Artifact Registry / Snapshot Diff / Restore / Rollback / \u4ea7\u7269\u6ce8\u518c\u8868\u5feb\u7167\u5dee\u5f02\u6062\u590d\u4e0e\u56de\u6eda'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderRegistryOperationApprovalBundleMarker: 'Project Workspace provider registry operation approval bundle',
+            providerRegistryOperationApprovalPanelTitle: 'Registry Operation Approval / Apply Simulation / Persistence Boundary',
+            providerRegistryOperationApprovalPanelHelper: 'Dry-run operator approval request, apply simulation, persistence boundary, restore and rollback authorization preview, destructive action guard, write plans, abort/no-op plan, and audit receipt. No registry, snapshot, workspace, rollback, delete, provider, secret, media, or paid operation is executed.',
+            copyProviderRegistryOperationApproval: 'Copy registry operation approval report',
+            providerRegistryOperationApprovalCopyTitle: 'Project registry operation approval / apply simulation / persistence boundary report',
+            providerRegistryOperationApprovalStatus: 'Registry operation approval status',
+            providerRegistryOperationApprovalNotRefreshedYet: 'Registry operation approval report has not been refreshed yet.',
+            providerRegistryOperationApprovalCopied: 'Registry operation approval report copied.',
+            providerRegistryOperationApprovalCopyFailed: 'Could not copy registry operation approval report.',
+            providerArtifactRegistryRestoreReady: 'Artifact registry restore report ready',
+            operatorApprovalRequired: 'Operator approval required',
+            approvalCheckCount: 'Approval check count',
+            simulationStepCount: 'Simulation step count',
+            persistenceBoundaryCount: 'Persistence boundary count',
+            authorizationCheckCount: 'Authorization check count',
+            destructiveGuardCount: 'Destructive guard count',
+            writePlanCount: 'Write plan count',
+            abortConditionCount: 'Abort condition count',
+            auditReceiptItemCount: 'Audit receipt item count',
+            providerRegistryOperationApprovalStages: 'Registry operation approval stages',
+            operatorApprovalRequest: 'Operator approval request',
+            applySimulation: 'Apply simulation',
+            persistenceBoundary: 'Persistence boundary',
+            authorizationPreview: 'Authorization preview',
+            destructiveActionGuard: 'Destructive action guard',
+            registryWritePlan: 'Registry write plan',
+            snapshotWritePlan: 'Snapshot write plan',
+            restoreWritePlan: 'Restore write plan',
+            rollbackWritePlan: 'Rollback write plan',
+            abortNoopPlan: 'Abort / no-op plan',
+            operationAuditReceipt: 'Operation audit receipt',
+            supportsOperatorApprovalRequest: 'Supports operator approval request',
+            supportsApplySimulation: 'Supports apply simulation',
+            supportsPersistenceBoundary: 'Supports persistence boundary',
+            supportsAuthorizationPreview: 'Supports authorization preview',
+            supportsDestructiveActionGuard: 'Supports destructive action guard',
+            supportsRegistryWritePlan: 'Supports registry write plan',
+            supportsSnapshotWritePlan: 'Supports snapshot write plan',
+            supportsRestoreWritePlan: 'Supports restore write plan',
+            supportsRollbackWritePlan: 'Supports rollback write plan',
+            supportsAbortNoopPlan: 'Supports abort / no-op plan',
+            supportsOperationAuditReceipt: 'Supports operation audit receipt',
+            operatorApprovalCaptured: 'Operator approval captured',
+            applySimulationRecorded: 'Apply simulation recorded',
+            applySimulationPersisted: 'Apply simulation persisted',
+            registryWritten: 'Registry written',
+            snapshotWritten: 'Snapshot written',
+            destructiveActionAllowed: 'Destructive action allowed',
+            operationAuditRecorded: 'Operation audit recorded',
+            externalApiCallAllowed: 'External API call allowed',
+            providerRegistryOperationApprovalAuditPreview: 'Registry operation approval audit preview',
+            projectWorkspaceExportProviderRegistryOperationApprovalTitle: 'Registry Operation Approval / Apply Simulation / Persistence Boundary'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderRegistryOperationApprovalBundleMarker: 'Project Workspace provider registry operation approval bundle',
+            providerRegistryOperationApprovalPanelTitle: 'Registry Operation Approval / Apply Simulation / Persistence Boundary / \u6ce8\u518c\u8868\u64cd\u4f5c\u6279\u51c6\u3001\u5e94\u7528\u6a21\u62df\u4e0e\u6301\u4e45\u5316\u8fb9\u754c',
+            providerRegistryOperationApprovalPanelHelper: '\u53ea\u8bfb dry-run \u5c55\u793a\u64cd\u4f5c\u5458\u6279\u51c6\u8bf7\u6c42\u3001\u5e94\u7528\u6a21\u62df\u3001\u6301\u4e45\u5316\u8fb9\u754c\u3001restore/rollback \u6388\u6743\u9884\u89c8\u3001\u7834\u574f\u6027\u64cd\u4f5c\u4fdd\u62a4\u3001\u5199\u5165\u8ba1\u5212\u3001abort/no-op \u8ba1\u5212\u548c\u5ba1\u8ba1\u56de\u6267\u3002\u4e0d\u4f1a\u5199 registry/snapshot\u3001\u6062\u590d workspace\u3001\u6267\u884c rollback\u3001\u5220\u9664 artifact\u3001\u8c03\u7528 provider\u3001\u8bfb\u53d6 secret\u3001\u4f20\u8f93\u5a92\u4f53\u6216\u6263\u8d39\u3002',
+            copyProviderRegistryOperationApproval: '\u590d\u5236 registry operation approval \u62a5\u544a',
+            providerRegistryOperationApprovalCopyTitle: '\u9879\u76ee Registry Operation Approval / Apply Simulation / Persistence Boundary \u62a5\u544a',
+            providerRegistryOperationApprovalStatus: 'Registry operation approval \u72b6\u6001',
+            providerRegistryOperationApprovalNotRefreshedYet: 'Registry operation approval \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerRegistryOperationApprovalCopied: 'Registry operation approval \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerRegistryOperationApprovalCopyFailed: '\u590d\u5236 registry operation approval \u62a5\u544a\u5931\u8d25\u3002',
+            providerArtifactRegistryRestoreReady: 'Artifact registry restore \u62a5\u544a\u5df2\u5c31\u7eea',
+            operatorApprovalRequired: '\u9700\u8981\u64cd\u4f5c\u5458\u6279\u51c6',
+            approvalCheckCount: '\u6279\u51c6\u68c0\u67e5\u6570',
+            simulationStepCount: '\u6a21\u62df\u6b65\u9aa4\u6570',
+            persistenceBoundaryCount: '\u6301\u4e45\u5316\u8fb9\u754c\u6570',
+            authorizationCheckCount: '\u6388\u6743\u68c0\u67e5\u6570',
+            destructiveGuardCount: '\u7834\u574f\u6027\u64cd\u4f5c\u4fdd\u62a4\u6570',
+            writePlanCount: '\u5199\u5165\u8ba1\u5212\u6570',
+            abortConditionCount: '\u4e2d\u6b62\u6761\u4ef6\u6570',
+            auditReceiptItemCount: '\u5ba1\u8ba1\u56de\u6267\u9879\u6570',
+            providerRegistryOperationApprovalStages: 'Registry operation approval \u9636\u6bb5',
+            operatorApprovalRequest: 'Operator approval request / \u64cd\u4f5c\u5458\u6279\u51c6\u8bf7\u6c42',
+            applySimulation: 'Apply simulation / \u5e94\u7528\u6a21\u62df',
+            persistenceBoundary: 'Persistence boundary / \u6301\u4e45\u5316\u8fb9\u754c',
+            authorizationPreview: 'Authorization preview / \u6388\u6743\u9884\u89c8',
+            destructiveActionGuard: 'Destructive action guard / \u7834\u574f\u6027\u64cd\u4f5c\u4fdd\u62a4',
+            registryWritePlan: 'Registry write plan / \u6ce8\u518c\u8868\u5199\u5165\u8ba1\u5212',
+            snapshotWritePlan: 'Snapshot write plan / \u5feb\u7167\u5199\u5165\u8ba1\u5212',
+            restoreWritePlan: 'Restore write plan / \u6062\u590d\u5199\u5165\u8ba1\u5212',
+            rollbackWritePlan: 'Rollback write plan / \u56de\u6eda\u5199\u5165\u8ba1\u5212',
+            abortNoopPlan: 'Abort / no-op plan / \u4e2d\u6b62\u4e0e\u65e0\u64cd\u4f5c\u8ba1\u5212',
+            operationAuditReceipt: 'Operation audit receipt / \u64cd\u4f5c\u5ba1\u8ba1\u56de\u6267',
+            supportsOperatorApprovalRequest: '\u652f\u6301\u64cd\u4f5c\u5458\u6279\u51c6\u8bf7\u6c42',
+            supportsApplySimulation: '\u652f\u6301\u5e94\u7528\u6a21\u62df',
+            supportsPersistenceBoundary: '\u652f\u6301\u6301\u4e45\u5316\u8fb9\u754c',
+            supportsAuthorizationPreview: '\u652f\u6301\u6388\u6743\u9884\u89c8',
+            supportsDestructiveActionGuard: '\u652f\u6301\u7834\u574f\u6027\u64cd\u4f5c\u4fdd\u62a4',
+            supportsRegistryWritePlan: '\u652f\u6301 registry \u5199\u5165\u8ba1\u5212',
+            supportsSnapshotWritePlan: '\u652f\u6301 snapshot \u5199\u5165\u8ba1\u5212',
+            supportsRestoreWritePlan: '\u652f\u6301 restore \u5199\u5165\u8ba1\u5212',
+            supportsRollbackWritePlan: '\u652f\u6301 rollback \u5199\u5165\u8ba1\u5212',
+            supportsAbortNoopPlan: '\u652f\u6301 abort/no-op \u8ba1\u5212',
+            supportsOperationAuditReceipt: '\u652f\u6301\u64cd\u4f5c\u5ba1\u8ba1\u56de\u6267',
+            operatorApprovalCaptured: '\u5df2\u6355\u83b7\u64cd\u4f5c\u5458\u6279\u51c6',
+            applySimulationRecorded: '\u5df2\u8bb0\u5f55\u5e94\u7528\u6a21\u62df',
+            applySimulationPersisted: '\u5e94\u7528\u6a21\u62df\u5df2\u6301\u4e45\u5316',
+            registryWritten: 'Registry \u5df2\u5199\u5165',
+            snapshotWritten: 'Snapshot \u5df2\u5199\u5165',
+            destructiveActionAllowed: '\u5141\u8bb8\u7834\u574f\u6027\u64cd\u4f5c',
+            operationAuditRecorded: '\u64cd\u4f5c\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
+            externalApiCallAllowed: '\u5141\u8bb8\u5916\u90e8 API \u8c03\u7528',
+            providerRegistryOperationApprovalAuditPreview: 'Registry operation approval \u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderRegistryOperationApprovalTitle: 'Registry Operation Approval / Apply Simulation / Persistence Boundary / \u6ce8\u518c\u8868\u64cd\u4f5c\u6279\u51c6\u3001\u5e94\u7528\u6a21\u62df\u4e0e\u6301\u4e45\u5316\u8fb9\u754c'
         });
 
 

@@ -6932,6 +6932,107 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_artifact_registry_restore_marker", script)
 
 
+    def test_project_workspace_provider_registry_operation_approval_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider registry operation approval bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_REGISTRY_OPERATION_APPROVAL_BUNDLE_MARKER", html)
+        self.assertIn("latestProjectProviderRegistryOperationApprovalReport", html)
+        self.assertIn("projectWorkspaceProviderRegistryOperationApprovalReportFromWorkspace", html)
+        self.assertIn("projectWorkspaceProviderRegistryOperationApprovalCopyText", html)
+        self.assertIn("copyProjectWorkspaceProviderRegistryOperationApproval", html)
+        self.assertIn("renderProjectWorkspaceProviderRegistryOperationApprovalPanel", html)
+        self.assertIn("provider_registry_operation_approval_report", html)
+        self.assertIn("projectWorkspaceExportProviderRegistryOperationApprovalMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderRegistryOperationApprovalSnapshot", html)
+        for field in [
+            "operator_approval_request",
+            "apply_simulation",
+            "persistence_boundary",
+            "authorization_preview",
+            "destructive_action_guard",
+            "registry_write_plan",
+            "snapshot_write_plan",
+            "restore_write_plan",
+            "rollback_write_plan",
+            "abort_noop_plan",
+            "operation_audit_receipt",
+            "blocking_failures",
+            "registry_operation_approval_stage_matrix",
+            "provider_artifact_registry_restore_ready",
+            "operator_review_required",
+            "operator_approval_required",
+            "approval_check_count",
+            "simulation_step_count",
+            "persistence_boundary_count",
+            "authorization_check_count",
+            "destructive_guard_count",
+            "write_plan_count",
+            "abort_condition_count",
+            "audit_receipt_item_count",
+            "operator_approval_captured",
+            "apply_simulation_recorded",
+            "apply_simulation_persisted",
+            "persist_allowed",
+            "persist_gate_recorded",
+            "registry_write_allowed",
+            "registry_written",
+            "snapshot_write_allowed",
+            "snapshot_written",
+            "restore_write_allowed",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_write_allowed",
+            "rollback_applied",
+            "artifact_delete_allowed",
+            "artifact_deleted",
+            "destructive_action_allowed",
+            "project_snapshot_saved",
+            "audit_ledger_persisted",
+            "operation_audit_recorded",
+            "workspace_export_ready",
+            "json_export_ready",
+            "markdown_export_ready",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+            "dry_run",
+            "has_provider_registry_operation_approval_report",
+        ]:
+            self.assertIn(field, html)
+        for support_field in [
+            "supports_operator_approval_request",
+            "supports_apply_simulation",
+            "supports_persistence_boundary",
+            "supports_authorization_preview",
+            "supports_destructive_action_guard",
+            "supports_registry_write_plan",
+            "supports_snapshot_write_plan",
+            "supports_restore_write_plan",
+            "supports_rollback_write_plan",
+            "supports_abort_noop_plan",
+            "supports_operation_audit_receipt",
+        ]:
+            self.assertIn(support_field, html)
+        self.assertIn("copyProviderRegistryOperationApproval", html)
+        self.assertIn("providerRegistryOperationApprovalCopied", html)
+        self.assertIn("providerRegistryOperationApprovalCopyFailed", html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_provider_registry_operation_approval_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_registry_operation_approval_marker", script)
+        self.assertIn("Project Workspace provider registry operation approval bundle", script)
+
+    def test_project_workspace_provider_registry_operation_approval_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider registry operation approval bundle", script)
+        self.assertIn("project_workspace_provider_registry_operation_approval_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
