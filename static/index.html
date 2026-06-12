@@ -11861,6 +11861,143 @@
             ].join('\n');
         }
 
+        function projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderArtifactRegistryRestoreReportFromWorkspace(workspace);
+            return {
+                marker: 'Project Workspace export pack provider artifact registry restore bundle',
+                report_status: report.report_status || '',
+                provider_artifact_registry_restore_report_version: report.provider_artifact_registry_restore_report_version || '',
+                provider_artifact_lineage_ready: Boolean(report.provider_artifact_lineage_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                artifact_registry_restore_stage_matrix: Array.isArray(report.artifact_registry_restore_stage_matrix) ? report.artifact_registry_restore_stage_matrix : [],
+                artifact_registry_model: report.artifact_registry_model || {},
+                versioned_snapshot_catalog: report.versioned_snapshot_catalog || {},
+                snapshot_diff_preview: report.snapshot_diff_preview || {},
+                restore_plan: report.restore_plan || {},
+                rollback_plan: report.rollback_plan || {},
+                retention_policy: report.retention_policy || {},
+                persist_gate: report.persist_gate || {},
+                restore_audit_ledger: report.restore_audit_ledger || {},
+                registry_receipt: report.registry_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                registry_item_count: Number(report.registry_item_count || 0),
+                snapshot_ref_count: Number(report.snapshot_ref_count || 0),
+                diff_section_count: Number(report.diff_section_count || 0),
+                restore_step_count: Number(report.restore_step_count || 0),
+                restore_blocker_count: Number(report.restore_blocker_count || 0),
+                rollback_step_count: Number(report.rollback_step_count || 0),
+                retention_action_count: Number(report.retention_action_count || 0),
+                delete_blocker_count: Number(report.delete_blocker_count || 0),
+                ledger_item_count: Number(report.ledger_item_count || 0),
+                registry_recorded: Boolean(report.registry_recorded),
+                registry_persisted: Boolean(report.registry_persisted),
+                snapshot_catalog_recorded: Boolean(report.snapshot_catalog_recorded),
+                snapshot_catalog_persisted: Boolean(report.snapshot_catalog_persisted),
+                diff_preview_recorded: Boolean(report.diff_preview_recorded),
+                diff_preview_persisted: Boolean(report.diff_preview_persisted),
+                restore_available: Boolean(report.restore_available),
+                restore_applied: Boolean(report.restore_applied),
+                workspace_restored: Boolean(report.workspace_restored),
+                rollback_available: Boolean(report.rollback_available),
+                rollback_applied: Boolean(report.rollback_applied),
+                rollback_recorded: Boolean(report.rollback_recorded),
+                retention_policy_recorded: Boolean(report.retention_policy_recorded),
+                artifact_delete_allowed: Boolean(report.artifact_delete_allowed),
+                artifact_deleted: Boolean(report.artifact_deleted),
+                persist_allowed: Boolean(report.persist_allowed),
+                persist_gate_recorded: Boolean(report.persist_gate_recorded),
+                registry_write_allowed: Boolean(report.registry_write_allowed),
+                snapshot_write_allowed: Boolean(report.snapshot_write_allowed),
+                restore_write_allowed: Boolean(report.restore_write_allowed),
+                rollback_write_allowed: Boolean(report.rollback_write_allowed),
+                restore_audit_recorded: Boolean(report.restore_audit_recorded),
+                audit_ledger_persisted: Boolean(report.audit_ledger_persisted),
+                registry_receipt_recorded: Boolean(report.registry_receipt_recorded),
+                project_snapshot_saved: Boolean(report.project_snapshot_saved),
+                workspace_export_ready: Boolean(report.workspace_export_ready),
+                json_export_ready: Boolean(report.json_export_ready),
+                markdown_export_ready: Boolean(report.markdown_export_ready),
+                external_api_called: Boolean(report.external_api_called),
+                provider_secret_read: Boolean(report.provider_secret_read),
+                provider_secret_exported: Boolean(report.provider_secret_exported),
+                media_uploaded: Boolean(report.media_uploaded),
+                media_downloaded: Boolean(report.media_downloaded),
+                paid_generation_allowed: Boolean(report.paid_generation_allowed),
+                dry_run: Boolean(report.dry_run),
+                has_provider_artifact_registry_restore_report: Boolean(
+                    report.report_status || report.provider_artifact_registry_restore_report_version
+                )
+            };
+        }
+
+        function projectWorkspaceExportProviderArtifactRegistryRestoreMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot(workspace);
+            if (!report.has_provider_artifact_registry_restore_report) {
+                return `## ${t('projectWorkspaceExportProviderArtifactRegistryRestoreTitle')}\n${t('providerArtifactRegistryRestoreNotRefreshedYet')}`;
+            }
+            const blockerLines = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stageLines = report.artifact_registry_restore_stage_matrix.length
+                ? report.artifact_registry_restore_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const statusKeys = [
+                'registry_recorded', 'registry_persisted', 'snapshot_catalog_recorded',
+                'snapshot_catalog_persisted', 'diff_preview_recorded', 'diff_preview_persisted',
+                'restore_available', 'restore_applied', 'workspace_restored', 'rollback_available',
+                'rollback_applied', 'rollback_recorded', 'retention_policy_recorded',
+                'artifact_delete_allowed', 'artifact_deleted', 'persist_allowed',
+                'persist_gate_recorded', 'registry_write_allowed', 'snapshot_write_allowed',
+                'restore_write_allowed', 'rollback_write_allowed', 'restore_audit_recorded',
+                'audit_ledger_persisted', 'registry_receipt_recorded', 'project_snapshot_saved',
+                'workspace_export_ready', 'json_export_ready', 'markdown_export_ready',
+                'external_api_called', 'provider_secret_read', 'provider_secret_exported',
+                'media_uploaded', 'media_downloaded', 'paid_generation_allowed'
+            ];
+            return [
+                `## ${t('projectWorkspaceExportProviderArtifactRegistryRestoreTitle')}`,
+                `${t('providerArtifactRegistryRestoreStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerArtifactLineageReady')}: ${report.provider_artifact_lineage_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('registryItemCount')}: ${report.registry_item_count}`,
+                `${t('snapshotRefCount')}: ${report.snapshot_ref_count}`,
+                `${t('diffSectionCount')}: ${report.diff_section_count}`,
+                `${t('restoreStepCount')}: ${report.restore_step_count}`,
+                `${t('restoreBlockerCount')}: ${report.restore_blocker_count}`,
+                `${t('rollbackStepCount')}: ${report.rollback_step_count}`,
+                `${t('retentionActionCount')}: ${report.retention_action_count}`,
+                `${t('deleteBlockerCount')}: ${report.delete_blocker_count}`,
+                `${t('ledgerItemCount')}: ${report.ledger_item_count}`,
+                ...statusKeys.map((key) => `${key}: ${report[key]}`),
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockerLines,
+                '',
+                `### ${t('providerArtifactRegistryRestoreStages')}`,
+                ...stageLines,
+                ...[
+                    ['artifactRegistryModel', report.artifact_registry_model],
+                    ['versionedSnapshotCatalog', report.versioned_snapshot_catalog],
+                    ['snapshotDiffPreview', report.snapshot_diff_preview],
+                    ['restorePlan', report.restore_plan],
+                    ['rollbackPlan', report.rollback_plan],
+                    ['retentionPolicy', report.retention_policy],
+                    ['persistGate', report.persist_gate],
+                    ['restoreAuditLedger', report.restore_audit_ledger],
+                    ['registryReceipt', report.registry_receipt]
+                ].flatMap(([labelKey, value]) => [
+                    '',
+                    `### ${t(labelKey)}`,
+                    '```json',
+                    JSON.stringify(value, null, 2),
+                    '```'
+                ])
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
             return {
@@ -13595,6 +13732,8 @@
                 '',
                 projectWorkspaceExportProviderArtifactLineageMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderArtifactRegistryRestoreMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -13630,6 +13769,7 @@
                 provider_worker_checkpoint_resume_report: projectWorkspaceExportProviderWorkerCheckpointResumeSnapshot(workspace),
                 provider_worker_finalization_report: projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace),
                 provider_artifact_lineage_report: projectWorkspaceExportProviderArtifactLineageSnapshot(workspace),
+                provider_artifact_registry_restore_report: projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -13765,6 +13905,7 @@
                 latestProjectProviderWorkerCheckpointResumeReport = payload.provider_worker_checkpoint_resume_report || {};
                 latestProjectProviderWorkerFinalizationReport = payload.provider_worker_finalization_report || {};
                 latestProjectProviderArtifactLineageReport = payload.provider_artifact_lineage_report || {};
+                latestProjectProviderArtifactRegistryRestoreReport = payload.provider_artifact_registry_restore_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -17628,6 +17769,8 @@
         let latestProjectProviderWorkerFinalizationReport = {};
         const PROJECT_WORKSPACE_PROVIDER_ARTIFACT_LINEAGE_BUNDLE_MARKER = 'Project Workspace provider artifact lineage bundle';
         let latestProjectProviderArtifactLineageReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_ARTIFACT_REGISTRY_RESTORE_BUNDLE_MARKER = 'Project Workspace provider artifact registry restore bundle';
+        let latestProjectProviderArtifactRegistryRestoreReport = {};
 
         function projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderArtifactLineageReport || {}).length
@@ -18036,6 +18179,262 @@
                         ${hasReport ? `<pre class="debug" data-provider-artifact-lineage-audit-preview="Project Workspace provider artifact lineage bundle">${escapeHTML(projectWorkspaceProviderArtifactLineageCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerArtifactLineageNotRefreshedYet'))}</div>`}
                     </div>
                     <div class="quick-use-copy-status" id="projectWorkspaceProviderArtifactLineageStatus"></div>
+                </div>
+            `;
+        }
+
+        function projectWorkspaceProviderArtifactRegistryRestoreReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderArtifactRegistryRestoreReport || {}).length
+                ? latestProjectProviderArtifactRegistryRestoreReport
+                : workspace?.provider_artifact_registry_restore_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_artifact_registry_restore_report_version: '',
+                report_status: graphSummary.latest_provider_artifact_registry_restore_status || '',
+                provider_artifact_lineage_ready: false,
+                operator_review_required: true,
+                stage_count: 0,
+                artifact_registry_restore_stage_matrix: [],
+                artifact_registry_model: {},
+                versioned_snapshot_catalog: {},
+                snapshot_diff_preview: {},
+                restore_plan: {},
+                rollback_plan: {},
+                retention_policy: {},
+                persist_gate: {},
+                restore_audit_ledger: {},
+                registry_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_artifact_registry_restore_blocking_failure_count || 0),
+                blocking_failures: [],
+                registry_item_count: 0,
+                snapshot_ref_count: 0,
+                diff_section_count: 0,
+                restore_step_count: 0,
+                restore_blocker_count: 0,
+                rollback_step_count: 0,
+                retention_action_count: 0,
+                delete_blocker_count: 0,
+                ledger_item_count: 0,
+                registry_recorded: false,
+                registry_persisted: Boolean(graphSummary.latest_provider_artifact_registry_restore_registry_persisted),
+                snapshot_catalog_recorded: false,
+                snapshot_catalog_persisted: false,
+                diff_preview_recorded: false,
+                diff_preview_persisted: false,
+                restore_available: Boolean(graphSummary.latest_provider_artifact_registry_restore_restore_available),
+                restore_applied: false,
+                workspace_restored: false,
+                rollback_available: false,
+                rollback_applied: false,
+                rollback_recorded: false,
+                retention_policy_recorded: false,
+                artifact_delete_allowed: false,
+                artifact_deleted: false,
+                persist_allowed: false,
+                persist_gate_recorded: false,
+                registry_write_allowed: false,
+                snapshot_write_allowed: false,
+                restore_write_allowed: false,
+                rollback_write_allowed: false,
+                restore_audit_recorded: false,
+                audit_ledger_persisted: false,
+                registry_receipt_recorded: false,
+                project_snapshot_saved: false,
+                workspace_export_ready: false,
+                json_export_ready: false,
+                markdown_export_ready: false,
+                external_api_called: Boolean(graphSummary.latest_provider_artifact_registry_restore_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false,
+                dry_run: true
+            };
+        }
+
+        function projectWorkspaceProviderArtifactRegistryRestoreCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot(workspace);
+            return [
+                t('providerArtifactRegistryRestoreCopyTitle'),
+                `${t('providerArtifactRegistryRestoreStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerArtifactLineageReady')}: ${report.provider_artifact_lineage_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('registryItemCount')}: ${report.registry_item_count}`,
+                `${t('snapshotRefCount')}: ${report.snapshot_ref_count}`,
+                `${t('diffSectionCount')}: ${report.diff_section_count}`,
+                `${t('restoreStepCount')}: ${report.restore_step_count}`,
+                `${t('restoreBlockerCount')}: ${report.restore_blocker_count}`,
+                `${t('rollbackStepCount')}: ${report.rollback_step_count}`,
+                `${t('retentionActionCount')}: ${report.retention_action_count}`,
+                `${t('deleteBlockerCount')}: ${report.delete_blocker_count}`,
+                `${t('ledgerItemCount')}: ${report.ledger_item_count}`,
+                `${t('registryRecorded')}: ${report.registry_recorded}`,
+                `${t('registryPersisted')}: ${report.registry_persisted}`,
+                `${t('snapshotCatalogRecorded')}: ${report.snapshot_catalog_recorded}`,
+                `${t('snapshotCatalogPersisted')}: ${report.snapshot_catalog_persisted}`,
+                `${t('diffPreviewRecorded')}: ${report.diff_preview_recorded}`,
+                `${t('diffPreviewPersisted')}: ${report.diff_preview_persisted}`,
+                `${t('restoreAvailable')}: ${report.restore_available}`,
+                `${t('restoreApplied')}: ${report.restore_applied}`,
+                `${t('workspaceRestored')}: ${report.workspace_restored}`,
+                `${t('rollbackAvailable')}: ${report.rollback_available}`,
+                `${t('rollbackApplied')}: ${report.rollback_applied}`,
+                `${t('rollbackRecorded')}: ${report.rollback_recorded}`,
+                `${t('retentionPolicyRecorded')}: ${report.retention_policy_recorded}`,
+                `${t('artifactDeleteAllowed')}: ${report.artifact_delete_allowed}`,
+                `${t('artifactDeleted')}: ${report.artifact_deleted}`,
+                `${t('persistAllowed')}: ${report.persist_allowed}`,
+                `${t('persistGateRecorded')}: ${report.persist_gate_recorded}`,
+                `${t('registryWriteAllowed')}: ${report.registry_write_allowed}`,
+                `${t('snapshotWriteAllowed')}: ${report.snapshot_write_allowed}`,
+                `${t('restoreWriteAllowed')}: ${report.restore_write_allowed}`,
+                `${t('rollbackWriteAllowed')}: ${report.rollback_write_allowed}`,
+                `${t('restoreAuditRecorded')}: ${report.restore_audit_recorded}`,
+                `${t('auditLedgerPersisted')}: ${report.audit_ledger_persisted}`,
+                `${t('registryReceiptRecorded')}: ${report.registry_receipt_recorded}`,
+                `${t('projectSnapshotSaved')}: ${report.project_snapshot_saved}`,
+                `${t('workspaceExportReady')}: ${report.workspace_export_ready}`,
+                `${t('jsonExportReady')}: ${report.json_export_ready}`,
+                `${t('markdownExportReady')}: ${report.markdown_export_ready}`,
+                `${t('externalApiCalled')}: ${report.external_api_called}`,
+                `${t('providerSecretRead')}: ${report.provider_secret_read}`,
+                `${t('providerSecretExported')}: ${report.provider_secret_exported}`,
+                `${t('mediaUploaded')}: ${report.media_uploaded}`,
+                `${t('mediaDownloaded')}: ${report.media_downloaded}`,
+                `${t('paidGenerationAllowed')}: ${report.paid_generation_allowed}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('blockingFailures')}:`,
+                report.blocking_failures.length
+                    ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : t('none'),
+                '',
+                JSON.stringify({ provider_artifact_registry_restore_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderArtifactRegistryRestore() {
+            const status = document.getElementById('projectWorkspaceProviderArtifactRegistryRestoreStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderArtifactRegistryRestoreCopyText());
+                if (status) status.textContent = t('providerArtifactRegistryRestoreCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerArtifactRegistryRestoreCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection(labelKey, value) {
+            return `
+                <div class="graph-os-card">
+                    <div class="json-key">${escapeHTML(t(labelKey))}</div>
+                    <pre class="debug">${escapeHTML(JSON.stringify(value || {}, null, 2))}</pre>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderArtifactRegistryRestorePanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderArtifactRegistryRestoreReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.artifact_registry_restore_stage_matrix) ? report.artifact_registry_restore_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const statusFields = [
+                ['registryRecorded', report.registry_recorded],
+                ['registryPersisted', report.registry_persisted],
+                ['snapshotCatalogRecorded', report.snapshot_catalog_recorded],
+                ['snapshotCatalogPersisted', report.snapshot_catalog_persisted],
+                ['diffPreviewRecorded', report.diff_preview_recorded],
+                ['diffPreviewPersisted', report.diff_preview_persisted],
+                ['restoreAvailable', report.restore_available],
+                ['restoreApplied', report.restore_applied],
+                ['workspaceRestored', report.workspace_restored],
+                ['rollbackAvailable', report.rollback_available],
+                ['rollbackApplied', report.rollback_applied],
+                ['rollbackRecorded', report.rollback_recorded],
+                ['retentionPolicyRecorded', report.retention_policy_recorded],
+                ['artifactDeleteAllowed', report.artifact_delete_allowed],
+                ['artifactDeleted', report.artifact_deleted],
+                ['persistAllowed', report.persist_allowed],
+                ['persistGateRecorded', report.persist_gate_recorded],
+                ['registryWriteAllowed', report.registry_write_allowed],
+                ['snapshotWriteAllowed', report.snapshot_write_allowed],
+                ['restoreWriteAllowed', report.restore_write_allowed],
+                ['rollbackWriteAllowed', report.rollback_write_allowed],
+                ['restoreAuditRecorded', report.restore_audit_recorded],
+                ['auditLedgerPersisted', report.audit_ledger_persisted],
+                ['registryReceiptRecorded', report.registry_receipt_recorded],
+                ['projectSnapshotSaved', report.project_snapshot_saved],
+                ['workspaceExportReady', report.workspace_export_ready],
+                ['jsonExportReady', report.json_export_ready],
+                ['markdownExportReady', report.markdown_export_ready],
+                ['externalApiCalled', report.external_api_called],
+                ['providerSecretRead', report.provider_secret_read],
+                ['providerSecretExported', report.provider_secret_exported],
+                ['mediaUploaded', report.media_uploaded],
+                ['mediaDownloaded', report.media_downloaded],
+                ['paidGenerationAllowed', report.paid_generation_allowed]
+            ];
+            const hasReport = Boolean(
+                report.report_status || report.provider_artifact_registry_restore_report_version || stages.length
+            );
+            return `
+                <div class="section-block" id="projectWorkspaceProviderArtifactRegistryRestorePanel" data-project-provider-artifact-registry-restore-marker="Project Workspace provider artifact registry restore bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerArtifactRegistryRestorePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerArtifactRegistryRestorePanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderArtifactRegistryRestoreBtn" type="button" onclick="copyProjectWorkspaceProviderArtifactRegistryRestore()">${escapeHTML(t('copyProviderArtifactRegistryRestore'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerArtifactRegistryRestoreStatus'))}</div><strong>${escapeHTML(report.report_status || t('providerArtifactRegistryRestoreNotRefreshedYet'))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerArtifactLineageReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_artifact_lineage_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewRequired'))}</div><strong>${escapeHTML(String(Boolean(report.operator_review_required)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('registryItemCount'))}</div><strong>${escapeHTML(String(Number(report.registry_item_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('snapshotRefCount'))}</div><strong>${escapeHTML(String(Number(report.snapshot_ref_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('diffSectionCount'))}</div><strong>${escapeHTML(String(Number(report.diff_section_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('restoreStepCount'))}</div><strong>${escapeHTML(String(Number(report.restore_step_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('restoreBlockerCount'))}</div><strong>${escapeHTML(String(Number(report.restore_blocker_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('rollbackStepCount'))}</div><strong>${escapeHTML(String(Number(report.rollback_step_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('retentionActionCount'))}</div><strong>${escapeHTML(String(Number(report.retention_action_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('deleteBlockerCount'))}</div><strong>${escapeHTML(String(Number(report.delete_blocker_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('ledgerItemCount'))}</div><strong>${escapeHTML(String(Number(report.ledger_item_count || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerArtifactRegistryRestoreStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} - ${escapeHTML(stage.stage_label || '')}</div>
+                                <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('artifactRegistryModel', report.artifact_registry_model)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('versionedSnapshotCatalog', report.versioned_snapshot_catalog)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('snapshotDiffPreview', report.snapshot_diff_preview)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('restorePlan', report.restore_plan)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('rollbackPlan', report.rollback_plan)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('retentionPolicy', report.retention_policy)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('persistGate', report.persist_gate)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('restoreAuditLedger', report.restore_audit_ledger)}
+                        ${renderProjectWorkspaceProviderArtifactRegistryRestoreJsonSection('registryReceipt', report.registry_receipt)}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${statusFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerArtifactRegistryRestoreAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-artifact-registry-restore-preview="Project Workspace provider artifact registry restore bundle">${escapeHTML(projectWorkspaceProviderArtifactRegistryRestoreCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerArtifactRegistryRestoreNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderArtifactRegistryRestoreStatus"></div>
                 </div>
             `;
         }
@@ -22354,6 +22753,8 @@
                 if (providerWorkerFinalizationPanel) providerWorkerFinalizationPanel.outerHTML = renderProjectWorkspaceProviderWorkerFinalizationPanel(latestProjectWorkspace);
                 const providerArtifactLineagePanel = document.getElementById('projectWorkspaceProviderArtifactLineagePanel');
                 if (providerArtifactLineagePanel) providerArtifactLineagePanel.outerHTML = renderProjectWorkspaceProviderArtifactLineagePanel(latestProjectWorkspace);
+                const providerArtifactRegistryRestorePanel = document.getElementById('projectWorkspaceProviderArtifactRegistryRestorePanel');
+                if (providerArtifactRegistryRestorePanel) providerArtifactRegistryRestorePanel.outerHTML = renderProjectWorkspaceProviderArtifactRegistryRestorePanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -24546,6 +24947,7 @@
                     ${renderProjectWorkspaceProviderWorkerCheckpointResumePanel(workspace)}
                     ${renderProjectWorkspaceProviderWorkerFinalizationPanel(workspace)}
                     ${renderProjectWorkspaceProviderArtifactLineagePanel(workspace)}
+                    ${renderProjectWorkspaceProviderArtifactRegistryRestorePanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -29916,6 +30318,126 @@
             available: 'Available',
             recorded: 'Recorded',
             projectWorkspaceExportProviderArtifactLineageTitle: 'Artifact Lineage / Provenance / Versioned Audit Snapshot / \u4ea7\u7269\u8840\u7edf\u6765\u6e90\u7248\u672c\u5316\u5ba1\u8ba1\u5feb\u7167'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderArtifactRegistryRestoreBundleMarker: 'Project Workspace provider artifact registry restore bundle',
+            providerArtifactRegistryRestorePanelTitle: 'Artifact Registry / Snapshot Diff / Restore / Rollback',
+            providerArtifactRegistryRestorePanelHelper: 'Dry-run registry, versioned snapshot catalog, diff preview, restore and rollback plans, retention policy, persist gate, audit ledger, and receipt. This panel does not write storage, restore a workspace, apply rollback, delete artifacts, call providers, read secrets, or upload/download media.',
+            copyProviderArtifactRegistryRestore: 'Copy registry restore report',
+            providerArtifactRegistryRestoreCopyTitle: 'Project artifact registry / snapshot diff / restore / rollback report',
+            providerArtifactRegistryRestoreStatus: 'Artifact registry restore status',
+            providerArtifactRegistryRestoreNotRefreshedYet: 'Artifact registry restore report has not been refreshed yet.',
+            providerArtifactRegistryRestoreCopied: 'Artifact registry restore report copied.',
+            providerArtifactRegistryRestoreCopyFailed: 'Could not copy artifact registry restore report.',
+            providerArtifactLineageReady: 'Provider artifact lineage ready',
+            operatorReviewRequired: 'Operator review required',
+            registryItemCount: 'Registry item count',
+            snapshotRefCount: 'Snapshot reference count',
+            diffSectionCount: 'Diff section count',
+            restoreStepCount: 'Restore step count',
+            restoreBlockerCount: 'Restore blocker count',
+            rollbackStepCount: 'Rollback step count',
+            retentionActionCount: 'Retention action count',
+            deleteBlockerCount: 'Delete blocker count',
+            ledgerItemCount: 'Ledger item count',
+            providerArtifactRegistryRestoreStages: 'Artifact registry restore stages',
+            artifactRegistryModel: 'Artifact registry model',
+            versionedSnapshotCatalog: 'Versioned snapshot catalog',
+            snapshotDiffPreview: 'Snapshot diff preview',
+            restorePlan: 'Restore plan',
+            rollbackPlan: 'Rollback plan',
+            retentionPolicy: 'Retention policy',
+            persistGate: 'Persist gate',
+            restoreAuditLedger: 'Restore audit ledger',
+            registryReceipt: 'Registry receipt',
+            registryRecorded: 'Registry recorded',
+            registryPersisted: 'Registry persisted',
+            snapshotCatalogRecorded: 'Snapshot catalog recorded',
+            snapshotCatalogPersisted: 'Snapshot catalog persisted',
+            diffPreviewRecorded: 'Diff preview recorded',
+            diffPreviewPersisted: 'Diff preview persisted',
+            restoreAvailable: 'Restore available',
+            restoreApplied: 'Restore applied',
+            workspaceRestored: 'Workspace restored',
+            rollbackAvailable: 'Rollback available',
+            rollbackApplied: 'Rollback applied',
+            rollbackRecorded: 'Rollback recorded',
+            retentionPolicyRecorded: 'Retention policy recorded',
+            artifactDeleteAllowed: 'Artifact delete allowed',
+            artifactDeleted: 'Artifact deleted',
+            persistAllowed: 'Persist allowed',
+            persistGateRecorded: 'Persist gate recorded',
+            registryWriteAllowed: 'Registry write allowed',
+            snapshotWriteAllowed: 'Snapshot write allowed',
+            restoreWriteAllowed: 'Restore write allowed',
+            rollbackWriteAllowed: 'Rollback write allowed',
+            restoreAuditRecorded: 'Restore audit recorded',
+            auditLedgerPersisted: 'Audit ledger persisted',
+            registryReceiptRecorded: 'Registry receipt recorded',
+            projectSnapshotSaved: 'Project snapshot saved',
+            providerArtifactRegistryRestoreAuditPreview: 'Artifact registry restore audit preview',
+            projectWorkspaceExportProviderArtifactRegistryRestoreTitle: 'Artifact Registry / Snapshot Diff / Restore / Rollback'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderArtifactRegistryRestoreBundleMarker: 'Project Workspace provider artifact registry restore bundle',
+            providerArtifactRegistryRestorePanelTitle: 'Artifact Registry / Snapshot Diff / Restore / Rollback / \u4ea7\u7269\u6ce8\u518c\u8868\u5feb\u7167\u5dee\u5f02\u6062\u590d\u4e0e\u56de\u6eda',
+            providerArtifactRegistryRestorePanelHelper: '\u53ea\u8bfb dry-run \u5c55\u793a\u4ea7\u7269\u6ce8\u518c\u8868\u3001\u7248\u672c\u5316\u5feb\u7167\u76ee\u5f55\u3001\u5dee\u5f02\u9884\u89c8\u3001\u6062\u590d/\u56de\u6eda\u8ba1\u5212\u3001\u4fdd\u7559\u7b56\u7565\u3001persist gate\u3001\u5ba1\u8ba1 ledger \u548c receipt\u3002\u4e0d\u4f1a\u5199\u5165\u5b58\u50a8\u3001\u6062\u590d workspace\u3001\u6267\u884c\u56de\u6eda\u3001\u5220\u9664 artifact\u3001\u8c03\u7528 provider\u3001\u8bfb\u53d6 secret \u6216\u4e0a\u4f20/\u4e0b\u8f7d\u5a92\u4f53\u3002',
+            copyProviderArtifactRegistryRestore: '\u590d\u5236 registry restore \u62a5\u544a',
+            providerArtifactRegistryRestoreCopyTitle: '\u9879\u76ee Artifact Registry / Snapshot Diff / Restore / Rollback \u62a5\u544a',
+            providerArtifactRegistryRestoreStatus: 'Artifact registry restore \u72b6\u6001',
+            providerArtifactRegistryRestoreNotRefreshedYet: 'Artifact registry restore \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerArtifactRegistryRestoreCopied: 'Artifact registry restore \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerArtifactRegistryRestoreCopyFailed: '\u590d\u5236 artifact registry restore \u62a5\u544a\u5931\u8d25\u3002',
+            providerArtifactLineageReady: 'Provider artifact lineage \u5df2\u5c31\u7eea',
+            operatorReviewRequired: '\u9700\u8981\u64cd\u4f5c\u5458\u5ba1\u6838',
+            registryItemCount: 'Registry item \u6570',
+            snapshotRefCount: 'Snapshot reference \u6570',
+            diffSectionCount: 'Diff section \u6570',
+            restoreStepCount: 'Restore step \u6570',
+            restoreBlockerCount: 'Restore blocker \u6570',
+            rollbackStepCount: 'Rollback step \u6570',
+            retentionActionCount: 'Retention action \u6570',
+            deleteBlockerCount: 'Delete blocker \u6570',
+            ledgerItemCount: 'Ledger item \u6570',
+            providerArtifactRegistryRestoreStages: 'Artifact registry restore \u9636\u6bb5',
+            artifactRegistryModel: 'Artifact registry model / \u4ea7\u7269\u6ce8\u518c\u8868\u6a21\u578b',
+            versionedSnapshotCatalog: 'Versioned snapshot catalog / \u7248\u672c\u5316\u5feb\u7167\u76ee\u5f55',
+            snapshotDiffPreview: 'Snapshot diff preview / \u5feb\u7167\u5dee\u5f02\u9884\u89c8',
+            restorePlan: 'Restore plan / \u6062\u590d\u8ba1\u5212',
+            rollbackPlan: 'Rollback plan / \u56de\u6eda\u8ba1\u5212',
+            retentionPolicy: 'Retention policy / \u4fdd\u7559\u7b56\u7565',
+            persistGate: 'Persist gate / \u6301\u4e45\u5316\u95e8',
+            restoreAuditLedger: 'Restore audit ledger / \u6062\u590d\u5ba1\u8ba1\u8d26\u672c',
+            registryReceipt: 'Registry receipt / \u6ce8\u518c\u8868\u56de\u6267',
+            registryRecorded: 'Registry \u5df2\u8bb0\u5f55',
+            registryPersisted: 'Registry \u5df2\u6301\u4e45\u5316',
+            snapshotCatalogRecorded: 'Snapshot catalog \u5df2\u8bb0\u5f55',
+            snapshotCatalogPersisted: 'Snapshot catalog \u5df2\u6301\u4e45\u5316',
+            diffPreviewRecorded: 'Diff preview \u5df2\u8bb0\u5f55',
+            diffPreviewPersisted: 'Diff preview \u5df2\u6301\u4e45\u5316',
+            restoreAvailable: '\u6062\u590d\u53ef\u7528',
+            restoreApplied: '\u6062\u590d\u5df2\u5e94\u7528',
+            workspaceRestored: 'Workspace \u5df2\u6062\u590d',
+            rollbackAvailable: '\u56de\u6eda\u53ef\u7528',
+            rollbackApplied: '\u56de\u6eda\u5df2\u5e94\u7528',
+            rollbackRecorded: '\u56de\u6eda\u5df2\u8bb0\u5f55',
+            retentionPolicyRecorded: '\u4fdd\u7559\u7b56\u7565\u5df2\u8bb0\u5f55',
+            artifactDeleteAllowed: '\u5141\u8bb8\u5220\u9664 artifact',
+            artifactDeleted: 'Artifact \u5df2\u5220\u9664',
+            persistAllowed: '\u5141\u8bb8\u6301\u4e45\u5316',
+            persistGateRecorded: 'Persist gate \u5df2\u8bb0\u5f55',
+            registryWriteAllowed: '\u5141\u8bb8\u5199 registry',
+            snapshotWriteAllowed: '\u5141\u8bb8\u5199 snapshot',
+            restoreWriteAllowed: '\u5141\u8bb8\u5199 restore',
+            rollbackWriteAllowed: '\u5141\u8bb8\u5199 rollback',
+            restoreAuditRecorded: '\u6062\u590d\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
+            auditLedgerPersisted: '\u5ba1\u8ba1 ledger \u5df2\u6301\u4e45\u5316',
+            registryReceiptRecorded: 'Registry receipt \u5df2\u8bb0\u5f55',
+            projectSnapshotSaved: '\u9879\u76ee\u5feb\u7167\u5df2\u4fdd\u5b58',
+            providerArtifactRegistryRestoreAuditPreview: 'Artifact registry restore \u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderArtifactRegistryRestoreTitle: 'Artifact Registry / Snapshot Diff / Restore / Rollback / \u4ea7\u7269\u6ce8\u518c\u8868\u5feb\u7167\u5dee\u5f02\u6062\u590d\u4e0e\u56de\u6eda'
         });
 
 

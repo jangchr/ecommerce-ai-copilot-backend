@@ -121,6 +121,7 @@ Add-Check "project_workspace_provider_queue_lease_worker_marker" ($page.Content 
 Add-Check "project_workspace_provider_worker_checkpoint_resume_marker" ($page.Content -match "Project Workspace provider worker checkpoint resume bundle")
 Add-Check "project_workspace_provider_worker_finalization_marker" ($page.Content -match "Project Workspace provider worker finalization bundle")
 Add-Check "project_workspace_provider_artifact_lineage_marker" ($page.Content -match "Project Workspace provider artifact lineage bundle")
+Add-Check "project_workspace_provider_artifact_registry_restore_marker" ($page.Content -match "Project Workspace provider artifact registry restore bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

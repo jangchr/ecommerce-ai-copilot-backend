@@ -6882,6 +6882,56 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("project_workspace_provider_artifact_lineage_marker", script)
 
 
+    def test_project_workspace_provider_artifact_registry_restore_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider artifact registry restore bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_ARTIFACT_REGISTRY_RESTORE_BUNDLE_MARKER", html)
+        self.assertIn("projectWorkspaceProviderArtifactRegistryRestoreReportFromWorkspace", html)
+        self.assertIn("renderProjectWorkspaceProviderArtifactRegistryRestorePanel", html)
+        self.assertIn("copyProjectWorkspaceProviderArtifactRegistryRestore", html)
+        self.assertIn("provider_artifact_registry_restore_report", html)
+        self.assertIn("projectWorkspaceExportProviderArtifactRegistryRestoreMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot", html)
+        self.assertIn("artifact_registry_model", html)
+        self.assertIn("versioned_snapshot_catalog", html)
+        self.assertIn("snapshot_diff_preview", html)
+        self.assertIn("restore_plan", html)
+        self.assertIn("rollback_plan", html)
+        self.assertIn("retention_policy", html)
+        self.assertIn("persist_gate", html)
+        self.assertIn("restore_audit_ledger", html)
+        self.assertIn("registry_receipt", html)
+        self.assertIn("blocking_failures", html)
+        self.assertIn("artifact_registry_restore_stage_matrix", html)
+        self.assertIn("provider_artifact_lineage_ready", html)
+        self.assertIn("operator_review_required", html)
+        self.assertIn("registry_persisted", html)
+        self.assertIn("snapshot_catalog_persisted", html)
+        self.assertIn("restore_applied", html)
+        self.assertIn("workspace_restored", html)
+        self.assertIn("rollback_applied", html)
+        self.assertIn("artifact_deleted", html)
+        self.assertIn("registry_write_allowed", html)
+        self.assertIn("restore_write_allowed", html)
+        self.assertIn("restore_audit_recorded", html)
+        self.assertIn("provider_secret_read", html)
+        self.assertIn("media_uploaded", html)
+        self.assertIn("paid_generation_allowed", html)
+        self.assertIn("copyProviderArtifactRegistryRestore", html)
+        self.assertIn("providerArtifactRegistryRestoreCopied", html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_provider_artifact_registry_restore_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_artifact_registry_restore_marker", script)
+        self.assertIn("Project Workspace provider artifact registry restore bundle", script)
+
+    def test_project_workspace_provider_artifact_registry_restore_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider artifact registry restore bundle", script)
+        self.assertIn("project_workspace_provider_artifact_registry_restore_marker", script)
+
+
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
