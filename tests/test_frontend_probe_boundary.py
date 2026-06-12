@@ -7032,6 +7032,111 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("Project Workspace provider registry operation approval bundle", script)
         self.assertIn("project_workspace_provider_registry_operation_approval_marker", script)
 
+    def test_project_workspace_provider_registry_transaction_rehearsal_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider registry transaction rehearsal bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_BUNDLE_MARKER", html)
+        self.assertIn("latestProjectProviderRegistryTransactionRehearsalReport", html)
+        self.assertIn("projectWorkspaceProviderRegistryTransactionRehearsalReportFromWorkspace", html)
+        self.assertIn("projectWorkspaceProviderRegistryTransactionRehearsalCopyText", html)
+        self.assertIn("copyProjectWorkspaceProviderRegistryTransactionRehearsal", html)
+        self.assertIn("renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel", html)
+        self.assertIn("projectWorkspaceExportProviderRegistryTransactionRehearsalMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot", html)
+        self.assertIn("provider_registry_transaction_rehearsal_report", html)
+        for field in [
+            "transaction_preflight",
+            "operation_lock_plan",
+            "mutation_ledger_preview",
+            "idempotency_guard",
+            "commit_packet",
+            "rollback_checkpoint",
+            "post_apply_verification",
+            "release_gate",
+            "transaction_audit_receipt",
+            "blocking_failures",
+            "registry_transaction_rehearsal_stage_matrix",
+            "provider_registry_operation_approval_ready",
+            "operator_review_required",
+            "preflight_check_count",
+            "lock_check_count",
+            "mutation_entry_count",
+            "idempotency_check_count",
+            "commit_packet_item_count",
+            "rollback_checkpoint_count",
+            "verification_check_count",
+            "release_gate_check_count",
+            "audit_receipt_item_count",
+            "transaction_required",
+            "transaction_preflight_recorded",
+            "operation_lock_required",
+            "operation_lock_acquired",
+            "mutation_ledger_recorded",
+            "mutation_ledger_persisted",
+            "idempotency_key_registered",
+            "commit_packet_recorded",
+            "commit_packet_persisted",
+            "commit_allowed",
+            "transaction_committed",
+            "registry_write_allowed",
+            "registry_written",
+            "snapshot_write_allowed",
+            "snapshot_written",
+            "restore_write_allowed",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_write_allowed",
+            "rollback_applied",
+            "rollback_checkpoint_recorded",
+            "rollback_checkpoint_persisted",
+            "post_apply_verification_recorded",
+            "post_apply_verification_passed",
+            "release_gate_open",
+            "transaction_audit_recorded",
+            "audit_ledger_persisted",
+            "project_snapshot_saved",
+            "artifact_delete_allowed",
+            "artifact_deleted",
+            "destructive_action_allowed",
+            "operator_approval_captured",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+            "dry_run",
+            "has_provider_registry_transaction_rehearsal_report",
+        ]:
+            self.assertIn(field, html)
+        for support_field in [
+            "supports_transaction_preflight",
+            "supports_operation_lock_plan",
+            "supports_mutation_ledger_preview",
+            "supports_idempotency_guard",
+            "supports_commit_packet",
+            "supports_rollback_checkpoint",
+            "supports_post_apply_verification",
+            "supports_release_gate",
+            "supports_transaction_audit_receipt",
+        ]:
+            self.assertIn(support_field, html)
+        self.assertIn("copyProviderRegistryTransactionRehearsal", html)
+        self.assertIn("providerRegistryTransactionRehearsalCopied", html)
+        self.assertIn("providerRegistryTransactionRehearsalCopyFailed", html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_provider_registry_transaction_rehearsal_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_registry_transaction_rehearsal_marker", script)
+        self.assertIn("Project Workspace provider registry transaction rehearsal bundle", script)
+
+    def test_project_workspace_provider_registry_transaction_rehearsal_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider registry transaction rehearsal bundle", script)
+        self.assertIn("project_workspace_provider_registry_transaction_rehearsal_marker", script)
+
 
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")

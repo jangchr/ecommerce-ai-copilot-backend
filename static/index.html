@@ -12155,6 +12155,149 @@
             ].join('\n');
         }
 
+        function projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderRegistryTransactionRehearsalReportFromWorkspace(workspace);
+            const booleanFields = [
+                'supports_transaction_preflight', 'supports_operation_lock_plan',
+                'supports_mutation_ledger_preview', 'supports_idempotency_guard',
+                'supports_commit_packet', 'supports_rollback_checkpoint',
+                'supports_post_apply_verification', 'supports_release_gate',
+                'supports_transaction_audit_receipt', 'transaction_required',
+                'transaction_preflight_recorded', 'operation_lock_required',
+                'operation_lock_acquired', 'mutation_ledger_recorded',
+                'mutation_ledger_persisted', 'idempotency_key_registered',
+                'commit_packet_recorded', 'commit_packet_persisted', 'commit_allowed',
+                'transaction_committed', 'registry_write_allowed', 'registry_written',
+                'snapshot_write_allowed', 'snapshot_written', 'restore_write_allowed',
+                'restore_applied', 'workspace_restored', 'rollback_write_allowed',
+                'rollback_applied', 'rollback_checkpoint_recorded',
+                'rollback_checkpoint_persisted', 'post_apply_verification_recorded',
+                'post_apply_verification_passed', 'release_gate_open',
+                'transaction_audit_recorded', 'audit_ledger_persisted',
+                'project_snapshot_saved', 'artifact_delete_allowed', 'artifact_deleted',
+                'destructive_action_allowed', 'operator_approval_captured',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'workspace_export_ready',
+                'json_export_ready', 'markdown_export_ready', 'dry_run'
+            ];
+            const snapshot = {
+                marker: 'Project Workspace export pack provider registry transaction rehearsal bundle',
+                report_status: report.report_status || '',
+                provider_registry_transaction_rehearsal_report_version: report.provider_registry_transaction_rehearsal_report_version || '',
+                provider_registry_operation_approval_ready: Boolean(report.provider_registry_operation_approval_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                registry_transaction_rehearsal_stage_matrix: Array.isArray(report.registry_transaction_rehearsal_stage_matrix) ? report.registry_transaction_rehearsal_stage_matrix : [],
+                transaction_preflight: report.transaction_preflight || {},
+                operation_lock_plan: report.operation_lock_plan || {},
+                mutation_ledger_preview: report.mutation_ledger_preview || {},
+                idempotency_guard: report.idempotency_guard || {},
+                commit_packet: report.commit_packet || {},
+                rollback_checkpoint: report.rollback_checkpoint || {},
+                post_apply_verification: report.post_apply_verification || {},
+                release_gate: report.release_gate || {},
+                transaction_audit_receipt: report.transaction_audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                preflight_check_count: Number(report.preflight_check_count || 0),
+                lock_check_count: Number(report.lock_check_count || 0),
+                mutation_entry_count: Number(report.mutation_entry_count || 0),
+                idempotency_check_count: Number(report.idempotency_check_count || 0),
+                commit_packet_item_count: Number(report.commit_packet_item_count || 0),
+                rollback_checkpoint_count: Number(report.rollback_checkpoint_count || 0),
+                verification_check_count: Number(report.verification_check_count || 0),
+                release_gate_check_count: Number(report.release_gate_check_count || 0),
+                audit_receipt_item_count: Number(report.audit_receipt_item_count || 0),
+                has_provider_registry_transaction_rehearsal_report: Boolean(
+                    report.report_status || report.provider_registry_transaction_rehearsal_report_version
+                )
+            };
+            booleanFields.forEach((key) => {
+                snapshot[key] = Boolean(report[key]);
+            });
+            return snapshot;
+        }
+
+        function projectWorkspaceExportProviderRegistryTransactionRehearsalMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot(workspace);
+            if (!report.has_provider_registry_transaction_rehearsal_report) {
+                return `## ${t('projectWorkspaceExportProviderRegistryTransactionRehearsalTitle')}\n${t('providerRegistryTransactionRehearsalNotRefreshedYet')}`;
+            }
+            const blockers = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stages = report.registry_transaction_rehearsal_stage_matrix.length
+                ? report.registry_transaction_rehearsal_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const supportKeys = [
+                'supports_transaction_preflight', 'supports_operation_lock_plan',
+                'supports_mutation_ledger_preview', 'supports_idempotency_guard',
+                'supports_commit_packet', 'supports_rollback_checkpoint',
+                'supports_post_apply_verification', 'supports_release_gate',
+                'supports_transaction_audit_receipt'
+            ];
+            const statusKeys = [
+                'transaction_required', 'transaction_preflight_recorded',
+                'operation_lock_required', 'operation_lock_acquired',
+                'mutation_ledger_recorded', 'mutation_ledger_persisted',
+                'idempotency_key_registered', 'commit_packet_recorded',
+                'commit_packet_persisted', 'commit_allowed', 'transaction_committed',
+                'registry_write_allowed', 'registry_written', 'snapshot_write_allowed',
+                'snapshot_written', 'restore_write_allowed', 'restore_applied',
+                'workspace_restored', 'rollback_write_allowed', 'rollback_applied',
+                'rollback_checkpoint_recorded', 'rollback_checkpoint_persisted',
+                'post_apply_verification_recorded', 'post_apply_verification_passed',
+                'release_gate_open', 'transaction_audit_recorded',
+                'audit_ledger_persisted', 'project_snapshot_saved',
+                'artifact_delete_allowed', 'artifact_deleted',
+                'destructive_action_allowed', 'operator_approval_captured',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'dry_run'
+            ];
+            return [
+                `## ${t('projectWorkspaceExportProviderRegistryTransactionRehearsalTitle')}`,
+                `${t('providerRegistryTransactionRehearsalStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerRegistryOperationApprovalReady')}: ${report.provider_registry_operation_approval_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('preflightCheckCount')}: ${report.preflight_check_count}`,
+                `${t('lockCheckCount')}: ${report.lock_check_count}`,
+                `${t('mutationEntryCount')}: ${report.mutation_entry_count}`,
+                `${t('idempotencyCheckCount')}: ${report.idempotency_check_count}`,
+                `${t('commitPacketItemCount')}: ${report.commit_packet_item_count}`,
+                `${t('rollbackCheckpointCount')}: ${report.rollback_checkpoint_count}`,
+                `${t('verificationCheckCount')}: ${report.verification_check_count}`,
+                `${t('releaseGateCheckCount')}: ${report.release_gate_check_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                ...supportKeys.map((key) => `${key}: ${report[key]}`),
+                ...statusKeys.map((key) => `${key}: ${report[key]}`),
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockers,
+                '',
+                `### ${t('providerRegistryTransactionRehearsalStages')}`,
+                ...stages,
+                ...[
+                    ['transactionPreflight', report.transaction_preflight],
+                    ['operationLockPlan', report.operation_lock_plan],
+                    ['mutationLedgerPreview', report.mutation_ledger_preview],
+                    ['idempotencyGuard', report.idempotency_guard],
+                    ['commitPacket', report.commit_packet],
+                    ['rollbackCheckpoint', report.rollback_checkpoint],
+                    ['postApplyVerification', report.post_apply_verification],
+                    ['releaseGate', report.release_gate],
+                    ['transactionAuditReceipt', report.transaction_audit_receipt]
+                ].flatMap(([labelKey, value]) => [
+                    '',
+                    `### ${t(labelKey)}`,
+                    '```json',
+                    JSON.stringify(value, null, 2),
+                    '```'
+                ])
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
             return {
@@ -13893,6 +14036,8 @@
                 '',
                 projectWorkspaceExportProviderRegistryOperationApprovalMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderRegistryTransactionRehearsalMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -13930,6 +14075,7 @@
                 provider_artifact_lineage_report: projectWorkspaceExportProviderArtifactLineageSnapshot(workspace),
                 provider_artifact_registry_restore_report: projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot(workspace),
                 provider_registry_operation_approval_report: projectWorkspaceExportProviderRegistryOperationApprovalSnapshot(workspace),
+                provider_registry_transaction_rehearsal_report: projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -14067,6 +14213,7 @@
                 latestProjectProviderArtifactLineageReport = payload.provider_artifact_lineage_report || {};
                 latestProjectProviderArtifactRegistryRestoreReport = payload.provider_artifact_registry_restore_report || {};
                 latestProjectProviderRegistryOperationApprovalReport = payload.provider_registry_operation_approval_report || {};
+                latestProjectProviderRegistryTransactionRehearsalReport = payload.provider_registry_transaction_rehearsal_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -17934,6 +18081,8 @@
         let latestProjectProviderArtifactRegistryRestoreReport = {};
         const PROJECT_WORKSPACE_PROVIDER_REGISTRY_OPERATION_APPROVAL_BUNDLE_MARKER = 'Project Workspace provider registry operation approval bundle';
         let latestProjectProviderRegistryOperationApprovalReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_BUNDLE_MARKER = 'Project Workspace provider registry transaction rehearsal bundle';
+        let latestProjectProviderRegistryTransactionRehearsalReport = {};
 
         function projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderArtifactLineageReport || {}).length
@@ -18845,6 +18994,267 @@
                         ${hasReport ? `<pre class="debug" data-provider-registry-operation-approval-preview="Project Workspace provider registry operation approval bundle">${escapeHTML(projectWorkspaceProviderRegistryOperationApprovalCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerRegistryOperationApprovalNotRefreshedYet'))}</div>`}
                     </div>
                     <div class="quick-use-copy-status" id="projectWorkspaceProviderRegistryOperationApprovalStatus"></div>
+                </div>
+            `;
+        }
+
+        function projectWorkspaceProviderRegistryTransactionRehearsalReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderRegistryTransactionRehearsalReport || {}).length
+                ? latestProjectProviderRegistryTransactionRehearsalReport
+                : workspace?.provider_registry_transaction_rehearsal_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_registry_transaction_rehearsal_report_version: '',
+                report_status: graphSummary.latest_provider_registry_transaction_rehearsal_status || '',
+                provider_registry_operation_approval_ready: false,
+                operator_review_required: true,
+                stage_count: 0,
+                registry_transaction_rehearsal_stage_matrix: [],
+                transaction_preflight: {},
+                operation_lock_plan: {},
+                mutation_ledger_preview: {},
+                idempotency_guard: {},
+                commit_packet: {},
+                rollback_checkpoint: {},
+                post_apply_verification: {},
+                release_gate: {},
+                transaction_audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_registry_transaction_rehearsal_blocking_failure_count || 0),
+                blocking_failures: [],
+                preflight_check_count: 0,
+                lock_check_count: 0,
+                mutation_entry_count: 0,
+                idempotency_check_count: 0,
+                commit_packet_item_count: 0,
+                rollback_checkpoint_count: 0,
+                verification_check_count: 0,
+                release_gate_check_count: 0,
+                audit_receipt_item_count: 0,
+                supports_transaction_preflight: false,
+                supports_operation_lock_plan: false,
+                supports_mutation_ledger_preview: false,
+                supports_idempotency_guard: false,
+                supports_commit_packet: false,
+                supports_rollback_checkpoint: false,
+                supports_post_apply_verification: false,
+                supports_release_gate: false,
+                supports_transaction_audit_receipt: false,
+                dry_run: true,
+                transaction_required: true,
+                transaction_preflight_recorded: false,
+                operation_lock_required: true,
+                operation_lock_acquired: false,
+                mutation_ledger_recorded: false,
+                mutation_ledger_persisted: false,
+                idempotency_key_registered: false,
+                commit_packet_recorded: false,
+                commit_packet_persisted: false,
+                commit_allowed: Boolean(graphSummary.latest_provider_registry_transaction_rehearsal_commit_allowed),
+                transaction_committed: Boolean(graphSummary.latest_provider_registry_transaction_rehearsal_transaction_committed),
+                registry_write_allowed: false,
+                registry_written: false,
+                snapshot_write_allowed: false,
+                snapshot_written: false,
+                restore_write_allowed: false,
+                restore_applied: false,
+                workspace_restored: false,
+                rollback_write_allowed: false,
+                rollback_applied: false,
+                rollback_checkpoint_recorded: false,
+                rollback_checkpoint_persisted: false,
+                post_apply_verification_recorded: false,
+                post_apply_verification_passed: false,
+                release_gate_open: false,
+                transaction_audit_recorded: false,
+                audit_ledger_persisted: false,
+                project_snapshot_saved: false,
+                artifact_delete_allowed: false,
+                artifact_deleted: false,
+                destructive_action_allowed: false,
+                operator_approval_captured: false,
+                workspace_export_ready: false,
+                json_export_ready: false,
+                markdown_export_ready: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_registry_transaction_rehearsal_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false
+            };
+        }
+
+        function projectWorkspaceProviderRegistryTransactionRehearsalCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot(workspace);
+            return [
+                t('providerRegistryTransactionRehearsalCopyTitle'),
+                `${t('providerRegistryTransactionRehearsalStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerRegistryOperationApprovalReady')}: ${report.provider_registry_operation_approval_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('preflightCheckCount')}: ${report.preflight_check_count}`,
+                `${t('lockCheckCount')}: ${report.lock_check_count}`,
+                `${t('mutationEntryCount')}: ${report.mutation_entry_count}`,
+                `${t('idempotencyCheckCount')}: ${report.idempotency_check_count}`,
+                `${t('commitPacketItemCount')}: ${report.commit_packet_item_count}`,
+                `${t('rollbackCheckpointCount')}: ${report.rollback_checkpoint_count}`,
+                `${t('verificationCheckCount')}: ${report.verification_check_count}`,
+                `${t('releaseGateCheckCount')}: ${report.release_gate_check_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('blockingFailures')}:`,
+                report.blocking_failures.length
+                    ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : t('none'),
+                '',
+                JSON.stringify({ provider_registry_transaction_rehearsal_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderRegistryTransactionRehearsal() {
+            const status = document.getElementById('projectWorkspaceProviderRegistryTransactionRehearsalStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderRegistryTransactionRehearsalCopyText());
+                if (status) status.textContent = t('providerRegistryTransactionRehearsalCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerRegistryTransactionRehearsalCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection(labelKey, value) {
+            return `
+                <div class="graph-os-card">
+                    <div class="json-key">${escapeHTML(t(labelKey))}</div>
+                    <pre class="debug">${escapeHTML(JSON.stringify(value || {}, null, 2))}</pre>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderRegistryTransactionRehearsalReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.registry_transaction_rehearsal_stage_matrix) ? report.registry_transaction_rehearsal_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const supportFields = [
+                ['supportsTransactionPreflight', report.supports_transaction_preflight],
+                ['supportsOperationLockPlan', report.supports_operation_lock_plan],
+                ['supportsMutationLedgerPreview', report.supports_mutation_ledger_preview],
+                ['supportsIdempotencyGuard', report.supports_idempotency_guard],
+                ['supportsCommitPacket', report.supports_commit_packet],
+                ['supportsRollbackCheckpoint', report.supports_rollback_checkpoint],
+                ['supportsPostApplyVerification', report.supports_post_apply_verification],
+                ['supportsReleaseGate', report.supports_release_gate],
+                ['supportsTransactionAuditReceipt', report.supports_transaction_audit_receipt]
+            ];
+            const statusFields = [
+                ['transactionRequired', report.transaction_required],
+                ['transactionPreflightRecorded', report.transaction_preflight_recorded],
+                ['operationLockRequired', report.operation_lock_required],
+                ['operationLockAcquired', report.operation_lock_acquired],
+                ['mutationLedgerRecorded', report.mutation_ledger_recorded],
+                ['mutationLedgerPersisted', report.mutation_ledger_persisted],
+                ['idempotencyKeyRegistered', report.idempotency_key_registered],
+                ['commitPacketRecorded', report.commit_packet_recorded],
+                ['commitPacketPersisted', report.commit_packet_persisted],
+                ['commitAllowed', report.commit_allowed],
+                ['transactionCommitted', report.transaction_committed],
+                ['registryWriteAllowed', report.registry_write_allowed],
+                ['registryWritten', report.registry_written],
+                ['snapshotWriteAllowed', report.snapshot_write_allowed],
+                ['snapshotWritten', report.snapshot_written],
+                ['restoreWriteAllowed', report.restore_write_allowed],
+                ['restoreApplied', report.restore_applied],
+                ['workspaceRestored', report.workspace_restored],
+                ['rollbackWriteAllowed', report.rollback_write_allowed],
+                ['rollbackApplied', report.rollback_applied],
+                ['rollbackCheckpointRecorded', report.rollback_checkpoint_recorded],
+                ['rollbackCheckpointPersisted', report.rollback_checkpoint_persisted],
+                ['postApplyVerificationRecorded', report.post_apply_verification_recorded],
+                ['postApplyVerificationPassed', report.post_apply_verification_passed],
+                ['releaseGateOpen', report.release_gate_open],
+                ['transactionAuditRecorded', report.transaction_audit_recorded],
+                ['auditLedgerPersisted', report.audit_ledger_persisted],
+                ['projectSnapshotSaved', report.project_snapshot_saved],
+                ['artifactDeleteAllowed', report.artifact_delete_allowed],
+                ['artifactDeleted', report.artifact_deleted],
+                ['destructiveActionAllowed', report.destructive_action_allowed],
+                ['operatorApprovalCaptured', report.operator_approval_captured],
+                ['externalApiCallAllowed', report.external_api_call_allowed],
+                ['externalApiCalled', report.external_api_called],
+                ['providerSecretRead', report.provider_secret_read],
+                ['providerSecretExported', report.provider_secret_exported],
+                ['mediaUploaded', report.media_uploaded],
+                ['mediaDownloaded', report.media_downloaded],
+                ['paidGenerationAllowed', report.paid_generation_allowed],
+                ['dryRun', report.dry_run]
+            ];
+            const hasReport = Boolean(
+                report.report_status || report.provider_registry_transaction_rehearsal_report_version || stages.length
+            );
+            return `
+                <div class="section-block" id="projectWorkspaceProviderRegistryTransactionRehearsalPanel" data-project-provider-registry-transaction-rehearsal-marker="Project Workspace provider registry transaction rehearsal bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerRegistryTransactionRehearsalPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerRegistryTransactionRehearsalPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderRegistryTransactionRehearsalBtn" type="button" onclick="copyProjectWorkspaceProviderRegistryTransactionRehearsal()">${escapeHTML(t('copyProviderRegistryTransactionRehearsal'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerRegistryTransactionRehearsalStatus'))}</div><strong>${escapeHTML(report.report_status || t('providerRegistryTransactionRehearsalNotRefreshedYet'))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerRegistryOperationApprovalReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_registry_operation_approval_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewRequired'))}</div><strong>${escapeHTML(String(Boolean(report.operator_review_required)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('preflightCheckCount'))}</div><strong>${escapeHTML(String(Number(report.preflight_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('lockCheckCount'))}</div><strong>${escapeHTML(String(Number(report.lock_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('mutationEntryCount'))}</div><strong>${escapeHTML(String(Number(report.mutation_entry_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('idempotencyCheckCount'))}</div><strong>${escapeHTML(String(Number(report.idempotency_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('commitPacketItemCount'))}</div><strong>${escapeHTML(String(Number(report.commit_packet_item_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('rollbackCheckpointCount'))}</div><strong>${escapeHTML(String(Number(report.rollback_checkpoint_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('verificationCheckCount'))}</div><strong>${escapeHTML(String(Number(report.verification_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('releaseGateCheckCount'))}</div><strong>${escapeHTML(String(Number(report.release_gate_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('auditReceiptItemCount'))}</div><strong>${escapeHTML(String(Number(report.audit_receipt_item_count || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerRegistryTransactionRehearsalStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} - ${escapeHTML(stage.stage_label || '')}</div>
+                                <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('transactionPreflight', report.transaction_preflight)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('operationLockPlan', report.operation_lock_plan)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('mutationLedgerPreview', report.mutation_ledger_preview)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('idempotencyGuard', report.idempotency_guard)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('commitPacket', report.commit_packet)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('rollbackCheckpoint', report.rollback_checkpoint)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('postApplyVerification', report.post_apply_verification)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('releaseGate', report.release_gate)}
+                        ${renderProjectWorkspaceProviderRegistryTransactionRehearsalJsonSection('transactionAuditReceipt', report.transaction_audit_receipt)}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${supportFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${statusFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerRegistryTransactionRehearsalAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-registry-transaction-rehearsal-preview="Project Workspace provider registry transaction rehearsal bundle">${escapeHTML(projectWorkspaceProviderRegistryTransactionRehearsalCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerRegistryTransactionRehearsalNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderRegistryTransactionRehearsalStatus"></div>
                 </div>
             `;
         }
@@ -23167,6 +23577,8 @@
                 if (providerArtifactRegistryRestorePanel) providerArtifactRegistryRestorePanel.outerHTML = renderProjectWorkspaceProviderArtifactRegistryRestorePanel(latestProjectWorkspace);
                 const providerRegistryOperationApprovalPanel = document.getElementById('projectWorkspaceProviderRegistryOperationApprovalPanel');
                 if (providerRegistryOperationApprovalPanel) providerRegistryOperationApprovalPanel.outerHTML = renderProjectWorkspaceProviderRegistryOperationApprovalPanel(latestProjectWorkspace);
+                const providerRegistryTransactionRehearsalPanel = document.getElementById('projectWorkspaceProviderRegistryTransactionRehearsalPanel');
+                if (providerRegistryTransactionRehearsalPanel) providerRegistryTransactionRehearsalPanel.outerHTML = renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -25361,6 +25773,7 @@
                     ${renderProjectWorkspaceProviderArtifactLineagePanel(workspace)}
                     ${renderProjectWorkspaceProviderArtifactRegistryRestorePanel(workspace)}
                     ${renderProjectWorkspaceProviderRegistryOperationApprovalPanel(workspace)}
+                    ${renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -30961,6 +31374,124 @@
             externalApiCallAllowed: '\u5141\u8bb8\u5916\u90e8 API \u8c03\u7528',
             providerRegistryOperationApprovalAuditPreview: 'Registry operation approval \u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderRegistryOperationApprovalTitle: 'Registry Operation Approval / Apply Simulation / Persistence Boundary / \u6ce8\u518c\u8868\u64cd\u4f5c\u6279\u51c6\u3001\u5e94\u7528\u6a21\u62df\u4e0e\u6301\u4e45\u5316\u8fb9\u754c'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderRegistryTransactionRehearsalBundleMarker: 'Project Workspace provider registry transaction rehearsal bundle',
+            providerRegistryTransactionRehearsalPanelTitle: 'Registry Transaction Rehearsal / Mutation Ledger / Post-Apply Verification',
+            providerRegistryTransactionRehearsalPanelHelper: 'Read-only dry-run transaction rehearsal covering preflight, lock planning, mutation ledger preview, idempotency, commit packet, rollback checkpoint, post-apply verification, release gate, and audit receipt. No lock is acquired and no registry, snapshot, restore, rollback, provider, media, secret, or paid operation is executed.',
+            copyProviderRegistryTransactionRehearsal: 'Copy registry transaction rehearsal report',
+            providerRegistryTransactionRehearsalCopyTitle: 'Project registry transaction rehearsal report',
+            providerRegistryTransactionRehearsalStatus: 'Registry transaction rehearsal status',
+            providerRegistryTransactionRehearsalNotRefreshedYet: 'Registry transaction rehearsal report has not been refreshed yet.',
+            providerRegistryTransactionRehearsalCopied: 'Registry transaction rehearsal report copied.',
+            providerRegistryTransactionRehearsalCopyFailed: 'Could not copy registry transaction rehearsal report.',
+            providerRegistryOperationApprovalReady: 'Registry operation approval report ready',
+            preflightCheckCount: 'Preflight check count',
+            lockCheckCount: 'Lock check count',
+            mutationEntryCount: 'Mutation entry count',
+            idempotencyCheckCount: 'Idempotency check count',
+            commitPacketItemCount: 'Commit packet item count',
+            rollbackCheckpointCount: 'Rollback checkpoint count',
+            verificationCheckCount: 'Verification check count',
+            releaseGateCheckCount: 'Release gate check count',
+            providerRegistryTransactionRehearsalStages: 'Registry transaction rehearsal stages',
+            transactionPreflight: 'Transaction preflight',
+            operationLockPlan: 'Operation lock plan',
+            mutationLedgerPreview: 'Mutation ledger preview',
+            idempotencyGuard: 'Idempotency guard',
+            commitPacket: 'Commit packet',
+            rollbackCheckpoint: 'Rollback checkpoint',
+            postApplyVerification: 'Post-apply verification',
+            releaseGate: 'Release gate',
+            transactionAuditReceipt: 'Transaction audit receipt',
+            supportsTransactionPreflight: 'Supports transaction preflight',
+            supportsOperationLockPlan: 'Supports operation lock plan',
+            supportsMutationLedgerPreview: 'Supports mutation ledger preview',
+            supportsIdempotencyGuard: 'Supports idempotency guard',
+            supportsCommitPacket: 'Supports commit packet',
+            supportsRollbackCheckpoint: 'Supports rollback checkpoint',
+            supportsPostApplyVerification: 'Supports post-apply verification',
+            supportsReleaseGate: 'Supports release gate',
+            supportsTransactionAuditReceipt: 'Supports transaction audit receipt',
+            transactionRequired: 'Transaction required',
+            transactionPreflightRecorded: 'Transaction preflight recorded',
+            operationLockRequired: 'Operation lock required',
+            operationLockAcquired: 'Operation lock acquired',
+            mutationLedgerRecorded: 'Mutation ledger recorded',
+            mutationLedgerPersisted: 'Mutation ledger persisted',
+            idempotencyKeyRegistered: 'Idempotency key registered',
+            commitPacketRecorded: 'Commit packet recorded',
+            commitPacketPersisted: 'Commit packet persisted',
+            commitAllowed: 'Commit allowed',
+            transactionCommitted: 'Transaction committed',
+            rollbackCheckpointRecorded: 'Rollback checkpoint recorded',
+            rollbackCheckpointPersisted: 'Rollback checkpoint persisted',
+            postApplyVerificationRecorded: 'Post-apply verification recorded',
+            postApplyVerificationPassed: 'Post-apply verification passed',
+            releaseGateOpen: 'Release gate open',
+            transactionAuditRecorded: 'Transaction audit recorded',
+            providerRegistryTransactionRehearsalAuditPreview: 'Registry transaction rehearsal audit preview',
+            projectWorkspaceExportProviderRegistryTransactionRehearsalTitle: 'Registry Transaction Rehearsal / Mutation Ledger / Post-Apply Verification'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderRegistryTransactionRehearsalBundleMarker: 'Project Workspace provider registry transaction rehearsal bundle',
+            providerRegistryTransactionRehearsalPanelTitle: 'Registry Transaction Rehearsal / Mutation Ledger / Post-Apply Verification / \u6ce8\u518c\u8868\u4e8b\u52a1\u6f14\u7ec3\u3001\u53d8\u66f4\u8d26\u672c\u4e0e\u5e94\u7528\u540e\u9a8c\u8bc1',
+            providerRegistryTransactionRehearsalPanelHelper: '\u53ea\u8bfb dry-run \u5c55\u793a\u4e8b\u52a1\u9884\u68c0\u3001\u9501\u8ba1\u5212\u3001\u53d8\u66f4\u8d26\u672c\u9884\u89c8\u3001\u5e42\u7b49\u4fdd\u62a4\u3001\u63d0\u4ea4\u5305\u3001\u56de\u6eda\u68c0\u67e5\u70b9\u3001\u5e94\u7528\u540e\u9a8c\u8bc1\u3001\u53d1\u5e03\u95e8\u7981\u548c\u5ba1\u8ba1\u56de\u6267\u3002\u4e0d\u4f1a\u83b7\u53d6\u771f\u5b9e\u9501\uff0c\u4e5f\u4e0d\u4f1a\u5199 registry/snapshot\u3001\u6267\u884c restore/rollback\u3001\u8c03\u7528 provider\u3001\u8bfb\u53d6 secret\u3001\u4f20\u8f93\u5a92\u4f53\u6216\u6263\u8d39\u3002',
+            copyProviderRegistryTransactionRehearsal: '\u590d\u5236 registry transaction rehearsal \u62a5\u544a',
+            providerRegistryTransactionRehearsalCopyTitle: '\u9879\u76ee registry transaction rehearsal \u62a5\u544a',
+            providerRegistryTransactionRehearsalStatus: 'Registry transaction rehearsal \u72b6\u6001',
+            providerRegistryTransactionRehearsalNotRefreshedYet: 'Registry transaction rehearsal \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerRegistryTransactionRehearsalCopied: 'Registry transaction rehearsal \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerRegistryTransactionRehearsalCopyFailed: '\u590d\u5236 registry transaction rehearsal \u62a5\u544a\u5931\u8d25\u3002',
+            providerRegistryOperationApprovalReady: 'Registry operation approval \u62a5\u544a\u5df2\u5c31\u7eea',
+            preflightCheckCount: '\u9884\u68c0\u9879\u6570',
+            lockCheckCount: '\u9501\u68c0\u67e5\u6570',
+            mutationEntryCount: '\u53d8\u66f4\u8d26\u672c\u9879\u6570',
+            idempotencyCheckCount: '\u5e42\u7b49\u68c0\u67e5\u6570',
+            commitPacketItemCount: '\u63d0\u4ea4\u5305\u9879\u6570',
+            rollbackCheckpointCount: '\u56de\u6eda\u68c0\u67e5\u70b9\u6570',
+            verificationCheckCount: '\u9a8c\u8bc1\u68c0\u67e5\u6570',
+            releaseGateCheckCount: '\u53d1\u5e03\u95e8\u7981\u68c0\u67e5\u6570',
+            providerRegistryTransactionRehearsalStages: 'Registry transaction rehearsal \u9636\u6bb5',
+            transactionPreflight: 'Transaction preflight / \u4e8b\u52a1\u9884\u68c0',
+            operationLockPlan: 'Operation lock plan / \u64cd\u4f5c\u9501\u8ba1\u5212',
+            mutationLedgerPreview: 'Mutation ledger preview / \u53d8\u66f4\u8d26\u672c\u9884\u89c8',
+            idempotencyGuard: 'Idempotency guard / \u5e42\u7b49\u4fdd\u62a4',
+            commitPacket: 'Commit packet / \u63d0\u4ea4\u5305',
+            rollbackCheckpoint: 'Rollback checkpoint / \u56de\u6eda\u68c0\u67e5\u70b9',
+            postApplyVerification: 'Post-apply verification / \u5e94\u7528\u540e\u9a8c\u8bc1',
+            releaseGate: 'Release gate / \u53d1\u5e03\u95e8\u7981',
+            transactionAuditReceipt: 'Transaction audit receipt / \u4e8b\u52a1\u5ba1\u8ba1\u56de\u6267',
+            supportsTransactionPreflight: '\u652f\u6301\u4e8b\u52a1\u9884\u68c0',
+            supportsOperationLockPlan: '\u652f\u6301\u64cd\u4f5c\u9501\u8ba1\u5212',
+            supportsMutationLedgerPreview: '\u652f\u6301\u53d8\u66f4\u8d26\u672c\u9884\u89c8',
+            supportsIdempotencyGuard: '\u652f\u6301\u5e42\u7b49\u4fdd\u62a4',
+            supportsCommitPacket: '\u652f\u6301\u63d0\u4ea4\u5305',
+            supportsRollbackCheckpoint: '\u652f\u6301\u56de\u6eda\u68c0\u67e5\u70b9',
+            supportsPostApplyVerification: '\u652f\u6301\u5e94\u7528\u540e\u9a8c\u8bc1',
+            supportsReleaseGate: '\u652f\u6301\u53d1\u5e03\u95e8\u7981',
+            supportsTransactionAuditReceipt: '\u652f\u6301\u4e8b\u52a1\u5ba1\u8ba1\u56de\u6267',
+            transactionRequired: '\u9700\u8981\u4e8b\u52a1',
+            transactionPreflightRecorded: '\u4e8b\u52a1\u9884\u68c0\u5df2\u8bb0\u5f55',
+            operationLockRequired: '\u9700\u8981\u64cd\u4f5c\u9501',
+            operationLockAcquired: '\u5df2\u83b7\u53d6\u64cd\u4f5c\u9501',
+            mutationLedgerRecorded: '\u53d8\u66f4\u8d26\u672c\u5df2\u8bb0\u5f55',
+            mutationLedgerPersisted: '\u53d8\u66f4\u8d26\u672c\u5df2\u6301\u4e45\u5316',
+            idempotencyKeyRegistered: '\u5e42\u7b49\u952e\u5df2\u6ce8\u518c',
+            commitPacketRecorded: '\u63d0\u4ea4\u5305\u5df2\u8bb0\u5f55',
+            commitPacketPersisted: '\u63d0\u4ea4\u5305\u5df2\u6301\u4e45\u5316',
+            commitAllowed: '\u5141\u8bb8\u63d0\u4ea4',
+            transactionCommitted: '\u4e8b\u52a1\u5df2\u63d0\u4ea4',
+            rollbackCheckpointRecorded: '\u56de\u6eda\u68c0\u67e5\u70b9\u5df2\u8bb0\u5f55',
+            rollbackCheckpointPersisted: '\u56de\u6eda\u68c0\u67e5\u70b9\u5df2\u6301\u4e45\u5316',
+            postApplyVerificationRecorded: '\u5e94\u7528\u540e\u9a8c\u8bc1\u5df2\u8bb0\u5f55',
+            postApplyVerificationPassed: '\u5e94\u7528\u540e\u9a8c\u8bc1\u5df2\u901a\u8fc7',
+            releaseGateOpen: '\u53d1\u5e03\u95e8\u7981\u5df2\u6253\u5f00',
+            transactionAuditRecorded: '\u4e8b\u52a1\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
+            providerRegistryTransactionRehearsalAuditPreview: 'Registry transaction rehearsal \u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderRegistryTransactionRehearsalTitle: 'Registry Transaction Rehearsal / Mutation Ledger / Post-Apply Verification / \u6ce8\u518c\u8868\u4e8b\u52a1\u6f14\u7ec3\u3001\u53d8\u66f4\u8d26\u672c\u4e0e\u5e94\u7528\u540e\u9a8c\u8bc1'
         });
 
 
