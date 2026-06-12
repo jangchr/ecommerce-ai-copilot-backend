@@ -1421,6 +1421,124 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             graph_summary["latest_provider_registry_operation_approval_external_api_called"]
         )
+        self.assertIn("provider_registry_transaction_rehearsal_report", payload)
+        transaction_rehearsal = payload["provider_registry_transaction_rehearsal_report"]
+        self.assertEqual(
+            transaction_rehearsal[
+                "provider_registry_transaction_rehearsal_report_version"
+            ],
+            "provider_registry_transaction_rehearsal_report_v1",
+        )
+        self.assertEqual(
+            transaction_rehearsal["report_status"],
+            "provider_registry_transaction_rehearsal_ready_dry_run",
+        )
+        self.assertTrue(
+            transaction_rehearsal["provider_registry_operation_approval_ready"]
+        )
+        self.assertTrue(transaction_rehearsal["operator_review_required"])
+        for section in [
+            "transaction_preflight",
+            "operation_lock_plan",
+            "mutation_ledger_preview",
+            "idempotency_guard",
+            "commit_packet",
+            "rollback_checkpoint",
+            "post_apply_verification",
+            "release_gate",
+            "transaction_audit_receipt",
+        ]:
+            self.assertTrue(transaction_rehearsal[section])
+        for count_field in [
+            "preflight_check_count",
+            "lock_check_count",
+            "mutation_entry_count",
+            "idempotency_check_count",
+            "commit_packet_item_count",
+            "rollback_checkpoint_count",
+            "verification_check_count",
+            "release_gate_check_count",
+            "audit_receipt_item_count",
+        ]:
+            self.assertGreater(transaction_rehearsal[count_field], 0)
+        for support_field in [
+            "supports_transaction_preflight",
+            "supports_operation_lock_plan",
+            "supports_mutation_ledger_preview",
+            "supports_idempotency_guard",
+            "supports_commit_packet",
+            "supports_rollback_checkpoint",
+            "supports_post_apply_verification",
+            "supports_release_gate",
+            "supports_transaction_audit_receipt",
+        ]:
+            self.assertTrue(transaction_rehearsal[support_field])
+        self.assertTrue(transaction_rehearsal["dry_run"])
+        for disabled_field in [
+            "transaction_preflight_recorded",
+            "operation_lock_acquired",
+            "mutation_ledger_recorded",
+            "mutation_ledger_persisted",
+            "idempotency_key_registered",
+            "commit_packet_recorded",
+            "commit_packet_persisted",
+            "commit_allowed",
+            "transaction_committed",
+            "registry_write_allowed",
+            "registry_written",
+            "snapshot_write_allowed",
+            "snapshot_written",
+            "restore_write_allowed",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_write_allowed",
+            "rollback_applied",
+            "rollback_checkpoint_recorded",
+            "rollback_checkpoint_persisted",
+            "post_apply_verification_recorded",
+            "post_apply_verification_passed",
+            "release_gate_open",
+            "transaction_audit_recorded",
+            "audit_ledger_persisted",
+            "project_snapshot_saved",
+            "artifact_delete_allowed",
+            "artifact_deleted",
+            "destructive_action_allowed",
+            "operator_approval_captured",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+        ]:
+            self.assertFalse(transaction_rehearsal[disabled_field])
+        self.assertEqual(
+            graph_summary["latest_provider_registry_transaction_rehearsal_status"],
+            "provider_registry_transaction_rehearsal_ready_dry_run",
+        )
+        self.assertGreater(
+            graph_summary[
+                "latest_provider_registry_transaction_rehearsal_blocking_failure_count"
+            ],
+            0,
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_registry_transaction_rehearsal_commit_allowed"
+            ]
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_registry_transaction_rehearsal_transaction_committed"
+            ]
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_registry_transaction_rehearsal_external_api_called"
+            ]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

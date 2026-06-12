@@ -4530,6 +4530,218 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
             self.assertFalse(report[disabled_field])
 
 
+    def test_provider_registry_transaction_rehearsal_report_models_transaction_safety(self):
+        from agent_runs import (
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_keyframe_prompt_pack_report,
+            build_keyframe_video_asset_chain_report,
+            build_manual_generation_result_report,
+            build_multi_agent_output_chain_report,
+            build_provider_api_readiness_report,
+            build_provider_artifact_lineage_report,
+            build_provider_artifact_registry_restore_report,
+            build_provider_failure_recovery_report,
+            build_provider_observability_report,
+            build_provider_queue_lease_worker_report,
+            build_provider_registry_operation_approval_report,
+            build_provider_registry_transaction_rehearsal_report,
+            build_provider_sandbox_runtime_report,
+            build_provider_worker_checkpoint_resume_report,
+            build_provider_worker_finalization_report,
+            build_real_provider_execution_gate_report,
+            build_source_adapter_contract_report,
+        )
+
+        project_id = "project_provider_registry_transaction_rehearsal"
+        agent_report = build_agent_contract_completeness_report(build_agent_contract_registry())
+        source_report = build_source_adapter_contract_report()
+        output_report = build_multi_agent_output_chain_report(
+            agent_contract_report=agent_report,
+            source_adapter_contract_report=source_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        asset_report = build_keyframe_video_asset_chain_report(
+            multi_agent_output_chain_report=output_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        prompt_pack_report = build_keyframe_prompt_pack_report(
+            keyframe_video_asset_chain_report=asset_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        manual_result_report = build_manual_generation_result_report(
+            keyframe_prompt_pack_report=prompt_pack_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        provider_api_report = build_provider_api_readiness_report(
+            manual_generation_result_report=manual_result_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        sandbox_report = build_provider_sandbox_runtime_report(
+            provider_api_readiness_report=provider_api_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        real_gate = build_real_provider_execution_gate_report(
+            provider_api_readiness_report=provider_api_report,
+            provider_sandbox_runtime_report=sandbox_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        failure_report = build_provider_failure_recovery_report(
+            real_provider_execution_gate_report=real_gate,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        observability_report = build_provider_observability_report(
+            provider_failure_recovery_report=failure_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        queue_worker_report = build_provider_queue_lease_worker_report(
+            provider_observability_report=observability_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        checkpoint_report = build_provider_worker_checkpoint_resume_report(
+            provider_queue_lease_worker_report=queue_worker_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        finalization_report = build_provider_worker_finalization_report(
+            provider_worker_checkpoint_resume_report=checkpoint_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        lineage_report = build_provider_artifact_lineage_report(
+            provider_worker_finalization_report=finalization_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        registry_restore_report = build_provider_artifact_registry_restore_report(
+            provider_artifact_lineage_report=lineage_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        operation_approval_report = build_provider_registry_operation_approval_report(
+            provider_artifact_registry_restore_report=registry_restore_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+        report = build_provider_registry_transaction_rehearsal_report(
+            provider_registry_operation_approval_report=operation_approval_report,
+            project_id=project_id,
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            report["provider_registry_transaction_rehearsal_report_version"],
+            "provider_registry_transaction_rehearsal_report_v1",
+        )
+        self.assertEqual(
+            report["report_status"],
+            "provider_registry_transaction_rehearsal_ready_dry_run",
+        )
+        self.assertTrue(report["provider_registry_operation_approval_ready"])
+        self.assertTrue(report["operator_review_required"])
+        self.assertGreater(report["stage_count"], 0)
+        for section in [
+            "transaction_preflight",
+            "operation_lock_plan",
+            "mutation_ledger_preview",
+            "idempotency_guard",
+            "commit_packet",
+            "rollback_checkpoint",
+            "post_apply_verification",
+            "release_gate",
+            "transaction_audit_receipt",
+        ]:
+            self.assertTrue(report[section])
+        for count_field in [
+            "preflight_check_count",
+            "lock_check_count",
+            "mutation_entry_count",
+            "idempotency_check_count",
+            "commit_packet_item_count",
+            "rollback_checkpoint_count",
+            "verification_check_count",
+            "release_gate_check_count",
+            "audit_receipt_item_count",
+        ]:
+            self.assertGreater(report[count_field], 0)
+        for support_field in [
+            "supports_transaction_preflight",
+            "supports_operation_lock_plan",
+            "supports_mutation_ledger_preview",
+            "supports_idempotency_guard",
+            "supports_commit_packet",
+            "supports_rollback_checkpoint",
+            "supports_post_apply_verification",
+            "supports_release_gate",
+            "supports_transaction_audit_receipt",
+        ]:
+            self.assertTrue(report[support_field])
+        for blocking_failure in [
+            "transaction_lock_not_acquired",
+            "mutation_ledger_not_persisted",
+            "commit_packet_not_persisted",
+            "commit_blocked_by_dry_run",
+            "rollback_checkpoint_not_persisted",
+            "post_apply_verification_not_recorded",
+            "release_gate_closed",
+            "operator_review_required",
+        ]:
+            self.assertIn(blocking_failure, report["blocking_failures"])
+        self.assertTrue(report["dry_run"])
+        self.assertTrue(report["transaction_required"])
+        self.assertTrue(report["operation_lock_required"])
+        for disabled_field in [
+            "transaction_preflight_recorded",
+            "operation_lock_acquired",
+            "mutation_ledger_recorded",
+            "mutation_ledger_persisted",
+            "idempotency_key_registered",
+            "commit_packet_recorded",
+            "commit_packet_persisted",
+            "commit_allowed",
+            "transaction_committed",
+            "registry_write_allowed",
+            "registry_written",
+            "snapshot_write_allowed",
+            "snapshot_written",
+            "restore_write_allowed",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_write_allowed",
+            "rollback_applied",
+            "rollback_checkpoint_recorded",
+            "rollback_checkpoint_persisted",
+            "post_apply_verification_recorded",
+            "post_apply_verification_passed",
+            "release_gate_open",
+            "transaction_audit_recorded",
+            "audit_ledger_persisted",
+            "project_snapshot_saved",
+            "artifact_delete_allowed",
+            "artifact_deleted",
+            "destructive_action_allowed",
+            "operator_approval_captured",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+        ]:
+            self.assertFalse(report[disabled_field])
+
+
     def test_provider_artifact_lineage_report_models_provenance_versioned_audit_and_safety(self):
         from agent_runs import (
             build_agent_contract_completeness_report,

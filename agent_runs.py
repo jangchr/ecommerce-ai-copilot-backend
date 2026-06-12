@@ -6109,6 +6109,478 @@ def build_provider_registry_operation_approval_report(
     }
 
 
+PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_REPORT_VERSION = (
+    "provider_registry_transaction_rehearsal_report_v1"
+)
+
+PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_STAGES = [
+    {
+        "stage_id": "run_transaction_preflight",
+        "stage_label": "Run transaction preflight",
+        "required_inputs": ["provider_registry_operation_approval_report", "persistence_boundary"],
+        "expected_outputs": ["transaction_preflight", "preflight_checks"],
+    },
+    {
+        "stage_id": "prepare_operation_lock_plan",
+        "stage_label": "Prepare operation lock plan",
+        "required_inputs": ["operator_approval_request", "authorization_preview"],
+        "expected_outputs": ["operation_lock_plan", "lock_checks"],
+    },
+    {
+        "stage_id": "preview_mutation_ledger",
+        "stage_label": "Preview mutation ledger",
+        "required_inputs": ["apply_simulation", "registry_write_plan", "snapshot_write_plan"],
+        "expected_outputs": ["mutation_ledger_preview", "mutation_entries"],
+    },
+    {
+        "stage_id": "enforce_idempotency_guard",
+        "stage_label": "Enforce idempotency guard",
+        "required_inputs": ["operation_lock_plan", "mutation_ledger_preview"],
+        "expected_outputs": ["idempotency_guard", "idempotency_checks"],
+    },
+    {
+        "stage_id": "prepare_commit_packet",
+        "stage_label": "Prepare commit packet",
+        "required_inputs": ["transaction_preflight", "mutation_ledger_preview", "idempotency_guard"],
+        "expected_outputs": ["commit_packet", "commit_packet_items"],
+    },
+    {
+        "stage_id": "prepare_rollback_checkpoint",
+        "stage_label": "Prepare rollback checkpoint",
+        "required_inputs": ["snapshot_write_plan", "restore_write_plan", "rollback_write_plan"],
+        "expected_outputs": ["rollback_checkpoint", "rollback_checkpoints"],
+    },
+    {
+        "stage_id": "plan_post_apply_verification",
+        "stage_label": "Plan post-apply verification",
+        "required_inputs": ["commit_packet", "rollback_checkpoint"],
+        "expected_outputs": ["post_apply_verification", "verification_checks"],
+    },
+    {
+        "stage_id": "evaluate_release_gate",
+        "stage_label": "Evaluate release gate",
+        "required_inputs": ["post_apply_verification", "destructive_action_guard"],
+        "expected_outputs": ["release_gate", "release_gate_checks"],
+    },
+    {
+        "stage_id": "prepare_transaction_audit_receipt",
+        "stage_label": "Prepare transaction audit receipt",
+        "required_inputs": ["commit_packet", "rollback_checkpoint", "release_gate"],
+        "expected_outputs": ["transaction_audit_receipt", "audit_receipt_items"],
+    },
+]
+
+
+def build_provider_registry_transaction_rehearsal_report(
+    *,
+    provider_registry_operation_approval_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_registry_transaction_rehearsal_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run registry transaction rehearsal without applying mutations.
+
+    The report models transaction preflight, locking, mutation ledger,
+    idempotency, commit, rollback checkpoint, post-apply verification, release,
+    and audit stages. It never acquires a lock, persists a ledger or commit
+    packet, writes registry state or snapshots, restores or rolls back a
+    workspace, calls providers, reads secrets, transfers media, or enables
+    paid generation.
+    """
+
+    operation_approval = (
+        provider_registry_operation_approval_report
+        if isinstance(provider_registry_operation_approval_report, dict)
+        else {}
+    )
+    operation_approval_ready = (
+        str(operation_approval.get("report_status") or "")
+        == "provider_registry_operation_approval_ready_dry_run"
+    )
+
+    transaction_preflight = {
+        "transaction_preflight_version": "provider_registry_transaction_preflight_v1",
+        "transaction_preflight_status": (
+            "transaction_preflight_ready_dry_run"
+            if operation_approval_ready
+            else "transaction_preflight_waiting_for_operation_approval"
+        ),
+        "preflight_checks": [
+            {
+                "preflight_check_id": "operation_approval_report_ready",
+                "passed": operation_approval_ready,
+                "required": True,
+            },
+            {
+                "preflight_check_id": "operator_approval_captured",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "preflight_check_id": "persistence_boundary_open",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "preflight_check_id": "registry_write_authorized",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "preflight_check_id": "snapshot_write_authorized",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "preflight_check_id": "restore_write_authorized",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "preflight_check_id": "rollback_write_authorized",
+                "passed": False,
+                "required": True,
+            },
+        ],
+        "preflight_check_count": 7,
+        "transaction_required": True,
+        "transaction_preflight_recorded": False,
+        "external_api_called": False,
+    }
+
+    operation_lock_plan = {
+        "operation_lock_plan_version": "provider_registry_operation_lock_plan_v1",
+        "operation_lock_plan_status": "operation_lock_plan_preview_only",
+        "lock_scope": f"provider_registry::{project_id}",
+        "lock_checks": [
+            {
+                "lock_check_id": "stable_transaction_scope",
+                "passed": operation_approval_ready,
+                "required": True,
+            },
+            {
+                "lock_check_id": "operator_approval_present",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "lock_check_id": "exclusive_lock_available",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "lock_check_id": "lock_lease_recorded",
+                "passed": False,
+                "required": True,
+            },
+        ],
+        "lock_check_count": 4,
+        "operation_lock_required": True,
+        "operation_lock_acquired": False,
+        "external_api_called": False,
+    }
+
+    mutation_ledger_preview = {
+        "mutation_ledger_preview_version": "provider_registry_mutation_ledger_preview_v1",
+        "mutation_ledger_preview_status": "mutation_ledger_preview_ready_dry_run",
+        "mutation_entries": [
+            {
+                "mutation_entry_id": "registry_pointer_update",
+                "mutation_type": "registry_write",
+                "source_plan_present": bool(operation_approval.get("registry_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+            {
+                "mutation_entry_id": "versioned_snapshot_write",
+                "mutation_type": "snapshot_write",
+                "source_plan_present": bool(operation_approval.get("snapshot_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+            {
+                "mutation_entry_id": "workspace_restore_apply",
+                "mutation_type": "restore_write",
+                "source_plan_present": bool(operation_approval.get("restore_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+            {
+                "mutation_entry_id": "registry_rollback_apply",
+                "mutation_type": "rollback_write",
+                "source_plan_present": bool(operation_approval.get("rollback_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+            {
+                "mutation_entry_id": "transaction_audit_append",
+                "mutation_type": "audit_ledger_write",
+                "source_plan_present": bool(operation_approval.get("operation_audit_receipt")),
+                "recorded": False,
+                "persisted": False,
+            },
+        ],
+        "mutation_entry_count": 5,
+        "mutation_ledger_recorded": False,
+        "mutation_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    idempotency_guard = {
+        "idempotency_guard_version": "provider_registry_idempotency_guard_v1",
+        "idempotency_guard_status": "idempotency_guard_blocked_dry_run",
+        "idempotency_key_preview": f"dry_run_registry_transaction::{project_id}",
+        "idempotency_checks": [
+            {
+                "idempotency_check_id": "transaction_scope_stable",
+                "passed": operation_approval_ready,
+                "required": True,
+            },
+            {
+                "idempotency_check_id": "operation_lock_acquired",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "idempotency_check_id": "mutation_digest_recorded",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "idempotency_check_id": "idempotency_key_registered",
+                "passed": False,
+                "required": True,
+            },
+        ],
+        "idempotency_check_count": 4,
+        "idempotency_key_registered": False,
+        "duplicate_commit_blocked": True,
+        "external_api_called": False,
+    }
+
+    commit_packet = {
+        "commit_packet_version": "provider_registry_commit_packet_v1",
+        "commit_packet_status": "commit_packet_preview_only",
+        "commit_packet_items": [
+            {"commit_item_id": "operator_approval", "included": True, "recorded": False},
+            {"commit_item_id": "transaction_preflight", "included": True, "recorded": False},
+            {"commit_item_id": "operation_lock", "included": True, "recorded": False},
+            {"commit_item_id": "mutation_ledger", "included": True, "recorded": False},
+            {"commit_item_id": "idempotency_guard", "included": True, "recorded": False},
+            {"commit_item_id": "rollback_checkpoint", "included": True, "recorded": False},
+        ],
+        "commit_packet_item_count": 6,
+        "commit_packet_recorded": False,
+        "commit_packet_persisted": False,
+        "commit_allowed": False,
+        "transaction_committed": False,
+        "external_api_called": False,
+    }
+
+    rollback_checkpoint = {
+        "rollback_checkpoint_version": "provider_registry_rollback_checkpoint_v1",
+        "rollback_checkpoint_status": "rollback_checkpoint_preview_only",
+        "rollback_checkpoints": [
+            {
+                "checkpoint_id": "pre_registry_write_state",
+                "source_plan_present": bool(operation_approval.get("registry_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+            {
+                "checkpoint_id": "pre_snapshot_write_state",
+                "source_plan_present": bool(operation_approval.get("snapshot_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+            {
+                "checkpoint_id": "pre_restore_workspace_state",
+                "source_plan_present": bool(operation_approval.get("restore_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+            {
+                "checkpoint_id": "pre_rollback_registry_state",
+                "source_plan_present": bool(operation_approval.get("rollback_write_plan")),
+                "recorded": False,
+                "persisted": False,
+            },
+        ],
+        "rollback_checkpoint_count": 4,
+        "rollback_checkpoint_recorded": False,
+        "rollback_checkpoint_persisted": False,
+        "external_api_called": False,
+    }
+
+    post_apply_verification = {
+        "post_apply_verification_version": "provider_registry_post_apply_verification_v1",
+        "post_apply_verification_status": "post_apply_verification_not_run_dry_run",
+        "verification_checks": [
+            {"verification_check_id": "registry_pointer_matches_commit", "passed": False},
+            {"verification_check_id": "snapshot_digest_matches_commit", "passed": False},
+            {"verification_check_id": "workspace_restore_matches_snapshot", "passed": False},
+            {"verification_check_id": "rollback_checkpoint_available", "passed": False},
+            {"verification_check_id": "mutation_ledger_complete", "passed": False},
+            {"verification_check_id": "audit_receipt_complete", "passed": False},
+            {"verification_check_id": "destructive_actions_remain_blocked", "passed": True},
+        ],
+        "verification_check_count": 7,
+        "post_apply_verification_recorded": False,
+        "post_apply_verification_passed": False,
+        "external_api_called": False,
+    }
+
+    release_gate = {
+        "release_gate_version": "provider_registry_transaction_release_gate_v1",
+        "release_gate_status": "release_gate_closed_dry_run",
+        "release_gate_checks": [
+            {"release_gate_check_id": "operator_approval_captured", "passed": False},
+            {"release_gate_check_id": "operation_lock_acquired", "passed": False},
+            {"release_gate_check_id": "mutation_ledger_persisted", "passed": False},
+            {"release_gate_check_id": "commit_packet_persisted", "passed": False},
+            {"release_gate_check_id": "transaction_committed", "passed": False},
+            {"release_gate_check_id": "rollback_checkpoint_persisted", "passed": False},
+            {"release_gate_check_id": "post_apply_verification_passed", "passed": False},
+            {"release_gate_check_id": "transaction_audit_recorded", "passed": False},
+        ],
+        "release_gate_check_count": 8,
+        "release_gate_open": False,
+        "external_api_called": False,
+    }
+
+    transaction_audit_receipt = {
+        "transaction_audit_receipt_version": "provider_registry_transaction_audit_receipt_v1",
+        "transaction_audit_receipt_status": "transaction_audit_receipt_ready_dry_run",
+        "audit_receipt_items": [
+            {"audit_item_id": "transaction_preflight", "included": True, "recorded": False},
+            {"audit_item_id": "operation_lock_plan", "included": True, "recorded": False},
+            {"audit_item_id": "mutation_ledger_preview", "included": True, "recorded": False},
+            {"audit_item_id": "idempotency_guard", "included": True, "recorded": False},
+            {"audit_item_id": "commit_packet", "included": True, "recorded": False},
+            {"audit_item_id": "rollback_checkpoint", "included": True, "recorded": False},
+            {"audit_item_id": "post_apply_verification", "included": True, "recorded": False},
+            {"audit_item_id": "release_gate", "included": True, "recorded": False},
+            {"audit_item_id": "operation_approval_report", "included": True, "recorded": False},
+        ],
+        "audit_receipt_item_count": 9,
+        "transaction_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not operation_approval_ready:
+        blocking_failures.append("provider_registry_operation_approval_report_not_ready")
+    blocking_failures.extend(
+        [
+            "transaction_lock_not_acquired",
+            "mutation_ledger_not_persisted",
+            "commit_packet_not_persisted",
+            "commit_blocked_by_dry_run",
+            "rollback_checkpoint_not_persisted",
+            "post_apply_verification_not_recorded",
+            "release_gate_closed",
+            "operator_review_required",
+        ]
+    )
+    report_status = (
+        "provider_registry_transaction_rehearsal_ready_dry_run"
+        if operation_approval_ready
+        else "provider_registry_transaction_rehearsal_incomplete"
+    )
+
+    return {
+        "provider_registry_transaction_rehearsal_report_version": (
+            PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_REPORT_VERSION
+        ),
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(
+            requested_by or "provider_registry_transaction_rehearsal_report_builder"
+        ),
+        "provider_registry_operation_approval_ready": operation_approval_ready,
+        "operator_review_required": True,
+        "stage_count": len(PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_STAGES),
+        "registry_transaction_rehearsal_stage_matrix": [
+            dict(item, complete=operation_approval_ready)
+            for item in PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_STAGES
+        ],
+        "transaction_preflight": transaction_preflight,
+        "operation_lock_plan": operation_lock_plan,
+        "mutation_ledger_preview": mutation_ledger_preview,
+        "idempotency_guard": idempotency_guard,
+        "commit_packet": commit_packet,
+        "rollback_checkpoint": rollback_checkpoint,
+        "post_apply_verification": post_apply_verification,
+        "release_gate": release_gate,
+        "transaction_audit_receipt": transaction_audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "preflight_check_count": transaction_preflight["preflight_check_count"],
+        "lock_check_count": operation_lock_plan["lock_check_count"],
+        "mutation_entry_count": mutation_ledger_preview["mutation_entry_count"],
+        "idempotency_check_count": idempotency_guard["idempotency_check_count"],
+        "commit_packet_item_count": commit_packet["commit_packet_item_count"],
+        "rollback_checkpoint_count": rollback_checkpoint["rollback_checkpoint_count"],
+        "verification_check_count": post_apply_verification["verification_check_count"],
+        "release_gate_check_count": release_gate["release_gate_check_count"],
+        "audit_receipt_item_count": transaction_audit_receipt["audit_receipt_item_count"],
+        "supports_transaction_preflight": True,
+        "supports_operation_lock_plan": True,
+        "supports_mutation_ledger_preview": True,
+        "supports_idempotency_guard": True,
+        "supports_commit_packet": True,
+        "supports_rollback_checkpoint": True,
+        "supports_post_apply_verification": True,
+        "supports_release_gate": True,
+        "supports_transaction_audit_receipt": True,
+        "recommended_next_state": "show_provider_registry_transaction_rehearsal_in_workspace",
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "dry_run": True,
+        "transaction_required": True,
+        "transaction_preflight_recorded": False,
+        "operation_lock_required": True,
+        "operation_lock_acquired": False,
+        "mutation_ledger_recorded": False,
+        "mutation_ledger_persisted": False,
+        "idempotency_key_registered": False,
+        "commit_packet_recorded": False,
+        "commit_packet_persisted": False,
+        "commit_allowed": False,
+        "transaction_committed": False,
+        "registry_write_allowed": False,
+        "registry_written": False,
+        "snapshot_write_allowed": False,
+        "snapshot_written": False,
+        "restore_write_allowed": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "rollback_write_allowed": False,
+        "rollback_applied": False,
+        "rollback_checkpoint_recorded": False,
+        "rollback_checkpoint_persisted": False,
+        "post_apply_verification_recorded": False,
+        "post_apply_verification_passed": False,
+        "release_gate_open": False,
+        "transaction_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "project_snapshot_saved": False,
+        "artifact_delete_allowed": False,
+        "artifact_deleted": False,
+        "destructive_action_allowed": False,
+        "operator_approval_captured": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []
