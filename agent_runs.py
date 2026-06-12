@@ -6581,6 +6581,383 @@ def build_provider_registry_transaction_rehearsal_report(
     }
 
 
+PROVIDER_TRANSACTION_MONITOR_REPORT_VERSION = "provider_transaction_monitor_report_v1"
+
+PROVIDER_TRANSACTION_MONITOR_STAGES = [
+    {
+        "stage_id": "run_monitoring_preflight",
+        "stage_label": "Run monitoring preflight",
+        "required_inputs": ["provider_registry_transaction_rehearsal_report", "release_gate"],
+        "expected_outputs": ["monitoring_preflight", "monitor_checks"],
+    },
+    {
+        "stage_id": "prepare_transaction_health_monitor",
+        "stage_label": "Prepare transaction health monitor",
+        "required_inputs": ["transaction_preflight", "commit_packet", "rollback_checkpoint"],
+        "expected_outputs": ["transaction_health_monitor", "health_signals"],
+    },
+    {
+        "stage_id": "define_drift_detection_policy",
+        "stage_label": "Define drift detection policy",
+        "required_inputs": ["mutation_ledger_preview", "post_apply_verification"],
+        "expected_outputs": ["drift_detection_policy", "drift_rules"],
+    },
+    {
+        "stage_id": "define_auto_abort_policy",
+        "stage_label": "Define auto-abort policy",
+        "required_inputs": ["transaction_health_monitor", "drift_detection_policy"],
+        "expected_outputs": ["auto_abort_policy", "auto_abort_rules"],
+    },
+    {
+        "stage_id": "prepare_operator_timeline",
+        "stage_label": "Prepare operator timeline",
+        "required_inputs": ["transaction_rehearsal_stages", "operator_review_state"],
+        "expected_outputs": ["operator_timeline", "timeline_events"],
+    },
+    {
+        "stage_id": "prepare_verification_monitor",
+        "stage_label": "Prepare verification monitor",
+        "required_inputs": ["post_apply_verification", "release_gate"],
+        "expected_outputs": ["verification_monitor", "verification_monitor_checks"],
+    },
+    {
+        "stage_id": "define_incident_escalation_policy",
+        "stage_label": "Define incident escalation policy",
+        "required_inputs": ["drift_detection_policy", "auto_abort_policy", "verification_monitor"],
+        "expected_outputs": ["incident_escalation_policy", "incident_escalation_rules"],
+    },
+    {
+        "stage_id": "prepare_monitoring_audit_receipt",
+        "stage_label": "Prepare monitoring audit receipt",
+        "required_inputs": ["monitoring_sections", "operator_timeline"],
+        "expected_outputs": ["monitoring_audit_receipt", "audit_receipt_items"],
+    },
+]
+
+
+def build_provider_transaction_monitor_report(
+    *,
+    provider_registry_transaction_rehearsal_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_transaction_monitor_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run transaction monitoring and auto-abort policy report.
+
+    The report describes monitoring, drift detection, automatic abort policy,
+    operator timeline, verification, escalation, and audit behavior. It never
+    starts monitoring, detects real drift, aborts or commits a transaction,
+    mutates registry or snapshot state, restores or rolls back a workspace,
+    opens an incident, calls providers, reads secrets, transfers media, or
+    enables paid generation.
+    """
+
+    transaction_rehearsal = (
+        provider_registry_transaction_rehearsal_report
+        if isinstance(provider_registry_transaction_rehearsal_report, dict)
+        else {}
+    )
+    transaction_rehearsal_ready = (
+        str(transaction_rehearsal.get("report_status") or "")
+        == "provider_registry_transaction_rehearsal_ready_dry_run"
+    )
+
+    monitoring_preflight = {
+        "monitoring_preflight_version": "provider_transaction_monitoring_preflight_v1",
+        "monitoring_preflight_status": (
+            "monitoring_preflight_ready_dry_run"
+            if transaction_rehearsal_ready
+            else "monitoring_preflight_waiting_for_transaction_rehearsal"
+        ),
+        "monitor_checks": [
+            {
+                "monitor_check_id": "transaction_rehearsal_report_ready",
+                "passed": transaction_rehearsal_ready,
+                "required": True,
+            },
+            {
+                "monitor_check_id": "operator_approval_captured",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "monitor_check_id": "operation_lock_acquired",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "monitor_check_id": "mutation_ledger_persisted",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "monitor_check_id": "commit_packet_persisted",
+                "passed": False,
+                "required": True,
+            },
+            {
+                "monitor_check_id": "release_gate_open",
+                "passed": False,
+                "required": True,
+            },
+        ],
+        "monitor_check_count": 6,
+        "monitoring_required": True,
+        "monitoring_started": False,
+        "external_api_called": False,
+    }
+
+    transaction_health_monitor = {
+        "transaction_health_monitor_version": "provider_transaction_health_monitor_v1",
+        "transaction_health_monitor_status": "transaction_health_monitor_preview_only",
+        "health_signals": [
+            {"health_signal_id": "operation_lock_lease", "observed": False, "healthy": False},
+            {"health_signal_id": "mutation_ledger_append", "observed": False, "healthy": False},
+            {"health_signal_id": "commit_packet_integrity", "observed": False, "healthy": False},
+            {"health_signal_id": "registry_snapshot_consistency", "observed": False, "healthy": False},
+            {"health_signal_id": "rollback_checkpoint_availability", "observed": False, "healthy": False},
+            {"health_signal_id": "post_apply_verification_state", "observed": False, "healthy": False},
+        ],
+        "health_signal_count": 6,
+        "health_monitor_recorded": False,
+        "transaction_committed": False,
+        "external_api_called": False,
+    }
+
+    drift_detection_policy = {
+        "drift_detection_policy_version": "provider_transaction_drift_detection_policy_v1",
+        "drift_detection_policy_status": "drift_detection_policy_ready_dry_run",
+        "drift_rules": [
+            {
+                "drift_rule_id": "registry_pointer_digest_changed",
+                "abort_on_match": True,
+                "evaluated": False,
+                "matched": False,
+            },
+            {
+                "drift_rule_id": "snapshot_digest_changed",
+                "abort_on_match": True,
+                "evaluated": False,
+                "matched": False,
+            },
+            {
+                "drift_rule_id": "mutation_ledger_sequence_gap",
+                "abort_on_match": True,
+                "evaluated": False,
+                "matched": False,
+            },
+            {
+                "drift_rule_id": "operation_lock_owner_changed",
+                "abort_on_match": True,
+                "evaluated": False,
+                "matched": False,
+            },
+            {
+                "drift_rule_id": "workspace_restore_target_changed",
+                "abort_on_match": True,
+                "evaluated": False,
+                "matched": False,
+            },
+            {
+                "drift_rule_id": "release_gate_state_changed",
+                "abort_on_match": True,
+                "evaluated": False,
+                "matched": False,
+            },
+        ],
+        "drift_rule_count": 6,
+        "drift_detection_started": False,
+        "drift_detected": False,
+        "external_api_called": False,
+    }
+
+    auto_abort_policy = {
+        "auto_abort_policy_version": "provider_transaction_auto_abort_policy_v1",
+        "auto_abort_policy_status": "auto_abort_policy_disabled_dry_run",
+        "auto_abort_rules": [
+            {"auto_abort_rule_id": "abort_on_lock_loss", "enabled": False, "triggered": False},
+            {"auto_abort_rule_id": "abort_on_registry_drift", "enabled": False, "triggered": False},
+            {"auto_abort_rule_id": "abort_on_snapshot_drift", "enabled": False, "triggered": False},
+            {"auto_abort_rule_id": "abort_on_ledger_gap", "enabled": False, "triggered": False},
+            {"auto_abort_rule_id": "abort_on_commit_integrity_failure", "enabled": False, "triggered": False},
+            {"auto_abort_rule_id": "abort_on_verification_failure", "enabled": False, "triggered": False},
+            {"auto_abort_rule_id": "abort_on_operator_cancel", "enabled": False, "triggered": False},
+        ],
+        "auto_abort_rule_count": 7,
+        "auto_abort_enabled": False,
+        "auto_abort_triggered": False,
+        "transaction_aborted": False,
+        "external_api_called": False,
+    }
+
+    operator_timeline = {
+        "operator_timeline_version": "provider_transaction_operator_timeline_v1",
+        "operator_timeline_status": "operator_timeline_preview_only",
+        "timeline_events": [
+            {"timeline_event_id": "transaction_rehearsal_ready", "recorded": False},
+            {"timeline_event_id": "operator_approval_captured", "recorded": False},
+            {"timeline_event_id": "operation_lock_acquired", "recorded": False},
+            {"timeline_event_id": "monitoring_started", "recorded": False},
+            {"timeline_event_id": "transaction_committed", "recorded": False},
+            {"timeline_event_id": "drift_detected_or_clear", "recorded": False},
+            {"timeline_event_id": "post_apply_verification_complete", "recorded": False},
+            {"timeline_event_id": "release_gate_open_or_abort", "recorded": False},
+        ],
+        "timeline_event_count": 8,
+        "operator_timeline_recorded": False,
+        "external_api_called": False,
+    }
+
+    verification_monitor = {
+        "verification_monitor_version": "provider_transaction_verification_monitor_v1",
+        "verification_monitor_status": "verification_monitor_not_run_dry_run",
+        "verification_monitor_checks": [
+            {"verification_monitor_check_id": "registry_pointer_verified", "passed": False},
+            {"verification_monitor_check_id": "snapshot_digest_verified", "passed": False},
+            {"verification_monitor_check_id": "workspace_restore_verified", "passed": False},
+            {"verification_monitor_check_id": "rollback_checkpoint_verified", "passed": False},
+            {"verification_monitor_check_id": "mutation_ledger_verified", "passed": False},
+            {"verification_monitor_check_id": "release_gate_verified", "passed": False},
+        ],
+        "verification_monitor_check_count": 6,
+        "verification_monitor_recorded": False,
+        "verification_passed": False,
+        "external_api_called": False,
+    }
+
+    incident_escalation_policy = {
+        "incident_escalation_policy_version": "provider_transaction_incident_escalation_policy_v1",
+        "incident_escalation_policy_status": "incident_escalation_policy_ready_dry_run",
+        "incident_escalation_rules": [
+            {"incident_escalation_rule_id": "escalate_lock_loss", "evaluated": False, "triggered": False},
+            {"incident_escalation_rule_id": "escalate_registry_drift", "evaluated": False, "triggered": False},
+            {"incident_escalation_rule_id": "escalate_commit_failure", "evaluated": False, "triggered": False},
+            {"incident_escalation_rule_id": "escalate_verification_failure", "evaluated": False, "triggered": False},
+            {"incident_escalation_rule_id": "escalate_abort_failure", "evaluated": False, "triggered": False},
+        ],
+        "incident_escalation_rule_count": 5,
+        "incident_escalation_triggered": False,
+        "incident_opened": False,
+        "external_api_called": False,
+    }
+
+    monitoring_audit_receipt = {
+        "monitoring_audit_receipt_version": "provider_transaction_monitoring_audit_receipt_v1",
+        "monitoring_audit_receipt_status": "monitoring_audit_receipt_ready_dry_run",
+        "audit_receipt_items": [
+            {"audit_item_id": "monitoring_preflight", "included": True, "recorded": False},
+            {"audit_item_id": "transaction_health_monitor", "included": True, "recorded": False},
+            {"audit_item_id": "drift_detection_policy", "included": True, "recorded": False},
+            {"audit_item_id": "auto_abort_policy", "included": True, "recorded": False},
+            {"audit_item_id": "operator_timeline", "included": True, "recorded": False},
+            {"audit_item_id": "verification_monitor", "included": True, "recorded": False},
+            {"audit_item_id": "incident_escalation_policy", "included": True, "recorded": False},
+            {"audit_item_id": "transaction_rehearsal_report", "included": True, "recorded": False},
+        ],
+        "audit_receipt_item_count": 8,
+        "monitoring_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not transaction_rehearsal_ready:
+        blocking_failures.append("provider_registry_transaction_rehearsal_report_not_ready")
+    blocking_failures.extend(
+        [
+            "monitoring_not_started",
+            "health_monitor_not_recorded",
+            "drift_detection_not_started",
+            "auto_abort_disabled",
+            "operator_timeline_not_recorded",
+            "verification_monitor_not_recorded",
+            "incident_escalation_not_triggered",
+            "monitoring_audit_not_recorded",
+            "operator_review_required",
+        ]
+    )
+    report_status = (
+        "provider_transaction_monitor_ready_dry_run"
+        if transaction_rehearsal_ready
+        else "provider_transaction_monitor_incomplete"
+    )
+
+    return {
+        "provider_transaction_monitor_report_version": PROVIDER_TRANSACTION_MONITOR_REPORT_VERSION,
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_transaction_monitor_report_builder"),
+        "provider_registry_transaction_rehearsal_ready": transaction_rehearsal_ready,
+        "operator_review_required": True,
+        "stage_count": len(PROVIDER_TRANSACTION_MONITOR_STAGES),
+        "transaction_monitor_stage_matrix": [
+            dict(item, complete=transaction_rehearsal_ready)
+            for item in PROVIDER_TRANSACTION_MONITOR_STAGES
+        ],
+        "monitoring_preflight": monitoring_preflight,
+        "transaction_health_monitor": transaction_health_monitor,
+        "drift_detection_policy": drift_detection_policy,
+        "auto_abort_policy": auto_abort_policy,
+        "operator_timeline": operator_timeline,
+        "verification_monitor": verification_monitor,
+        "incident_escalation_policy": incident_escalation_policy,
+        "monitoring_audit_receipt": monitoring_audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "monitor_check_count": monitoring_preflight["monitor_check_count"],
+        "health_signal_count": transaction_health_monitor["health_signal_count"],
+        "drift_rule_count": drift_detection_policy["drift_rule_count"],
+        "auto_abort_rule_count": auto_abort_policy["auto_abort_rule_count"],
+        "timeline_event_count": operator_timeline["timeline_event_count"],
+        "verification_monitor_check_count": verification_monitor["verification_monitor_check_count"],
+        "incident_escalation_rule_count": incident_escalation_policy["incident_escalation_rule_count"],
+        "audit_receipt_item_count": monitoring_audit_receipt["audit_receipt_item_count"],
+        "supports_monitoring_preflight": True,
+        "supports_transaction_health_monitor": True,
+        "supports_drift_detection_policy": True,
+        "supports_auto_abort_policy": True,
+        "supports_operator_timeline": True,
+        "supports_verification_monitor": True,
+        "supports_incident_escalation_policy": True,
+        "supports_monitoring_audit_receipt": True,
+        "recommended_next_state": "show_provider_transaction_monitor_in_workspace",
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "dry_run": True,
+        "monitoring_required": True,
+        "monitoring_started": False,
+        "health_monitor_recorded": False,
+        "drift_detection_started": False,
+        "drift_detected": False,
+        "auto_abort_enabled": False,
+        "auto_abort_triggered": False,
+        "transaction_aborted": False,
+        "operator_timeline_recorded": False,
+        "verification_monitor_recorded": False,
+        "verification_passed": False,
+        "incident_escalation_triggered": False,
+        "incident_opened": False,
+        "monitoring_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "transaction_committed": False,
+        "registry_written": False,
+        "snapshot_written": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "rollback_applied": False,
+        "project_snapshot_saved": False,
+        "artifact_deleted": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

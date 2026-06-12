@@ -81,6 +81,7 @@ from agent_runs import (
     build_provider_artifact_registry_restore_report,
     build_provider_registry_operation_approval_report,
     build_provider_registry_transaction_rehearsal_report,
+    build_provider_transaction_monitor_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6318,6 +6319,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
             requested_by="project_runner_plan_api",
         )
     )
+    provider_transaction_monitor_report = build_provider_transaction_monitor_report(
+        provider_registry_transaction_rehearsal_report=provider_registry_transaction_rehearsal_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6426,6 +6432,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_provider_registry_transaction_rehearsal_commit_allowed": bool(provider_registry_transaction_rehearsal_report.get("commit_allowed")),
         "latest_provider_registry_transaction_rehearsal_transaction_committed": bool(provider_registry_transaction_rehearsal_report.get("transaction_committed")),
         "latest_provider_registry_transaction_rehearsal_external_api_called": bool(provider_registry_transaction_rehearsal_report.get("external_api_called")),
+        "latest_provider_transaction_monitor_status": provider_transaction_monitor_report.get("report_status", ""),
+        "latest_provider_transaction_monitor_blocking_failure_count": int(provider_transaction_monitor_report.get("blocking_failure_count") or 0),
+        "latest_provider_transaction_monitor_drift_detected": bool(provider_transaction_monitor_report.get("drift_detected")),
+        "latest_provider_transaction_monitor_auto_abort_triggered": bool(provider_transaction_monitor_report.get("auto_abort_triggered")),
+        "latest_provider_transaction_monitor_external_api_called": bool(provider_transaction_monitor_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6463,6 +6474,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "provider_artifact_registry_restore_report": provider_artifact_registry_restore_report,
         "provider_registry_operation_approval_report": provider_registry_operation_approval_report,
         "provider_registry_transaction_rehearsal_report": provider_registry_transaction_rehearsal_report,
+        "provider_transaction_monitor_report": provider_transaction_monitor_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,

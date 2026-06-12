@@ -1539,6 +1539,108 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
                 "latest_provider_registry_transaction_rehearsal_external_api_called"
             ]
         )
+        self.assertIn("provider_transaction_monitor_report", payload)
+        transaction_monitor = payload["provider_transaction_monitor_report"]
+        self.assertEqual(
+            transaction_monitor["provider_transaction_monitor_report_version"],
+            "provider_transaction_monitor_report_v1",
+        )
+        self.assertEqual(
+            transaction_monitor["report_status"],
+            "provider_transaction_monitor_ready_dry_run",
+        )
+        self.assertTrue(
+            transaction_monitor["provider_registry_transaction_rehearsal_ready"]
+        )
+        self.assertTrue(transaction_monitor["operator_review_required"])
+        for section in [
+            "monitoring_preflight",
+            "transaction_health_monitor",
+            "drift_detection_policy",
+            "auto_abort_policy",
+            "operator_timeline",
+            "verification_monitor",
+            "incident_escalation_policy",
+            "monitoring_audit_receipt",
+        ]:
+            self.assertTrue(transaction_monitor[section])
+        for count_field in [
+            "monitor_check_count",
+            "health_signal_count",
+            "drift_rule_count",
+            "auto_abort_rule_count",
+            "timeline_event_count",
+            "verification_monitor_check_count",
+            "incident_escalation_rule_count",
+            "audit_receipt_item_count",
+        ]:
+            self.assertGreater(transaction_monitor[count_field], 0)
+        for support_field in [
+            "supports_monitoring_preflight",
+            "supports_transaction_health_monitor",
+            "supports_drift_detection_policy",
+            "supports_auto_abort_policy",
+            "supports_operator_timeline",
+            "supports_verification_monitor",
+            "supports_incident_escalation_policy",
+            "supports_monitoring_audit_receipt",
+        ]:
+            self.assertTrue(transaction_monitor[support_field])
+        self.assertTrue(transaction_monitor["dry_run"])
+        self.assertTrue(transaction_monitor["monitoring_required"])
+        for disabled_field in [
+            "monitoring_started",
+            "health_monitor_recorded",
+            "drift_detection_started",
+            "drift_detected",
+            "auto_abort_enabled",
+            "auto_abort_triggered",
+            "transaction_aborted",
+            "operator_timeline_recorded",
+            "verification_monitor_recorded",
+            "verification_passed",
+            "incident_escalation_triggered",
+            "incident_opened",
+            "monitoring_audit_recorded",
+            "audit_ledger_persisted",
+            "transaction_committed",
+            "registry_written",
+            "snapshot_written",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_applied",
+            "project_snapshot_saved",
+            "artifact_deleted",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+        ]:
+            self.assertFalse(transaction_monitor[disabled_field])
+        self.assertEqual(
+            graph_summary["latest_provider_transaction_monitor_status"],
+            "provider_transaction_monitor_ready_dry_run",
+        )
+        self.assertGreater(
+            graph_summary[
+                "latest_provider_transaction_monitor_blocking_failure_count"
+            ],
+            0,
+        )
+        self.assertFalse(
+            graph_summary["latest_provider_transaction_monitor_drift_detected"]
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_transaction_monitor_auto_abort_triggered"
+            ]
+        )
+        self.assertFalse(
+            graph_summary["latest_provider_transaction_monitor_external_api_called"]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],
