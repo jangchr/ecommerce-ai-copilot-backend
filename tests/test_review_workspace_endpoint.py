@@ -1375,6 +1375,43 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
                     self.assertTrue(angle[field], field)
                 self.assertTrue(angle["proof_quote"] or angle["missing_quote"])
                 self.assertTrue(angle["proof_source"])
+                for field in [
+                    "angle_rank",
+                    "is_recommended",
+                    "recommendation_reason",
+                    "evidence_strength_score",
+                    "evidence_coverage",
+                    "evidence_gaps",
+                    "angle_cluster",
+                    "duplicate_angle_note",
+                    "tiktok_script",
+                    "copy_readiness",
+                    "claim_safety_level",
+                ]:
+                    self.assertIn(field, angle)
+                self.assertGreaterEqual(angle["evidence_strength_score"], 0)
+                self.assertLessEqual(angle["evidence_strength_score"], 100)
+                self.assertEqual(
+                    set(angle["tiktok_script"]),
+                    {"hook", "scenes", "cta", "proof_quote", "risk_note"},
+                )
+                self.assertEqual(len(angle["tiktok_script"]["scenes"]), 3)
+
+        self.assertTrue(any(angle["is_recommended"] for angle in pack["top_ad_angles"]))
+        self.assertTrue(pack["recommended_angle_id"])
+        self.assertTrue(pack["recommended_angle_title"])
+        self.assertTrue(pack["decision_reason"])
+        self.assertTrue(pack["angle_ranking_summary"])
+        for field in [
+            "weak_evidence_count",
+            "missing_quote_count",
+            "ready_to_copy_script_count",
+            "duplicate_angle_count",
+        ]:
+            self.assertIn(field, pack)
+            self.assertGreaterEqual(pack[field], 0)
+        self.assertTrue(pack["creative_next_actions"])
+        self.assertTrue(all(action["guidance_only"] for action in pack["creative_next_actions"]))
 
         evidence_brief = pack["evidence_brief"]
         self.assertTrue(evidence_brief["high_signal_quotes"])
@@ -1427,9 +1464,38 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertLess(len(pack["top_ad_angles"]), 3)
         self.assertTrue(pack["quality_checks"]["weak_evidence"])
         self.assertTrue(pack["weak_evidence_reason"])
+        self.assertIn("Weak evidence", pack["decision_reason"])
         self.assertTrue(
             all(angle["proof_quote"] or angle["missing_quote"] for angle in pack["top_ad_angles"])
         )
+
+    def test_creative_decision_pack_dedupes_repeated_signal_clusters(self):
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "creative-decision-pack-dedupe",
+                "source": "manual",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "manual",
+                        "title": "Portable Blender",
+                        "reviews": [
+                            {"rating": "2", "text": "Hard to clean after a smoothie."},
+                            {"rating": "2", "text": "Hard to clean because pulp stays under the blade."},
+                            {"rating": "5", "text": "Small enough to carry to work every day."},
+                            {"rating": "3", "text": "The cup leaks in my bag during travel."},
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pack = response.json()["creative_decision_pack"]
+        clusters = [angle["angle_cluster"] for angle in pack["top_ad_angles"]]
+        self.assertEqual(len(clusters), len(set(clusters)))
+        self.assertGreaterEqual(pack["duplicate_angle_count"], 0)
 
     def test_creative_quality_checks_detect_unsupported_claims(self):
         from main import _rw_creative_quality_checks

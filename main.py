@@ -17274,14 +17274,11 @@ def _rw_creative_angle_candidates(
     evidence_quotes: list[str],
 ) -> list[dict]:
     candidates: list[dict] = []
-    seen_quotes: set[str] = set()
 
     def add(signal_type: str, theme: ReviewThemeSummary | None = None, quote: str = ""):
         proof_quote = _rw_quote_snippet(quote or _rw_theme_first_quote(theme), 240)
-        quote_key = " ".join(proof_quote.lower().split())
-        if not proof_quote or quote_key in seen_quotes:
+        if not proof_quote:
             return
-        seen_quotes.add(quote_key)
         candidates.append(
             {
                 "signal_type": signal_type,
@@ -17303,7 +17300,7 @@ def _rw_creative_angle_candidates(
     for quote in evidence_quotes:
         add("high_signal_quote", quote=quote)
 
-    return candidates[:3]
+    return candidates[:12]
 
 
 def _rw_creative_angle_title(signal_type: str, label: str, language: str) -> str:
@@ -17316,6 +17313,133 @@ def _rw_creative_angle_title(signal_type: str, label: str, language: str) -> str
         "high_signal_quote": "\u4e70\u5bb6\u539f\u8bdd" if is_zh else "Buyer-language proof",
     }.get(signal_type, "\u8bc1\u636e\u89d2\u5ea6" if is_zh else "Evidence angle")
     return f"{prefix}\uff1a{label}" if is_zh else f"{prefix}: {label}"
+
+
+def _rw_creative_angle_dedupe_key(angle: dict) -> str:
+    cluster = " ".join(_rw_text(angle.get("angle_cluster")).lower().split())
+    quote = " ".join(_rw_text(angle.get("proof_quote")).lower().split())
+    return cluster or quote
+
+
+def _rw_rank_and_dedupe_creative_angles(angles: list[dict]) -> tuple[list[dict], int]:
+    ranked: list[dict] = []
+    seen_clusters: set[str] = set()
+    seen_quotes: set[str] = set()
+    duplicate_count = 0
+
+    for angle in angles:
+        cluster_key = _rw_creative_angle_dedupe_key(angle)
+        quote_key = " ".join(_rw_text(angle.get("proof_quote")).lower().split())
+        duplicate_reasons: list[str] = []
+        if cluster_key and cluster_key in seen_clusters:
+            duplicate_reasons.append("same evidence signal cluster")
+        if quote_key and quote_key in seen_quotes:
+            duplicate_reasons.append("same proof quote")
+        if duplicate_reasons:
+            duplicate_count += 1
+            continue
+
+        coverage = dict(angle.get("evidence_coverage") or {})
+        evidence_count = int(angle.get("supporting_evidence_count") or 0)
+        score = min(
+            100,
+            (30 if coverage.get("proof_quote") else 0)
+            + (10 if coverage.get("proof_source") else 0)
+            + (15 if coverage.get("buyer_pain") else 0)
+            + (15 if coverage.get("buyer_objection") else 0)
+            + (10 if coverage.get("liked_point") else 0)
+            + (10 if coverage.get("use_case") else 0)
+            + min(10, max(0, evidence_count - 1) * 5),
+        )
+        gaps = [name for name, covered in coverage.items() if not covered]
+        copy_ready = bool(
+            coverage.get("proof_quote")
+            and _rw_text(angle.get("hook"))
+            and _rw_text(angle.get("cta"))
+            and all(_rw_text(angle.get(field)) for field in ["first_scene", "second_scene", "third_scene"])
+        )
+        angle.update(
+            {
+                "evidence_strength_score": score,
+                "evidence_gaps": gaps,
+                "duplicate_angle_note": "",
+                "copy_readiness": "ready" if copy_ready else "needs_evidence",
+                "claim_safety_level": "conservative" if score < 70 else "evidence_grounded",
+            }
+        )
+        ranked.append(angle)
+        if cluster_key:
+            seen_clusters.add(cluster_key)
+        if quote_key:
+            seen_quotes.add(quote_key)
+
+    ranked.sort(
+        key=lambda angle: (
+            int(angle.get("evidence_strength_score") or 0),
+            int(angle.get("supporting_evidence_count") or 0),
+            bool(angle.get("proof_quote")),
+        ),
+        reverse=True,
+    )
+    top_angles = ranked[:3]
+    for rank, angle in enumerate(top_angles, start=1):
+        angle["angle_rank"] = rank
+        angle["is_recommended"] = rank == 1
+        angle["recommendation_reason"] = (
+            "Highest evidence coverage and strongest copy readiness among distinct review-signal clusters."
+            if rank == 1
+            else "Retained as a distinct evidence-backed alternative angle."
+        )
+        angle["angle_id"] = f"angle_{rank}"
+    return top_angles, duplicate_count
+
+
+def _rw_creative_next_actions(
+    top_ad_angles: list[dict],
+    quality_checks: dict,
+) -> list[dict]:
+    actions: list[dict] = []
+    recommended = next((angle for angle in top_ad_angles if angle.get("is_recommended")), None)
+    if recommended:
+        actions.append(
+            {
+                "action_type": "use_recommended_angle",
+                "label": "Use the recommended angle",
+                "reason": recommended.get("recommendation_reason", ""),
+                "target": recommended.get("angle_id", ""),
+                "guidance_only": True,
+            }
+        )
+    if quality_checks.get("weak_evidence") or quality_checks.get("missing_quote"):
+        actions.append(
+            {
+                "action_type": "collect_more_reviews",
+                "label": "Collect more distinct review evidence",
+                "reason": "Weak or missing quote coverage limits production confidence.",
+                "target": "review_workspace",
+                "guidance_only": True,
+            }
+        )
+        actions.append(
+            {
+                "action_type": "lower_claim_strength",
+                "label": "Use a more conservative claim",
+                "reason": "Keep the script inside the supplied visible-sample evidence boundary.",
+                "target": recommended.get("angle_id", "") if recommended else "creative_decision_pack",
+                "guidance_only": True,
+            }
+        )
+    if recommended and recommended.get("copy_readiness") == "ready":
+        actions.append(
+            {
+                "action_type": "copy_video_prompt",
+                "label": "Copy the provider-neutral video prompt",
+                "reason": "The recommended script has a quote, three scenes, CTA, and risk note.",
+                "target": "video_prompt_pack",
+                "guidance_only": True,
+            }
+        )
+    return actions
 
 
 def _rw_creative_quality_checks(top_ad_angles: list[dict], evidence_count: int) -> dict:
@@ -17409,7 +17533,7 @@ def _review_workspace_creative_decision_pack(
     positive_quote = _rw_quote_snippet(_rw_theme_first_quote(positive_theme), 180) if positive_theme else ""
     positive_label = _rw_output_theme_label(positive_theme.label, language) if positive_theme else ""
 
-    top_ad_angles: list[dict] = []
+    candidate_angles: list[dict] = []
     for index, candidate in enumerate(candidates, start=1):
         theme = candidate.get("theme")
         signal_type = candidate["signal_type"]
@@ -17458,7 +17582,16 @@ def _review_workspace_creative_decision_pack(
             else "Treat this as a visible-sample buyer signal, not a full-market conclusion or guaranteed product result."
         )
         title = _rw_creative_angle_title(signal_type, label, language)
-        top_ad_angles.append(
+        signal_cluster_label = " ".join(label.lower().split())
+        coverage = {
+            "proof_quote": bool(proof_quote),
+            "proof_source": bool(_rw_creative_proof_source(proof_quote, source_breakdown)),
+            "buyer_pain": signal_type == "pain_point",
+            "buyer_objection": signal_type == "buyer_objection",
+            "liked_point": signal_type == "positive_signal" or bool(positive_label),
+            "use_case": signal_type == "use_case",
+        }
+        candidate_angles.append(
             {
                 "angle_id": f"angle_{index}",
                 "title": title,
@@ -17475,6 +17608,11 @@ def _review_workspace_creative_decision_pack(
                 "third_scene": third_scene,
                 "cta": cta,
                 "evidence_strength": evidence_strength,
+                "supporting_evidence_count": evidence_count,
+                "evidence_coverage": coverage,
+                "evidence_gaps": [],
+                "angle_cluster": f"{signal_type}:{signal_cluster_label}",
+                "duplicate_angle_note": "",
                 "missing_quote": not bool(proof_quote),
                 "weak_evidence_reason": (
                     "Only one visible-sample quote supports this angle."
@@ -17483,9 +17621,17 @@ def _review_workspace_creative_decision_pack(
                 ),
                 "risk_note": risk_note,
                 "copy_ready_text": "\n".join([title, hook, first_scene, second_scene, third_scene, cta]),
+                "tiktok_script": {
+                    "hook": hook,
+                    "scenes": [first_scene, second_scene, third_scene],
+                    "cta": cta,
+                    "proof_quote": proof_quote,
+                    "risk_note": risk_note,
+                },
             }
         )
 
+    top_ad_angles, duplicate_angle_count = _rw_rank_and_dedupe_creative_angles(candidate_angles)
     source_summary = [
         {
             "source_type": group.get("source_type", ""),
@@ -17544,6 +17690,26 @@ def _review_workspace_creative_decision_pack(
         "video_generation_performed": False,
     }
     quality_checks = _rw_creative_quality_checks(top_ad_angles, len(evidence_quotes))
+    recommended_angle = next((angle for angle in top_ad_angles if angle.get("is_recommended")), {})
+    weak_evidence_count = sum(
+        1 for angle in top_ad_angles
+        if angle.get("evidence_strength") == "weak"
+        or int(angle.get("evidence_strength_score") or 0) < 60
+    )
+    missing_quote_count = sum(1 for angle in top_ad_angles if angle.get("missing_quote"))
+    ready_to_copy_script_count = sum(
+        1 for angle in top_ad_angles if angle.get("copy_readiness") == "ready"
+    )
+    if quality_checks["weak_evidence"]:
+        decision_reason = (
+            "Weak evidence: the best available angle is ranked for review, "
+            "but more distinct buyer quotes are required before production use."
+        )
+    elif recommended_angle:
+        decision_reason = recommended_angle.get("recommendation_reason", "")
+    else:
+        decision_reason = "Weak evidence: no distinct quote-backed creative angle is ready to recommend."
+    creative_next_actions = _rw_creative_next_actions(top_ad_angles, quality_checks)
 
     return {
         "pack_version": "creative_decision_pack_v1",
@@ -17552,6 +17718,24 @@ def _review_workspace_creative_decision_pack(
         "evidence_brief": evidence_brief,
         "video_prompt_pack": video_prompt_pack,
         "quality_checks": quality_checks,
+        "recommended_angle_id": recommended_angle.get("angle_id", ""),
+        "recommended_angle_title": recommended_angle.get("title", ""),
+        "decision_reason": decision_reason,
+        "angle_ranking_summary": [
+            {
+                "angle_id": angle.get("angle_id", ""),
+                "angle_rank": angle.get("angle_rank", 0),
+                "title": angle.get("title", ""),
+                "evidence_strength_score": angle.get("evidence_strength_score", 0),
+                "copy_readiness": angle.get("copy_readiness", ""),
+            }
+            for angle in top_ad_angles
+        ],
+        "weak_evidence_count": weak_evidence_count,
+        "missing_quote_count": missing_quote_count,
+        "ready_to_copy_script_count": ready_to_copy_script_count,
+        "duplicate_angle_count": duplicate_angle_count,
+        "creative_next_actions": creative_next_actions,
         "weak_evidence_reason": (
             quality_checks["recommendation"] if quality_checks["weak_evidence"] else ""
         ),
