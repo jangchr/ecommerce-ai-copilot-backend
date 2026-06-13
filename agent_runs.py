@@ -6958,6 +6958,326 @@ def build_provider_transaction_monitor_report(
     }
 
 
+PROVIDER_TRANSACTION_INCIDENT_DRILL_REPORT_VERSION = (
+    "provider_transaction_incident_drill_report_v1"
+)
+
+PROVIDER_TRANSACTION_INCIDENT_DRILL_STAGES = [
+    {
+        "stage_id": "run_incident_drill_preflight",
+        "stage_label": "Run incident drill preflight",
+        "required_inputs": ["provider_transaction_monitor_report", "operator_review_state"],
+        "expected_outputs": ["incident_drill_preflight", "drill_checks"],
+    },
+    {
+        "stage_id": "prepare_incident_scenario_matrix",
+        "stage_label": "Prepare incident scenario matrix",
+        "required_inputs": ["drift_detection_policy", "auto_abort_policy"],
+        "expected_outputs": ["incident_scenario_matrix", "incident_scenarios"],
+    },
+    {
+        "stage_id": "prepare_recovery_runbook",
+        "stage_label": "Prepare recovery runbook",
+        "required_inputs": ["incident_scenario_matrix", "verification_monitor"],
+        "expected_outputs": ["recovery_runbook", "recovery_steps"],
+    },
+    {
+        "stage_id": "prepare_operator_decision_replay",
+        "stage_label": "Prepare operator decision replay",
+        "required_inputs": ["operator_timeline", "recovery_runbook"],
+        "expected_outputs": ["operator_decision_replay", "operator_decisions"],
+    },
+    {
+        "stage_id": "prepare_rollback_restore_drill",
+        "stage_label": "Prepare rollback and restore drill",
+        "required_inputs": ["recovery_runbook", "operator_decision_replay"],
+        "expected_outputs": ["rollback_restore_drill", "rollback_restore_steps"],
+    },
+    {
+        "stage_id": "prepare_evidence_reconciliation",
+        "stage_label": "Prepare evidence reconciliation",
+        "required_inputs": ["monitoring_audit_receipt", "rollback_restore_drill"],
+        "expected_outputs": ["evidence_reconciliation", "evidence_reconciliation_checks"],
+    },
+    {
+        "stage_id": "prepare_incident_timeline",
+        "stage_label": "Prepare incident timeline",
+        "required_inputs": ["operator_timeline", "incident_scenario_matrix"],
+        "expected_outputs": ["incident_timeline", "incident_timeline_events"],
+    },
+    {
+        "stage_id": "prepare_drill_audit_receipt",
+        "stage_label": "Prepare drill audit receipt",
+        "required_inputs": ["incident_drill_sections", "incident_timeline"],
+        "expected_outputs": ["drill_audit_receipt", "audit_receipt_items"],
+    },
+]
+
+
+def build_provider_transaction_incident_drill_report(
+    *,
+    provider_transaction_monitor_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_transaction_incident_drill_report_builder",
+) -> dict[str, Any]:
+    """Build a dry-run incident, recovery, and decision replay report."""
+
+    monitor_report = (
+        provider_transaction_monitor_report
+        if isinstance(provider_transaction_monitor_report, dict)
+        else {}
+    )
+    monitor_ready = (
+        str(monitor_report.get("report_status") or "")
+        == "provider_transaction_monitor_ready_dry_run"
+    )
+
+    incident_drill_preflight = {
+        "incident_drill_preflight_version": "provider_transaction_incident_drill_preflight_v1",
+        "incident_drill_preflight_status": (
+            "incident_drill_preflight_ready_dry_run"
+            if monitor_ready
+            else "incident_drill_preflight_waiting_for_monitor_report"
+        ),
+        "drill_checks": [
+            {"drill_check_id": "transaction_monitor_report_ready", "passed": monitor_ready, "required": True},
+            {"drill_check_id": "operator_review_captured", "passed": False, "required": True},
+            {"drill_check_id": "incident_window_open", "passed": False, "required": True},
+            {"drill_check_id": "recovery_checkpoint_available", "passed": False, "required": True},
+            {"drill_check_id": "rollback_restore_authorized", "passed": False, "required": True},
+            {"drill_check_id": "audit_ledger_available", "passed": False, "required": True},
+        ],
+        "drill_check_count": 6,
+        "incident_drill_required": True,
+        "incident_drill_started": False,
+        "external_api_called": False,
+    }
+
+    incident_scenario_matrix = {
+        "incident_scenario_matrix_version": "provider_transaction_incident_scenario_matrix_v1",
+        "incident_scenario_matrix_status": "incident_scenario_matrix_ready_dry_run",
+        "incident_scenarios": [
+            {"scenario_id": "operation_lock_lost", "severity": "critical", "simulated": False},
+            {"scenario_id": "registry_pointer_drift", "severity": "critical", "simulated": False},
+            {"scenario_id": "snapshot_digest_drift", "severity": "high", "simulated": False},
+            {"scenario_id": "mutation_ledger_sequence_gap", "severity": "high", "simulated": False},
+            {"scenario_id": "commit_packet_integrity_failure", "severity": "critical", "simulated": False},
+            {"scenario_id": "post_apply_verification_failure", "severity": "critical", "simulated": False},
+            {"scenario_id": "auto_abort_failed", "severity": "critical", "simulated": False},
+        ],
+        "incident_scenario_count": 7,
+        "incident_detected": False,
+        "incident_opened": False,
+        "external_api_called": False,
+    }
+
+    recovery_runbook = {
+        "recovery_runbook_version": "provider_transaction_recovery_runbook_v1",
+        "recovery_runbook_status": "recovery_runbook_preview_only",
+        "recovery_steps": [
+            {"recovery_step_id": "freeze_transaction_window", "ready": monitor_ready, "executed": False},
+            {"recovery_step_id": "preserve_mutation_ledger_preview", "ready": monitor_ready, "executed": False},
+            {"recovery_step_id": "verify_rollback_checkpoint", "ready": False, "executed": False},
+            {"recovery_step_id": "request_operator_decision", "ready": False, "executed": False},
+            {"recovery_step_id": "rehearse_restore_or_rollback", "ready": False, "executed": False},
+            {"recovery_step_id": "reconcile_registry_snapshot_evidence", "ready": False, "executed": False},
+            {"recovery_step_id": "record_incident_audit_receipt", "ready": False, "executed": False},
+        ],
+        "recovery_step_count": 7,
+        "recovery_runbook_recorded": False,
+        "external_api_called": False,
+    }
+
+    operator_decision_replay = {
+        "operator_decision_replay_version": "provider_transaction_operator_decision_replay_v1",
+        "operator_decision_replay_status": "operator_decision_replay_preview_only",
+        "operator_decisions": [
+            {"decision_id": "pause_and_review", "available": True, "selected": False, "replayed": False},
+            {"decision_id": "abort_without_write", "available": True, "selected": False, "replayed": False},
+            {"decision_id": "restore_from_checkpoint", "available": False, "selected": False, "replayed": False},
+            {"decision_id": "rollback_registry_state", "available": False, "selected": False, "replayed": False},
+            {"decision_id": "escalate_incident", "available": True, "selected": False, "replayed": False},
+        ],
+        "operator_decision_count": 5,
+        "operator_decision_replayed": False,
+        "operator_decision_persisted": False,
+        "external_api_called": False,
+    }
+
+    rollback_restore_drill = {
+        "rollback_restore_drill_version": "provider_transaction_rollback_restore_drill_v1",
+        "rollback_restore_drill_status": "rollback_restore_drill_preview_only",
+        "rollback_restore_steps": [
+            {"rollback_restore_step_id": "validate_selected_checkpoint", "executed": False},
+            {"rollback_restore_step_id": "compare_registry_pointer", "executed": False},
+            {"rollback_restore_step_id": "compare_snapshot_digest", "executed": False},
+            {"rollback_restore_step_id": "preview_workspace_restore", "executed": False},
+            {"rollback_restore_step_id": "preview_registry_rollback", "executed": False},
+            {"rollback_restore_step_id": "verify_post_recovery_state", "executed": False},
+        ],
+        "rollback_restore_step_count": 6,
+        "rollback_restore_drill_recorded": False,
+        "rollback_restore_executed": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "rollback_applied": False,
+        "external_api_called": False,
+    }
+
+    evidence_reconciliation = {
+        "evidence_reconciliation_version": "provider_transaction_evidence_reconciliation_v1",
+        "evidence_reconciliation_status": "evidence_reconciliation_preview_only",
+        "evidence_reconciliation_checks": [
+            {"check_id": "monitor_signal_matches_incident_scenario", "passed": False},
+            {"check_id": "mutation_ledger_matches_commit_packet", "passed": False},
+            {"check_id": "checkpoint_matches_snapshot_digest", "passed": False},
+            {"check_id": "operator_decision_matches_timeline", "passed": False},
+            {"check_id": "rollback_restore_preview_matches_policy", "passed": False},
+            {"check_id": "audit_receipt_has_complete_chain", "passed": False},
+        ],
+        "evidence_reconciliation_check_count": 6,
+        "evidence_reconciliation_recorded": False,
+        "external_api_called": False,
+    }
+
+    incident_timeline = {
+        "incident_timeline_version": "provider_transaction_incident_timeline_v1",
+        "incident_timeline_status": "incident_timeline_preview_only",
+        "incident_timeline_events": [
+            {"timeline_event_id": "monitor_signal_observed", "recorded": False},
+            {"timeline_event_id": "drift_rule_evaluated", "recorded": False},
+            {"timeline_event_id": "auto_abort_decision_evaluated", "recorded": False},
+            {"timeline_event_id": "incident_opened", "recorded": False},
+            {"timeline_event_id": "operator_decision_requested", "recorded": False},
+            {"timeline_event_id": "operator_decision_replayed", "recorded": False},
+            {"timeline_event_id": "rollback_restore_drill_reviewed", "recorded": False},
+            {"timeline_event_id": "evidence_reconciled", "recorded": False},
+            {"timeline_event_id": "incident_drill_closed", "recorded": False},
+        ],
+        "incident_timeline_event_count": 9,
+        "incident_timeline_recorded": False,
+        "external_api_called": False,
+    }
+
+    drill_audit_receipt = {
+        "drill_audit_receipt_version": "provider_transaction_incident_drill_audit_receipt_v1",
+        "drill_audit_receipt_status": "drill_audit_receipt_ready_dry_run",
+        "audit_receipt_items": [
+            {"audit_item_id": "incident_drill_preflight", "included": True, "recorded": False},
+            {"audit_item_id": "incident_scenario_matrix", "included": True, "recorded": False},
+            {"audit_item_id": "recovery_runbook", "included": True, "recorded": False},
+            {"audit_item_id": "operator_decision_replay", "included": True, "recorded": False},
+            {"audit_item_id": "rollback_restore_drill", "included": True, "recorded": False},
+            {"audit_item_id": "evidence_reconciliation", "included": True, "recorded": False},
+            {"audit_item_id": "incident_timeline", "included": True, "recorded": False},
+            {"audit_item_id": "transaction_monitor_report", "included": True, "recorded": False},
+        ],
+        "audit_receipt_item_count": 8,
+        "drill_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not monitor_ready:
+        blocking_failures.append("provider_transaction_monitor_report_not_ready")
+    blocking_failures.extend(
+        [
+            "incident_drill_not_started",
+            "incident_not_opened",
+            "recovery_runbook_not_recorded",
+            "operator_decision_not_replayed",
+            "rollback_restore_drill_not_recorded",
+            "evidence_reconciliation_not_recorded",
+            "incident_timeline_not_recorded",
+            "drill_audit_not_recorded",
+            "operator_review_required",
+        ]
+    )
+    report_status = (
+        "provider_transaction_incident_drill_ready_dry_run"
+        if monitor_ready
+        else "provider_transaction_incident_drill_incomplete"
+    )
+
+    return {
+        "provider_transaction_incident_drill_report_version": (
+            PROVIDER_TRANSACTION_INCIDENT_DRILL_REPORT_VERSION
+        ),
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_transaction_incident_drill_report_builder"),
+        "provider_transaction_monitor_ready": monitor_ready,
+        "operator_review_required": True,
+        "stage_count": len(PROVIDER_TRANSACTION_INCIDENT_DRILL_STAGES),
+        "transaction_incident_drill_stage_matrix": [
+            dict(item, complete=monitor_ready)
+            for item in PROVIDER_TRANSACTION_INCIDENT_DRILL_STAGES
+        ],
+        "incident_drill_preflight": incident_drill_preflight,
+        "incident_scenario_matrix": incident_scenario_matrix,
+        "recovery_runbook": recovery_runbook,
+        "operator_decision_replay": operator_decision_replay,
+        "rollback_restore_drill": rollback_restore_drill,
+        "evidence_reconciliation": evidence_reconciliation,
+        "incident_timeline": incident_timeline,
+        "drill_audit_receipt": drill_audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "drill_check_count": incident_drill_preflight["drill_check_count"],
+        "incident_scenario_count": incident_scenario_matrix["incident_scenario_count"],
+        "recovery_step_count": recovery_runbook["recovery_step_count"],
+        "operator_decision_count": operator_decision_replay["operator_decision_count"],
+        "rollback_restore_step_count": rollback_restore_drill["rollback_restore_step_count"],
+        "evidence_reconciliation_check_count": evidence_reconciliation["evidence_reconciliation_check_count"],
+        "incident_timeline_event_count": incident_timeline["incident_timeline_event_count"],
+        "audit_receipt_item_count": drill_audit_receipt["audit_receipt_item_count"],
+        "supports_incident_drill_preflight": True,
+        "supports_incident_scenario_matrix": True,
+        "supports_recovery_runbook": True,
+        "supports_operator_decision_replay": True,
+        "supports_rollback_restore_drill": True,
+        "supports_evidence_reconciliation": True,
+        "supports_incident_timeline": True,
+        "supports_drill_audit_receipt": True,
+        "recommended_next_state": "show_provider_transaction_incident_drill_in_workspace",
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "dry_run": True,
+        "incident_drill_required": True,
+        "incident_drill_started": False,
+        "incident_detected": False,
+        "incident_opened": False,
+        "recovery_runbook_recorded": False,
+        "operator_decision_replayed": False,
+        "operator_decision_persisted": False,
+        "rollback_restore_drill_recorded": False,
+        "rollback_restore_executed": False,
+        "evidence_reconciliation_recorded": False,
+        "incident_timeline_recorded": False,
+        "drill_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "transaction_aborted": False,
+        "transaction_committed": False,
+        "registry_written": False,
+        "snapshot_written": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "rollback_applied": False,
+        "project_snapshot_saved": False,
+        "artifact_deleted": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

@@ -1641,6 +1641,93 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertFalse(
             graph_summary["latest_provider_transaction_monitor_external_api_called"]
         )
+        transaction_incident_drill = payload[
+            "provider_transaction_incident_drill_report"
+        ]
+        self.assertEqual(
+            transaction_incident_drill[
+                "provider_transaction_incident_drill_report_version"
+            ],
+            "provider_transaction_incident_drill_report_v1",
+        )
+        self.assertEqual(
+            transaction_incident_drill["report_status"],
+            "provider_transaction_incident_drill_ready_dry_run",
+        )
+        self.assertTrue(transaction_incident_drill["provider_transaction_monitor_ready"])
+        for section in [
+            "incident_drill_preflight",
+            "incident_scenario_matrix",
+            "recovery_runbook",
+            "operator_decision_replay",
+            "rollback_restore_drill",
+            "evidence_reconciliation",
+            "incident_timeline",
+            "drill_audit_receipt",
+        ]:
+            self.assertTrue(transaction_incident_drill[section])
+        for count_field in [
+            "drill_check_count",
+            "incident_scenario_count",
+            "recovery_step_count",
+            "operator_decision_count",
+            "rollback_restore_step_count",
+            "evidence_reconciliation_check_count",
+            "incident_timeline_event_count",
+            "audit_receipt_item_count",
+        ]:
+            self.assertGreater(transaction_incident_drill[count_field], 0)
+        self.assertGreater(
+            transaction_incident_drill["blocking_failure_count"],
+            0,
+        )
+        self.assertTrue(transaction_incident_drill["dry_run"])
+        self.assertTrue(transaction_incident_drill["incident_drill_required"])
+        for disabled_field in [
+            "incident_drill_started",
+            "incident_detected",
+            "incident_opened",
+            "operator_decision_replayed",
+            "rollback_restore_executed",
+            "transaction_aborted",
+            "transaction_committed",
+            "registry_written",
+            "snapshot_written",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_applied",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+        ]:
+            self.assertFalse(transaction_incident_drill[disabled_field])
+        self.assertEqual(
+            graph_summary["latest_provider_transaction_incident_drill_status"],
+            "provider_transaction_incident_drill_ready_dry_run",
+        )
+        self.assertGreater(
+            graph_summary[
+                "latest_provider_transaction_incident_drill_blocking_failure_count"
+            ],
+            0,
+        )
+        self.assertFalse(
+            graph_summary["latest_provider_transaction_incident_drill_incident_opened"]
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_transaction_incident_drill_rollback_restore_executed"
+            ]
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_transaction_incident_drill_external_api_called"
+            ]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],
