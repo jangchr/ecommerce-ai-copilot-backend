@@ -17442,6 +17442,216 @@ def _rw_creative_next_actions(
     return actions
 
 
+def _rw_creative_feedback_runtime(
+    top_ad_angles: list[dict],
+    recommended_angle: dict,
+    quality_checks: dict,
+    video_prompt_pack: dict,
+    weak_evidence_count: int,
+    missing_quote_count: int,
+) -> dict:
+    feedback_cards: list[dict] = []
+    for angle in top_ad_angles:
+        script = dict(angle.get("tiktok_script") or {})
+        scenes = list(script.get("scenes") or [])
+        missing_script_parts = [
+            name
+            for name, present in [
+                ("hook", bool(_rw_text(script.get("hook") or angle.get("hook")))),
+                ("scene_1", len(scenes) >= 1 and bool(_rw_text(scenes[0]))),
+                ("scene_2", len(scenes) >= 2 and bool(_rw_text(scenes[1]))),
+                ("scene_3", len(scenes) >= 3 and bool(_rw_text(scenes[2]))),
+                ("cta", bool(_rw_text(script.get("cta") or angle.get("cta")))),
+                ("proof_quote", bool(_rw_text(script.get("proof_quote") or angle.get("proof_quote")))),
+            ]
+            if not present
+        ]
+        score = int(angle.get("evidence_strength_score") or 0)
+        evidence_gaps = list(angle.get("evidence_gaps") or [])
+        script_ready = not missing_script_parts
+        evidence_ready = bool(angle.get("proof_quote")) and score >= 60
+        video_prompt_ready = bool(
+            video_prompt_pack.get("keyframe_prompt")
+            and list(video_prompt_pack.get("shot_list") or [])
+        )
+        should_lower_claim = (
+            angle.get("claim_safety_level") != "evidence_grounded"
+            or bool(evidence_gaps)
+            or not evidence_ready
+        )
+        if script_ready and evidence_ready and not should_lower_claim:
+            feedback_status = "ready_to_copy"
+            suggested_user_action = "copy_video_prompt" if video_prompt_ready else "use_recommended_angle"
+            feedback_reason = "Script and evidence coverage are ready for manual creative review and copy/export."
+        elif script_ready and angle.get("proof_quote"):
+            feedback_status = "needs_review"
+            suggested_user_action = "lower_claim_strength" if should_lower_claim else "use_recommended_angle"
+            feedback_reason = "The script is complete, but evidence gaps or conservative claim limits require review."
+        else:
+            feedback_status = "needs_evidence"
+            suggested_user_action = "collect_more_reviews"
+            feedback_reason = "Missing quote or script coverage prevents copy-ready use."
+        feedback_cards.append(
+            {
+                "angle_id": angle.get("angle_id", ""),
+                "angle_rank": angle.get("angle_rank", 0),
+                "title": angle.get("title", ""),
+                "is_recommended": bool(angle.get("is_recommended")),
+                "feedback_status": feedback_status,
+                "feedback_reason": feedback_reason,
+                "script_ready": script_ready,
+                "video_prompt_ready": video_prompt_ready,
+                "evidence_ready": evidence_ready,
+                "needs_more_reviews": not evidence_ready,
+                "should_lower_claim": should_lower_claim,
+                "suggested_user_action": suggested_user_action,
+                "copy_target": (
+                    "video_prompt_pack"
+                    if suggested_user_action == "copy_video_prompt"
+                    else angle.get("angle_id", "")
+                ),
+            }
+        )
+
+    recommended_card = next(
+        (card for card in feedback_cards if card.get("is_recommended")),
+        feedback_cards[0] if feedback_cards else {},
+    )
+    recommended_script = dict(recommended_angle.get("tiktok_script") or {})
+    recommended_scenes = list(recommended_script.get("scenes") or [])
+    missing_script_parts = [
+        name
+        for name, present in [
+            ("hook", bool(_rw_text(recommended_script.get("hook")))),
+            ("scene_1", len(recommended_scenes) >= 1 and bool(_rw_text(recommended_scenes[0]))),
+            ("scene_2", len(recommended_scenes) >= 2 and bool(_rw_text(recommended_scenes[1]))),
+            ("scene_3", len(recommended_scenes) >= 3 and bool(_rw_text(recommended_scenes[2]))),
+            ("cta", bool(_rw_text(recommended_script.get("cta")))),
+            ("proof_quote", bool(_rw_text(recommended_script.get("proof_quote")))),
+        ]
+        if not present
+    ]
+    recommended_script_ready = not missing_script_parts
+    copy_video_prompt_available = bool(
+        video_prompt_pack.get("keyframe_prompt")
+        and list(video_prompt_pack.get("shot_list") or [])
+    )
+    ready_angle_count = sum(card["feedback_status"] == "ready_to_copy" for card in feedback_cards)
+    needs_review_angle_count = sum(card["feedback_status"] != "ready_to_copy" for card in feedback_cards)
+
+    if not recommended_card:
+        overall_readiness = "needs_evidence"
+        overall_reason = "No evidence-backed creative angle is available."
+        recommended_next_step = "collect_more_reviews"
+    elif missing_quote_count > 0 or weak_evidence_count > 0:
+        overall_readiness = "ready_to_review" if recommended_script_ready else "needs_evidence"
+        overall_reason = "A draft is available, but weak or missing evidence requires manual review."
+        recommended_next_step = (
+            "lower_claim_strength"
+            if recommended_script_ready and recommended_card.get("should_lower_claim")
+            else "collect_more_reviews"
+        )
+    elif recommended_card.get("feedback_status") == "ready_to_copy":
+        overall_readiness = "ready_to_copy"
+        overall_reason = "The recommended angle has a complete script and quote-backed evidence."
+        recommended_next_step = "copy_video_prompt" if copy_video_prompt_available else "use_recommended_angle"
+    else:
+        overall_readiness = "ready_to_review"
+        overall_reason = "The recommended angle exists but still needs a conservative manual review."
+        recommended_next_step = "lower_claim_strength"
+
+    evidence_gap_actions: list[dict] = []
+    if missing_quote_count:
+        evidence_gap_actions.append(
+            {
+                "gap_type": "missing_quote",
+                "severity": "high",
+                "reason": "One or more creative angles do not have a supplied buyer quote.",
+                "suggested_action": "collect_more_reviews",
+                "target_angle_id": recommended_angle.get("angle_id", ""),
+            }
+        )
+    if weak_evidence_count:
+        evidence_gap_actions.append(
+            {
+                "gap_type": "weak_evidence",
+                "severity": "medium",
+                "reason": "Visible-sample evidence is not strong enough for broad product claims.",
+                "suggested_action": "lower_claim_strength",
+                "target_angle_id": recommended_angle.get("angle_id", ""),
+            }
+        )
+    if recommended_card.get("should_lower_claim") and not evidence_gap_actions:
+        evidence_gap_actions.append(
+            {
+                "gap_type": "claim_safety",
+                "severity": "medium",
+                "reason": "The recommended angle still has evidence gaps or a conservative claim boundary.",
+                "suggested_action": "use_conservative_script",
+                "target_angle_id": recommended_angle.get("angle_id", ""),
+            }
+        )
+
+    return {
+        "feedback_summary": {
+            "recommended_angle_id": recommended_angle.get("angle_id", ""),
+            "recommended_angle_title": recommended_angle.get("title", ""),
+            "overall_readiness": overall_readiness,
+            "overall_readiness_reason": overall_reason,
+            "ready_angle_count": ready_angle_count,
+            "needs_review_angle_count": needs_review_angle_count,
+            "weak_evidence_count": weak_evidence_count,
+            "missing_quote_count": missing_quote_count,
+            "recommended_next_step": recommended_next_step,
+        },
+        "angle_feedback_cards": feedback_cards,
+        "script_readiness_review": {
+            "recommended_script_ready": recommended_script_ready,
+            "recommended_script_reason": (
+                "The recommended script includes hook, three scenes, CTA, and proof quote."
+                if recommended_script_ready
+                else "The recommended script is missing required copy parts."
+            ),
+            "copy_recommended_script_available": recommended_script_ready,
+            "copy_video_prompt_available": copy_video_prompt_available,
+            "missing_script_parts": missing_script_parts,
+            "claim_safety_level": recommended_angle.get("claim_safety_level", "conservative"),
+        },
+        "evidence_gap_actions": evidence_gap_actions,
+        "workspace_flow_hints": [
+            {
+                "step_id": "review_evidence",
+                "label": "Review the supplied evidence",
+                "reason": "Confirm that the quote and source support the selected angle.",
+                "target_panel": "projectWorkspaceCreativeEvidenceQualityPanel",
+                "copy_or_export_hint": "copy_evidence_brief",
+            },
+            {
+                "step_id": "review_recommended_angle",
+                "label": "Review the recommended angle and TikTok script",
+                "reason": overall_reason,
+                "target_panel": "projectWorkspaceCreativeDecisionRecommendationPanel",
+                "copy_or_export_hint": "copy_recommended_script",
+            },
+            {
+                "step_id": "review_video_prompt",
+                "label": "Review the provider-neutral video prompt",
+                "reason": "Copy/export only; no video provider is called.",
+                "target_panel": "projectWorkspaceVideoPromptPackPanel",
+                "copy_or_export_hint": "copy_video_prompt",
+            },
+        ],
+        "safety_reminders": {
+            "provider_disabled": True,
+            "video_generation_disabled": True,
+            "llm_api_disabled": True,
+            "media_upload_disabled": True,
+            "paid_operation_disabled": True,
+            "registry_write_disabled": True,
+        },
+    }
+
+
 def _rw_creative_quality_checks(top_ad_angles: list[dict], evidence_count: int) -> dict:
     unsupported_terms = (
         "100% guaranteed",
@@ -17710,6 +17920,14 @@ def _review_workspace_creative_decision_pack(
     else:
         decision_reason = "Weak evidence: no distinct quote-backed creative angle is ready to recommend."
     creative_next_actions = _rw_creative_next_actions(top_ad_angles, quality_checks)
+    creative_feedback_runtime = _rw_creative_feedback_runtime(
+        top_ad_angles,
+        recommended_angle,
+        quality_checks,
+        video_prompt_pack,
+        weak_evidence_count,
+        missing_quote_count,
+    )
 
     return {
         "pack_version": "creative_decision_pack_v1",
@@ -17736,6 +17954,7 @@ def _review_workspace_creative_decision_pack(
         "ready_to_copy_script_count": ready_to_copy_script_count,
         "duplicate_angle_count": duplicate_angle_count,
         "creative_next_actions": creative_next_actions,
+        "creative_feedback_runtime": creative_feedback_runtime,
         "weak_evidence_reason": (
             quality_checks["recommendation"] if quality_checks["weak_evidence"] else ""
         ),

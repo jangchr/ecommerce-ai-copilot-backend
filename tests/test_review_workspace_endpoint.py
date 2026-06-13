@@ -1412,6 +1412,30 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
             self.assertGreaterEqual(pack[field], 0)
         self.assertTrue(pack["creative_next_actions"])
         self.assertTrue(all(action["guidance_only"] for action in pack["creative_next_actions"]))
+        feedback = pack["creative_feedback_runtime"]
+        summary = feedback["feedback_summary"]
+        for field in ["recommended_angle_id", "overall_readiness", "recommended_next_step"]:
+            self.assertIn(field, summary)
+        self.assertEqual(summary["recommended_angle_id"], pack["recommended_angle_id"])
+        self.assertTrue(feedback["angle_feedback_cards"])
+        for card in feedback["angle_feedback_cards"]:
+            for field in ["feedback_status", "suggested_user_action", "copy_target"]:
+                self.assertIn(field, card)
+        script_review = feedback["script_readiness_review"]
+        self.assertIn("recommended_script_ready", script_review)
+        self.assertIn("copy_recommended_script_available", script_review)
+        self.assertTrue(feedback["workspace_flow_hints"])
+        self.assertEqual(
+            feedback["safety_reminders"],
+            {
+                "provider_disabled": True,
+                "video_generation_disabled": True,
+                "llm_api_disabled": True,
+                "media_upload_disabled": True,
+                "paid_operation_disabled": True,
+                "registry_write_disabled": True,
+            },
+        )
 
         evidence_brief = pack["evidence_brief"]
         self.assertTrue(evidence_brief["high_signal_quotes"])
@@ -1467,6 +1491,22 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertIn("Weak evidence", pack["decision_reason"])
         self.assertTrue(
             all(angle["proof_quote"] or angle["missing_quote"] for angle in pack["top_ad_angles"])
+        )
+        feedback = pack["creative_feedback_runtime"]
+        self.assertIn(
+            feedback["feedback_summary"]["recommended_next_step"],
+            {"collect_more_reviews", "lower_claim_strength"},
+        )
+        self.assertTrue(feedback["evidence_gap_actions"])
+        self.assertTrue(
+            all(
+                action["suggested_action"] in {
+                    "collect_more_reviews",
+                    "lower_claim_strength",
+                    "use_conservative_script",
+                }
+                for action in feedback["evidence_gap_actions"]
+            )
         )
 
     def test_creative_decision_pack_dedupes_repeated_signal_clusters(self):
