@@ -7278,6 +7278,316 @@ def build_provider_transaction_incident_drill_report(
     }
 
 
+PROVIDER_EXECUTION_READINESS_PACKET_REPORT_VERSION = (
+    "provider_execution_readiness_packet_report_v1"
+)
+
+PROVIDER_EXECUTION_READINESS_PACKET_STAGES = [
+    {
+        "stage_id": "summarize_readiness_packet",
+        "stage_label": "Summarize provider execution readiness packet",
+        "required_inputs": ["provider_transaction_incident_drill_report"],
+        "expected_outputs": ["readiness_packet_summary"],
+    },
+    {
+        "stage_id": "map_system_capabilities",
+        "stage_label": "Map system capabilities",
+        "required_inputs": ["incident_drill_sections", "upstream_report_chain"],
+        "expected_outputs": ["system_capability_matrix"],
+    },
+    {
+        "stage_id": "map_execution_boundaries",
+        "stage_label": "Map execution boundaries",
+        "required_inputs": ["safety_boundaries", "blocking_failures"],
+        "expected_outputs": ["execution_boundary_map"],
+    },
+    {
+        "stage_id": "prepare_operator_runbook",
+        "stage_label": "Prepare operator runbook",
+        "required_inputs": ["recovery_runbook", "operator_decision_replay"],
+        "expected_outputs": ["operator_runbook"],
+    },
+    {
+        "stage_id": "index_audit_exports",
+        "stage_label": "Index audit exports",
+        "required_inputs": ["drill_audit_receipt", "workspace_export_state"],
+        "expected_outputs": ["audit_export_index"],
+    },
+    {
+        "stage_id": "prepare_demo_storyline",
+        "stage_label": "Prepare demo storyline",
+        "required_inputs": ["readiness_summary", "execution_boundary_map"],
+        "expected_outputs": ["demo_storyline"],
+    },
+    {
+        "stage_id": "evaluate_final_readiness_gate",
+        "stage_label": "Evaluate final readiness gate",
+        "required_inputs": ["system_capability_matrix", "operator_review_state"],
+        "expected_outputs": ["final_readiness_gate"],
+    },
+    {
+        "stage_id": "prepare_readiness_audit_receipt",
+        "stage_label": "Prepare readiness audit receipt",
+        "required_inputs": ["readiness_packet_sections", "final_readiness_gate"],
+        "expected_outputs": ["readiness_audit_receipt"],
+    },
+]
+
+
+def build_provider_execution_readiness_packet_report(
+    *,
+    provider_transaction_incident_drill_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "provider_execution_readiness_packet_report_builder",
+) -> dict[str, Any]:
+    """Build the final dry-run provider execution readiness packet."""
+
+    incident_drill_report = (
+        provider_transaction_incident_drill_report
+        if isinstance(provider_transaction_incident_drill_report, dict)
+        else {}
+    )
+    incident_drill_ready = (
+        str(incident_drill_report.get("report_status") or "")
+        == "provider_transaction_incident_drill_ready_dry_run"
+    )
+
+    readiness_packet_summary = {
+        "readiness_packet_summary_version": "provider_execution_readiness_packet_summary_v1",
+        "readiness_packet_summary_status": (
+            "readiness_packet_summary_ready_dry_run"
+            if incident_drill_ready
+            else "readiness_packet_summary_waiting_for_incident_drill"
+        ),
+        "upstream_report_status": str(incident_drill_report.get("report_status") or ""),
+        "dry_run_chain_complete": incident_drill_ready,
+        "operator_review_required": True,
+        "real_execution_enabled": False,
+        "external_api_called": False,
+    }
+
+    system_capability_matrix = {
+        "system_capability_matrix_version": "provider_execution_system_capability_matrix_v1",
+        "system_capability_matrix_status": "system_capability_matrix_ready_dry_run",
+        "capabilities": [
+            {"capability_id": "provider_prompt_and_payload_preview", "supported": True, "real_execution_enabled": False},
+            {"capability_id": "provider_sandbox_simulation", "supported": True, "real_execution_enabled": False},
+            {"capability_id": "queue_lease_checkpoint_resume_preview", "supported": True, "real_execution_enabled": False},
+            {"capability_id": "artifact_lineage_and_restore_preview", "supported": True, "real_execution_enabled": False},
+            {"capability_id": "registry_transaction_rehearsal", "supported": True, "real_execution_enabled": False},
+            {"capability_id": "transaction_monitor_and_incident_drill", "supported": incident_drill_ready, "real_execution_enabled": False},
+            {"capability_id": "workspace_and_audit_export", "supported": True, "real_execution_enabled": False},
+            {"capability_id": "real_provider_transaction_execution", "supported": False, "real_execution_enabled": False},
+        ],
+        "capability_count": 8,
+        "supported_capability_count": 7 if incident_drill_ready else 6,
+        "real_execution_capability_count": 0,
+        "external_api_called": False,
+    }
+
+    execution_boundary_map = {
+        "execution_boundary_map_version": "provider_execution_boundary_map_v1",
+        "execution_boundary_map_status": "execution_boundary_map_ready_dry_run",
+        "boundaries": [
+            {"boundary_id": "operator_approval_required", "enforced": True, "crossed": False},
+            {"boundary_id": "real_execution_disabled", "enforced": True, "crossed": False},
+            {"boundary_id": "external_provider_calls_disabled", "enforced": True, "crossed": False},
+            {"boundary_id": "provider_secrets_unread", "enforced": True, "crossed": False},
+            {"boundary_id": "registry_and_snapshot_writes_disabled", "enforced": True, "crossed": False},
+            {"boundary_id": "restore_and_rollback_execution_disabled", "enforced": True, "crossed": False},
+            {"boundary_id": "media_transfer_disabled", "enforced": True, "crossed": False},
+            {"boundary_id": "paid_generation_disabled", "enforced": True, "crossed": False},
+        ],
+        "boundary_count": 8,
+        "crossed_boundary_count": 0,
+        "external_api_called": False,
+    }
+
+    operator_runbook = {
+        "operator_runbook_version": "provider_execution_operator_runbook_v1",
+        "operator_runbook_status": "operator_runbook_preview_only",
+        "operator_steps": [
+            {"operator_step_id": "review_readiness_packet", "ready": incident_drill_ready, "executed": False},
+            {"operator_step_id": "review_execution_boundaries", "ready": incident_drill_ready, "executed": False},
+            {"operator_step_id": "review_provider_cost_and_secret_policy", "ready": False, "executed": False},
+            {"operator_step_id": "approve_or_reject_execution_window", "ready": False, "executed": False},
+            {"operator_step_id": "verify_registry_snapshot_checkpoint", "ready": False, "executed": False},
+            {"operator_step_id": "open_monitored_transaction_window", "ready": False, "executed": False},
+            {"operator_step_id": "close_and_audit_execution_window", "ready": False, "executed": False},
+        ],
+        "operator_step_count": 7,
+        "operator_runbook_recorded": False,
+        "operator_review_required": True,
+        "external_api_called": False,
+    }
+
+    audit_export_index = {
+        "audit_export_index_version": "provider_execution_audit_export_index_v1",
+        "audit_export_index_status": "audit_export_index_ready_dry_run",
+        "audit_exports": [
+            {"export_id": "provider_transaction_incident_drill_report", "available": incident_drill_ready, "persisted": False},
+            {"export_id": "provider_execution_readiness_packet_report", "available": True, "persisted": False},
+            {"export_id": "workspace_markdown_export", "available": True, "persisted": False},
+            {"export_id": "workspace_json_export", "available": True, "persisted": False},
+            {"export_id": "operator_audit_receipt", "available": True, "persisted": False},
+        ],
+        "audit_export_count": 5,
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "external_api_called": False,
+    }
+
+    demo_storyline = {
+        "demo_storyline_version": "provider_execution_demo_storyline_v1",
+        "demo_storyline_status": "demo_storyline_ready_dry_run",
+        "storyline_steps": [
+            {"storyline_step_id": "show_capability_chain", "ready": incident_drill_ready, "executed": False},
+            {"storyline_step_id": "show_execution_boundaries", "ready": True, "executed": False},
+            {"storyline_step_id": "show_operator_runbook", "ready": True, "executed": False},
+            {"storyline_step_id": "show_incident_recovery_drill", "ready": incident_drill_ready, "executed": False},
+            {"storyline_step_id": "export_audit_packet", "ready": True, "executed": False},
+        ],
+        "storyline_step_count": 5,
+        "demo_executed": False,
+        "external_api_called": False,
+    }
+
+    final_readiness_gate = {
+        "final_readiness_gate_version": "provider_execution_final_readiness_gate_v1",
+        "final_readiness_gate_status": "provider_execution_not_authorized",
+        "dry_run_chain_ready": incident_drill_ready,
+        "operator_approval_present": False,
+        "provider_cost_review_complete": False,
+        "provider_secret_policy_approved": False,
+        "registry_write_authorized": False,
+        "rollback_restore_authorized": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "final_gate_passed": False,
+        "external_api_called": False,
+    }
+
+    readiness_audit_receipt = {
+        "readiness_audit_receipt_version": "provider_execution_readiness_audit_receipt_v1",
+        "readiness_audit_receipt_status": "readiness_audit_receipt_ready_dry_run",
+        "audit_receipt_items": [
+            {"audit_item_id": "readiness_packet_summary", "included": True, "recorded": False},
+            {"audit_item_id": "system_capability_matrix", "included": True, "recorded": False},
+            {"audit_item_id": "execution_boundary_map", "included": True, "recorded": False},
+            {"audit_item_id": "operator_runbook", "included": True, "recorded": False},
+            {"audit_item_id": "audit_export_index", "included": True, "recorded": False},
+            {"audit_item_id": "demo_storyline", "included": True, "recorded": False},
+            {"audit_item_id": "final_readiness_gate", "included": True, "recorded": False},
+            {"audit_item_id": "provider_transaction_incident_drill_report", "included": incident_drill_ready, "recorded": False},
+        ],
+        "audit_receipt_item_count": 8,
+        "readiness_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "external_api_called": False,
+    }
+
+    blocking_failures = []
+    if not incident_drill_ready:
+        blocking_failures.append("provider_transaction_incident_drill_report_not_ready")
+    blocking_failures.extend(
+        [
+            "operator_approval_missing",
+            "provider_cost_review_not_complete",
+            "provider_secret_policy_not_approved",
+            "registry_write_not_authorized",
+            "rollback_restore_not_authorized",
+            "real_execution_not_enabled",
+            "provider_call_not_allowed",
+            "operator_review_required",
+        ]
+    )
+    report_status = (
+        "provider_execution_readiness_packet_ready_dry_run"
+        if incident_drill_ready
+        else "provider_execution_readiness_packet_incomplete"
+    )
+
+    return {
+        "provider_execution_readiness_packet_report_version": (
+            PROVIDER_EXECUTION_READINESS_PACKET_REPORT_VERSION
+        ),
+        "report_status": report_status,
+        "project_id": str(project_id or "demo_project_default"),
+        "requested_by": str(requested_by or "provider_execution_readiness_packet_report_builder"),
+        "provider_transaction_incident_drill_ready": incident_drill_ready,
+        "operator_review_required": True,
+        "stage_count": len(PROVIDER_EXECUTION_READINESS_PACKET_STAGES),
+        "execution_readiness_packet_stage_matrix": [
+            dict(item, complete=incident_drill_ready)
+            for item in PROVIDER_EXECUTION_READINESS_PACKET_STAGES
+        ],
+        "readiness_packet_summary": readiness_packet_summary,
+        "system_capability_matrix": system_capability_matrix,
+        "execution_boundary_map": execution_boundary_map,
+        "operator_runbook": operator_runbook,
+        "audit_export_index": audit_export_index,
+        "demo_storyline": demo_storyline,
+        "final_readiness_gate": final_readiness_gate,
+        "readiness_audit_receipt": readiness_audit_receipt,
+        "blocking_failure_count": len(blocking_failures),
+        "blocking_failures": blocking_failures,
+        "readiness_summary_item_count": 6,
+        "capability_count": system_capability_matrix["capability_count"],
+        "boundary_count": execution_boundary_map["boundary_count"],
+        "operator_step_count": operator_runbook["operator_step_count"],
+        "audit_export_count": audit_export_index["audit_export_count"],
+        "storyline_step_count": demo_storyline["storyline_step_count"],
+        "final_gate_check_count": 8,
+        "audit_receipt_item_count": readiness_audit_receipt["audit_receipt_item_count"],
+        "supports_readiness_packet_summary": True,
+        "supports_system_capability_matrix": True,
+        "supports_execution_boundary_map": True,
+        "supports_operator_runbook": True,
+        "supports_audit_export_index": True,
+        "supports_demo_storyline": True,
+        "supports_final_readiness_gate": True,
+        "supports_readiness_audit_receipt": True,
+        "recommended_next_state": "show_provider_execution_readiness_packet_in_workspace",
+        "workspace_export_ready": True,
+        "json_export_ready": True,
+        "markdown_export_ready": True,
+        "dry_run": True,
+        "readiness_packet_required": True,
+        "readiness_packet_recorded": False,
+        "operator_runbook_recorded": False,
+        "demo_executed": False,
+        "final_gate_passed": False,
+        "operator_approval_present": False,
+        "provider_cost_review_complete": False,
+        "provider_secret_policy_approved": False,
+        "registry_write_authorized": False,
+        "rollback_restore_authorized": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "transaction_started": False,
+        "transaction_aborted": False,
+        "transaction_committed": False,
+        "registry_written": False,
+        "snapshot_written": False,
+        "restore_applied": False,
+        "workspace_restored": False,
+        "rollback_applied": False,
+        "project_snapshot_saved": False,
+        "artifact_deleted": False,
+        "readiness_audit_recorded": False,
+        "audit_ledger_persisted": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 def build_agent_contract_summary(registry: dict[str, Any] | None = None) -> dict[str, Any]:
     safe_registry = registry if isinstance(registry, dict) else build_agent_contract_registry()
     contracts = safe_registry.get("contracts") if isinstance(safe_registry.get("contracts"), list) else []

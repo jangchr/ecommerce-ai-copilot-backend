@@ -5159,6 +5159,115 @@ class AgentRunnerFinalizationTests(unittest.TestCase):
         ]:
             self.assertFalse(report[disabled_field])
 
+    def test_provider_execution_readiness_packet_report_models_final_gate_and_safety(self):
+        from agent_runs import (
+            build_provider_execution_readiness_packet_report,
+            build_provider_transaction_incident_drill_report,
+        )
+
+        incident_drill_report = build_provider_transaction_incident_drill_report(
+            provider_transaction_monitor_report={
+                "report_status": "provider_transaction_monitor_ready_dry_run",
+            },
+            project_id="project_provider_execution_readiness_packet",
+            requested_by="unit_test",
+        )
+        report = build_provider_execution_readiness_packet_report(
+            provider_transaction_incident_drill_report=incident_drill_report,
+            project_id="project_provider_execution_readiness_packet",
+            requested_by="unit_test",
+        )
+
+        self.assertEqual(
+            report["provider_execution_readiness_packet_report_version"],
+            "provider_execution_readiness_packet_report_v1",
+        )
+        self.assertEqual(
+            report["report_status"],
+            "provider_execution_readiness_packet_ready_dry_run",
+        )
+        self.assertTrue(report["provider_transaction_incident_drill_ready"])
+        self.assertTrue(report["operator_review_required"])
+        for section in [
+            "readiness_packet_summary",
+            "system_capability_matrix",
+            "execution_boundary_map",
+            "operator_runbook",
+            "audit_export_index",
+            "demo_storyline",
+            "final_readiness_gate",
+            "readiness_audit_receipt",
+        ]:
+            self.assertTrue(report[section])
+        for count_field in [
+            "readiness_summary_item_count",
+            "capability_count",
+            "boundary_count",
+            "operator_step_count",
+            "audit_export_count",
+            "storyline_step_count",
+            "final_gate_check_count",
+            "audit_receipt_item_count",
+        ]:
+            self.assertGreater(report[count_field], 0)
+        for support_field in [
+            "supports_readiness_packet_summary",
+            "supports_system_capability_matrix",
+            "supports_execution_boundary_map",
+            "supports_operator_runbook",
+            "supports_audit_export_index",
+            "supports_demo_storyline",
+            "supports_final_readiness_gate",
+            "supports_readiness_audit_receipt",
+        ]:
+            self.assertTrue(report[support_field])
+        for blocker in [
+            "operator_approval_missing",
+            "provider_cost_review_not_complete",
+            "provider_secret_policy_not_approved",
+            "registry_write_not_authorized",
+            "rollback_restore_not_authorized",
+            "real_execution_not_enabled",
+            "provider_call_not_allowed",
+            "operator_review_required",
+        ]:
+            self.assertIn(blocker, report["blocking_failures"])
+        self.assertTrue(report["dry_run"])
+        self.assertTrue(report["readiness_packet_required"])
+        for disabled_field in [
+            "readiness_packet_recorded",
+            "operator_runbook_recorded",
+            "demo_executed",
+            "final_gate_passed",
+            "operator_approval_present",
+            "provider_cost_review_complete",
+            "provider_secret_policy_approved",
+            "registry_write_authorized",
+            "rollback_restore_authorized",
+            "real_execution_enabled",
+            "provider_call_allowed",
+            "transaction_started",
+            "transaction_aborted",
+            "transaction_committed",
+            "registry_written",
+            "snapshot_written",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_applied",
+            "project_snapshot_saved",
+            "artifact_deleted",
+            "readiness_audit_recorded",
+            "audit_ledger_persisted",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+        ]:
+            self.assertFalse(report[disabled_field])
+
 
     def test_provider_artifact_lineage_report_models_provenance_versioned_audit_and_safety(self):
         from agent_runs import (

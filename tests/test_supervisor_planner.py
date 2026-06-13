@@ -1728,6 +1728,105 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
                 "latest_provider_transaction_incident_drill_external_api_called"
             ]
         )
+        execution_readiness_packet = payload[
+            "provider_execution_readiness_packet_report"
+        ]
+        self.assertEqual(
+            execution_readiness_packet[
+                "provider_execution_readiness_packet_report_version"
+            ],
+            "provider_execution_readiness_packet_report_v1",
+        )
+        self.assertEqual(
+            execution_readiness_packet["report_status"],
+            "provider_execution_readiness_packet_ready_dry_run",
+        )
+        self.assertTrue(
+            execution_readiness_packet[
+                "provider_transaction_incident_drill_ready"
+            ]
+        )
+        for section in [
+            "readiness_packet_summary",
+            "system_capability_matrix",
+            "execution_boundary_map",
+            "operator_runbook",
+            "audit_export_index",
+            "demo_storyline",
+            "final_readiness_gate",
+            "readiness_audit_receipt",
+        ]:
+            self.assertTrue(execution_readiness_packet[section])
+        for count_field in [
+            "readiness_summary_item_count",
+            "capability_count",
+            "boundary_count",
+            "operator_step_count",
+            "audit_export_count",
+            "storyline_step_count",
+            "final_gate_check_count",
+            "audit_receipt_item_count",
+        ]:
+            self.assertGreater(execution_readiness_packet[count_field], 0)
+        self.assertGreater(
+            execution_readiness_packet["blocking_failure_count"],
+            0,
+        )
+        self.assertTrue(execution_readiness_packet["dry_run"])
+        self.assertTrue(execution_readiness_packet["readiness_packet_required"])
+        for disabled_field in [
+            "readiness_packet_recorded",
+            "operator_runbook_recorded",
+            "demo_executed",
+            "final_gate_passed",
+            "operator_approval_present",
+            "provider_cost_review_complete",
+            "provider_secret_policy_approved",
+            "registry_write_authorized",
+            "rollback_restore_authorized",
+            "real_execution_enabled",
+            "provider_call_allowed",
+            "transaction_started",
+            "transaction_committed",
+            "registry_written",
+            "snapshot_written",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_applied",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+        ]:
+            self.assertFalse(execution_readiness_packet[disabled_field])
+        self.assertEqual(
+            graph_summary["latest_provider_execution_readiness_packet_status"],
+            "provider_execution_readiness_packet_ready_dry_run",
+        )
+        self.assertGreater(
+            graph_summary[
+                "latest_provider_execution_readiness_packet_blocking_failure_count"
+            ],
+            0,
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_execution_readiness_packet_final_gate_passed"
+            ]
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_execution_readiness_packet_real_execution_enabled"
+            ]
+        )
+        self.assertFalse(
+            graph_summary[
+                "latest_provider_execution_readiness_packet_external_api_called"
+            ]
+        )
         self.assertEqual(
             payload["project"]["graph_summary"]["latest_runner_plan_status"],
             plan["execution_status"],

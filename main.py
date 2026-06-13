@@ -83,6 +83,7 @@ from agent_runs import (
     build_provider_registry_transaction_rehearsal_report,
     build_provider_transaction_monitor_report,
     build_provider_transaction_incident_drill_report,
+    build_provider_execution_readiness_packet_report,
     build_agent_runner_dispatch_ticket,
     build_agent_runner_dispatch_summary,
     build_agent_runner_dispatch_event,
@@ -6330,6 +6331,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         project_id=project_id,
         requested_by="project_runner_plan_api",
     )
+    provider_execution_readiness_packet_report = build_provider_execution_readiness_packet_report(
+        provider_transaction_incident_drill_report=provider_transaction_incident_drill_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_plan = build_agent_runner_plan(
         planner_recommendation=planner_recommendation,
         project=project,
@@ -6448,6 +6454,11 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "latest_provider_transaction_incident_drill_incident_opened": bool(provider_transaction_incident_drill_report.get("incident_opened")),
         "latest_provider_transaction_incident_drill_rollback_restore_executed": bool(provider_transaction_incident_drill_report.get("rollback_restore_executed")),
         "latest_provider_transaction_incident_drill_external_api_called": bool(provider_transaction_incident_drill_report.get("external_api_called")),
+        "latest_provider_execution_readiness_packet_status": provider_execution_readiness_packet_report.get("report_status", ""),
+        "latest_provider_execution_readiness_packet_blocking_failure_count": int(provider_execution_readiness_packet_report.get("blocking_failure_count") or 0),
+        "latest_provider_execution_readiness_packet_final_gate_passed": bool(provider_execution_readiness_packet_report.get("final_gate_passed")),
+        "latest_provider_execution_readiness_packet_real_execution_enabled": bool(provider_execution_readiness_packet_report.get("real_execution_enabled")),
+        "latest_provider_execution_readiness_packet_external_api_called": bool(provider_execution_readiness_packet_report.get("external_api_called")),
         }
     )
     project["graph_summary"] = graph_summary
@@ -6487,6 +6498,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "provider_registry_transaction_rehearsal_report": provider_registry_transaction_rehearsal_report,
         "provider_transaction_monitor_report": provider_transaction_monitor_report,
         "provider_transaction_incident_drill_report": provider_transaction_incident_drill_report,
+        "provider_execution_readiness_packet_report": provider_execution_readiness_packet_report,
         "dry_run": True,
         "external_api_called": False,
         "cost_incurred_by_crossgrowth": False,
