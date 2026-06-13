@@ -12554,6 +12554,136 @@
             ].join('\n');
         }
 
+        function projectWorkspaceExportProviderExecutionReadinessPacketSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderExecutionReadinessPacketReportFromWorkspace(workspace);
+            const booleanFields = [
+                'supports_readiness_packet_summary', 'supports_system_capability_matrix',
+                'supports_execution_boundary_map', 'supports_operator_runbook',
+                'supports_audit_export_index', 'supports_demo_storyline',
+                'supports_final_readiness_gate', 'supports_readiness_audit_receipt',
+                'readiness_packet_required', 'readiness_packet_recorded',
+                'operator_runbook_recorded', 'demo_executed', 'final_gate_passed',
+                'operator_approval_present', 'provider_cost_review_complete',
+                'provider_secret_policy_approved', 'registry_write_authorized',
+                'rollback_restore_authorized', 'real_execution_enabled',
+                'provider_call_allowed', 'transaction_started', 'transaction_aborted',
+                'transaction_committed', 'registry_written', 'snapshot_written',
+                'restore_applied', 'workspace_restored', 'rollback_applied',
+                'project_snapshot_saved', 'artifact_deleted',
+                'readiness_audit_recorded', 'audit_ledger_persisted',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'workspace_export_ready',
+                'json_export_ready', 'markdown_export_ready', 'dry_run'
+            ];
+            const snapshot = {
+                marker: 'Project Workspace export pack provider execution readiness packet bundle',
+                report_status: report.report_status || '',
+                provider_execution_readiness_packet_report_version: report.provider_execution_readiness_packet_report_version || '',
+                provider_transaction_incident_drill_ready: Boolean(report.provider_transaction_incident_drill_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                execution_readiness_packet_stage_matrix: Array.isArray(report.execution_readiness_packet_stage_matrix) ? report.execution_readiness_packet_stage_matrix : [],
+                readiness_packet_summary: report.readiness_packet_summary || {},
+                system_capability_matrix: report.system_capability_matrix || {},
+                execution_boundary_map: report.execution_boundary_map || {},
+                operator_runbook: report.operator_runbook || {},
+                audit_export_index: report.audit_export_index || {},
+                demo_storyline: report.demo_storyline || {},
+                final_readiness_gate: report.final_readiness_gate || {},
+                readiness_audit_receipt: report.readiness_audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                readiness_summary_item_count: Number(report.readiness_summary_item_count || 0),
+                capability_count: Number(report.capability_count || 0),
+                boundary_count: Number(report.boundary_count || 0),
+                operator_step_count: Number(report.operator_step_count || 0),
+                audit_export_count: Number(report.audit_export_count || 0),
+                storyline_step_count: Number(report.storyline_step_count || 0),
+                final_gate_check_count: Number(report.final_gate_check_count || 0),
+                audit_receipt_item_count: Number(report.audit_receipt_item_count || 0),
+                has_provider_execution_readiness_packet_report: Boolean(
+                    report.report_status || report.provider_execution_readiness_packet_report_version
+                )
+            };
+            booleanFields.forEach((key) => {
+                snapshot[key] = Boolean(report[key]);
+            });
+            return snapshot;
+        }
+
+        function projectWorkspaceExportProviderExecutionReadinessPacketMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderExecutionReadinessPacketSnapshot(workspace);
+            if (!report.has_provider_execution_readiness_packet_report) {
+                return `## ${t('projectWorkspaceExportProviderExecutionReadinessPacketTitle')}\n${t('providerExecutionReadinessPacketNotRefreshedYet')}`;
+            }
+            const blockers = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stages = report.execution_readiness_packet_stage_matrix.length
+                ? report.execution_readiness_packet_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const supportKeys = [
+                'supports_readiness_packet_summary', 'supports_system_capability_matrix',
+                'supports_execution_boundary_map', 'supports_operator_runbook',
+                'supports_audit_export_index', 'supports_demo_storyline',
+                'supports_final_readiness_gate', 'supports_readiness_audit_receipt'
+            ];
+            const statusKeys = [
+                'readiness_packet_required', 'readiness_packet_recorded',
+                'operator_runbook_recorded', 'demo_executed', 'final_gate_passed',
+                'operator_approval_present', 'provider_cost_review_complete',
+                'provider_secret_policy_approved', 'registry_write_authorized',
+                'rollback_restore_authorized', 'real_execution_enabled',
+                'provider_call_allowed', 'transaction_started', 'transaction_aborted',
+                'transaction_committed', 'registry_written', 'snapshot_written',
+                'restore_applied', 'workspace_restored', 'rollback_applied',
+                'project_snapshot_saved', 'artifact_deleted',
+                'readiness_audit_recorded', 'audit_ledger_persisted',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'dry_run'
+            ];
+            return [
+                `## ${t('projectWorkspaceExportProviderExecutionReadinessPacketTitle')}`,
+                `${t('providerExecutionReadinessPacketStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerTransactionIncidentDrillReady')}: ${report.provider_transaction_incident_drill_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('readinessSummaryItemCount')}: ${report.readiness_summary_item_count}`,
+                `${t('capabilityCount')}: ${report.capability_count}`,
+                `${t('boundaryCount')}: ${report.boundary_count}`,
+                `${t('operatorStepCount')}: ${report.operator_step_count}`,
+                `${t('auditExportCount')}: ${report.audit_export_count}`,
+                `${t('storylineStepCount')}: ${report.storyline_step_count}`,
+                `${t('finalGateCheckCount')}: ${report.final_gate_check_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                ...supportKeys.map((key) => `${key}: ${report[key]}`),
+                ...statusKeys.map((key) => `${key}: ${report[key]}`),
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockers,
+                '',
+                `### ${t('providerExecutionReadinessPacketStages')}`,
+                ...stages,
+                ...[
+                    ['readinessPacketSummary', report.readiness_packet_summary],
+                    ['systemCapabilityMatrix', report.system_capability_matrix],
+                    ['executionBoundaryMap', report.execution_boundary_map],
+                    ['operatorRunbook', report.operator_runbook],
+                    ['auditExportIndex', report.audit_export_index],
+                    ['demoStoryline', report.demo_storyline],
+                    ['finalReadinessGate', report.final_readiness_gate],
+                    ['readinessAuditReceipt', report.readiness_audit_receipt]
+                ].flatMap(([labelKey, value]) => [
+                    '',
+                    `### ${t(labelKey)}`,
+                    '```json',
+                    JSON.stringify(value, null, 2),
+                    '```'
+                ])
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
             return {
@@ -14298,6 +14428,8 @@
                 '',
                 projectWorkspaceExportProviderTransactionIncidentDrillMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderExecutionReadinessPacketMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -14338,6 +14470,7 @@
                 provider_registry_transaction_rehearsal_report: projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot(workspace),
                 provider_transaction_monitor_report: projectWorkspaceExportProviderTransactionMonitorSnapshot(workspace),
                 provider_transaction_incident_drill_report: projectWorkspaceExportProviderTransactionIncidentDrillSnapshot(workspace),
+                provider_execution_readiness_packet_report: projectWorkspaceExportProviderExecutionReadinessPacketSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -14478,6 +14611,7 @@
                 latestProjectProviderRegistryTransactionRehearsalReport = payload.provider_registry_transaction_rehearsal_report || {};
                 latestProjectProviderTransactionMonitorReport = payload.provider_transaction_monitor_report || {};
                 latestProjectProviderTransactionIncidentDrillReport = payload.provider_transaction_incident_drill_report || {};
+                latestProjectProviderExecutionReadinessPacketReport = payload.provider_execution_readiness_packet_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -18351,6 +18485,8 @@
         let latestProjectProviderTransactionMonitorReport = {};
         const PROJECT_WORKSPACE_PROVIDER_TRANSACTION_INCIDENT_DRILL_BUNDLE_MARKER = 'Project Workspace provider transaction incident drill bundle';
         let latestProjectProviderTransactionIncidentDrillReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_EXECUTION_READINESS_PACKET_BUNDLE_MARKER = 'Project Workspace provider execution readiness packet bundle';
+        let latestProjectProviderExecutionReadinessPacketReport = {};
 
         function projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderArtifactLineageReport || {}).length
@@ -19993,6 +20129,244 @@
                         ${hasReport ? `<pre class="debug" data-provider-transaction-incident-drill-preview="Project Workspace provider transaction incident drill bundle">${escapeHTML(projectWorkspaceProviderTransactionIncidentDrillCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerTransactionIncidentDrillNotRefreshedYet'))}</div>`}
                     </div>
                     <div class="quick-use-copy-status" id="projectWorkspaceProviderTransactionIncidentDrillStatus"></div>
+                </div>
+            `;
+        }
+
+        function projectWorkspaceProviderExecutionReadinessPacketReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderExecutionReadinessPacketReport || {}).length
+                ? latestProjectProviderExecutionReadinessPacketReport
+                : workspace?.provider_execution_readiness_packet_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_execution_readiness_packet_report_version: '',
+                report_status: graphSummary.latest_provider_execution_readiness_packet_status || '',
+                provider_transaction_incident_drill_ready: false,
+                operator_review_required: true,
+                stage_count: 0,
+                execution_readiness_packet_stage_matrix: [],
+                readiness_packet_summary: {},
+                system_capability_matrix: {},
+                execution_boundary_map: {},
+                operator_runbook: {},
+                audit_export_index: {},
+                demo_storyline: {},
+                final_readiness_gate: {},
+                readiness_audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_execution_readiness_packet_blocking_failure_count || 0),
+                blocking_failures: [],
+                readiness_summary_item_count: 0,
+                capability_count: 0,
+                boundary_count: 0,
+                operator_step_count: 0,
+                audit_export_count: 0,
+                storyline_step_count: 0,
+                final_gate_check_count: 0,
+                audit_receipt_item_count: 0,
+                supports_readiness_packet_summary: false,
+                supports_system_capability_matrix: false,
+                supports_execution_boundary_map: false,
+                supports_operator_runbook: false,
+                supports_audit_export_index: false,
+                supports_demo_storyline: false,
+                supports_final_readiness_gate: false,
+                supports_readiness_audit_receipt: false,
+                readiness_packet_required: true,
+                readiness_packet_recorded: false,
+                operator_runbook_recorded: false,
+                demo_executed: false,
+                final_gate_passed: Boolean(graphSummary.latest_provider_execution_readiness_packet_final_gate_passed),
+                operator_approval_present: false,
+                provider_cost_review_complete: false,
+                provider_secret_policy_approved: false,
+                registry_write_authorized: false,
+                rollback_restore_authorized: false,
+                real_execution_enabled: Boolean(graphSummary.latest_provider_execution_readiness_packet_real_execution_enabled),
+                provider_call_allowed: false,
+                transaction_started: false,
+                transaction_aborted: false,
+                transaction_committed: false,
+                registry_written: false,
+                snapshot_written: false,
+                restore_applied: false,
+                workspace_restored: false,
+                rollback_applied: false,
+                project_snapshot_saved: false,
+                artifact_deleted: false,
+                readiness_audit_recorded: false,
+                audit_ledger_persisted: false,
+                workspace_export_ready: false,
+                json_export_ready: false,
+                markdown_export_ready: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_execution_readiness_packet_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false,
+                dry_run: true
+            };
+        }
+
+        function projectWorkspaceProviderExecutionReadinessPacketCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderExecutionReadinessPacketSnapshot(workspace);
+            return [
+                t('providerExecutionReadinessPacketCopyTitle'),
+                `${t('providerExecutionReadinessPacketStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerTransactionIncidentDrillReady')}: ${report.provider_transaction_incident_drill_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('readinessSummaryItemCount')}: ${report.readiness_summary_item_count}`,
+                `${t('capabilityCount')}: ${report.capability_count}`,
+                `${t('boundaryCount')}: ${report.boundary_count}`,
+                `${t('operatorStepCount')}: ${report.operator_step_count}`,
+                `${t('auditExportCount')}: ${report.audit_export_count}`,
+                `${t('storylineStepCount')}: ${report.storyline_step_count}`,
+                `${t('finalGateCheckCount')}: ${report.final_gate_check_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('blockingFailures')}:`,
+                report.blocking_failures.length
+                    ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : t('none'),
+                '',
+                JSON.stringify({ provider_execution_readiness_packet_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderExecutionReadinessPacket() {
+            const status = document.getElementById('projectWorkspaceProviderExecutionReadinessPacketStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderExecutionReadinessPacketCopyText());
+                if (status) status.textContent = t('providerExecutionReadinessPacketCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerExecutionReadinessPacketCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection(labelKey, value) {
+            return `
+                <div class="graph-os-card">
+                    <div class="json-key">${escapeHTML(t(labelKey))}</div>
+                    <pre class="debug">${escapeHTML(JSON.stringify(value || {}, null, 2))}</pre>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderExecutionReadinessPacketPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderExecutionReadinessPacketReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.execution_readiness_packet_stage_matrix) ? report.execution_readiness_packet_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const supportFields = [
+                ['supportsReadinessPacketSummary', report.supports_readiness_packet_summary],
+                ['supportsSystemCapabilityMatrix', report.supports_system_capability_matrix],
+                ['supportsExecutionBoundaryMap', report.supports_execution_boundary_map],
+                ['supportsOperatorRunbook', report.supports_operator_runbook],
+                ['supportsAuditExportIndex', report.supports_audit_export_index],
+                ['supportsDemoStoryline', report.supports_demo_storyline],
+                ['supportsFinalReadinessGate', report.supports_final_readiness_gate],
+                ['supportsReadinessAuditReceipt', report.supports_readiness_audit_receipt]
+            ];
+            const statusFields = [
+                ['readinessPacketRequired', report.readiness_packet_required],
+                ['readinessPacketRecorded', report.readiness_packet_recorded],
+                ['operatorRunbookRecorded', report.operator_runbook_recorded],
+                ['demoExecuted', report.demo_executed],
+                ['finalGatePassed', report.final_gate_passed],
+                ['operatorApprovalPresent', report.operator_approval_present],
+                ['providerCostReviewComplete', report.provider_cost_review_complete],
+                ['providerSecretPolicyApproved', report.provider_secret_policy_approved],
+                ['registryWriteAuthorized', report.registry_write_authorized],
+                ['rollbackRestoreAuthorized', report.rollback_restore_authorized],
+                ['realExecutionEnabled', report.real_execution_enabled],
+                ['providerCallAllowed', report.provider_call_allowed],
+                ['transactionStarted', report.transaction_started],
+                ['transactionAborted', report.transaction_aborted],
+                ['transactionCommitted', report.transaction_committed],
+                ['registryWritten', report.registry_written],
+                ['snapshotWritten', report.snapshot_written],
+                ['restoreApplied', report.restore_applied],
+                ['workspaceRestored', report.workspace_restored],
+                ['rollbackApplied', report.rollback_applied],
+                ['projectSnapshotSaved', report.project_snapshot_saved],
+                ['artifactDeleted', report.artifact_deleted],
+                ['readinessAuditRecorded', report.readiness_audit_recorded],
+                ['auditLedgerPersisted', report.audit_ledger_persisted],
+                ['externalApiCallAllowed', report.external_api_call_allowed],
+                ['externalApiCalled', report.external_api_called],
+                ['providerSecretRead', report.provider_secret_read],
+                ['providerSecretExported', report.provider_secret_exported],
+                ['mediaUploaded', report.media_uploaded],
+                ['mediaDownloaded', report.media_downloaded],
+                ['paidGenerationAllowed', report.paid_generation_allowed],
+                ['dryRun', report.dry_run]
+            ];
+            const hasReport = Boolean(
+                report.report_status || report.provider_execution_readiness_packet_report_version || stages.length
+            );
+            return `
+                <div class="section-block" id="projectWorkspaceProviderExecutionReadinessPacketPanel" data-project-provider-execution-readiness-packet-marker="Project Workspace provider execution readiness packet bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerExecutionReadinessPacketPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerExecutionReadinessPacketPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderExecutionReadinessPacketBtn" type="button" onclick="copyProjectWorkspaceProviderExecutionReadinessPacket()">${escapeHTML(t('copyProviderExecutionReadinessPacket'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerExecutionReadinessPacketStatus'))}</div><strong>${escapeHTML(report.report_status || t('providerExecutionReadinessPacketNotRefreshedYet'))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerTransactionIncidentDrillReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_transaction_incident_drill_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewRequired'))}</div><strong>${escapeHTML(String(Boolean(report.operator_review_required)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('readinessSummaryItemCount'))}</div><strong>${escapeHTML(String(Number(report.readiness_summary_item_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('capabilityCount'))}</div><strong>${escapeHTML(String(Number(report.capability_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('boundaryCount'))}</div><strong>${escapeHTML(String(Number(report.boundary_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorStepCount'))}</div><strong>${escapeHTML(String(Number(report.operator_step_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('auditExportCount'))}</div><strong>${escapeHTML(String(Number(report.audit_export_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('storylineStepCount'))}</div><strong>${escapeHTML(String(Number(report.storyline_step_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('finalGateCheckCount'))}</div><strong>${escapeHTML(String(Number(report.final_gate_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('auditReceiptItemCount'))}</div><strong>${escapeHTML(String(Number(report.audit_receipt_item_count || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerExecutionReadinessPacketStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} - ${escapeHTML(stage.stage_label || '')}</div>
+                                <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('readinessPacketSummary', report.readiness_packet_summary)}
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('systemCapabilityMatrix', report.system_capability_matrix)}
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('executionBoundaryMap', report.execution_boundary_map)}
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('operatorRunbook', report.operator_runbook)}
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('auditExportIndex', report.audit_export_index)}
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('demoStoryline', report.demo_storyline)}
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('finalReadinessGate', report.final_readiness_gate)}
+                        ${renderProjectWorkspaceProviderExecutionReadinessPacketJsonSection('readinessAuditReceipt', report.readiness_audit_receipt)}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${supportFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${statusFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerExecutionReadinessPacketAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-execution-readiness-packet-preview="Project Workspace provider execution readiness packet bundle">${escapeHTML(projectWorkspaceProviderExecutionReadinessPacketCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerExecutionReadinessPacketNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderExecutionReadinessPacketStatus"></div>
                 </div>
             `;
         }
@@ -24321,6 +24695,8 @@
                 if (providerTransactionMonitorPanel) providerTransactionMonitorPanel.outerHTML = renderProjectWorkspaceProviderTransactionMonitorPanel(latestProjectWorkspace);
                 const providerTransactionIncidentDrillPanel = document.getElementById('projectWorkspaceProviderTransactionIncidentDrillPanel');
                 if (providerTransactionIncidentDrillPanel) providerTransactionIncidentDrillPanel.outerHTML = renderProjectWorkspaceProviderTransactionIncidentDrillPanel(latestProjectWorkspace);
+                const providerExecutionReadinessPacketPanel = document.getElementById('projectWorkspaceProviderExecutionReadinessPacketPanel');
+                if (providerExecutionReadinessPacketPanel) providerExecutionReadinessPacketPanel.outerHTML = renderProjectWorkspaceProviderExecutionReadinessPacketPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -26518,6 +26894,7 @@
                     ${renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(workspace)}
                     ${renderProjectWorkspaceProviderTransactionMonitorPanel(workspace)}
                     ${renderProjectWorkspaceProviderTransactionIncidentDrillPanel(workspace)}
+                    ${renderProjectWorkspaceProviderExecutionReadinessPacketPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -32442,6 +32819,108 @@
             drillAuditRecorded: '\u6f14\u7ec3\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
             providerTransactionIncidentDrillAuditPreview: '\u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderTransactionIncidentDrillTitle: 'Transaction Incident Drill / Recovery Replay / Evidence Reconciliation / \u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u3001\u6062\u590d\u56de\u653e\u4e0e\u8bc1\u636e\u5bf9\u8d26'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderExecutionReadinessPacketBundleMarker: 'Project Workspace provider execution readiness packet bundle',
+            providerExecutionReadinessPacketPanelTitle: 'Provider Execution Readiness Packet / Capability / Boundary / Final Gate',
+            providerExecutionReadinessPacketPanelHelper: 'Final read-only dry-run packet summarizing system capabilities, execution boundaries, operator runbook, audit exports, demo storyline, and final readiness gate. It does not authorize or perform provider calls, transactions, registry or snapshot writes, restore or rollback, secret access, media transfer, or paid generation.',
+            copyProviderExecutionReadinessPacket: 'Copy execution readiness packet',
+            providerExecutionReadinessPacketCopyTitle: 'Project provider execution readiness packet report',
+            providerExecutionReadinessPacketStatus: 'Execution readiness packet status',
+            providerExecutionReadinessPacketNotRefreshedYet: 'Execution readiness packet has not been refreshed yet.',
+            providerExecutionReadinessPacketCopied: 'Execution readiness packet copied.',
+            providerExecutionReadinessPacketCopyFailed: 'Could not copy execution readiness packet.',
+            providerTransactionIncidentDrillReady: 'Transaction incident drill report ready',
+            readinessSummaryItemCount: 'Readiness summary item count',
+            capabilityCount: 'Capability count',
+            boundaryCount: 'Execution boundary count',
+            operatorStepCount: 'Operator step count',
+            auditExportCount: 'Audit export count',
+            storylineStepCount: 'Demo storyline step count',
+            finalGateCheckCount: 'Final gate check count',
+            providerExecutionReadinessPacketStages: 'Execution readiness packet stages',
+            readinessPacketSummary: 'Readiness packet summary',
+            systemCapabilityMatrix: 'System capability matrix',
+            executionBoundaryMap: 'Execution boundary map',
+            operatorRunbook: 'Operator runbook',
+            auditExportIndex: 'Audit export index',
+            demoStoryline: 'Demo storyline',
+            finalReadinessGate: 'Final readiness gate',
+            readinessAuditReceipt: 'Readiness audit receipt',
+            supportsReadinessPacketSummary: 'Supports readiness packet summary',
+            supportsSystemCapabilityMatrix: 'Supports system capability matrix',
+            supportsExecutionBoundaryMap: 'Supports execution boundary map',
+            supportsOperatorRunbook: 'Supports operator runbook',
+            supportsAuditExportIndex: 'Supports audit export index',
+            supportsDemoStoryline: 'Supports demo storyline',
+            supportsFinalReadinessGate: 'Supports final readiness gate',
+            supportsReadinessAuditReceipt: 'Supports readiness audit receipt',
+            readinessPacketRequired: 'Readiness packet required',
+            readinessPacketRecorded: 'Readiness packet recorded',
+            operatorRunbookRecorded: 'Operator runbook recorded',
+            demoExecuted: 'Demo executed',
+            finalGatePassed: 'Final gate passed',
+            operatorApprovalPresent: 'Operator approval present',
+            providerCostReviewComplete: 'Provider cost review complete',
+            providerSecretPolicyApproved: 'Provider secret policy approved',
+            registryWriteAuthorized: 'Registry write authorized',
+            rollbackRestoreAuthorized: 'Rollback / restore authorized',
+            transactionStarted: 'Transaction started',
+            readinessAuditRecorded: 'Readiness audit recorded',
+            providerExecutionReadinessPacketAuditPreview: 'Provider execution readiness packet audit preview',
+            projectWorkspaceExportProviderExecutionReadinessPacketTitle: 'Provider Execution Readiness Packet / Capability / Boundary / Final Gate'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderExecutionReadinessPacketBundleMarker: 'Project Workspace provider execution readiness packet bundle',
+            providerExecutionReadinessPacketPanelTitle: 'Provider Execution Readiness Packet / Capability / Boundary / Final Gate / Provider \u6267\u884c\u51c6\u5907\u5ea6\u5305\u3001\u80fd\u529b\u3001\u8fb9\u754c\u4e0e\u6700\u7ec8\u95e8\u7981',
+            providerExecutionReadinessPacketPanelHelper: '\u6700\u7ec8\u53ea\u8bfb dry-run \u51c6\u5907\u5ea6\u5305\uff0c\u6c47\u603b\u7cfb\u7edf\u80fd\u529b\u3001\u6267\u884c\u8fb9\u754c\u3001\u64cd\u4f5c\u5458\u624b\u518c\u3001\u5ba1\u8ba1\u5bfc\u51fa\u3001demo \u6545\u4e8b\u7ebf\u548c\u6700\u7ec8\u51c6\u5907\u5ea6\u95e8\u7981\u3002\u4e0d\u4f1a\u6388\u6743\u6216\u6267\u884c provider \u8c03\u7528\u3001\u4e8b\u52a1\u3001registry/snapshot \u5199\u5165\u3001restore/rollback\u3001secret \u8bbf\u95ee\u3001\u5a92\u4f53\u4f20\u8f93\u6216\u4ed8\u8d39\u751f\u6210\u3002',
+            copyProviderExecutionReadinessPacket: '\u590d\u5236\u6267\u884c\u51c6\u5907\u5ea6\u5305',
+            providerExecutionReadinessPacketCopyTitle: '\u9879\u76ee provider \u6267\u884c\u51c6\u5907\u5ea6\u5305\u62a5\u544a',
+            providerExecutionReadinessPacketStatus: '\u6267\u884c\u51c6\u5907\u5ea6\u5305\u72b6\u6001',
+            providerExecutionReadinessPacketNotRefreshedYet: '\u6267\u884c\u51c6\u5907\u5ea6\u5305\u5c1a\u672a\u5237\u65b0\u3002',
+            providerExecutionReadinessPacketCopied: '\u6267\u884c\u51c6\u5907\u5ea6\u5305\u5df2\u590d\u5236\u3002',
+            providerExecutionReadinessPacketCopyFailed: '\u590d\u5236\u6267\u884c\u51c6\u5907\u5ea6\u5305\u5931\u8d25\u3002',
+            providerTransactionIncidentDrillReady: '\u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u62a5\u544a\u5df2\u5c31\u7eea',
+            readinessSummaryItemCount: '\u51c6\u5907\u5ea6\u6458\u8981\u9879\u6570',
+            capabilityCount: '\u80fd\u529b\u9879\u6570',
+            boundaryCount: '\u6267\u884c\u8fb9\u754c\u6570',
+            operatorStepCount: '\u64cd\u4f5c\u5458\u6b65\u9aa4\u6570',
+            auditExportCount: '\u5ba1\u8ba1\u5bfc\u51fa\u6570',
+            storylineStepCount: 'Demo \u6545\u4e8b\u7ebf\u6b65\u9aa4\u6570',
+            finalGateCheckCount: '\u6700\u7ec8\u95e8\u7981\u68c0\u67e5\u6570',
+            providerExecutionReadinessPacketStages: '\u6267\u884c\u51c6\u5907\u5ea6\u5305\u9636\u6bb5',
+            readinessPacketSummary: '\u51c6\u5907\u5ea6\u5305\u6458\u8981',
+            systemCapabilityMatrix: '\u7cfb\u7edf\u80fd\u529b\u77e9\u9635',
+            executionBoundaryMap: '\u6267\u884c\u8fb9\u754c\u56fe',
+            operatorRunbook: '\u64cd\u4f5c\u5458\u8fd0\u884c\u624b\u518c',
+            auditExportIndex: '\u5ba1\u8ba1\u5bfc\u51fa\u7d22\u5f15',
+            demoStoryline: 'Demo \u6545\u4e8b\u7ebf',
+            finalReadinessGate: '\u6700\u7ec8\u51c6\u5907\u5ea6\u95e8\u7981',
+            readinessAuditReceipt: '\u51c6\u5907\u5ea6\u5ba1\u8ba1\u56de\u6267',
+            supportsReadinessPacketSummary: '\u652f\u6301\u51c6\u5907\u5ea6\u5305\u6458\u8981',
+            supportsSystemCapabilityMatrix: '\u652f\u6301\u7cfb\u7edf\u80fd\u529b\u77e9\u9635',
+            supportsExecutionBoundaryMap: '\u652f\u6301\u6267\u884c\u8fb9\u754c\u56fe',
+            supportsOperatorRunbook: '\u652f\u6301\u64cd\u4f5c\u5458\u8fd0\u884c\u624b\u518c',
+            supportsAuditExportIndex: '\u652f\u6301\u5ba1\u8ba1\u5bfc\u51fa\u7d22\u5f15',
+            supportsDemoStoryline: '\u652f\u6301 demo \u6545\u4e8b\u7ebf',
+            supportsFinalReadinessGate: '\u652f\u6301\u6700\u7ec8\u51c6\u5907\u5ea6\u95e8\u7981',
+            supportsReadinessAuditReceipt: '\u652f\u6301\u51c6\u5907\u5ea6\u5ba1\u8ba1\u56de\u6267',
+            readinessPacketRequired: '\u9700\u8981\u51c6\u5907\u5ea6\u5305',
+            readinessPacketRecorded: '\u51c6\u5907\u5ea6\u5305\u5df2\u8bb0\u5f55',
+            operatorRunbookRecorded: '\u64cd\u4f5c\u5458\u8fd0\u884c\u624b\u518c\u5df2\u8bb0\u5f55',
+            demoExecuted: 'Demo \u5df2\u6267\u884c',
+            finalGatePassed: '\u6700\u7ec8\u95e8\u7981\u5df2\u901a\u8fc7',
+            operatorApprovalPresent: '\u5df2\u6709\u64cd\u4f5c\u5458\u5ba1\u6279',
+            providerCostReviewComplete: 'Provider \u6210\u672c\u5ba1\u67e5\u5df2\u5b8c\u6210',
+            providerSecretPolicyApproved: 'Provider secret \u7b56\u7565\u5df2\u6279\u51c6',
+            registryWriteAuthorized: 'Registry \u5199\u5165\u5df2\u6388\u6743',
+            rollbackRestoreAuthorized: 'Rollback / restore \u5df2\u6388\u6743',
+            transactionStarted: '\u4e8b\u52a1\u5df2\u542f\u52a8',
+            readinessAuditRecorded: '\u51c6\u5907\u5ea6\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
+            providerExecutionReadinessPacketAuditPreview: 'Provider \u6267\u884c\u51c6\u5907\u5ea6\u5305\u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderExecutionReadinessPacketTitle: 'Provider Execution Readiness Packet / Capability / Boundary / Final Gate / Provider \u6267\u884c\u51c6\u5907\u5ea6\u5305\u3001\u80fd\u529b\u3001\u8fb9\u754c\u4e0e\u6700\u7ec8\u95e8\u7981'
         });
 
 

@@ -7322,6 +7322,100 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("Project Workspace provider transaction incident drill bundle", script)
         self.assertIn("project_workspace_provider_transaction_incident_drill_marker", script)
 
+    def test_project_workspace_provider_execution_readiness_packet_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider execution readiness packet bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_EXECUTION_READINESS_PACKET_BUNDLE_MARKER", html)
+        self.assertIn("latestProjectProviderExecutionReadinessPacketReport", html)
+        self.assertIn("projectWorkspaceProviderExecutionReadinessPacketReportFromWorkspace", html)
+        self.assertIn("projectWorkspaceProviderExecutionReadinessPacketCopyText", html)
+        self.assertIn("copyProjectWorkspaceProviderExecutionReadinessPacket", html)
+        self.assertIn("renderProjectWorkspaceProviderExecutionReadinessPacketPanel", html)
+        self.assertIn("projectWorkspaceExportProviderExecutionReadinessPacketMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderExecutionReadinessPacketSnapshot", html)
+        self.assertIn("provider_execution_readiness_packet_report", html)
+        for field in [
+            "readiness_packet_summary",
+            "system_capability_matrix",
+            "execution_boundary_map",
+            "operator_runbook",
+            "audit_export_index",
+            "demo_storyline",
+            "final_readiness_gate",
+            "readiness_audit_receipt",
+            "blocking_failures",
+            "execution_readiness_packet_stage_matrix",
+            "provider_transaction_incident_drill_ready",
+            "operator_review_required",
+            "readiness_summary_item_count",
+            "capability_count",
+            "boundary_count",
+            "operator_step_count",
+            "audit_export_count",
+            "storyline_step_count",
+            "final_gate_check_count",
+            "audit_receipt_item_count",
+            "readiness_packet_required",
+            "readiness_packet_recorded",
+            "operator_runbook_recorded",
+            "demo_executed",
+            "final_gate_passed",
+            "operator_approval_present",
+            "provider_cost_review_complete",
+            "provider_secret_policy_approved",
+            "registry_write_authorized",
+            "rollback_restore_authorized",
+            "real_execution_enabled",
+            "provider_call_allowed",
+            "transaction_started",
+            "transaction_aborted",
+            "transaction_committed",
+            "registry_written",
+            "snapshot_written",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_applied",
+            "project_snapshot_saved",
+            "artifact_deleted",
+            "readiness_audit_recorded",
+            "audit_ledger_persisted",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+            "dry_run",
+            "has_provider_execution_readiness_packet_report",
+        ]:
+            self.assertIn(field, html)
+        for support_field in [
+            "supports_readiness_packet_summary",
+            "supports_system_capability_matrix",
+            "supports_execution_boundary_map",
+            "supports_operator_runbook",
+            "supports_audit_export_index",
+            "supports_demo_storyline",
+            "supports_final_readiness_gate",
+            "supports_readiness_audit_receipt",
+        ]:
+            self.assertIn(support_field, html)
+        self.assertIn("copyProviderExecutionReadinessPacket", html)
+        self.assertIn("providerExecutionReadinessPacketCopied", html)
+        self.assertIn("providerExecutionReadinessPacketCopyFailed", html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_provider_execution_readiness_packet_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_execution_readiness_packet_marker", script)
+        self.assertIn("Project Workspace provider execution readiness packet bundle", script)
+
+    def test_project_workspace_provider_execution_readiness_packet_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider execution readiness packet bundle", script)
+        self.assertIn("project_workspace_provider_execution_readiness_packet_marker", script)
+
 
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
