@@ -7485,9 +7485,13 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "copyProjectWorkspaceTopAngleScript",
             "copyProjectWorkspaceVideoPromptPack",
             "renderProjectWorkspaceCreativeDecisionSummaryStrip",
+            "renderProjectWorkspaceCreativeDecisionRecommendationPanel",
             "renderProjectWorkspaceTopAdAnglesPanel",
+            "renderProjectWorkspaceCreativeEvidenceQualityPanel",
+            "renderProjectWorkspaceCreativeNextActionsPanel",
             "renderProjectWorkspaceVideoPromptPackPanel",
             "renderProjectWorkspaceCreativeQualityChecksPanel",
+            "copyProjectWorkspaceRecommendedTikTokScript",
             "projectWorkspaceExportCreativeDecisionPackSnapshot",
             "projectWorkspaceExportCreativeDecisionPackMarkdown",
             "creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace)",
@@ -7497,6 +7501,10 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "Evidence Brief",
             "Video Prompt Pack",
             "Creative Quality Checks",
+            "Recommended Creative Angle",
+            "Evidence Quality Summary",
+            "Creative Next Actions",
+            "TikTok Script",
         ]:
             with self.subTest(marker=marker):
                 self.assertIn(marker, html)
@@ -7514,6 +7522,14 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "creativeDecisionCopyNoData",
             "creativeDecisionReadOnlyNote",
             "creativeDecisionWeakEvidence",
+            "creativeDecisionRecommended",
+            "creativeDecisionCopyRecommendedScript",
+            "creativeDecisionEvidenceQualitySummary",
+            "creativeDecisionNextActionsTitle",
+            "creativeDecisionEvidenceScore",
+            "creativeDecisionEvidenceCoverage",
+            "creativeDecisionEvidenceGaps",
+            "creativeDecisionClaimSafetyLevel",
         ]:
             with self.subTest(key=key):
                 self.assertGreaterEqual(html.count(key), 3)
@@ -7527,6 +7543,43 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         for script in [guard, smoke]:
             self.assertIn("Project Workspace creative decision pack bundle", script)
             self.assertIn("project_workspace_creative_decision_pack_marker", script)
+            self.assertIn("Project Workspace creative decision usability bundle", script)
+            self.assertIn("project_workspace_creative_decision_usability_marker", script)
+
+    def test_creative_decision_pack_consumes_ranking_quality_and_next_actions(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for field in [
+            "recommended_angle_id",
+            "recommended_angle_title",
+            "decision_reason",
+            "angle_ranking_summary",
+            "weak_evidence_count",
+            "missing_quote_count",
+            "ready_to_copy_script_count",
+            "duplicate_angle_count",
+            "creative_next_actions",
+            "angle_rank",
+            "is_recommended",
+            "recommendation_reason",
+            "evidence_strength_score",
+            "evidence_coverage",
+            "evidence_gaps",
+            "angle_cluster",
+            "duplicate_angle_note",
+            "tiktok_script",
+            "copy_readiness",
+            "claim_safety_level",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for export_heading in [
+            "creativeDecisionRecommendedAngleTitle",
+            "creativeDecisionEvidenceQualitySummary",
+            "creativeDecisionNextActionsTitle",
+            "creativeDecisionTikTokScript",
+        ]:
+            self.assertIn(export_heading, html)
+        self.assertIn("creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace)", html)
 
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")

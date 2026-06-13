@@ -14671,6 +14671,7 @@
         }
 
         const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER = 'Project Workspace creative decision pack bundle';
+        const PROJECT_WORKSPACE_CREATIVE_DECISION_USABILITY_MARKER = 'Project Workspace creative decision usability bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14692,6 +14693,15 @@
                 evidence_brief: pack.evidence_brief || {},
                 video_prompt_pack: pack.video_prompt_pack || {},
                 quality_checks: pack.quality_checks || {},
+                recommended_angle_id: pack.recommended_angle_id || '',
+                recommended_angle_title: pack.recommended_angle_title || '',
+                decision_reason: pack.decision_reason || '',
+                angle_ranking_summary: Array.isArray(pack.angle_ranking_summary) ? pack.angle_ranking_summary : [],
+                weak_evidence_count: Number(pack.weak_evidence_count || 0),
+                missing_quote_count: Number(pack.missing_quote_count || 0),
+                ready_to_copy_script_count: Number(pack.ready_to_copy_script_count || 0),
+                duplicate_angle_count: Number(pack.duplicate_angle_count || 0),
+                creative_next_actions: Array.isArray(pack.creative_next_actions) ? pack.creative_next_actions : [],
                 weak_evidence_reason: pack.weak_evidence_reason || '',
                 safety_boundaries: pack.safety_boundaries || {}
             };
@@ -14712,9 +14722,14 @@
             const evidence = pack.evidence_brief || {};
             const video = pack.video_prompt_pack || {};
             const checks = pack.quality_checks || {};
+            const recommended = pack.top_ad_angles.find((angle) =>
+                angle.is_recommended || angle.angle_id === pack.recommended_angle_id
+            ) || {};
             const angleLines = pack.top_ad_angles.length
                 ? pack.top_ad_angles.flatMap((angle, index) => [
                     `### ${index + 1}. ${angle.title || t('creativeDecisionUntitledAngle')}`,
+                    `${t('creativeDecisionRecommended')}: ${Boolean(angle.is_recommended)}`,
+                    `${t('creativeDecisionRecommendationReason')}: ${angle.recommendation_reason || t('none')}`,
                     `${t('creativeDecisionTargetAudience')}: ${angle.target_audience || t('none')}`,
                     `${t('creativeDecisionBuyerPain')}: ${angle.buyer_pain || t('none')}`,
                     `${t('creativeDecisionBuyerObjection')}: ${angle.buyer_objection || t('none')}`,
@@ -14727,6 +14742,10 @@
                     `${t('creativeDecisionThirdScene')}: ${angle.third_scene || t('none')}`,
                     `${t('creativeDecisionCta')}: ${angle.cta || t('none')}`,
                     `${t('creativeDecisionEvidenceStrength')}: ${angle.evidence_strength || 'weak'}`,
+                    `${t('creativeDecisionEvidenceScore')}: ${Number(angle.evidence_strength_score || 0)}`,
+                    `${t('creativeDecisionEvidenceCoverage')}: ${JSON.stringify(angle.evidence_coverage || {})}`,
+                    `${t('creativeDecisionEvidenceGaps')}: ${(angle.evidence_gaps || []).join(', ') || t('none')}`,
+                    `${t('creativeDecisionClaimSafetyLevel')}: ${angle.claim_safety_level || t('none')}`,
                     `${t('creativeDecisionRiskNote')}: ${angle.risk_note || t('none')}`,
                     ''
                 ])
@@ -14737,6 +14756,20 @@
             return [
                 `## ${t('creativeDecisionPackTitle')}`,
                 `${t('creativeDecisionPackVersion')}: ${pack.pack_version}`,
+                '',
+                `### ${t('creativeDecisionRecommendedAngleTitle')}`,
+                `${t('creativeDecisionRecommendedAngle')}: ${pack.recommended_angle_title || t('creativeDecisionNoData')}`,
+                `${t('creativeDecisionDecisionReason')}: ${pack.decision_reason || t('creativeDecisionNoData')}`,
+                `${t('creativeDecisionTikTokScript')}:`,
+                `${t('creativeDecisionHook')}: ${recommended.tiktok_script?.hook || recommended.hook || t('none')}`,
+                ...((recommended.tiktok_script?.scenes || []).map((scene, index) => `${index + 1}. ${scene}`)),
+                `${t('creativeDecisionCta')}: ${recommended.tiktok_script?.cta || recommended.cta || t('none')}`,
+                '',
+                `### ${t('creativeDecisionEvidenceQualitySummary')}`,
+                `${t('creativeDecisionWeakEvidenceCount')}: ${pack.weak_evidence_count}`,
+                `${t('creativeDecisionMissingQuoteCount')}: ${pack.missing_quote_count}`,
+                `${t('creativeDecisionDuplicateAngleCount')}: ${pack.duplicate_angle_count}`,
+                `${t('creativeDecisionReadyScriptCount')}: ${pack.ready_to_copy_script_count}`,
                 '',
                 `### ${t('creativeDecisionTopAnglesTitle')}`,
                 ...angleLines,
@@ -14768,7 +14801,14 @@
                 `${t('creativeDecisionWeakCta')}: ${Boolean(checks.weak_cta)}`,
                 `${t('creativeDecisionUnsafeProviderAction')}: ${Boolean(checks.unsafe_provider_action)}`,
                 `${t('creativeDecisionEvidenceCount')}: ${Number(checks.evidence_count || 0)}`,
-                `${t('creativeDecisionRecommendation')}: ${checks.recommendation || t('none')}`
+                `${t('creativeDecisionRecommendation')}: ${checks.recommendation || t('none')}`,
+                '',
+                `### ${t('creativeDecisionNextActionsTitle')}`,
+                ...(pack.creative_next_actions.length
+                    ? pack.creative_next_actions.map((action) =>
+                        `- ${action.label || action.action_type || t('none')}: ${action.reason || t('none')} [${action.target || t('none')}]`
+                    )
+                    : [t('creativeDecisionNoData')])
             ].join('\n');
         }
 
@@ -14778,15 +14818,18 @@
             if (section === 'angle') {
                 const angle = pack.top_ad_angles[Number(angleIndex)] || {};
                 if (!angle.title) return '';
+                const script = angle.tiktok_script || {};
+                const scenes = Array.isArray(script.scenes) && script.scenes.length
+                    ? script.scenes
+                    : [angle.first_scene, angle.second_scene, angle.third_scene].filter(Boolean);
                 return [
                     angle.title,
                     `${t('creativeDecisionProofQuote')}: ${angle.proof_quote || t('creativeDecisionMissingQuote')}`,
-                    `${t('creativeDecisionHook')}: ${angle.hook || ''}`,
-                    `${t('creativeDecisionFirstScene')}: ${angle.first_scene || ''}`,
-                    `${t('creativeDecisionSecondScene')}: ${angle.second_scene || ''}`,
-                    `${t('creativeDecisionThirdScene')}: ${angle.third_scene || ''}`,
-                    `${t('creativeDecisionCta')}: ${angle.cta || ''}`,
-                    `${t('creativeDecisionRiskNote')}: ${angle.risk_note || ''}`
+                    `${t('creativeDecisionHook')}: ${script.hook || angle.hook || ''}`,
+                    ...scenes.map((scene, index) => `${index + 1}. ${scene}`),
+                    `${t('creativeDecisionCta')}: ${script.cta || angle.cta || ''}`,
+                    `${t('creativeDecisionRiskNote')}: ${script.risk_note || angle.risk_note || ''}`,
+                    `${t('creativeDecisionClaimSafetyLevel')}: ${angle.claim_safety_level || ''}`
                 ].join('\n');
             }
             if (section === 'video') {
@@ -14810,6 +14853,8 @@
                 ...projectWorkspaceCreativeDecisionThemeLines(evidence.objections),
                 `${t('creativeDecisionLikedPoints')}:`,
                 ...projectWorkspaceCreativeDecisionThemeLines(evidence.liked_points),
+                `${t('creativeDecisionUseCases')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.use_cases),
                 `${t('creativeDecisionHighSignalQuotes')}:`,
                 ...(evidence.high_signal_quotes || []).map((quote) => `- ${quote}`),
                 `${t('creativeDecisionSampleSizeNote')}: ${evidence.sample_size_note || t('none')}`
@@ -14840,6 +14885,18 @@
             return copyProjectWorkspaceCreativeDecisionText('angle', angleIndex, 'creativeDecisionAngleCopied');
         }
 
+        function copyProjectWorkspaceRecommendedTikTokScript() {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(latestProjectWorkspace);
+            const recommendedIndex = pack.top_ad_angles.findIndex((angle) =>
+                angle.is_recommended || angle.angle_id === pack.recommended_angle_id
+            );
+            return copyProjectWorkspaceCreativeDecisionText(
+                'angle',
+                recommendedIndex >= 0 ? recommendedIndex : 0,
+                'creativeDecisionRecommendedScriptCopied'
+            );
+        }
+
         function copyProjectWorkspaceVideoPromptPack() {
             return copyProjectWorkspaceCreativeDecisionText('video', 0, 'creativeDecisionVideoCopied');
         }
@@ -14847,8 +14904,8 @@
         function renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
             const angles = pack.top_ad_angles || [];
-            const weakCount = angles.filter((angle) => angle.evidence_strength === 'weak' || angle.missing_quote).length;
-            const readyScriptCount = angles.filter((angle) => String(angle.copy_ready_text || '').trim()).length;
+            const weakCount = pack.weak_evidence_count;
+            const readyScriptCount = pack.ready_to_copy_script_count;
             const strength = angles.some((angle) => angle.evidence_strength === 'strong')
                 ? t('creativeDecisionStrengthStrong')
                 : angles.some((angle) => angle.evidence_strength === 'moderate')
@@ -14868,12 +14925,45 @@
                         ${metricPill(t('creativeDecisionTopAngleCount'), String(angles.length))}
                         ${metricPill(t('creativeDecisionEvidenceStrength'), strength)}
                         ${metricPill(t('creativeDecisionWeakEvidenceCount'), String(weakCount))}
+                        ${metricPill(t('creativeDecisionMissingQuoteCount'), String(pack.missing_quote_count))}
+                        ${metricPill(t('creativeDecisionDuplicateAngleCount'), String(pack.duplicate_angle_count))}
                         ${metricPill(t('creativeDecisionReadyScriptCount'), String(readyScriptCount))}
                         ${metricPill(t('creativeDecisionVideoPromptReady'), boolText(videoReady))}
                     </div>
+                    ${pack.recommended_angle_title ? `
+                        <div><strong>${escapeHTML(t('creativeDecisionRecommendedAngle'))}:</strong> ${escapeHTML(pack.recommended_angle_title)}</div>
+                        <div class="field-helper"><strong>${escapeHTML(t('creativeDecisionDecisionReason'))}:</strong> ${escapeHTML(pack.decision_reason || t('none'))}</div>
+                    ` : ''}
                     ${pack.has_creative_decision_pack
                         ? `<div class="feedback-box">${escapeHTML(t('creativeDecisionReadOnlyNote'))}</div>`
                         : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeDecisionRecommendationPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const recommended = pack.top_ad_angles.find((angle) =>
+                angle.is_recommended || angle.angle_id === pack.recommended_angle_id
+            );
+            if (!recommended) return '';
+            const script = recommended.tiktok_script || {};
+            const scenes = Array.isArray(script.scenes) ? script.scenes : [];
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeDecisionRecommendationPanel" data-creative-decision-usability-marker="${PROJECT_WORKSPACE_CREATIVE_DECISION_USABILITY_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <span class="badge">${escapeHTML(t('creativeDecisionRecommended'))}</span>
+                            <div class="json-key">${escapeHTML(pack.recommended_angle_title || recommended.title || t('creativeDecisionUntitledAngle'))}</div>
+                            <div class="field-helper">${escapeHTML(pack.decision_reason || recommended.recommendation_reason || t('none'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceRecommendedTikTokScript()">${escapeHTML(t('creativeDecisionCopyRecommendedScript'))}</button>
+                    </div>
+                    <div><strong>${escapeHTML(t('creativeDecisionHook'))}:</strong> ${escapeHTML(script.hook || recommended.hook || t('none'))}</div>
+                    ${scenes.map((scene, index) => `<div><strong>${index + 1}.</strong> ${escapeHTML(scene)}</div>`).join('')}
+                    <div><strong>${escapeHTML(t('creativeDecisionCta'))}:</strong> ${escapeHTML(script.cta || recommended.cta || t('none'))}</div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionProofQuote'))}:</strong> ${escapeHTML(script.proof_quote || recommended.proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeDecisionClaimSafetyLevel'))}: ${escapeHTML(recommended.claim_safety_level || t('none'))}</div>
                 </div>
             `;
         }
@@ -14886,11 +14976,15 @@
                     <div class="json-key">${escapeHTML(t('creativeDecisionTopAnglesTitle'))}</div>
                     <div class="field-helper">${escapeHTML(t('creativeDecisionTopAnglesHelper'))}</div>
                     ${angles.length ? `<div class="graph-os-grid">${angles.map((angle, index) => `
-                        <div class="graph-os-card" data-creative-angle-id="${escapeHTML(angle.angle_id || '')}">
+                        <div class="graph-os-card" data-creative-angle-id="${escapeHTML(angle.angle_id || '')}" data-creative-angle-cluster="${escapeHTML(angle.angle_cluster || '')}" data-creative-angle-recommended="${angle.is_recommended ? 'true' : 'false'}" style="${angle.is_recommended ? 'border-color: var(--accent); box-shadow: 0 0 0 2px rgba(17, 94, 89, 0.12);' : ''}">
                             <div class="section-header">
-                                <strong>${escapeHTML(angle.title || t('creativeDecisionUntitledAngle'))}</strong>
-                                <span class="badge">${escapeHTML(angle.evidence_strength || t('creativeDecisionStrengthWeak'))}</span>
+                                <strong>${escapeHTML(`${angle.angle_rank || index + 1}. ${angle.title || t('creativeDecisionUntitledAngle')}`)}</strong>
+                                <div>
+                                    ${angle.is_recommended ? `<span class="badge">${escapeHTML(t('creativeDecisionRecommended'))}</span>` : ''}
+                                    <span class="badge">${escapeHTML(angle.evidence_strength || t('creativeDecisionStrengthWeak'))}</span>
+                                </div>
                             </div>
+                            <div class="field-helper">${escapeHTML(angle.recommendation_reason || t('none'))}</div>
                             <div><strong>${escapeHTML(t('creativeDecisionTargetAudience'))}:</strong> ${escapeHTML(angle.target_audience || t('none'))}</div>
                             <div><strong>${escapeHTML(t('creativeDecisionBuyerPain'))}:</strong> ${escapeHTML(angle.buyer_pain || t('none'))}</div>
                             <div><strong>${escapeHTML(t('creativeDecisionBuyerObjection'))}:</strong> ${escapeHTML(angle.buyer_objection || t('none'))}</div>
@@ -14903,10 +14997,53 @@
                             <div><strong>${escapeHTML(t('creativeDecisionSecondScene'))}:</strong> ${escapeHTML(angle.second_scene || t('none'))}</div>
                             <div><strong>${escapeHTML(t('creativeDecisionThirdScene'))}:</strong> ${escapeHTML(angle.third_scene || t('none'))}</div>
                             <div><strong>${escapeHTML(t('creativeDecisionCta'))}:</strong> ${escapeHTML(angle.cta || t('none'))}</div>
+                            <div class="metric-strip">
+                                ${metricPill(t('creativeDecisionEvidenceScore'), String(angle.evidence_strength_score || 0))}
+                                ${metricPill(t('creativeDecisionClaimSafetyLevel'), angle.claim_safety_level || t('none'))}
+                                ${metricPill(t('creativeDecisionCopyReadiness'), angle.copy_readiness || t('none'))}
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeDecisionEvidenceCoverage'))}:</strong> ${escapeHTML(Object.entries(angle.evidence_coverage || {}).filter(([, value]) => value).map(([key]) => key).join(', ') || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionEvidenceGaps'))}:</strong> ${escapeHTML((angle.evidence_gaps || []).join(', ') || t('none'))}</div>
+                            ${angle.duplicate_angle_note ? `<div class="field-helper">${escapeHTML(t('creativeDecisionDuplicateAngle'))}: ${escapeHTML(angle.duplicate_angle_note)}</div>` : ''}
                             <div class="field-helper">${escapeHTML(t('creativeDecisionRiskNote'))}: ${escapeHTML(angle.risk_note || t('none'))}</div>
                             <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceTopAngleScript(${index})">${escapeHTML(t('creativeDecisionCopyAngle'))}</button>
                         </div>
                     `).join('')}</div>` : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeEvidenceQualityPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const hasRisk = pack.weak_evidence_count > 0 || pack.missing_quote_count > 0;
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeEvidenceQualityPanel">
+                    <div class="json-key">${escapeHTML(t('creativeDecisionEvidenceQualitySummary'))}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeDecisionWeakEvidenceCount'), String(pack.weak_evidence_count))}
+                        ${metricPill(t('creativeDecisionMissingQuoteCount'), String(pack.missing_quote_count))}
+                        ${metricPill(t('creativeDecisionDuplicateAngleCount'), String(pack.duplicate_angle_count))}
+                        ${metricPill(t('creativeDecisionReadyScriptCount'), String(pack.ready_to_copy_script_count))}
+                    </div>
+                    ${hasRisk ? `<div class="feedback-box">${escapeHTML(t('creativeDecisionEvidenceWarning'))}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeNextActionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const actions = pack.creative_next_actions || [];
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeNextActionsPanel">
+                    <div class="json-key">${escapeHTML(t('creativeDecisionNextActionsTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeDecisionNextActionsHelper'))}</div>
+                    ${actions.length ? actions.map((action) => `
+                        <div class="artifact-timeline-row" data-creative-next-action="${escapeHTML(action.action_type || '')}">
+                            <strong>${escapeHTML(action.label || action.action_type || t('none'))}</strong>
+                            <div>${escapeHTML(action.reason || t('none'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionActionTarget'))}: ${escapeHTML(action.target || t('none'))}</div>
+                        </div>
+                    `).join('') : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
                 </div>
             `;
         }
@@ -27475,7 +27612,10 @@
                     ${renderProjectWorkspaceAgentTaskBoardPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextActionsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
+                    ${renderProjectWorkspaceCreativeDecisionRecommendationPanel(workspace)}
                     ${renderProjectWorkspaceTopAdAnglesPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeEvidenceQualityPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeNextActionsPanel(workspace)}
                     ${renderProjectWorkspaceVideoPromptPackPanel(workspace)}
                     ${renderProjectWorkspaceCreativeQualityChecksPanel(workspace)}
                     <div class="metric-strip">
@@ -33822,6 +33962,27 @@
             creativeDecisionUnsafeProviderAction: 'Unsafe provider action',
             creativeDecisionEvidenceCount: 'Evidence count',
             creativeDecisionRecommendation: 'Recommendation',
+            creativeDecisionRecommended: 'Recommended',
+            creativeDecisionRecommendedAngleTitle: 'Recommended Creative Angle',
+            creativeDecisionRecommendedAngle: 'Recommended angle',
+            creativeDecisionRecommendationReason: 'Recommendation reason',
+            creativeDecisionDecisionReason: 'Decision reason',
+            creativeDecisionEvidenceQualitySummary: 'Evidence Quality Summary',
+            creativeDecisionNextActionsTitle: 'Creative Next Actions',
+            creativeDecisionNextActionsHelper: 'Read-only guidance. These actions do not trigger providers, media, or paid execution.',
+            creativeDecisionTikTokScript: 'TikTok Script',
+            creativeDecisionCopyRecommendedScript: 'Copy recommended TikTok script',
+            creativeDecisionRecommendedScriptCopied: 'Recommended TikTok script copied.',
+            creativeDecisionEvidenceScore: 'Evidence score',
+            creativeDecisionEvidenceCoverage: 'Evidence coverage',
+            creativeDecisionEvidenceGaps: 'Evidence gaps',
+            creativeDecisionClaimSafetyLevel: 'Claim safety level',
+            creativeDecisionCopyReadiness: 'Copy readiness',
+            creativeDecisionMissingQuoteCount: 'Missing quote count',
+            creativeDecisionDuplicateAngleCount: 'Duplicate angle count',
+            creativeDecisionDuplicateAngle: 'Duplicate angle',
+            creativeDecisionActionTarget: 'Target',
+            creativeDecisionEvidenceWarning: 'More reviews are needed. Lower claim strength and use a more conservative script until missing quotes are resolved.',
             creativeDecisionCopyEvidence: 'Copy evidence brief',
             creativeDecisionCopyAngle: 'Copy top angle script',
             creativeDecisionCopyVideoPrompt: 'Copy video prompt pack',
@@ -33886,6 +34047,27 @@
             creativeDecisionUnsafeProviderAction: '\u4e0d\u5b89\u5168 Provider \u52a8\u4f5c',
             creativeDecisionEvidenceCount: '\u8bc1\u636e\u6570',
             creativeDecisionRecommendation: '\u5efa\u8bae',
+            creativeDecisionRecommended: '推荐',
+            creativeDecisionRecommendedAngleTitle: '推荐创意角度',
+            creativeDecisionRecommendedAngle: '推荐角度',
+            creativeDecisionRecommendationReason: '推荐理由',
+            creativeDecisionDecisionReason: '决策理由',
+            creativeDecisionEvidenceQualitySummary: '证据质量摘要',
+            creativeDecisionNextActionsTitle: '创意下一步建议',
+            creativeDecisionNextActionsHelper: '只读建议，不会触发 provider、媒体传输或付费执行。',
+            creativeDecisionTikTokScript: 'TikTok 脚本',
+            creativeDecisionCopyRecommendedScript: '复制推荐 TikTok 脚本',
+            creativeDecisionRecommendedScriptCopied: '推荐 TikTok 脚本已复制。',
+            creativeDecisionEvidenceScore: '证据评分',
+            creativeDecisionEvidenceCoverage: '证据覆盖',
+            creativeDecisionEvidenceGaps: '证据缺口',
+            creativeDecisionClaimSafetyLevel: '主张安全级别',
+            creativeDecisionCopyReadiness: '复制就绪度',
+            creativeDecisionMissingQuoteCount: '缺少原话数',
+            creativeDecisionDuplicateAngleCount: '重复角度数',
+            creativeDecisionDuplicateAngle: '重复角度',
+            creativeDecisionActionTarget: '目标',
+            creativeDecisionEvidenceWarning: '需要更多评论证据。在补齐原话前，请降低主张强度并使用更保守的脚本。',
             creativeDecisionCopyEvidence: '\u590d\u5236\u8bc1\u636e\u7b80\u62a5',
             creativeDecisionCopyAngle: '\u590d\u5236\u4e3b\u5e7f\u544a\u65b9\u5411\u811a\u672c',
             creativeDecisionCopyVideoPrompt: '\u590d\u5236\u89c6\u9891\u63d0\u793a\u8bcd\u5305',
