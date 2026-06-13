@@ -3590,6 +3590,7 @@
         let latestVideoGenerationJob = null;
         let latestProjectId = 'demo_project_default';
         let latestProjectWorkspace = null;
+        let latestProjectCreativeDecisionPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8844,6 +8845,17 @@
                 setReviewsStatus(t('pastedReviewWorkspaceReady'));
 
                 const workspaceAnalysis = workspaceResponse.analysis || {};
+                latestProjectCreativeDecisionPack = workspaceResponse.creative_decision_pack
+                    || workspaceAnalysis.creative_decision_pack
+                    || {};
+                latestProjectWorkspace = {
+                    ...(latestProjectWorkspace || {}),
+                    creative_decision_pack: latestProjectCreativeDecisionPack
+                };
+                const projectWorkspaceRoot = document.getElementById('projectWorkspaceRoot');
+                if (projectWorkspaceRoot) {
+                    projectWorkspaceRoot.innerHTML = renderProjectWorkspacePanel(latestProjectWorkspace);
+                }
                 workspaceAnalysis.creative_angles = (workspaceAnalysis.creative_angles || [])
                     .map((value) => String(value || "")
                         .replace(/^Copy-ready angle:\s*/i, "")
@@ -14658,6 +14670,296 @@
             `;
         }
 
+        const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER = 'Project Workspace creative decision pack bundle';
+
+        function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
+                return latestProjectCreativeDecisionPack;
+            }
+            return workspace?.creative_decision_pack
+                || workspace?.analysis?.creative_decision_pack
+                || {};
+        }
+
+        function projectWorkspaceExportCreativeDecisionPackSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCreativeDecisionPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER,
+                has_creative_decision_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                intended_use: pack.intended_use || '',
+                top_ad_angles: Array.isArray(pack.top_ad_angles) ? pack.top_ad_angles : [],
+                evidence_brief: pack.evidence_brief || {},
+                video_prompt_pack: pack.video_prompt_pack || {},
+                quality_checks: pack.quality_checks || {},
+                weak_evidence_reason: pack.weak_evidence_reason || '',
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCreativeDecisionThemeLines(items = []) {
+            return (Array.isArray(items) ? items : []).map((item) => {
+                const quotes = Array.isArray(item?.evidence_quotes) ? item.evidence_quotes : [];
+                return `- ${item?.label || t('none')}: ${quotes.join(' | ') || t('creativeDecisionNoData')}`;
+            });
+        }
+
+        function projectWorkspaceExportCreativeDecisionPackMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            if (!pack.has_creative_decision_pack) {
+                return `## ${t('creativeDecisionPackTitle')}\n${t('creativeDecisionNoData')}`;
+            }
+            const evidence = pack.evidence_brief || {};
+            const video = pack.video_prompt_pack || {};
+            const checks = pack.quality_checks || {};
+            const angleLines = pack.top_ad_angles.length
+                ? pack.top_ad_angles.flatMap((angle, index) => [
+                    `### ${index + 1}. ${angle.title || t('creativeDecisionUntitledAngle')}`,
+                    `${t('creativeDecisionTargetAudience')}: ${angle.target_audience || t('none')}`,
+                    `${t('creativeDecisionBuyerPain')}: ${angle.buyer_pain || t('none')}`,
+                    `${t('creativeDecisionBuyerObjection')}: ${angle.buyer_objection || t('none')}`,
+                    `${t('creativeDecisionProofQuote')}: ${angle.proof_quote || t('creativeDecisionMissingQuote')}`,
+                    `${t('creativeDecisionProofSource')}: ${angle.proof_source || t('none')}`,
+                    `${t('creativeDecisionPositiveReversal')}: ${angle.liked_point_or_positive_reversal || t('none')}`,
+                    `${t('creativeDecisionHook')}: ${angle.hook || t('none')}`,
+                    `${t('creativeDecisionFirstScene')}: ${angle.first_scene || t('none')}`,
+                    `${t('creativeDecisionSecondScene')}: ${angle.second_scene || t('none')}`,
+                    `${t('creativeDecisionThirdScene')}: ${angle.third_scene || t('none')}`,
+                    `${t('creativeDecisionCta')}: ${angle.cta || t('none')}`,
+                    `${t('creativeDecisionEvidenceStrength')}: ${angle.evidence_strength || 'weak'}`,
+                    `${t('creativeDecisionRiskNote')}: ${angle.risk_note || t('none')}`,
+                    ''
+                ])
+                : [t('creativeDecisionNoData')];
+            const shotLines = (Array.isArray(video.shot_list) ? video.shot_list : []).map((shot, index) =>
+                `${index + 1}. ${shot.prompt || ''}${shot.evidence_quote ? ` | ${t('creativeDecisionProofQuote')}: ${shot.evidence_quote}` : ''}`
+            );
+            return [
+                `## ${t('creativeDecisionPackTitle')}`,
+                `${t('creativeDecisionPackVersion')}: ${pack.pack_version}`,
+                '',
+                `### ${t('creativeDecisionTopAnglesTitle')}`,
+                ...angleLines,
+                `### ${t('creativeDecisionEvidenceBriefTitle')}`,
+                `${t('creativeDecisionPainPoints')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.pain_points),
+                `${t('creativeDecisionObjections')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.objections),
+                `${t('creativeDecisionLikedPoints')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.liked_points),
+                `${t('creativeDecisionUseCases')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.use_cases),
+                `${t('creativeDecisionHighSignalQuotes')}:`,
+                ...(evidence.high_signal_quotes || []).map((quote) => `- ${quote}`),
+                `${t('creativeDecisionSampleSizeNote')}: ${evidence.sample_size_note || t('none')}`,
+                '',
+                `### ${t('creativeDecisionVideoPromptTitle')}`,
+                `${t('creativeDecisionKeyframePrompt')}: ${video.keyframe_prompt || t('none')}`,
+                `${t('creativeDecisionVisualStyle')}: ${video.visual_style_hint || t('none')}`,
+                `${t('creativeDecisionProductContext')}: ${video.product_context || t('none')}`,
+                `${t('creativeDecisionShotList')}:`,
+                ...(shotLines.length ? shotLines : [t('creativeDecisionNoData')]),
+                `${t('creativeDecisionDoNotClaim')}:`,
+                ...(video.do_not_claim || []).map((item) => `- ${item}`),
+                '',
+                `### ${t('creativeDecisionQualityChecksTitle')}`,
+                `${t('creativeDecisionMissingQuote')}: ${Boolean(checks.missing_quote)}`,
+                `${t('creativeDecisionUnsupportedClaim')}: ${Boolean(checks.unsupported_claim)}`,
+                `${t('creativeDecisionWeakCta')}: ${Boolean(checks.weak_cta)}`,
+                `${t('creativeDecisionUnsafeProviderAction')}: ${Boolean(checks.unsafe_provider_action)}`,
+                `${t('creativeDecisionEvidenceCount')}: ${Number(checks.evidence_count || 0)}`,
+                `${t('creativeDecisionRecommendation')}: ${checks.recommendation || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeDecisionPackCopyText(section = 'evidence', angleIndex = 0) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(latestProjectWorkspace);
+            if (!pack.has_creative_decision_pack) return '';
+            if (section === 'angle') {
+                const angle = pack.top_ad_angles[Number(angleIndex)] || {};
+                if (!angle.title) return '';
+                return [
+                    angle.title,
+                    `${t('creativeDecisionProofQuote')}: ${angle.proof_quote || t('creativeDecisionMissingQuote')}`,
+                    `${t('creativeDecisionHook')}: ${angle.hook || ''}`,
+                    `${t('creativeDecisionFirstScene')}: ${angle.first_scene || ''}`,
+                    `${t('creativeDecisionSecondScene')}: ${angle.second_scene || ''}`,
+                    `${t('creativeDecisionThirdScene')}: ${angle.third_scene || ''}`,
+                    `${t('creativeDecisionCta')}: ${angle.cta || ''}`,
+                    `${t('creativeDecisionRiskNote')}: ${angle.risk_note || ''}`
+                ].join('\n');
+            }
+            if (section === 'video') {
+                const video = pack.video_prompt_pack || {};
+                if (!video.keyframe_prompt && !(video.shot_list || []).length) return '';
+                return [
+                    `${t('creativeDecisionKeyframePrompt')}: ${video.keyframe_prompt || ''}`,
+                    `${t('creativeDecisionVisualStyle')}: ${video.visual_style_hint || ''}`,
+                    `${t('creativeDecisionShotList')}:`,
+                    ...(video.shot_list || []).map((shot, index) => `${index + 1}. ${shot.prompt || ''}`),
+                    `${t('creativeDecisionDoNotClaim')}:`,
+                    ...(video.do_not_claim || []).map((item) => `- ${item}`)
+                ].join('\n');
+            }
+            const evidence = pack.evidence_brief || {};
+            return [
+                t('creativeDecisionEvidenceBriefTitle'),
+                `${t('creativeDecisionPainPoints')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.pain_points),
+                `${t('creativeDecisionObjections')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.objections),
+                `${t('creativeDecisionLikedPoints')}:`,
+                ...projectWorkspaceCreativeDecisionThemeLines(evidence.liked_points),
+                `${t('creativeDecisionHighSignalQuotes')}:`,
+                ...(evidence.high_signal_quotes || []).map((quote) => `- ${quote}`),
+                `${t('creativeDecisionSampleSizeNote')}: ${evidence.sample_size_note || t('none')}`
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCreativeDecisionText(section, angleIndex = 0, successKey = 'creativeDecisionEvidenceCopied') {
+            const status = document.getElementById('projectWorkspaceCreativeDecisionStatus');
+            try {
+                const text = projectWorkspaceCreativeDecisionPackCopyText(section, angleIndex);
+                if (!text) {
+                    if (status) status.textContent = t('creativeDecisionCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('creativeDecisionCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t(successKey);
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeDecisionCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceCreativeDecisionPack() {
+            return copyProjectWorkspaceCreativeDecisionText('evidence', 0, 'creativeDecisionEvidenceCopied');
+        }
+
+        function copyProjectWorkspaceTopAngleScript(angleIndex = 0) {
+            return copyProjectWorkspaceCreativeDecisionText('angle', angleIndex, 'creativeDecisionAngleCopied');
+        }
+
+        function copyProjectWorkspaceVideoPromptPack() {
+            return copyProjectWorkspaceCreativeDecisionText('video', 0, 'creativeDecisionVideoCopied');
+        }
+
+        function renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const angles = pack.top_ad_angles || [];
+            const weakCount = angles.filter((angle) => angle.evidence_strength === 'weak' || angle.missing_quote).length;
+            const readyScriptCount = angles.filter((angle) => String(angle.copy_ready_text || '').trim()).length;
+            const strength = angles.some((angle) => angle.evidence_strength === 'strong')
+                ? t('creativeDecisionStrengthStrong')
+                : angles.some((angle) => angle.evidence_strength === 'moderate')
+                    ? t('creativeDecisionStrengthModerate')
+                    : t('creativeDecisionStrengthWeak');
+            const videoReady = Boolean(pack.video_prompt_pack?.keyframe_prompt && pack.video_prompt_pack?.shot_list?.length);
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeDecisionSummaryStrip" data-creative-decision-pack-marker="${PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeDecisionPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionPackHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCreativeDecisionPack()">${escapeHTML(t('creativeDecisionCopyEvidence'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeDecisionTopAngleCount'), String(angles.length))}
+                        ${metricPill(t('creativeDecisionEvidenceStrength'), strength)}
+                        ${metricPill(t('creativeDecisionWeakEvidenceCount'), String(weakCount))}
+                        ${metricPill(t('creativeDecisionReadyScriptCount'), String(readyScriptCount))}
+                        ${metricPill(t('creativeDecisionVideoPromptReady'), boolText(videoReady))}
+                    </div>
+                    ${pack.has_creative_decision_pack
+                        ? `<div class="feedback-box">${escapeHTML(t('creativeDecisionReadOnlyNote'))}</div>`
+                        : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceTopAdAnglesPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const angles = pack.top_ad_angles || [];
+            return `
+                <div class="section-block" id="projectWorkspaceTopAdAnglesPanel">
+                    <div class="json-key">${escapeHTML(t('creativeDecisionTopAnglesTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeDecisionTopAnglesHelper'))}</div>
+                    ${angles.length ? `<div class="graph-os-grid">${angles.map((angle, index) => `
+                        <div class="graph-os-card" data-creative-angle-id="${escapeHTML(angle.angle_id || '')}">
+                            <div class="section-header">
+                                <strong>${escapeHTML(angle.title || t('creativeDecisionUntitledAngle'))}</strong>
+                                <span class="badge">${escapeHTML(angle.evidence_strength || t('creativeDecisionStrengthWeak'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeDecisionTargetAudience'))}:</strong> ${escapeHTML(angle.target_audience || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionBuyerPain'))}:</strong> ${escapeHTML(angle.buyer_pain || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionBuyerObjection'))}:</strong> ${escapeHTML(angle.buyer_objection || t('none'))}</div>
+                            <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionProofQuote'))}:</strong> ${escapeHTML(angle.proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionProofSource'))}: ${escapeHTML(angle.proof_source || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionPositiveReversal'))}:</strong> ${escapeHTML(angle.liked_point_or_positive_reversal || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionHook'))}:</strong> ${escapeHTML(angle.hook || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionScriptOutline'))}:</strong> ${escapeHTML(angle.script_outline || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionFirstScene'))}:</strong> ${escapeHTML(angle.first_scene || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionSecondScene'))}:</strong> ${escapeHTML(angle.second_scene || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionThirdScene'))}:</strong> ${escapeHTML(angle.third_scene || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionCta'))}:</strong> ${escapeHTML(angle.cta || t('none'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionRiskNote'))}: ${escapeHTML(angle.risk_note || t('none'))}</div>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceTopAngleScript(${index})">${escapeHTML(t('creativeDecisionCopyAngle'))}</button>
+                        </div>
+                    `).join('')}</div>` : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceVideoPromptPackPanel(workspace = latestProjectWorkspace) {
+            const video = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace).video_prompt_pack || {};
+            const shots = Array.isArray(video.shot_list) ? video.shot_list : [];
+            return `
+                <div class="section-block" id="projectWorkspaceVideoPromptPackPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeDecisionVideoPromptTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionVideoPromptHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVideoPromptPack()">${escapeHTML(t('creativeDecisionCopyVideoPrompt'))}</button>
+                    </div>
+                    ${video.keyframe_prompt || shots.length ? `
+                        <div><strong>${escapeHTML(t('creativeDecisionProductContext'))}:</strong> ${escapeHTML(video.product_context || t('none'))}</div>
+                        <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionKeyframePrompt'))}:</strong> ${escapeHTML(video.keyframe_prompt || t('none'))}</div>
+                        <div><strong>${escapeHTML(t('creativeDecisionVisualStyle'))}:</strong> ${escapeHTML(video.visual_style_hint || t('none'))}</div>
+                        <div class="json-key">${escapeHTML(t('creativeDecisionShotList'))}</div>
+                        ${shots.map((shot, index) => `<div class="artifact-timeline-row"><strong>${index + 1}</strong><div>${escapeHTML(shot.prompt || '')}</div><div class="field-helper">${escapeHTML(shot.evidence_quote || '')}</div></div>`).join('')}
+                        <div class="json-key">${escapeHTML(t('creativeDecisionDoNotClaim'))}</div>
+                        ${(video.do_not_claim || []).map((item) => `<div class="field-helper">- ${escapeHTML(item)}</div>`).join('')}
+                        <details><summary>${escapeHTML(t('creativeDecisionEvidenceLinks'))}</summary><pre>${escapeHTML(JSON.stringify(video.evidence_links || [], null, 2))}</pre></details>
+                    ` : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeQualityChecksPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const checks = pack.quality_checks || {};
+            const hasChecks = Object.keys(checks).length > 0;
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeQualityChecksPanel">
+                    <div class="json-key">${escapeHTML(t('creativeDecisionQualityChecksTitle'))}</div>
+                    ${hasChecks ? `
+                        <div class="metric-strip">
+                            ${metricPill(t('creativeDecisionMissingQuote'), boolText(Boolean(checks.missing_quote)))}
+                            ${metricPill(t('creativeDecisionUnsupportedClaim'), boolText(Boolean(checks.unsupported_claim)))}
+                            ${metricPill(t('creativeDecisionWeakCta'), boolText(Boolean(checks.weak_cta)))}
+                            ${metricPill(t('creativeDecisionWeakEvidence'), boolText(Boolean(checks.weak_evidence)))}
+                            ${metricPill(t('creativeDecisionUnsafeProviderAction'), boolText(Boolean(checks.unsafe_provider_action)))}
+                            ${metricPill(t('creativeDecisionEvidenceCount'), String(checks.evidence_count || 0))}
+                        </div>
+                        <div class="feedback-box">${escapeHTML(checks.recommendation || t('creativeDecisionNoData'))}</div>
+                    ` : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeDecisionStatus"></div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceProviderGovernanceGroup(workspace = latestProjectWorkspace) {
             return `
                 <details class="section-block" id="projectWorkspaceProviderGovernanceGroup">
@@ -14712,6 +15014,8 @@
                 `${t('recentProjectAssets')}: ${summary.asset_count || projectWorkspaceHistoryArray(workspace, 'recent_assets').length}`,
                 '',
                 projectWorkspaceExportAgentCapabilityRuntimeMarkdown(workspace),
+                '',
+                projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -14783,6 +15087,7 @@
                 project_id: workspace?.project?.project_id || latestProjectId || 'demo_project_default',
                 graph_summary: workspace?.project?.graph_summary || {},
                 agent_capability_runtime: projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace),
+                creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -27169,6 +27474,10 @@
                     ${renderProjectWorkspaceAgentCapabilitySummaryStrip(workspace)}
                     ${renderProjectWorkspaceAgentTaskBoardPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextActionsPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
+                    ${renderProjectWorkspaceTopAdAnglesPanel(workspace)}
+                    ${renderProjectWorkspaceVideoPromptPackPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeQualityChecksPanel(workspace)}
                     <div class="metric-strip">
                         ${metricPill(t('recentProjectSources'), String(summary.source_count || 0))}
                         ${metricPill(t('recentProjectRuns'), String(summary.run_count || 0))}
@@ -33468,6 +33777,134 @@
             agentCapabilityCheckWorkspaceExportResult: '\u5de5\u4f5c\u533a JSON \u548c Markdown \u5bfc\u51fa\u8def\u5f84\u5df2\u5c31\u7eea\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCreativeDecisionPackMarker: 'Project Workspace creative decision pack bundle',
+            creativeDecisionPackTitle: 'Creative Decision Pack',
+            creativeDecisionPackHelper: 'Choose evidence-grounded ad angles, copy-ready scripts, and a provider-neutral video prompt pack.',
+            creativeDecisionPackVersion: 'Pack version',
+            creativeDecisionTopAnglesTitle: 'Top 3 Ad Angles',
+            creativeDecisionTopAnglesHelper: 'Each angle stays tied to a supplied buyer quote and visible-sample boundary.',
+            creativeDecisionEvidenceBriefTitle: 'Evidence Brief',
+            creativeDecisionVideoPromptTitle: 'Video Prompt Pack',
+            creativeDecisionVideoPromptHelper: 'Read-only shot and keyframe guidance. No provider call or video generation is performed.',
+            creativeDecisionQualityChecksTitle: 'Creative Quality Checks',
+            creativeDecisionTargetAudience: 'Target audience',
+            creativeDecisionBuyerPain: 'Buyer pain',
+            creativeDecisionBuyerObjection: 'Buyer objection',
+            creativeDecisionProofQuote: 'Proof quote',
+            creativeDecisionProofSource: 'Proof source',
+            creativeDecisionPositiveReversal: 'Positive reversal',
+            creativeDecisionHook: 'Hook',
+            creativeDecisionScriptOutline: 'Script outline',
+            creativeDecisionFirstScene: 'First scene',
+            creativeDecisionSecondScene: 'Second scene',
+            creativeDecisionThirdScene: 'Third scene',
+            creativeDecisionCta: 'CTA',
+            creativeDecisionEvidenceStrength: 'Evidence strength',
+            creativeDecisionRiskNote: 'Risk note',
+            creativeDecisionUntitledAngle: 'Evidence-grounded angle',
+            creativeDecisionPainPoints: 'Pain points',
+            creativeDecisionObjections: 'Buyer objections',
+            creativeDecisionLikedPoints: 'Liked points and positive signals',
+            creativeDecisionUseCases: 'Use cases',
+            creativeDecisionHighSignalQuotes: 'High-signal quotes',
+            creativeDecisionSampleSizeNote: 'Sample-size note',
+            creativeDecisionKeyframePrompt: 'Keyframe prompt',
+            creativeDecisionVisualStyle: 'Visual style',
+            creativeDecisionProductContext: 'Product context',
+            creativeDecisionShotList: 'Shot list',
+            creativeDecisionDoNotClaim: 'Do not claim',
+            creativeDecisionEvidenceLinks: 'Evidence links',
+            creativeDecisionMissingQuote: 'Missing quote',
+            creativeDecisionUnsupportedClaim: 'Unsupported claim',
+            creativeDecisionWeakCta: 'Weak CTA',
+            creativeDecisionWeakEvidence: 'Weak evidence',
+            creativeDecisionUnsafeProviderAction: 'Unsafe provider action',
+            creativeDecisionEvidenceCount: 'Evidence count',
+            creativeDecisionRecommendation: 'Recommendation',
+            creativeDecisionCopyEvidence: 'Copy evidence brief',
+            creativeDecisionCopyAngle: 'Copy top angle script',
+            creativeDecisionCopyVideoPrompt: 'Copy video prompt pack',
+            creativeDecisionEvidenceCopied: 'Evidence brief copied.',
+            creativeDecisionAngleCopied: 'Top angle script copied.',
+            creativeDecisionVideoCopied: 'Video prompt pack copied.',
+            creativeDecisionCopyFailed: 'Unable to copy creative decision content.',
+            creativeDecisionCopyNoData: 'No creative decision data is available to copy.',
+            creativeDecisionTopAngleCount: 'Top angle count',
+            creativeDecisionWeakEvidenceCount: 'Weak evidence count',
+            creativeDecisionReadyScriptCount: 'Ready-to-copy scripts',
+            creativeDecisionVideoPromptReady: 'Video prompt ready',
+            creativeDecisionStrengthStrong: 'Strong',
+            creativeDecisionStrengthModerate: 'Moderate',
+            creativeDecisionStrengthWeak: 'Weak',
+            creativeDecisionReadOnlyNote: 'Evidence review and copy/export only. Real providers, media transfer, registry writes, restore, rollback, and paid actions remain disabled.',
+            creativeDecisionNoData: 'Run Review Workspace analysis to load an evidence-grounded creative decision pack.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCreativeDecisionPackMarker: 'Project Workspace creative decision pack bundle',
+            creativeDecisionPackTitle: '\u521b\u610f\u51b3\u7b56\u5305',
+            creativeDecisionPackHelper: '\u9009\u62e9\u6709\u8bc1\u636e\u652f\u6491\u7684\u5e7f\u544a\u65b9\u5411\u3001\u53ef\u590d\u5236\u811a\u672c\u548c provider \u4e2d\u7acb\u7684\u89c6\u9891\u63d0\u793a\u8bcd\u5305\u3002',
+            creativeDecisionPackVersion: '\u51b3\u7b56\u5305\u7248\u672c',
+            creativeDecisionTopAnglesTitle: 'Top 3 \u5e7f\u544a\u65b9\u5411',
+            creativeDecisionTopAnglesHelper: '\u6bcf\u4e2a\u65b9\u5411\u90fd\u7ed1\u5b9a\u5df2\u63d0\u4f9b\u7684\u4e70\u5bb6\u539f\u8bdd\u548c\u53ef\u89c1\u6837\u672c\u8fb9\u754c\u3002',
+            creativeDecisionEvidenceBriefTitle: '\u8bc1\u636e\u7b80\u62a5',
+            creativeDecisionVideoPromptTitle: '\u89c6\u9891\u63d0\u793a\u8bcd\u5305',
+            creativeDecisionVideoPromptHelper: '\u53ea\u8bfb\u5206\u955c\u4e0e\u5173\u952e\u5e27\u5efa\u8bae\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u751f\u6210\u89c6\u9891\u3002',
+            creativeDecisionQualityChecksTitle: '\u521b\u610f\u8d28\u91cf\u68c0\u67e5',
+            creativeDecisionTargetAudience: '\u76ee\u6807\u53d7\u4f17',
+            creativeDecisionBuyerPain: '\u4e70\u5bb6\u75db\u70b9',
+            creativeDecisionBuyerObjection: '\u8d2d\u4e70\u987e\u8651',
+            creativeDecisionProofQuote: '\u8bc1\u636e\u539f\u8bdd',
+            creativeDecisionProofSource: '\u8bc1\u636e\u6765\u6e90',
+            creativeDecisionPositiveReversal: '\u6b63\u5411\u53cd\u8f6c',
+            creativeDecisionHook: '\u5f00\u573a Hook',
+            creativeDecisionScriptOutline: '\u811a\u672c\u5927\u7eb2',
+            creativeDecisionFirstScene: '\u7b2c\u4e00\u955c',
+            creativeDecisionSecondScene: '\u7b2c\u4e8c\u955c',
+            creativeDecisionThirdScene: '\u7b2c\u4e09\u955c',
+            creativeDecisionCta: '\u884c\u52a8\u53f7\u53ec',
+            creativeDecisionEvidenceStrength: '\u8bc1\u636e\u5f3a\u5ea6',
+            creativeDecisionRiskNote: '\u98ce\u9669\u63d0\u793a',
+            creativeDecisionUntitledAngle: '\u8bc1\u636e\u578b\u521b\u610f\u65b9\u5411',
+            creativeDecisionPainPoints: '\u75db\u70b9',
+            creativeDecisionObjections: '\u8d2d\u4e70\u987e\u8651',
+            creativeDecisionLikedPoints: '\u559c\u6b22\u70b9\u4e0e\u6b63\u5411\u4fe1\u53f7',
+            creativeDecisionUseCases: '\u4f7f\u7528\u573a\u666f',
+            creativeDecisionHighSignalQuotes: '\u9ad8\u4fe1\u53f7\u539f\u8bdd',
+            creativeDecisionSampleSizeNote: '\u6837\u672c\u89e3\u8bfb',
+            creativeDecisionKeyframePrompt: '\u5173\u952e\u5e27\u63d0\u793a\u8bcd',
+            creativeDecisionVisualStyle: '\u89c6\u89c9\u98ce\u683c',
+            creativeDecisionProductContext: '\u5546\u54c1\u4e0a\u4e0b\u6587',
+            creativeDecisionShotList: '\u955c\u5934\u6e05\u5355',
+            creativeDecisionDoNotClaim: '\u7981\u6b62\u4e3b\u5f20',
+            creativeDecisionEvidenceLinks: '\u8bc1\u636e\u94fe\u63a5',
+            creativeDecisionMissingQuote: '\u7f3a\u5c11\u539f\u8bdd',
+            creativeDecisionUnsupportedClaim: '\u65e0\u8bc1\u636e\u4e3b\u5f20',
+            creativeDecisionWeakCta: 'CTA \u504f\u5f31',
+            creativeDecisionWeakEvidence: '\u8bc1\u636e\u504f\u5f31',
+            creativeDecisionUnsafeProviderAction: '\u4e0d\u5b89\u5168 Provider \u52a8\u4f5c',
+            creativeDecisionEvidenceCount: '\u8bc1\u636e\u6570',
+            creativeDecisionRecommendation: '\u5efa\u8bae',
+            creativeDecisionCopyEvidence: '\u590d\u5236\u8bc1\u636e\u7b80\u62a5',
+            creativeDecisionCopyAngle: '\u590d\u5236\u4e3b\u5e7f\u544a\u65b9\u5411\u811a\u672c',
+            creativeDecisionCopyVideoPrompt: '\u590d\u5236\u89c6\u9891\u63d0\u793a\u8bcd\u5305',
+            creativeDecisionEvidenceCopied: '\u8bc1\u636e\u7b80\u62a5\u5df2\u590d\u5236\u3002',
+            creativeDecisionAngleCopied: '\u4e3b\u5e7f\u544a\u65b9\u5411\u811a\u672c\u5df2\u590d\u5236\u3002',
+            creativeDecisionVideoCopied: '\u89c6\u9891\u63d0\u793a\u8bcd\u5305\u5df2\u590d\u5236\u3002',
+            creativeDecisionCopyFailed: '\u65e0\u6cd5\u590d\u5236\u521b\u610f\u51b3\u7b56\u5185\u5bb9\u3002',
+            creativeDecisionCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u521b\u610f\u51b3\u7b56\u6570\u636e\u3002',
+            creativeDecisionTopAngleCount: '\u4f18\u5148\u65b9\u5411\u6570',
+            creativeDecisionWeakEvidenceCount: '\u5f31\u8bc1\u636e\u6570',
+            creativeDecisionReadyScriptCount: '\u53ef\u590d\u5236\u811a\u672c\u6570',
+            creativeDecisionVideoPromptReady: '\u89c6\u9891\u63d0\u793a\u8bcd\u5df2\u5c31\u7eea',
+            creativeDecisionStrengthStrong: '\u5f3a',
+            creativeDecisionStrengthModerate: '\u4e2d\u7b49',
+            creativeDecisionStrengthWeak: '\u5f31',
+            creativeDecisionReadOnlyNote: '\u4ec5\u7528\u4e8e\u8bc1\u636e\u5ba1\u9605\u548c\u590d\u5236/\u5bfc\u51fa\u3002\u771f\u5b9e provider\u3001\u5a92\u4f53\u4f20\u8f93\u3001registry \u5199\u5165\u3001restore\u3001rollback \u548c\u4ed8\u8d39\u52a8\u4f5c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            creativeDecisionNoData: '\u8fd0\u884c\u8bc4\u8bba\u5de5\u4f5c\u533a\u5206\u6790\u540e\uff0c\u5373\u53ef\u52a0\u8f7d\u8bc1\u636e\u578b\u521b\u610f\u51b3\u7b56\u5305\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -34841,6 +35278,15 @@ async function analyzeExtensionWorkspace() {
       return;
     }
     body.output_language = body.output_language || payload.output_language || extensionWorkspaceLanguage(payload);
+    latestProjectCreativeDecisionPack = body.creative_decision_pack || {};
+    latestProjectWorkspace = {
+      ...(latestProjectWorkspace || {}),
+      creative_decision_pack: latestProjectCreativeDecisionPack
+    };
+    const projectWorkspaceRoot = document.getElementById("projectWorkspaceRoot");
+    if (projectWorkspaceRoot) {
+      projectWorkspaceRoot.innerHTML = renderProjectWorkspacePanel(latestProjectWorkspace);
+    }
 
     if (output) output.innerHTML = `
       ${extensionWorkspaceStatusHTML("complete", body)}

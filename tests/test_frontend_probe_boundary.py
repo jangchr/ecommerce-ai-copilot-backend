@@ -7470,3 +7470,70 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
         matches = list(_cg_invalid_unicode_re.finditer(r"\\u(?![0-9a-fA-F]{4})", html))
         self.assertEqual(matches, [])
+
+
+class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
+    def test_creative_decision_pack_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace creative decision pack bundle",
+            "PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER",
+            "latestProjectCreativeDecisionPack",
+            "projectWorkspaceCreativeDecisionPackFromWorkspace",
+            "projectWorkspaceCreativeDecisionPackCopyText",
+            "copyProjectWorkspaceCreativeDecisionPack",
+            "copyProjectWorkspaceTopAngleScript",
+            "copyProjectWorkspaceVideoPromptPack",
+            "renderProjectWorkspaceCreativeDecisionSummaryStrip",
+            "renderProjectWorkspaceTopAdAnglesPanel",
+            "renderProjectWorkspaceVideoPromptPackPanel",
+            "renderProjectWorkspaceCreativeQualityChecksPanel",
+            "projectWorkspaceExportCreativeDecisionPackSnapshot",
+            "projectWorkspaceExportCreativeDecisionPackMarkdown",
+            "creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace)",
+            "creative_decision_pack: latestProjectCreativeDecisionPack",
+            "Creative Decision Pack",
+            "Top 3 Ad Angles",
+            "Evidence Brief",
+            "Video Prompt Pack",
+            "Creative Quality Checks",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+    def test_creative_decision_pack_copy_feedback_and_bilingual_copy_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for key in [
+            "creativeDecisionCopyEvidence",
+            "creativeDecisionCopyAngle",
+            "creativeDecisionCopyVideoPrompt",
+            "creativeDecisionEvidenceCopied",
+            "creativeDecisionAngleCopied",
+            "creativeDecisionVideoCopied",
+            "creativeDecisionCopyFailed",
+            "creativeDecisionCopyNoData",
+            "creativeDecisionReadOnlyNote",
+            "creativeDecisionWeakEvidence",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        self.assertIn("\\u521b\\u610f\\u51b3\\u7b56\\u5305", html)
+        self.assertIn("\\u8bc1\\u636e\\u7b80\\u62a5", html)
+        self.assertNotIn("????", html)
+
+    def test_creative_decision_pack_quality_guard_and_public_smoke_markers(self):
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace creative decision pack bundle", script)
+            self.assertIn("project_workspace_creative_decision_pack_marker", script)
+
+    def test_creative_decision_pack_keeps_real_execution_disabled(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        creative_section = html[
+            html.index("const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER"):
+            html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        ]
+        self.assertIn("safety_boundaries: pack.safety_boundaries || {}", creative_section)
+        self.assertIn("Real providers, media transfer, registry writes, restore, rollback, and paid actions remain disabled.", html)
+        self.assertNotIn("fetch(", creative_section)

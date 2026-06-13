@@ -128,6 +128,7 @@ Add-Check "project_workspace_provider_transaction_monitor_marker" ($page.Content
 Add-Check "project_workspace_provider_transaction_incident_drill_marker" ($page.Content -match "Project Workspace provider transaction incident drill bundle")
 Add-Check "project_workspace_provider_execution_readiness_packet_marker" ($page.Content -match "Project Workspace provider execution readiness packet bundle")
 Add-Check "project_workspace_agent_capability_runtime_marker" ($page.Content -match "Project Workspace agent capability runtime bundle")
+Add-Check "project_workspace_creative_decision_pack_marker" ($page.Content -match "Project Workspace creative decision pack bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
