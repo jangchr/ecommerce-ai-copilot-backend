@@ -17256,6 +17256,318 @@ def _rw_video_script_pack(
     )
 
 
+def _rw_creative_proof_source(quote: str, source_breakdown: ReviewSourceBreakdown) -> str:
+    quote_key = " ".join(_rw_text(quote).lower().split())
+    for group in getattr(source_breakdown, "source_groups", []) or []:
+        for candidate in getattr(group, "evidence_quotes", []) or []:
+            candidate_key = " ".join(_rw_text(candidate).lower().split())
+            if quote_key and (quote_key in candidate_key or candidate_key in quote_key):
+                return _rw_text(getattr(group, "source_type", "")) or _rw_text(getattr(group, "label", ""))
+    return "visible_review_sample"
+
+
+def _rw_creative_angle_candidates(
+    common_pain_points: list[ReviewThemeSummary],
+    buyer_objections: list[ReviewThemeSummary],
+    liked_points: list[ReviewThemeSummary],
+    use_cases: list[ReviewThemeSummary],
+    evidence_quotes: list[str],
+) -> list[dict]:
+    candidates: list[dict] = []
+    seen_quotes: set[str] = set()
+
+    def add(signal_type: str, theme: ReviewThemeSummary | None = None, quote: str = ""):
+        proof_quote = _rw_quote_snippet(quote or _rw_theme_first_quote(theme), 240)
+        quote_key = " ".join(proof_quote.lower().split())
+        if not proof_quote or quote_key in seen_quotes:
+            return
+        seen_quotes.add(quote_key)
+        candidates.append(
+            {
+                "signal_type": signal_type,
+                "theme": theme,
+                "proof_quote": proof_quote,
+                "evidence_count": int(getattr(theme, "evidence_count", 0) or 1),
+            }
+        )
+
+    for signal_type, themes in [
+        ("buyer_objection", buyer_objections),
+        ("pain_point", common_pain_points),
+        ("positive_signal", liked_points),
+        ("use_case", use_cases),
+    ]:
+        for theme in themes or []:
+            add(signal_type, theme)
+
+    for quote in evidence_quotes:
+        add("high_signal_quote", quote=quote)
+
+    return candidates[:3]
+
+
+def _rw_creative_angle_title(signal_type: str, label: str, language: str) -> str:
+    is_zh = language == "zh-CN"
+    prefix = {
+        "buyer_objection": "\u987e\u8651\u53cd\u8f6c" if is_zh else "Objection reversal",
+        "pain_point": "\u75db\u70b9\u89e3\u9898" if is_zh else "Pain-point resolution",
+        "positive_signal": "\u6b63\u5411\u8bc1\u660e" if is_zh else "Positive proof",
+        "use_case": "\u573a\u666f\u5171\u9e23" if is_zh else "Use-case resonance",
+        "high_signal_quote": "\u4e70\u5bb6\u539f\u8bdd" if is_zh else "Buyer-language proof",
+    }.get(signal_type, "\u8bc1\u636e\u89d2\u5ea6" if is_zh else "Evidence angle")
+    return f"{prefix}\uff1a{label}" if is_zh else f"{prefix}: {label}"
+
+
+def _rw_creative_quality_checks(top_ad_angles: list[dict], evidence_count: int) -> dict:
+    unsupported_terms = (
+        "100% guaranteed",
+        "guaranteed results",
+        "never fails",
+        "best on the market",
+        "eliminates every",
+        "works for everyone",
+    )
+    unsupported_claims: list[str] = []
+    for angle in top_ad_angles:
+        generated_copy = " ".join(
+            _rw_text(angle.get(field))
+            for field in ["hook", "script_outline", "first_scene", "second_scene", "third_scene", "cta"]
+        ).lower()
+        unsupported_claims.extend(term for term in unsupported_terms if term in generated_copy)
+
+    missing_quote_angles = [
+        angle.get("angle_id", "")
+        for angle in top_ad_angles
+        if angle.get("missing_quote") or not _rw_text(angle.get("proof_quote"))
+    ]
+    weak_evidence_angles = [
+        angle.get("angle_id", "")
+        for angle in top_ad_angles
+        if angle.get("evidence_strength") == "weak"
+    ]
+    weak_cta_angles = [
+        angle.get("angle_id", "")
+        for angle in top_ad_angles
+        if len(_rw_text(angle.get("cta"))) < 18
+    ]
+    weak_evidence = evidence_count < 3 or len(top_ad_angles) < 3 or bool(weak_evidence_angles)
+    if unsupported_claims:
+        recommendation = "Remove unsupported absolute claims before using this creative pack."
+    elif missing_quote_angles or weak_evidence:
+        recommendation = "Collect more distinct buyer quotes before treating every angle as production-ready."
+    elif weak_cta_angles:
+        recommendation = "Strengthen the CTA while keeping it tied to the supplied evidence."
+    else:
+        recommendation = "Evidence coverage is sufficient for manual creative review and copy/export."
+
+    return {
+        "missing_quote": bool(missing_quote_angles),
+        "missing_quote_angles": missing_quote_angles,
+        "unsupported_claim": bool(unsupported_claims),
+        "unsupported_claim_terms": sorted(set(unsupported_claims)),
+        "weak_cta": bool(weak_cta_angles),
+        "weak_cta_angles": weak_cta_angles,
+        "weak_evidence": weak_evidence,
+        "weak_evidence_angles": weak_evidence_angles,
+        "unsafe_provider_action": False,
+        "evidence_count": evidence_count,
+        "recommendation": recommendation,
+        "provider_call_enabled": False,
+        "video_generation_performed": False,
+        "media_uploaded_or_downloaded": False,
+        "paid_operation_enabled": False,
+    }
+
+
+def _review_workspace_creative_decision_pack(
+    payload: ReviewWorkspaceRequest,
+    source_breakdown: ReviewSourceBreakdown,
+    common_pain_points: list[ReviewThemeSummary],
+    buyer_objections: list[ReviewThemeSummary],
+    liked_points: list[ReviewThemeSummary],
+    use_cases: list[ReviewThemeSummary],
+    sample_interpretation: ReviewSampleInterpretation,
+    llm_evidence_packet: dict,
+) -> dict:
+    language = payload.output_language
+    is_zh = language == "zh-CN"
+    product_context = _rw_workspace_product_hint(payload, language)
+    packet_evidence = dict(llm_evidence_packet.get("evidence") or {})
+    evidence_quotes = [
+        _rw_quote_snippet(quote, 240)
+        for quote in list(packet_evidence.get("quotes") or [])[:12]
+        if _rw_text(quote)
+    ]
+    candidates = _rw_creative_angle_candidates(
+        common_pain_points,
+        buyer_objections,
+        liked_points,
+        use_cases,
+        evidence_quotes,
+    )
+    positive_theme = _rw_first_available_theme(liked_points, use_cases)
+    positive_quote = _rw_quote_snippet(_rw_theme_first_quote(positive_theme), 180) if positive_theme else ""
+    positive_label = _rw_output_theme_label(positive_theme.label, language) if positive_theme else ""
+
+    top_ad_angles: list[dict] = []
+    for index, candidate in enumerate(candidates, start=1):
+        theme = candidate.get("theme")
+        signal_type = candidate["signal_type"]
+        proof_quote = candidate["proof_quote"]
+        raw_label = getattr(theme, "label", "") if theme else ""
+        label = _rw_output_theme_label(raw_label, language) if raw_label else (
+            "\u9ad8\u4fe1\u53f7\u4e70\u5bb6\u539f\u8bdd" if is_zh else "high-signal buyer quote"
+        )
+        evidence_count = int(candidate.get("evidence_count") or 0)
+        evidence_strength = "strong" if evidence_count >= 3 else "moderate" if proof_quote else "weak"
+        target_audience = (
+            f"\u6b63\u5728\u8bc4\u4f30{product_context}\u3001\u5e76\u5728\u610f{label}\u7684\u6d88\u8d39\u8005"
+            if is_zh
+            else f"Buyers evaluating {product_context} who care about {label}"
+        )
+        hook = (
+            f"\u4e70\u4e4b\u524d\uff0c\u5148\u770b\u8fd9\u53e5\u771f\u5b9e\u4e70\u5bb6\u539f\u8bdd\uff1a\u201c{proof_quote}\u201d"
+            if is_zh
+            else f"Before you buy, start with this real buyer line: \"{proof_quote}\""
+        )
+        first_scene = (
+            f"\u7b2c\u4e00\u955c\uff1a\u5c55\u793a{product_context}\u7684\u771f\u5b9e\u4f7f\u7528\u573a\u666f\uff0c\u5c4f\u5e55\u5b57\u5e55\u4f7f\u7528\u8bc1\u636e\u539f\u8bdd\u3002"
+            if is_zh
+            else f"Scene 1: Show {product_context} in a real use context and place the evidence quote on screen."
+        )
+        second_scene = (
+            f"\u7b2c\u4e8c\u955c\uff1a\u7528\u53ef\u89c6\u5316\u7684\u9009\u62e9\u6216\u5bf9\u6bd4\u573a\u666f\u56de\u5e94\u201c{label}\u201d\uff0c\u4e0d\u6dfb\u52a0\u672a\u88ab\u8bc1\u636e\u652f\u6301\u7684\u6548\u679c\u3002"
+            if is_zh
+            else f"Scene 2: Respond to \"{label}\" with a visible choice or comparison, without adding unsupported product effects."
+        )
+        payoff = positive_quote if positive_quote and positive_quote != proof_quote else proof_quote
+        third_scene = (
+            f"\u7b2c\u4e09\u955c\uff1a\u7528\u6b63\u5411\u6216\u573a\u666f\u8bc1\u636e\u6536\u5c3e\uff1a\u201c{payoff}\u201d"
+            if is_zh
+            else f"Scene 3: Close with positive or use-case proof: \"{payoff}\""
+        )
+        cta = (
+            "\u628a\u8fd9\u53e5\u4e70\u5bb6\u539f\u8bdd\u5f53\u4f5c\u9009\u8d2d\u53c2\u8003\uff0c\u518d\u770b\u5b83\u662f\u5426\u9002\u5408\u4f60\u7684\u4f7f\u7528\u573a\u666f\u3002"
+            if is_zh
+            else "Use this buyer quote as a decision signal, then check whether the product fits your use case."
+        )
+        script_outline = " ".join([hook, first_scene, second_scene, third_scene, cta])
+        risk_note = (
+            "\u4ec5\u8868\u8fbe\u5f53\u524d\u53ef\u89c1\u6837\u672c\u4e2d\u7684\u4e70\u5bb6\u4fe1\u53f7\uff1b\u4e0d\u5f97\u63a8\u5e7f\u4e3a\u5168\u5e02\u573a\u7ed3\u8bba\u6216\u4fdd\u8bc1\u4ea7\u54c1\u6548\u679c\u3002"
+            if is_zh
+            else "Treat this as a visible-sample buyer signal, not a full-market conclusion or guaranteed product result."
+        )
+        title = _rw_creative_angle_title(signal_type, label, language)
+        top_ad_angles.append(
+            {
+                "angle_id": f"angle_{index}",
+                "title": title,
+                "target_audience": target_audience,
+                "buyer_pain": label if signal_type == "pain_point" else "",
+                "buyer_objection": label if signal_type == "buyer_objection" else "",
+                "proof_quote": proof_quote,
+                "proof_source": _rw_creative_proof_source(proof_quote, source_breakdown),
+                "liked_point_or_positive_reversal": positive_label or label,
+                "hook": hook,
+                "script_outline": script_outline,
+                "first_scene": first_scene,
+                "second_scene": second_scene,
+                "third_scene": third_scene,
+                "cta": cta,
+                "evidence_strength": evidence_strength,
+                "missing_quote": not bool(proof_quote),
+                "weak_evidence_reason": (
+                    "Only one visible-sample quote supports this angle."
+                    if evidence_strength != "strong"
+                    else ""
+                ),
+                "risk_note": risk_note,
+                "copy_ready_text": "\n".join([title, hook, first_scene, second_scene, third_scene, cta]),
+            }
+        )
+
+    source_summary = [
+        {
+            "source_type": group.get("source_type", ""),
+            "label": group.get("label", ""),
+            "review_count": group.get("review_count", 0),
+            "high_signal_review_count": group.get("high_signal_review_count", 0),
+        }
+        for group in list(packet_evidence.get("source_groups") or [])[:6]
+    ]
+    evidence_brief = {
+        "pain_points": _rw_packet_theme_items(common_pain_points),
+        "objections": _rw_packet_theme_items(buyer_objections),
+        "liked_points": _rw_packet_theme_items(liked_points),
+        "use_cases": _rw_packet_theme_items(use_cases),
+        "high_signal_quotes": evidence_quotes,
+        "source_breakdown_summary": source_summary,
+        "sample_size_note": _rw_text(getattr(sample_interpretation, "sample_size_note", "")),
+    }
+    primary_angle = top_ad_angles[0] if top_ad_angles else {}
+    shot_list = [
+        {
+            "scene_number": scene_number,
+            "prompt": primary_angle.get(field, ""),
+            "evidence_quote": primary_angle.get("proof_quote", ""),
+        }
+        for scene_number, field in enumerate(["first_scene", "second_scene", "third_scene"], start=1)
+        if primary_angle.get(field)
+    ]
+    do_not_claim = [
+        "Do not claim full-market statistics from the visible review sample.",
+        "Do not promise guaranteed product performance or universal outcomes.",
+        "Do not generalize one variant, color, size, or packaging issue to the whole product without repeated evidence.",
+        "Do not imply that a buyer objection is resolved unless the supplied evidence explicitly supports the reversal.",
+    ]
+    video_prompt_pack = {
+        "keyframe_prompt": (
+            f"Create three evidence-grounded keyframes for {product_context}. "
+            f"Keep product identity stable and follow the selected angle: {primary_angle.get('title', '')}. "
+            f"Anchor the sequence to this visible-review quote: {primary_angle.get('proof_quote', '')}"
+            if primary_angle
+            else ""
+        ),
+        "shot_list": shot_list,
+        "visual_style_hint": "Clear product-first ecommerce footage, readable evidence overlays, realistic use context, no fabricated before/after result.",
+        "product_context": product_context,
+        "do_not_claim": do_not_claim,
+        "evidence_links": [
+            {
+                "angle_id": angle["angle_id"],
+                "proof_quote": angle["proof_quote"],
+                "proof_source": angle["proof_source"],
+            }
+            for angle in top_ad_angles
+        ],
+        "provider_call_enabled": False,
+        "video_generation_performed": False,
+    }
+    quality_checks = _rw_creative_quality_checks(top_ad_angles, len(evidence_quotes))
+
+    return {
+        "pack_version": "creative_decision_pack_v1",
+        "intended_use": "evidence_grounded_creative_decision",
+        "top_ad_angles": top_ad_angles,
+        "evidence_brief": evidence_brief,
+        "video_prompt_pack": video_prompt_pack,
+        "quality_checks": quality_checks,
+        "weak_evidence_reason": (
+            quality_checks["recommendation"] if quality_checks["weak_evidence"] else ""
+        ),
+        "safety_boundaries": {
+            "real_provider_called": False,
+            "secret_read": False,
+            "media_uploaded": False,
+            "media_downloaded": False,
+            "video_generated": False,
+            "registry_written": False,
+            "restore_or_rollback_performed": False,
+            "paid_operation_performed": False,
+        },
+    }
+
+
 
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
@@ -17318,6 +17630,16 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         liked_points,
         use_cases,
     )
+    creative_decision_pack = _review_workspace_creative_decision_pack(
+        payload,
+        source_breakdown,
+        common_pain_points,
+        buyer_objections,
+        liked_points,
+        use_cases,
+        sample_interpretation,
+        llm_evidence_packet,
+    )
 
     return ReviewWorkspaceResponse(
         workspace_id=payload.workspace_id,
@@ -17340,6 +17662,7 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         sample_interpretation=sample_interpretation,
         video_script_pack=video_script_pack,
         llm_evidence_packet=llm_evidence_packet,
+        creative_decision_pack=creative_decision_pack,
     )
 
 

@@ -1300,6 +1300,164 @@ class ReviewWorkspaceSampleInterpretationAndScriptPackTest(unittest.TestCase):
         self.assertTrue(body["common_pain_points"])
 
 
+class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
+    def setUp(self):
+        from fastapi.testclient import TestClient
+        from main import app
+
+        self.client = TestClient(app)
+
+    def test_review_workspace_returns_evidence_grounded_creative_decision_pack(self):
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "creative-decision-pack",
+                "source": "browser_extension",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "BLENDER01",
+                        "title": "Portable Mini Blender",
+                        "description": "Compact rechargeable blender for travel and single servings.",
+                        "reviews": [
+                            {
+                                "rating": "2 out of 5 stars",
+                                "text": "Hard to clean after one smoothie and pulp gets stuck under the blade.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "Too loud for early mornings in my apartment.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "Small enough for travel but the cup sometimes leaks in my bag.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Perfect for one protein shake at work and I use it every day.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        pack = body["creative_decision_pack"]
+
+        self.assertEqual(pack["pack_version"], "creative_decision_pack_v1")
+        for section in ["top_ad_angles", "evidence_brief", "video_prompt_pack", "quality_checks"]:
+            with self.subTest(section=section):
+                self.assertIn(section, pack)
+
+        self.assertEqual(len(pack["top_ad_angles"]), 3)
+        for angle in pack["top_ad_angles"]:
+            with self.subTest(angle_id=angle["angle_id"]):
+                for field in [
+                    "title",
+                    "target_audience",
+                    "hook",
+                    "script_outline",
+                    "first_scene",
+                    "second_scene",
+                    "third_scene",
+                    "cta",
+                    "evidence_strength",
+                    "risk_note",
+                    "copy_ready_text",
+                ]:
+                    self.assertTrue(angle[field], field)
+                self.assertTrue(angle["proof_quote"] or angle["missing_quote"])
+                self.assertTrue(angle["proof_source"])
+
+        evidence_brief = pack["evidence_brief"]
+        self.assertTrue(evidence_brief["high_signal_quotes"])
+        self.assertTrue(evidence_brief["source_breakdown_summary"])
+        self.assertTrue(evidence_brief["sample_size_note"])
+
+        video_pack = pack["video_prompt_pack"]
+        self.assertTrue(video_pack["keyframe_prompt"])
+        self.assertEqual(len(video_pack["shot_list"]), 3)
+        self.assertTrue(video_pack["do_not_claim"])
+        self.assertTrue(video_pack["evidence_links"])
+        self.assertFalse(video_pack["provider_call_enabled"])
+        self.assertFalse(video_pack["video_generation_performed"])
+
+        checks = pack["quality_checks"]
+        self.assertFalse(checks["unsafe_provider_action"])
+        self.assertFalse(checks["provider_call_enabled"])
+        self.assertFalse(checks["video_generation_performed"])
+        self.assertFalse(checks["media_uploaded_or_downloaded"])
+        self.assertFalse(checks["paid_operation_enabled"])
+        self.assertEqual(checks["evidence_count"], len(evidence_brief["high_signal_quotes"]))
+        self.assertTrue(checks["recommendation"])
+        self.assertTrue(all(value is False for value in pack["safety_boundaries"].values()))
+
+    def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "creative-decision-pack-weak-evidence",
+                "source": "manual",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "manual",
+                        "title": "Desk Lamp",
+                        "reviews": [
+                            {
+                                "rating": "3",
+                                "text": "The light feels too harsh late at night.",
+                                "source_section": "visible_review",
+                            }
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pack = response.json()["creative_decision_pack"]
+        self.assertLess(len(pack["top_ad_angles"]), 3)
+        self.assertTrue(pack["quality_checks"]["weak_evidence"])
+        self.assertTrue(pack["weak_evidence_reason"])
+        self.assertTrue(
+            all(angle["proof_quote"] or angle["missing_quote"] for angle in pack["top_ad_angles"])
+        )
+
+    def test_creative_quality_checks_detect_unsupported_claims(self):
+        from main import _rw_creative_quality_checks
+
+        checks = _rw_creative_quality_checks(
+            [
+                {
+                    "angle_id": "angle_risky",
+                    "proof_quote": "It is convenient for one smoothie.",
+                    "missing_quote": False,
+                    "evidence_strength": "moderate",
+                    "hook": "This is 100% guaranteed to work for everyone.",
+                    "script_outline": "Show the product.",
+                    "first_scene": "Show the product.",
+                    "second_scene": "Show the use case.",
+                    "third_scene": "Show the quote.",
+                    "cta": "Review the supplied buyer evidence before deciding.",
+                }
+            ],
+            evidence_count=1,
+        )
+
+        self.assertTrue(checks["unsupported_claim"])
+        self.assertIn("100% guaranteed", checks["unsupported_claim_terms"])
+        self.assertIn("Remove unsupported absolute claims", checks["recommendation"])
+        self.assertFalse(checks["unsafe_provider_action"])
+
+
 if __name__ == "__main__":
     unittest.main()
 
