@@ -430,6 +430,25 @@ class AgentRunnerPlanEndpointTests(unittest.TestCase):
         self.assertTrue(plan["handoff_message"]["handoff_valid"], plan["handoff_message"])
         self.assertEqual(summary["summary_version"], "agent_runner_plan_summary_v1")
         self.assertEqual(summary["execution_status"], plan["execution_status"])
+        self.assertIn("agent_capability_runtime", payload)
+        capability_runtime = payload["agent_capability_runtime"]
+        self.assertEqual(
+            capability_runtime["agent_capability_runtime_version"],
+            "agent_capability_runtime_v1",
+        )
+        self.assertEqual(capability_runtime["agent_task_count"], 7)
+        self.assertEqual(capability_runtime["supervisor_next_action_count"], 5)
+        self.assertEqual(capability_runtime["agent_quality_check_count"], 4)
+        self.assertTrue(capability_runtime["agent_handoff_ready"])
+        self.assertTrue(capability_runtime["dry_run"])
+        self.assertFalse(capability_runtime["external_api_called"])
+        self.assertFalse(capability_runtime["real_execution_enabled"])
+        self.assertFalse(capability_runtime["provider_call_allowed"])
+        graph_summary = payload["project"]["graph_summary"]
+        self.assertEqual(graph_summary["latest_agent_task_count"], 7)
+        self.assertEqual(graph_summary["latest_agent_next_action_count"], 5)
+        self.assertEqual(graph_summary["latest_agent_quality_check_count"], 4)
+        self.assertTrue(graph_summary["latest_agent_handoff_ready"])
         self.assertIn("agent_contract_registry", payload)
         self.assertIn("agent_contract_summary", payload)
         self.assertIn("agent_contract_completeness_report", payload)

@@ -7947,6 +7947,310 @@ def build_agent_runner_plan_summary(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+AGENT_CAPABILITY_RUNTIME_VERSION = "agent_capability_runtime_v1"
+
+AGENT_CAPABILITY_RUNTIME_ROLE_MATRIX = [
+    {
+        "role": "Evidence",
+        "agent_id": "evidence_agent",
+        "goal": "Review supplied source evidence and preserve quote-level traceability.",
+        "evidence_dependency": "SourceEvidence, review quotes, and source boundaries.",
+        "risk_boundary": "Do not invent evidence or generalize beyond the supplied sample.",
+        "next_action": "Review evidence",
+    },
+    {
+        "role": "Strategy",
+        "agent_id": "strategy_agent",
+        "goal": "Choose a grounded audience, hook, and buyer-objection strategy.",
+        "evidence_dependency": "Evidence brief and source-grounded customer signals.",
+        "risk_boundary": "Keep claims aligned with evidence and avoid unsupported market statistics.",
+        "next_action": "Choose creative angle",
+    },
+    {
+        "role": "Creative",
+        "agent_id": "storyboard_agent",
+        "goal": "Turn the selected strategy into an evidence-linked short-video storyboard.",
+        "evidence_dependency": "Creative strategy, evidence brief, and product identity constraints.",
+        "risk_boundary": "Keep scenes actionable and avoid unsupported absolute claims.",
+        "next_action": "Review storyboard",
+    },
+    {
+        "role": "Video",
+        "agent_id": "prompt_handoff_agent",
+        "goal": "Prepare copy-ready, provider-neutral video prompts and handoff artifacts.",
+        "evidence_dependency": "Storyboard, keyframe plan, and product asset lock.",
+        "risk_boundary": "Manual or dry-run handoff only; no provider call or paid generation.",
+        "next_action": "Prepare video prompt",
+    },
+    {
+        "role": "Risk",
+        "agent_id": "risk_agent",
+        "goal": "Inspect claims, evidence alignment, and approval boundaries.",
+        "evidence_dependency": "Storyboard, video generation packet, and evaluation.",
+        "risk_boundary": "Block unsafe claims and keep real execution locked.",
+        "next_action": "Inspect readiness",
+    },
+    {
+        "role": "Workspace",
+        "agent_id": "planner_agent",
+        "goal": "Organize the next reviewable workspace action without executing it.",
+        "evidence_dependency": "Project state, artifact registry, runner plan, and readiness state.",
+        "risk_boundary": "Guidance only; require explicit user action for gated operations.",
+        "next_action": "Review workspace state",
+    },
+    {
+        "role": "Audit",
+        "agent_id": "finalizer_agent",
+        "goal": "Prepare traceable workspace exports and an audit-ready closeout.",
+        "evidence_dependency": "Artifact registry, graph snapshot, and project history.",
+        "risk_boundary": "Export safe outputs only; never expose secrets or hidden source claims.",
+        "next_action": "Export audit pack",
+    },
+]
+
+
+def build_agent_capability_runtime(
+    *,
+    agent_contract_registry: dict[str, Any] | None = None,
+    agent_contract_completeness_report: dict[str, Any] | None = None,
+    multi_agent_output_chain_report: dict[str, Any] | None = None,
+    runner_plan: dict[str, Any] | None = None,
+    provider_execution_readiness_packet_report: dict[str, Any] | None = None,
+    project_id: str = "demo_project_default",
+    requested_by: str = "agent_capability_runtime_builder",
+) -> dict[str, Any]:
+    """Build reviewable Agent task guidance without executing graph actions."""
+
+    registry = (
+        agent_contract_registry
+        if isinstance(agent_contract_registry, dict)
+        else build_agent_contract_registry()
+    )
+    contract_by_id = (
+        registry.get("contract_by_agent_id")
+        if isinstance(registry.get("contract_by_agent_id"), dict)
+        else {}
+    )
+    completeness = (
+        agent_contract_completeness_report
+        if isinstance(agent_contract_completeness_report, dict)
+        else build_agent_contract_completeness_report(registry)
+    )
+    output_chain = (
+        multi_agent_output_chain_report
+        if isinstance(multi_agent_output_chain_report, dict)
+        else {}
+    )
+    plan = runner_plan if isinstance(runner_plan, dict) else {}
+    readiness = (
+        provider_execution_readiness_packet_report
+        if isinstance(provider_execution_readiness_packet_report, dict)
+        else {}
+    )
+    next_agent_id = str(plan.get("next_agent_id") or "")
+
+    task_board: list[dict[str, Any]] = []
+    for index, role_spec in enumerate(AGENT_CAPABILITY_RUNTIME_ROLE_MATRIX, start=1):
+        agent_id = str(role_spec.get("agent_id") or "")
+        contract = contract_by_id.get(agent_id) if isinstance(contract_by_id.get(agent_id), dict) else {}
+        status = "current" if agent_id == next_agent_id else ("planned" if contract else "blocked")
+        task_board.append(
+            {
+                "task_id": f"agent_capability_task_{index}",
+                "role": str(role_spec.get("role") or ""),
+                "agent_id": agent_id,
+                "goal": str(role_spec.get("goal") or ""),
+                "input_contract": list(contract.get("input_contract") or []),
+                "output_contract": list(contract.get("output_contract") or []),
+                "evidence_dependency": str(role_spec.get("evidence_dependency") or ""),
+                "risk_boundary": str(role_spec.get("risk_boundary") or ""),
+                "status": status,
+                "next_action": str(role_spec.get("next_action") or ""),
+            }
+        )
+
+    task_by_role = {item["role"]: item for item in task_board}
+    handoff_roles = ["Evidence", "Strategy", "Creative", "Video", "Risk", "Workspace", "Audit"]
+    handoff_chain: list[dict[str, Any]] = []
+    for index, (source_role, target_role) in enumerate(zip(handoff_roles, handoff_roles[1:]), start=1):
+        source_task = task_by_role.get(source_role, {})
+        target_task = task_by_role.get(target_role, {})
+        ready = bool(
+            source_task.get("output_contract")
+            and target_task.get("input_contract")
+            and source_task.get("status") != "blocked"
+            and target_task.get("status") != "blocked"
+        )
+        handoff_chain.append(
+            {
+                "handoff_id": f"agent_capability_handoff_{index}",
+                "from_role": source_role,
+                "to_role": target_role,
+                "input_contract": list(target_task.get("input_contract") or []),
+                "output_contract": list(source_task.get("output_contract") or []),
+                "blocking_conditions": [] if ready else ["agent_contract_missing_or_incomplete"],
+                "trace_fields": [
+                    "project_id",
+                    "run_id",
+                    "job_id",
+                    "artifact_ids",
+                    "evidence_quote_ids",
+                ],
+                "ready": ready,
+            }
+        )
+
+    stage_reports = (
+        output_chain.get("stage_reports")
+        if isinstance(output_chain.get("stage_reports"), list)
+        else []
+    )
+    evidence_stage = next(
+        (
+            item
+            for item in stage_reports
+            if isinstance(item, dict) and item.get("stage_id") == "evidence"
+        ),
+        {},
+    )
+    evidence_contract_ready = bool(evidence_stage.get("complete"))
+    provider_locked = not any(
+        bool(readiness.get(field))
+        for field in (
+            "real_execution_enabled",
+            "provider_call_allowed",
+            "external_api_call_allowed",
+            "external_api_called",
+        )
+    )
+    export_ready = all(
+        bool(readiness.get(field))
+        for field in ("workspace_export_ready", "json_export_ready", "markdown_export_ready")
+    )
+
+    quality_checks = [
+        {
+            "check_id": "evidence_grounded",
+            "status": "passed" if evidence_contract_ready else "review_required",
+            "passed": evidence_contract_ready,
+            "result": (
+                "Evidence contract and visible-source boundaries are available."
+                if evidence_contract_ready
+                else "Evidence contract or visible-source boundary requires review."
+            ),
+            "auto_modified": False,
+        },
+        {
+            "check_id": "source_quote_present",
+            "status": "review_required",
+            "passed": False,
+            "result": "Confirm at least one source quote before approving creative claims.",
+            "auto_modified": False,
+        },
+        {
+            "check_id": "unsafe_provider_action",
+            "status": "passed" if provider_locked else "blocked",
+            "passed": provider_locked,
+            "result": (
+                "Provider calls, real execution, and paid generation remain disabled."
+                if provider_locked
+                else "A provider execution boundary requires operator review."
+            ),
+            "auto_modified": False,
+        },
+        {
+            "check_id": "workspace_export_ready",
+            "status": "passed" if export_ready else "review_required",
+            "passed": export_ready,
+            "result": (
+                "Workspace JSON and Markdown export paths are ready."
+                if export_ready
+                else "Workspace export readiness requires review."
+            ),
+            "auto_modified": False,
+        },
+    ]
+
+    supervisor_next_actions = [
+        {
+            "action_id": "review_evidence",
+            "label": "Review evidence",
+            "target_role": "Evidence",
+            "reason": "Confirm source quotes and sample boundaries before strategy review.",
+            "status": "guidance_only",
+        },
+        {
+            "action_id": "choose_creative_angle",
+            "label": "Choose creative angle",
+            "target_role": "Strategy",
+            "reason": "Select one evidence-grounded hook and buyer-objection angle.",
+            "status": "guidance_only",
+        },
+        {
+            "action_id": "prepare_video_prompt",
+            "label": "Prepare video prompt",
+            "target_role": "Video",
+            "reason": "Package approved storyboard inputs into a manual, provider-neutral handoff.",
+            "status": "guidance_only",
+        },
+        {
+            "action_id": "inspect_readiness",
+            "label": "Inspect readiness",
+            "target_role": "Risk",
+            "reason": "Review provider, approval, cost, and transaction boundaries.",
+            "status": "guidance_only",
+        },
+        {
+            "action_id": "export_audit_pack",
+            "label": "Export audit pack",
+            "target_role": "Audit",
+            "reason": "Preserve the task board, handoffs, checks, and workspace trace.",
+            "status": "guidance_only",
+        },
+    ]
+
+    handoff_ready = bool(handoff_chain) and all(item["ready"] for item in handoff_chain)
+    contract_registry_ready = bool(completeness.get("supervisor_can_use_registry"))
+
+    return {
+        "agent_capability_runtime_version": AGENT_CAPABILITY_RUNTIME_VERSION,
+        "runtime_status": (
+            "agent_capability_runtime_ready_dry_run"
+            if handoff_ready and contract_registry_ready
+            else "agent_capability_runtime_review_required"
+        ),
+        "project_id": str(project_id or plan.get("project_id") or "demo_project_default"),
+        "requested_by": str(requested_by or "agent_capability_runtime_builder"),
+        "agent_task_board": task_board,
+        "supervisor_next_actions": supervisor_next_actions,
+        "agent_handoff_chain": handoff_chain,
+        "agent_quality_checks": quality_checks,
+        "agent_task_count": len(task_board),
+        "supervisor_next_action_count": len(supervisor_next_actions),
+        "agent_handoff_count": len(handoff_chain),
+        "agent_quality_check_count": len(quality_checks),
+        "agent_handoff_ready": handoff_ready,
+        "contract_registry_ready": contract_registry_ready,
+        "dry_run": True,
+        "guidance_only": True,
+        "agent_execution_performed": False,
+        "real_execution_enabled": False,
+        "provider_call_allowed": False,
+        "external_api_call_allowed": False,
+        "external_api_called": False,
+        "provider_secret_read": False,
+        "provider_secret_exported": False,
+        "media_uploaded": False,
+        "media_downloaded": False,
+        "registry_written": False,
+        "transaction_committed": False,
+        "restore_applied": False,
+        "rollback_applied": False,
+        "paid_generation_allowed": False,
+        "safety_boundaries": _graph_safety_boundaries(),
+    }
+
+
 
 
 AGENT_RUNNER_DISPATCH_TICKET_VERSION = "agent_runner_dispatch_ticket_v1"

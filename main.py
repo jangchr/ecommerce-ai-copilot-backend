@@ -59,6 +59,7 @@ from agent_runs import (
     apply_human_approval_decision,
     apply_evidence_safe_storyboard_rework,
     build_agent_message,
+    build_agent_capability_runtime,
     build_agent_runner_plan,
     build_agent_runner_plan_summary,
     build_agent_contract_registry,
@@ -6344,6 +6345,15 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         latest_job=context["latest_job"],
     )
     runner_plan_summary = build_agent_runner_plan_summary(runner_plan)
+    agent_capability_runtime = build_agent_capability_runtime(
+        agent_contract_registry=agent_contract_registry,
+        agent_contract_completeness_report=agent_contract_completeness_report,
+        multi_agent_output_chain_report=multi_agent_output_chain_report,
+        runner_plan=runner_plan,
+        provider_execution_readiness_packet_report=provider_execution_readiness_packet_report,
+        project_id=project_id,
+        requested_by="project_runner_plan_api",
+    )
     runner_dispatch_ticket = build_agent_runner_dispatch_ticket(
         runner_plan,
         requested_by="project_runner_plan_api",
@@ -6364,6 +6374,10 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
             "latest_runner_dispatch_allowed": bool(runner_dispatch_ticket.get("dispatch_allowed")),
             "latest_runner_dispatch_event_status": runner_dispatch_event.get("event_status", ""),
             "latest_runner_dispatch_event_id": runner_dispatch_event.get("event_id", ""),
+        "latest_agent_task_count": int(agent_capability_runtime.get("agent_task_count") or 0),
+        "latest_agent_next_action_count": int(agent_capability_runtime.get("supervisor_next_action_count") or 0),
+        "latest_agent_quality_check_count": int(agent_capability_runtime.get("agent_quality_check_count") or 0),
+        "latest_agent_handoff_ready": bool(agent_capability_runtime.get("agent_handoff_ready")),
         "latest_agent_contract_report_status": agent_contract_completeness_report.get("report_status", ""),
         "latest_agent_contract_complete_role_count": int(agent_contract_completeness_report.get("complete_role_count") or 0),
         "latest_agent_contract_missing_role_count": int(agent_contract_completeness_report.get("missing_role_count") or 0),
@@ -6476,6 +6490,7 @@ def _build_project_runner_plan_payload(project_id: str) -> dict:
         "runner_dispatch_summary": runner_dispatch_summary,
         "runner_dispatch_event": runner_dispatch_event,
         "runner_dispatch_event_summary": runner_dispatch_event_summary,
+        "agent_capability_runtime": agent_capability_runtime,
         "agent_contract_registry": agent_contract_registry,
         "agent_contract_summary": agent_contract_summary,
         "agent_contract_completeness_report": agent_contract_completeness_report,

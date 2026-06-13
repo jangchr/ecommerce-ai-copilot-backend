@@ -1031,6 +1031,92 @@ class AgentContractRegistryTests(unittest.TestCase):
 
 
 class AgentRunnerPlanBuilderTests(unittest.TestCase):
+    def test_agent_capability_runtime_builds_reviewable_task_guidance(self):
+        from agent_runs import (
+            build_agent_capability_runtime,
+            build_agent_contract_completeness_report,
+            build_agent_contract_registry,
+            build_agent_runner_plan,
+            build_multi_agent_output_chain_report,
+            build_provider_execution_readiness_packet_report,
+            build_source_adapter_contract_report,
+        )
+
+        registry = build_agent_contract_registry()
+        completeness = build_agent_contract_completeness_report(registry)
+        output_chain = build_multi_agent_output_chain_report(
+            agent_contract_report=completeness,
+            source_adapter_contract_report=build_source_adapter_contract_report(),
+            project_id="project_agent_capability_runtime",
+        )
+        plan = build_agent_runner_plan(
+            {
+                "project_id": "project_agent_capability_runtime",
+                "overall_status": "needs_source",
+                "next_action_type": "add_source",
+                "next_agent_id": "source_adapter_agent",
+                "user_action_required": True,
+            },
+            project={"project_id": "project_agent_capability_runtime"},
+        )
+        readiness = build_provider_execution_readiness_packet_report(
+            project_id="project_agent_capability_runtime"
+        )
+
+        runtime = build_agent_capability_runtime(
+            agent_contract_registry=registry,
+            agent_contract_completeness_report=completeness,
+            multi_agent_output_chain_report=output_chain,
+            runner_plan=plan,
+            provider_execution_readiness_packet_report=readiness,
+            project_id="project_agent_capability_runtime",
+        )
+
+        self.assertEqual(
+            runtime["agent_capability_runtime_version"],
+            "agent_capability_runtime_v1",
+        )
+        self.assertEqual(
+            [item["role"] for item in runtime["agent_task_board"]],
+            ["Evidence", "Strategy", "Creative", "Video", "Risk", "Workspace", "Audit"],
+        )
+        for task in runtime["agent_task_board"]:
+            for field in (
+                "role",
+                "goal",
+                "input_contract",
+                "output_contract",
+                "evidence_dependency",
+                "risk_boundary",
+                "status",
+                "next_action",
+            ):
+                self.assertIn(field, task)
+        self.assertEqual(runtime["agent_task_count"], 7)
+        self.assertEqual(runtime["supervisor_next_action_count"], 5)
+        self.assertEqual(runtime["agent_handoff_count"], 6)
+        self.assertEqual(runtime["agent_quality_check_count"], 4)
+        self.assertTrue(runtime["agent_handoff_ready"], runtime)
+        self.assertTrue(runtime["dry_run"])
+        self.assertTrue(runtime["guidance_only"])
+        for field in (
+            "agent_execution_performed",
+            "real_execution_enabled",
+            "provider_call_allowed",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "registry_written",
+            "transaction_committed",
+            "restore_applied",
+            "rollback_applied",
+            "paid_generation_allowed",
+        ):
+            self.assertFalse(runtime[field], field)
+
     def test_agent_runner_plan_ready_for_agent_run(self):
         from agent_runs import (
             build_agent_runner_plan,
