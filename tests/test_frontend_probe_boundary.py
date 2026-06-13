@@ -7230,6 +7230,98 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("Project Workspace provider transaction monitor bundle", script)
         self.assertIn("project_workspace_provider_transaction_monitor_marker", script)
 
+    def test_project_workspace_provider_transaction_incident_drill_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider transaction incident drill bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_TRANSACTION_INCIDENT_DRILL_BUNDLE_MARKER", html)
+        self.assertIn("latestProjectProviderTransactionIncidentDrillReport", html)
+        self.assertIn("projectWorkspaceProviderTransactionIncidentDrillReportFromWorkspace", html)
+        self.assertIn("projectWorkspaceProviderTransactionIncidentDrillCopyText", html)
+        self.assertIn("copyProjectWorkspaceProviderTransactionIncidentDrill", html)
+        self.assertIn("renderProjectWorkspaceProviderTransactionIncidentDrillPanel", html)
+        self.assertIn("projectWorkspaceExportProviderTransactionIncidentDrillMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderTransactionIncidentDrillSnapshot", html)
+        self.assertIn("provider_transaction_incident_drill_report", html)
+        for field in [
+            "incident_drill_preflight",
+            "incident_scenario_matrix",
+            "recovery_runbook",
+            "operator_decision_replay",
+            "rollback_restore_drill",
+            "evidence_reconciliation",
+            "incident_timeline",
+            "drill_audit_receipt",
+            "blocking_failures",
+            "transaction_incident_drill_stage_matrix",
+            "provider_transaction_monitor_ready",
+            "operator_review_required",
+            "drill_check_count",
+            "incident_scenario_count",
+            "recovery_step_count",
+            "operator_decision_count",
+            "rollback_restore_step_count",
+            "evidence_reconciliation_check_count",
+            "incident_timeline_event_count",
+            "audit_receipt_item_count",
+            "incident_drill_required",
+            "incident_drill_started",
+            "incident_detected",
+            "incident_opened",
+            "recovery_runbook_recorded",
+            "operator_decision_replayed",
+            "operator_decision_persisted",
+            "rollback_restore_drill_recorded",
+            "rollback_restore_executed",
+            "evidence_reconciliation_recorded",
+            "incident_timeline_recorded",
+            "drill_audit_recorded",
+            "audit_ledger_persisted",
+            "transaction_aborted",
+            "transaction_committed",
+            "registry_written",
+            "snapshot_written",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_applied",
+            "project_snapshot_saved",
+            "artifact_deleted",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+            "dry_run",
+            "has_provider_transaction_incident_drill_report",
+        ]:
+            self.assertIn(field, html)
+        for support_field in [
+            "supports_incident_drill_preflight",
+            "supports_incident_scenario_matrix",
+            "supports_recovery_runbook",
+            "supports_operator_decision_replay",
+            "supports_rollback_restore_drill",
+            "supports_evidence_reconciliation",
+            "supports_incident_timeline",
+            "supports_drill_audit_receipt",
+        ]:
+            self.assertIn(support_field, html)
+        self.assertIn("copyProviderTransactionIncidentDrill", html)
+        self.assertIn("providerTransactionIncidentDrillCopied", html)
+        self.assertIn("providerTransactionIncidentDrillCopyFailed", html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_provider_transaction_incident_drill_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_transaction_incident_drill_marker", script)
+        self.assertIn("Project Workspace provider transaction incident drill bundle", script)
+
+    def test_project_workspace_provider_transaction_incident_drill_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider transaction incident drill bundle", script)
+        self.assertIn("project_workspace_provider_transaction_incident_drill_marker", script)
+
 
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")

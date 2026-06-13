@@ -12426,6 +12426,134 @@
             ].join('\n');
         }
 
+        function projectWorkspaceExportProviderTransactionIncidentDrillSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderTransactionIncidentDrillReportFromWorkspace(workspace);
+            const booleanFields = [
+                'supports_incident_drill_preflight', 'supports_incident_scenario_matrix',
+                'supports_recovery_runbook', 'supports_operator_decision_replay',
+                'supports_rollback_restore_drill', 'supports_evidence_reconciliation',
+                'supports_incident_timeline', 'supports_drill_audit_receipt',
+                'incident_drill_required', 'incident_drill_started', 'incident_detected',
+                'incident_opened', 'recovery_runbook_recorded',
+                'operator_decision_replayed', 'operator_decision_persisted',
+                'rollback_restore_drill_recorded', 'rollback_restore_executed',
+                'evidence_reconciliation_recorded', 'incident_timeline_recorded',
+                'drill_audit_recorded', 'audit_ledger_persisted',
+                'transaction_aborted', 'transaction_committed', 'registry_written',
+                'snapshot_written', 'restore_applied', 'workspace_restored',
+                'rollback_applied', 'project_snapshot_saved', 'artifact_deleted',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'workspace_export_ready',
+                'json_export_ready', 'markdown_export_ready', 'dry_run'
+            ];
+            const snapshot = {
+                marker: 'Project Workspace export pack provider transaction incident drill bundle',
+                report_status: report.report_status || '',
+                provider_transaction_incident_drill_report_version: report.provider_transaction_incident_drill_report_version || '',
+                provider_transaction_monitor_ready: Boolean(report.provider_transaction_monitor_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                transaction_incident_drill_stage_matrix: Array.isArray(report.transaction_incident_drill_stage_matrix) ? report.transaction_incident_drill_stage_matrix : [],
+                incident_drill_preflight: report.incident_drill_preflight || {},
+                incident_scenario_matrix: report.incident_scenario_matrix || {},
+                recovery_runbook: report.recovery_runbook || {},
+                operator_decision_replay: report.operator_decision_replay || {},
+                rollback_restore_drill: report.rollback_restore_drill || {},
+                evidence_reconciliation: report.evidence_reconciliation || {},
+                incident_timeline: report.incident_timeline || {},
+                drill_audit_receipt: report.drill_audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                drill_check_count: Number(report.drill_check_count || 0),
+                incident_scenario_count: Number(report.incident_scenario_count || 0),
+                recovery_step_count: Number(report.recovery_step_count || 0),
+                operator_decision_count: Number(report.operator_decision_count || 0),
+                rollback_restore_step_count: Number(report.rollback_restore_step_count || 0),
+                evidence_reconciliation_check_count: Number(report.evidence_reconciliation_check_count || 0),
+                incident_timeline_event_count: Number(report.incident_timeline_event_count || 0),
+                audit_receipt_item_count: Number(report.audit_receipt_item_count || 0),
+                has_provider_transaction_incident_drill_report: Boolean(
+                    report.report_status || report.provider_transaction_incident_drill_report_version
+                )
+            };
+            booleanFields.forEach((key) => {
+                snapshot[key] = Boolean(report[key]);
+            });
+            return snapshot;
+        }
+
+        function projectWorkspaceExportProviderTransactionIncidentDrillMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderTransactionIncidentDrillSnapshot(workspace);
+            if (!report.has_provider_transaction_incident_drill_report) {
+                return `## ${t('projectWorkspaceExportProviderTransactionIncidentDrillTitle')}\n${t('providerTransactionIncidentDrillNotRefreshedYet')}`;
+            }
+            const blockers = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stages = report.transaction_incident_drill_stage_matrix.length
+                ? report.transaction_incident_drill_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const supportKeys = [
+                'supports_incident_drill_preflight', 'supports_incident_scenario_matrix',
+                'supports_recovery_runbook', 'supports_operator_decision_replay',
+                'supports_rollback_restore_drill', 'supports_evidence_reconciliation',
+                'supports_incident_timeline', 'supports_drill_audit_receipt'
+            ];
+            const statusKeys = [
+                'incident_drill_required', 'incident_drill_started', 'incident_detected',
+                'incident_opened', 'recovery_runbook_recorded',
+                'operator_decision_replayed', 'operator_decision_persisted',
+                'rollback_restore_drill_recorded', 'rollback_restore_executed',
+                'evidence_reconciliation_recorded', 'incident_timeline_recorded',
+                'drill_audit_recorded', 'audit_ledger_persisted',
+                'transaction_aborted', 'transaction_committed', 'registry_written',
+                'snapshot_written', 'restore_applied', 'workspace_restored',
+                'rollback_applied', 'project_snapshot_saved', 'artifact_deleted',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'dry_run'
+            ];
+            return [
+                `## ${t('projectWorkspaceExportProviderTransactionIncidentDrillTitle')}`,
+                `${t('providerTransactionIncidentDrillStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerTransactionMonitorReady')}: ${report.provider_transaction_monitor_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('drillCheckCount')}: ${report.drill_check_count}`,
+                `${t('incidentScenarioCount')}: ${report.incident_scenario_count}`,
+                `${t('recoveryStepCount')}: ${report.recovery_step_count}`,
+                `${t('operatorDecisionCount')}: ${report.operator_decision_count}`,
+                `${t('rollbackRestoreStepCount')}: ${report.rollback_restore_step_count}`,
+                `${t('evidenceReconciliationCheckCount')}: ${report.evidence_reconciliation_check_count}`,
+                `${t('incidentTimelineEventCount')}: ${report.incident_timeline_event_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                ...supportKeys.map((key) => `${key}: ${report[key]}`),
+                ...statusKeys.map((key) => `${key}: ${report[key]}`),
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockers,
+                '',
+                `### ${t('providerTransactionIncidentDrillStages')}`,
+                ...stages,
+                ...[
+                    ['incidentDrillPreflight', report.incident_drill_preflight],
+                    ['incidentScenarioMatrix', report.incident_scenario_matrix],
+                    ['recoveryRunbook', report.recovery_runbook],
+                    ['operatorDecisionReplay', report.operator_decision_replay],
+                    ['rollbackRestoreDrill', report.rollback_restore_drill],
+                    ['evidenceReconciliation', report.evidence_reconciliation],
+                    ['incidentTimeline', report.incident_timeline],
+                    ['drillAuditReceipt', report.drill_audit_receipt]
+                ].flatMap(([labelKey, value]) => [
+                    '',
+                    `### ${t(labelKey)}`,
+                    '```json',
+                    JSON.stringify(value, null, 2),
+                    '```'
+                ])
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
             return {
@@ -14168,6 +14296,8 @@
                 '',
                 projectWorkspaceExportProviderTransactionMonitorMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderTransactionIncidentDrillMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -14207,6 +14337,7 @@
                 provider_registry_operation_approval_report: projectWorkspaceExportProviderRegistryOperationApprovalSnapshot(workspace),
                 provider_registry_transaction_rehearsal_report: projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot(workspace),
                 provider_transaction_monitor_report: projectWorkspaceExportProviderTransactionMonitorSnapshot(workspace),
+                provider_transaction_incident_drill_report: projectWorkspaceExportProviderTransactionIncidentDrillSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -14346,6 +14477,7 @@
                 latestProjectProviderRegistryOperationApprovalReport = payload.provider_registry_operation_approval_report || {};
                 latestProjectProviderRegistryTransactionRehearsalReport = payload.provider_registry_transaction_rehearsal_report || {};
                 latestProjectProviderTransactionMonitorReport = payload.provider_transaction_monitor_report || {};
+                latestProjectProviderTransactionIncidentDrillReport = payload.provider_transaction_incident_drill_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -18217,6 +18349,8 @@
         let latestProjectProviderRegistryTransactionRehearsalReport = {};
         const PROJECT_WORKSPACE_PROVIDER_TRANSACTION_MONITOR_BUNDLE_MARKER = 'Project Workspace provider transaction monitor bundle';
         let latestProjectProviderTransactionMonitorReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_TRANSACTION_INCIDENT_DRILL_BUNDLE_MARKER = 'Project Workspace provider transaction incident drill bundle';
+        let latestProjectProviderTransactionIncidentDrillReport = {};
 
         function projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderArtifactLineageReport || {}).length
@@ -19625,6 +19759,240 @@
                         ${hasReport ? `<pre class="debug" data-provider-transaction-monitor-preview="Project Workspace provider transaction monitor bundle">${escapeHTML(projectWorkspaceProviderTransactionMonitorCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerTransactionMonitorNotRefreshedYet'))}</div>`}
                     </div>
                     <div class="quick-use-copy-status" id="projectWorkspaceProviderTransactionMonitorStatus"></div>
+                </div>
+            `;
+        }
+
+        function projectWorkspaceProviderTransactionIncidentDrillReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderTransactionIncidentDrillReport || {}).length
+                ? latestProjectProviderTransactionIncidentDrillReport
+                : workspace?.provider_transaction_incident_drill_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_transaction_incident_drill_report_version: '',
+                report_status: graphSummary.latest_provider_transaction_incident_drill_status || '',
+                provider_transaction_monitor_ready: false,
+                operator_review_required: true,
+                stage_count: 0,
+                transaction_incident_drill_stage_matrix: [],
+                incident_drill_preflight: {},
+                incident_scenario_matrix: {},
+                recovery_runbook: {},
+                operator_decision_replay: {},
+                rollback_restore_drill: {},
+                evidence_reconciliation: {},
+                incident_timeline: {},
+                drill_audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_transaction_incident_drill_blocking_failure_count || 0),
+                blocking_failures: [],
+                drill_check_count: 0,
+                incident_scenario_count: 0,
+                recovery_step_count: 0,
+                operator_decision_count: 0,
+                rollback_restore_step_count: 0,
+                evidence_reconciliation_check_count: 0,
+                incident_timeline_event_count: 0,
+                audit_receipt_item_count: 0,
+                supports_incident_drill_preflight: false,
+                supports_incident_scenario_matrix: false,
+                supports_recovery_runbook: false,
+                supports_operator_decision_replay: false,
+                supports_rollback_restore_drill: false,
+                supports_evidence_reconciliation: false,
+                supports_incident_timeline: false,
+                supports_drill_audit_receipt: false,
+                incident_drill_required: true,
+                incident_drill_started: false,
+                incident_detected: false,
+                incident_opened: Boolean(graphSummary.latest_provider_transaction_incident_drill_incident_opened),
+                recovery_runbook_recorded: false,
+                operator_decision_replayed: false,
+                operator_decision_persisted: false,
+                rollback_restore_drill_recorded: false,
+                rollback_restore_executed: Boolean(graphSummary.latest_provider_transaction_incident_drill_rollback_restore_executed),
+                evidence_reconciliation_recorded: false,
+                incident_timeline_recorded: false,
+                drill_audit_recorded: false,
+                audit_ledger_persisted: false,
+                transaction_aborted: false,
+                transaction_committed: false,
+                registry_written: false,
+                snapshot_written: false,
+                restore_applied: false,
+                workspace_restored: false,
+                rollback_applied: false,
+                project_snapshot_saved: false,
+                artifact_deleted: false,
+                workspace_export_ready: false,
+                json_export_ready: false,
+                markdown_export_ready: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_transaction_incident_drill_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false,
+                dry_run: true
+            };
+        }
+
+        function projectWorkspaceProviderTransactionIncidentDrillCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderTransactionIncidentDrillSnapshot(workspace);
+            return [
+                t('providerTransactionIncidentDrillCopyTitle'),
+                `${t('providerTransactionIncidentDrillStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerTransactionMonitorReady')}: ${report.provider_transaction_monitor_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('drillCheckCount')}: ${report.drill_check_count}`,
+                `${t('incidentScenarioCount')}: ${report.incident_scenario_count}`,
+                `${t('recoveryStepCount')}: ${report.recovery_step_count}`,
+                `${t('operatorDecisionCount')}: ${report.operator_decision_count}`,
+                `${t('rollbackRestoreStepCount')}: ${report.rollback_restore_step_count}`,
+                `${t('evidenceReconciliationCheckCount')}: ${report.evidence_reconciliation_check_count}`,
+                `${t('incidentTimelineEventCount')}: ${report.incident_timeline_event_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('blockingFailures')}:`,
+                report.blocking_failures.length
+                    ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : t('none'),
+                '',
+                JSON.stringify({ provider_transaction_incident_drill_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderTransactionIncidentDrill() {
+            const status = document.getElementById('projectWorkspaceProviderTransactionIncidentDrillStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderTransactionIncidentDrillCopyText());
+                if (status) status.textContent = t('providerTransactionIncidentDrillCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerTransactionIncidentDrillCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection(labelKey, value) {
+            return `
+                <div class="graph-os-card">
+                    <div class="json-key">${escapeHTML(t(labelKey))}</div>
+                    <pre class="debug">${escapeHTML(JSON.stringify(value || {}, null, 2))}</pre>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderTransactionIncidentDrillPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderTransactionIncidentDrillReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.transaction_incident_drill_stage_matrix) ? report.transaction_incident_drill_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const supportFields = [
+                ['supportsIncidentDrillPreflight', report.supports_incident_drill_preflight],
+                ['supportsIncidentScenarioMatrix', report.supports_incident_scenario_matrix],
+                ['supportsRecoveryRunbook', report.supports_recovery_runbook],
+                ['supportsOperatorDecisionReplay', report.supports_operator_decision_replay],
+                ['supportsRollbackRestoreDrill', report.supports_rollback_restore_drill],
+                ['supportsEvidenceReconciliation', report.supports_evidence_reconciliation],
+                ['supportsIncidentTimeline', report.supports_incident_timeline],
+                ['supportsDrillAuditReceipt', report.supports_drill_audit_receipt]
+            ];
+            const statusFields = [
+                ['incidentDrillRequired', report.incident_drill_required],
+                ['incidentDrillStarted', report.incident_drill_started],
+                ['incidentDetected', report.incident_detected],
+                ['incidentOpened', report.incident_opened],
+                ['recoveryRunbookRecorded', report.recovery_runbook_recorded],
+                ['operatorDecisionReplayed', report.operator_decision_replayed],
+                ['operatorDecisionPersisted', report.operator_decision_persisted],
+                ['rollbackRestoreDrillRecorded', report.rollback_restore_drill_recorded],
+                ['rollbackRestoreExecuted', report.rollback_restore_executed],
+                ['evidenceReconciliationRecorded', report.evidence_reconciliation_recorded],
+                ['incidentTimelineRecorded', report.incident_timeline_recorded],
+                ['drillAuditRecorded', report.drill_audit_recorded],
+                ['auditLedgerPersisted', report.audit_ledger_persisted],
+                ['transactionAborted', report.transaction_aborted],
+                ['transactionCommitted', report.transaction_committed],
+                ['registryWritten', report.registry_written],
+                ['snapshotWritten', report.snapshot_written],
+                ['restoreApplied', report.restore_applied],
+                ['workspaceRestored', report.workspace_restored],
+                ['rollbackApplied', report.rollback_applied],
+                ['projectSnapshotSaved', report.project_snapshot_saved],
+                ['artifactDeleted', report.artifact_deleted],
+                ['externalApiCallAllowed', report.external_api_call_allowed],
+                ['externalApiCalled', report.external_api_called],
+                ['providerSecretRead', report.provider_secret_read],
+                ['providerSecretExported', report.provider_secret_exported],
+                ['mediaUploaded', report.media_uploaded],
+                ['mediaDownloaded', report.media_downloaded],
+                ['paidGenerationAllowed', report.paid_generation_allowed],
+                ['dryRun', report.dry_run]
+            ];
+            const hasReport = Boolean(
+                report.report_status || report.provider_transaction_incident_drill_report_version || stages.length
+            );
+            return `
+                <div class="section-block" id="projectWorkspaceProviderTransactionIncidentDrillPanel" data-project-provider-transaction-incident-drill-marker="Project Workspace provider transaction incident drill bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerTransactionIncidentDrillPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerTransactionIncidentDrillPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderTransactionIncidentDrillBtn" type="button" onclick="copyProjectWorkspaceProviderTransactionIncidentDrill()">${escapeHTML(t('copyProviderTransactionIncidentDrill'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerTransactionIncidentDrillStatus'))}</div><strong>${escapeHTML(report.report_status || t('providerTransactionIncidentDrillNotRefreshedYet'))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerTransactionMonitorReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_transaction_monitor_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewRequired'))}</div><strong>${escapeHTML(String(Boolean(report.operator_review_required)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('drillCheckCount'))}</div><strong>${escapeHTML(String(Number(report.drill_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('incidentScenarioCount'))}</div><strong>${escapeHTML(String(Number(report.incident_scenario_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('recoveryStepCount'))}</div><strong>${escapeHTML(String(Number(report.recovery_step_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorDecisionCount'))}</div><strong>${escapeHTML(String(Number(report.operator_decision_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('rollbackRestoreStepCount'))}</div><strong>${escapeHTML(String(Number(report.rollback_restore_step_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('evidenceReconciliationCheckCount'))}</div><strong>${escapeHTML(String(Number(report.evidence_reconciliation_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('incidentTimelineEventCount'))}</div><strong>${escapeHTML(String(Number(report.incident_timeline_event_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('auditReceiptItemCount'))}</div><strong>${escapeHTML(String(Number(report.audit_receipt_item_count || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerTransactionIncidentDrillStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} - ${escapeHTML(stage.stage_label || '')}</div>
+                                <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('incidentDrillPreflight', report.incident_drill_preflight)}
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('incidentScenarioMatrix', report.incident_scenario_matrix)}
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('recoveryRunbook', report.recovery_runbook)}
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('operatorDecisionReplay', report.operator_decision_replay)}
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('rollbackRestoreDrill', report.rollback_restore_drill)}
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('evidenceReconciliation', report.evidence_reconciliation)}
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('incidentTimeline', report.incident_timeline)}
+                        ${renderProjectWorkspaceProviderTransactionIncidentDrillJsonSection('drillAuditReceipt', report.drill_audit_receipt)}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${supportFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${statusFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerTransactionIncidentDrillAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-transaction-incident-drill-preview="Project Workspace provider transaction incident drill bundle">${escapeHTML(projectWorkspaceProviderTransactionIncidentDrillCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerTransactionIncidentDrillNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderTransactionIncidentDrillStatus"></div>
                 </div>
             `;
         }
@@ -23951,6 +24319,8 @@
                 if (providerRegistryTransactionRehearsalPanel) providerRegistryTransactionRehearsalPanel.outerHTML = renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(latestProjectWorkspace);
                 const providerTransactionMonitorPanel = document.getElementById('projectWorkspaceProviderTransactionMonitorPanel');
                 if (providerTransactionMonitorPanel) providerTransactionMonitorPanel.outerHTML = renderProjectWorkspaceProviderTransactionMonitorPanel(latestProjectWorkspace);
+                const providerTransactionIncidentDrillPanel = document.getElementById('projectWorkspaceProviderTransactionIncidentDrillPanel');
+                if (providerTransactionIncidentDrillPanel) providerTransactionIncidentDrillPanel.outerHTML = renderProjectWorkspaceProviderTransactionIncidentDrillPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -26147,6 +26517,7 @@
                     ${renderProjectWorkspaceProviderRegistryOperationApprovalPanel(workspace)}
                     ${renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(workspace)}
                     ${renderProjectWorkspaceProviderTransactionMonitorPanel(workspace)}
+                    ${renderProjectWorkspaceProviderTransactionIncidentDrillPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -31971,6 +32342,106 @@
             monitoringAuditRecorded: '\u76d1\u63a7\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
             providerTransactionMonitorAuditPreview: 'Transaction monitor \u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderTransactionMonitorTitle: 'Transaction Monitor / Drift Detection / Auto-Abort / Operator Timeline / \u4e8b\u52a1\u76d1\u63a7\u3001\u6f02\u79fb\u68c0\u6d4b\u3001\u81ea\u52a8\u4e2d\u6b62\u4e0e\u64cd\u4f5c\u5458\u65f6\u95f4\u7ebf'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderTransactionIncidentDrillBundleMarker: 'Project Workspace provider transaction incident drill bundle',
+            providerTransactionIncidentDrillPanelTitle: 'Transaction Incident Drill / Recovery Replay / Evidence Reconciliation',
+            providerTransactionIncidentDrillPanelHelper: 'Read-only dry-run incident drill for a future provider transaction. It records scenarios, recovery steps, operator decision replay, rollback/restore rehearsal, evidence reconciliation, timeline, and audit receipt without opening an incident or executing any transaction, registry, snapshot, restore, rollback, provider, secret, media, or paid action.',
+            copyProviderTransactionIncidentDrill: 'Copy incident drill report',
+            providerTransactionIncidentDrillCopyTitle: 'Project provider transaction incident drill report',
+            providerTransactionIncidentDrillStatus: 'Incident drill status',
+            providerTransactionIncidentDrillNotRefreshedYet: 'Incident drill report has not been refreshed yet.',
+            providerTransactionIncidentDrillCopied: 'Incident drill report copied.',
+            providerTransactionIncidentDrillCopyFailed: 'Could not copy incident drill report.',
+            providerTransactionMonitorReady: 'Transaction monitor report ready',
+            drillCheckCount: 'Drill preflight check count',
+            incidentScenarioCount: 'Incident scenario count',
+            recoveryStepCount: 'Recovery step count',
+            operatorDecisionCount: 'Operator decision count',
+            rollbackRestoreStepCount: 'Rollback / restore step count',
+            evidenceReconciliationCheckCount: 'Evidence reconciliation check count',
+            incidentTimelineEventCount: 'Incident timeline event count',
+            providerTransactionIncidentDrillStages: 'Transaction incident drill stages',
+            incidentDrillPreflight: 'Incident drill preflight',
+            incidentScenarioMatrix: 'Incident scenario matrix',
+            recoveryRunbook: 'Recovery runbook',
+            operatorDecisionReplay: 'Operator decision replay',
+            rollbackRestoreDrill: 'Rollback / restore drill',
+            evidenceReconciliation: 'Evidence reconciliation',
+            incidentTimeline: 'Incident timeline',
+            drillAuditReceipt: 'Drill audit receipt',
+            supportsIncidentDrillPreflight: 'Supports incident drill preflight',
+            supportsIncidentScenarioMatrix: 'Supports incident scenario matrix',
+            supportsRecoveryRunbook: 'Supports recovery runbook',
+            supportsOperatorDecisionReplay: 'Supports operator decision replay',
+            supportsRollbackRestoreDrill: 'Supports rollback / restore drill',
+            supportsEvidenceReconciliation: 'Supports evidence reconciliation',
+            supportsIncidentTimeline: 'Supports incident timeline',
+            supportsDrillAuditReceipt: 'Supports drill audit receipt',
+            incidentDrillRequired: 'Incident drill required',
+            incidentDrillStarted: 'Incident drill started',
+            incidentDetected: 'Incident detected',
+            recoveryRunbookRecorded: 'Recovery runbook recorded',
+            operatorDecisionReplayed: 'Operator decision replayed',
+            operatorDecisionPersisted: 'Operator decision persisted',
+            rollbackRestoreDrillRecorded: 'Rollback / restore drill recorded',
+            rollbackRestoreExecuted: 'Rollback / restore executed',
+            evidenceReconciliationRecorded: 'Evidence reconciliation recorded',
+            incidentTimelineRecorded: 'Incident timeline recorded',
+            drillAuditRecorded: 'Drill audit recorded',
+            providerTransactionIncidentDrillAuditPreview: 'Transaction incident drill audit preview',
+            projectWorkspaceExportProviderTransactionIncidentDrillTitle: 'Transaction Incident Drill / Recovery Replay / Evidence Reconciliation'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderTransactionIncidentDrillBundleMarker: 'Project Workspace provider transaction incident drill bundle',
+            providerTransactionIncidentDrillPanelTitle: 'Transaction Incident Drill / Recovery Replay / Evidence Reconciliation / \u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u3001\u6062\u590d\u56de\u653e\u4e0e\u8bc1\u636e\u5bf9\u8d26',
+            providerTransactionIncidentDrillPanelHelper: '\u53ea\u8bfb dry-run \u6f14\u7ec3\u672a\u6765 provider \u4e8b\u52a1\u4e8b\u6545\u54cd\u5e94\uff0c\u8bb0\u5f55\u4e8b\u6545\u573a\u666f\u3001\u6062\u590d\u6b65\u9aa4\u3001\u64cd\u4f5c\u5458\u51b3\u7b56\u56de\u653e\u3001rollback/restore \u6f14\u7ec3\u3001\u8bc1\u636e\u5bf9\u8d26\u3001\u65f6\u95f4\u7ebf\u548c\u5ba1\u8ba1\u56de\u6267\u3002\u4e0d\u4f1a\u5f00\u542f\u771f\u5b9e\u4e8b\u6545\uff0c\u4e5f\u4e0d\u4f1a\u6267\u884c\u4e8b\u52a1\u3001registry\u3001snapshot\u3001restore\u3001rollback\u3001provider\u3001secret\u3001\u5a92\u4f53\u6216\u4ed8\u8d39\u52a8\u4f5c\u3002',
+            copyProviderTransactionIncidentDrill: '\u590d\u5236\u4e8b\u6545\u6f14\u7ec3\u62a5\u544a',
+            providerTransactionIncidentDrillCopyTitle: '\u9879\u76ee provider \u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u62a5\u544a',
+            providerTransactionIncidentDrillStatus: '\u4e8b\u6545\u6f14\u7ec3\u72b6\u6001',
+            providerTransactionIncidentDrillNotRefreshedYet: '\u4e8b\u6545\u6f14\u7ec3\u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerTransactionIncidentDrillCopied: '\u4e8b\u6545\u6f14\u7ec3\u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerTransactionIncidentDrillCopyFailed: '\u590d\u5236\u4e8b\u6545\u6f14\u7ec3\u62a5\u544a\u5931\u8d25\u3002',
+            providerTransactionMonitorReady: '\u4e8b\u52a1\u76d1\u63a7\u62a5\u544a\u5df2\u5c31\u7eea',
+            drillCheckCount: '\u6f14\u7ec3\u9884\u68c0\u6570',
+            incidentScenarioCount: '\u4e8b\u6545\u573a\u666f\u6570',
+            recoveryStepCount: '\u6062\u590d\u6b65\u9aa4\u6570',
+            operatorDecisionCount: '\u64cd\u4f5c\u5458\u51b3\u7b56\u6570',
+            rollbackRestoreStepCount: 'Rollback / restore \u6b65\u9aa4\u6570',
+            evidenceReconciliationCheckCount: '\u8bc1\u636e\u5bf9\u8d26\u68c0\u67e5\u6570',
+            incidentTimelineEventCount: '\u4e8b\u6545\u65f6\u95f4\u7ebf\u4e8b\u4ef6\u6570',
+            providerTransactionIncidentDrillStages: '\u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u9636\u6bb5',
+            incidentDrillPreflight: '\u4e8b\u6545\u6f14\u7ec3\u9884\u68c0',
+            incidentScenarioMatrix: '\u4e8b\u6545\u573a\u666f\u77e9\u9635',
+            recoveryRunbook: '\u6062\u590d\u8fd0\u884c\u624b\u518c',
+            operatorDecisionReplay: '\u64cd\u4f5c\u5458\u51b3\u7b56\u56de\u653e',
+            rollbackRestoreDrill: 'Rollback / restore \u6f14\u7ec3',
+            evidenceReconciliation: '\u8bc1\u636e\u5bf9\u8d26',
+            incidentTimeline: '\u4e8b\u6545\u65f6\u95f4\u7ebf',
+            drillAuditReceipt: '\u6f14\u7ec3\u5ba1\u8ba1\u56de\u6267',
+            supportsIncidentDrillPreflight: '\u652f\u6301\u4e8b\u6545\u6f14\u7ec3\u9884\u68c0',
+            supportsIncidentScenarioMatrix: '\u652f\u6301\u4e8b\u6545\u573a\u666f\u77e9\u9635',
+            supportsRecoveryRunbook: '\u652f\u6301\u6062\u590d\u8fd0\u884c\u624b\u518c',
+            supportsOperatorDecisionReplay: '\u652f\u6301\u64cd\u4f5c\u5458\u51b3\u7b56\u56de\u653e',
+            supportsRollbackRestoreDrill: '\u652f\u6301 rollback / restore \u6f14\u7ec3',
+            supportsEvidenceReconciliation: '\u652f\u6301\u8bc1\u636e\u5bf9\u8d26',
+            supportsIncidentTimeline: '\u652f\u6301\u4e8b\u6545\u65f6\u95f4\u7ebf',
+            supportsDrillAuditReceipt: '\u652f\u6301\u6f14\u7ec3\u5ba1\u8ba1\u56de\u6267',
+            incidentDrillRequired: '\u9700\u8981\u4e8b\u6545\u6f14\u7ec3',
+            incidentDrillStarted: '\u4e8b\u6545\u6f14\u7ec3\u5df2\u542f\u52a8',
+            incidentDetected: '\u5df2\u68c0\u6d4b\u4e8b\u6545',
+            recoveryRunbookRecorded: '\u6062\u590d\u8fd0\u884c\u624b\u518c\u5df2\u8bb0\u5f55',
+            operatorDecisionReplayed: '\u64cd\u4f5c\u5458\u51b3\u7b56\u5df2\u56de\u653e',
+            operatorDecisionPersisted: '\u64cd\u4f5c\u5458\u51b3\u7b56\u5df2\u6301\u4e45\u5316',
+            rollbackRestoreDrillRecorded: 'Rollback / restore \u6f14\u7ec3\u5df2\u8bb0\u5f55',
+            rollbackRestoreExecuted: 'Rollback / restore \u5df2\u6267\u884c',
+            evidenceReconciliationRecorded: '\u8bc1\u636e\u5bf9\u8d26\u5df2\u8bb0\u5f55',
+            incidentTimelineRecorded: '\u4e8b\u6545\u65f6\u95f4\u7ebf\u5df2\u8bb0\u5f55',
+            drillAuditRecorded: '\u6f14\u7ec3\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
+            providerTransactionIncidentDrillAuditPreview: '\u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderTransactionIncidentDrillTitle: 'Transaction Incident Drill / Recovery Replay / Evidence Reconciliation / \u4e8b\u52a1\u4e8b\u6545\u6f14\u7ec3\u3001\u6062\u590d\u56de\u653e\u4e0e\u8bc1\u636e\u5bf9\u8d26'
         });
 
 
