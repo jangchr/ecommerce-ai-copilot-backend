@@ -14345,6 +14345,343 @@
             ].join('\n');
         }
 
+        const PROJECT_WORKSPACE_AGENT_CAPABILITY_RUNTIME_MARKER = 'Project Workspace agent capability runtime bundle';
+        let latestProjectAgentCapabilityRuntime = {};
+
+        function projectWorkspaceAgentCapabilityRuntimeFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectAgentCapabilityRuntime && Object.keys(latestProjectAgentCapabilityRuntime).length) {
+                return latestProjectAgentCapabilityRuntime;
+            }
+            if (workspace?.agent_capability_runtime && Object.keys(workspace.agent_capability_runtime).length) {
+                return workspace.agent_capability_runtime;
+            }
+            const summary = workspace?.project?.graph_summary || {};
+            return {
+                agent_capability_runtime_version: '',
+                runtime_status: 'not_refreshed',
+                agent_task_board: [],
+                supervisor_next_actions: [],
+                agent_handoff_chain: [],
+                agent_quality_checks: [],
+                agent_task_count: Number(summary.latest_agent_task_count || 0),
+                supervisor_next_action_count: Number(summary.latest_agent_next_action_count || 0),
+                agent_quality_check_count: Number(summary.latest_agent_quality_check_count || 0),
+                agent_handoff_ready: Boolean(summary.latest_agent_handoff_ready),
+                dry_run: true,
+                guidance_only: true,
+                real_execution_enabled: false,
+                provider_call_allowed: false,
+                external_api_called: false
+            };
+        }
+
+        function projectWorkspaceAgentCapabilityStatusLabel(status = '') {
+            const keyByStatus = {
+                current: 'agentCapabilityStatusCurrent',
+                planned: 'agentCapabilityStatusPlanned',
+                blocked: 'agentCapabilityStatusBlocked',
+                passed: 'agentCapabilityStatusPassed',
+                review_required: 'agentCapabilityStatusReviewRequired',
+                guidance_only: 'agentCapabilityGuidanceOnly'
+            };
+            return keyByStatus[status] ? t(keyByStatus[status]) : String(status || t('none'));
+        }
+
+        function projectWorkspaceAgentCapabilityRoleLabel(role = '') {
+            const roleKeyByName = {
+                Evidence: 'agentCapabilityRoleEvidence',
+                Strategy: 'agentCapabilityRoleStrategy',
+                Creative: 'agentCapabilityRoleCreative',
+                Video: 'agentCapabilityRoleVideo',
+                Risk: 'agentCapabilityRoleRisk',
+                Workspace: 'agentCapabilityRoleWorkspace',
+                Audit: 'agentCapabilityRoleAudit'
+            };
+            return roleKeyByName[role] ? t(roleKeyByName[role]) : String(role || t('none'));
+        }
+
+        function projectWorkspaceAgentCapabilityTaskCopy(task = {}) {
+            const roleKeyByName = {
+                Evidence: 'agentCapabilityRoleEvidence',
+                Strategy: 'agentCapabilityRoleStrategy',
+                Creative: 'agentCapabilityRoleCreative',
+                Video: 'agentCapabilityRoleVideo',
+                Risk: 'agentCapabilityRoleRisk',
+                Workspace: 'agentCapabilityRoleWorkspace',
+                Audit: 'agentCapabilityRoleAudit'
+            };
+            const roleKey = roleKeyByName[task.role] || 'agentCapabilityRoleWorkspace';
+            return {
+                role: projectWorkspaceAgentCapabilityRoleLabel(task.role),
+                goal: t(`${roleKey}Goal`),
+                status: projectWorkspaceAgentCapabilityStatusLabel(task.status),
+                nextAction: t(`${roleKey}NextAction`),
+                evidenceDependency: t(`${roleKey}EvidenceDependency`),
+                riskBoundary: t(`${roleKey}RiskBoundary`)
+            };
+        }
+
+        function projectWorkspaceAgentCapabilityActionCopy(action = {}) {
+            const keyByAction = {
+                review_evidence: 'agentCapabilityActionReviewEvidence',
+                choose_creative_angle: 'agentCapabilityActionChooseAngle',
+                prepare_video_prompt: 'agentCapabilityActionPrepareVideo',
+                inspect_readiness: 'agentCapabilityActionInspectReadiness',
+                export_audit_pack: 'agentCapabilityActionExportAudit'
+            };
+            const baseKey = keyByAction[action.action_id] || 'agentCapabilityActionReviewEvidence';
+            return {
+                label: t(baseKey),
+                reason: t(`${baseKey}Reason`),
+                targetPanel: t(`${baseKey}TargetPanel`),
+                copyOrExportHint: t(`${baseKey}CopyHint`)
+            };
+        }
+
+        function projectWorkspaceAgentCapabilityQualityCheckCopy(check = {}) {
+            const keyByCheck = {
+                evidence_grounded: 'agentCapabilityCheckEvidenceGrounded',
+                source_quote_present: 'agentCapabilityCheckSourceQuote',
+                unsafe_provider_action: 'agentCapabilityCheckUnsafeProvider',
+                workspace_export_ready: 'agentCapabilityCheckWorkspaceExport'
+            };
+            const baseKey = keyByCheck[check.check_id] || 'agentCapabilityCheckEvidenceGrounded';
+            return {
+                label: t(baseKey),
+                result: t(`${baseKey}Result`),
+                status: projectWorkspaceAgentCapabilityStatusLabel(check.status)
+            };
+        }
+
+        function projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceAgentCapabilityRuntimeFromWorkspace(workspace);
+            const actions = Array.isArray(runtime.supervisor_next_actions)
+                ? runtime.supervisor_next_actions.map((action) => {
+                    const copy = projectWorkspaceAgentCapabilityActionCopy(action);
+                    return {
+                        ...action,
+                        target_panel: action.target_panel || copy.targetPanel,
+                        copy_or_export_hint: action.copy_or_export_hint || copy.copyOrExportHint
+                    };
+                })
+                : [];
+            return {
+                marker: PROJECT_WORKSPACE_AGENT_CAPABILITY_RUNTIME_MARKER,
+                has_agent_capability_runtime: Boolean(runtime.agent_capability_runtime_version),
+                ...runtime,
+                supervisor_next_actions: actions
+            };
+        }
+
+        function projectWorkspaceExportAgentCapabilityRuntimeMarkdown(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace);
+            const tasks = Array.isArray(runtime.agent_task_board) ? runtime.agent_task_board : [];
+            const actions = Array.isArray(runtime.supervisor_next_actions) ? runtime.supervisor_next_actions : [];
+            const handoffs = Array.isArray(runtime.agent_handoff_chain) ? runtime.agent_handoff_chain : [];
+            const checks = Array.isArray(runtime.agent_quality_checks) ? runtime.agent_quality_checks : [];
+            if (!runtime.has_agent_capability_runtime) {
+                return `## ${t('agentCapabilityRuntimeTitle')}\n${t('agentCapabilityRuntimeNoData')}`;
+            }
+            return [
+                `## ${t('agentCapabilityRuntimeTitle')}`,
+                `${t('agentCapabilityRuntimeStatus')}: ${runtime.runtime_status || 'not_refreshed'}`,
+                `${t('agentCapabilityTaskCount')}: ${runtime.agent_task_count || tasks.length}`,
+                `${t('agentCapabilityNextActionCount')}: ${runtime.supervisor_next_action_count || actions.length}`,
+                `${t('agentCapabilityQualityCheckCount')}: ${runtime.agent_quality_check_count || 0}`,
+                `${t('agentCapabilityHandoffReady')}: ${Boolean(runtime.agent_handoff_ready)}`,
+                `${t('agentCapabilityDryRun')}: ${Boolean(runtime.dry_run)}`,
+                `${t('agentCapabilityRealExecutionDisabled')}: ${!Boolean(runtime.real_execution_enabled)}`,
+                '',
+                `### ${t('agentCapabilityTaskBoardTitle')}`,
+                ...tasks.map((task) => {
+                    const copy = projectWorkspaceAgentCapabilityTaskCopy(task);
+                    return [
+                        `- ${copy.role}: ${copy.goal}`,
+                        `  - ${t('agentCapabilityTaskStatus')}: ${copy.status}`,
+                        `  - ${t('agentCapabilityNextAction')}: ${copy.nextAction}`,
+                        `  - ${t('agentCapabilityEvidenceDependency')}: ${copy.evidenceDependency}`,
+                        `  - ${t('agentCapabilityRiskBoundary')}: ${copy.riskBoundary}`
+                    ].join('\n');
+                }),
+                '',
+                `### ${t('agentCapabilityNextActionsTitle')}`,
+                ...actions.map((action) => {
+                    const copy = projectWorkspaceAgentCapabilityActionCopy(action);
+                    return [
+                        `- ${copy.label}: ${copy.reason}`,
+                        `  - ${t('agentCapabilityTargetPanel')}: ${copy.targetPanel}`,
+                        `  - ${t('agentCapabilityCopyOrExportHint')}: ${copy.copyOrExportHint}`
+                    ].join('\n');
+                }),
+                '',
+                `### ${t('agentCapabilityHandoffChainTitle')}`,
+                ...handoffs.map((handoff) => [
+                    `- ${projectWorkspaceAgentCapabilityRoleLabel(handoff.from_role)} -> ${projectWorkspaceAgentCapabilityRoleLabel(handoff.to_role)}`,
+                    `  - ${t('agentCapabilityHandoffReady')}: ${Boolean(handoff.ready)}`,
+                    `  - ${t('agentCapabilityInputContract')}: ${(handoff.input_contract || []).join(', ')}`,
+                    `  - ${t('agentCapabilityOutputContract')}: ${(handoff.output_contract || []).join(', ')}`,
+                    `  - ${t('agentCapabilityBlockingConditions')}: ${(handoff.blocking_conditions || []).join(', ') || t('none')}`,
+                    `  - ${t('agentCapabilityTraceFields')}: ${(handoff.trace_fields || []).join(', ')}`
+                ].join('\n')),
+                '',
+                `### ${t('agentCapabilityQualityChecksTitle')}`,
+                ...checks.map((check) => {
+                    const copy = projectWorkspaceAgentCapabilityQualityCheckCopy(check);
+                    return `- ${copy.label}: ${copy.status} · ${copy.result}`;
+                })
+            ].join('\n');
+        }
+
+        function projectWorkspaceAgentCapabilityRuntimeCopyText(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceAgentCapabilityRuntimeFromWorkspace(workspace);
+            if (!runtime.agent_capability_runtime_version) return '';
+            return projectWorkspaceExportAgentCapabilityRuntimeMarkdown(workspace);
+        }
+
+        async function copyProjectWorkspaceAgentCapabilityRuntime() {
+            const status = document.getElementById('projectWorkspaceAgentCapabilityStatus');
+            try {
+                const text = projectWorkspaceAgentCapabilityRuntimeCopyText(latestProjectWorkspace);
+                if (!text) {
+                    if (status) status.textContent = t('agentCapabilityRuntimeNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('projectHistoryCopyUnavailable'));
+                }
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('agentCapabilityRuntimeCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('agentCapabilityRuntimeCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceAgentCapabilitySummaryStrip(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceAgentCapabilityRuntimeFromWorkspace(workspace);
+            return `
+                <div class="section-block" id="projectWorkspaceAgentCapabilitySummaryStrip" data-agent-capability-runtime-marker="${PROJECT_WORKSPACE_AGENT_CAPABILITY_RUNTIME_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('agentCapabilityRuntimeTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('agentCapabilityRuntimeHelper'))}</div>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('agentCapabilityTaskCount'), String(runtime.agent_task_count || 0))}
+                        ${metricPill(t('agentCapabilityNextActionCount'), String(runtime.supervisor_next_action_count || 0))}
+                        ${metricPill(t('agentCapabilityQualityCheckCount'), String(runtime.agent_quality_check_count || 0))}
+                        ${metricPill(t('agentCapabilityHandoffReady'), boolText(Boolean(runtime.agent_handoff_ready)))}
+                        ${metricPill(t('agentCapabilityDryRun'), boolText(Boolean(runtime.dry_run)))}
+                        ${metricPill(t('agentCapabilityRealExecutionDisabled'), boolText(!Boolean(runtime.real_execution_enabled)))}
+                    </div>
+                    <div class="feedback-box">${escapeHTML(t('agentCapabilitySafetyNote'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceAgentTaskBoardPanel(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceAgentCapabilityRuntimeFromWorkspace(workspace);
+            const tasks = Array.isArray(runtime.agent_task_board) ? runtime.agent_task_board : [];
+            return `
+                <div class="section-block" id="projectWorkspaceAgentTaskBoardPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('agentCapabilityTaskBoardTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('agentCapabilityTaskBoardHelper'))}</div>
+                        </div>
+                    </div>
+                    ${tasks.length ? `
+                        <div class="graph-os-grid">
+                            ${tasks.map((task) => {
+                                const copy = projectWorkspaceAgentCapabilityTaskCopy(task);
+                                return `
+                                    <div class="graph-os-card" data-agent-capability-role="${escapeHTML(task.role || '')}">
+                                        <div class="section-header">
+                                            <strong>${escapeHTML(copy.role)}</strong>
+                                            <span class="badge">${escapeHTML(copy.status)}</span>
+                                        </div>
+                                        <div>${escapeHTML(copy.goal)}</div>
+                                        <div class="field-helper">${escapeHTML(t('agentCapabilityNextAction'))}: ${escapeHTML(copy.nextAction)}</div>
+                                        <div class="field-helper">${escapeHTML(t('agentCapabilityEvidenceDependency'))}: ${escapeHTML(copy.evidenceDependency)}</div>
+                                        <div class="field-helper">${escapeHTML(t('agentCapabilityRiskBoundary'))}: ${escapeHTML(copy.riskBoundary)}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : `<div class="recent-empty">${escapeHTML(t('agentCapabilityRuntimeNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceSupervisorNextActionsPanel(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceAgentCapabilityRuntimeFromWorkspace(workspace);
+            const actions = Array.isArray(runtime.supervisor_next_actions) ? runtime.supervisor_next_actions : [];
+            const checks = Array.isArray(runtime.agent_quality_checks) ? runtime.agent_quality_checks : [];
+            return `
+                <div class="section-block" id="projectWorkspaceSupervisorNextActionsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('agentCapabilityNextActionsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('agentCapabilityNextActionsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentCapabilityRuntime()">${escapeHTML(t('agentCapabilityCopyRuntime'))}</button>
+                    </div>
+                    ${actions.length ? actions.map((action) => {
+                        const copy = projectWorkspaceAgentCapabilityActionCopy(action);
+                        return `
+                            <div class="artifact-timeline-row" data-agent-capability-action="${escapeHTML(action.action_id || '')}">
+                                <strong>${escapeHTML(copy.label)}</strong>
+                                <div>${escapeHTML(copy.reason)}</div>
+                                <div class="field-helper">${escapeHTML(t('agentCapabilityTargetPanel'))}: ${escapeHTML(copy.targetPanel)}</div>
+                                <div class="field-helper">${escapeHTML(t('agentCapabilityCopyOrExportHint'))}: ${escapeHTML(copy.copyOrExportHint)}</div>
+                                <span class="badge">${escapeHTML(t('agentCapabilityGuidanceOnly'))}</span>
+                            </div>
+                        `;
+                    }).join('') : `<div class="recent-empty">${escapeHTML(t('agentCapabilityRuntimeNoData'))}</div>`}
+                    ${checks.length ? `
+                        <details>
+                            <summary>${escapeHTML(t('agentCapabilityQualityChecksTitle'))}</summary>
+                            ${checks.map((check) => {
+                                const copy = projectWorkspaceAgentCapabilityQualityCheckCopy(check);
+                                return `
+                                    <div class="artifact-timeline-row">
+                                        <strong>${escapeHTML(copy.label)}</strong>
+                                        <div>${escapeHTML(copy.result)}</div>
+                                        <span class="badge">${escapeHTML(copy.status)}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </details>
+                    ` : ''}
+                    <div class="quick-use-copy-status" id="projectWorkspaceAgentCapabilityStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderGovernanceGroup(workspace = latestProjectWorkspace) {
+            return `
+                <details class="section-block" id="projectWorkspaceProviderGovernanceGroup">
+                    <summary>${escapeHTML(t('agentCapabilityProviderGovernanceTitle'))}</summary>
+                    <div class="field-helper">${escapeHTML(t('agentCapabilityProviderGovernanceHelper'))}</div>
+                    ${renderProjectWorkspaceProviderApiReadinessPanel(workspace)}
+                    ${renderProjectWorkspaceProviderSandboxRuntimePanel(workspace)}
+                    ${renderProjectWorkspaceRealProviderExecutionGatePanel(workspace)}
+                    ${renderProjectWorkspaceProviderFailureRecoveryPanel(workspace)}
+                    ${renderProjectWorkspaceProviderObservabilityReportPanel(workspace)}
+                    ${renderProjectWorkspaceProviderQueueLeaseWorkerPanel(workspace)}
+                    ${renderProjectWorkspaceProviderWorkerCheckpointResumePanel(workspace)}
+                    ${renderProjectWorkspaceProviderWorkerFinalizationPanel(workspace)}
+                    ${renderProjectWorkspaceProviderArtifactLineagePanel(workspace)}
+                    ${renderProjectWorkspaceProviderArtifactRegistryRestorePanel(workspace)}
+                    ${renderProjectWorkspaceProviderRegistryOperationApprovalPanel(workspace)}
+                    ${renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(workspace)}
+                    ${renderProjectWorkspaceProviderTransactionMonitorPanel(workspace)}
+                    ${renderProjectWorkspaceProviderTransactionIncidentDrillPanel(workspace)}
+                    ${renderProjectWorkspaceProviderExecutionReadinessPacketPanel(workspace)}
+                </details>
+            `;
+        }
+
 
         function projectWorkspaceExportPackMarkdownText(workspace = latestProjectWorkspace) {
             const project = workspace?.project || {};
@@ -14373,6 +14710,8 @@
                 `${t('recentGraphReports')}: ${summary.report_count || projectWorkspaceHistoryArray(workspace, 'recent_reports').length}`,
                 `${t('recentProjectSources')}: ${summary.source_count || projectWorkspaceHistoryArray(workspace, 'recent_sources').length}`,
                 `${t('recentProjectAssets')}: ${summary.asset_count || projectWorkspaceHistoryArray(workspace, 'recent_assets').length}`,
+                '',
+                projectWorkspaceExportAgentCapabilityRuntimeMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -14443,6 +14782,7 @@
                 generated_at: new Date().toISOString(),
                 project_id: workspace?.project?.project_id || latestProjectId || 'demo_project_default',
                 graph_summary: workspace?.project?.graph_summary || {},
+                agent_capability_runtime: projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -14612,6 +14952,7 @@
                 latestProjectProviderTransactionMonitorReport = payload.provider_transaction_monitor_report || {};
                 latestProjectProviderTransactionIncidentDrillReport = payload.provider_transaction_incident_drill_report || {};
                 latestProjectProviderExecutionReadinessPacketReport = payload.provider_execution_readiness_packet_report || {};
+                latestProjectAgentCapabilityRuntime = payload.agent_capability_runtime || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -14623,13 +14964,20 @@
                     runner_dispatch_ticket: latestProjectRunnerDispatchTicket,
                     runner_dispatch_summary: payload.runner_dispatch_summary || {},
                     runner_dispatch_event: latestProjectRunnerDispatchEvent,
-                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {}
+                    runner_dispatch_event_summary: payload.runner_dispatch_event_summary || {},
+                    agent_capability_runtime: latestProjectAgentCapabilityRuntime
                 };
                 if (typeof updateWorkspaceLastSyncTimestamp === 'function') updateWorkspaceLastSyncTimestamp('runner_plan');
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('synced', 'runner_plan');
                 if (status) status.textContent = t('runnerPlanRefreshed');
                 const panel = document.getElementById('projectWorkspaceRunnerPlanPanel');
                 if (panel) panel.outerHTML = renderProjectWorkspaceRunnerPlanPanel(latestProjectWorkspace);
+                const capabilitySummary = document.getElementById('projectWorkspaceAgentCapabilitySummaryStrip');
+                if (capabilitySummary) capabilitySummary.outerHTML = renderProjectWorkspaceAgentCapabilitySummaryStrip(latestProjectWorkspace);
+                const taskBoard = document.getElementById('projectWorkspaceAgentTaskBoardPanel');
+                if (taskBoard) taskBoard.outerHTML = renderProjectWorkspaceAgentTaskBoardPanel(latestProjectWorkspace);
+                const nextActions = document.getElementById('projectWorkspaceSupervisorNextActionsPanel');
+                if (nextActions) nextActions.outerHTML = renderProjectWorkspaceSupervisorNextActionsPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_plan');
@@ -26818,6 +27166,9 @@
                     <div class="json-key">${escapeHTML(t('projectGraphSummary'))}</div>
                     ${renderPlannerRecommendationPanel(planner, summary)}
                     ${renderWorkspaceAgentGraph(project)}
+                    ${renderProjectWorkspaceAgentCapabilitySummaryStrip(workspace)}
+                    ${renderProjectWorkspaceAgentTaskBoardPanel(workspace)}
+                    ${renderProjectWorkspaceSupervisorNextActionsPanel(workspace)}
                     <div class="metric-strip">
                         ${metricPill(t('recentProjectSources'), String(summary.source_count || 0))}
                         ${metricPill(t('recentProjectRuns'), String(summary.run_count || 0))}
@@ -26880,21 +27231,7 @@
                     ${renderProjectWorkspaceKeyframeVideoAssetChainPanel(workspace)}
                     ${renderProjectWorkspaceKeyframePromptPackPanel(workspace)}
                     ${renderProjectWorkspaceManualGenerationResultPanel(workspace)}
-                    ${renderProjectWorkspaceProviderApiReadinessPanel(workspace)}
-                    ${renderProjectWorkspaceProviderSandboxRuntimePanel(workspace)}
-                    ${renderProjectWorkspaceRealProviderExecutionGatePanel(workspace)}
-                    ${renderProjectWorkspaceProviderFailureRecoveryPanel(workspace)}
-                    ${renderProjectWorkspaceProviderObservabilityReportPanel(workspace)}
-                    ${renderProjectWorkspaceProviderQueueLeaseWorkerPanel(workspace)}
-                    ${renderProjectWorkspaceProviderWorkerCheckpointResumePanel(workspace)}
-                    ${renderProjectWorkspaceProviderWorkerFinalizationPanel(workspace)}
-                    ${renderProjectWorkspaceProviderArtifactLineagePanel(workspace)}
-                    ${renderProjectWorkspaceProviderArtifactRegistryRestorePanel(workspace)}
-                    ${renderProjectWorkspaceProviderRegistryOperationApprovalPanel(workspace)}
-                    ${renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(workspace)}
-                    ${renderProjectWorkspaceProviderTransactionMonitorPanel(workspace)}
-                    ${renderProjectWorkspaceProviderTransactionIncidentDrillPanel(workspace)}
-                    ${renderProjectWorkspaceProviderExecutionReadinessPacketPanel(workspace)}
+                    ${renderProjectWorkspaceProviderGovernanceGroup(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -32921,6 +33258,214 @@
             readinessAuditRecorded: '\u51c6\u5907\u5ea6\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
             providerExecutionReadinessPacketAuditPreview: 'Provider \u6267\u884c\u51c6\u5907\u5ea6\u5305\u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderExecutionReadinessPacketTitle: 'Provider Execution Readiness Packet / Capability / Boundary / Final Gate / Provider \u6267\u884c\u51c6\u5907\u5ea6\u5305\u3001\u80fd\u529b\u3001\u8fb9\u754c\u4e0e\u6700\u7ec8\u95e8\u7981'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            agentCapabilityRuntimeTitle: 'Agent Capability Runtime',
+            agentCapabilityRuntimeHelper: 'Review the current Agent task board, handoffs, quality checks, and safe next actions.',
+            agentCapabilityRuntimeStatus: 'Runtime status',
+            agentCapabilityTaskCount: 'Agent tasks',
+            agentCapabilityNextActionCount: 'Next actions',
+            agentCapabilityQualityCheckCount: 'Quality checks',
+            agentCapabilityHandoffReady: 'Handoff ready',
+            agentCapabilityDryRun: 'Dry-run',
+            agentCapabilityRealExecutionDisabled: 'Real execution disabled',
+            agentCapabilitySafetyNote: 'Guidance only. Provider calls, paid generation, registry writes, restore, and rollback remain disabled.',
+            agentCapabilityTaskBoardTitle: 'Agent Task Board',
+            agentCapabilityTaskBoardHelper: 'Each card shows the role goal, evidence dependency, risk boundary, status, and next action.',
+            agentCapabilityTaskStatus: 'Status',
+            agentCapabilityNextAction: 'Next action',
+            agentCapabilityEvidenceDependency: 'Evidence dependency',
+            agentCapabilityRiskBoundary: 'Risk boundary',
+            agentCapabilityNextActionsTitle: 'Supervisor Next Actions',
+            agentCapabilityNextActionsHelper: 'These are reviewable recommendations, not automatically executed commands.',
+            agentCapabilityGuidanceOnly: 'Guidance only',
+            agentCapabilityQualityChecksTitle: 'Agent Quality Checks',
+            agentCapabilityCopyRuntime: 'Copy Agent runtime',
+            agentCapabilityRuntimeCopied: 'Agent capability runtime copied.',
+            agentCapabilityRuntimeCopyFailed: 'Unable to copy Agent capability runtime.',
+            agentCapabilityRuntimeNoData: 'Refresh the runner plan to load Agent capability runtime data.',
+            agentCapabilityProviderGovernanceTitle: 'Provider governance and execution readiness',
+            agentCapabilityProviderGovernanceHelper: 'Expand to inspect the existing provider readiness, recovery, audit, transaction, and execution-boundary reports.',
+            agentCapabilityTargetPanel: 'Target panel',
+            agentCapabilityCopyOrExportHint: 'Copy or export hint',
+            agentCapabilityHandoffChainTitle: 'Agent Handoff Chain',
+            agentCapabilityInputContract: 'Input contract',
+            agentCapabilityOutputContract: 'Output contract',
+            agentCapabilityBlockingConditions: 'Blocking conditions',
+            agentCapabilityTraceFields: 'Trace fields',
+            agentCapabilityStatusCurrent: 'Current',
+            agentCapabilityStatusPlanned: 'Planned',
+            agentCapabilityStatusBlocked: 'Blocked',
+            agentCapabilityStatusPassed: 'Passed',
+            agentCapabilityStatusReviewRequired: 'Review required',
+            agentCapabilityRoleEvidence: 'Evidence',
+            agentCapabilityRoleEvidenceGoal: 'Review supplied source evidence and preserve quote-level traceability.',
+            agentCapabilityRoleEvidenceNextAction: 'Review evidence',
+            agentCapabilityRoleEvidenceEvidenceDependency: 'Source evidence, review quotes, and source boundaries.',
+            agentCapabilityRoleEvidenceRiskBoundary: 'Do not invent evidence or generalize beyond the supplied sample.',
+            agentCapabilityRoleStrategy: 'Strategy',
+            agentCapabilityRoleStrategyGoal: 'Choose a grounded audience, hook, and buyer-objection strategy.',
+            agentCapabilityRoleStrategyNextAction: 'Choose creative angle',
+            agentCapabilityRoleStrategyEvidenceDependency: 'Evidence brief and source-grounded customer signals.',
+            agentCapabilityRoleStrategyRiskBoundary: 'Keep claims aligned with evidence and avoid unsupported market statistics.',
+            agentCapabilityRoleCreative: 'Creative',
+            agentCapabilityRoleCreativeGoal: 'Turn the selected strategy into an evidence-linked short-video storyboard.',
+            agentCapabilityRoleCreativeNextAction: 'Review storyboard',
+            agentCapabilityRoleCreativeEvidenceDependency: 'Creative strategy, evidence brief, and product identity constraints.',
+            agentCapabilityRoleCreativeRiskBoundary: 'Keep scenes actionable and avoid unsupported absolute claims.',
+            agentCapabilityRoleVideo: 'Video',
+            agentCapabilityRoleVideoGoal: 'Prepare copy-ready, provider-neutral video prompts and handoff artifacts.',
+            agentCapabilityRoleVideoNextAction: 'Prepare video prompt',
+            agentCapabilityRoleVideoEvidenceDependency: 'Storyboard, keyframe plan, and product asset lock.',
+            agentCapabilityRoleVideoRiskBoundary: 'Manual or dry-run handoff only; no provider call or paid generation.',
+            agentCapabilityRoleRisk: 'Risk',
+            agentCapabilityRoleRiskGoal: 'Inspect claims, evidence alignment, and approval boundaries.',
+            agentCapabilityRoleRiskNextAction: 'Inspect readiness',
+            agentCapabilityRoleRiskEvidenceDependency: 'Storyboard, video generation packet, and evaluation.',
+            agentCapabilityRoleRiskRiskBoundary: 'Block unsafe claims and keep real execution locked.',
+            agentCapabilityRoleWorkspace: 'Workspace',
+            agentCapabilityRoleWorkspaceGoal: 'Organize the next reviewable workspace action without executing it.',
+            agentCapabilityRoleWorkspaceNextAction: 'Review workspace state',
+            agentCapabilityRoleWorkspaceEvidenceDependency: 'Project state, artifact registry, runner plan, and readiness state.',
+            agentCapabilityRoleWorkspaceRiskBoundary: 'Guidance only; require explicit user action for gated operations.',
+            agentCapabilityRoleAudit: 'Audit',
+            agentCapabilityRoleAuditGoal: 'Prepare traceable workspace exports and an audit-ready closeout.',
+            agentCapabilityRoleAuditNextAction: 'Export audit pack',
+            agentCapabilityRoleAuditEvidenceDependency: 'Artifact registry, graph snapshot, and project history.',
+            agentCapabilityRoleAuditRiskBoundary: 'Export safe outputs only; never expose secrets or hidden source claims.',
+            agentCapabilityActionReviewEvidence: 'Review evidence',
+            agentCapabilityActionReviewEvidenceReason: 'Confirm source quotes and sample boundaries before strategy review.',
+            agentCapabilityActionReviewEvidenceTargetPanel: 'Evidence and source panels',
+            agentCapabilityActionReviewEvidenceCopyHint: 'Copy the runtime after evidence review.',
+            agentCapabilityActionChooseAngle: 'Choose creative angle',
+            agentCapabilityActionChooseAngleReason: 'Select one evidence-grounded hook and buyer-objection angle.',
+            agentCapabilityActionChooseAngleTargetPanel: 'Strategy and storyboard panels',
+            agentCapabilityActionChooseAngleCopyHint: 'Copy the chosen angle into the creative handoff.',
+            agentCapabilityActionPrepareVideo: 'Prepare video prompt',
+            agentCapabilityActionPrepareVideoReason: 'Package approved storyboard inputs into a manual, provider-neutral handoff.',
+            agentCapabilityActionPrepareVideoTargetPanel: 'Keyframe and prompt handoff panels',
+            agentCapabilityActionPrepareVideoCopyHint: 'Copy or export the provider-neutral prompt pack.',
+            agentCapabilityActionInspectReadiness: 'Inspect readiness',
+            agentCapabilityActionInspectReadinessReason: 'Review provider, approval, cost, and transaction boundaries.',
+            agentCapabilityActionInspectReadinessTargetPanel: 'Provider governance group',
+            agentCapabilityActionInspectReadinessCopyHint: 'Expand the group and copy the relevant readiness report.',
+            agentCapabilityActionExportAudit: 'Export audit pack',
+            agentCapabilityActionExportAuditReason: 'Preserve the task board, handoffs, checks, and workspace trace.',
+            agentCapabilityActionExportAuditTargetPanel: 'Workspace history and export panel',
+            agentCapabilityActionExportAuditCopyHint: 'Use Markdown or JSON workspace export.',
+            agentCapabilityCheckEvidenceGrounded: 'Evidence grounded',
+            agentCapabilityCheckEvidenceGroundedResult: 'Evidence contract and visible-source boundaries are available.',
+            agentCapabilityCheckSourceQuote: 'Source quote present',
+            agentCapabilityCheckSourceQuoteResult: 'Confirm at least one source quote before approving creative claims.',
+            agentCapabilityCheckUnsafeProvider: 'Unsafe provider action',
+            agentCapabilityCheckUnsafeProviderResult: 'Provider calls, real execution, and paid generation remain disabled.',
+            agentCapabilityCheckWorkspaceExport: 'Workspace export ready',
+            agentCapabilityCheckWorkspaceExportResult: 'Workspace JSON and Markdown export paths are ready.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            agentCapabilityRuntimeTitle: 'Agent \u80fd\u529b\u8fd0\u884c\u65f6',
+            agentCapabilityRuntimeHelper: '\u67e5\u770b\u5f53\u524d Agent \u4efb\u52a1\u677f\u3001\u4ea4\u63a5\u94fe\u3001\u8d28\u91cf\u68c0\u67e5\u548c\u5b89\u5168\u4e0b\u4e00\u6b65\u3002',
+            agentCapabilityRuntimeStatus: '\u8fd0\u884c\u65f6\u72b6\u6001',
+            agentCapabilityTaskCount: 'Agent \u4efb\u52a1\u6570',
+            agentCapabilityNextActionCount: '\u4e0b\u4e00\u6b65\u6570',
+            agentCapabilityQualityCheckCount: '\u8d28\u91cf\u68c0\u67e5\u6570',
+            agentCapabilityHandoffReady: '\u4ea4\u63a5\u5df2\u5c31\u7eea',
+            agentCapabilityDryRun: '\u6f14\u7ec3\u6a21\u5f0f',
+            agentCapabilityRealExecutionDisabled: '\u771f\u5b9e\u6267\u884c\u5df2\u7981\u7528',
+            agentCapabilitySafetyNote: '\u4ec5\u63d0\u4f9b\u5efa\u8bae\u3002Provider \u8c03\u7528\u3001\u4ed8\u8d39\u751f\u6210\u3001registry \u5199\u5165\u3001restore \u548c rollback \u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            agentCapabilityTaskBoardTitle: 'Agent \u4efb\u52a1\u677f',
+            agentCapabilityTaskBoardHelper: '\u6bcf\u5f20\u5361\u7247\u5c55\u793a\u89d2\u8272\u76ee\u6807\u3001\u8bc1\u636e\u4f9d\u8d56\u3001\u98ce\u9669\u8fb9\u754c\u3001\u72b6\u6001\u548c\u4e0b\u4e00\u6b65\u3002',
+            agentCapabilityTaskStatus: '\u72b6\u6001',
+            agentCapabilityNextAction: '\u4e0b\u4e00\u6b65',
+            agentCapabilityEvidenceDependency: '\u8bc1\u636e\u4f9d\u8d56',
+            agentCapabilityRiskBoundary: '\u98ce\u9669\u8fb9\u754c',
+            agentCapabilityNextActionsTitle: 'Supervisor \u4e0b\u4e00\u6b65\u5efa\u8bae',
+            agentCapabilityNextActionsHelper: '\u8fd9\u4e9b\u662f\u53ef\u5ba1\u9605\u5efa\u8bae\uff0c\u4e0d\u4f1a\u81ea\u52a8\u6267\u884c\u3002',
+            agentCapabilityGuidanceOnly: '\u4ec5\u5efa\u8bae',
+            agentCapabilityQualityChecksTitle: 'Agent \u8d28\u91cf\u68c0\u67e5',
+            agentCapabilityCopyRuntime: '\u590d\u5236 Agent \u8fd0\u884c\u65f6',
+            agentCapabilityRuntimeCopied: 'Agent \u80fd\u529b\u8fd0\u884c\u65f6\u5df2\u590d\u5236\u3002',
+            agentCapabilityRuntimeCopyFailed: '\u65e0\u6cd5\u590d\u5236 Agent \u80fd\u529b\u8fd0\u884c\u65f6\u3002',
+            agentCapabilityRuntimeNoData: '\u8bf7\u5237\u65b0 runner plan \u4ee5\u52a0\u8f7d Agent \u80fd\u529b\u8fd0\u884c\u65f6\u6570\u636e\u3002',
+            agentCapabilityProviderGovernanceTitle: 'Provider \u6cbb\u7406\u4e0e\u6267\u884c\u51c6\u5907\u5ea6',
+            agentCapabilityProviderGovernanceHelper: '\u5c55\u5f00\u540e\u67e5\u770b\u73b0\u6709 provider \u51c6\u5907\u5ea6\u3001\u6062\u590d\u3001\u5ba1\u8ba1\u3001\u4e8b\u52a1\u4e0e\u6267\u884c\u8fb9\u754c\u62a5\u544a\u3002',
+            agentCapabilityTargetPanel: '\u76ee\u6807\u9762\u677f',
+            agentCapabilityCopyOrExportHint: '\u590d\u5236\u6216\u5bfc\u51fa\u63d0\u793a',
+            agentCapabilityHandoffChainTitle: 'Agent \u4ea4\u63a5\u94fe',
+            agentCapabilityInputContract: '\u8f93\u5165\u5408\u7ea6',
+            agentCapabilityOutputContract: '\u8f93\u51fa\u5408\u7ea6',
+            agentCapabilityBlockingConditions: '\u963b\u65ad\u6761\u4ef6',
+            agentCapabilityTraceFields: '\u8ffd\u8e2a\u5b57\u6bb5',
+            agentCapabilityStatusCurrent: '\u5f53\u524d',
+            agentCapabilityStatusPlanned: '\u5df2\u89c4\u5212',
+            agentCapabilityStatusBlocked: '\u5df2\u963b\u65ad',
+            agentCapabilityStatusPassed: '\u5df2\u901a\u8fc7',
+            agentCapabilityStatusReviewRequired: '\u9700\u8981\u5ba1\u9605',
+            agentCapabilityRoleEvidence: '\u8bc1\u636e',
+            agentCapabilityRoleEvidenceGoal: '\u5ba1\u9605\u5df2\u63d0\u4f9b\u7684\u6765\u6e90\u8bc1\u636e\uff0c\u5e76\u4fdd\u7559\u539f\u8bdd\u7ea7\u8ffd\u8e2a\u3002',
+            agentCapabilityRoleEvidenceNextAction: '\u5ba1\u9605\u8bc1\u636e',
+            agentCapabilityRoleEvidenceEvidenceDependency: '\u6765\u6e90\u8bc1\u636e\u3001\u8bc4\u8bba\u539f\u8bdd\u548c\u6765\u6e90\u8fb9\u754c\u3002',
+            agentCapabilityRoleEvidenceRiskBoundary: '\u4e0d\u865a\u6784\u8bc1\u636e\uff0c\u4e0d\u8d85\u51fa\u5df2\u63d0\u4f9b\u6837\u672c\u6cdb\u5316\u3002',
+            agentCapabilityRoleStrategy: '\u7b56\u7565',
+            agentCapabilityRoleStrategyGoal: '\u9009\u62e9\u6709\u8bc1\u636e\u652f\u6491\u7684\u53d7\u4f17\u3001Hook \u548c\u8d2d\u4e70\u987e\u8651\u7b56\u7565\u3002',
+            agentCapabilityRoleStrategyNextAction: '\u9009\u62e9\u521b\u610f\u89d2\u5ea6',
+            agentCapabilityRoleStrategyEvidenceDependency: '\u8bc1\u636e\u7b80\u62a5\u548c\u6765\u6e90\u652f\u6491\u7684\u7528\u6237\u4fe1\u53f7\u3002',
+            agentCapabilityRoleStrategyRiskBoundary: '\u4e3b\u5f20\u5fc5\u987b\u4e0e\u8bc1\u636e\u4e00\u81f4\uff0c\u907f\u514d\u65e0\u6765\u6e90\u7684\u5e02\u573a\u7edf\u8ba1\u3002',
+            agentCapabilityRoleCreative: '\u521b\u610f',
+            agentCapabilityRoleCreativeGoal: '\u628a\u9009\u5b9a\u7b56\u7565\u8f6c\u6210\u4e0e\u8bc1\u636e\u5173\u8054\u7684\u77ed\u89c6\u9891\u5206\u955c\u3002',
+            agentCapabilityRoleCreativeNextAction: '\u5ba1\u9605\u5206\u955c',
+            agentCapabilityRoleCreativeEvidenceDependency: '\u521b\u610f\u7b56\u7565\u3001\u8bc1\u636e\u7b80\u62a5\u548c\u5546\u54c1\u8eab\u4efd\u7ea6\u675f\u3002',
+            agentCapabilityRoleCreativeRiskBoundary: '\u5206\u955c\u9700\u53ef\u6267\u884c\uff0c\u4e0d\u4f7f\u7528\u65e0\u652f\u6491\u7684\u7edd\u5bf9\u5316\u4e3b\u5f20\u3002',
+            agentCapabilityRoleVideo: '\u89c6\u9891',
+            agentCapabilityRoleVideoGoal: '\u51c6\u5907\u53ef\u590d\u5236\u3001provider \u4e2d\u7acb\u7684\u89c6\u9891\u63d0\u793a\u8bcd\u4e0e\u4ea4\u63a5\u4ea7\u7269\u3002',
+            agentCapabilityRoleVideoNextAction: '\u51c6\u5907\u89c6\u9891\u63d0\u793a\u8bcd',
+            agentCapabilityRoleVideoEvidenceDependency: '\u5206\u955c\u3001\u5173\u952e\u5e27\u8ba1\u5212\u548c\u5546\u54c1\u8d44\u4ea7\u9501\u3002',
+            agentCapabilityRoleVideoRiskBoundary: '\u4ec5\u624b\u52a8\u6216\u6f14\u7ec3\u4ea4\u63a5\uff1b\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4ed8\u8d39\u751f\u6210\u3002',
+            agentCapabilityRoleRisk: '\u98ce\u9669',
+            agentCapabilityRoleRiskGoal: '\u68c0\u67e5\u4e3b\u5f20\u3001\u8bc1\u636e\u5bf9\u9f50\u548c\u5ba1\u6279\u8fb9\u754c\u3002',
+            agentCapabilityRoleRiskNextAction: '\u68c0\u67e5\u51c6\u5907\u5ea6',
+            agentCapabilityRoleRiskEvidenceDependency: '\u5206\u955c\u3001\u89c6\u9891\u751f\u6210\u5305\u548c\u8bc4\u4f30\u3002',
+            agentCapabilityRoleRiskRiskBoundary: '\u963b\u6b62\u4e0d\u5b89\u5168\u4e3b\u5f20\uff0c\u771f\u5b9e\u6267\u884c\u7ee7\u7eed\u9501\u5b9a\u3002',
+            agentCapabilityRoleWorkspace: '\u5de5\u4f5c\u533a',
+            agentCapabilityRoleWorkspaceGoal: '\u7ec4\u7ec7\u4e0b\u4e00\u4e2a\u53ef\u5ba1\u9605\u7684\u5de5\u4f5c\u533a\u52a8\u4f5c\uff0c\u4f46\u4e0d\u6267\u884c\u3002',
+            agentCapabilityRoleWorkspaceNextAction: '\u5ba1\u9605\u5de5\u4f5c\u533a\u72b6\u6001',
+            agentCapabilityRoleWorkspaceEvidenceDependency: '\u9879\u76ee\u72b6\u6001\u3001\u4ea7\u7269\u6ce8\u518c\u8868\u3001runner plan \u548c\u51c6\u5907\u5ea6\u72b6\u6001\u3002',
+            agentCapabilityRoleWorkspaceRiskBoundary: '\u4ec5\u63d0\u4f9b\u5efa\u8bae\uff1b\u95e8\u7981\u64cd\u4f5c\u5fc5\u987b\u6709\u660e\u786e\u7528\u6237\u52a8\u4f5c\u3002',
+            agentCapabilityRoleAudit: '\u5ba1\u8ba1',
+            agentCapabilityRoleAuditGoal: '\u51c6\u5907\u53ef\u8ffd\u8e2a\u7684\u5de5\u4f5c\u533a\u5bfc\u51fa\u548c\u5ba1\u8ba1\u6536\u5c3e\u3002',
+            agentCapabilityRoleAuditNextAction: '\u5bfc\u51fa\u5ba1\u8ba1\u5305',
+            agentCapabilityRoleAuditEvidenceDependency: '\u4ea7\u7269\u6ce8\u518c\u8868\u3001\u56fe\u5feb\u7167\u548c\u9879\u76ee\u5386\u53f2\u3002',
+            agentCapabilityRoleAuditRiskBoundary: '\u53ea\u5bfc\u51fa\u5b89\u5168\u5185\u5bb9\uff1b\u4e0d\u66b4\u9732 secret \u6216\u9690\u85cf\u6765\u6e90\u4e3b\u5f20\u3002',
+            agentCapabilityActionReviewEvidence: '\u5ba1\u9605\u8bc1\u636e',
+            agentCapabilityActionReviewEvidenceReason: '\u5728\u7b56\u7565\u5ba1\u9605\u524d\u786e\u8ba4\u6765\u6e90\u539f\u8bdd\u548c\u6837\u672c\u8fb9\u754c\u3002',
+            agentCapabilityActionReviewEvidenceTargetPanel: '\u8bc1\u636e\u4e0e\u6765\u6e90\u9762\u677f',
+            agentCapabilityActionReviewEvidenceCopyHint: '\u5ba1\u9605\u8bc1\u636e\u540e\u590d\u5236 Agent \u8fd0\u884c\u65f6\u3002',
+            agentCapabilityActionChooseAngle: '\u9009\u62e9\u521b\u610f\u89d2\u5ea6',
+            agentCapabilityActionChooseAngleReason: '\u9009\u62e9\u4e00\u4e2a\u6709\u8bc1\u636e\u652f\u6491\u7684 Hook \u548c\u8d2d\u4e70\u987e\u8651\u89d2\u5ea6\u3002',
+            agentCapabilityActionChooseAngleTargetPanel: '\u7b56\u7565\u4e0e\u5206\u955c\u9762\u677f',
+            agentCapabilityActionChooseAngleCopyHint: '\u628a\u9009\u5b9a\u89d2\u5ea6\u590d\u5236\u5230\u521b\u610f\u4ea4\u63a5\u4e2d\u3002',
+            agentCapabilityActionPrepareVideo: '\u51c6\u5907\u89c6\u9891\u63d0\u793a\u8bcd',
+            agentCapabilityActionPrepareVideoReason: '\u628a\u5df2\u901a\u8fc7\u7684\u5206\u955c\u8f93\u5165\u6574\u7406\u6210\u624b\u52a8\u3001provider \u4e2d\u7acb\u7684\u4ea4\u63a5\u5305\u3002',
+            agentCapabilityActionPrepareVideoTargetPanel: '\u5173\u952e\u5e27\u4e0e\u63d0\u793a\u8bcd\u4ea4\u63a5\u9762\u677f',
+            agentCapabilityActionPrepareVideoCopyHint: '\u590d\u5236\u6216\u5bfc\u51fa provider \u4e2d\u7acb\u63d0\u793a\u8bcd\u5305\u3002',
+            agentCapabilityActionInspectReadiness: '\u68c0\u67e5\u51c6\u5907\u5ea6',
+            agentCapabilityActionInspectReadinessReason: '\u68c0\u67e5 provider\u3001\u5ba1\u6279\u3001\u6210\u672c\u4e0e\u4e8b\u52a1\u8fb9\u754c\u3002',
+            agentCapabilityActionInspectReadinessTargetPanel: 'Provider \u6cbb\u7406\u5206\u7ec4',
+            agentCapabilityActionInspectReadinessCopyHint: '\u5c55\u5f00\u5206\u7ec4\u5e76\u590d\u5236\u76f8\u5173\u51c6\u5907\u5ea6\u62a5\u544a\u3002',
+            agentCapabilityActionExportAudit: '\u5bfc\u51fa\u5ba1\u8ba1\u5305',
+            agentCapabilityActionExportAuditReason: '\u4fdd\u7559\u4efb\u52a1\u677f\u3001\u4ea4\u63a5\u3001\u68c0\u67e5\u548c\u5de5\u4f5c\u533a\u8ffd\u8e2a\u3002',
+            agentCapabilityActionExportAuditTargetPanel: '\u5de5\u4f5c\u533a\u5386\u53f2\u4e0e\u5bfc\u51fa\u9762\u677f',
+            agentCapabilityActionExportAuditCopyHint: '\u4f7f\u7528 Markdown \u6216 JSON \u5de5\u4f5c\u533a\u5bfc\u51fa\u3002',
+            agentCapabilityCheckEvidenceGrounded: '\u8bc1\u636e\u5df2 grounded',
+            agentCapabilityCheckEvidenceGroundedResult: '\u8bc1\u636e\u5408\u7ea6\u548c\u53ef\u89c1\u6765\u6e90\u8fb9\u754c\u5df2\u5c31\u7eea\u3002',
+            agentCapabilityCheckSourceQuote: '\u6765\u6e90\u539f\u8bdd\u5df2\u63d0\u4f9b',
+            agentCapabilityCheckSourceQuoteResult: '\u6279\u51c6\u521b\u610f\u4e3b\u5f20\u524d\uff0c\u8bf7\u786e\u8ba4\u81f3\u5c11\u4e00\u6761\u6765\u6e90\u539f\u8bdd\u3002',
+            agentCapabilityCheckUnsafeProvider: '\u4e0d\u5b89\u5168 Provider \u52a8\u4f5c',
+            agentCapabilityCheckUnsafeProviderResult: 'Provider \u8c03\u7528\u3001\u771f\u5b9e\u6267\u884c\u548c\u4ed8\u8d39\u751f\u6210\u4ecd\u7981\u7528\u3002',
+            agentCapabilityCheckWorkspaceExport: '\u5de5\u4f5c\u533a\u5bfc\u51fa\u5df2\u5c31\u7eea',
+            agentCapabilityCheckWorkspaceExportResult: '\u5de5\u4f5c\u533a JSON \u548c Markdown \u5bfc\u51fa\u8def\u5f84\u5df2\u5c31\u7eea\u3002'
         });
 
 

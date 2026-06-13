@@ -7416,6 +7416,55 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("Project Workspace provider execution readiness packet bundle", script)
         self.assertIn("project_workspace_provider_execution_readiness_packet_marker", script)
 
+    def test_project_workspace_agent_capability_runtime_bundle(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace agent capability runtime bundle",
+            "PROJECT_WORKSPACE_AGENT_CAPABILITY_RUNTIME_MARKER",
+            "latestProjectAgentCapabilityRuntime",
+            "projectWorkspaceAgentCapabilityRuntimeFromWorkspace",
+            "projectWorkspaceAgentCapabilityRuntimeCopyText",
+            "copyProjectWorkspaceAgentCapabilityRuntime",
+            "renderProjectWorkspaceAgentCapabilitySummaryStrip",
+            "renderProjectWorkspaceAgentTaskBoardPanel",
+            "renderProjectWorkspaceSupervisorNextActionsPanel",
+            "projectWorkspaceExportAgentCapabilityRuntimeSnapshot",
+            "projectWorkspaceExportAgentCapabilityRuntimeMarkdown",
+            "agent_capability_runtime",
+            "agent_task_board",
+            "supervisor_next_actions",
+            "target_panel",
+            "copy_or_export_hint",
+            "agent_handoff_chain",
+            "agent_quality_checks",
+            "agent_handoff_ready",
+            "projectWorkspaceProviderGovernanceGroup",
+            "agentCapabilityRuntimeCopied",
+            "agentCapabilityRuntimeCopyFailed",
+            "agentCapabilityRuntimeNoData",
+        ]:
+            self.assertIn(marker, html)
+        self.assertIn("Agent Capability Runtime", html)
+        self.assertIn("Agent Task Board", html)
+        self.assertIn("Supervisor Next Actions", html)
+        self.assertIn("Agent Handoff Chain", html)
+        self.assertIn("Agent Quality Checks", html)
+        self.assertIn("Agent \\u80fd\\u529b\\u8fd0\\u884c\\u65f6", html)
+        self.assertIn("Agent \\u4efb\\u52a1\\u677f", html)
+        self.assertIn("guidance_only", html)
+        self.assertIn("real_execution_enabled: false", html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_agent_capability_runtime_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_agent_capability_runtime_marker", script)
+        self.assertIn("Project Workspace agent capability runtime bundle", script)
+
+    def test_project_workspace_agent_capability_runtime_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace agent capability runtime bundle", script)
+        self.assertIn("project_workspace_agent_capability_runtime_marker", script)
+
 
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")
