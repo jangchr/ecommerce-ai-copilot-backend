@@ -14672,6 +14672,7 @@
 
         const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER = 'Project Workspace creative decision pack bundle';
         const PROJECT_WORKSPACE_CREATIVE_DECISION_USABILITY_MARKER = 'Project Workspace creative decision usability bundle';
+        const PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER = 'Project Workspace creative feedback runtime bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14702,6 +14703,7 @@
                 ready_to_copy_script_count: Number(pack.ready_to_copy_script_count || 0),
                 duplicate_angle_count: Number(pack.duplicate_angle_count || 0),
                 creative_next_actions: Array.isArray(pack.creative_next_actions) ? pack.creative_next_actions : [],
+                creative_feedback_runtime: pack.creative_feedback_runtime || {},
                 weak_evidence_reason: pack.weak_evidence_reason || '',
                 safety_boundaries: pack.safety_boundaries || {}
             };
@@ -14725,6 +14727,11 @@
             const recommended = pack.top_ad_angles.find((angle) =>
                 angle.is_recommended || angle.angle_id === pack.recommended_angle_id
             ) || {};
+            const feedback = pack.creative_feedback_runtime || {};
+            const feedbackSummary = feedback.feedback_summary || {};
+            const gapActions = Array.isArray(feedback.evidence_gap_actions) ? feedback.evidence_gap_actions : [];
+            const flowHints = Array.isArray(feedback.workspace_flow_hints) ? feedback.workspace_flow_hints : [];
+            const safety = feedback.safety_reminders || {};
             const angleLines = pack.top_ad_angles.length
                 ? pack.top_ad_angles.flatMap((angle, index) => [
                     `### ${index + 1}. ${angle.title || t('creativeDecisionUntitledAngle')}`,
@@ -14808,7 +14815,23 @@
                     ? pack.creative_next_actions.map((action) =>
                         `- ${action.label || action.action_type || t('none')}: ${action.reason || t('none')} [${action.target || t('none')}]`
                     )
-                    : [t('creativeDecisionNoData')])
+                    : [t('creativeDecisionNoData')]),
+                '',
+                `### ${t('creativeFeedbackRuntimeTitle')}`,
+                `${t('creativeFeedbackOverallReadiness')}: ${feedbackSummary.overall_readiness || t('none')}`,
+                `${t('creativeFeedbackRecommendedNextStep')}: ${feedbackSummary.recommended_next_step || t('none')}`,
+                `${t('creativeFeedbackReadinessReason')}: ${feedbackSummary.overall_readiness_reason || t('none')}`,
+                '',
+                `### ${t('creativeCoreFlowTitle')}`,
+                ...flowHints.map((hint, index) => `${index + 1}. ${hint.label || hint.step_id}: ${hint.reason || ''}`),
+                '',
+                `### ${t('creativeFeedbackEvidenceGapActions')}`,
+                ...(gapActions.length
+                    ? gapActions.map((action) => `- ${action.gap_type}: ${action.reason} -> ${action.suggested_action}`)
+                    : [t('creativeDecisionNoData')]),
+                '',
+                `### ${t('creativeFeedbackSafetyReminders')}`,
+                ...Object.entries(safety).map(([key, value]) => `- ${key}: ${Boolean(value)}`)
             ].join('\n');
         }
 
@@ -14899,6 +14922,206 @@
 
         function copyProjectWorkspaceVideoPromptPack() {
             return copyProjectWorkspaceCreativeDecisionText('video', 0, 'creativeDecisionVideoCopied');
+        }
+
+        function projectWorkspaceCreativeFeedbackRuntime(workspace = latestProjectWorkspace) {
+            return projectWorkspaceExportCreativeDecisionPackSnapshot(workspace).creative_feedback_runtime || {};
+        }
+
+        function creativeFeedbackActionLabel(actionType = '') {
+            const labels = {
+                use_recommended_angle: t('creativeFeedbackUseRecommendedAngle'),
+                collect_more_reviews: t('creativeFeedbackCollectMoreReviews'),
+                lower_claim_strength: t('creativeFeedbackLowerClaimStrength'),
+                copy_video_prompt: t('creativeFeedbackCopyVideoPrompt'),
+                use_conservative_script: t('creativeFeedbackUseConservativeScript')
+            };
+            return labels[actionType] || actionType || t('none');
+        }
+
+        function projectWorkspaceCreativeFeedbackCopyText(kind = 'summary') {
+            const runtime = projectWorkspaceCreativeFeedbackRuntime();
+            const summary = runtime.feedback_summary || {};
+            const script = runtime.script_readiness_review || {};
+            const gaps = Array.isArray(runtime.evidence_gap_actions) ? runtime.evidence_gap_actions : [];
+            const hints = Array.isArray(runtime.workspace_flow_hints) ? runtime.workspace_flow_hints : [];
+            if (!Object.keys(runtime).length) return '';
+            if (kind === 'flow') {
+                return [
+                    t('creativeCoreFlowTitle'),
+                    ...hints.map((hint, index) =>
+                        `${index + 1}. ${hint.label || hint.step_id || t('none')}: ${hint.reason || t('none')}`
+                    )
+                ].join('\n');
+            }
+            if (kind === 'conservative') {
+                return [
+                    t('creativeFeedbackConservativeGuidanceTitle'),
+                    `${t('creativeDecisionClaimSafetyLevel')}: ${script.claim_safety_level || t('none')}`,
+                    `${t('creativeFeedbackReadinessReason')}: ${summary.overall_readiness_reason || t('none')}`,
+                    ...gaps.map((gap) => `- ${gap.reason || ''} -> ${creativeFeedbackActionLabel(gap.suggested_action)}`)
+                ].join('\n');
+            }
+            return [
+                t('creativeFeedbackRuntimeTitle'),
+                `${t('creativeDecisionRecommendedAngle')}: ${summary.recommended_angle_title || t('none')}`,
+                `${t('creativeFeedbackOverallReadiness')}: ${summary.overall_readiness || t('none')}`,
+                `${t('creativeFeedbackRecommendedNextStep')}: ${creativeFeedbackActionLabel(summary.recommended_next_step)}`,
+                `${t('creativeFeedbackReadinessReason')}: ${summary.overall_readiness_reason || t('none')}`,
+                `${t('creativeDecisionWeakEvidenceCount')}: ${summary.weak_evidence_count || 0}`,
+                `${t('creativeDecisionMissingQuoteCount')}: ${summary.missing_quote_count || 0}`
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCreativeFeedbackText(kind, successKey) {
+            const status = document.getElementById('projectWorkspaceCreativeFeedbackStatus')
+                || document.getElementById('projectWorkspaceCreativeDecisionStatus');
+            try {
+                const text = projectWorkspaceCreativeFeedbackCopyText(kind);
+                if (!text) {
+                    if (status) status.textContent = t('creativeDecisionCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('creativeDecisionCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t(successKey);
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeDecisionCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceCreativeFeedbackSummary() {
+            return copyProjectWorkspaceCreativeFeedbackText('summary', 'creativeFeedbackSummaryCopied');
+        }
+
+        function copyProjectWorkspaceCreativeFlowHints() {
+            return copyProjectWorkspaceCreativeFeedbackText('flow', 'creativeFeedbackFlowCopied');
+        }
+
+        function copyProjectWorkspaceConservativeScriptGuidance() {
+            return copyProjectWorkspaceCreativeFeedbackText('conservative', 'creativeFeedbackConservativeCopied');
+        }
+
+        function creativeCoreFlowStepStatus(stepId, pack, runtime) {
+            const summary = runtime.feedback_summary || {};
+            const script = runtime.script_readiness_review || {};
+            const checks = pack.quality_checks || {};
+            const states = {
+                evidence: pack.evidence_brief?.high_signal_quotes?.length
+                    ? (pack.weak_evidence_count ? 'weak_evidence' : 'ready')
+                    : 'no_data',
+                angle: pack.recommended_angle_id ? 'ready' : 'no_data',
+                script: script.recommended_script_ready ? 'ready' : 'needs_review',
+                video: script.copy_video_prompt_available ? 'ready' : 'no_data',
+                quality: checks.weak_evidence || checks.missing_quote ? 'needs_review' : 'ready',
+                export: summary.overall_readiness === 'ready_to_copy' ? 'ready' : 'needs_review'
+            };
+            return states[stepId] || 'no_data';
+        }
+
+        function creativeCoreFlowStatusLabel(status) {
+            const labels = {
+                ready: t('creativeCoreFlowReady'),
+                needs_review: t('creativeCoreFlowNeedsReview'),
+                weak_evidence: t('creativeCoreFlowWeakEvidence'),
+                no_data: t('creativeCoreFlowNoData')
+            };
+            return labels[status] || status;
+        }
+
+        function renderProjectWorkspaceCreativeCoreFlowStrip(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const runtime = pack.creative_feedback_runtime || {};
+            const steps = [
+                ['evidence', t('creativeCoreFlowEvidence')],
+                ['angle', t('creativeCoreFlowRecommendedAngle')],
+                ['script', t('creativeCoreFlowTikTokScript')],
+                ['video', t('creativeCoreFlowVideoPrompt')],
+                ['quality', t('creativeCoreFlowQuality')],
+                ['export', t('creativeCoreFlowExport')]
+            ];
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeCoreFlowStrip" data-creative-feedback-runtime-marker="${PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER}">
+                    <div class="json-key">${escapeHTML(t('creativeCoreFlowTitle'))}</div>
+                    <div class="metric-strip">
+                        ${steps.map(([id, label]) => {
+                            const status = creativeCoreFlowStepStatus(id, pack, runtime);
+                            return metricPill(label, creativeCoreFlowStatusLabel(status));
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
+            const summary = runtime.feedback_summary || {};
+            if (!Object.keys(summary).length) return '';
+            const nextStep = summary.recommended_next_step || '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeRecommendedActionPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeFeedbackRecommendedActionTitle'))}</div>
+                            <strong>${escapeHTML(creativeFeedbackActionLabel(nextStep))}</strong>
+                        </div>
+                        <span class="badge">${escapeHTML(summary.overall_readiness || t('none'))}</span>
+                    </div>
+                    <div class="feedback-box">${escapeHTML(summary.overall_readiness_reason || t('creativeDecisionNoData'))}</div>
+                    ${nextStep === 'collect_more_reviews' ? `<div class="field-helper">${escapeHTML(t('creativeFeedbackCollectReviewsWarning'))}</div>` : ''}
+                    ${nextStep === 'lower_claim_strength' ? `<div class="field-helper">${escapeHTML(t('creativeFeedbackClaimSafetyWarning'))}</div>` : ''}
+                    ${nextStep === 'copy_video_prompt' ? `<div class="field-helper">${escapeHTML(t('creativeFeedbackVideoPromptReadyHint'))}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace = latestProjectWorkspace) {
+            const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
+            if (!Object.keys(runtime).length) return '';
+            const summary = runtime.feedback_summary || {};
+            const cards = Array.isArray(runtime.angle_feedback_cards) ? runtime.angle_feedback_cards : [];
+            const script = runtime.script_readiness_review || {};
+            const gaps = Array.isArray(runtime.evidence_gap_actions) ? runtime.evidence_gap_actions : [];
+            const hints = Array.isArray(runtime.workspace_flow_hints) ? runtime.workspace_flow_hints : [];
+            const safety = runtime.safety_reminders || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeFeedbackRuntimePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeFeedbackRuntimeTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeFeedbackRuntimeHelper'))}</div>
+                        </div>
+                        <div>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCreativeFeedbackSummary()">${escapeHTML(t('creativeFeedbackCopySummary'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCreativeFlowHints()">${escapeHTML(t('creativeFeedbackCopyFlow'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceConservativeScriptGuidance()">${escapeHTML(t('creativeFeedbackCopyConservative'))}</button>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeFeedbackOverallReadiness'), summary.overall_readiness || t('none'))}
+                        ${metricPill(t('creativeFeedbackReadyAngles'), String(summary.ready_angle_count || 0))}
+                        ${metricPill(t('creativeFeedbackNeedsReviewAngles'), String(summary.needs_review_angle_count || 0))}
+                        ${metricPill(t('creativeFeedbackRecommendedNextStep'), creativeFeedbackActionLabel(summary.recommended_next_step))}
+                    </div>
+                    <div class="graph-os-grid">${cards.map((card) => `
+                        <div class="graph-os-card">
+                            <div class="section-header"><strong>${escapeHTML(card.title || t('none'))}</strong><span class="badge">${escapeHTML(card.feedback_status || '')}</span></div>
+                            <div>${escapeHTML(card.feedback_reason || '')}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeFeedbackSuggestedAction'))}: ${escapeHTML(creativeFeedbackActionLabel(card.suggested_user_action))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeFeedbackCopyTarget'))}: ${escapeHTML(card.copy_target || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>
+                    <div class="json-key">${escapeHTML(t('creativeFeedbackScriptReadiness'))}</div>
+                    <div class="feedback-box">${escapeHTML(script.recommended_script_reason || t('none'))}</div>
+                    <div class="json-key">${escapeHTML(t('creativeFeedbackEvidenceGapActions'))}</div>
+                    ${gaps.length ? gaps.map((gap) => `<div class="artifact-timeline-row"><strong>${escapeHTML(gap.gap_type || '')}</strong><div>${escapeHTML(gap.reason || '')}</div><div class="field-helper">${escapeHTML(creativeFeedbackActionLabel(gap.suggested_action))}</div></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('creativeFeedbackNoEvidenceGaps'))}</div>`}
+                    <div class="json-key">${escapeHTML(t('creativeFeedbackWorkspaceFlowHints'))}</div>
+                    ${hints.map((hint, index) => `<div class="artifact-timeline-row"><strong>${index + 1}. ${escapeHTML(hint.label || hint.step_id || '')}</strong><div>${escapeHTML(hint.reason || '')}</div><div class="field-helper">${escapeHTML(hint.copy_or_export_hint || '')}</div></div>`).join('')}
+                    <div class="json-key">${escapeHTML(t('creativeFeedbackSafetyReminders'))}</div>
+                    <div class="metric-strip">${Object.entries(safety).map(([key, value]) => metricPill(key, boolText(Boolean(value)))).join('')}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeFeedbackStatus"></div>
+                </div>
+            `;
         }
 
         function renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace = latestProjectWorkspace) {
@@ -27611,13 +27834,16 @@
                     ${renderProjectWorkspaceAgentCapabilitySummaryStrip(workspace)}
                     ${renderProjectWorkspaceAgentTaskBoardPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextActionsPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
+                    ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionRecommendationPanel(workspace)}
                     ${renderProjectWorkspaceTopAdAnglesPanel(workspace)}
                     ${renderProjectWorkspaceCreativeEvidenceQualityPanel(workspace)}
                     ${renderProjectWorkspaceCreativeNextActionsPanel(workspace)}
                     ${renderProjectWorkspaceVideoPromptPackPanel(workspace)}
                     ${renderProjectWorkspaceCreativeQualityChecksPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
                         ${metricPill(t('recentProjectSources'), String(summary.source_count || 0))}
                         ${metricPill(t('recentProjectRuns'), String(summary.run_count || 0))}
@@ -33983,6 +34209,47 @@
             creativeDecisionDuplicateAngle: 'Duplicate angle',
             creativeDecisionActionTarget: 'Target',
             creativeDecisionEvidenceWarning: 'More reviews are needed. Lower claim strength and use a more conservative script until missing quotes are resolved.',
+            creativeFeedbackRuntimeTitle: 'Creative Feedback Runtime',
+            creativeFeedbackRuntimeHelper: 'Runtime guidance derived from evidence quality. No user preference is invented or persisted.',
+            creativeCoreFlowTitle: 'Core Creative Flow',
+            creativeCoreFlowEvidence: 'Evidence Brief',
+            creativeCoreFlowRecommendedAngle: 'Recommended Angle',
+            creativeCoreFlowTikTokScript: 'TikTok Script',
+            creativeCoreFlowVideoPrompt: 'Video Prompt',
+            creativeCoreFlowQuality: 'Quality / Feedback',
+            creativeCoreFlowExport: 'Export',
+            creativeCoreFlowReady: 'Ready',
+            creativeCoreFlowNeedsReview: 'Needs review',
+            creativeCoreFlowWeakEvidence: 'Weak evidence',
+            creativeCoreFlowNoData: 'No data',
+            creativeFeedbackRecommendedActionTitle: 'Recommended Next Step',
+            creativeFeedbackOverallReadiness: 'Overall readiness',
+            creativeFeedbackReadinessReason: 'Readiness reason',
+            creativeFeedbackRecommendedNextStep: 'Recommended next step',
+            creativeFeedbackReadyAngles: 'Ready angles',
+            creativeFeedbackNeedsReviewAngles: 'Needs-review angles',
+            creativeFeedbackSuggestedAction: 'Suggested action',
+            creativeFeedbackCopyTarget: 'Copy target',
+            creativeFeedbackScriptReadiness: 'Script readiness review',
+            creativeFeedbackEvidenceGapActions: 'Evidence Gap Actions',
+            creativeFeedbackWorkspaceFlowHints: 'Workspace flow hints',
+            creativeFeedbackSafetyReminders: 'Safety Reminders',
+            creativeFeedbackCopySummary: 'Copy feedback summary',
+            creativeFeedbackCopyFlow: 'Copy workspace flow hints',
+            creativeFeedbackCopyConservative: 'Copy conservative script guidance',
+            creativeFeedbackSummaryCopied: 'Creative feedback summary copied.',
+            creativeFeedbackFlowCopied: 'Workspace flow hints copied.',
+            creativeFeedbackConservativeCopied: 'Conservative script guidance copied.',
+            creativeFeedbackConservativeGuidanceTitle: 'Conservative script guidance',
+            creativeFeedbackUseRecommendedAngle: 'Use recommended angle',
+            creativeFeedbackCollectMoreReviews: 'Collect more reviews',
+            creativeFeedbackLowerClaimStrength: 'Lower claim strength',
+            creativeFeedbackCopyVideoPrompt: 'Copy video prompt',
+            creativeFeedbackUseConservativeScript: 'Use conservative script',
+            creativeFeedbackCollectReviewsWarning: 'Evidence is incomplete. Collect more distinct review quotes before using broad claims.',
+            creativeFeedbackClaimSafetyWarning: 'Keep claims conservative and inside the supplied visible-sample evidence.',
+            creativeFeedbackVideoPromptReadyHint: 'The provider-neutral video prompt is ready to copy. No provider call will occur.',
+            creativeFeedbackNoEvidenceGaps: 'No evidence gap action is currently required.',
             creativeDecisionCopyEvidence: 'Copy evidence brief',
             creativeDecisionCopyAngle: 'Copy top angle script',
             creativeDecisionCopyVideoPrompt: 'Copy video prompt pack',
@@ -34068,6 +34335,47 @@
             creativeDecisionDuplicateAngle: '重复角度',
             creativeDecisionActionTarget: '目标',
             creativeDecisionEvidenceWarning: '需要更多评论证据。在补齐原话前，请降低主张强度并使用更保守的脚本。',
+            creativeFeedbackRuntimeTitle: '创意反馈运行建议',
+            creativeFeedbackRuntimeHelper: '根据证据质量派生的运行时建议，不会虚构或持久化用户偏好。',
+            creativeCoreFlowTitle: '核心创意流程',
+            creativeCoreFlowEvidence: '证据简报',
+            creativeCoreFlowRecommendedAngle: '推荐角度',
+            creativeCoreFlowTikTokScript: 'TikTok 脚本',
+            creativeCoreFlowVideoPrompt: '视频提示词',
+            creativeCoreFlowQuality: '质量与反馈',
+            creativeCoreFlowExport: '导出',
+            creativeCoreFlowReady: '已就绪',
+            creativeCoreFlowNeedsReview: '需要审核',
+            creativeCoreFlowWeakEvidence: '证据偏弱',
+            creativeCoreFlowNoData: '暂无数据',
+            creativeFeedbackRecommendedActionTitle: '推荐下一步',
+            creativeFeedbackOverallReadiness: '整体就绪度',
+            creativeFeedbackReadinessReason: '就绪原因',
+            creativeFeedbackRecommendedNextStep: '推荐下一步',
+            creativeFeedbackReadyAngles: '已就绪角度',
+            creativeFeedbackNeedsReviewAngles: '待审核角度',
+            creativeFeedbackSuggestedAction: '建议操作',
+            creativeFeedbackCopyTarget: '复制目标',
+            creativeFeedbackScriptReadiness: '脚本就绪检查',
+            creativeFeedbackEvidenceGapActions: '证据缺口操作',
+            creativeFeedbackWorkspaceFlowHints: '工作区流程提示',
+            creativeFeedbackSafetyReminders: '安全提醒',
+            creativeFeedbackCopySummary: '复制反馈摘要',
+            creativeFeedbackCopyFlow: '复制工作区流程提示',
+            creativeFeedbackCopyConservative: '复制保守脚本建议',
+            creativeFeedbackSummaryCopied: '创意反馈摘要已复制。',
+            creativeFeedbackFlowCopied: '工作区流程提示已复制。',
+            creativeFeedbackConservativeCopied: '保守脚本建议已复制。',
+            creativeFeedbackConservativeGuidanceTitle: '保守脚本建议',
+            creativeFeedbackUseRecommendedAngle: '使用推荐角度',
+            creativeFeedbackCollectMoreReviews: '收集更多评论',
+            creativeFeedbackLowerClaimStrength: '降低主张强度',
+            creativeFeedbackCopyVideoPrompt: '复制视频提示词',
+            creativeFeedbackUseConservativeScript: '使用保守脚本',
+            creativeFeedbackCollectReviewsWarning: '证据尚不完整，请先收集更多不同的评论原话，再使用宽泛主张。',
+            creativeFeedbackClaimSafetyWarning: '请保持保守主张，并严格限定在当前可见样本证据内。',
+            creativeFeedbackVideoPromptReadyHint: 'Provider 中立的视频提示词已可复制，不会调用真实 provider。',
+            creativeFeedbackNoEvidenceGaps: '当前没有需要处理的证据缺口。',
             creativeDecisionCopyEvidence: '\u590d\u5236\u8bc1\u636e\u7b80\u62a5',
             creativeDecisionCopyAngle: '\u590d\u5236\u4e3b\u5e7f\u544a\u65b9\u5411\u811a\u672c',
             creativeDecisionCopyVideoPrompt: '\u590d\u5236\u89c6\u9891\u63d0\u793a\u8bcd\u5305',

@@ -7590,3 +7590,47 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertIn("safety_boundaries: pack.safety_boundaries || {}", creative_section)
         self.assertIn("Real providers, media transfer, registry writes, restore, rollback, and paid actions remain disabled.", html)
         self.assertNotIn("fetch(", creative_section)
+
+    def test_creative_feedback_runtime_core_flow_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace creative feedback runtime bundle",
+            "PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER",
+            "renderProjectWorkspaceCreativeCoreFlowStrip",
+            "renderProjectWorkspaceCreativeFeedbackRuntimePanel",
+            "renderProjectWorkspaceCreativeRecommendedActionPanel",
+            "copyProjectWorkspaceCreativeFeedbackSummary",
+            "copyProjectWorkspaceCreativeFlowHints",
+            "copyProjectWorkspaceConservativeScriptGuidance",
+            "creative_feedback_runtime: pack.creative_feedback_runtime || {}",
+            "Creative Feedback Runtime",
+            "Core Creative Flow",
+            "Recommended Next Step",
+            "Evidence Gap Actions",
+            "Safety Reminders",
+            "creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace)",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+
+    def test_creative_feedback_runtime_bilingual_copy_and_guard_markers_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "creativeFeedbackRuntimeTitle",
+            "creativeCoreFlowTitle",
+            "creativeFeedbackRecommendedActionTitle",
+            "creativeFeedbackCopySummary",
+            "creativeFeedbackCopyFlow",
+            "creativeFeedbackCopyConservative",
+            "creativeFeedbackSummaryCopied",
+            "creativeFeedbackFlowCopied",
+            "creativeFeedbackConservativeCopied",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace creative feedback runtime bundle", script)
+            self.assertIn("project_workspace_creative_feedback_runtime_marker", script)
+        self.assertNotIn("????", html)
