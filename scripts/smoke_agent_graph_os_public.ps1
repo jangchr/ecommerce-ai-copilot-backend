@@ -124,6 +124,7 @@ Add-Check "project_workspace_provider_artifact_lineage_marker" ($page.Content -m
 Add-Check "project_workspace_provider_artifact_registry_restore_marker" ($page.Content -match "Project Workspace provider artifact registry restore bundle")
 Add-Check "project_workspace_provider_registry_operation_approval_marker" ($page.Content -match "Project Workspace provider registry operation approval bundle")
 Add-Check "project_workspace_provider_registry_transaction_rehearsal_marker" ($page.Content -match "Project Workspace provider registry transaction rehearsal bundle")
+Add-Check "project_workspace_provider_transaction_monitor_marker" ($page.Content -match "Project Workspace provider transaction monitor bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

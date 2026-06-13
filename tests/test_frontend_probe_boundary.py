@@ -7137,6 +7137,99 @@ class FrontendInvalidUnicodeEscapeTests(_cg_invalid_unicode_unittest.TestCase):
         self.assertIn("Project Workspace provider registry transaction rehearsal bundle", script)
         self.assertIn("project_workspace_provider_registry_transaction_rehearsal_marker", script)
 
+    def test_project_workspace_provider_transaction_monitor_bundle_markers(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider transaction monitor bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_PROVIDER_TRANSACTION_MONITOR_BUNDLE_MARKER", html)
+        self.assertIn("latestProjectProviderTransactionMonitorReport", html)
+        self.assertIn("projectWorkspaceProviderTransactionMonitorReportFromWorkspace", html)
+        self.assertIn("projectWorkspaceProviderTransactionMonitorCopyText", html)
+        self.assertIn("copyProjectWorkspaceProviderTransactionMonitor", html)
+        self.assertIn("renderProjectWorkspaceProviderTransactionMonitorPanel", html)
+        self.assertIn("projectWorkspaceExportProviderTransactionMonitorMarkdown", html)
+        self.assertIn("projectWorkspaceExportProviderTransactionMonitorSnapshot", html)
+        self.assertIn("provider_transaction_monitor_report", html)
+        for field in [
+            "monitoring_preflight",
+            "transaction_health_monitor",
+            "drift_detection_policy",
+            "auto_abort_policy",
+            "operator_timeline",
+            "verification_monitor",
+            "incident_escalation_policy",
+            "monitoring_audit_receipt",
+            "blocking_failures",
+            "transaction_monitor_stage_matrix",
+            "provider_registry_transaction_rehearsal_ready",
+            "operator_review_required",
+            "monitor_check_count",
+            "health_signal_count",
+            "drift_rule_count",
+            "auto_abort_rule_count",
+            "timeline_event_count",
+            "verification_monitor_check_count",
+            "incident_escalation_rule_count",
+            "audit_receipt_item_count",
+            "monitoring_required",
+            "monitoring_started",
+            "health_monitor_recorded",
+            "drift_detection_started",
+            "drift_detected",
+            "auto_abort_enabled",
+            "auto_abort_triggered",
+            "transaction_aborted",
+            "operator_timeline_recorded",
+            "verification_monitor_recorded",
+            "verification_passed",
+            "incident_escalation_triggered",
+            "incident_opened",
+            "monitoring_audit_recorded",
+            "audit_ledger_persisted",
+            "transaction_committed",
+            "registry_written",
+            "snapshot_written",
+            "restore_applied",
+            "workspace_restored",
+            "rollback_applied",
+            "project_snapshot_saved",
+            "artifact_deleted",
+            "external_api_call_allowed",
+            "external_api_called",
+            "provider_secret_read",
+            "provider_secret_exported",
+            "media_uploaded",
+            "media_downloaded",
+            "paid_generation_allowed",
+            "dry_run",
+            "has_provider_transaction_monitor_report",
+        ]:
+            self.assertIn(field, html)
+        for support_field in [
+            "supports_monitoring_preflight",
+            "supports_transaction_health_monitor",
+            "supports_drift_detection_policy",
+            "supports_auto_abort_policy",
+            "supports_operator_timeline",
+            "supports_verification_monitor",
+            "supports_incident_escalation_policy",
+            "supports_monitoring_audit_receipt",
+        ]:
+            self.assertIn(support_field, html)
+        self.assertIn("copyProviderTransactionMonitor", html)
+        self.assertIn("providerTransactionMonitorCopied", html)
+        self.assertIn("providerTransactionMonitorCopyFailed", html)
+        self.assertNotIn("????", html)
+
+    def test_project_workspace_provider_transaction_monitor_public_smoke_marker(self):
+        script = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("project_workspace_provider_transaction_monitor_marker", script)
+        self.assertIn("Project Workspace provider transaction monitor bundle", script)
+
+    def test_project_workspace_provider_transaction_monitor_quality_guard_marker(self):
+        script = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace provider transaction monitor bundle", script)
+        self.assertIn("project_workspace_provider_transaction_monitor_marker", script)
+
 
     def test_static_index_has_no_invalid_js_unicode_escape_sequences(self):
         html = _CgInvalidUnicodePath("static/index.html").read_text(encoding="utf-8")

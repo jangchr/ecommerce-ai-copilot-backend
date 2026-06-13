@@ -12298,6 +12298,134 @@
             ].join('\n');
         }
 
+        function projectWorkspaceExportProviderTransactionMonitorSnapshot(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderTransactionMonitorReportFromWorkspace(workspace);
+            const booleanFields = [
+                'supports_monitoring_preflight', 'supports_transaction_health_monitor',
+                'supports_drift_detection_policy', 'supports_auto_abort_policy',
+                'supports_operator_timeline', 'supports_verification_monitor',
+                'supports_incident_escalation_policy', 'supports_monitoring_audit_receipt',
+                'monitoring_required', 'monitoring_started', 'health_monitor_recorded',
+                'drift_detection_started', 'drift_detected', 'auto_abort_enabled',
+                'auto_abort_triggered', 'transaction_aborted',
+                'operator_timeline_recorded', 'verification_monitor_recorded',
+                'verification_passed', 'incident_escalation_triggered',
+                'incident_opened', 'monitoring_audit_recorded',
+                'audit_ledger_persisted', 'transaction_committed', 'registry_written',
+                'snapshot_written', 'restore_applied', 'workspace_restored',
+                'rollback_applied', 'project_snapshot_saved', 'artifact_deleted',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'workspace_export_ready',
+                'json_export_ready', 'markdown_export_ready', 'dry_run'
+            ];
+            const snapshot = {
+                marker: 'Project Workspace export pack provider transaction monitor bundle',
+                report_status: report.report_status || '',
+                provider_transaction_monitor_report_version: report.provider_transaction_monitor_report_version || '',
+                provider_registry_transaction_rehearsal_ready: Boolean(report.provider_registry_transaction_rehearsal_ready),
+                operator_review_required: Boolean(report.operator_review_required),
+                stage_count: Number(report.stage_count || 0),
+                transaction_monitor_stage_matrix: Array.isArray(report.transaction_monitor_stage_matrix) ? report.transaction_monitor_stage_matrix : [],
+                monitoring_preflight: report.monitoring_preflight || {},
+                transaction_health_monitor: report.transaction_health_monitor || {},
+                drift_detection_policy: report.drift_detection_policy || {},
+                auto_abort_policy: report.auto_abort_policy || {},
+                operator_timeline: report.operator_timeline || {},
+                verification_monitor: report.verification_monitor || {},
+                incident_escalation_policy: report.incident_escalation_policy || {},
+                monitoring_audit_receipt: report.monitoring_audit_receipt || {},
+                blocking_failure_count: Number(report.blocking_failure_count || 0),
+                blocking_failures: Array.isArray(report.blocking_failures) ? report.blocking_failures : [],
+                monitor_check_count: Number(report.monitor_check_count || 0),
+                health_signal_count: Number(report.health_signal_count || 0),
+                drift_rule_count: Number(report.drift_rule_count || 0),
+                auto_abort_rule_count: Number(report.auto_abort_rule_count || 0),
+                timeline_event_count: Number(report.timeline_event_count || 0),
+                verification_monitor_check_count: Number(report.verification_monitor_check_count || 0),
+                incident_escalation_rule_count: Number(report.incident_escalation_rule_count || 0),
+                audit_receipt_item_count: Number(report.audit_receipt_item_count || 0),
+                has_provider_transaction_monitor_report: Boolean(
+                    report.report_status || report.provider_transaction_monitor_report_version
+                )
+            };
+            booleanFields.forEach((key) => {
+                snapshot[key] = Boolean(report[key]);
+            });
+            return snapshot;
+        }
+
+        function projectWorkspaceExportProviderTransactionMonitorMarkdown(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderTransactionMonitorSnapshot(workspace);
+            if (!report.has_provider_transaction_monitor_report) {
+                return `## ${t('projectWorkspaceExportProviderTransactionMonitorTitle')}\n${t('providerTransactionMonitorNotRefreshedYet')}`;
+            }
+            const blockers = report.blocking_failures.length
+                ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`)
+                : ['none'];
+            const stages = report.transaction_monitor_stage_matrix.length
+                ? report.transaction_monitor_stage_matrix.map((stage, index) => `${index + 1}. ${stage.stage_id || ''} | complete=${Boolean(stage.complete)} | ${stage.stage_label || ''}`)
+                : ['none'];
+            const supportKeys = [
+                'supports_monitoring_preflight', 'supports_transaction_health_monitor',
+                'supports_drift_detection_policy', 'supports_auto_abort_policy',
+                'supports_operator_timeline', 'supports_verification_monitor',
+                'supports_incident_escalation_policy', 'supports_monitoring_audit_receipt'
+            ];
+            const statusKeys = [
+                'monitoring_required', 'monitoring_started', 'health_monitor_recorded',
+                'drift_detection_started', 'drift_detected', 'auto_abort_enabled',
+                'auto_abort_triggered', 'transaction_aborted',
+                'operator_timeline_recorded', 'verification_monitor_recorded',
+                'verification_passed', 'incident_escalation_triggered',
+                'incident_opened', 'monitoring_audit_recorded',
+                'audit_ledger_persisted', 'transaction_committed', 'registry_written',
+                'snapshot_written', 'restore_applied', 'workspace_restored',
+                'rollback_applied', 'project_snapshot_saved', 'artifact_deleted',
+                'external_api_call_allowed', 'external_api_called',
+                'provider_secret_read', 'provider_secret_exported', 'media_uploaded',
+                'media_downloaded', 'paid_generation_allowed', 'dry_run'
+            ];
+            return [
+                `## ${t('projectWorkspaceExportProviderTransactionMonitorTitle')}`,
+                `${t('providerTransactionMonitorStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerRegistryTransactionRehearsalReady')}: ${report.provider_registry_transaction_rehearsal_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('monitorCheckCount')}: ${report.monitor_check_count}`,
+                `${t('healthSignalCount')}: ${report.health_signal_count}`,
+                `${t('driftRuleCount')}: ${report.drift_rule_count}`,
+                `${t('autoAbortRuleCount')}: ${report.auto_abort_rule_count}`,
+                `${t('timelineEventCount')}: ${report.timeline_event_count}`,
+                `${t('verificationMonitorCheckCount')}: ${report.verification_monitor_check_count}`,
+                `${t('incidentEscalationRuleCount')}: ${report.incident_escalation_rule_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                ...supportKeys.map((key) => `${key}: ${report[key]}`),
+                ...statusKeys.map((key) => `${key}: ${report[key]}`),
+                '',
+                `### ${t('blockingFailures')}`,
+                ...blockers,
+                '',
+                `### ${t('providerTransactionMonitorStages')}`,
+                ...stages,
+                ...[
+                    ['monitoringPreflight', report.monitoring_preflight],
+                    ['transactionHealthMonitor', report.transaction_health_monitor],
+                    ['driftDetectionPolicy', report.drift_detection_policy],
+                    ['autoAbortPolicy', report.auto_abort_policy],
+                    ['operatorTimeline', report.operator_timeline],
+                    ['verificationMonitor', report.verification_monitor],
+                    ['incidentEscalationPolicy', report.incident_escalation_policy],
+                    ['monitoringAuditReceipt', report.monitoring_audit_receipt]
+                ].flatMap(([labelKey, value]) => [
+                    '',
+                    `### ${t(labelKey)}`,
+                    '```json',
+                    JSON.stringify(value, null, 2),
+                    '```'
+                ])
+            ].join('\n');
+        }
+
         function projectWorkspaceExportProviderWorkerFinalizationSnapshot(workspace = latestProjectWorkspace) {
             const report = projectWorkspaceProviderWorkerFinalizationReportFromWorkspace(workspace);
             return {
@@ -14038,6 +14166,8 @@
                 '',
                 projectWorkspaceExportProviderRegistryTransactionRehearsalMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderTransactionMonitorMarkdown(workspace),
+                '',
                 section(t('recentProjectRunsQuickLink'), workspace?.recent_runs, 'runs'),
                 section(t('recentProjectJobsQuickLink'), workspace?.recent_jobs, 'jobs'),
                 section(t('recentProjectArtifactsQuickLink'), workspace?.recent_artifacts, 'artifacts'),
@@ -14076,6 +14206,7 @@
                 provider_artifact_registry_restore_report: projectWorkspaceExportProviderArtifactRegistryRestoreSnapshot(workspace),
                 provider_registry_operation_approval_report: projectWorkspaceExportProviderRegistryOperationApprovalSnapshot(workspace),
                 provider_registry_transaction_rehearsal_report: projectWorkspaceExportProviderRegistryTransactionRehearsalSnapshot(workspace),
+                provider_transaction_monitor_report: projectWorkspaceExportProviderTransactionMonitorSnapshot(workspace),
                 recent_runs: projectWorkspaceHistoryArray(workspace, 'recent_runs'),
                 recent_jobs: projectWorkspaceHistoryArray(workspace, 'recent_jobs'),
                 recent_artifacts: projectWorkspaceHistoryArray(workspace, 'recent_artifacts'),
@@ -14214,6 +14345,7 @@
                 latestProjectProviderArtifactRegistryRestoreReport = payload.provider_artifact_registry_restore_report || {};
                 latestProjectProviderRegistryOperationApprovalReport = payload.provider_registry_operation_approval_report || {};
                 latestProjectProviderRegistryTransactionRehearsalReport = payload.provider_registry_transaction_rehearsal_report || {};
+                latestProjectProviderTransactionMonitorReport = payload.provider_transaction_monitor_report || {};
                 latestProjectRunnerDispatchTicket = payload.runner_dispatch_ticket || {};
                 latestProjectRunnerDispatchEvent = payload.runner_dispatch_event || {};
                 latestProjectWorkspace = {
@@ -18083,6 +18215,8 @@
         let latestProjectProviderRegistryOperationApprovalReport = {};
         const PROJECT_WORKSPACE_PROVIDER_REGISTRY_TRANSACTION_REHEARSAL_BUNDLE_MARKER = 'Project Workspace provider registry transaction rehearsal bundle';
         let latestProjectProviderRegistryTransactionRehearsalReport = {};
+        const PROJECT_WORKSPACE_PROVIDER_TRANSACTION_MONITOR_BUNDLE_MARKER = 'Project Workspace provider transaction monitor bundle';
+        let latestProjectProviderTransactionMonitorReport = {};
 
         function projectWorkspaceProviderArtifactLineageReportFromWorkspace(workspace = latestProjectWorkspace) {
             const report = Object.keys(latestProjectProviderArtifactLineageReport || {}).length
@@ -19255,6 +19389,242 @@
                         ${hasReport ? `<pre class="debug" data-provider-registry-transaction-rehearsal-preview="Project Workspace provider registry transaction rehearsal bundle">${escapeHTML(projectWorkspaceProviderRegistryTransactionRehearsalCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerRegistryTransactionRehearsalNotRefreshedYet'))}</div>`}
                     </div>
                     <div class="quick-use-copy-status" id="projectWorkspaceProviderRegistryTransactionRehearsalStatus"></div>
+                </div>
+            `;
+        }
+
+        function projectWorkspaceProviderTransactionMonitorReportFromWorkspace(workspace = latestProjectWorkspace) {
+            const report = Object.keys(latestProjectProviderTransactionMonitorReport || {}).length
+                ? latestProjectProviderTransactionMonitorReport
+                : workspace?.provider_transaction_monitor_report || {};
+            const graphSummary = workspace?.project?.graph_summary || {};
+            if (report && Object.keys(report).length) return report;
+            return {
+                provider_transaction_monitor_report_version: '',
+                report_status: graphSummary.latest_provider_transaction_monitor_status || '',
+                provider_registry_transaction_rehearsal_ready: false,
+                operator_review_required: true,
+                stage_count: 0,
+                transaction_monitor_stage_matrix: [],
+                monitoring_preflight: {},
+                transaction_health_monitor: {},
+                drift_detection_policy: {},
+                auto_abort_policy: {},
+                operator_timeline: {},
+                verification_monitor: {},
+                incident_escalation_policy: {},
+                monitoring_audit_receipt: {},
+                blocking_failure_count: Number(graphSummary.latest_provider_transaction_monitor_blocking_failure_count || 0),
+                blocking_failures: [],
+                monitor_check_count: 0,
+                health_signal_count: 0,
+                drift_rule_count: 0,
+                auto_abort_rule_count: 0,
+                timeline_event_count: 0,
+                verification_monitor_check_count: 0,
+                incident_escalation_rule_count: 0,
+                audit_receipt_item_count: 0,
+                supports_monitoring_preflight: false,
+                supports_transaction_health_monitor: false,
+                supports_drift_detection_policy: false,
+                supports_auto_abort_policy: false,
+                supports_operator_timeline: false,
+                supports_verification_monitor: false,
+                supports_incident_escalation_policy: false,
+                supports_monitoring_audit_receipt: false,
+                monitoring_required: true,
+                monitoring_started: false,
+                health_monitor_recorded: false,
+                drift_detection_started: false,
+                drift_detected: Boolean(graphSummary.latest_provider_transaction_monitor_drift_detected),
+                auto_abort_enabled: false,
+                auto_abort_triggered: Boolean(graphSummary.latest_provider_transaction_monitor_auto_abort_triggered),
+                transaction_aborted: false,
+                operator_timeline_recorded: false,
+                verification_monitor_recorded: false,
+                verification_passed: false,
+                incident_escalation_triggered: false,
+                incident_opened: false,
+                monitoring_audit_recorded: false,
+                audit_ledger_persisted: false,
+                transaction_committed: false,
+                registry_written: false,
+                snapshot_written: false,
+                restore_applied: false,
+                workspace_restored: false,
+                rollback_applied: false,
+                project_snapshot_saved: false,
+                artifact_deleted: false,
+                workspace_export_ready: false,
+                json_export_ready: false,
+                markdown_export_ready: false,
+                external_api_call_allowed: false,
+                external_api_called: Boolean(graphSummary.latest_provider_transaction_monitor_external_api_called),
+                provider_secret_read: false,
+                provider_secret_exported: false,
+                media_uploaded: false,
+                media_downloaded: false,
+                paid_generation_allowed: false,
+                dry_run: true
+            };
+        }
+
+        function projectWorkspaceProviderTransactionMonitorCopyText(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceExportProviderTransactionMonitorSnapshot(workspace);
+            return [
+                t('providerTransactionMonitorCopyTitle'),
+                `${t('providerTransactionMonitorStatus')}: ${report.report_status || 'not_refreshed'}`,
+                `${t('providerRegistryTransactionRehearsalReady')}: ${report.provider_registry_transaction_rehearsal_ready}`,
+                `${t('operatorReviewRequired')}: ${report.operator_review_required}`,
+                `${t('blockingFailureCount')}: ${report.blocking_failure_count}`,
+                `${t('monitorCheckCount')}: ${report.monitor_check_count}`,
+                `${t('healthSignalCount')}: ${report.health_signal_count}`,
+                `${t('driftRuleCount')}: ${report.drift_rule_count}`,
+                `${t('autoAbortRuleCount')}: ${report.auto_abort_rule_count}`,
+                `${t('timelineEventCount')}: ${report.timeline_event_count}`,
+                `${t('verificationMonitorCheckCount')}: ${report.verification_monitor_check_count}`,
+                `${t('incidentEscalationRuleCount')}: ${report.incident_escalation_rule_count}`,
+                `${t('auditReceiptItemCount')}: ${report.audit_receipt_item_count}`,
+                `${t('dryRun')}: ${report.dry_run}`,
+                '',
+                `${t('blockingFailures')}:`,
+                report.blocking_failures.length
+                    ? report.blocking_failures.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : t('none'),
+                '',
+                JSON.stringify({ provider_transaction_monitor_report: report }, null, 2)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderTransactionMonitor() {
+            const status = document.getElementById('projectWorkspaceProviderTransactionMonitorStatus');
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error(t('projectHistoryCopyUnavailable'));
+                await navigator.clipboard.writeText(projectWorkspaceProviderTransactionMonitorCopyText());
+                if (status) status.textContent = t('providerTransactionMonitorCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('providerTransactionMonitorCopyFailed');
+            }
+        }
+
+        function renderProjectWorkspaceProviderTransactionMonitorJsonSection(labelKey, value) {
+            return `
+                <div class="graph-os-card">
+                    <div class="json-key">${escapeHTML(t(labelKey))}</div>
+                    <pre class="debug">${escapeHTML(JSON.stringify(value || {}, null, 2))}</pre>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderTransactionMonitorPanel(workspace = latestProjectWorkspace) {
+            const report = projectWorkspaceProviderTransactionMonitorReportFromWorkspace(workspace);
+            const stages = Array.isArray(report.transaction_monitor_stage_matrix) ? report.transaction_monitor_stage_matrix : [];
+            const blockers = Array.isArray(report.blocking_failures) ? report.blocking_failures : [];
+            const supportFields = [
+                ['supportsMonitoringPreflight', report.supports_monitoring_preflight],
+                ['supportsTransactionHealthMonitor', report.supports_transaction_health_monitor],
+                ['supportsDriftDetectionPolicy', report.supports_drift_detection_policy],
+                ['supportsAutoAbortPolicy', report.supports_auto_abort_policy],
+                ['supportsOperatorTimeline', report.supports_operator_timeline],
+                ['supportsVerificationMonitor', report.supports_verification_monitor],
+                ['supportsIncidentEscalationPolicy', report.supports_incident_escalation_policy],
+                ['supportsMonitoringAuditReceipt', report.supports_monitoring_audit_receipt]
+            ];
+            const statusFields = [
+                ['monitoringRequired', report.monitoring_required],
+                ['monitoringStarted', report.monitoring_started],
+                ['healthMonitorRecorded', report.health_monitor_recorded],
+                ['driftDetectionStarted', report.drift_detection_started],
+                ['driftDetected', report.drift_detected],
+                ['autoAbortEnabled', report.auto_abort_enabled],
+                ['autoAbortTriggered', report.auto_abort_triggered],
+                ['transactionAborted', report.transaction_aborted],
+                ['operatorTimelineRecorded', report.operator_timeline_recorded],
+                ['verificationMonitorRecorded', report.verification_monitor_recorded],
+                ['verificationPassed', report.verification_passed],
+                ['incidentEscalationTriggered', report.incident_escalation_triggered],
+                ['incidentOpened', report.incident_opened],
+                ['monitoringAuditRecorded', report.monitoring_audit_recorded],
+                ['auditLedgerPersisted', report.audit_ledger_persisted],
+                ['transactionCommitted', report.transaction_committed],
+                ['registryWritten', report.registry_written],
+                ['snapshotWritten', report.snapshot_written],
+                ['restoreApplied', report.restore_applied],
+                ['workspaceRestored', report.workspace_restored],
+                ['rollbackApplied', report.rollback_applied],
+                ['projectSnapshotSaved', report.project_snapshot_saved],
+                ['artifactDeleted', report.artifact_deleted],
+                ['externalApiCallAllowed', report.external_api_call_allowed],
+                ['externalApiCalled', report.external_api_called],
+                ['providerSecretRead', report.provider_secret_read],
+                ['providerSecretExported', report.provider_secret_exported],
+                ['mediaUploaded', report.media_uploaded],
+                ['mediaDownloaded', report.media_downloaded],
+                ['paidGenerationAllowed', report.paid_generation_allowed],
+                ['dryRun', report.dry_run]
+            ];
+            const hasReport = Boolean(
+                report.report_status || report.provider_transaction_monitor_report_version || stages.length
+            );
+            return `
+                <div class="section-block" id="projectWorkspaceProviderTransactionMonitorPanel" data-project-provider-transaction-monitor-marker="Project Workspace provider transaction monitor bundle">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('providerTransactionMonitorPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('providerTransactionMonitorPanelHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" id="copyProjectWorkspaceProviderTransactionMonitorBtn" type="button" onclick="copyProjectWorkspaceProviderTransactionMonitor()">${escapeHTML(t('copyProviderTransactionMonitor'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerTransactionMonitorStatus'))}</div><strong>${escapeHTML(report.report_status || t('providerTransactionMonitorNotRefreshedYet'))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('providerRegistryTransactionRehearsalReady'))}</div><strong>${escapeHTML(String(Boolean(report.provider_registry_transaction_rehearsal_ready)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('operatorReviewRequired'))}</div><strong>${escapeHTML(String(Boolean(report.operator_review_required)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('blockingFailureCount'))}</div><strong>${escapeHTML(String(Number(report.blocking_failure_count || blockers.length || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('monitorCheckCount'))}</div><strong>${escapeHTML(String(Number(report.monitor_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('healthSignalCount'))}</div><strong>${escapeHTML(String(Number(report.health_signal_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('driftRuleCount'))}</div><strong>${escapeHTML(String(Number(report.drift_rule_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('autoAbortRuleCount'))}</div><strong>${escapeHTML(String(Number(report.auto_abort_rule_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('timelineEventCount'))}</div><strong>${escapeHTML(String(Number(report.timeline_event_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('verificationMonitorCheckCount'))}</div><strong>${escapeHTML(String(Number(report.verification_monitor_check_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('incidentEscalationRuleCount'))}</div><strong>${escapeHTML(String(Number(report.incident_escalation_rule_count || 0)))}</strong></div>
+                        <div class="graph-os-card"><div class="json-key">${escapeHTML(t('auditReceiptItemCount'))}</div><strong>${escapeHTML(String(Number(report.audit_receipt_item_count || 0)))}</strong></div>
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('blockingFailures'))}</div>
+                        ${blockers.length ? blockers.map((item, index) => `<div class="artifact-timeline-row">${escapeHTML(String(index + 1))}. <strong>${escapeHTML(item)}</strong></div>`).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerTransactionMonitorStages'))}</div>
+                        ${stages.length ? stages.map((stage) => `
+                            <div class="scene-card">
+                                <div class="scene-title">${escapeHTML(stage.stage_id || '')} - ${escapeHTML(stage.stage_label || '')}</div>
+                                <span class="badge">${escapeHTML(t('complete'))}: ${escapeHTML(String(Boolean(stage.complete)))}</span>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('none'))}</div>`}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('monitoringPreflight', report.monitoring_preflight)}
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('transactionHealthMonitor', report.transaction_health_monitor)}
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('driftDetectionPolicy', report.drift_detection_policy)}
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('autoAbortPolicy', report.auto_abort_policy)}
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('operatorTimeline', report.operator_timeline)}
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('verificationMonitor', report.verification_monitor)}
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('incidentEscalationPolicy', report.incident_escalation_policy)}
+                        ${renderProjectWorkspaceProviderTransactionMonitorJsonSection('monitoringAuditReceipt', report.monitoring_audit_receipt)}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${supportFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${statusFields.map(([labelKey, value]) => `<div class="graph-os-card"><div class="json-key">${escapeHTML(t(labelKey))}</div><strong>${escapeHTML(String(Boolean(value)))}</strong></div>`).join('')}
+                    </div>
+                    <div class="graph-os-card">
+                        <div class="json-key">${escapeHTML(t('providerTransactionMonitorAuditPreview'))}</div>
+                        ${hasReport ? `<pre class="debug" data-provider-transaction-monitor-preview="Project Workspace provider transaction monitor bundle">${escapeHTML(projectWorkspaceProviderTransactionMonitorCopyText(workspace))}</pre>` : `<div class="recent-empty">${escapeHTML(t('providerTransactionMonitorNotRefreshedYet'))}</div>`}
+                    </div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceProviderTransactionMonitorStatus"></div>
                 </div>
             `;
         }
@@ -23579,6 +23949,8 @@
                 if (providerRegistryOperationApprovalPanel) providerRegistryOperationApprovalPanel.outerHTML = renderProjectWorkspaceProviderRegistryOperationApprovalPanel(latestProjectWorkspace);
                 const providerRegistryTransactionRehearsalPanel = document.getElementById('projectWorkspaceProviderRegistryTransactionRehearsalPanel');
                 if (providerRegistryTransactionRehearsalPanel) providerRegistryTransactionRehearsalPanel.outerHTML = renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(latestProjectWorkspace);
+                const providerTransactionMonitorPanel = document.getElementById('projectWorkspaceProviderTransactionMonitorPanel');
+                if (providerTransactionMonitorPanel) providerTransactionMonitorPanel.outerHTML = renderProjectWorkspaceProviderTransactionMonitorPanel(latestProjectWorkspace);
                 return payload;
             } catch (error) {
                 if (typeof setWorkspaceSyncStatus === 'function') setWorkspaceSyncStatus('failed', 'runner_real_execution_incident_response_dry_run');
@@ -25774,6 +26146,7 @@
                     ${renderProjectWorkspaceProviderArtifactRegistryRestorePanel(workspace)}
                     ${renderProjectWorkspaceProviderRegistryOperationApprovalPanel(workspace)}
                     ${renderProjectWorkspaceProviderRegistryTransactionRehearsalPanel(workspace)}
+                    ${renderProjectWorkspaceProviderTransactionMonitorPanel(workspace)}
                     ${renderProjectWorkspaceAuthorizationManifestPanel(workspace)}
                     ${renderProjectWorkspaceHistoryQuickPanel(workspace)}
                     <div class="quick-use-pack-actions">
@@ -31492,6 +31865,112 @@
             transactionAuditRecorded: '\u4e8b\u52a1\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
             providerRegistryTransactionRehearsalAuditPreview: 'Registry transaction rehearsal \u5ba1\u8ba1\u9884\u89c8',
             projectWorkspaceExportProviderRegistryTransactionRehearsalTitle: 'Registry Transaction Rehearsal / Mutation Ledger / Post-Apply Verification / \u6ce8\u518c\u8868\u4e8b\u52a1\u6f14\u7ec3\u3001\u53d8\u66f4\u8d26\u672c\u4e0e\u5e94\u7528\u540e\u9a8c\u8bc1'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderTransactionMonitorBundleMarker: 'Project Workspace provider transaction monitor bundle',
+            providerTransactionMonitorPanelTitle: 'Transaction Monitor / Drift Detection / Auto-Abort / Operator Timeline',
+            providerTransactionMonitorPanelHelper: 'Read-only dry-run monitoring plan for a future transaction execution window. It previews health signals, drift rules, auto-abort policy, operator timeline, verification monitoring, incident escalation, and audit receipt. Monitoring is not started and no transaction, registry, snapshot, restore, rollback, provider, secret, media, or paid action is executed.',
+            copyProviderTransactionMonitor: 'Copy transaction monitor report',
+            providerTransactionMonitorCopyTitle: 'Project transaction monitor / drift / auto-abort report',
+            providerTransactionMonitorStatus: 'Transaction monitor status',
+            providerTransactionMonitorNotRefreshedYet: 'Transaction monitor report has not been refreshed yet.',
+            providerTransactionMonitorCopied: 'Transaction monitor report copied.',
+            providerTransactionMonitorCopyFailed: 'Could not copy transaction monitor report.',
+            providerRegistryTransactionRehearsalReady: 'Registry transaction rehearsal report ready',
+            monitorCheckCount: 'Monitor check count',
+            healthSignalCount: 'Health signal count',
+            driftRuleCount: 'Drift rule count',
+            autoAbortRuleCount: 'Auto-abort rule count',
+            timelineEventCount: 'Timeline event count',
+            verificationMonitorCheckCount: 'Verification monitor check count',
+            incidentEscalationRuleCount: 'Incident escalation rule count',
+            providerTransactionMonitorStages: 'Transaction monitor stages',
+            monitoringPreflight: 'Monitoring preflight',
+            transactionHealthMonitor: 'Transaction health monitor',
+            driftDetectionPolicy: 'Drift detection policy',
+            autoAbortPolicy: 'Auto-abort policy',
+            operatorTimeline: 'Operator timeline',
+            verificationMonitor: 'Verification monitor',
+            incidentEscalationPolicy: 'Incident escalation policy',
+            monitoringAuditReceipt: 'Monitoring audit receipt',
+            supportsMonitoringPreflight: 'Supports monitoring preflight',
+            supportsTransactionHealthMonitor: 'Supports transaction health monitor',
+            supportsDriftDetectionPolicy: 'Supports drift detection policy',
+            supportsAutoAbortPolicy: 'Supports auto-abort policy',
+            supportsOperatorTimeline: 'Supports operator timeline',
+            supportsVerificationMonitor: 'Supports verification monitor',
+            supportsIncidentEscalationPolicy: 'Supports incident escalation policy',
+            supportsMonitoringAuditReceipt: 'Supports monitoring audit receipt',
+            monitoringRequired: 'Monitoring required',
+            monitoringStarted: 'Monitoring started',
+            healthMonitorRecorded: 'Health monitor recorded',
+            driftDetectionStarted: 'Drift detection started',
+            driftDetected: 'Drift detected',
+            autoAbortEnabled: 'Auto-abort enabled',
+            autoAbortTriggered: 'Auto-abort triggered',
+            transactionAborted: 'Transaction aborted',
+            operatorTimelineRecorded: 'Operator timeline recorded',
+            verificationMonitorRecorded: 'Verification monitor recorded',
+            verificationPassed: 'Verification passed',
+            incidentEscalationTriggered: 'Incident escalation triggered',
+            incidentOpened: 'Incident opened',
+            monitoringAuditRecorded: 'Monitoring audit recorded',
+            providerTransactionMonitorAuditPreview: 'Transaction monitor audit preview',
+            projectWorkspaceExportProviderTransactionMonitorTitle: 'Transaction Monitor / Drift Detection / Auto-Abort / Operator Timeline'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderTransactionMonitorBundleMarker: 'Project Workspace provider transaction monitor bundle',
+            providerTransactionMonitorPanelTitle: 'Transaction Monitor / Drift Detection / Auto-Abort / Operator Timeline / \u4e8b\u52a1\u76d1\u63a7\u3001\u6f02\u79fb\u68c0\u6d4b\u3001\u81ea\u52a8\u4e2d\u6b62\u4e0e\u64cd\u4f5c\u5458\u65f6\u95f4\u7ebf',
+            providerTransactionMonitorPanelHelper: '\u53ea\u8bfb dry-run \u5c55\u793a\u672a\u6765\u4e8b\u52a1\u6267\u884c\u7a97\u53e3\u7684\u5065\u5eb7\u4fe1\u53f7\u3001\u6f02\u79fb\u89c4\u5219\u3001\u81ea\u52a8\u4e2d\u6b62\u7b56\u7565\u3001\u64cd\u4f5c\u5458\u65f6\u95f4\u7ebf\u3001\u9a8c\u8bc1\u76d1\u63a7\u3001\u4e8b\u6545\u5347\u7ea7\u548c\u5ba1\u8ba1\u56de\u6267\u3002\u4e0d\u4f1a\u542f\u52a8\u771f\u5b9e\u76d1\u63a7\uff0c\u4e5f\u4e0d\u4f1a\u63d0\u4ea4\u6216\u4e2d\u6b62\u4e8b\u52a1\u3001\u5199 registry/snapshot\u3001\u6267\u884c restore/rollback\u3001\u8c03\u7528 provider\u3001\u8bfb\u53d6 secret\u3001\u4f20\u8f93\u5a92\u4f53\u6216\u6263\u8d39\u3002',
+            copyProviderTransactionMonitor: '\u590d\u5236 transaction monitor \u62a5\u544a',
+            providerTransactionMonitorCopyTitle: '\u9879\u76ee transaction monitor / drift / auto-abort \u62a5\u544a',
+            providerTransactionMonitorStatus: 'Transaction monitor \u72b6\u6001',
+            providerTransactionMonitorNotRefreshedYet: 'Transaction monitor \u62a5\u544a\u5c1a\u672a\u5237\u65b0\u3002',
+            providerTransactionMonitorCopied: 'Transaction monitor \u62a5\u544a\u5df2\u590d\u5236\u3002',
+            providerTransactionMonitorCopyFailed: '\u590d\u5236 transaction monitor \u62a5\u544a\u5931\u8d25\u3002',
+            providerRegistryTransactionRehearsalReady: 'Registry transaction rehearsal \u62a5\u544a\u5df2\u5c31\u7eea',
+            monitorCheckCount: '\u76d1\u63a7\u9884\u68c0\u6570',
+            healthSignalCount: '\u5065\u5eb7\u4fe1\u53f7\u6570',
+            driftRuleCount: '\u6f02\u79fb\u89c4\u5219\u6570',
+            autoAbortRuleCount: '\u81ea\u52a8\u4e2d\u6b62\u89c4\u5219\u6570',
+            timelineEventCount: '\u65f6\u95f4\u7ebf\u4e8b\u4ef6\u6570',
+            verificationMonitorCheckCount: '\u9a8c\u8bc1\u76d1\u63a7\u68c0\u67e5\u6570',
+            incidentEscalationRuleCount: '\u4e8b\u6545\u5347\u7ea7\u89c4\u5219\u6570',
+            providerTransactionMonitorStages: 'Transaction monitor \u9636\u6bb5',
+            monitoringPreflight: 'Monitoring preflight / \u76d1\u63a7\u9884\u68c0',
+            transactionHealthMonitor: 'Transaction health monitor / \u4e8b\u52a1\u5065\u5eb7\u76d1\u63a7',
+            driftDetectionPolicy: 'Drift detection policy / \u6f02\u79fb\u68c0\u6d4b\u7b56\u7565',
+            autoAbortPolicy: 'Auto-abort policy / \u81ea\u52a8\u4e2d\u6b62\u7b56\u7565',
+            operatorTimeline: 'Operator timeline / \u64cd\u4f5c\u5458\u65f6\u95f4\u7ebf',
+            verificationMonitor: 'Verification monitor / \u9a8c\u8bc1\u76d1\u63a7',
+            incidentEscalationPolicy: 'Incident escalation policy / \u4e8b\u6545\u5347\u7ea7\u7b56\u7565',
+            monitoringAuditReceipt: 'Monitoring audit receipt / \u76d1\u63a7\u5ba1\u8ba1\u56de\u6267',
+            supportsMonitoringPreflight: '\u652f\u6301\u76d1\u63a7\u9884\u68c0',
+            supportsTransactionHealthMonitor: '\u652f\u6301\u4e8b\u52a1\u5065\u5eb7\u76d1\u63a7',
+            supportsDriftDetectionPolicy: '\u652f\u6301\u6f02\u79fb\u68c0\u6d4b\u7b56\u7565',
+            supportsAutoAbortPolicy: '\u652f\u6301\u81ea\u52a8\u4e2d\u6b62\u7b56\u7565',
+            supportsOperatorTimeline: '\u652f\u6301\u64cd\u4f5c\u5458\u65f6\u95f4\u7ebf',
+            supportsVerificationMonitor: '\u652f\u6301\u9a8c\u8bc1\u76d1\u63a7',
+            supportsIncidentEscalationPolicy: '\u652f\u6301\u4e8b\u6545\u5347\u7ea7\u7b56\u7565',
+            supportsMonitoringAuditReceipt: '\u652f\u6301\u76d1\u63a7\u5ba1\u8ba1\u56de\u6267',
+            monitoringRequired: '\u9700\u8981\u76d1\u63a7',
+            monitoringStarted: '\u76d1\u63a7\u5df2\u542f\u52a8',
+            healthMonitorRecorded: '\u5065\u5eb7\u76d1\u63a7\u5df2\u8bb0\u5f55',
+            driftDetectionStarted: '\u6f02\u79fb\u68c0\u6d4b\u5df2\u542f\u52a8',
+            driftDetected: '\u5df2\u68c0\u6d4b\u5230\u6f02\u79fb',
+            autoAbortEnabled: '\u81ea\u52a8\u4e2d\u6b62\u5df2\u542f\u7528',
+            autoAbortTriggered: '\u81ea\u52a8\u4e2d\u6b62\u5df2\u89e6\u53d1',
+            transactionAborted: '\u4e8b\u52a1\u5df2\u4e2d\u6b62',
+            operatorTimelineRecorded: '\u64cd\u4f5c\u5458\u65f6\u95f4\u7ebf\u5df2\u8bb0\u5f55',
+            verificationMonitorRecorded: '\u9a8c\u8bc1\u76d1\u63a7\u5df2\u8bb0\u5f55',
+            verificationPassed: '\u9a8c\u8bc1\u5df2\u901a\u8fc7',
+            incidentEscalationTriggered: '\u4e8b\u6545\u5347\u7ea7\u5df2\u89e6\u53d1',
+            incidentOpened: '\u4e8b\u6545\u5df2\u5f00\u542f',
+            monitoringAuditRecorded: '\u76d1\u63a7\u5ba1\u8ba1\u5df2\u8bb0\u5f55',
+            providerTransactionMonitorAuditPreview: 'Transaction monitor \u5ba1\u8ba1\u9884\u89c8',
+            projectWorkspaceExportProviderTransactionMonitorTitle: 'Transaction Monitor / Drift Detection / Auto-Abort / Operator Timeline / \u4e8b\u52a1\u76d1\u63a7\u3001\u6f02\u79fb\u68c0\u6d4b\u3001\u81ea\u52a8\u4e2d\u6b62\u4e0e\u64cd\u4f5c\u5458\u65f6\u95f4\u7ebf'
         });
 
 
