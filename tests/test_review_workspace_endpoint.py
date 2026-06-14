@@ -1547,6 +1547,20 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(script["cta"])
         self.assertEqual(script["proof_quote"], recommended["proof_quote"])
         self.assertIn("visible sample", script["risk_note"])
+        copy_ready_text = recommended["copy_ready_text"]
+        copy_parts = [
+            "Hook:",
+            "Scene 1:",
+            "Scene 2:",
+            "Scene 3:",
+            "CTA:",
+            "Proof quote:",
+            "Risk note:",
+        ]
+        copy_positions = [copy_ready_text.index(part) for part in copy_parts]
+        self.assertEqual(copy_positions, sorted(copy_positions))
+        self.assertIn(recommended["proof_quote"], copy_ready_text)
+        self.assertIn(script["risk_note"], copy_ready_text)
         self.assertFalse(
             any(
                 old_template in " ".join(script["scenes"])
@@ -1569,6 +1583,14 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(video_pack["keyframe_prompt"])
         self.assertTrue(
             any("leak-proof, quiet, or easy to clean" in item for item in video_pack["do_not_claim"])
+        )
+        self.assertIn("Keyframe prompt:", video_pack["copy_ready_text"])
+        self.assertIn("Shot 1:", video_pack["copy_ready_text"])
+        self.assertIn("Shot 2:", video_pack["copy_ready_text"])
+        self.assertIn("Shot 3:", video_pack["copy_ready_text"])
+        self.assertIn("Do not claim:", video_pack["copy_ready_text"])
+        self.assertTrue(
+            any(recommended["title"] in item for item in video_pack["do_not_claim"])
         )
         self.assertTrue(pack["creative_feedback_runtime"]["feedback_summary"]["recommended_next_step"])
         self.assertLessEqual(pack["weak_evidence_count"], len(angles))
@@ -1604,6 +1626,14 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(pack["quality_checks"]["weak_evidence"])
         self.assertTrue(pack["weak_evidence_reason"])
         self.assertIn("Weak evidence", pack["decision_reason"])
+        self.assertFalse(pack["recommended_angle_id"])
+        self.assertFalse(any(angle["is_recommended"] for angle in pack["top_ad_angles"]))
+        self.assertFalse(
+            any(
+                action["action_type"] in {"use_recommended_angle", "copy_video_prompt"}
+                for action in pack["creative_next_actions"]
+            )
+        )
         self.assertTrue(
             all(angle["proof_quote"] or angle["missing_quote"] for angle in pack["top_ad_angles"])
         )

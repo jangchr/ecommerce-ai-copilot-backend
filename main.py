@@ -17576,11 +17576,14 @@ def _rw_rank_and_dedupe_creative_angles(angles: list[dict]) -> tuple[list[dict],
             duplicate_count += 1
             continue
 
+        score = raw_score(angle)
         coverage = dict(angle.get("evidence_coverage") or {})
         evidence_count = int(angle.get("supporting_evidence_count") or 0)
-        score = raw_score(angle)
         gaps = [name for name, covered in coverage.items() if not covered]
         copy_ready = bool(
+            score >= 60
+            and evidence_count >= 2
+            and
             coverage.get("proof_quote")
             and _rw_text(angle.get("hook"))
             and _rw_text(angle.get("cta"))
@@ -17611,10 +17614,18 @@ def _rw_rank_and_dedupe_creative_angles(angles: list[dict]) -> tuple[list[dict],
     )
     top_angles = ranked[:3]
     for rank, angle in enumerate(top_angles, start=1):
+        recommendation_ready = bool(
+            rank == 1
+            and int(angle.get("evidence_strength_score") or 0) >= 60
+            and angle.get("copy_readiness") == "ready"
+            and _rw_text(angle.get("proof_quote"))
+        )
         angle["angle_rank"] = rank
-        angle["is_recommended"] = rank == 1
+        angle["is_recommended"] = recommendation_ready
         angle["recommendation_reason"] = (
             "Highest evidence coverage and strongest copy readiness among distinct review-signal clusters."
+            if recommendation_ready
+            else "Highest-ranked draft, but more distinct review evidence is required before recommendation."
             if rank == 1
             else "Retained as a distinct evidence-backed alternative angle."
         )
@@ -18016,6 +18027,17 @@ def _review_workspace_creative_decision_pack(
             "liked_point": signal_type == "positive_signal" or bool(positive_label),
             "use_case": signal_type == "use_case",
         }
+        copy_ready_text = "\n".join(
+            [
+                f"Hook: {hook}",
+                f"Scene 1: {first_scene}",
+                f"Scene 2: {second_scene}",
+                f"Scene 3: {third_scene}",
+                f"CTA: {cta}",
+                f"Proof quote: {proof_quote or 'missing_quote'}",
+                f"Risk note: {risk_note}",
+            ]
+        )
         candidate_angles.append(
             {
                 "angle_id": f"angle_{index}",
@@ -18045,7 +18067,7 @@ def _review_workspace_creative_decision_pack(
                     else ""
                 ),
                 "risk_note": risk_note,
-                "copy_ready_text": "\n".join([title, hook, first_scene, second_scene, third_scene, cta]),
+                "copy_ready_text": copy_ready_text,
                 "tiktok_script": {
                     "hook": hook,
                     "scenes": [first_scene, second_scene, third_scene],
@@ -18092,6 +18114,22 @@ def _review_workspace_creative_decision_pack(
         "Do not imply that a buyer objection is resolved unless the supplied evidence explicitly supports the reversal.",
         "Do not claim the product is leak-proof, quiet, or easy to clean unless repeated supplied quotes explicitly support that claim.",
     ]
+    if primary_angle.get("title"):
+        do_not_claim.append(
+            f"Do not present the selected angle \"{primary_angle['title']}\" as a resolved product benefit; "
+            "show it as a buyer check grounded in the supplied quote."
+        )
+    video_copy_ready_text = "\n".join(
+        [
+            f"Keyframe prompt: {primary_angle.get('title', '')}",
+            *[
+                f"Shot {shot['scene_number']}: {shot['prompt']}"
+                for shot in shot_list
+            ],
+            "Do not claim:",
+            *[f"- {item}" for item in do_not_claim],
+        ]
+    )
     video_prompt_pack = {
         "keyframe_prompt": (
             f"Create three evidence-grounded keyframes for {product_context}. "
@@ -18104,6 +18142,7 @@ def _review_workspace_creative_decision_pack(
         "visual_style_hint": "Clear product-first ecommerce footage, readable evidence overlays, realistic use context, no fabricated before/after result.",
         "product_context": product_context,
         "do_not_claim": do_not_claim,
+        "copy_ready_text": video_copy_ready_text,
         "evidence_links": [
             {
                 "angle_id": angle["angle_id"],
