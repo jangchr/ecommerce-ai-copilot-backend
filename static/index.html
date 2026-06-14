@@ -3595,6 +3595,7 @@
         let latestProjectCreativeVariantSelectionPack = {};
         let latestProjectCreativeTestFeedbackPack = {};
         let latestProjectCreativeIterationPack = {};
+        let latestProjectCreativeVersionControlPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8857,6 +8858,9 @@
                 latestProjectCreativeTestFeedbackPack = latestProjectCreativeVariantPack.creative_test_feedback_pack || {};
                 latestProjectCreativeIterationPack = latestProjectCreativeDecisionPack.creative_iteration_pack
                     || latestProjectCreativeVariantPack.creative_iteration_pack
+                    || {};
+                latestProjectCreativeVersionControlPack = latestProjectCreativeDecisionPack.creative_version_control_pack
+                    || latestProjectCreativeVariantPack.creative_version_control_pack
                     || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -14689,6 +14693,7 @@
         const PROJECT_WORKSPACE_CREATIVE_VARIANT_SELECTION_MARKER = 'Project Workspace creative variant selection bundle';
         const PROJECT_WORKSPACE_CREATIVE_TEST_FEEDBACK_MARKER = 'Project Workspace creative test feedback bundle';
         const PROJECT_WORKSPACE_CREATIVE_ITERATION_MARKER = 'Project Workspace creative iteration bundle';
+        const PROJECT_WORKSPACE_CREATIVE_VERSION_CONTROL_MARKER = 'Project Workspace creative version control bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14721,6 +14726,7 @@
                 creative_next_actions: Array.isArray(pack.creative_next_actions) ? pack.creative_next_actions : [],
                 creative_feedback_runtime: pack.creative_feedback_runtime || {},
                 creative_variant_pack: pack.creative_variant_pack || {},
+                creative_version_control_pack: pack.creative_version_control_pack || {},
                 weak_evidence_reason: pack.weak_evidence_reason || '',
                 safety_boundaries: pack.safety_boundaries || {}
             };
@@ -15244,6 +15250,167 @@
             return decisionPack?.creative_iteration_pack
                 || decisionPack?.creative_variant_pack?.creative_iteration_pack
                 || {};
+        }
+
+        function projectWorkspaceCreativeVersionControlPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCreativeVersionControlPack
+                && Object.keys(latestProjectCreativeVersionControlPack).length) {
+                return latestProjectCreativeVersionControlPack;
+            }
+            const decisionPack = projectWorkspaceCreativeDecisionPackFromWorkspace(workspace);
+            return decisionPack?.creative_version_control_pack
+                || decisionPack?.creative_variant_pack?.creative_version_control_pack
+                || {};
+        }
+
+        function projectWorkspaceExportCreativeVersionControlSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCreativeVersionControlPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CREATIVE_VERSION_CONTROL_MARKER,
+                has_creative_version_control_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                version_summary: pack.version_summary || {},
+                recommended_next_test_version_id: pack.recommended_next_test_version_id || '',
+                version_lineage: Array.isArray(pack.version_lineage) ? pack.version_lineage : [],
+                version_comparison_cards: Array.isArray(pack.version_comparison_cards) ? pack.version_comparison_cards : [],
+                version_risk_summary: pack.version_risk_summary || {},
+                version_export_snapshot: pack.version_export_snapshot || {},
+                version_quality_checks: pack.version_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCreativeVersionText(version = {}) {
+            if (!version.version_id) return '';
+            return [
+                `${version.version_label || ''} - ${version.version_title || version.version_id}`,
+                `${t('creativeVersionGoal')}: ${version.version_goal || t('none')}`,
+                `${t('creativeDecisionHook')}: ${version.hook || t('none')}`,
+                `${t('creativeDecisionFirstScene')}: ${version.scene_1 || t('none')}`,
+                `${t('creativeDecisionSecondScene')}: ${version.scene_2 || t('none')}`,
+                `${t('creativeDecisionThirdScene')}: ${version.scene_3 || t('none')}`,
+                `${t('creativeDecisionCta')}: ${version.cta || t('none')}`,
+                `${t('creativeDecisionProofQuote')}: ${version.proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('creativeDecisionRiskNote')}: ${version.risk_note || t('none')}`,
+                `${t('creativeDecisionDoNotClaim')}: ${(version.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeVersionComparisonText(card = {}) {
+            if (!card.comparison_id) return '';
+            return [
+                card.comparison_title || card.comparison_id,
+                `${t('creativeVersionBaseVersion')}: ${card.base_version_id || t('none')}`,
+                `${t('creativeVersionRevisedVersion')}: ${card.revised_version_id || t('none')}`,
+                `${t('creativeVersionWhatChanged')}: ${(card.what_changed || []).join(', ') || t('none')}`,
+                `${t('creativeVersionWhyChanged')}: ${card.why_it_changed || t('none')}`,
+                `${t('creativeVersionExpectedBenefit')}: ${card.expected_benefit || t('none')}`,
+                `${t('creativeVersionRiskDelta')}: ${card.risk_delta || t('none')}`,
+                `${t('creativeVersionEvidenceDelta')}: ${card.evidence_delta || t('none')}`,
+                `${t('creativeVersionRecommendedNextAction')}: ${card.recommended_next_action || t('none')}`,
+                `${t('creativeDecisionProofQuote')}: ${card.proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('creativeDecisionRiskNote')}: ${card.risk_note || t('none')}`,
+                `${t('creativeDecisionDoNotClaim')}: ${(card.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeVersionRiskText(risk = {}) {
+            return [
+                `${t('creativeVersionLowestRisk')}: ${risk.lowest_risk_version_id || t('none')}`,
+                `${t('creativeVersionHighestReadiness')}: ${risk.highest_copy_readiness_version_id || t('none')}`,
+                `${t('creativeVersionBestTikTok')}: ${risk.best_for_tiktok_version_id || t('none')}`,
+                `${t('creativeVersionBestDirectResponse')}: ${risk.best_for_direct_response_version_id || t('none')}`,
+                `${t('creativeVersionBestLowEvidence')}: ${risk.best_for_low_evidence_safe_use_version_id || t('none')}`,
+                ...(risk.risk_notes || []).map((note) => `- ${note}`)
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportCreativeVersionControlMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVersionControlSnapshot(workspace);
+            if (!pack.has_creative_version_control_pack) return '';
+            const recommended = pack.version_lineage.find((version) =>
+                version.version_id === pack.recommended_next_test_version_id
+            ) || {};
+            return [
+                `## ${t('creativeVersionControlTitle')}`,
+                '',
+                `### ${t('creativeVersionTimelineTitle')}`,
+                ...pack.version_lineage.flatMap((version) => [
+                    `#### ${version.version_label || ''} - ${version.version_title || version.version_id}`,
+                    projectWorkspaceCreativeVersionText(version),
+                    ''
+                ]),
+                `### ${t('creativeVersionComparisonTitle')}`,
+                ...pack.version_comparison_cards.flatMap((card) => [
+                    `#### ${card.comparison_title || card.comparison_id}`,
+                    projectWorkspaceCreativeVersionComparisonText(card),
+                    ''
+                ]),
+                `### ${t('creativeVersionRecommendedNextTitle')}`,
+                projectWorkspaceCreativeVersionText(recommended) || t('creativeVersionNoData'),
+                '',
+                `### ${t('creativeVersionRiskSummaryTitle')}`,
+                projectWorkspaceCreativeVersionRiskText(pack.version_risk_summary)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCreativeVersionControlText(kind = 'recommended', itemId = '') {
+            const status = document.getElementById('projectWorkspaceCreativeVersionControlStatus');
+            const pack = projectWorkspaceExportCreativeVersionControlSnapshot();
+            const recommended = pack.version_lineage.find((version) =>
+                version.version_id === pack.recommended_next_test_version_id
+            ) || {};
+            let text = '';
+            if (kind === 'version') {
+                text = projectWorkspaceCreativeVersionText(
+                    pack.version_lineage.find((version) => version.version_id === itemId) || {}
+                );
+            } else if (kind === 'comparison') {
+                text = projectWorkspaceCreativeVersionComparisonText(
+                    pack.version_comparison_cards.find((card) => card.comparison_id === itemId) || {}
+                );
+            } else if (kind === 'timeline') {
+                text = pack.version_lineage.map(projectWorkspaceCreativeVersionText).filter(Boolean).join('\n\n');
+            } else if (kind === 'risk') {
+                text = projectWorkspaceCreativeVersionRiskText(pack.version_risk_summary);
+            } else {
+                text = projectWorkspaceCreativeVersionText(recommended);
+            }
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('creativeVersionCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('creativeVersionCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('creativeVersionCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeVersionCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceRecommendedCreativeVersion() {
+            return copyProjectWorkspaceCreativeVersionControlText('recommended');
+        }
+
+        function copyProjectWorkspaceCreativeRecommendedVersionScript() {
+            return copyProjectWorkspaceRecommendedCreativeVersion();
+        }
+
+        function copyProjectWorkspaceCreativeVersion(versionId) {
+            return copyProjectWorkspaceCreativeVersionControlText('version', versionId);
+        }
+
+        function copyProjectWorkspaceCreativeVersionComparison(comparisonId) {
+            return copyProjectWorkspaceCreativeVersionControlText('comparison', comparisonId);
+        }
+
+        function copyProjectWorkspaceCreativeVersionTimeline() {
+            return copyProjectWorkspaceCreativeVersionControlText('timeline');
+        }
+
+        function copyProjectWorkspaceCreativeVersionRiskSummary() {
+            return copyProjectWorkspaceCreativeVersionControlText('risk');
         }
 
         function projectWorkspaceExportCreativeIterationSnapshot(workspace = latestProjectWorkspace) {
@@ -16028,6 +16195,121 @@
             `;
         }
 
+        function renderProjectWorkspaceCreativeVersionSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVersionControlSnapshot(workspace);
+            if (!pack.has_creative_version_control_pack) return '';
+            const summary = pack.version_summary || {};
+            const recommended = pack.version_lineage.find((version) =>
+                version.version_id === pack.recommended_next_test_version_id
+            ) || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVersionSummaryPanel"
+                    data-creative-version-control-marker="${PROJECT_WORKSPACE_CREATIVE_VERSION_CONTROL_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeVersionControlTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeVersionControlHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-primary" type="button" ${recommended.version_id ? '' : 'disabled'}
+                                onclick="copyProjectWorkspaceRecommendedCreativeVersion()">${escapeHTML(t('creativeVersionCopyRecommended'))}</button>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeVersionTimeline()">${escapeHTML(t('creativeVersionCopyTimeline'))}</button>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeVersionRiskSummary()">${escapeHTML(t('creativeVersionCopyRisk'))}</button>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeVersionTotalVersions'), String(summary.version_count || 0))}
+                        ${metricPill(t('creativeVersionV1Count'), String(summary.v1_version_count || 0))}
+                        ${metricPill(t('creativeVersionV2Count'), String(summary.v2_version_count || 0))}
+                        ${metricPill(t('creativeVersionComparisonCount'), String(summary.comparison_count || 0))}
+                    </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(t('creativeVersionRecommendedNextTitle'))}:</strong>
+                        ${escapeHTML(recommended.version_title || pack.recommended_next_test_version_id || t('creativeVersionNoData'))}
+                    </div>
+                    <div class="field-helper">${escapeHTML(t('creativeVersionGuidanceOnly'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeVersionControlStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeVersionTimelinePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVersionControlSnapshot(workspace);
+            if (!pack.has_creative_version_control_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVersionTimelinePanel">
+                    <div class="json-key">${escapeHTML(t('creativeVersionTimelineTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeVersionTimelineHelper'))}</div>
+                    <div class="graph-os-grid">${pack.version_lineage.map((version) => `
+                        <div class="graph-os-card" data-creative-version-id="${escapeHTML(version.version_id || '')}">
+                            <div class="section-header">
+                                <strong>${escapeHTML(version.version_title || version.version_id || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(version.version_label || '')}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeVersionParent'))}:</strong> ${escapeHTML(version.parent_version_id || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeVersionGoal'))}:</strong> ${escapeHTML(version.version_goal || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionHook'))}:</strong> ${escapeHTML(version.hook || t('none'))}</div>
+                            <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionProofQuote'))}:</strong> ${escapeHTML(version.proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                            <div class="metric-strip">
+                                ${metricPill(t('creativeDecisionEvidenceScore'), String(version.evidence_strength_score || 0))}
+                                ${metricPill(t('creativeDecisionCopyReadiness'), version.copy_readiness || t('none'))}
+                                ${metricPill(t('creativeDecisionClaimSafetyLevel'), version.claim_safety_level || t('none'))}
+                            </div>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeVersion('${escapeHTML(version.version_id || '')}')">${escapeHTML(t('creativeVersionCopyVersion'))}</button>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeVersionComparisonPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVersionControlSnapshot(workspace);
+            if (!pack.has_creative_version_control_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVersionComparisonPanel">
+                    <div class="json-key">${escapeHTML(t('creativeVersionComparisonTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeVersionComparisonHelper'))}</div>
+                    <div class="graph-os-compact-grid">${pack.version_comparison_cards.map((card) => `
+                        <div class="graph-os-card">
+                            <div class="section-header">
+                                <strong>${escapeHTML(card.comparison_title || card.comparison_id || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(card.risk_delta || t('none'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeVersionWhatChanged'))}:</strong> ${escapeHTML((card.what_changed || []).join(', ') || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeVersionWhyChanged'))}:</strong> ${escapeHTML(card.why_it_changed || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeVersionExpectedBenefit'))}:</strong> ${escapeHTML(card.expected_benefit || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeVersionEvidenceDelta'))}:</strong> ${escapeHTML(card.evidence_delta || t('none'))}</div>
+                            <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionProofQuote'))}:</strong> ${escapeHTML(card.proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('creativeDecisionRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeVersionComparison('${escapeHTML(card.comparison_id || '')}')">${escapeHTML(t('creativeVersionCopyComparison'))}</button>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeVersionRiskSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVersionControlSnapshot(workspace);
+            if (!pack.has_creative_version_control_pack) return '';
+            const risk = pack.version_risk_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVersionRiskSummaryPanel">
+                    <div class="json-key">${escapeHTML(t('creativeVersionRiskSummaryTitle'))}</div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeVersionLowestRisk'))}</strong><div>${escapeHTML(risk.lowest_risk_version_id || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeVersionHighestReadiness'))}</strong><div>${escapeHTML(risk.highest_copy_readiness_version_id || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeVersionBestTikTok'))}</strong><div>${escapeHTML(risk.best_for_tiktok_version_id || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeVersionBestDirectResponse'))}</strong><div>${escapeHTML(risk.best_for_direct_response_version_id || t('none'))}</div></div>
+                    </div>
+                    <div class="demo-warning">${escapeHTML((risk.risk_notes || []).join(' | ') || t('creativeVersionNoData'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -16393,6 +16675,7 @@
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
                 projectWorkspaceExportCreativeTestFeedbackMarkdown(workspace),
                 projectWorkspaceExportCreativeIterationMarkdown(workspace),
+                projectWorkspaceExportCreativeVersionControlMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -16469,6 +16752,7 @@
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
                 creative_test_feedback_pack: projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace),
                 creative_iteration_pack: projectWorkspaceExportCreativeIterationSnapshot(workspace),
+                creative_version_control_pack: projectWorkspaceExportCreativeVersionControlSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -28876,6 +29160,10 @@
                     ${renderProjectWorkspaceCreativeIterationSummaryPanel(workspace)}
                     ${renderProjectWorkspaceCreativeIterationVariantsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeOriginalVsRevisedDiffPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVersionSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVersionTimelinePanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVersionComparisonPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVersionRiskSummaryPanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -35723,6 +36011,86 @@
             creativeIterationNoData: '暂无创意迭代数据。'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            creativeVersionControlTitle: 'Creative Version Control',
+            creativeVersionControlHelper: 'Compare evidence-grounded V1 and V2 drafts, then choose the safest next version to test.',
+            creativeVersionTimelineTitle: 'Version Timeline',
+            creativeVersionTimelineHelper: 'Trace each original variant and its evidence-preserving revision.',
+            creativeVersionComparisonTitle: 'V1 vs V2 Comparison',
+            creativeVersionComparisonHelper: 'Review what changed, why it changed, and which evidence and claim boundaries stayed fixed.',
+            creativeVersionRecommendedNextTitle: 'Recommended Next Test Version',
+            creativeVersionRiskSummaryTitle: 'Version Risk Summary',
+            creativeVersionGoal: 'Version goal',
+            creativeVersionParent: 'Parent version',
+            creativeVersionBaseVersion: 'Base version',
+            creativeVersionRevisedVersion: 'Revised version',
+            creativeVersionWhatChanged: 'What changed',
+            creativeVersionWhyChanged: 'Why it changed',
+            creativeVersionExpectedBenefit: 'Expected test benefit',
+            creativeVersionRiskDelta: 'Risk delta',
+            creativeVersionEvidenceDelta: 'Evidence delta',
+            creativeVersionRecommendedNextAction: 'Recommended next action',
+            creativeVersionLowestRisk: 'Lowest-risk version',
+            creativeVersionHighestReadiness: 'Highest copy readiness',
+            creativeVersionBestTikTok: 'Best for TikTok',
+            creativeVersionBestDirectResponse: 'Best for direct response',
+            creativeVersionBestLowEvidence: 'Best for low-evidence safe use',
+            creativeVersionTotalVersions: 'Versions',
+            creativeVersionV1Count: 'V1 versions',
+            creativeVersionV2Count: 'V2 versions',
+            creativeVersionComparisonCount: 'Comparisons',
+            creativeVersionCopyRecommended: 'Copy recommended version',
+            creativeVersionCopyVersion: 'Copy version',
+            creativeVersionCopyComparison: 'Copy comparison',
+            creativeVersionCopyTimeline: 'Copy version timeline',
+            creativeVersionCopyRisk: 'Copy risk summary',
+            creativeVersionCopied: 'Creative version content copied.',
+            creativeVersionCopyFailed: 'Unable to copy creative version content.',
+            creativeVersionCopyNoData: 'No creative version content is available to copy.',
+            creativeVersionNoData: 'No creative version control data is available.',
+            creativeVersionGuidanceOnly: 'Guidance only. This workspace does not run providers, generate media, persist feedback, or perform paid actions.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            creativeVersionControlTitle: '\u521b\u610f\u7248\u672c\u63a7\u5236',
+            creativeVersionControlHelper: '\u5bf9\u6bd4\u6709\u8bc1\u636e\u7ea6\u675f\u7684 V1 \u4e0e V2 \u8349\u7a3f\uff0c\u9009\u62e9\u6700\u5b89\u5168\u7684\u4e0b\u4e00\u4e2a\u6d4b\u8bd5\u7248\u672c\u3002',
+            creativeVersionTimelineTitle: '\u7248\u672c\u65f6\u95f4\u7ebf',
+            creativeVersionTimelineHelper: '\u8ffd\u8e2a\u6bcf\u4e2a\u539f\u59cb\u53d8\u4f53\u548c\u4fdd\u7559\u8bc1\u636e\u8fb9\u754c\u7684\u4fee\u8ba2\u7248\u3002',
+            creativeVersionComparisonTitle: 'V1 \u4e0e V2 \u5bf9\u6bd4',
+            creativeVersionComparisonHelper: '\u5ba1\u9605\u6539\u4e86\u4ec0\u4e48\u3001\u4e3a\u4ec0\u4e48\u6539\uff0c\u4ee5\u53ca\u54ea\u4e9b\u8bc1\u636e\u548c\u4e3b\u5f20\u8fb9\u754c\u4fdd\u6301\u4e0d\u53d8\u3002',
+            creativeVersionRecommendedNextTitle: '\u63a8\u8350\u4e0b\u4e00\u4e2a\u6d4b\u8bd5\u7248\u672c',
+            creativeVersionRiskSummaryTitle: '\u7248\u672c\u98ce\u9669\u6458\u8981',
+            creativeVersionGoal: '\u7248\u672c\u76ee\u6807',
+            creativeVersionParent: '\u7236\u7248\u672c',
+            creativeVersionBaseVersion: '\u57fa\u7840\u7248\u672c',
+            creativeVersionRevisedVersion: '\u4fee\u8ba2\u7248\u672c',
+            creativeVersionWhatChanged: '\u6539\u4e86\u4ec0\u4e48',
+            creativeVersionWhyChanged: '\u4e3a\u4ec0\u4e48\u6539',
+            creativeVersionExpectedBenefit: '\u9884\u671f\u6d4b\u8bd5\u4ef7\u503c',
+            creativeVersionRiskDelta: '\u98ce\u9669\u53d8\u5316',
+            creativeVersionEvidenceDelta: '\u8bc1\u636e\u53d8\u5316',
+            creativeVersionRecommendedNextAction: '\u5efa\u8bae\u4e0b\u4e00\u6b65',
+            creativeVersionLowestRisk: '\u6700\u4f4e\u98ce\u9669\u7248\u672c',
+            creativeVersionHighestReadiness: '\u6700\u9ad8\u590d\u5236\u5c31\u7eea\u5ea6',
+            creativeVersionBestTikTok: '\u6700\u9002\u5408 TikTok',
+            creativeVersionBestDirectResponse: '\u6700\u9002\u5408\u76f4\u6548\u5e7f\u544a',
+            creativeVersionBestLowEvidence: '\u6700\u9002\u5408\u5f31\u8bc1\u636e\u5b89\u5168\u4f7f\u7528',
+            creativeVersionTotalVersions: '\u7248\u672c\u6570',
+            creativeVersionV1Count: 'V1 \u7248\u672c',
+            creativeVersionV2Count: 'V2 \u7248\u672c',
+            creativeVersionComparisonCount: '\u5bf9\u6bd4\u6570',
+            creativeVersionCopyRecommended: '\u590d\u5236\u63a8\u8350\u7248\u672c',
+            creativeVersionCopyVersion: '\u590d\u5236\u7248\u672c',
+            creativeVersionCopyComparison: '\u590d\u5236\u7248\u672c\u5bf9\u6bd4',
+            creativeVersionCopyTimeline: '\u590d\u5236\u7248\u672c\u65f6\u95f4\u7ebf',
+            creativeVersionCopyRisk: '\u590d\u5236\u98ce\u9669\u6458\u8981',
+            creativeVersionCopied: '\u521b\u610f\u7248\u672c\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            creativeVersionCopyFailed: '\u65e0\u6cd5\u590d\u5236\u521b\u610f\u7248\u672c\u5185\u5bb9\u3002',
+            creativeVersionCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u521b\u610f\u7248\u672c\u5185\u5bb9\u3002',
+            creativeVersionNoData: '\u6682\u65e0\u521b\u610f\u7248\u672c\u63a7\u5236\u6570\u636e\u3002',
+            creativeVersionGuidanceOnly: '\u4ec5\u4f5c\u5efa\u8bae\u3002\u672c\u5de5\u4f5c\u533a\u4e0d\u8c03\u7528 provider\u3001\u4e0d\u751f\u6210\u5a92\u4f53\u3001\u4e0d\u6301\u4e45\u5316\u53cd\u9988\u3001\u4e0d\u6267\u884c\u4ed8\u8d39\u64cd\u4f5c\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -37102,6 +37470,9 @@ async function analyzeExtensionWorkspace() {
     latestProjectCreativeTestFeedbackPack = latestProjectCreativeVariantPack.creative_test_feedback_pack || {};
     latestProjectCreativeIterationPack = latestProjectCreativeDecisionPack.creative_iteration_pack
       || latestProjectCreativeVariantPack.creative_iteration_pack
+      || {};
+    latestProjectCreativeVersionControlPack = latestProjectCreativeDecisionPack.creative_version_control_pack
+      || latestProjectCreativeVariantPack.creative_version_control_pack
       || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),

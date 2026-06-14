@@ -8004,6 +8004,100 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertNotIn("<details open", governance)
         self.assertNotIn("????", html)
 
+    def test_creative_version_control_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace creative version control bundle",
+            "PROJECT_WORKSPACE_CREATIVE_VERSION_CONTROL_MARKER",
+            "latestProjectCreativeVersionControlPack",
+            "projectWorkspaceCreativeVersionControlPackFromWorkspace",
+            "projectWorkspaceExportCreativeVersionControlSnapshot",
+            "projectWorkspaceExportCreativeVersionControlMarkdown",
+            "renderProjectWorkspaceCreativeVersionSummaryPanel",
+            "renderProjectWorkspaceCreativeVersionTimelinePanel",
+            "renderProjectWorkspaceCreativeVersionComparisonPanel",
+            "renderProjectWorkspaceCreativeVersionRiskSummaryPanel",
+            "copyProjectWorkspaceRecommendedCreativeVersion",
+            "copyProjectWorkspaceCreativeRecommendedVersionScript",
+            "copyProjectWorkspaceCreativeVersion",
+            "copyProjectWorkspaceCreativeVersionComparison",
+            "copyProjectWorkspaceCreativeVersionTimeline",
+            "copyProjectWorkspaceCreativeVersionRiskSummary",
+            "creative_version_control_pack: projectWorkspaceExportCreativeVersionControlSnapshot(workspace)",
+            "Creative Version Control",
+            "Version Timeline",
+            "V1 vs V2 Comparison",
+            "Recommended Next Test Version",
+            "Version Risk Summary",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.version_lineage",
+            "pack.version_comparison_cards",
+            "pack.recommended_next_test_version_id",
+            "version.parent_version_id",
+            "version.proof_quote",
+            "version.evidence_strength_score",
+            "card.what_changed",
+            "card.expected_benefit",
+            "card.evidence_delta",
+            "risk.lowest_risk_version_id",
+        ]:
+            self.assertIn(runtime_field, html)
+
+    def test_creative_version_control_has_bilingual_copy_guard_and_collapsed_governance(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "creativeVersionControlTitle",
+            "creativeVersionTimelineTitle",
+            "creativeVersionComparisonTitle",
+            "creativeVersionRecommendedNextTitle",
+            "creativeVersionRiskSummaryTitle",
+            "creativeVersionCopyRecommended",
+            "creativeVersionCopyVersion",
+            "creativeVersionCopyComparison",
+            "creativeVersionCopyTimeline",
+            "creativeVersionCopyRisk",
+            "creativeVersionCopied",
+            "creativeVersionCopyFailed",
+            "creativeVersionCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace creative version control bundle", script)
+            self.assertIn("project_workspace_creative_version_control_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportCreativeVersionControlMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceCreativeVersionControlText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for marker in [
+            "creativeVersionControlTitle",
+            "creativeVersionTimelineTitle",
+            "creativeVersionComparisonTitle",
+            "creativeVersionRecommendedNextTitle",
+            "creativeVersionRiskSummaryTitle",
+        ]:
+            self.assertIn(marker, markdown)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
+        creative_section = html[
+            html.index("const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER"):
+            governance_start
+        ]
+        self.assertNotIn("fetch(", creative_section)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
