@@ -7681,6 +7681,76 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertNotIn("<details open", governance)
         self.assertNotIn("????", html)
 
+    def test_creative_variant_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace creative variant pack bundle",
+            "PROJECT_WORKSPACE_CREATIVE_VARIANT_PACK_MARKER",
+            "latestProjectCreativeVariantPack",
+            "projectWorkspaceCreativeVariantPackFromWorkspace",
+            "projectWorkspaceExportCreativeVariantPackSnapshot",
+            "projectWorkspaceExportCreativeVariantPackMarkdown",
+            "renderProjectWorkspaceCreativeVariantSummaryPanel",
+            "renderProjectWorkspaceCreativeVariantsPanel",
+            "renderProjectWorkspaceCreativeVariantComparePanel",
+            "copyProjectWorkspaceRecommendedVariantScript",
+            "copyProjectWorkspaceCreativeVariantScript",
+            "copyProjectWorkspaceCreativeVariantVideoPrompt",
+            "creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace)",
+            "Creative Variant Pack",
+            "Recommended Variant Script",
+            "Variant Scripts and Video Prompts",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "variant.variant_type",
+            "variant.target_length_seconds",
+            "variant.creative_style",
+            "variant.claim_safety_level",
+            "variant.copy_readiness",
+        ]:
+            self.assertIn(runtime_field, html)
+
+    def test_creative_variant_workspace_has_bilingual_copy_guard_and_collapsed_governance(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "creativeVariantSummaryTitle",
+            "creativeVariantPanelTitle",
+            "creativeVariantCompareTitle",
+            "creativeVariantCopyRecommended",
+            "creativeVariantCopyScript",
+            "creativeVariantCopyVideoPrompt",
+            "creativeVariantScriptCopied",
+            "creativeVariantVideoPromptCopied",
+            "creativeVariantCopyFailed",
+            "creativeVariantCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace creative variant pack bundle", script)
+            self.assertIn("project_workspace_creative_variant_pack_marker", script)
+        markdown_start = html.index("function projectWorkspaceExportCreativeVariantPackMarkdown")
+        markdown_end = html.index("async function copyProjectWorkspaceCreativeVariantText", markdown_start)
+        markdown = html[markdown_start:markdown_end]
+        for marker in [
+            "creativeVariantPackTitle",
+            "creativeVariantRecommendedVariant",
+            "creativeVariantRecommendedScript",
+            "creativeVariantScriptsTitle",
+            "creativeVariantVideoPrompt",
+        ]:
+            self.assertIn(marker, markdown)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
