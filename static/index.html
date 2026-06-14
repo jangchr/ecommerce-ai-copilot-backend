@@ -14674,6 +14674,7 @@
         const PROJECT_WORKSPACE_CREATIVE_DECISION_USABILITY_MARKER = 'Project Workspace creative decision usability bundle';
         const PROJECT_WORKSPACE_CREATIVE_DECISION_QUALITY_POLISH_MARKER = 'Project Workspace creative decision quality polish bundle';
         const PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER = 'Project Workspace creative feedback runtime bundle';
+        const PROJECT_WORKSPACE_REAL_SAMPLE_EXPORT_FLOW_MARKER = 'Project Workspace real sample export flow bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14772,6 +14773,8 @@
                 `${t('creativeDecisionHook')}: ${recommended.tiktok_script?.hook || recommended.hook || t('none')}`,
                 ...((recommended.tiktok_script?.scenes || []).map((scene, index) => `${index + 1}. ${scene}`)),
                 `${t('creativeDecisionCta')}: ${recommended.tiktok_script?.cta || recommended.cta || t('none')}`,
+                `${t('creativeDecisionProofQuote')}: ${recommended.tiktok_script?.proof_quote || recommended.proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('creativeDecisionRiskNote')}: ${recommended.tiktok_script?.risk_note || recommended.risk_note || t('none')}`,
                 '',
                 `### ${t('creativeDecisionEvidenceQualitySummary')}`,
                 `${t('creativeDecisionWeakEvidenceCount')}: ${pack.weak_evidence_count}`,
@@ -14925,6 +14928,35 @@
             return copyProjectWorkspaceCreativeDecisionText('video', 0, 'creativeDecisionVideoCopied');
         }
 
+        function projectWorkspaceCreativeDecisionExportText(format = 'markdown', workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            if (!pack.has_creative_decision_pack) return '';
+            return format === 'json'
+                ? JSON.stringify(pack, null, 2)
+                : projectWorkspaceExportCreativeDecisionPackMarkdown(workspace);
+        }
+
+        async function copyProjectWorkspaceCreativeDecisionExport(format = 'markdown') {
+            const status = document.getElementById('projectWorkspaceCreativeExportStatus')
+                || document.getElementById('projectWorkspaceCreativeDecisionStatus');
+            try {
+                const text = projectWorkspaceCreativeDecisionExportText(format);
+                if (!text) {
+                    if (status) status.textContent = t('creativeDecisionExportNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('creativeDecisionExportFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) {
+                    status.textContent = format === 'json'
+                        ? t('creativeDecisionExportJsonCopied')
+                        : t('creativeDecisionExportMarkdownCopied');
+                }
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeDecisionExportFailed');
+            }
+        }
+
         function projectWorkspaceCreativeFeedbackRuntime(workspace = latestProjectWorkspace) {
             return projectWorkspaceExportCreativeDecisionPackSnapshot(workspace).creative_feedback_runtime || {};
         }
@@ -15011,11 +15043,18 @@
                 evidence: pack.evidence_brief?.high_signal_quotes?.length
                     ? (pack.weak_evidence_count ? 'weak_evidence' : 'ready')
                     : 'no_data',
-                angle: pack.recommended_angle_id ? 'ready' : 'no_data',
-                script: script.recommended_script_ready ? 'ready' : 'needs_review',
-                video: script.copy_video_prompt_available ? 'ready' : 'no_data',
-                quality: checks.weak_evidence || checks.missing_quote ? 'needs_review' : 'ready',
-                export: summary.overall_readiness === 'ready_to_copy' ? 'ready' : 'needs_review'
+                angle: pack.recommended_angle_id
+                    ? 'ready'
+                    : (pack.top_ad_angles?.length ? 'weak_evidence' : 'no_data'),
+                script: script.recommended_script_ready && pack.recommended_angle_id
+                    ? 'ready'
+                    : (pack.top_ad_angles?.length ? 'needs_review' : 'no_data'),
+                video: script.copy_video_prompt_available && pack.recommended_angle_id
+                    ? 'ready'
+                    : (pack.video_prompt_pack?.shot_list?.length ? 'needs_review' : 'no_data'),
+                export: summary.overall_readiness === 'ready_to_copy'
+                    ? 'ready'
+                    : (pack.has_creative_decision_pack ? 'needs_review' : 'no_data')
             };
             return states[stepId] || 'no_data';
         }
@@ -15038,18 +15077,56 @@
                 ['angle', t('creativeCoreFlowRecommendedAngle')],
                 ['script', t('creativeCoreFlowTikTokScript')],
                 ['video', t('creativeCoreFlowVideoPrompt')],
-                ['quality', t('creativeCoreFlowQuality')],
                 ['export', t('creativeCoreFlowExport')]
             ];
             return `
-                <div class="section-block" id="projectWorkspaceCreativeCoreFlowStrip" data-creative-feedback-runtime-marker="${PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER}">
+                <div class="section-block" id="projectWorkspaceCreativeCoreFlowStrip"
+                    data-creative-feedback-runtime-marker="${PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER}"
+                    data-real-sample-export-flow-marker="${PROJECT_WORKSPACE_REAL_SAMPLE_EXPORT_FLOW_MARKER}">
                     <div class="json-key">${escapeHTML(t('creativeCoreFlowTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeCoreFlowHelper'))}</div>
                     <div class="metric-strip">
                         ${steps.map(([id, label]) => {
                             const status = creativeCoreFlowStepStatus(id, pack, runtime);
                             return metricPill(label, creativeCoreFlowStatusLabel(status));
                         }).join('')}
                     </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeExportPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace);
+            const disabled = pack.has_creative_decision_pack ? '' : 'disabled';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeExportPanel"
+                    data-real-sample-export-flow-marker="${PROJECT_WORKSPACE_REAL_SAMPLE_EXPORT_FLOW_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeDecisionExportTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionExportHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-primary" type="button" ${disabled}
+                                onclick="copyProjectWorkspaceCreativeDecisionExport('markdown')">${escapeHTML(t('creativeDecisionExportMarkdown'))}</button>
+                            <button class="btn-secondary" type="button" ${disabled}
+                                onclick="copyProjectWorkspaceCreativeDecisionExport('json')">${escapeHTML(t('creativeDecisionExportJson'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('creativeDecisionExportMarkdown'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionExportMarkdownContents'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('creativeDecisionExportJson'))}</strong>
+                            <div class="field-helper">${escapeHTML(t('creativeDecisionExportJsonContents'))}</div>
+                        </div>
+                    </div>
+                    ${pack.has_creative_decision_pack
+                        ? `<div class="feedback-box">${escapeHTML(t('creativeDecisionExportSafetyNote'))}</div>`
+                        : `<div class="recent-empty">${escapeHTML(t('creativeDecisionExportNoData'))}</div>`}
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeExportStatus"></div>
                 </div>
             `;
         }
@@ -27882,6 +27959,7 @@
                     ${renderProjectWorkspaceCreativeNextActionsPanel(workspace)}
                     ${renderProjectWorkspaceVideoPromptPackPanel(workspace)}
                     ${renderProjectWorkspaceCreativeQualityChecksPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
                         ${metricPill(t('recentProjectSources'), String(summary.source_count || 0))}
@@ -34256,6 +34334,7 @@
             creativeFeedbackRuntimeTitle: 'Creative Feedback Runtime',
             creativeFeedbackRuntimeHelper: 'Runtime guidance derived from evidence quality. No user preference is invented or persisted.',
             creativeCoreFlowTitle: 'Core Creative Flow',
+            creativeCoreFlowHelper: 'Move from supplied evidence to a reviewable angle, copy-ready TikTok script, safe video prompt, and export.',
             creativeCoreFlowEvidence: 'Evidence Brief',
             creativeCoreFlowRecommendedAngle: 'Recommended Angle',
             creativeCoreFlowTikTokScript: 'TikTok Script',
@@ -34310,7 +34389,18 @@
             creativeDecisionStrengthModerate: 'Moderate',
             creativeDecisionStrengthWeak: 'Weak',
             creativeDecisionReadOnlyNote: 'Evidence review and copy/export only. Real providers, media transfer, registry writes, restore, rollback, and paid actions remain disabled.',
-            creativeDecisionNoData: 'Run Review Workspace analysis to load an evidence-grounded creative decision pack.'
+            creativeDecisionNoData: 'Run Review Workspace analysis to load an evidence-grounded creative decision pack.',
+            creativeDecisionExportTitle: 'Creative Decision Export',
+            creativeDecisionExportHelper: 'Export the selected creative path without triggering a provider or media operation.',
+            creativeDecisionExportMarkdown: 'Copy creative Markdown',
+            creativeDecisionExportJson: 'Copy creative JSON',
+            creativeDecisionExportMarkdownContents: 'Includes Recommended Angle, TikTok Script, Proof Quote, Risk Note, Video Prompt, shot list, and Do Not Claim boundaries.',
+            creativeDecisionExportJsonContents: 'Includes the structured creative_decision_pack, evidence quality, feedback runtime, and safety boundaries.',
+            creativeDecisionExportSafetyNote: 'Copy/export only. Review weak evidence and claim limits before production use.',
+            creativeDecisionExportMarkdownCopied: 'Creative Decision Markdown copied.',
+            creativeDecisionExportJsonCopied: 'Creative Decision JSON copied.',
+            creativeDecisionExportFailed: 'Unable to copy the creative decision export.',
+            creativeDecisionExportNoData: 'Run Review Workspace analysis before exporting a creative decision.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -34387,6 +34477,7 @@
             creativeFeedbackRuntimeTitle: '创意反馈运行建议',
             creativeFeedbackRuntimeHelper: '根据证据质量派生的运行时建议，不会虚构或持久化用户偏好。',
             creativeCoreFlowTitle: '核心创意流程',
+            creativeCoreFlowHelper: '从已有证据依次确认推荐角度、可复制 TikTok 脚本、安全视频提示词和导出内容。',
             creativeCoreFlowEvidence: '证据简报',
             creativeCoreFlowRecommendedAngle: '推荐角度',
             creativeCoreFlowTikTokScript: 'TikTok 脚本',
@@ -34441,7 +34532,18 @@
             creativeDecisionStrengthModerate: '\u4e2d\u7b49',
             creativeDecisionStrengthWeak: '\u5f31',
             creativeDecisionReadOnlyNote: '\u4ec5\u7528\u4e8e\u8bc1\u636e\u5ba1\u9605\u548c\u590d\u5236/\u5bfc\u51fa\u3002\u771f\u5b9e provider\u3001\u5a92\u4f53\u4f20\u8f93\u3001registry \u5199\u5165\u3001restore\u3001rollback \u548c\u4ed8\u8d39\u52a8\u4f5c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
-            creativeDecisionNoData: '\u8fd0\u884c\u8bc4\u8bba\u5de5\u4f5c\u533a\u5206\u6790\u540e\uff0c\u5373\u53ef\u52a0\u8f7d\u8bc1\u636e\u578b\u521b\u610f\u51b3\u7b56\u5305\u3002'
+            creativeDecisionNoData: '\u8fd0\u884c\u8bc4\u8bba\u5de5\u4f5c\u533a\u5206\u6790\u540e\uff0c\u5373\u53ef\u52a0\u8f7d\u8bc1\u636e\u578b\u521b\u610f\u51b3\u7b56\u5305\u3002',
+            creativeDecisionExportTitle: '创意决策导出',
+            creativeDecisionExportHelper: '只导出当前选定的创意路径，不会触发 provider 或媒体操作。',
+            creativeDecisionExportMarkdown: '复制创意 Markdown',
+            creativeDecisionExportJson: '复制创意 JSON',
+            creativeDecisionExportMarkdownContents: '包含推荐角度、TikTok 脚本、证据原话、风险提示、视频提示词、镜头清单和禁止主张。',
+            creativeDecisionExportJsonContents: '包含结构化 creative_decision_pack、证据质量、反馈运行时和安全边界。',
+            creativeDecisionExportSafetyNote: '仅复制/导出。投入制作前请审核弱证据和主张边界。',
+            creativeDecisionExportMarkdownCopied: '创意决策 Markdown 已复制。',
+            creativeDecisionExportJsonCopied: '创意决策 JSON 已复制。',
+            creativeDecisionExportFailed: '无法复制创意决策导出内容。',
+            creativeDecisionExportNoData: '请先运行评论工作区分析，再导出创意决策。'
         });
 
 

@@ -7494,6 +7494,9 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "copyProjectWorkspaceRecommendedTikTokScript",
             "projectWorkspaceExportCreativeDecisionPackSnapshot",
             "projectWorkspaceExportCreativeDecisionPackMarkdown",
+            "projectWorkspaceCreativeDecisionExportText",
+            "copyProjectWorkspaceCreativeDecisionExport",
+            "renderProjectWorkspaceCreativeExportPanel",
             "creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace)",
             "creative_decision_pack: latestProjectCreativeDecisionPack",
             "Creative Decision Pack",
@@ -7505,6 +7508,7 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "Evidence Quality Summary",
             "Creative Next Actions",
             "TikTok Script",
+            "Creative Decision Export",
         ]:
             with self.subTest(marker=marker):
                 self.assertIn(marker, html)
@@ -7535,6 +7539,16 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "creativeDecisionShotPrompt",
             "creativeDecisionShotEvidence",
             "creativeDecisionPromptSafetyBoundary",
+            "creativeDecisionExportTitle",
+            "creativeDecisionExportMarkdown",
+            "creativeDecisionExportJson",
+            "creativeDecisionExportMarkdownContents",
+            "creativeDecisionExportJsonContents",
+            "creativeDecisionExportSafetyNote",
+            "creativeDecisionExportMarkdownCopied",
+            "creativeDecisionExportJsonCopied",
+            "creativeDecisionExportFailed",
+            "creativeDecisionExportNoData",
         ]:
             with self.subTest(key=key):
                 self.assertGreaterEqual(html.count(key), 3)
@@ -7611,6 +7625,18 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertLess(copy_source.index("creativeDecisionCta"), copy_source.index("creativeDecisionProofQuote"))
         self.assertLess(copy_source.index("creativeDecisionProofQuote"), copy_source.index("creativeDecisionRiskNote"))
 
+        markdown_start = html.index("function projectWorkspaceExportCreativeDecisionPackMarkdown")
+        markdown_end = html.index("function projectWorkspaceCreativeDecisionPackCopyText", markdown_start)
+        markdown_source = html[markdown_start:markdown_end]
+        for marker in [
+            "creativeDecisionRecommendedAngleTitle",
+            "creativeDecisionTikTokScript",
+            "creativeDecisionVideoPromptTitle",
+            "creativeDecisionRiskNote",
+            "creativeDecisionDoNotClaim",
+        ]:
+            self.assertIn(marker, markdown_source)
+
         video_start = html.index("function renderProjectWorkspaceVideoPromptPackPanel")
         video_end = html.index("function renderProjectWorkspaceCreativeQualityChecksPanel", video_start)
         video = html[video_start:video_end]
@@ -7623,6 +7649,36 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         ]:
             self.assertIn(marker, video)
         self.assertNotIn("JSON.stringify(video.evidence_links", video)
+        self.assertNotIn("????", html)
+
+    def test_real_sample_export_flow_has_status_guidance_and_bilingual_copy(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        self.assertIn("Project Workspace real sample export flow bundle", html)
+        self.assertIn("PROJECT_WORKSPACE_REAL_SAMPLE_EXPORT_FLOW_MARKER", html)
+        self.assertIn("renderProjectWorkspaceCreativeExportPanel(workspace)", html)
+        self.assertIn("copyProjectWorkspaceCreativeDecisionExport('markdown')", html)
+        self.assertIn("copyProjectWorkspaceCreativeDecisionExport('json')", html)
+        self.assertIn("pack.top_ad_angles?.length ? 'weak_evidence' : 'no_data'", html)
+        for key in [
+            "creativeCoreFlowHelper",
+            "creativeDecisionExportTitle",
+            "creativeDecisionExportHelper",
+            "creativeDecisionExportMarkdownContents",
+            "creativeDecisionExportJsonContents",
+            "creativeDecisionExportSafetyNote",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace real sample export flow bundle", script)
+            self.assertIn("project_workspace_real_sample_export_flow_marker", script)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
         self.assertNotIn("????", html)
 
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
