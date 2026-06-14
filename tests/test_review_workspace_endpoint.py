@@ -1650,6 +1650,51 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(variant_pack["variant_copy_export"]["variant_scripts"])
         self.assertTrue(variant_pack["variant_copy_export"]["variant_video_prompts"])
         self.assertTrue(all(value is False for value in variant_pack["safety_boundaries"].values()))
+        selection_pack = variant_pack["variant_selection_pack"]
+        self.assertEqual(selection_pack["pack_version"], "variant_selection_pack_v1")
+        self.assertTrue(selection_pack["recommended_first_variant_id"])
+        pair = selection_pack["recommended_ab_pair"]
+        self.assertTrue(pair["variant_a_id"])
+        self.assertTrue(pair["variant_b_id"])
+        self.assertNotEqual(pair["variant_a_id"], pair["variant_b_id"])
+        self.assertGreaterEqual(len(selection_pack["selection_cards"]), 5)
+        self.assertTrue(
+            {
+                "best_for_tiktok",
+                "best_for_ugc",
+                "best_for_direct_response",
+                "best_for_low_evidence_safe_use",
+            }.issubset({card["best_for"] for card in selection_pack["selection_cards"]})
+        )
+        for card in selection_pack["selection_cards"]:
+            with self.subTest(selection_id=card["selection_id"]):
+                for field in [
+                    "selection_reason",
+                    "test_hypothesis",
+                    "success_metric",
+                    "recommended_next_action",
+                ]:
+                    self.assertTrue(card[field], field)
+                self.assertTrue(card["proof_quote"] or card["evidence_fit"] == "missing_quote")
+                self.assertTrue(card["do_not_claim"])
+        ab_plan = selection_pack["ab_test_plan"]
+        for field in [
+            "hypothesis",
+            "primary_metric",
+            "what_to_change",
+            "what_to_keep_constant",
+        ]:
+            self.assertTrue(ab_plan[field], field)
+        self.assertTrue(selection_pack["selection_quality_checks"]["distinct_ab_pair"])
+        for boundary in [
+            "provider_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_operation_enabled",
+            "paid_operation_enabled",
+            "registry_operation_enabled",
+        ]:
+            self.assertFalse(selection_pack["safety_boundaries"][boundary])
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -1696,6 +1741,22 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertFalse(variant_pack["recommended_variant_id"])
         self.assertTrue(variant_pack["variant_quality_checks"]["weak_evidence"])
         self.assertTrue(all(variant["weak_evidence"] for variant in variant_pack["variants"]))
+        selection_pack = variant_pack["variant_selection_pack"]
+        self.assertTrue(selection_pack["recommended_first_variant_id"])
+        recommended_card = next(
+            card
+            for card in selection_pack["selection_cards"]
+            if card["variant_id"] == selection_pack["recommended_first_variant_id"]
+        )
+        self.assertEqual(recommended_card["best_for"], "best_for_low_evidence_safe_use")
+        self.assertEqual(recommended_card["claim_safety_level"], "conservative")
+        self.assertNotEqual(recommended_card["copy_readiness"], "ready")
+        self.assertTrue(selection_pack["selection_quality_checks"]["weak_evidence"])
+        self.assertFalse(
+            selection_pack["selection_quality_checks"][
+                "high_claim_safety_recommended_without_quote"
+            ]
+        )
         feedback = pack["creative_feedback_runtime"]
         self.assertIn(
             feedback["feedback_summary"]["recommended_next_step"],

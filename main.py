@@ -17952,6 +17952,225 @@ def _rw_creative_quality_checks(top_ad_angles: list[dict], evidence_count: int) 
     }
 
 
+def _rw_creative_variant_selection_pack(
+    variants: list[dict],
+    recommended_variant_id: str,
+) -> dict:
+    best_for_by_type = {
+        "short_hook": "best_for_tiktok",
+        "ugc_testimonial": "best_for_ugc",
+        "problem_solution": "best_for_direct_response",
+        "direct_demo": "best_for_low_evidence_safe_use",
+        "objection_reversal": "best_for_fast_hook_test",
+    }
+    fit_reason_by_type = {
+        "short_hook": "Uses the shortest evidence-backed opening for a fast TikTok hook test.",
+        "ugc_testimonial": "Keeps the supplied buyer quote visible, which fits creator-led UGC framing.",
+        "problem_solution": "Turns the documented pain or objection into a direct-response inspection sequence.",
+        "direct_demo": "Keeps claims conservative by showing the existing product checks instead of promising a result.",
+        "objection_reversal": "Tests an objection-first opening while preserving the supplied evidence and resolution boundary.",
+    }
+    hypothesis_by_type = {
+        "short_hook": "A shorter quote-first opening will improve the first-seconds hold rate.",
+        "ugc_testimonial": "A visible buyer quote will improve trust without adding a new product claim.",
+        "problem_solution": "A pain-led inspection sequence will improve qualified click intent.",
+        "direct_demo": "A product-first inspection will improve comprehension with lower claim risk.",
+        "objection_reversal": "Acknowledging the objection early will improve engagement from cautious buyers.",
+    }
+    metric_by_type = {
+        "short_hook": "3-second view rate",
+        "ugc_testimonial": "hook hold rate",
+        "problem_solution": "click-through rate",
+        "direct_demo": "qualified view completion",
+        "objection_reversal": "click-through rate",
+    }
+
+    selection_cards: list[dict] = []
+    for variant in variants:
+        variant_type = _rw_text(variant.get("variant_type"))
+        missing_quote = bool(variant.get("missing_quote"))
+        weak_evidence = bool(variant.get("weak_evidence"))
+        evidence_score = max(0, min(100, int(variant.get("evidence_strength_score") or 0)))
+        readiness = _rw_text(variant.get("copy_readiness")) or "needs_review"
+        claim_safety = _rw_text(variant.get("claim_safety_level")) or "conservative"
+        risk_level = (
+            "high"
+            if missing_quote
+            else "medium"
+            if weak_evidence or claim_safety != "evidence_grounded"
+            else "low"
+        )
+        selection_score = evidence_score
+        if readiness == "ready":
+            selection_score += 15
+        if claim_safety == "evidence_grounded":
+            selection_score += 10
+        if variant.get("variant_id") == recommended_variant_id:
+            selection_score += 8
+        if missing_quote:
+            selection_score -= 35
+        elif weak_evidence:
+            selection_score -= 20
+        if variant_type == "direct_demo" and weak_evidence:
+            selection_score += 12
+        selection_score = max(0, min(100, selection_score))
+        best_for = best_for_by_type.get(variant_type, "best_for_tiktok")
+        selection_reason = fit_reason_by_type.get(
+            variant_type,
+            "Uses the existing evidence-grounded variant without introducing a new claim.",
+        )
+        if weak_evidence:
+            selection_reason += " Evidence is weak, so treat this as a conservative review draft."
+        recommended_next_action = (
+            "collect_more_reviews"
+            if missing_quote
+            else "lower_claim_strength"
+            if weak_evidence
+            else "prepare_ab_test"
+        )
+        selection_cards.append(
+            {
+                "selection_id": f"selection_{variant.get('variant_id', variant_type)}",
+                "variant_id": variant.get("variant_id", ""),
+                "variant_type": variant_type,
+                "variant_title": variant.get("variant_title", ""),
+                "best_for": best_for,
+                "selection_rank": 0,
+                "selection_score": selection_score,
+                "selection_reason": selection_reason,
+                "audience_fit": (
+                    "Buyer-language fit from the selected evidence-grounded source angle."
+                    if variant.get("proof_quote")
+                    else "Audience fit needs more buyer-language evidence."
+                ),
+                "platform_fit": "TikTok vertical short-form creative test.",
+                "evidence_fit": (
+                    "proof_quote_present"
+                    if variant.get("proof_quote")
+                    else "missing_quote"
+                ),
+                "risk_level": risk_level,
+                "claim_safety_level": (
+                    claim_safety if not weak_evidence else "conservative"
+                ),
+                "copy_readiness": readiness if not weak_evidence else "needs_evidence",
+                "test_hypothesis": hypothesis_by_type.get(
+                    variant_type,
+                    "This evidence-grounded framing may improve qualified engagement.",
+                ),
+                "success_metric": metric_by_type.get(variant_type, "click-through rate"),
+                "recommended_next_action": recommended_next_action,
+                "proof_quote": variant.get("proof_quote", ""),
+                "risk_note": variant.get("risk_note", ""),
+                "do_not_claim": list(variant.get("do_not_claim") or []),
+            }
+        )
+
+    selection_cards.sort(
+        key=lambda card: (-card["selection_score"], card["variant_type"], card["variant_id"])
+    )
+    for rank, card in enumerate(selection_cards, start=1):
+        card["selection_rank"] = rank
+
+    has_strong_evidence = any(
+        card["evidence_fit"] == "proof_quote_present"
+        and card["copy_readiness"] == "ready"
+        and card["claim_safety_level"] == "evidence_grounded"
+        for card in selection_cards
+    )
+    if has_strong_evidence:
+        first_card = selection_cards[0] if selection_cards else {}
+    else:
+        first_card = next(
+            (
+                card
+                for card in selection_cards
+                if card["best_for"] == "best_for_low_evidence_safe_use"
+            ),
+            selection_cards[0] if selection_cards else {},
+        )
+
+    pair_candidates = [first_card] if first_card else []
+    pair_candidates.extend(
+        card
+        for card in selection_cards
+        if card.get("variant_id") != first_card.get("variant_id")
+    )
+    variant_a = pair_candidates[0] if pair_candidates else {}
+    variant_b = pair_candidates[1] if len(pair_candidates) > 1 else {}
+    recommended_ab_pair = {
+        "variant_a_id": variant_a.get("variant_id", ""),
+        "variant_b_id": variant_b.get("variant_id", ""),
+        "variant_a_title": variant_a.get("variant_title", ""),
+        "variant_b_title": variant_b.get("variant_title", ""),
+    }
+    weak_evidence_count = sum(card["copy_readiness"] != "ready" for card in selection_cards)
+    missing_quote_count = sum(card["evidence_fit"] == "missing_quote" for card in selection_cards)
+    ab_test_plan = {
+        "test_name": "Evidence-grounded creative variant A/B readiness test",
+        **recommended_ab_pair,
+        "hypothesis": (
+            f"{variant_a.get('variant_title', 'Variant A')} will outperform "
+            f"{variant_b.get('variant_title', 'Variant B')} on "
+            f"{variant_a.get('success_metric', 'qualified engagement')} while both stay inside the same evidence boundary."
+        ),
+        "what_to_change": "Change only the hook framing and creative presentation defined by each selected variant.",
+        "what_to_keep_constant": "Keep product, audience, proof quote, offer context, CTA intent, duration range, and evidence boundary constant.",
+        "primary_metric": variant_a.get("success_metric", "click-through rate"),
+        "secondary_metric": "qualified view completion",
+        "minimum_evidence_warning": (
+            "Evidence is weak or missing for one or more variants; collect more reviews before paid launch."
+            if weak_evidence_count or missing_quote_count
+            else "Use only the supplied proof quote and do not generalize the result beyond this visible sample."
+        ),
+        "safe_launch_note": "Guidance only. Run a small controlled test after human review; no provider, media, or paid action is triggered here.",
+    }
+    return {
+        "pack_version": "variant_selection_pack_v1",
+        "selection_summary": {
+            "selection_count": len(selection_cards),
+            "best_use_case_count": len(
+                {card["best_for"] for card in selection_cards if card["best_for"]}
+            ),
+            "weak_evidence_count": weak_evidence_count,
+            "missing_quote_count": missing_quote_count,
+            "ready_variant_count": sum(
+                card["copy_readiness"] == "ready" for card in selection_cards
+            ),
+            "selection_readiness": (
+                "ready_for_controlled_test" if has_strong_evidence else "needs_evidence_review"
+            ),
+        },
+        "recommended_first_variant_id": first_card.get("variant_id", ""),
+        "recommended_ab_pair": recommended_ab_pair,
+        "selection_cards": selection_cards,
+        "ab_test_plan": ab_test_plan,
+        "selection_quality_checks": {
+            "distinct_ab_pair": bool(
+                variant_a.get("variant_id")
+                and variant_b.get("variant_id")
+                and variant_a.get("variant_id") != variant_b.get("variant_id")
+            ),
+            "weak_evidence": bool(weak_evidence_count),
+            "missing_quote": bool(missing_quote_count),
+            "high_claim_safety_recommended_without_quote": any(
+                card["evidence_fit"] == "missing_quote"
+                and card["claim_safety_level"] == "evidence_grounded"
+                for card in selection_cards
+            ),
+        },
+        "safety_boundaries": {
+            "provider_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_operation_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_operation_enabled": False,
+            "restore_or_rollback_enabled": False,
+        },
+    }
+
+
 def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
     angles = list(creative_decision_pack.get("top_ad_angles") or [])
     source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
@@ -18131,6 +18350,10 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
     unsupported_claims = list(
         creative_decision_pack.get("quality_checks", {}).get("unsupported_claim_terms") or []
     )
+    variant_selection_pack = _rw_creative_variant_selection_pack(
+        variants,
+        recommended_variant.get("variant_id", ""),
+    )
     return {
         "pack_version": "creative_variant_pack_v1",
         "variant_summary": {
@@ -18166,6 +18389,7 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
                 variant["variant_id"]: variant["video_prompt"] for variant in variants
             },
         },
+        "variant_selection_pack": variant_selection_pack,
         "safety_boundaries": {
             "real_provider_called": False,
             "llm_api_called": False,
