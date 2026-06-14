@@ -3592,6 +3592,7 @@
         let latestProjectWorkspace = null;
         let latestProjectCreativeDecisionPack = {};
         let latestProjectCreativeVariantPack = {};
+        let latestProjectCreativeVariantSelectionPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8850,6 +8851,7 @@
                     || workspaceAnalysis.creative_decision_pack
                     || {};
                 latestProjectCreativeVariantPack = latestProjectCreativeDecisionPack.creative_variant_pack || {};
+                latestProjectCreativeVariantSelectionPack = latestProjectCreativeVariantPack.variant_selection_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14678,6 +14680,7 @@
         const PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER = 'Project Workspace creative feedback runtime bundle';
         const PROJECT_WORKSPACE_REAL_SAMPLE_EXPORT_FLOW_MARKER = 'Project Workspace real sample export flow bundle';
         const PROJECT_WORKSPACE_CREATIVE_VARIANT_PACK_MARKER = 'Project Workspace creative variant pack bundle';
+        const PROJECT_WORKSPACE_CREATIVE_VARIANT_SELECTION_MARKER = 'Project Workspace creative variant selection bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14950,8 +14953,131 @@
                 variants: Array.isArray(pack.variants) ? pack.variants : [],
                 variant_quality_checks: pack.variant_quality_checks || {},
                 variant_copy_export: pack.variant_copy_export || {},
+                variant_selection_pack: pack.variant_selection_pack || {},
                 safety_boundaries: pack.safety_boundaries || {}
             };
+        }
+
+        function projectWorkspaceCreativeVariantSelectionPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCreativeVariantSelectionPack
+                && Object.keys(latestProjectCreativeVariantSelectionPack).length) {
+                return latestProjectCreativeVariantSelectionPack;
+            }
+            return projectWorkspaceCreativeVariantPackFromWorkspace(workspace)?.variant_selection_pack || {};
+        }
+
+        function projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCreativeVariantSelectionPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CREATIVE_VARIANT_SELECTION_MARKER,
+                has_variant_selection_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                selection_summary: pack.selection_summary || {},
+                recommended_first_variant_id: pack.recommended_first_variant_id || '',
+                recommended_ab_pair: pack.recommended_ab_pair || {},
+                selection_cards: Array.isArray(pack.selection_cards) ? pack.selection_cards : [],
+                ab_test_plan: pack.ab_test_plan || {},
+                selection_quality_checks: pack.selection_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCreativeVariantSelectionCardText(card = {}) {
+            if (!card.selection_id) return '';
+            return [
+                `${t('creativeVariantSelectionVariant')}: ${card.variant_title || card.variant_type || ''}`,
+                `${t('creativeVariantSelectionBestFor')}: ${card.best_for || ''}`,
+                `${t('creativeVariantSelectionReason')}: ${card.selection_reason || ''}`,
+                `${t('creativeVariantSelectionHypothesis')}: ${card.test_hypothesis || ''}`,
+                `${t('creativeVariantSelectionSuccessMetric')}: ${card.success_metric || ''}`,
+                `${t('creativeVariantSelectionNextAction')}: ${card.recommended_next_action || ''}`,
+                `${t('creativeDecisionProofQuote')}: ${card.proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('creativeDecisionRiskNote')}: ${card.risk_note || ''}`,
+                `${t('creativeDecisionDoNotClaim')}: ${(card.do_not_claim || []).join(' | ')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeVariantAbTestPlanText(plan = {}) {
+            if (!plan.test_name) return '';
+            return [
+                `${t('creativeVariantSelectionAbTestPlan')}: ${plan.test_name || ''}`,
+                `${t('creativeVariantSelectionVariantA')}: ${plan.variant_a_title || plan.variant_a_id || ''}`,
+                `${t('creativeVariantSelectionVariantB')}: ${plan.variant_b_title || plan.variant_b_id || ''}`,
+                `${t('creativeVariantSelectionHypothesis')}: ${plan.hypothesis || ''}`,
+                `${t('creativeVariantSelectionWhatToChange')}: ${plan.what_to_change || ''}`,
+                `${t('creativeVariantSelectionKeepConstant')}: ${plan.what_to_keep_constant || ''}`,
+                `${t('creativeVariantSelectionPrimaryMetric')}: ${plan.primary_metric || ''}`,
+                `${t('creativeVariantSelectionSecondaryMetric')}: ${plan.secondary_metric || ''}`,
+                `${t('creativeVariantSelectionMinimumEvidenceWarning')}: ${plan.minimum_evidence_warning || ''}`,
+                `${t('creativeVariantSelectionSafeLaunchNote')}: ${plan.safe_launch_note || ''}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace);
+            if (!pack.has_variant_selection_pack) return '';
+            const firstCard = pack.selection_cards.find((card) =>
+                card.variant_id === pack.recommended_first_variant_id
+            ) || {};
+            return [
+                `## ${t('creativeVariantSelectionTitle')}`,
+                '',
+                `### ${t('creativeVariantSelectionRecommendedFirst')}`,
+                projectWorkspaceCreativeVariantSelectionCardText(firstCard) || t('creativeVariantSelectionNoData'),
+                '',
+                `### ${t('creativeVariantSelectionCardsTitle')}`,
+                ...pack.selection_cards.flatMap((card, index) => [
+                    `#### ${index + 1}. ${card.variant_title || card.variant_type || ''}`,
+                    projectWorkspaceCreativeVariantSelectionCardText(card),
+                    ''
+                ]),
+                `### ${t('creativeVariantSelectionAbTestPlan')}`,
+                projectWorkspaceCreativeVariantAbTestPlanText(pack.ab_test_plan),
+                '',
+                `### ${t('creativeVariantSelectionSafetyNotes')}`,
+                pack.ab_test_plan.minimum_evidence_warning || '',
+                pack.ab_test_plan.safe_launch_note || ''
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCreativeVariantSelectionText(kind = 'recommended', selectionId = '') {
+            const status = document.getElementById('projectWorkspaceCreativeVariantSelectionStatus');
+            const pack = projectWorkspaceExportCreativeVariantSelectionSnapshot();
+            const card = kind === 'recommended'
+                ? pack.selection_cards.find((item) => item.variant_id === pack.recommended_first_variant_id)
+                : pack.selection_cards.find((item) => item.selection_id === selectionId);
+            const text = kind === 'ab_plan'
+                ? projectWorkspaceCreativeVariantAbTestPlanText(pack.ab_test_plan)
+                : projectWorkspaceCreativeVariantSelectionCardText(card || {});
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('creativeVariantSelectionCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) {
+                    throw new Error(t('creativeVariantSelectionCopyFailed'));
+                }
+                await navigator.clipboard.writeText(text);
+                if (status) {
+                    status.textContent = kind === 'ab_plan'
+                        ? t('creativeVariantSelectionAbPlanCopied')
+                        : t('creativeVariantSelectionCardCopied');
+                }
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeVariantSelectionCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceRecommendedFirstVariant() {
+            return copyProjectWorkspaceCreativeVariantSelectionText('recommended');
+        }
+
+        function copyProjectWorkspaceCreativeVariantSelectionCard(selectionId) {
+            return copyProjectWorkspaceCreativeVariantSelectionText('card', selectionId);
+        }
+
+        function copyProjectWorkspaceCreativeVariantAbTestPlan() {
+            return copyProjectWorkspaceCreativeVariantSelectionText('ab_plan');
         }
 
         function projectWorkspaceCreativeVariantScriptText(variant = {}) {
@@ -15324,6 +15450,103 @@
             `;
         }
 
+        function renderProjectWorkspaceCreativeVariantSelectionSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace);
+            if (!pack.has_variant_selection_pack) return '';
+            const summary = pack.selection_summary || {};
+            const firstCard = pack.selection_cards.find((card) =>
+                card.variant_id === pack.recommended_first_variant_id
+            ) || {};
+            const pair = pack.recommended_ab_pair || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVariantSelectionSummaryPanel"
+                    data-creative-variant-selection-marker="${PROJECT_WORKSPACE_CREATIVE_VARIANT_SELECTION_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeVariantSelectionTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeVariantSelectionHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" ${firstCard.selection_id ? '' : 'disabled'}
+                            onclick="copyProjectWorkspaceRecommendedFirstVariant()">${escapeHTML(t('creativeVariantSelectionCopyRecommended'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeVariantSelectionBestUseCases'), String(summary.best_use_case_count || 0))}
+                        ${metricPill(t('creativeVariantSelectionReadyCount'), String(summary.ready_variant_count || 0))}
+                        ${metricPill(t('creativeVariantSelectionWeakCount'), String(summary.weak_evidence_count || 0))}
+                        ${metricPill(t('creativeVariantSelectionReadiness'), summary.selection_readiness || t('none'))}
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('creativeVariantSelectionRecommendedFirst'))}:</strong> ${escapeHTML(firstCard.variant_title || t('creativeVariantSelectionNoRecommendation'))}</div>
+                    <div class="field-helper"><strong>${escapeHTML(t('creativeVariantSelectionRecommendedPair'))}:</strong> ${escapeHTML([pair.variant_a_title, pair.variant_b_title].filter(Boolean).join(' / ') || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeVariantSelectionCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace);
+            if (!pack.has_variant_selection_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVariantSelectionCardsPanel">
+                    <div class="json-key">${escapeHTML(t('creativeVariantSelectionCardsTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeVariantSelectionCardsHelper'))}</div>
+                    <div class="graph-os-grid">${pack.selection_cards.map((card) => `
+                        <div class="graph-os-card" data-variant-best-for="${escapeHTML(card.best_for || '')}">
+                            <div class="section-header">
+                                <strong>${escapeHTML(card.variant_title || card.variant_type || t('none'))}</strong>
+                                <span class="badge">#${escapeHTML(String(card.selection_rank || 0))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeVariantSelectionBestFor'))}:</strong> ${escapeHTML(card.best_for || t('none'))}</div>
+                            <div class="field-helper">${escapeHTML(card.selection_reason || '')}</div>
+                            <div><strong>${escapeHTML(t('creativeVariantSelectionHypothesis'))}:</strong> ${escapeHTML(card.test_hypothesis || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeVariantSelectionSuccessMetric'))}:</strong> ${escapeHTML(card.success_metric || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeVariantSelectionNextAction'))}:</strong> ${escapeHTML(card.recommended_next_action || t('none'))}</div>
+                            <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionProofQuote'))}:</strong> ${escapeHTML(card.proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                            <div class="field-helper"><strong>${escapeHTML(t('creativeDecisionRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('creativeDecisionDoNotClaim'))}:</strong> ${escapeHTML((card.do_not_claim || []).join(' | ') || t('none'))}</div>
+                            <div class="metric-strip">
+                                ${metricPill(t('creativeVariantSelectionRiskLevel'), card.risk_level || t('none'))}
+                                ${metricPill(t('creativeDecisionClaimSafetyLevel'), card.claim_safety_level || t('none'))}
+                                ${metricPill(t('creativeDecisionCopyReadiness'), card.copy_readiness || t('none'))}
+                            </div>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeVariantSelectionCard('${escapeHTML(card.selection_id || '')}')">${escapeHTML(t('creativeVariantSelectionCopyCard'))}</button>
+                        </div>
+                    `).join('')}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeVariantSelectionStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeVariantAbTestPlanPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace);
+            if (!pack.has_variant_selection_pack) return '';
+            const plan = pack.ab_test_plan || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVariantAbTestPlanPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeVariantSelectionAbTestPlan'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeVariantSelectionAbTestHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" ${plan.test_name ? '' : 'disabled'}
+                            onclick="copyProjectWorkspaceCreativeVariantAbTestPlan()">${escapeHTML(t('creativeVariantSelectionCopyAbPlan'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeVariantSelectionVariantA'))}</strong><div>${escapeHTML(plan.variant_a_title || plan.variant_a_id || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeVariantSelectionVariantB'))}</strong><div>${escapeHTML(plan.variant_b_title || plan.variant_b_id || t('none'))}</div></div>
+                    </div>
+                    <div><strong>${escapeHTML(t('creativeVariantSelectionHypothesis'))}:</strong> ${escapeHTML(plan.hypothesis || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('creativeVariantSelectionWhatToChange'))}:</strong> ${escapeHTML(plan.what_to_change || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('creativeVariantSelectionKeepConstant'))}:</strong> ${escapeHTML(plan.what_to_keep_constant || t('none'))}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeVariantSelectionPrimaryMetric'), plan.primary_metric || t('none'))}
+                        ${metricPill(t('creativeVariantSelectionSecondaryMetric'), plan.secondary_metric || t('none'))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('creativeVariantSelectionMinimumEvidenceWarning'))}:</strong> ${escapeHTML(plan.minimum_evidence_warning || t('none'))}</div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('creativeVariantSelectionSafeLaunchNote'))}:</strong> ${escapeHTML(plan.safe_launch_note || t('none'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -15686,6 +15909,7 @@
                 '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
+                projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -15759,6 +15983,7 @@
                 agent_capability_runtime: projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
+                variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -28157,6 +28382,9 @@
                     ${renderProjectWorkspaceCreativeVariantSummaryPanel(workspace)}
                     ${renderProjectWorkspaceCreativeVariantsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeVariantComparePanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVariantSelectionSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVariantSelectionCardsPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVariantAbTestPlanPanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -34626,7 +34854,44 @@
             creativeVariantCopyFailed: 'Unable to copy creative variant content.',
             creativeVariantCopyNoData: 'No creative variant content is available to copy.',
             creativeVariantNoRecommendation: 'Evidence is too weak to recommend a production variant.',
-            creativeVariantNoData: 'No creative variant data is available.'
+            creativeVariantNoData: 'No creative variant data is available.',
+            creativeVariantSelectionTitle: 'Variant Selection',
+            creativeVariantSelectionHelper: 'Choose a first creative and a controlled A/B pair using only the existing evidence-grounded variants.',
+            creativeVariantSelectionCardsTitle: 'Variant Selection Cards',
+            creativeVariantSelectionCardsHelper: 'Compare the best use case, evidence fit, risk, hypothesis, and next action for each variant.',
+            creativeVariantSelectionRecommendedFirst: 'Recommended First Variant',
+            creativeVariantSelectionRecommendedPair: 'Recommended A/B pair',
+            creativeVariantSelectionBestUseCases: 'Best-use cases',
+            creativeVariantSelectionReadyCount: 'Test-ready variants',
+            creativeVariantSelectionWeakCount: 'Weak-evidence variants',
+            creativeVariantSelectionReadiness: 'Selection readiness',
+            creativeVariantSelectionVariant: 'Variant',
+            creativeVariantSelectionBestFor: 'Best for',
+            creativeVariantSelectionReason: 'Selection reason',
+            creativeVariantSelectionHypothesis: 'Test hypothesis',
+            creativeVariantSelectionSuccessMetric: 'Success metric',
+            creativeVariantSelectionNextAction: 'Recommended next action',
+            creativeVariantSelectionRiskLevel: 'Risk level',
+            creativeVariantSelectionAbTestPlan: 'A/B Test Plan',
+            creativeVariantSelectionAbTestHelper: 'Change one creative framing at a time while keeping product, proof, audience, and evidence limits constant.',
+            creativeVariantSelectionVariantA: 'Variant A',
+            creativeVariantSelectionVariantB: 'Variant B',
+            creativeVariantSelectionWhatToChange: 'What to change',
+            creativeVariantSelectionKeepConstant: 'What to keep constant',
+            creativeVariantSelectionPrimaryMetric: 'Primary metric',
+            creativeVariantSelectionSecondaryMetric: 'Secondary metric',
+            creativeVariantSelectionMinimumEvidenceWarning: 'Minimum evidence warning',
+            creativeVariantSelectionSafeLaunchNote: 'Safe launch note',
+            creativeVariantSelectionSafetyNotes: 'Safety Notes',
+            creativeVariantSelectionCopyRecommended: 'Copy recommended first variant',
+            creativeVariantSelectionCopyCard: 'Copy variant selection card',
+            creativeVariantSelectionCopyAbPlan: 'Copy A/B test plan',
+            creativeVariantSelectionCardCopied: 'Variant selection copied.',
+            creativeVariantSelectionAbPlanCopied: 'A/B test plan copied.',
+            creativeVariantSelectionCopyFailed: 'Unable to copy variant selection content.',
+            creativeVariantSelectionCopyNoData: 'No variant selection content is available to copy.',
+            creativeVariantSelectionNoRecommendation: 'No production variant is recommended until the evidence is reviewed.',
+            creativeVariantSelectionNoData: 'No variant selection data is available.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -34797,7 +35062,44 @@
             creativeVariantCopyFailed: '无法复制创意变体内容。',
             creativeVariantCopyNoData: '暂无可复制的创意变体内容。',
             creativeVariantNoRecommendation: '当前证据偏弱，暂不推荐用于制作的变体。',
-            creativeVariantNoData: '暂无创意变体数据。'
+            creativeVariantNoData: '暂无创意变体数据。',
+            creativeVariantSelectionTitle: '变体选择',
+            creativeVariantSelectionHelper: '只基于现有证据型变体，选择首个测试创意和受控 A/B 组合。',
+            creativeVariantSelectionCardsTitle: '变体选择卡',
+            creativeVariantSelectionCardsHelper: '对比每个变体的适用场景、证据匹配、风险、测试假设和下一步。',
+            creativeVariantSelectionRecommendedFirst: '推荐首测变体',
+            creativeVariantSelectionRecommendedPair: '推荐 A/B 组合',
+            creativeVariantSelectionBestUseCases: '适用场景数',
+            creativeVariantSelectionReadyCount: '可测试变体',
+            creativeVariantSelectionWeakCount: '弱证据变体',
+            creativeVariantSelectionReadiness: '选择就绪度',
+            creativeVariantSelectionVariant: '变体',
+            creativeVariantSelectionBestFor: '最适合',
+            creativeVariantSelectionReason: '选择理由',
+            creativeVariantSelectionHypothesis: '测试假设',
+            creativeVariantSelectionSuccessMetric: '成功指标',
+            creativeVariantSelectionNextAction: '建议下一步',
+            creativeVariantSelectionRiskLevel: '风险等级',
+            creativeVariantSelectionAbTestPlan: 'A/B 测试计划',
+            creativeVariantSelectionAbTestHelper: '每次只改变一种创意表达，同时保持产品、证据、受众和主张边界不变。',
+            creativeVariantSelectionVariantA: '变体 A',
+            creativeVariantSelectionVariantB: '变体 B',
+            creativeVariantSelectionWhatToChange: '改变什么',
+            creativeVariantSelectionKeepConstant: '保持不变',
+            creativeVariantSelectionPrimaryMetric: '主要指标',
+            creativeVariantSelectionSecondaryMetric: '次要指标',
+            creativeVariantSelectionMinimumEvidenceWarning: '最低证据提醒',
+            creativeVariantSelectionSafeLaunchNote: '安全测试说明',
+            creativeVariantSelectionSafetyNotes: '安全说明',
+            creativeVariantSelectionCopyRecommended: '复制推荐首测变体',
+            creativeVariantSelectionCopyCard: '复制变体选择卡',
+            creativeVariantSelectionCopyAbPlan: '复制 A/B 测试计划',
+            creativeVariantSelectionCardCopied: '变体选择内容已复制。',
+            creativeVariantSelectionAbPlanCopied: 'A/B 测试计划已复制。',
+            creativeVariantSelectionCopyFailed: '无法复制变体选择内容。',
+            creativeVariantSelectionCopyNoData: '暂无可复制的变体选择内容。',
+            creativeVariantSelectionNoRecommendation: '证据审核完成前，暂不推荐用于制作的变体。',
+            creativeVariantSelectionNoData: '暂无变体选择数据。'
         });
 
 
@@ -36175,6 +36477,7 @@ async function analyzeExtensionWorkspace() {
     body.output_language = body.output_language || payload.output_language || extensionWorkspaceLanguage(payload);
     latestProjectCreativeDecisionPack = body.creative_decision_pack || {};
     latestProjectCreativeVariantPack = latestProjectCreativeDecisionPack.creative_variant_pack || {};
+    latestProjectCreativeVariantSelectionPack = latestProjectCreativeVariantPack.variant_selection_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
