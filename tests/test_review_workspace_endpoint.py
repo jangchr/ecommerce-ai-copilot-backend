@@ -1742,6 +1742,56 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
             "registry_operation_enabled",
         ]:
             self.assertFalse(feedback_pack["safety_boundaries"][boundary])
+        iteration_pack = pack["creative_iteration_pack"]
+        self.assertEqual(iteration_pack["pack_version"], "creative_iteration_pack_v1")
+        self.assertIn(iteration_pack["source_winner_variant_id"], variant_ids)
+        self.assertTrue(iteration_pack["recommended_iteration_variant_id"])
+        self.assertGreaterEqual(len(iteration_pack["iteration_variants"]), 3)
+        for iteration_variant in iteration_pack["iteration_variants"]:
+            with self.subTest(
+                iteration_variant_id=iteration_variant["iteration_variant_id"]
+            ):
+                for field in [
+                    "revised_hook",
+                    "revised_scene_1",
+                    "revised_scene_2",
+                    "revised_scene_3",
+                    "revised_cta",
+                    "revised_video_prompt",
+                    "revised_risk_note",
+                ]:
+                    self.assertTrue(iteration_variant[field], field)
+                self.assertEqual(len(iteration_variant["revised_shot_list"]), 3)
+                self.assertTrue(iteration_variant["revised_do_not_claim"])
+                script = iteration_variant["copy_ready_v2_script"]
+                for label in [
+                    "Hook:",
+                    "Scene 1:",
+                    "Scene 2:",
+                    "Scene 3:",
+                    "CTA:",
+                    "Proof quote:",
+                    "Risk note:",
+                    "Do not claim:",
+                ]:
+                    self.assertIn(label, script)
+        self.assertTrue(iteration_pack["original_vs_revised_diff"])
+        self.assertTrue(
+            any(
+                diff["field_name"] in {"hook", "cta", "scene_1", "scene_2", "scene_3"}
+                for diff in iteration_pack["original_vs_revised_diff"]
+            )
+        )
+        self.assertTrue(iteration_pack["iteration_quality_checks"])
+        for boundary in [
+            "provider_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_operation_enabled",
+            "paid_operation_enabled",
+            "registry_operation_enabled",
+        ]:
+            self.assertFalse(iteration_pack["safety_boundaries"][boundary])
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -1823,6 +1873,27 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
             any(
                 card["claim_safety_level"] == "evidence_grounded"
                 for card in selection_pack["selection_cards"]
+            )
+        )
+        iteration_pack = pack["creative_iteration_pack"]
+        self.assertTrue(iteration_pack["iteration_quality_checks"]["weak_evidence"])
+        self.assertTrue(
+            all(
+                variant["claim_safety_level"] == "conservative"
+                for variant in iteration_pack["iteration_variants"]
+            )
+        )
+        self.assertTrue(
+            all(
+                variant["copy_readiness"] == "needs_evidence"
+                for variant in iteration_pack["iteration_variants"]
+            )
+        )
+        self.assertTrue(
+            all(
+                variant["recommended_next_action"]
+                in {"collect_more_reviews", "lower_claim_strength"}
+                for variant in iteration_pack["iteration_variants"]
             )
         )
         feedback = pack["creative_feedback_runtime"]

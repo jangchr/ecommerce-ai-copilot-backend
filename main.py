@@ -18422,6 +18422,314 @@ def _rw_creative_test_feedback_pack(
     }
 
 
+def _rw_creative_iteration_pack(
+    variants: list[dict],
+    creative_test_feedback_pack: dict,
+    language: str,
+) -> dict:
+    winner_id = _rw_text(creative_test_feedback_pack.get("recommended_winner_variant_id"))
+    winner = next(
+        (variant for variant in variants if variant.get("variant_id") == winner_id),
+        variants[0] if variants else {},
+    )
+    feedback_cards = list(creative_test_feedback_pack.get("variant_feedback_cards") or [])
+    winner_feedback = next(
+        (card for card in feedback_cards if card.get("variant_id") == winner.get("variant_id")),
+        feedback_cards[0] if feedback_cards else {},
+    )
+    actions = list(creative_test_feedback_pack.get("iteration_actions") or [])
+    action_by_type = {
+        action.get("action_type"): action
+        for action in actions
+        if action.get("action_type")
+    }
+    is_zh = language == "zh-CN"
+    proof_quote = _rw_text(winner.get("proof_quote"))
+    missing_quote = not bool(proof_quote)
+    weak_evidence = bool(winner.get("weak_evidence")) or missing_quote
+    source_scenes = [
+        _rw_text(winner.get("scene_1")),
+        _rw_text(winner.get("scene_2")),
+        _rw_text(winner.get("scene_3")),
+    ]
+    source_hook = _rw_text(winner.get("hook"))
+    source_cta = _rw_text(winner.get("cta"))
+    source_risk = _rw_text(winner.get("risk_note"))
+    do_not_claim = list(winner.get("do_not_claim") or [])
+    strengthened_do_not_claim = list(dict.fromkeys([
+        *do_not_claim,
+        "Do not present deterministic mock feedback as live ad-platform performance.",
+        "Do not add a product benefit that is not supported by the supplied proof quote.",
+    ]))
+    if weak_evidence:
+        strengthened_do_not_claim.append(
+            "Do not increase claim strength until another specific buyer quote is supplied."
+        )
+
+    quote_first_hook = (
+        f"\u4e0b\u4e00\u8f6e\u5148\u7528\u4e70\u5bb6\u539f\u8bdd\u5f00\u573a\uff1a\u201c{proof_quote}\u201d"
+        if is_zh and proof_quote
+        else f"Next test: open with the buyer line, \"{proof_quote}\""
+        if proof_quote
+        else (
+            "\u4e0b\u4e00\u8f6e\u53ea\u505a\u4fdd\u5b88\u8d2d\u4e70\u68c0\u67e5\uff0c\u8865\u5145\u539f\u8bdd\u540e\u518d\u63d0\u9ad8\u4e3b\u5f20\u3002"
+            if is_zh
+            else "Next test: use a conservative buyer check and add a real quote before increasing the claim."
+        )
+    )
+    conservative_cta = (
+        "\u5bf9\u7167\u4f60\u7684\u771f\u5b9e\u4f7f\u7528\u573a\u666f\uff0c\u518d\u5224\u65ad\u8fd9\u4e2a\u4ea7\u54c1\u662f\u5426\u9002\u5408\u3002"
+        if is_zh
+        else "Compare this with your real use case before deciding whether the product fits."
+    )
+    scene_prefixes = (
+        ["\u5f00\u573a\u7279\u5199", "\u8bc1\u636e\u68c0\u67e5", "\u4fdd\u5b88\u6536\u5c3e"]
+        if is_zh
+        else ["Opening close-up", "Evidence check", "Conservative close"]
+    )
+
+    definitions = [
+        {
+            "goal": "revise_hook",
+            "title": (
+                f"{winner.get('variant_title', '')} v2\uff1aHook \u7cbe\u70bc"
+                if is_zh
+                else f"{winner.get('variant_title', '')} v2: Hook refinement"
+            ),
+            "hook": quote_first_hook,
+            "scenes": source_scenes,
+            "cta": source_cta,
+            "what_changed": "Hook only",
+            "why_changed": _rw_text(
+                action_by_type.get("revise_hook", {}).get("action_reason")
+                or winner_feedback.get("what_to_improve")
+            ),
+            "action_types": ["keep_winner", "revise_hook"],
+        },
+        {
+            "goal": "revise_scenes",
+            "title": (
+                f"{winner.get('variant_title', '')} v2\uff1a\u955c\u5934\u8282\u594f"
+                if is_zh
+                else f"{winner.get('variant_title', '')} v2: Scene pacing"
+            ),
+            "hook": source_hook,
+            "scenes": [
+                f"{scene_prefixes[index]}: {scene}"
+                for index, scene in enumerate(source_scenes)
+            ],
+            "cta": source_cta,
+            "what_changed": "Scene framing and pacing",
+            "why_changed": _rw_text(
+                winner_feedback.get("next_scene_direction")
+                or "Tighten pacing while preserving the same evidence sequence."
+            ),
+            "action_types": ["keep_winner"],
+        },
+        {
+            "goal": "revise_cta_and_proof",
+            "title": (
+                f"{winner.get('variant_title', '')} v2\uff1a\u4fdd\u5b88\u8bc1\u636e\u6536\u5c3e"
+                if is_zh
+                else f"{winner.get('variant_title', '')} v2: Conservative proof close"
+            ),
+            "hook": quote_first_hook if weak_evidence else source_hook,
+            "scenes": source_scenes,
+            "cta": conservative_cta,
+            "what_changed": "CTA and proof boundary",
+            "why_changed": _rw_text(
+                action_by_type.get("lower_claim_strength", {}).get("action_reason")
+                or action_by_type.get("revise_cta", {}).get("action_reason")
+                or winner_feedback.get("next_cta_direction")
+            ),
+            "action_types": [
+                "revise_cta",
+                "lower_claim_strength" if weak_evidence else "keep_winner",
+            ],
+        },
+    ]
+
+    iteration_variants: list[dict] = []
+    diffs: list[dict] = []
+    for index, definition in enumerate(definitions, start=1):
+        iteration_variant_id = (
+            f"iteration_v2_{index}_{winner.get('variant_type', 'creative')}_{definition['goal']}"
+        )
+        revised_scenes = list(definition["scenes"])
+        while len(revised_scenes) < 3:
+            revised_scenes.append("")
+        source_action_ids = [
+            action_by_type[action_type].get("action_id", "")
+            for action_type in definition["action_types"]
+            if action_type in action_by_type
+        ]
+        revised_risk_note = " ".join(
+            part
+            for part in [
+                source_risk,
+                (
+                    "Weak evidence: keep this as a conservative review draft and collect another quote."
+                    if weak_evidence
+                    else "Change one creative variable at a time; mock feedback is not live performance evidence."
+                ),
+            ]
+            if part
+        )
+        shot_list = [
+            {
+                "scene_number": scene_number,
+                "prompt": scene,
+                "evidence_quote": proof_quote,
+            }
+            for scene_number, scene in enumerate(revised_scenes[:3], start=1)
+        ]
+        video_prompt = "\n".join([
+            f"V2 variant: {definition['title']}",
+            f"Iteration goal: {definition['goal']}",
+            f"Hook: {definition['hook']}",
+            *[f"Shot {shot['scene_number']}: {shot['prompt']}" for shot in shot_list],
+            f"CTA: {definition['cta']}",
+            f"Proof quote: {proof_quote or 'missing_quote'}",
+            f"Risk note: {revised_risk_note}",
+            "Do not claim:",
+            *[f"- {item}" for item in strengthened_do_not_claim],
+        ])
+        copy_ready_script = "\n".join([
+            f"Hook: {definition['hook']}",
+            f"Scene 1: {revised_scenes[0]}",
+            f"Scene 2: {revised_scenes[1]}",
+            f"Scene 3: {revised_scenes[2]}",
+            f"CTA: {definition['cta']}",
+            f"Proof quote: {proof_quote or 'missing_quote'}",
+            f"Risk note: {revised_risk_note}",
+            "Do not claim:",
+            *[f"- {item}" for item in strengthened_do_not_claim],
+        ])
+        iteration_variants.append({
+            "iteration_variant_id": iteration_variant_id,
+            "source_variant_id": winner.get("variant_id", ""),
+            "source_variant_type": winner.get("variant_type", ""),
+            "iteration_round": 2,
+            "iteration_goal": definition["goal"],
+            "revised_variant_title": definition["title"],
+            "revised_hook": definition["hook"],
+            "revised_scene_1": revised_scenes[0],
+            "revised_scene_2": revised_scenes[1],
+            "revised_scene_3": revised_scenes[2],
+            "revised_cta": definition["cta"],
+            "revised_proof_quote": proof_quote,
+            "missing_quote": missing_quote,
+            "weak_evidence": weak_evidence,
+            "revised_risk_note": revised_risk_note,
+            "revised_do_not_claim": strengthened_do_not_claim,
+            "revised_video_prompt": video_prompt,
+            "revised_shot_list": shot_list,
+            "copy_ready_v2_script": copy_ready_script,
+            "what_changed": definition["what_changed"],
+            "why_changed": definition["why_changed"],
+            "source_feedback_action_ids": source_action_ids,
+            "evidence_requirement": (
+                "Collect a specific buyer quote before production use."
+                if missing_quote
+                else "Keep the supplied proof quote visible and do not generalize beyond the visible sample."
+            ),
+            "claim_safety_level": (
+                "conservative" if weak_evidence else winner.get("claim_safety_level", "conservative")
+            ),
+            "copy_readiness": (
+                "needs_evidence" if weak_evidence else winner.get("copy_readiness", "ready")
+            ),
+            "recommended_next_action": (
+                "collect_more_reviews"
+                if missing_quote
+                else "lower_claim_strength"
+                if weak_evidence
+                else "human_review_before_test"
+            ),
+        })
+        revised_fields = {
+            "hook": definition["hook"],
+            "scene_1": revised_scenes[0],
+            "scene_2": revised_scenes[1],
+            "scene_3": revised_scenes[2],
+            "cta": definition["cta"],
+        }
+        original_fields = {
+            "hook": source_hook,
+            "scene_1": source_scenes[0],
+            "scene_2": source_scenes[1],
+            "scene_3": source_scenes[2],
+            "cta": source_cta,
+        }
+        for field_name, revised_value in revised_fields.items():
+            original_value = original_fields[field_name]
+            if revised_value == original_value:
+                continue
+            diffs.append({
+                "diff_id": f"diff_{iteration_variant_id}_{field_name}",
+                "iteration_variant_id": iteration_variant_id,
+                "source_variant_id": winner.get("variant_id", ""),
+                "field_name": field_name,
+                "original_value": original_value,
+                "revised_value": revised_value,
+                "change_reason": definition["why_changed"],
+                "risk_control": "Keep the original proof quote and strengthened do-not-claim boundaries.",
+            })
+
+    recommended = next(
+        (
+            variant
+            for variant in iteration_variants
+            if variant["iteration_goal"] == (
+                "revise_cta_and_proof" if weak_evidence else "revise_hook"
+            )
+        ),
+        iteration_variants[0] if iteration_variants else {},
+    )
+    return {
+        "pack_version": "creative_iteration_pack_v1",
+        "iteration_summary": {
+            "iteration_round": 2,
+            "iteration_variant_count": len(iteration_variants),
+            "diff_count": len(diffs),
+            "iteration_goal": recommended.get("iteration_goal", ""),
+            "readiness": (
+                "needs_evidence_review" if weak_evidence else "ready_for_human_review"
+            ),
+            "risk_summary": (
+                "Claim strength is reduced because the winner has weak or missing evidence."
+                if weak_evidence
+                else "V2 changes remain inside the original proof and claim-safety boundaries."
+            ),
+        },
+        "source_winner_variant_id": winner.get("variant_id", ""),
+        "recommended_iteration_variant_id": recommended.get("iteration_variant_id", ""),
+        "iteration_variants": iteration_variants,
+        "original_vs_revised_diff": diffs,
+        "iteration_quality_checks": {
+            "missing_winner": not bool(winner.get("variant_id")),
+            "missing_quote": missing_quote,
+            "weak_evidence": weak_evidence,
+            "unsupported_claim_added": False,
+            "do_not_claim_preserved": all(
+                set(do_not_claim).issubset(set(variant["revised_do_not_claim"]))
+                for variant in iteration_variants
+            ),
+            "unsafe_provider_action": False,
+        },
+        "safety_boundaries": {
+            "provider_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_operation_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_operation_enabled": False,
+            "restore_or_rollback_enabled": False,
+            "feedback_persisted": False,
+        },
+    }
+
+
 def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
     angles = list(creative_decision_pack.get("top_ad_angles") or [])
     source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
@@ -18610,6 +18918,11 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         variant_selection_pack,
         unsupported_claims,
     )
+    creative_iteration_pack = _rw_creative_iteration_pack(
+        variants,
+        creative_test_feedback_pack,
+        language,
+    )
     return {
         "pack_version": "creative_variant_pack_v1",
         "variant_summary": {
@@ -18647,6 +18960,7 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         },
         "variant_selection_pack": variant_selection_pack,
         "creative_test_feedback_pack": creative_test_feedback_pack,
+        "creative_iteration_pack": creative_iteration_pack,
         "safety_boundaries": {
             "real_provider_called": False,
             "llm_api_called": False,
@@ -18935,6 +19249,9 @@ def _review_workspace_creative_decision_pack(
     creative_decision_pack["creative_variant_pack"] = _rw_creative_variant_pack(
         creative_decision_pack,
         language,
+    )
+    creative_decision_pack["creative_iteration_pack"] = (
+        creative_decision_pack["creative_variant_pack"].get("creative_iteration_pack") or {}
     )
     return creative_decision_pack
 
