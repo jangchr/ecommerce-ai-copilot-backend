@@ -1460,6 +1460,121 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(checks["recommendation"])
         self.assertTrue(all(value is False for value in pack["safety_boundaries"].values()))
 
+    def test_creative_decision_pack_prioritizes_realistic_review_evidence(self):
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json={
+                "workspace_id": "creative-decision-realistic-qa",
+                "source": "browser_extension",
+                "output_language": "en",
+                "products": [
+                    {
+                        "platform": "amazon",
+                        "asin": "BLENDER-QA-01",
+                        "title": "Portable Mini Blender",
+                        "description": "Compact rechargeable blender for travel, work, and single servings.",
+                        "reviews": [
+                            {
+                                "rating": "2 out of 5 stars",
+                                "text": "Hard to clean after one smoothie because pulp gets stuck under the blade.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "2 out of 5 stars",
+                                "text": "Cleaning under the blade takes longer than making the protein shake.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "3 out of 5 stars",
+                                "text": "The motor is too loud for early mornings in my apartment.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "2 out of 5 stars",
+                                "text": "The cup leaked in my gym bag during the commute.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Perfect for one protein shake at the office and I use it every day.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Small enough for travel and easy to rinse after a single serving.",
+                                "source_section": "amazon_visible_review",
+                            },
+                            {
+                                "rating": "5 out of 5 stars",
+                                "text": "Nice product.",
+                                "source_section": "amazon_visible_review",
+                            },
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        pack = body["creative_decision_pack"]
+        angles = pack["top_ad_angles"]
+        recommended = next(angle for angle in angles if angle["is_recommended"])
+
+        self.assertEqual(len(angles), 3)
+        self.assertEqual(pack["recommended_angle_id"], recommended["angle_id"])
+        self.assertGreaterEqual(recommended["evidence_strength_score"], 65)
+        self.assertTrue(recommended["proof_quote"])
+        self.assertTrue(recommended["recommendation_reason"])
+        self.assertNotIn("flavor praise", str(pack).lower())
+        self.assertTrue(
+            any(
+                signal in str(body["common_pain_points"]).lower()
+                for signal in ["clean", "noise", "leak", "mess"]
+            )
+        )
+        self.assertTrue(
+            any(
+                signal in str(body["liked_points"] + body["use_cases"]).lower()
+                for signal in ["travel", "office", "gym", "single-serving", "rinse"]
+            )
+        )
+
+        script = recommended["tiktok_script"]
+        self.assertTrue(script["hook"])
+        self.assertEqual(len(script["scenes"]), 3)
+        self.assertTrue(all(scene for scene in script["scenes"]))
+        self.assertTrue(script["cta"])
+        self.assertEqual(script["proof_quote"], recommended["proof_quote"])
+        self.assertIn("visible sample", script["risk_note"])
+        self.assertFalse(
+            any(
+                old_template in " ".join(script["scenes"])
+                for old_template in [
+                    "Show Portable Mini Blender in a real use context",
+                    "Respond to",
+                    "with a visible choice or comparison",
+                ]
+            )
+        )
+        self.assertTrue(
+            any(
+                concrete_term in " ".join(script["scenes"]).lower()
+                for concrete_term in ["blade", "motor", "lid", "seal", "bag", "office", "gym"]
+            )
+        )
+
+        video_pack = pack["video_prompt_pack"]
+        self.assertEqual(len(video_pack["shot_list"]), 3)
+        self.assertTrue(video_pack["keyframe_prompt"])
+        self.assertTrue(
+            any("leak-proof, quiet, or easy to clean" in item for item in video_pack["do_not_claim"])
+        )
+        self.assertTrue(pack["creative_feedback_runtime"]["feedback_summary"]["recommended_next_step"])
+        self.assertLessEqual(pack["weak_evidence_count"], len(angles))
+        self.assertLessEqual(pack["missing_quote_count"], len(angles))
+        self.assertTrue(all(value is False for value in pack["safety_boundaries"].values()))
+
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
             "/api/v1/analyze-review-workspace",

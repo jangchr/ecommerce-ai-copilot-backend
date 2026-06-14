@@ -14621,7 +14621,16 @@ from schemas.review_paste import (
 
 _REVIEW_WORKSPACE_THEME_MARKERS = {
     "leak / mess risk": ["leak", "leaking", "spill", "spilled", "mess", "drip"],
-    "hard to clean": ["hard to clean", "difficult to clean", "scrub", "dishwasher"],
+    "hard to clean": [
+        "hard to clean",
+        "difficult to clean",
+        "cleaning under",
+        "pulp gets stuck",
+        "under the blade",
+        "scrub",
+        "dishwasher",
+    ],
+    "motor noise concern": ["too loud", "loud motor", "noisy", "motor noise"],
     "size / fit issue": ["too small", "too big", "doesn't fit", "didn't fit", "opening was bigger", "wide cans", "narrow opening", "\u30b5\u30a4\u30ba\u304c\u5c0f\u3055\u3044", "1\u30b5\u30a4\u30ba\u5927\u304d\u3044", "2\u30b5\u30a4\u30ba\u5927\u304d\u3044", "\u5c0f\u3076\u308a"],
     "grip / slipping concern": ["move a lot", "moves a lot", "stick to the floor", "sliding", "slides", "slip around", "slips", "does not stay", "doesn\'t stay", "stay in place"],
     "thickness / robot vacuum tradeoff": ["robot vacuum", "gets trapped", "get trapped", "too thick", "thick nature", "does not fit under", "doesn\'t fit under", "fit under doors", "under some doors"],
@@ -14710,6 +14719,7 @@ _REVIEW_WORKSPACE_OBJECTION_MARKERS = [
 
 _REVIEW_WORKSPACE_LIKE_MARKERS = [
     "love", "great", "easy", "perfect", "works", "useful", "recommend", "helpful",
+    "small enough", "easy to rinse",
     "will continue to purchase", "best rootbeer", "best root beer", "order it frequently",
     "great flavor", "greater flavor", "smoother", "worth the price",
     "cannot beat the price", "can't beat the price", "value priced", "worth it",
@@ -14717,7 +14727,8 @@ _REVIEW_WORKSPACE_LIKE_MARKERS = [
 ]
 
 _REVIEW_WORKSPACE_USE_CASE_MARKERS = [
-    "for", "when", "use it", "daily", "morning", "travel", "kitchen", "work", "kids", "pet",
+    "for", "when", "use it", "daily", "morning", "travel", "kitchen", "work", "office",
+    "gym", "backpack", "single serving", "protein shake", "kids", "pet",
     "??", "??", "??", "??", "??", "??", "??", "??",
 ]
 
@@ -15659,6 +15670,15 @@ def _rw_compact_theme_summaries(themes):
 def _rw_objection_label_from_quotes(label: str, quotes: list[str]) -> str:
     blob = " ".join([label or "", *(quotes or [])]).lower()
 
+    if any(term in blob for term in ["hard to clean", "difficult to clean", "pulp gets stuck", "under the blade"]):
+        return "cleanup concern"
+
+    if any(term in blob for term in ["too loud", "loud motor", "motor noise", "noisy"]):
+        return "motor noise concern"
+
+    if any(term in blob for term in ["leak", "leaking", "leaked", "spill", "mess"]):
+        return "leak / mess concern"
+
     if any(term in blob for term in [
         "move a lot",
         "moves a lot",
@@ -16293,6 +16313,17 @@ def _rw_quote_has_pain_signal(value: str) -> bool:
         "oxidation",
         "cap leaked",
         "bottle cap",
+        "hard to clean",
+        "difficult to clean",
+        "cleaning under",
+        "pulp gets stuck",
+        "under the blade",
+        "too loud",
+        "loud motor",
+        "motor noise",
+        "leak",
+        "leaked",
+        "leaking",
     ]
     return any(term in lower for term in pain_terms)
 
@@ -16840,7 +16871,13 @@ def _rw_positive_theme_label_from_quote(quote: str, fallback_label: str = "") ->
     if "barq" in lower or "a&w" in lower or "smoother" in lower or "smother" in lower or "greater flavor" in lower:
         return "root beer flavor comparison"
 
-    if "great flavor" in lower or "smooth" in lower:
+    if any(term in lower for term in ["small enough for travel", "fits in my bag", "fits in a backpack"]):
+        return "portable travel fit"
+
+    if "easy to rinse" in lower or "quick to rinse" in lower:
+        return "easy rinse signal"
+
+    if "great flavor" in lower or re.search(r"\bsmooth(?:er|est)?\b", lower):
         return "flavor praise"
 
     if (
@@ -16907,6 +16944,18 @@ def _rw_use_case_label_from_quote(quote: str, fallback_label: str = "") -> str:
     if "daily" in lower or "morning" in lower or "every day" in lower:
         return "daily use context"
 
+    if any(term in lower for term in ["office", "at work", "work desk"]):
+        return "office use context"
+
+    if any(term in lower for term in ["gym", "protein shake"]):
+        return "gym or shake context"
+
+    if any(term in lower for term in ["travel", "backpack", "in my bag"]):
+        return "travel use context"
+
+    if "single serving" in lower or "one smoothie" in lower:
+        return "single-serving context"
+
     if "party" in lower or "guests" in lower:
         return "party or hosting context"
 
@@ -16918,6 +16967,21 @@ def _rw_use_case_label_from_quote(quote: str, fallback_label: str = "") -> str:
 
 def _rw_quote_is_real_use_case(quote: str, label: str = "") -> bool:
     lower = str(quote or "").lower()
+
+    if "_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote):
+        explicit_context = [
+            "at work",
+            "office",
+            "gym",
+            "travel",
+            "backpack",
+            "every day",
+            "daily",
+            "morning",
+            "commute",
+        ]
+        if not any(term in lower for term in explicit_context):
+            return False
 
     if _rw_quote_is_strong_positive_signal(quote) and not any(term in lower for term in [
         "west coast",
@@ -16933,6 +16997,16 @@ def _rw_quote_is_real_use_case(quote: str, label: str = "") -> bool:
         "refrigerator",
         "pack",
         "stock",
+        "office",
+        "at work",
+        "work desk",
+        "gym",
+        "protein shake",
+        "travel",
+        "backpack",
+        "in my bag",
+        "single serving",
+        "one smoothie",
     ]):
         return False
 
@@ -16963,6 +17037,16 @@ def _rw_quote_is_real_use_case(quote: str, label: str = "") -> bool:
         "stock",
         "for cooking",
         "for salads",
+        "office",
+        "at work",
+        "work desk",
+        "gym",
+        "protein shake",
+        "travel",
+        "backpack",
+        "in my bag",
+        "single serving",
+        "one smoothie",
     ])
 
 
@@ -16985,11 +17069,18 @@ def _rw_refine_use_case_summaries(themes: list[ReviewThemeSummary]) -> list[Revi
 
     refined: list[ReviewThemeSummary] = []
     for label, quotes in grouped.items():
+        ordered_quotes = sorted(
+            quotes,
+            key=lambda quote: (
+                bool("_rw_quote_has_pain_signal" in globals() and _rw_quote_has_pain_signal(quote)),
+                quotes.index(quote),
+            ),
+        )
         refined.append(
             ReviewThemeSummary(
                 label=label,
-                evidence_count=len(quotes),
-                evidence_quotes=quotes[:2],
+                evidence_count=len(ordered_quotes),
+                evidence_quotes=ordered_quotes[:2],
             )
         )
 
@@ -17315,6 +17406,130 @@ def _rw_creative_angle_title(signal_type: str, label: str, language: str) -> str
     return f"{prefix}\uff1a{label}" if is_zh else f"{prefix}: {label}"
 
 
+def _rw_creative_script_copy(
+    *,
+    signal_type: str,
+    label: str,
+    product_context: str,
+    proof_quote: str,
+    payoff_quote: str,
+    evidence_count: int,
+    language: str,
+) -> dict:
+    is_zh = language == "zh-CN"
+    label_lower = label.lower()
+    evidence_scope = (
+        f"\u5f53\u524d\u53ef\u89c1\u6837\u672c\u4e2d\u7684 {evidence_count} \u6761\u76f8\u5173\u8bc1\u636e"
+        if is_zh
+        else f"{evidence_count} related quote{'s' if evidence_count != 1 else ''} in the visible sample"
+    )
+
+    if any(term in label_lower for term in ["clean", "cleanup", "\u6e05\u6d17"]):
+        scene_actions = (
+            [
+                f"\u7b2c\u4e00\u955c\uff1a\u62cd{product_context}\u505a\u5b8c\u4e00\u676f\u996e\u54c1\u540e\uff0c\u5200\u5934\u4e0b\u65b9\u6b8b\u7559\u679c\u6e23\u7684\u7279\u5199\uff0c\u53e0\u52a0\u539f\u8bdd\u201c{proof_quote}\u201d\u3002",
+                "\u7b2c\u4e8c\u955c\uff1a\u62c6\u89e3\u5c55\u793a\u7528\u6237\u9700\u8981\u68c0\u67e5\u7684\u5200\u5934\u3001\u676f\u4f53\u548c\u51b2\u6d17\u6b65\u9aa4\uff0c\u4e0d\u58f0\u79f0\u5b83\u5df2\u7ecf\u5bb9\u6613\u6e05\u6d17\u3002",
+                f"\u7b2c\u4e09\u955c\uff1a\u56de\u5230\u771f\u5b9e\u4f7f\u7528\u573a\u666f\uff0c\u7528\u201c{payoff_quote}\u201d\u8bf4\u660e\u4e70\u5bb6\u4e3a\u4ec0\u4e48\u4ecd\u4f1a\u8003\u8651\u5b83\u3002",
+            ]
+            if is_zh
+            else [
+                f"Scene 1: Show residue under the blade after one drink, with the buyer quote on screen: \"{proof_quote}\"",
+                "Scene 2: Demonstrate the blade, cup, and rinse steps a buyer should inspect, without claiming cleanup is easy.",
+                f"Scene 3: Return to the real use context and close with the supplied payoff quote: \"{payoff_quote}\"",
+            ]
+        )
+        cta = (
+            "\u8d2d\u4e70\u524d\uff0c\u7528\u8fd9\u53e5\u539f\u8bdd\u68c0\u67e5\u5200\u5934\u7ed3\u6784\u548c\u65e5\u5e38\u51b2\u6d17\u6b65\u9aa4\uff0c\u518d\u5224\u65ad\u662f\u5426\u9002\u5408\u4f60\u7684\u8282\u594f\u3002"
+            if is_zh
+            else "Before buying, use this quote as a checklist: inspect the blade design and daily rinse steps, then decide whether they fit your routine."
+        )
+    elif any(term in label_lower for term in ["noise", "loud", "\u566a\u97f3", "\u592a\u54cd"]):
+        scene_actions = (
+            [
+                f"\u7b2c\u4e00\u955c\uff1a\u5728\u6e05\u6668\u516c\u5bd3\u573a\u666f\u4e2d\u542f\u52a8{product_context}\uff0c\u53e0\u52a0\u539f\u8bdd\u201c{proof_quote}\u201d\u3002",
+                "\u7b2c\u4e8c\u955c\uff1a\u5c55\u793a\u7528\u6237\u5728\u4e0d\u540c\u65f6\u95f4\u548c\u7a7a\u95f4\u4e2d\u8bc4\u4f30\u9a6c\u8fbe\u58f0\u97f3\uff0c\u4e0d\u58f0\u79f0\u4ea7\u54c1\u66f4\u5b89\u9759\u3002",
+                f"\u7b2c\u4e09\u955c\uff1a\u7528\u201c{payoff_quote}\u201d\u56de\u5230\u4e70\u5bb6\u771f\u5b9e\u4f7f\u7528\u573a\u666f\u3002",
+            ]
+            if is_zh
+            else [
+                f"Scene 1: Start {product_context} in an early-morning apartment setting and overlay the quote: \"{proof_quote}\"",
+                "Scene 2: Show the buyer evaluating motor sound across realistic times and spaces, without claiming the product is quieter.",
+                f"Scene 3: Return to the supplied use-case proof: \"{payoff_quote}\"",
+            ]
+        )
+        cta = (
+            "\u8d2d\u4e70\u524d\uff0c\u5148\u60f3\u6e05\u695a\u4f60\u4f1a\u5728\u4ec0\u4e48\u65f6\u95f4\u548c\u7a7a\u95f4\u4f7f\u7528\uff0c\u518d\u6839\u636e\u8fd9\u6761\u566a\u97f3\u53cd\u9988\u505a\u9009\u62e9\u3002"
+            if is_zh
+            else "Before buying, match this noise feedback to the time and space where you would actually use the product."
+        )
+    elif any(term in label_lower for term in ["leak", "spill", "mess", "\u6f0f", "\u6d12"]):
+        scene_actions = (
+            [
+                f"\u7b2c\u4e00\u955c\uff1a\u628a{product_context}\u653e\u8fdb\u5065\u8eab\u5305\u6216\u80cc\u5305\uff0c\u7528\u539f\u8bdd\u201c{proof_quote}\u201d\u70b9\u51fa\u6f0f\u6db2\u98ce\u9669\u3002",
+                "\u7b2c\u4e8c\u955c\uff1a\u7279\u5199\u68c0\u67e5\u676f\u76d6\u3001\u5bc6\u5c01\u4f4d\u7f6e\u548c\u643a\u5e26\u59ff\u52bf\uff0c\u4e0d\u58f0\u79f0\u4ea7\u54c1\u9632\u6f0f\u3002",
+                f"\u7b2c\u4e09\u955c\uff1a\u7528\u201c{payoff_quote}\u201d\u56de\u6536\u4fbf\u643a\u6216\u4f7f\u7528\u573a\u666f\uff0c\u4fdd\u7559\u8d2d\u4e70\u524d\u68c0\u67e5\u63d0\u793a\u3002",
+            ]
+            if is_zh
+            else [
+                f"Scene 1: Pack {product_context} beside a gym bag or backpack and surface the leak concern with: \"{proof_quote}\"",
+                "Scene 2: Close in on the lid, seal, and carry position a buyer should inspect, without claiming the product is leak-proof.",
+                f"Scene 3: Close with the supplied portability or use-case proof: \"{payoff_quote}\" while keeping the pre-purchase check visible.",
+            ]
+        )
+        cta = (
+            "\u5982\u679c\u4f60\u4f1a\u628a\u5b83\u653e\u8fdb\u5305\u91cc\uff0c\u8d2d\u4e70\u524d\u5148\u6839\u636e\u8fd9\u6761\u539f\u8bdd\u68c0\u67e5\u676f\u76d6\u3001\u5bc6\u5c01\u548c\u643a\u5e26\u65b9\u5f0f\u3002"
+            if is_zh
+            else "If you plan to carry it in a bag, use this quote to check the lid, seal, and carry routine before buying."
+        )
+    elif signal_type == "use_case" or any(
+        term in label_lower for term in ["travel", "office", "gym", "single-serving", "usage"]
+    ):
+        scene_actions = (
+            [
+                f"\u7b2c\u4e00\u955c\uff1a\u76f4\u63a5\u5c55\u793a{product_context}\u51fa\u73b0\u5728\u8bc4\u8bba\u63d0\u5230\u7684\u4f7f\u7528\u573a\u666f\uff0c\u53e0\u52a0\u201c{proof_quote}\u201d\u3002",
+                f"\u7b2c\u4e8c\u955c\uff1a\u8ddf\u62cd\u4e00\u6b21\u5b8c\u6574\u7684\u4f7f\u7528\u52a8\u4f5c\uff0c\u53ea\u5c55\u793a\u539f\u8bdd\u652f\u6301\u7684\u201c{label}\u201d\u3002",
+                f"\u7b2c\u4e09\u955c\uff1a\u7528\u201c{payoff_quote}\u201d\u6536\u5c3e\uff0c\u8ba9\u89c2\u4f17\u5bf9\u7167\u81ea\u5df1\u7684\u4f7f\u7528\u8282\u594f\u3002",
+            ]
+            if is_zh
+            else [
+                f"Scene 1: Put {product_context} directly in the review-backed use context and overlay: \"{proof_quote}\"",
+                f"Scene 2: Follow one complete use moment and show only what the supplied \"{label}\" evidence supports.",
+                f"Scene 3: Close with \"{payoff_quote}\" and invite viewers to compare it with their own routine.",
+            ]
+        )
+        cta = (
+            "\u5bf9\u7167\u8fd9\u6761\u4e70\u5bb6\u573a\u666f\uff0c\u770b\u5b83\u662f\u5426\u771f\u7684\u9002\u5408\u4f60\u7684\u901a\u52e4\u3001\u529e\u516c\u6216\u5065\u8eab\u8282\u594f\u3002"
+            if is_zh
+            else "Compare this buyer's use case with your own commute, office, or gym routine before choosing."
+        )
+    else:
+        scene_actions = (
+            [
+                f"\u7b2c\u4e00\u955c\uff1a\u5c55\u793a{product_context}\u548c\u539f\u8bdd\u201c{proof_quote}\u201d\uff0c\u660e\u786e\u8fd9\u662f\u5f53\u524d\u6837\u672c\u7684\u4e70\u5bb6\u4fe1\u53f7\u3002",
+                f"\u7b2c\u4e8c\u955c\uff1a\u628a\u201c{label}\u201d\u8f6c\u6362\u6210\u4e00\u4e2a\u53ef\u89c2\u5bdf\u7684\u8d2d\u4e70\u68c0\u67e5\u70b9\uff0c\u4e0d\u6dfb\u52a0\u4ea7\u54c1\u6548\u679c\u3002",
+                f"\u7b2c\u4e09\u955c\uff1a\u7528\u201c{payoff_quote}\u201d\u6536\u5c3e\uff0c\u4fdd\u7559\u7528\u6237\u81ea\u4e3b\u5224\u65ad\u3002",
+            ]
+            if is_zh
+            else [
+                f"Scene 1: Show {product_context} with the supplied buyer line: \"{proof_quote}\" and label it as visible-sample evidence.",
+                f"Scene 2: Turn \"{label}\" into one observable pre-purchase check without inventing a product effect.",
+                f"Scene 3: Close with the supplied payoff quote: \"{payoff_quote}\" and leave the decision with the viewer.",
+            ]
+        )
+        cta = (
+            "\u628a\u8fd9\u6761\u4e70\u5bb6\u539f\u8bdd\u5f53\u4f5c\u8d2d\u4e70\u68c0\u67e5\u9879\uff0c\u518d\u5224\u65ad\u4ea7\u54c1\u662f\u5426\u9002\u5408\u4f60\u7684\u771f\u5b9e\u573a\u666f\u3002"
+            if is_zh
+            else "Use this buyer quote as a pre-purchase check, then decide whether the product fits your real use context."
+        )
+
+    risk_note = (
+        f"\u8fd9\u4e2a\u65b9\u5411\u53ea\u6709{evidence_scope}\uff1b\u4e0d\u5f97\u58f0\u79f0\u987e\u8651\u5df2\u89e3\u51b3\uff0c\u4e5f\u4e0d\u5f97\u6269\u5927\u4e3a\u5168\u5e02\u573a\u7ed3\u8bba\u3002"
+        if is_zh
+        else f"This angle is supported by {evidence_scope}; do not claim the concern is resolved or generalize it to the full market."
+    )
+    return {"scenes": scene_actions, "cta": cta, "risk_note": risk_note}
+
+
 def _rw_creative_angle_dedupe_key(angle: dict) -> str:
     cluster = " ".join(_rw_text(angle.get("angle_cluster")).lower().split())
     quote = " ".join(_rw_text(angle.get("proof_quote")).lower().split())
@@ -17327,7 +17542,29 @@ def _rw_rank_and_dedupe_creative_angles(angles: list[dict]) -> tuple[list[dict],
     seen_quotes: set[str] = set()
     duplicate_count = 0
 
-    for angle in angles:
+    def raw_score(angle: dict) -> int:
+        coverage = dict(angle.get("evidence_coverage") or {})
+        evidence_count = int(angle.get("supporting_evidence_count") or 0)
+        return min(
+            100,
+            (30 if coverage.get("proof_quote") else 0)
+            + (10 if coverage.get("proof_source") else 0)
+            + (15 if coverage.get("buyer_pain") else 0)
+            + (15 if coverage.get("buyer_objection") else 0)
+            + (10 if coverage.get("liked_point") else 0)
+            + (10 if coverage.get("use_case") else 0)
+            + min(10, max(0, evidence_count - 1) * 5),
+        )
+
+    for angle in sorted(
+        angles,
+        key=lambda item: (
+            raw_score(item),
+            int(item.get("supporting_evidence_count") or 0),
+            bool(item.get("proof_quote")),
+        ),
+        reverse=True,
+    ):
         cluster_key = _rw_creative_angle_dedupe_key(angle)
         quote_key = " ".join(_rw_text(angle.get("proof_quote")).lower().split())
         duplicate_reasons: list[str] = []
@@ -17341,16 +17578,7 @@ def _rw_rank_and_dedupe_creative_angles(angles: list[dict]) -> tuple[list[dict],
 
         coverage = dict(angle.get("evidence_coverage") or {})
         evidence_count = int(angle.get("supporting_evidence_count") or 0)
-        score = min(
-            100,
-            (30 if coverage.get("proof_quote") else 0)
-            + (10 if coverage.get("proof_source") else 0)
-            + (15 if coverage.get("buyer_pain") else 0)
-            + (15 if coverage.get("buyer_objection") else 0)
-            + (10 if coverage.get("liked_point") else 0)
-            + (10 if coverage.get("use_case") else 0)
-            + min(10, max(0, evidence_count - 1) * 5),
-        )
+        score = raw_score(angle)
         gaps = [name for name, covered in coverage.items() if not covered]
         copy_ready = bool(
             coverage.get("proof_quote")
@@ -17764,33 +17992,20 @@ def _review_workspace_creative_decision_pack(
             if is_zh
             else f"Before you buy, start with this real buyer line: \"{proof_quote}\""
         )
-        first_scene = (
-            f"\u7b2c\u4e00\u955c\uff1a\u5c55\u793a{product_context}\u7684\u771f\u5b9e\u4f7f\u7528\u573a\u666f\uff0c\u5c4f\u5e55\u5b57\u5e55\u4f7f\u7528\u8bc1\u636e\u539f\u8bdd\u3002"
-            if is_zh
-            else f"Scene 1: Show {product_context} in a real use context and place the evidence quote on screen."
-        )
-        second_scene = (
-            f"\u7b2c\u4e8c\u955c\uff1a\u7528\u53ef\u89c6\u5316\u7684\u9009\u62e9\u6216\u5bf9\u6bd4\u573a\u666f\u56de\u5e94\u201c{label}\u201d\uff0c\u4e0d\u6dfb\u52a0\u672a\u88ab\u8bc1\u636e\u652f\u6301\u7684\u6548\u679c\u3002"
-            if is_zh
-            else f"Scene 2: Respond to \"{label}\" with a visible choice or comparison, without adding unsupported product effects."
-        )
         payoff = positive_quote if positive_quote and positive_quote != proof_quote else proof_quote
-        third_scene = (
-            f"\u7b2c\u4e09\u955c\uff1a\u7528\u6b63\u5411\u6216\u573a\u666f\u8bc1\u636e\u6536\u5c3e\uff1a\u201c{payoff}\u201d"
-            if is_zh
-            else f"Scene 3: Close with positive or use-case proof: \"{payoff}\""
+        script_copy = _rw_creative_script_copy(
+            signal_type=signal_type,
+            label=label,
+            product_context=product_context,
+            proof_quote=proof_quote,
+            payoff_quote=payoff,
+            evidence_count=evidence_count,
+            language=language,
         )
-        cta = (
-            "\u628a\u8fd9\u53e5\u4e70\u5bb6\u539f\u8bdd\u5f53\u4f5c\u9009\u8d2d\u53c2\u8003\uff0c\u518d\u770b\u5b83\u662f\u5426\u9002\u5408\u4f60\u7684\u4f7f\u7528\u573a\u666f\u3002"
-            if is_zh
-            else "Use this buyer quote as a decision signal, then check whether the product fits your use case."
-        )
+        first_scene, second_scene, third_scene = script_copy["scenes"]
+        cta = script_copy["cta"]
         script_outline = " ".join([hook, first_scene, second_scene, third_scene, cta])
-        risk_note = (
-            "\u4ec5\u8868\u8fbe\u5f53\u524d\u53ef\u89c1\u6837\u672c\u4e2d\u7684\u4e70\u5bb6\u4fe1\u53f7\uff1b\u4e0d\u5f97\u63a8\u5e7f\u4e3a\u5168\u5e02\u573a\u7ed3\u8bba\u6216\u4fdd\u8bc1\u4ea7\u54c1\u6548\u679c\u3002"
-            if is_zh
-            else "Treat this as a visible-sample buyer signal, not a full-market conclusion or guaranteed product result."
-        )
+        risk_note = script_copy["risk_note"]
         title = _rw_creative_angle_title(signal_type, label, language)
         signal_cluster_label = " ".join(label.lower().split())
         coverage = {
@@ -17875,6 +18090,7 @@ def _review_workspace_creative_decision_pack(
         "Do not promise guaranteed product performance or universal outcomes.",
         "Do not generalize one variant, color, size, or packaging issue to the whole product without repeated evidence.",
         "Do not imply that a buyer objection is resolved unless the supplied evidence explicitly supports the reversal.",
+        "Do not claim the product is leak-proof, quiet, or easy to clean unless repeated supplied quotes explicitly support that claim.",
     ]
     video_prompt_pack = {
         "keyframe_prompt": (
