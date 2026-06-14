@@ -130,6 +130,7 @@ Add-Check "project_workspace_provider_execution_readiness_packet_marker" ($page.
 Add-Check "project_workspace_agent_capability_runtime_marker" ($page.Content -match "Project Workspace agent capability runtime bundle")
 Add-Check "project_workspace_creative_decision_pack_marker" ($page.Content -match "Project Workspace creative decision pack bundle")
 Add-Check "project_workspace_creative_decision_usability_marker" ($page.Content -match "Project Workspace creative decision usability bundle")
+Add-Check "project_workspace_creative_decision_quality_polish_marker" ($page.Content -match "Project Workspace creative decision quality polish bundle")
 Add-Check "project_workspace_creative_feedback_runtime_marker" ($page.Content -match "Project Workspace creative feedback runtime bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")

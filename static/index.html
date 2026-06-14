@@ -14672,6 +14672,7 @@
 
         const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER = 'Project Workspace creative decision pack bundle';
         const PROJECT_WORKSPACE_CREATIVE_DECISION_USABILITY_MARKER = 'Project Workspace creative decision usability bundle';
+        const PROJECT_WORKSPACE_CREATIVE_DECISION_QUALITY_POLISH_MARKER = 'Project Workspace creative decision quality polish bundle';
         const PROJECT_WORKSPACE_CREATIVE_FEEDBACK_RUNTIME_MARKER = 'Project Workspace creative feedback runtime bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -14847,10 +14848,10 @@
                     : [angle.first_scene, angle.second_scene, angle.third_scene].filter(Boolean);
                 return [
                     angle.title,
-                    `${t('creativeDecisionProofQuote')}: ${angle.proof_quote || t('creativeDecisionMissingQuote')}`,
                     `${t('creativeDecisionHook')}: ${script.hook || angle.hook || ''}`,
                     ...scenes.map((scene, index) => `${index + 1}. ${scene}`),
                     `${t('creativeDecisionCta')}: ${script.cta || angle.cta || ''}`,
+                    `${t('creativeDecisionProofQuote')}: ${angle.proof_quote || t('creativeDecisionMissingQuote')}`,
                     `${t('creativeDecisionRiskNote')}: ${script.risk_note || angle.risk_note || ''}`,
                     `${t('creativeDecisionClaimSafetyLevel')}: ${angle.claim_safety_level || ''}`
                 ].join('\n');
@@ -15172,21 +15173,40 @@
             if (!recommended) return '';
             const script = recommended.tiktok_script || {};
             const scenes = Array.isArray(script.scenes) ? script.scenes : [];
+            const hasEvidenceRisk = pack.weak_evidence_count > 0 || pack.missing_quote_count > 0;
             return `
-                <div class="section-block" id="projectWorkspaceCreativeDecisionRecommendationPanel" data-creative-decision-usability-marker="${PROJECT_WORKSPACE_CREATIVE_DECISION_USABILITY_MARKER}">
+                <div class="section-block" id="projectWorkspaceCreativeDecisionRecommendationPanel"
+                    data-creative-decision-usability-marker="${PROJECT_WORKSPACE_CREATIVE_DECISION_USABILITY_MARKER}"
+                    data-creative-decision-quality-polish-marker="${PROJECT_WORKSPACE_CREATIVE_DECISION_QUALITY_POLISH_MARKER}"
+                    style="border-color:var(--accent);box-shadow:0 0 0 2px rgba(17, 94, 89, 0.12);">
                     <div class="section-header">
                         <div>
                             <span class="badge">${escapeHTML(t('creativeDecisionRecommended'))}</span>
                             <div class="json-key">${escapeHTML(pack.recommended_angle_title || recommended.title || t('creativeDecisionUntitledAngle'))}</div>
-                            <div class="field-helper">${escapeHTML(pack.decision_reason || recommended.recommendation_reason || t('none'))}</div>
                         </div>
                         <button class="btn-primary" type="button" onclick="copyProjectWorkspaceRecommendedTikTokScript()">${escapeHTML(t('creativeDecisionCopyRecommendedScript'))}</button>
                     </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(t('creativeDecisionWhyRecommended'))}:</strong>
+                        ${escapeHTML(pack.decision_reason || recommended.recommendation_reason || t('none'))}
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeDecisionEvidenceScore'), String(recommended.evidence_strength_score || 0))}
+                        ${metricPill(t('creativeDecisionEvidenceStrength'), recommended.evidence_strength || t('creativeDecisionStrengthWeak'))}
+                        ${metricPill(t('creativeDecisionClaimSafetyLevel'), recommended.claim_safety_level || t('none'))}
+                        ${metricPill(t('creativeDecisionCopyReadiness'), recommended.copy_readiness || t('none'))}
+                    </div>
+                    ${hasEvidenceRisk ? `
+                        <div class="demo-warning">
+                            <strong>${escapeHTML(t('creativeDecisionEvidenceRisk'))}:</strong>
+                            ${escapeHTML(t('creativeDecisionEvidenceWarning'))}
+                        </div>
+                    ` : ''}
                     <div><strong>${escapeHTML(t('creativeDecisionHook'))}:</strong> ${escapeHTML(script.hook || recommended.hook || t('none'))}</div>
                     ${scenes.map((scene, index) => `<div><strong>${index + 1}.</strong> ${escapeHTML(scene)}</div>`).join('')}
                     <div><strong>${escapeHTML(t('creativeDecisionCta'))}:</strong> ${escapeHTML(script.cta || recommended.cta || t('none'))}</div>
                     <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionProofQuote'))}:</strong> ${escapeHTML(script.proof_quote || recommended.proof_quote || t('creativeDecisionMissingQuote'))}</div>
-                    <div class="field-helper">${escapeHTML(t('creativeDecisionClaimSafetyLevel'))}: ${escapeHTML(recommended.claim_safety_level || t('none'))}</div>
+                    <div class="field-helper"><strong>${escapeHTML(t('creativeDecisionRiskNote'))}:</strong> ${escapeHTML(script.risk_note || recommended.risk_note || t('none'))}</div>
                 </div>
             `;
         }
@@ -15262,7 +15282,7 @@
                     <div class="field-helper">${escapeHTML(t('creativeDecisionNextActionsHelper'))}</div>
                     ${actions.length ? actions.map((action) => `
                         <div class="artifact-timeline-row" data-creative-next-action="${escapeHTML(action.action_type || '')}">
-                            <strong>${escapeHTML(action.label || action.action_type || t('none'))}</strong>
+                            <strong>${escapeHTML(creativeFeedbackActionLabel(action.action_type) || action.label || t('none'))}</strong>
                             <div>${escapeHTML(action.reason || t('none'))}</div>
                             <div class="field-helper">${escapeHTML(t('creativeDecisionActionTarget'))}: ${escapeHTML(action.target || t('none'))}</div>
                         </div>
@@ -15274,6 +15294,8 @@
         function renderProjectWorkspaceVideoPromptPackPanel(workspace = latestProjectWorkspace) {
             const video = projectWorkspaceExportCreativeDecisionPackSnapshot(workspace).video_prompt_pack || {};
             const shots = Array.isArray(video.shot_list) ? video.shot_list : [];
+            const evidenceLinks = Array.isArray(video.evidence_links) ? video.evidence_links : [];
+            const claimLimits = Array.isArray(video.do_not_claim) ? video.do_not_claim : [];
             return `
                 <div class="section-block" id="projectWorkspaceVideoPromptPackPanel">
                     <div class="section-header">
@@ -15288,10 +15310,27 @@
                         <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionKeyframePrompt'))}:</strong> ${escapeHTML(video.keyframe_prompt || t('none'))}</div>
                         <div><strong>${escapeHTML(t('creativeDecisionVisualStyle'))}:</strong> ${escapeHTML(video.visual_style_hint || t('none'))}</div>
                         <div class="json-key">${escapeHTML(t('creativeDecisionShotList'))}</div>
-                        ${shots.map((shot, index) => `<div class="artifact-timeline-row"><strong>${index + 1}</strong><div>${escapeHTML(shot.prompt || '')}</div><div class="field-helper">${escapeHTML(shot.evidence_quote || '')}</div></div>`).join('')}
-                        <div class="json-key">${escapeHTML(t('creativeDecisionDoNotClaim'))}</div>
-                        ${(video.do_not_claim || []).map((item) => `<div class="field-helper">- ${escapeHTML(item)}</div>`).join('')}
-                        <details><summary>${escapeHTML(t('creativeDecisionEvidenceLinks'))}</summary><pre>${escapeHTML(JSON.stringify(video.evidence_links || [], null, 2))}</pre></details>
+                        ${shots.map((shot, index) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(`${index + 1}. ${t('creativeDecisionShotPrompt')}`)}</strong>
+                                <div>${escapeHTML(shot.prompt || '')}</div>
+                                <div class="field-helper"><strong>${escapeHTML(t('creativeDecisionShotEvidence'))}:</strong> ${escapeHTML(shot.evidence_quote || t('creativeDecisionMissingQuote'))}</div>
+                            </div>
+                        `).join('')}
+                        <div class="demo-warning">
+                            <strong>${escapeHTML(t('creativeDecisionPromptSafetyBoundary'))}</strong>
+                            ${claimLimits.length
+                                ? claimLimits.map((item) => `<div>- ${escapeHTML(item)}</div>`).join('')
+                                : `<div>${escapeHTML(t('creativeDecisionNoData'))}</div>`}
+                        </div>
+                        <div class="json-key">${escapeHTML(t('creativeDecisionEvidenceLinks'))}</div>
+                        ${evidenceLinks.length ? evidenceLinks.map((link) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(link.angle_id || t('none'))}</strong>
+                                <div>${escapeHTML(link.proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                                <div class="field-helper">${escapeHTML(t('creativeDecisionProofSource'))}: ${escapeHTML(link.proof_source || t('none'))}</div>
+                            </div>
+                        `).join('') : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
                     ` : `<div class="recent-empty">${escapeHTML(t('creativeDecisionNoData'))}</div>`}
                 </div>
             `;
@@ -34209,6 +34248,11 @@
             creativeDecisionDuplicateAngle: 'Duplicate angle',
             creativeDecisionActionTarget: 'Target',
             creativeDecisionEvidenceWarning: 'More reviews are needed. Lower claim strength and use a more conservative script until missing quotes are resolved.',
+            creativeDecisionWhyRecommended: 'Why this angle is recommended',
+            creativeDecisionEvidenceRisk: 'Evidence caution',
+            creativeDecisionShotPrompt: 'Shot prompt',
+            creativeDecisionShotEvidence: 'Shot evidence',
+            creativeDecisionPromptSafetyBoundary: 'Claim boundaries for this video prompt',
             creativeFeedbackRuntimeTitle: 'Creative Feedback Runtime',
             creativeFeedbackRuntimeHelper: 'Runtime guidance derived from evidence quality. No user preference is invented or persisted.',
             creativeCoreFlowTitle: 'Core Creative Flow',
@@ -34335,6 +34379,11 @@
             creativeDecisionDuplicateAngle: '重复角度',
             creativeDecisionActionTarget: '目标',
             creativeDecisionEvidenceWarning: '需要更多评论证据。在补齐原话前，请降低主张强度并使用更保守的脚本。',
+            creativeDecisionWhyRecommended: '\u4e3a\u4ec0\u4e48\u63a8\u8350\u8fd9\u4e2a\u89d2\u5ea6',
+            creativeDecisionEvidenceRisk: '\u8bc1\u636e\u98ce\u9669\u63d0\u793a',
+            creativeDecisionShotPrompt: '\u955c\u5934\u63d0\u793a\u8bcd',
+            creativeDecisionShotEvidence: '\u955c\u5934\u8bc1\u636e',
+            creativeDecisionPromptSafetyBoundary: '\u8fd9\u7ec4\u89c6\u9891\u63d0\u793a\u8bcd\u7684\u4e3b\u5f20\u8fb9\u754c',
             creativeFeedbackRuntimeTitle: '创意反馈运行建议',
             creativeFeedbackRuntimeHelper: '根据证据质量派生的运行时建议，不会虚构或持久化用户偏好。',
             creativeCoreFlowTitle: '核心创意流程',

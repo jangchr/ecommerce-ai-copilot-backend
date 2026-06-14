@@ -7530,6 +7530,11 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "creativeDecisionEvidenceCoverage",
             "creativeDecisionEvidenceGaps",
             "creativeDecisionClaimSafetyLevel",
+            "creativeDecisionWhyRecommended",
+            "creativeDecisionEvidenceRisk",
+            "creativeDecisionShotPrompt",
+            "creativeDecisionShotEvidence",
+            "creativeDecisionPromptSafetyBoundary",
         ]:
             with self.subTest(key=key):
                 self.assertGreaterEqual(html.count(key), 3)
@@ -7545,6 +7550,8 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn("project_workspace_creative_decision_pack_marker", script)
             self.assertIn("Project Workspace creative decision usability bundle", script)
             self.assertIn("project_workspace_creative_decision_usability_marker", script)
+            self.assertIn("Project Workspace creative decision quality polish bundle", script)
+            self.assertIn("project_workspace_creative_decision_quality_polish_marker", script)
 
     def test_creative_decision_pack_consumes_ranking_quality_and_next_actions(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
@@ -7580,6 +7587,43 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         ]:
             self.assertIn(export_heading, html)
         self.assertIn("creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace)", html)
+
+    def test_creative_decision_quality_polish_groups_recommendation_script_and_video_safety(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        recommendation_start = html.index("function renderProjectWorkspaceCreativeDecisionRecommendationPanel")
+        recommendation_end = html.index("function renderProjectWorkspaceTopAdAnglesPanel", recommendation_start)
+        recommendation = html[recommendation_start:recommendation_end]
+        for marker in [
+            "creativeDecisionWhyRecommended",
+            "creativeDecisionEvidenceScore",
+            "creativeDecisionClaimSafetyLevel",
+            "creativeDecisionCopyReadiness",
+            "creativeDecisionEvidenceRisk",
+            "creativeDecisionRiskNote",
+            "PROJECT_WORKSPACE_CREATIVE_DECISION_QUALITY_POLISH_MARKER",
+        ]:
+            self.assertIn(marker, recommendation)
+
+        copy_start = html.index("function projectWorkspaceCreativeDecisionPackCopyText")
+        copy_end = html.index("async function copyProjectWorkspaceCreativeDecisionText", copy_start)
+        copy_source = html[copy_start:copy_end]
+        self.assertLess(copy_source.index("creativeDecisionHook"), copy_source.index("creativeDecisionCta"))
+        self.assertLess(copy_source.index("creativeDecisionCta"), copy_source.index("creativeDecisionProofQuote"))
+        self.assertLess(copy_source.index("creativeDecisionProofQuote"), copy_source.index("creativeDecisionRiskNote"))
+
+        video_start = html.index("function renderProjectWorkspaceVideoPromptPackPanel")
+        video_end = html.index("function renderProjectWorkspaceCreativeQualityChecksPanel", video_start)
+        video = html[video_start:video_end]
+        for marker in [
+            "creativeDecisionShotList",
+            "creativeDecisionShotEvidence",
+            "creativeDecisionPromptSafetyBoundary",
+            "creativeDecisionEvidenceLinks",
+            "creativeDecisionProductContext",
+        ]:
+            self.assertIn(marker, video)
+        self.assertNotIn("JSON.stringify(video.evidence_links", video)
+        self.assertNotIn("????", html)
 
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
