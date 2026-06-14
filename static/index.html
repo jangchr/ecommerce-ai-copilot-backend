@@ -3593,6 +3593,7 @@
         let latestProjectCreativeDecisionPack = {};
         let latestProjectCreativeVariantPack = {};
         let latestProjectCreativeVariantSelectionPack = {};
+        let latestProjectCreativeTestFeedbackPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8852,6 +8853,7 @@
                     || {};
                 latestProjectCreativeVariantPack = latestProjectCreativeDecisionPack.creative_variant_pack || {};
                 latestProjectCreativeVariantSelectionPack = latestProjectCreativeVariantPack.variant_selection_pack || {};
+                latestProjectCreativeTestFeedbackPack = latestProjectCreativeVariantPack.creative_test_feedback_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14681,6 +14683,7 @@
         const PROJECT_WORKSPACE_REAL_SAMPLE_EXPORT_FLOW_MARKER = 'Project Workspace real sample export flow bundle';
         const PROJECT_WORKSPACE_CREATIVE_VARIANT_PACK_MARKER = 'Project Workspace creative variant pack bundle';
         const PROJECT_WORKSPACE_CREATIVE_VARIANT_SELECTION_MARKER = 'Project Workspace creative variant selection bundle';
+        const PROJECT_WORKSPACE_CREATIVE_TEST_FEEDBACK_MARKER = 'Project Workspace creative test feedback bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14954,6 +14957,7 @@
                 variant_quality_checks: pack.variant_quality_checks || {},
                 variant_copy_export: pack.variant_copy_export || {},
                 variant_selection_pack: pack.variant_selection_pack || {},
+                creative_test_feedback_pack: pack.creative_test_feedback_pack || {},
                 safety_boundaries: pack.safety_boundaries || {}
             };
         }
@@ -15078,6 +15082,151 @@
 
         function copyProjectWorkspaceCreativeVariantAbTestPlan() {
             return copyProjectWorkspaceCreativeVariantSelectionText('ab_plan');
+        }
+
+        function projectWorkspaceCreativeTestFeedbackPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCreativeTestFeedbackPack
+                && Object.keys(latestProjectCreativeTestFeedbackPack).length) {
+                return latestProjectCreativeTestFeedbackPack;
+            }
+            return projectWorkspaceCreativeVariantPackFromWorkspace(workspace)?.creative_test_feedback_pack || {};
+        }
+
+        function projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCreativeTestFeedbackPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CREATIVE_TEST_FEEDBACK_MARKER,
+                has_creative_test_feedback_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                feedback_summary: pack.feedback_summary || {},
+                recommended_winner_variant_id: pack.recommended_winner_variant_id || '',
+                recommended_next_iteration: pack.recommended_next_iteration || {},
+                variant_feedback_cards: Array.isArray(pack.variant_feedback_cards) ? pack.variant_feedback_cards : [],
+                iteration_actions: Array.isArray(pack.iteration_actions) ? pack.iteration_actions : [],
+                feedback_quality_checks: pack.feedback_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCreativeVariantFeedbackCardText(card = {}) {
+            if (!card.feedback_id) return '';
+            return [
+                `${t('creativeTestFeedbackVariant')}: ${card.variant_title || card.variant_type || ''}`,
+                `${t('creativeTestFeedbackPerformanceTier')}: ${card.performance_tier || ''}`,
+                `${t('creativeTestFeedbackKeepOrChange')}: ${card.keep_or_change || ''}`,
+                `${t('creativeTestFeedbackWhatWorked')}: ${card.what_worked || ''}`,
+                `${t('creativeTestFeedbackWhatToImprove')}: ${card.what_to_improve || ''}`,
+                `${t('creativeTestFeedbackNextHook')}: ${card.next_hook_direction || ''}`,
+                `${t('creativeTestFeedbackNextScene')}: ${card.next_scene_direction || ''}`,
+                `${t('creativeTestFeedbackNextCta')}: ${card.next_cta_direction || ''}`,
+                `${t('creativeDecisionRiskNote')}: ${card.risk_note || ''}`,
+                `${t('creativeDecisionDoNotClaim')}: ${(card.do_not_claim || []).join(' | ')}`,
+                `${t('creativeTestFeedbackNextAction')}: ${card.recommended_next_action || ''}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeNextIterationText(iteration = {}) {
+            if (!iteration.source_variant_id) return '';
+            return [
+                `${t('creativeTestFeedbackNextIteration')}: ${iteration.source_variant_id}`,
+                `${t('creativeTestFeedbackNextHook')}: ${iteration.hook_direction || ''}`,
+                `${t('creativeTestFeedbackNextScene')}: ${iteration.scene_direction || ''}`,
+                `${t('creativeTestFeedbackNextCta')}: ${iteration.cta_direction || ''}`,
+                `${t('creativeTestFeedbackProofDirection')}: ${iteration.proof_quote_direction || ''}`,
+                `${t('creativeTestFeedbackIterationNote')}: ${iteration.iteration_note || ''}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeIterationActionsText(actions = []) {
+            return actions.map((action, index) => [
+                `${index + 1}. ${action.action_title || action.action_type || ''}`,
+                `${t('creativeTestFeedbackNextAction')}: ${action.action_type || ''}`,
+                `${t('creativeTestFeedbackActionReason')}: ${action.action_reason || ''}`,
+                `${t('creativeTestFeedbackCopyChange')}: ${action.suggested_copy_change || ''}`,
+                `${t('creativeTestFeedbackVideoChange')}: ${action.suggested_video_prompt_change || ''}`,
+                `${t('creativeTestFeedbackEvidenceRequirement')}: ${action.evidence_requirement || ''}`,
+                `${t('creativeTestFeedbackRiskControl')}: ${action.risk_control || ''}`
+            ].join('\n')).join('\n\n');
+        }
+
+        function projectWorkspaceExportCreativeTestFeedbackMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace);
+            if (!pack.has_creative_test_feedback_pack) return '';
+            const winner = pack.variant_feedback_cards.find((card) =>
+                card.variant_id === pack.recommended_winner_variant_id
+            ) || {};
+            return [
+                `## ${t('creativeTestFeedbackTitle')}`,
+                '',
+                `### ${t('creativeTestFeedbackRecommendedWinner')}`,
+                projectWorkspaceCreativeVariantFeedbackCardText(winner) || t('creativeTestFeedbackNoData'),
+                '',
+                `### ${t('creativeTestFeedbackNextIteration')}`,
+                projectWorkspaceCreativeNextIterationText(pack.recommended_next_iteration),
+                '',
+                `### ${t('creativeTestFeedbackVariantCardsTitle')}`,
+                ...pack.variant_feedback_cards.flatMap((card, index) => [
+                    `#### ${index + 1}. ${card.variant_title || card.variant_type || ''}`,
+                    projectWorkspaceCreativeVariantFeedbackCardText(card),
+                    ''
+                ]),
+                `### ${t('creativeTestFeedbackIterationActions')}`,
+                projectWorkspaceCreativeIterationActionsText(pack.iteration_actions),
+                '',
+                `### ${t('creativeVariantSelectionSafetyNotes')}`,
+                `${t('creativeTestFeedbackMockSignalNote')}: ${pack.feedback_summary.mock_signal_only ? 'true' : 'false'}`
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCreativeTestFeedbackText(kind = 'summary', feedbackId = '') {
+            const status = document.getElementById('projectWorkspaceCreativeTestFeedbackStatus');
+            const pack = projectWorkspaceExportCreativeTestFeedbackSnapshot();
+            const winner = pack.variant_feedback_cards.find((card) =>
+                card.variant_id === pack.recommended_winner_variant_id
+            ) || {};
+            let text = '';
+            if (kind === 'summary') {
+                text = [
+                    t('creativeTestFeedbackTitle'),
+                    `${t('creativeTestFeedbackStatus')}: ${pack.feedback_summary.feedback_status || ''}`,
+                    `${t('creativeTestFeedbackRecommendedWinner')}: ${winner.variant_title || winner.variant_type || ''}`,
+                    projectWorkspaceCreativeNextIterationText(pack.recommended_next_iteration)
+                ].join('\n');
+            } else if (kind === 'winner') {
+                text = projectWorkspaceCreativeNextIterationText(pack.recommended_next_iteration);
+            } else if (kind === 'card') {
+                const card = pack.variant_feedback_cards.find((item) => item.feedback_id === feedbackId);
+                text = projectWorkspaceCreativeVariantFeedbackCardText(card || {});
+            } else if (kind === 'actions') {
+                text = projectWorkspaceCreativeIterationActionsText(pack.iteration_actions);
+            }
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('creativeTestFeedbackCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('creativeTestFeedbackCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('creativeTestFeedbackCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeTestFeedbackCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceCreativeTestFeedbackSummary() {
+            return copyProjectWorkspaceCreativeTestFeedbackText('summary');
+        }
+
+        function copyProjectWorkspaceCreativeWinnerIterationPlan() {
+            return copyProjectWorkspaceCreativeTestFeedbackText('winner');
+        }
+
+        function copyProjectWorkspaceCreativeVariantFeedbackCard(feedbackId) {
+            return copyProjectWorkspaceCreativeTestFeedbackText('card', feedbackId);
+        }
+
+        function copyProjectWorkspaceCreativeIterationActions() {
+            return copyProjectWorkspaceCreativeTestFeedbackText('actions');
         }
 
         function projectWorkspaceCreativeVariantScriptText(variant = {}) {
@@ -15547,6 +15696,102 @@
             `;
         }
 
+        function renderProjectWorkspaceCreativeTestFeedbackSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace);
+            if (!pack.has_creative_test_feedback_pack) return '';
+            const winner = pack.variant_feedback_cards.find((card) =>
+                card.variant_id === pack.recommended_winner_variant_id
+            ) || {};
+            const checks = pack.feedback_quality_checks || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeTestFeedbackSummaryPanel"
+                    data-creative-test-feedback-marker="${PROJECT_WORKSPACE_CREATIVE_TEST_FEEDBACK_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeTestFeedbackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeTestFeedbackHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-primary" type="button"
+                                onclick="copyProjectWorkspaceCreativeTestFeedbackSummary()">${escapeHTML(t('creativeTestFeedbackCopySummary'))}</button>
+                            <button class="btn-secondary" type="button" ${winner.feedback_id ? '' : 'disabled'}
+                                onclick="copyProjectWorkspaceCreativeWinnerIterationPlan()">${escapeHTML(t('creativeTestFeedbackCopyWinnerPlan'))}</button>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeTestFeedbackStatus'), pack.feedback_summary.feedback_status || t('none'))}
+                        ${metricPill(t('creativeTestFeedbackCardCount'), String(pack.feedback_summary.variant_feedback_count || 0))}
+                        ${metricPill(t('creativeDecisionWeakEvidence'), checks.weak_evidence ? t('yes') : t('no'))}
+                        ${metricPill(t('creativeDecisionMissingQuote'), checks.missing_quote ? t('yes') : t('no'))}
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('creativeTestFeedbackRecommendedWinner'))}:</strong> ${escapeHTML(winner.variant_title || winner.variant_type || t('creativeTestFeedbackNoWinner'))}</div>
+                    <div><strong>${escapeHTML(t('creativeTestFeedbackNextIteration'))}:</strong> ${escapeHTML(pack.recommended_next_iteration.iteration_note || t('none'))}</div>
+                    <div class="demo-warning">${escapeHTML(t('creativeTestFeedbackMockSignalNote'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeVariantFeedbackCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace);
+            if (!pack.has_creative_test_feedback_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVariantFeedbackCardsPanel">
+                    <div class="json-key">${escapeHTML(t('creativeTestFeedbackVariantCardsTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeTestFeedbackVariantCardsHelper'))}</div>
+                    <div class="graph-os-grid">${pack.variant_feedback_cards.map((card) => `
+                        <div class="graph-os-card" data-feedback-tier="${escapeHTML(card.performance_tier || '')}">
+                            <div class="section-header">
+                                <strong>${escapeHTML(card.variant_title || card.variant_type || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(card.performance_tier || t('none'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackKeepOrChange'))}:</strong> ${escapeHTML(card.keep_or_change || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackWhatWorked'))}:</strong> ${escapeHTML(card.what_worked || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackWhatToImprove'))}:</strong> ${escapeHTML(card.what_to_improve || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackNextHook'))}:</strong> ${escapeHTML(card.next_hook_direction || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackNextScene'))}:</strong> ${escapeHTML(card.next_scene_direction || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackNextCta'))}:</strong> ${escapeHTML(card.next_cta_direction || t('none'))}</div>
+                            <div class="field-helper"><strong>${escapeHTML(t('creativeDecisionRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('creativeDecisionDoNotClaim'))}:</strong> ${escapeHTML((card.do_not_claim || []).join(' | ') || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackNextAction'))}:</strong> ${escapeHTML(card.recommended_next_action || t('none'))}</div>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeVariantFeedbackCard('${escapeHTML(card.feedback_id || '')}')">${escapeHTML(t('creativeTestFeedbackCopyCard'))}</button>
+                        </div>
+                    `).join('')}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeTestFeedbackStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeIterationActionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace);
+            if (!pack.has_creative_test_feedback_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeIterationActionsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeTestFeedbackIterationActions'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeTestFeedbackIterationActionsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" ${pack.iteration_actions.length ? '' : 'disabled'}
+                            onclick="copyProjectWorkspaceCreativeIterationActions()">${escapeHTML(t('creativeTestFeedbackCopyActions'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">${pack.iteration_actions.map((action) => `
+                        <div class="graph-os-card">
+                            <div class="section-header">
+                                <strong>${escapeHTML(action.action_title || action.action_type || t('none'))}</strong>
+                                <span class="badge">P${escapeHTML(String(action.priority || 0))}</span>
+                            </div>
+                            <div class="field-helper">${escapeHTML(action.action_reason || '')}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackCopyChange'))}:</strong> ${escapeHTML(action.suggested_copy_change || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackVideoChange'))}:</strong> ${escapeHTML(action.suggested_video_prompt_change || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeTestFeedbackEvidenceRequirement'))}:</strong> ${escapeHTML(action.evidence_requirement || t('none'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('creativeTestFeedbackRiskControl'))}:</strong> ${escapeHTML(action.risk_control || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -15910,6 +16155,7 @@
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
+                projectWorkspaceExportCreativeTestFeedbackMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -15984,6 +16230,7 @@
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
+                creative_test_feedback_pack: projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -28385,6 +28632,9 @@
                     ${renderProjectWorkspaceCreativeVariantSelectionSummaryPanel(workspace)}
                     ${renderProjectWorkspaceCreativeVariantSelectionCardsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeVariantAbTestPlanPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeTestFeedbackSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVariantFeedbackCardsPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeIterationActionsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -34891,7 +35141,43 @@
             creativeVariantSelectionCopyFailed: 'Unable to copy variant selection content.',
             creativeVariantSelectionCopyNoData: 'No variant selection content is available to copy.',
             creativeVariantSelectionNoRecommendation: 'No production variant is recommended until the evidence is reviewed.',
-            creativeVariantSelectionNoData: 'No variant selection data is available.'
+            creativeVariantSelectionNoData: 'No variant selection data is available.',
+            creativeTestFeedbackTitle: 'Creative Test Feedback',
+            creativeTestFeedbackHelper: 'Review deterministic mock performance signals and prepare the next evidence-safe creative iteration.',
+            creativeTestFeedbackStatus: 'Feedback status',
+            creativeTestFeedbackCardCount: 'Feedback cards',
+            creativeTestFeedbackRecommendedWinner: 'Recommended Winner',
+            creativeTestFeedbackNoWinner: 'No winner is ready until evidence review is complete.',
+            creativeTestFeedbackNextIteration: 'Next Iteration',
+            creativeTestFeedbackVariantCardsTitle: 'Variant Feedback Cards',
+            creativeTestFeedbackVariantCardsHelper: 'These are deterministic planning signals, not live ad-platform performance results.',
+            creativeTestFeedbackVariant: 'Variant',
+            creativeTestFeedbackPerformanceTier: 'Performance tier',
+            creativeTestFeedbackKeepOrChange: 'Keep or change',
+            creativeTestFeedbackWhatWorked: 'What worked',
+            creativeTestFeedbackWhatToImprove: 'What to improve',
+            creativeTestFeedbackNextHook: 'Next hook direction',
+            creativeTestFeedbackNextScene: 'Next scene direction',
+            creativeTestFeedbackNextCta: 'Next CTA direction',
+            creativeTestFeedbackProofDirection: 'Proof quote direction',
+            creativeTestFeedbackIterationNote: 'Iteration note',
+            creativeTestFeedbackNextAction: 'Recommended next action',
+            creativeTestFeedbackIterationActions: 'Iteration Actions',
+            creativeTestFeedbackIterationActionsHelper: 'Use these guidance-only actions to change one creative variable at a time.',
+            creativeTestFeedbackActionReason: 'Action reason',
+            creativeTestFeedbackCopyChange: 'Suggested copy change',
+            creativeTestFeedbackVideoChange: 'Suggested video prompt change',
+            creativeTestFeedbackEvidenceRequirement: 'Evidence requirement',
+            creativeTestFeedbackRiskControl: 'Risk control',
+            creativeTestFeedbackMockSignalNote: 'Mock/manual planning signals only. No live ad platform, provider, media, or paid operation is used.',
+            creativeTestFeedbackCopySummary: 'Copy test feedback summary',
+            creativeTestFeedbackCopyWinnerPlan: 'Copy winner iteration plan',
+            creativeTestFeedbackCopyCard: 'Copy variant feedback card',
+            creativeTestFeedbackCopyActions: 'Copy next iteration actions',
+            creativeTestFeedbackCopied: 'Creative test feedback copied.',
+            creativeTestFeedbackCopyFailed: 'Unable to copy creative test feedback.',
+            creativeTestFeedbackCopyNoData: 'No creative test feedback is available to copy.',
+            creativeTestFeedbackNoData: 'No creative test feedback data is available.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -35099,7 +35385,43 @@
             creativeVariantSelectionCopyFailed: '无法复制变体选择内容。',
             creativeVariantSelectionCopyNoData: '暂无可复制的变体选择内容。',
             creativeVariantSelectionNoRecommendation: '证据审核完成前，暂不推荐用于制作的变体。',
-            creativeVariantSelectionNoData: '暂无变体选择数据。'
+            creativeVariantSelectionNoData: '暂无变体选择数据。',
+            creativeTestFeedbackTitle: '创意测试反馈',
+            creativeTestFeedbackHelper: '查看确定性的模拟表现信号，并准备下一轮证据安全的创意迭代。',
+            creativeTestFeedbackStatus: '反馈状态',
+            creativeTestFeedbackCardCount: '反馈卡数量',
+            creativeTestFeedbackRecommendedWinner: '推荐胜出变体',
+            creativeTestFeedbackNoWinner: '证据审核完成前，暂无可投入制作的胜出变体。',
+            creativeTestFeedbackNextIteration: '下一轮迭代',
+            creativeTestFeedbackVariantCardsTitle: '变体反馈卡',
+            creativeTestFeedbackVariantCardsHelper: '这些是确定性的规划信号，不是真实广告平台表现数据。',
+            creativeTestFeedbackVariant: '变体',
+            creativeTestFeedbackPerformanceTier: '表现层级',
+            creativeTestFeedbackKeepOrChange: '保留或修改',
+            creativeTestFeedbackWhatWorked: '有效部分',
+            creativeTestFeedbackWhatToImprove: '需要改进',
+            creativeTestFeedbackNextHook: '下一版 Hook 方向',
+            creativeTestFeedbackNextScene: '下一版画面方向',
+            creativeTestFeedbackNextCta: '下一版 CTA 方向',
+            creativeTestFeedbackProofDirection: '证据原话方向',
+            creativeTestFeedbackIterationNote: '迭代说明',
+            creativeTestFeedbackNextAction: '建议下一步',
+            creativeTestFeedbackIterationActions: '迭代操作建议',
+            creativeTestFeedbackIterationActionsHelper: '这些仅为指导建议，每次只改变一个创意变量。',
+            creativeTestFeedbackActionReason: '操作理由',
+            creativeTestFeedbackCopyChange: '建议文案修改',
+            creativeTestFeedbackVideoChange: '建议视频提示词修改',
+            creativeTestFeedbackEvidenceRequirement: '证据要求',
+            creativeTestFeedbackRiskControl: '风险控制',
+            creativeTestFeedbackMockSignalNote: '仅使用模拟/手动规划信号，不调用真实广告平台、provider、媒体或付费操作。',
+            creativeTestFeedbackCopySummary: '复制测试反馈摘要',
+            creativeTestFeedbackCopyWinnerPlan: '复制胜出变体迭代计划',
+            creativeTestFeedbackCopyCard: '复制变体反馈卡',
+            creativeTestFeedbackCopyActions: '复制下一轮迭代建议',
+            creativeTestFeedbackCopied: '创意测试反馈已复制。',
+            creativeTestFeedbackCopyFailed: '无法复制创意测试反馈。',
+            creativeTestFeedbackCopyNoData: '暂无可复制的创意测试反馈。',
+            creativeTestFeedbackNoData: '暂无创意测试反馈数据。'
         });
 
 
@@ -36478,6 +36800,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectCreativeDecisionPack = body.creative_decision_pack || {};
     latestProjectCreativeVariantPack = latestProjectCreativeDecisionPack.creative_variant_pack || {};
     latestProjectCreativeVariantSelectionPack = latestProjectCreativeVariantPack.variant_selection_pack || {};
+    latestProjectCreativeTestFeedbackPack = latestProjectCreativeVariantPack.creative_test_feedback_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
