@@ -1874,6 +1874,78 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(
             all(value is False for value in version_pack["safety_boundaries"].values())
         )
+        asset_pack = pack["creative_asset_pack"]
+        self.assertEqual(asset_pack["pack_version"], "creative_asset_pack_v1")
+        self.assertIn(asset_pack["source_version_id"], lineage_ids)
+        self.assertTrue(asset_pack["recommended_asset_pack_id"])
+        self.assertGreaterEqual(len(asset_pack["asset_packs"]), 1)
+        recommended_asset = next(
+            item
+            for item in asset_pack["asset_packs"]
+            if item["asset_pack_id"] == asset_pack["recommended_asset_pack_id"]
+        )
+        for field in [
+            "source_version_id",
+            "source_version_label",
+            "asset_pack_title",
+            "target_platform",
+            "target_format",
+            "target_length_seconds",
+            "shooting_script",
+            "shot_list",
+            "keyframe_prompts",
+            "subtitle_lines",
+            "b_roll_notes",
+            "thumbnail_prompt",
+            "caption_variants",
+            "on_screen_text",
+            "voiceover_script",
+            "product_context",
+            "risk_notes",
+            "do_not_claim",
+            "asset_readiness",
+            "evidence_strength_score",
+            "recommended_next_action",
+        ]:
+            self.assertTrue(recommended_asset[field], field)
+        shooting_script = recommended_asset["shooting_script"]
+        for field in [
+            "hook",
+            "scene_1",
+            "scene_2",
+            "scene_3",
+            "cta",
+            "risk_note",
+            "do_not_claim",
+        ]:
+            self.assertTrue(shooting_script[field], field)
+        self.assertTrue(
+            shooting_script["proof_quote"] or shooting_script["missing_quote"]
+        )
+        self.assertGreaterEqual(len(recommended_asset["keyframe_prompts"]), 3)
+        for keyframe in recommended_asset["keyframe_prompts"]:
+            self.assertTrue(keyframe["prompt"])
+            self.assertTrue(keyframe["visual_style"])
+            self.assertTrue(keyframe["evidence_link"])
+            self.assertTrue(keyframe["do_not_claim"])
+        self.assertGreaterEqual(len(recommended_asset["subtitle_lines"]), 3)
+        self.assertEqual(
+            {
+                "short_caption",
+                "benefit_caption",
+                "proof_caption",
+                "safe_claim_caption",
+            },
+            set(recommended_asset["caption_variants"]),
+        )
+        self.assertFalse(asset_pack["asset_quality_checks"]["unsupported_claim"])
+        self.assertFalse(asset_pack["asset_quality_checks"]["unsafe_provider_action"])
+        self.assertTrue(
+            asset_pack["asset_quality_checks"]["do_not_claim_preserved"]
+        )
+        self.assertTrue(
+            all(value is False for value in asset_pack["safety_boundaries"].values())
+        )
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -2006,6 +2078,25 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         )
         self.assertTrue(
             all(value is False for value in version_pack["safety_boundaries"].values())
+        )
+        asset_pack = pack["creative_asset_pack"]
+        self.assertIn(asset_pack["source_version_id"], lineage_ids)
+        self.assertTrue(asset_pack["asset_packs"])
+        recommended_asset = asset_pack["asset_packs"][0]
+        self.assertEqual(recommended_asset["asset_readiness"], "needs_evidence")
+        self.assertIn(
+            recommended_asset["recommended_next_action"],
+            {"collect_more_reviews", "lower_claim_strength"},
+        )
+        self.assertEqual(
+            recommended_asset["proof_quotes"],
+            ["The light feels too harsh late at night"],
+        )
+        self.assertFalse(asset_pack["asset_quality_checks"]["missing_quote"])
+        self.assertTrue(asset_pack["asset_quality_checks"]["weak_evidence"])
+        self.assertFalse(asset_pack["asset_quality_checks"]["unsupported_claim"])
+        self.assertTrue(
+            all(value is False for value in asset_pack["safety_boundaries"].values())
         )
         feedback = pack["creative_feedback_runtime"]
         self.assertIn(
