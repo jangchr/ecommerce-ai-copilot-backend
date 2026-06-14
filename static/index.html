@@ -3594,6 +3594,7 @@
         let latestProjectCreativeVariantPack = {};
         let latestProjectCreativeVariantSelectionPack = {};
         let latestProjectCreativeTestFeedbackPack = {};
+        let latestProjectCreativeIterationPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8854,6 +8855,9 @@
                 latestProjectCreativeVariantPack = latestProjectCreativeDecisionPack.creative_variant_pack || {};
                 latestProjectCreativeVariantSelectionPack = latestProjectCreativeVariantPack.variant_selection_pack || {};
                 latestProjectCreativeTestFeedbackPack = latestProjectCreativeVariantPack.creative_test_feedback_pack || {};
+                latestProjectCreativeIterationPack = latestProjectCreativeDecisionPack.creative_iteration_pack
+                    || latestProjectCreativeVariantPack.creative_iteration_pack
+                    || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14684,6 +14688,7 @@
         const PROJECT_WORKSPACE_CREATIVE_VARIANT_PACK_MARKER = 'Project Workspace creative variant pack bundle';
         const PROJECT_WORKSPACE_CREATIVE_VARIANT_SELECTION_MARKER = 'Project Workspace creative variant selection bundle';
         const PROJECT_WORKSPACE_CREATIVE_TEST_FEEDBACK_MARKER = 'Project Workspace creative test feedback bundle';
+        const PROJECT_WORKSPACE_CREATIVE_ITERATION_MARKER = 'Project Workspace creative iteration bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14958,6 +14963,7 @@
                 variant_copy_export: pack.variant_copy_export || {},
                 variant_selection_pack: pack.variant_selection_pack || {},
                 creative_test_feedback_pack: pack.creative_test_feedback_pack || {},
+                creative_iteration_pack: pack.creative_iteration_pack || {},
                 safety_boundaries: pack.safety_boundaries || {}
             };
         }
@@ -15227,6 +15233,138 @@
 
         function copyProjectWorkspaceCreativeIterationActions() {
             return copyProjectWorkspaceCreativeTestFeedbackText('actions');
+        }
+
+        function projectWorkspaceCreativeIterationPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCreativeIterationPack
+                && Object.keys(latestProjectCreativeIterationPack).length) {
+                return latestProjectCreativeIterationPack;
+            }
+            const decisionPack = projectWorkspaceCreativeDecisionPackFromWorkspace(workspace);
+            return decisionPack?.creative_iteration_pack
+                || decisionPack?.creative_variant_pack?.creative_iteration_pack
+                || {};
+        }
+
+        function projectWorkspaceExportCreativeIterationSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCreativeIterationPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CREATIVE_ITERATION_MARKER,
+                has_creative_iteration_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                iteration_summary: pack.iteration_summary || {},
+                source_winner_variant_id: pack.source_winner_variant_id || '',
+                recommended_iteration_variant_id: pack.recommended_iteration_variant_id || '',
+                iteration_variants: Array.isArray(pack.iteration_variants) ? pack.iteration_variants : [],
+                original_vs_revised_diff: Array.isArray(pack.original_vs_revised_diff) ? pack.original_vs_revised_diff : [],
+                iteration_quality_checks: pack.iteration_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCreativeV2ScriptText(variant = {}) {
+            if (!variant.iteration_variant_id) return '';
+            return variant.copy_ready_v2_script || [
+                `${t('creativeDecisionHook')}: ${variant.revised_hook || ''}`,
+                `${t('creativeDecisionFirstScene')}: ${variant.revised_scene_1 || ''}`,
+                `${t('creativeDecisionSecondScene')}: ${variant.revised_scene_2 || ''}`,
+                `${t('creativeDecisionThirdScene')}: ${variant.revised_scene_3 || ''}`,
+                `${t('creativeDecisionCta')}: ${variant.revised_cta || ''}`,
+                `${t('creativeDecisionProofQuote')}: ${variant.revised_proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('creativeDecisionRiskNote')}: ${variant.revised_risk_note || ''}`,
+                `${t('creativeDecisionDoNotClaim')}: ${(variant.revised_do_not_claim || []).join(' | ')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeDiffText(diffs = []) {
+            return diffs.map((diff, index) => [
+                `${index + 1}. ${diff.field_name || ''}`,
+                `${t('creativeIterationOriginalValue')}: ${diff.original_value || ''}`,
+                `${t('creativeIterationRevisedValue')}: ${diff.revised_value || ''}`,
+                `${t('creativeIterationChangeReason')}: ${diff.change_reason || ''}`,
+                `${t('creativeIterationRiskControl')}: ${diff.risk_control || ''}`
+            ].join('\n')).join('\n\n');
+        }
+
+        function projectWorkspaceExportCreativeIterationMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeIterationSnapshot(workspace);
+            if (!pack.has_creative_iteration_pack) return '';
+            const recommended = pack.iteration_variants.find((variant) =>
+                variant.iteration_variant_id === pack.recommended_iteration_variant_id
+            ) || {};
+            return [
+                `## ${t('creativeIterationPackTitle')}`,
+                '',
+                `### ${t('creativeIterationRecommendedV2')}`,
+                `${t('creativeIterationSourceWinner')}: ${pack.source_winner_variant_id || t('none')}`,
+                projectWorkspaceCreativeV2ScriptText(recommended) || t('creativeIterationNoData'),
+                '',
+                `### ${t('creativeIterationV2Script')}`,
+                ...pack.iteration_variants.flatMap((variant, index) => [
+                    `#### ${index + 1}. ${variant.revised_variant_title || variant.iteration_goal || ''}`,
+                    projectWorkspaceCreativeV2ScriptText(variant),
+                    `${t('creativeIterationV2VideoPrompt')}:`,
+                    variant.revised_video_prompt || t('creativeIterationNoData'),
+                    ''
+                ]),
+                `### ${t('creativeIterationOriginalVsRevised')}`,
+                projectWorkspaceCreativeDiffText(pack.original_vs_revised_diff),
+                '',
+                `### ${t('creativeVariantSelectionSafetyNotes')}`,
+                pack.iteration_summary.risk_summary || ''
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCreativeIterationText(kind = 'summary') {
+            const status = document.getElementById('projectWorkspaceCreativeIterationStatus');
+            const pack = projectWorkspaceExportCreativeIterationSnapshot();
+            const recommended = pack.iteration_variants.find((variant) =>
+                variant.iteration_variant_id === pack.recommended_iteration_variant_id
+            ) || {};
+            let text = '';
+            if (kind === 'script') {
+                text = projectWorkspaceCreativeV2ScriptText(recommended);
+            } else if (kind === 'video') {
+                text = recommended.revised_video_prompt || '';
+            } else if (kind === 'diff') {
+                text = projectWorkspaceCreativeDiffText(pack.original_vs_revised_diff);
+            } else {
+                text = [
+                    t('creativeIterationPackTitle'),
+                    `${t('creativeIterationSourceWinner')}: ${pack.source_winner_variant_id || ''}`,
+                    `${t('creativeIterationRecommendedV2')}: ${recommended.revised_variant_title || ''}`,
+                    `${t('creativeIterationGoal')}: ${pack.iteration_summary.iteration_goal || ''}`,
+                    `${t('creativeIterationReadiness')}: ${pack.iteration_summary.readiness || ''}`,
+                    `${t('creativeDecisionRiskNote')}: ${pack.iteration_summary.risk_summary || ''}`
+                ].join('\n');
+            }
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('creativeIterationCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('creativeIterationCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('creativeIterationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeIterationCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceCreativeRecommendedV2Script() {
+            return copyProjectWorkspaceCreativeIterationText('script');
+        }
+
+        function copyProjectWorkspaceCreativeV2VideoPrompt() {
+            return copyProjectWorkspaceCreativeIterationText('video');
+        }
+
+        function copyProjectWorkspaceCreativeOriginalVsRevisedDiff() {
+            return copyProjectWorkspaceCreativeIterationText('diff');
+        }
+
+        function copyProjectWorkspaceCreativeIterationSummary() {
+            return copyProjectWorkspaceCreativeIterationText('summary');
         }
 
         function projectWorkspaceCreativeVariantScriptText(variant = {}) {
@@ -15792,6 +15930,104 @@
             `;
         }
 
+        function renderProjectWorkspaceCreativeIterationSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeIterationSnapshot(workspace);
+            if (!pack.has_creative_iteration_pack) return '';
+            const summary = pack.iteration_summary || {};
+            const recommended = pack.iteration_variants.find((variant) =>
+                variant.iteration_variant_id === pack.recommended_iteration_variant_id
+            ) || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeIterationSummaryPanel"
+                    data-creative-iteration-marker="${PROJECT_WORKSPACE_CREATIVE_ITERATION_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeIterationPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeIterationHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-primary" type="button" ${recommended.iteration_variant_id ? '' : 'disabled'}
+                                onclick="copyProjectWorkspaceCreativeRecommendedV2Script()">${escapeHTML(t('creativeIterationCopyV2Script'))}</button>
+                            <button class="btn-secondary" type="button" ${recommended.revised_video_prompt ? '' : 'disabled'}
+                                onclick="copyProjectWorkspaceCreativeV2VideoPrompt()">${escapeHTML(t('creativeIterationCopyVideoPrompt'))}</button>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeIterationSummary()">${escapeHTML(t('creativeIterationCopySummary'))}</button>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeIterationRound'), String(summary.iteration_round || 0))}
+                        ${metricPill(t('creativeIterationVariantCount'), String(summary.iteration_variant_count || 0))}
+                        ${metricPill(t('creativeIterationReadiness'), summary.readiness || t('none'))}
+                        ${metricPill(t('creativeIterationGoal'), summary.iteration_goal || t('none'))}
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('creativeIterationSourceWinner'))}:</strong> ${escapeHTML(pack.source_winner_variant_id || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('creativeIterationRecommendedV2'))}:</strong> ${escapeHTML(recommended.revised_variant_title || t('creativeIterationNoRecommendation'))}</div>
+                    <div class="demo-warning">${escapeHTML(summary.risk_summary || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeIterationVariantsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeIterationSnapshot(workspace);
+            if (!pack.has_creative_iteration_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeIterationVariantsPanel">
+                    <div class="json-key">${escapeHTML(t('creativeIterationVariantsTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('creativeIterationVariantsHelper'))}</div>
+                    <div class="graph-os-grid">${pack.iteration_variants.map((variant) => `
+                        <div class="graph-os-card" data-iteration-goal="${escapeHTML(variant.iteration_goal || '')}">
+                            <div class="section-header">
+                                <strong>${escapeHTML(variant.revised_variant_title || variant.iteration_goal || t('none'))}</strong>
+                                <span class="badge">v${escapeHTML(String(variant.iteration_round || 2))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeDecisionHook'))}:</strong> ${escapeHTML(variant.revised_hook || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionFirstScene'))}:</strong> ${escapeHTML(variant.revised_scene_1 || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionSecondScene'))}:</strong> ${escapeHTML(variant.revised_scene_2 || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionThirdScene'))}:</strong> ${escapeHTML(variant.revised_scene_3 || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeDecisionCta'))}:</strong> ${escapeHTML(variant.revised_cta || t('none'))}</div>
+                            <div class="feedback-box"><strong>${escapeHTML(t('creativeDecisionProofQuote'))}:</strong> ${escapeHTML(variant.revised_proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                            <div class="field-helper"><strong>${escapeHTML(t('creativeDecisionRiskNote'))}:</strong> ${escapeHTML(variant.revised_risk_note || t('none'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('creativeDecisionDoNotClaim'))}:</strong> ${escapeHTML((variant.revised_do_not_claim || []).join(' | ') || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeIterationWhatChanged'))}:</strong> ${escapeHTML(variant.what_changed || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeIterationWhyChanged'))}:</strong> ${escapeHTML(variant.why_changed || t('none'))}</div>
+                            <div class="metric-strip">
+                                ${metricPill(t('creativeDecisionClaimSafetyLevel'), variant.claim_safety_level || t('none'))}
+                                ${metricPill(t('creativeDecisionCopyReadiness'), variant.copy_readiness || t('none'))}
+                                ${metricPill(t('creativeTestFeedbackNextAction'), variant.recommended_next_action || t('none'))}
+                            </div>
+                        </div>
+                    `).join('')}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeIterationStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeOriginalVsRevisedDiffPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeIterationSnapshot(workspace);
+            if (!pack.has_creative_iteration_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeOriginalVsRevisedDiffPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeIterationOriginalVsRevised'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeIterationDiffHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" ${pack.original_vs_revised_diff.length ? '' : 'disabled'}
+                            onclick="copyProjectWorkspaceCreativeOriginalVsRevisedDiff()">${escapeHTML(t('creativeIterationCopyDiff'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">${pack.original_vs_revised_diff.map((diff) => `
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(diff.field_name || t('none'))}</strong>
+                            <div><strong>${escapeHTML(t('creativeIterationOriginalValue'))}:</strong> ${escapeHTML(diff.original_value || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeIterationRevisedValue'))}:</strong> ${escapeHTML(diff.revised_value || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeIterationChangeReason'))}:</strong> ${escapeHTML(diff.change_reason || t('none'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('creativeIterationRiskControl'))}:</strong> ${escapeHTML(diff.risk_control || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -16156,6 +16392,7 @@
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
                 projectWorkspaceExportCreativeTestFeedbackMarkdown(workspace),
+                projectWorkspaceExportCreativeIterationMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -16231,6 +16468,7 @@
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
                 creative_test_feedback_pack: projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace),
+                creative_iteration_pack: projectWorkspaceExportCreativeIterationSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -28635,6 +28873,9 @@
                     ${renderProjectWorkspaceCreativeTestFeedbackSummaryPanel(workspace)}
                     ${renderProjectWorkspaceCreativeVariantFeedbackCardsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeIterationActionsPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeIterationSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeIterationVariantsPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeOriginalVsRevisedDiffPanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -35177,7 +35418,36 @@
             creativeTestFeedbackCopied: 'Creative test feedback copied.',
             creativeTestFeedbackCopyFailed: 'Unable to copy creative test feedback.',
             creativeTestFeedbackCopyNoData: 'No creative test feedback is available to copy.',
-            creativeTestFeedbackNoData: 'No creative test feedback data is available.'
+            creativeTestFeedbackNoData: 'No creative test feedback data is available.',
+            creativeIterationPackTitle: 'Creative Iteration Pack',
+            creativeIterationHelper: 'Turn the deterministic winner feedback into evidence-safe v2 scripts and video prompts.',
+            creativeIterationSourceWinner: 'Source winner variant',
+            creativeIterationRecommendedV2: 'Recommended V2 Variant',
+            creativeIterationGoal: 'Iteration goal',
+            creativeIterationReadiness: 'Iteration readiness',
+            creativeIterationRound: 'Iteration round',
+            creativeIterationVariantCount: 'V2 variants',
+            creativeIterationVariantsTitle: 'Iteration Variant Cards',
+            creativeIterationVariantsHelper: 'Each v2 draft changes a specific creative variable while preserving the original proof and claim boundary.',
+            creativeIterationV2Script: 'V2 Script',
+            creativeIterationV2VideoPrompt: 'V2 Video Prompt',
+            creativeIterationOriginalVsRevised: 'Original vs Revised Diff',
+            creativeIterationDiffHelper: 'Review exactly which hook, scene, or CTA field changed and why.',
+            creativeIterationOriginalValue: 'Original value',
+            creativeIterationRevisedValue: 'Revised value',
+            creativeIterationChangeReason: 'Change reason',
+            creativeIterationRiskControl: 'Risk control',
+            creativeIterationWhatChanged: 'What changed',
+            creativeIterationWhyChanged: 'Why changed',
+            creativeIterationCopyV2Script: 'Copy recommended v2 script',
+            creativeIterationCopyVideoPrompt: 'Copy v2 video prompt',
+            creativeIterationCopyDiff: 'Copy original vs revised diff',
+            creativeIterationCopySummary: 'Copy iteration pack summary',
+            creativeIterationCopied: 'Creative iteration content copied.',
+            creativeIterationCopyFailed: 'Unable to copy creative iteration content.',
+            creativeIterationCopyNoData: 'No creative iteration content is available to copy.',
+            creativeIterationNoRecommendation: 'No v2 variant is recommended until evidence review is complete.',
+            creativeIterationNoData: 'No creative iteration data is available.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -35421,7 +35691,36 @@
             creativeTestFeedbackCopied: '创意测试反馈已复制。',
             creativeTestFeedbackCopyFailed: '无法复制创意测试反馈。',
             creativeTestFeedbackCopyNoData: '暂无可复制的创意测试反馈。',
-            creativeTestFeedbackNoData: '暂无创意测试反馈数据。'
+            creativeTestFeedbackNoData: '暂无创意测试反馈数据。',
+            creativeIterationPackTitle: '创意迭代包',
+            creativeIterationHelper: '把确定性的胜出反馈转成证据安全的 v2 脚本和视频提示词。',
+            creativeIterationSourceWinner: '来源胜出变体',
+            creativeIterationRecommendedV2: '推荐 V2 变体',
+            creativeIterationGoal: '迭代目标',
+            creativeIterationReadiness: '迭代就绪度',
+            creativeIterationRound: '迭代轮次',
+            creativeIterationVariantCount: 'V2 变体数量',
+            creativeIterationVariantsTitle: '迭代变体卡',
+            creativeIterationVariantsHelper: '每个 v2 草稿只改变一个具体创意变量，同时保留原始证据和主张边界。',
+            creativeIterationV2Script: 'V2 脚本',
+            creativeIterationV2VideoPrompt: 'V2 视频提示词',
+            creativeIterationOriginalVsRevised: '原版与修改版对比',
+            creativeIterationDiffHelper: '查看 Hook、镜头或 CTA 具体改了什么，以及修改原因。',
+            creativeIterationOriginalValue: '原始内容',
+            creativeIterationRevisedValue: '修改内容',
+            creativeIterationChangeReason: '修改原因',
+            creativeIterationRiskControl: '风险控制',
+            creativeIterationWhatChanged: '改了什么',
+            creativeIterationWhyChanged: '为什么改',
+            creativeIterationCopyV2Script: '复制推荐 v2 脚本',
+            creativeIterationCopyVideoPrompt: '复制 v2 视频提示词',
+            creativeIterationCopyDiff: '复制原版与修改版对比',
+            creativeIterationCopySummary: '复制创意迭代摘要',
+            creativeIterationCopied: '创意迭代内容已复制。',
+            creativeIterationCopyFailed: '无法复制创意迭代内容。',
+            creativeIterationCopyNoData: '暂无可复制的创意迭代内容。',
+            creativeIterationNoRecommendation: '证据审核完成前，暂无推荐 v2 变体。',
+            creativeIterationNoData: '暂无创意迭代数据。'
         });
 
 
@@ -36801,6 +37100,9 @@ async function analyzeExtensionWorkspace() {
     latestProjectCreativeVariantPack = latestProjectCreativeDecisionPack.creative_variant_pack || {};
     latestProjectCreativeVariantSelectionPack = latestProjectCreativeVariantPack.variant_selection_pack || {};
     latestProjectCreativeTestFeedbackPack = latestProjectCreativeVariantPack.creative_test_feedback_pack || {};
+    latestProjectCreativeIterationPack = latestProjectCreativeDecisionPack.creative_iteration_pack
+      || latestProjectCreativeVariantPack.creative_iteration_pack
+      || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

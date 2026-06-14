@@ -136,6 +136,7 @@ Add-Check "project_workspace_real_sample_export_flow_marker" ($page.Content -mat
 Add-Check "project_workspace_creative_variant_pack_marker" ($page.Content -match "Project Workspace creative variant pack bundle")
 Add-Check "project_workspace_creative_variant_selection_marker" ($page.Content -match "Project Workspace creative variant selection bundle")
 Add-Check "project_workspace_creative_test_feedback_marker" ($page.Content -match "Project Workspace creative test feedback bundle")
+Add-Check "project_workspace_creative_iteration_marker" ($page.Content -match "Project Workspace creative iteration bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

@@ -7917,6 +7917,93 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertNotIn("<details open", governance)
         self.assertNotIn("????", html)
 
+    def test_creative_iteration_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace creative iteration bundle",
+            "PROJECT_WORKSPACE_CREATIVE_ITERATION_MARKER",
+            "latestProjectCreativeIterationPack",
+            "projectWorkspaceCreativeIterationPackFromWorkspace",
+            "projectWorkspaceExportCreativeIterationSnapshot",
+            "projectWorkspaceExportCreativeIterationMarkdown",
+            "renderProjectWorkspaceCreativeIterationSummaryPanel",
+            "renderProjectWorkspaceCreativeIterationVariantsPanel",
+            "renderProjectWorkspaceCreativeOriginalVsRevisedDiffPanel",
+            "copyProjectWorkspaceCreativeRecommendedV2Script",
+            "copyProjectWorkspaceCreativeV2VideoPrompt",
+            "copyProjectWorkspaceCreativeOriginalVsRevisedDiff",
+            "copyProjectWorkspaceCreativeIterationSummary",
+            "creative_iteration_pack: projectWorkspaceExportCreativeIterationSnapshot(workspace)",
+            "Creative Iteration Pack",
+            "Recommended V2 Variant",
+            "Original vs Revised Diff",
+            "V2 Script",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "variant.revised_hook",
+            "variant.revised_scene_1",
+            "variant.revised_scene_2",
+            "variant.revised_scene_3",
+            "variant.revised_cta",
+            "variant.revised_proof_quote",
+            "variant.revised_risk_note",
+            "variant.revised_do_not_claim",
+            "variant.what_changed",
+            "variant.why_changed",
+            "variant.copy_readiness",
+            "variant.recommended_next_action",
+        ]:
+            self.assertIn(runtime_field, html)
+
+    def test_creative_iteration_workspace_has_bilingual_copy_guard_and_collapsed_governance(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "creativeIterationPackTitle",
+            "creativeIterationRecommendedV2",
+            "creativeIterationVariantsTitle",
+            "creativeIterationOriginalVsRevised",
+            "creativeIterationV2Script",
+            "creativeIterationCopyV2Script",
+            "creativeIterationCopyVideoPrompt",
+            "creativeIterationCopyDiff",
+            "creativeIterationCopySummary",
+            "creativeIterationCopied",
+            "creativeIterationCopyFailed",
+            "creativeIterationCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace creative iteration bundle", script)
+            self.assertIn("project_workspace_creative_iteration_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportCreativeIterationMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceCreativeIterationText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for marker in [
+            "creativeIterationPackTitle",
+            "creativeIterationRecommendedV2",
+            "creativeIterationOriginalVsRevised",
+            "creativeIterationV2Script",
+            "creativeIterationV2VideoPrompt",
+            "creativeVariantSelectionSafetyNotes",
+        ]:
+            self.assertIn(marker, markdown)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
