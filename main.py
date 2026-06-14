@@ -17952,6 +17952,233 @@ def _rw_creative_quality_checks(top_ad_angles: list[dict], evidence_count: int) 
     }
 
 
+def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
+    angles = list(creative_decision_pack.get("top_ad_angles") or [])
+    source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
+    video_pack = dict(creative_decision_pack.get("video_prompt_pack") or {})
+    is_zh = language == "zh-CN"
+    source_script = dict(source_angle.get("tiktok_script") or {})
+    source_scenes = list(source_script.get("scenes") or [])
+    while len(source_scenes) < 3:
+        source_scenes.append("")
+    proof_quote = _rw_text(source_script.get("proof_quote") or source_angle.get("proof_quote"))
+    proof_source = _rw_text(source_angle.get("proof_source"))
+    risk_note = _rw_text(source_script.get("risk_note") or source_angle.get("risk_note"))
+    source_hook = _rw_text(source_script.get("hook") or source_angle.get("hook"))
+    source_cta = _rw_text(source_script.get("cta") or source_angle.get("cta"))
+    source_title = _rw_text(source_angle.get("title"))
+    do_not_claim = list(video_pack.get("do_not_claim") or [])
+    missing_quote = not bool(proof_quote)
+    weak_evidence = (
+        missing_quote
+        or int(source_angle.get("evidence_strength_score") or 0) < 60
+        or source_angle.get("claim_safety_level") != "evidence_grounded"
+    )
+
+    definitions = [
+        {
+            "variant_type": "ugc_testimonial",
+            "title": "\u4e70\u5bb6\u539f\u8bdd UGC" if is_zh else "Buyer-quote UGC",
+            "length": 20,
+            "style": "\u624b\u6301\u51fa\u955c\u3001\u539f\u8bdd\u53e0\u52a0\u3001\u4fdd\u5b88\u89e3\u8bfb" if is_zh else "Handheld testimonial framing with buyer-quote overlays",
+            "hook": (
+                f"\u4e70\u5bb6\u7684\u539f\u8bdd\u662f\uff1a\u201c{proof_quote}\u201d"
+                if is_zh and proof_quote
+                else f"A buyer put it plainly: \"{proof_quote}\""
+                if proof_quote
+                else source_hook
+            ),
+            "reason": "Lead with the supplied buyer voice and keep the creator interpretation visibly secondary.",
+        },
+        {
+            "variant_type": "problem_solution",
+            "title": "\u95ee\u9898\u68c0\u67e5\u8def\u5f84" if is_zh else "Problem-check path",
+            "length": 25,
+            "style": "\u95ee\u9898\u7279\u5199\u3001\u8d2d\u4e70\u68c0\u67e5\u3001\u8bc1\u636e\u6536\u5c3e" if is_zh else "Problem close-up, buyer inspection, evidence-led close",
+            "hook": source_hook,
+            "reason": "Turn the source pain or objection into a pre-purchase inspection sequence without claiming a fix.",
+        },
+        {
+            "variant_type": "direct_demo",
+            "title": "\u76f4\u63a5\u6f14\u793a\u68c0\u67e5" if is_zh else "Direct inspection demo",
+            "length": 18,
+            "style": "\u4ea7\u54c1\u4e3a\u4e3b\u3001\u8fde\u7eed\u52a8\u4f5c\u3001\u5c11\u65c1\u767d" if is_zh else "Product-first continuous demonstration with minimal narration",
+            "hook": (
+                f"\u76f4\u63a5\u770b\u8fd9\u6761\u8bc4\u8bba\u5bf9\u5e94\u7684\u8d2d\u4e70\u68c0\u67e5\uff1a\u201c{proof_quote}\u201d"
+                if is_zh and proof_quote
+                else f"Watch the buyer check behind this review: \"{proof_quote}\""
+                if proof_quote
+                else source_hook
+            ),
+            "reason": "Use the existing three evidence-grounded scenes as a product-first visual inspection.",
+        },
+        {
+            "variant_type": "objection_reversal",
+            "title": "\u987e\u8651\u56de\u5e94\uff08\u4e0d\u5ba3\u79f0\u5df2\u89e3\u51b3\uff09" if is_zh else "Objection response without resolution claim",
+            "length": 25,
+            "style": "\u5148\u5448\u73b0\u987e\u8651\u3001\u518d\u5c55\u793a\u68c0\u67e5\u3001\u4fdd\u7559\u5224\u65ad" if is_zh else "Objection first, inspection second, viewer decision retained",
+            "hook": (
+                f"\u5148\u4e0d\u56de\u907f\u8fd9\u4e2a\u987e\u8651\uff1a\u201c{proof_quote}\u201d"
+                if is_zh and proof_quote
+                else f"Do not skip this buyer concern: \"{proof_quote}\""
+                if proof_quote
+                else source_hook
+            ),
+            "reason": "Acknowledge the supplied objection, then show only the checks supported by the existing script.",
+        },
+        {
+            "variant_type": "short_hook",
+            "title": "\u539f\u8bdd\u77ed Hook" if is_zh else "Quote-first short hook",
+            "length": 10,
+            "style": "\u5feb\u8282\u594f\u539f\u8bdd\u5f00\u573a\u3001\u4e09\u955c\u5feb\u5207\u3001\u4fdd\u5b88 CTA" if is_zh else "Fast quote-first open, three quick cuts, conservative CTA",
+            "hook": (
+                f"\u5341\u79d2\u5148\u770b\u8fd9\u53e5\uff1a\u201c{proof_quote}\u201d"
+                if is_zh and proof_quote
+                else f"Ten seconds. Start with the buyer line: \"{proof_quote}\""
+                if proof_quote
+                else source_hook
+            ),
+            "reason": "Compress the same evidence-backed script into a short opening test without adding a new claim.",
+        },
+    ]
+
+    variants: list[dict] = []
+    for index, definition in enumerate(definitions, start=1):
+        variant_id = f"variant_{index}_{definition['variant_type']}"
+        variant_hook = _rw_text(definition["hook"])
+        shot_list = [
+            {
+                "scene_number": scene_number,
+                "prompt": scene,
+                "evidence_quote": proof_quote,
+            }
+            for scene_number, scene in enumerate(source_scenes[:3], start=1)
+            if scene
+        ]
+        video_prompt = "\n".join(
+            [
+                f"Variant: {definition['title']}",
+                f"Creative style: {definition['style']}",
+                f"Hook: {variant_hook}",
+                *[f"Shot {shot['scene_number']}: {shot['prompt']}" for shot in shot_list],
+                f"CTA: {source_cta}",
+                f"Risk note: {risk_note}",
+                "Do not claim:",
+                *[f"- {item}" for item in do_not_claim],
+            ]
+        )
+        copy_ready_script = "\n".join(
+            [
+                f"Hook: {variant_hook}",
+                f"Scene 1: {source_scenes[0]}",
+                f"Scene 2: {source_scenes[1]}",
+                f"Scene 3: {source_scenes[2]}",
+                f"CTA: {source_cta}",
+                f"Proof quote: {proof_quote or 'missing_quote'}",
+                f"Risk note: {risk_note}",
+            ]
+        )
+        variants.append(
+            {
+                "variant_id": variant_id,
+                "variant_type": definition["variant_type"],
+                "variant_title": definition["title"],
+                "source_angle_id": source_angle.get("angle_id", ""),
+                "source_angle_title": source_title,
+                "target_platform": "TikTok",
+                "target_length_seconds": definition["length"],
+                "creative_style": definition["style"],
+                "hook": variant_hook,
+                "scene_1": source_scenes[0],
+                "scene_2": source_scenes[1],
+                "scene_3": source_scenes[2],
+                "cta": source_cta,
+                "proof_quote": proof_quote,
+                "proof_source": proof_source,
+                "missing_quote": missing_quote,
+                "weak_evidence": weak_evidence,
+                "risk_note": risk_note,
+                "do_not_claim": do_not_claim,
+                "video_prompt": video_prompt,
+                "shot_list": shot_list,
+                "copy_ready_script": copy_ready_script,
+                "evidence_strength_score": int(source_angle.get("evidence_strength_score") or 0),
+                "claim_safety_level": source_angle.get("claim_safety_level", "conservative"),
+                "copy_readiness": "needs_evidence" if weak_evidence else source_angle.get("copy_readiness", "ready"),
+                "variant_reason": definition["reason"],
+            }
+        )
+
+    recommended_type = (
+        "objection_reversal"
+        if source_angle.get("buyer_objection")
+        else "problem_solution"
+        if source_angle.get("buyer_pain")
+        else "direct_demo"
+    )
+    recommended_variant = next(
+        (variant for variant in variants if variant["variant_type"] == recommended_type),
+        variants[0] if variants else {},
+    )
+    if weak_evidence:
+        recommended_variant = {}
+    missing_quote_variants = [
+        variant["variant_id"] for variant in variants if variant["missing_quote"]
+    ]
+    weak_evidence_variants = [
+        variant["variant_id"] for variant in variants if variant["weak_evidence"]
+    ]
+    unsupported_claims = list(
+        creative_decision_pack.get("quality_checks", {}).get("unsupported_claim_terms") or []
+    )
+    return {
+        "pack_version": "creative_variant_pack_v1",
+        "variant_summary": {
+            "variant_count": len(variants),
+            "recommended_variant_id": recommended_variant.get("variant_id", ""),
+            "recommended_variant_title": recommended_variant.get("variant_title", ""),
+            "recommendation_reason": (
+                recommended_variant.get("variant_reason", "")
+                if recommended_variant
+                else "Weak evidence: variants are available for review, but none is recommended for production use."
+            ),
+            "weak_evidence_count": len(weak_evidence_variants),
+            "missing_quote_count": len(missing_quote_variants),
+            "copy_ready_count": sum(variant["copy_readiness"] == "ready" for variant in variants),
+        },
+        "recommended_variant_id": recommended_variant.get("variant_id", ""),
+        "variants": variants,
+        "variant_quality_checks": {
+            "unsupported_claim": bool(unsupported_claims),
+            "unsupported_claim_terms": unsupported_claims,
+            "missing_quote": bool(missing_quote_variants),
+            "missing_quote_variants": missing_quote_variants,
+            "weak_evidence": bool(weak_evidence_variants),
+            "weak_evidence_variants": weak_evidence_variants,
+            "unsafe_provider_action": False,
+        },
+        "variant_copy_export": {
+            "recommended_script": recommended_variant.get("copy_ready_script", ""),
+            "variant_scripts": {
+                variant["variant_id"]: variant["copy_ready_script"] for variant in variants
+            },
+            "variant_video_prompts": {
+                variant["variant_id"]: variant["video_prompt"] for variant in variants
+            },
+        },
+        "safety_boundaries": {
+            "real_provider_called": False,
+            "llm_api_called": False,
+            "video_generated": False,
+            "media_uploaded": False,
+            "media_downloaded": False,
+            "paid_operation_performed": False,
+            "registry_written": False,
+            "restore_or_rollback_performed": False,
+        },
+    }
+
+
 def _review_workspace_creative_decision_pack(
     payload: ReviewWorkspaceRequest,
     source_breakdown: ReviewSourceBreakdown,
@@ -18184,7 +18411,7 @@ def _review_workspace_creative_decision_pack(
         missing_quote_count,
     )
 
-    return {
+    creative_decision_pack = {
         "pack_version": "creative_decision_pack_v1",
         "intended_use": "evidence_grounded_creative_decision",
         "top_ad_angles": top_ad_angles,
@@ -18224,6 +18451,11 @@ def _review_workspace_creative_decision_pack(
             "paid_operation_performed": False,
         },
     }
+    creative_decision_pack["creative_variant_pack"] = _rw_creative_variant_pack(
+        creative_decision_pack,
+        language,
+    )
+    return creative_decision_pack
 
 
 

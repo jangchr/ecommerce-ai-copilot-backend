@@ -1597,6 +1597,60 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertLessEqual(pack["missing_quote_count"], len(angles))
         self.assertTrue(all(value is False for value in pack["safety_boundaries"].values()))
 
+        variant_pack = pack["creative_variant_pack"]
+        self.assertEqual(variant_pack["pack_version"], "creative_variant_pack_v1")
+        self.assertEqual(len(variant_pack["variants"]), 5)
+        self.assertTrue(variant_pack["recommended_variant_id"])
+        self.assertEqual(
+            {
+                "ugc_testimonial",
+                "problem_solution",
+                "direct_demo",
+                "objection_reversal",
+                "short_hook",
+            },
+            {variant["variant_type"] for variant in variant_pack["variants"]},
+        )
+        for variant in variant_pack["variants"]:
+            with self.subTest(variant_id=variant["variant_id"]):
+                for field in [
+                    "variant_id",
+                    "variant_type",
+                    "variant_title",
+                    "source_angle_id",
+                    "source_angle_title",
+                    "target_platform",
+                    "target_length_seconds",
+                    "creative_style",
+                    "hook",
+                    "scene_1",
+                    "scene_2",
+                    "scene_3",
+                    "cta",
+                    "risk_note",
+                    "video_prompt",
+                    "copy_ready_script",
+                    "variant_reason",
+                ]:
+                    self.assertTrue(variant[field], field)
+                self.assertTrue(variant["proof_quote"] or variant["missing_quote"])
+                self.assertEqual(len(variant["shot_list"]), 3)
+                self.assertTrue(variant["do_not_claim"])
+                self.assertIn(variant["proof_quote"], variant["copy_ready_script"])
+                self.assertIn(variant["risk_note"], variant["copy_ready_script"])
+        checks = variant_pack["variant_quality_checks"]
+        for field in [
+            "unsupported_claim",
+            "missing_quote",
+            "weak_evidence",
+            "unsafe_provider_action",
+        ]:
+            self.assertIn(field, checks)
+        self.assertFalse(checks["unsafe_provider_action"])
+        self.assertTrue(variant_pack["variant_copy_export"]["variant_scripts"])
+        self.assertTrue(variant_pack["variant_copy_export"]["variant_video_prompts"])
+        self.assertTrue(all(value is False for value in variant_pack["safety_boundaries"].values()))
+
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
             "/api/v1/analyze-review-workspace",
@@ -1637,6 +1691,11 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(
             all(angle["proof_quote"] or angle["missing_quote"] for angle in pack["top_ad_angles"])
         )
+        variant_pack = pack["creative_variant_pack"]
+        self.assertEqual(len(variant_pack["variants"]), 5)
+        self.assertFalse(variant_pack["recommended_variant_id"])
+        self.assertTrue(variant_pack["variant_quality_checks"]["weak_evidence"])
+        self.assertTrue(all(variant["weak_evidence"] for variant in variant_pack["variants"]))
         feedback = pack["creative_feedback_runtime"]
         self.assertIn(
             feedback["feedback_summary"]["recommended_next_step"],
