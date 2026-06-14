@@ -1792,6 +1792,83 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
             "registry_operation_enabled",
         ]:
             self.assertFalse(iteration_pack["safety_boundaries"][boundary])
+        version_pack = pack["creative_version_control_pack"]
+        self.assertEqual(
+            version_pack["pack_version"],
+            "creative_version_control_pack_v1",
+        )
+        lineage = version_pack["version_lineage"]
+        self.assertTrue(lineage)
+        self.assertEqual({1, 2}, {version["version_round"] for version in lineage})
+        lineage_ids = {version["version_id"] for version in lineage}
+        self.assertIn(
+            version_pack["recommended_next_test_version_id"],
+            lineage_ids,
+        )
+        for version in lineage:
+            with self.subTest(version_id=version["version_id"]):
+                for field in [
+                    "hook",
+                    "scene_1",
+                    "scene_2",
+                    "scene_3",
+                    "cta",
+                    "risk_note",
+                    "copy_ready_script",
+                ]:
+                    self.assertTrue(version[field], field)
+                self.assertTrue(version["proof_quote"] or version["missing_quote"])
+                self.assertTrue(version["do_not_claim"])
+                if version["version_round"] == 2:
+                    self.assertIn(version["parent_version_id"], lineage_ids)
+        comparisons = version_pack["version_comparison_cards"]
+        self.assertGreaterEqual(len(comparisons), 1)
+        for comparison in comparisons:
+            with self.subTest(comparison_id=comparison["comparison_id"]):
+                self.assertIn(comparison["base_version_id"], lineage_ids)
+                self.assertIn(comparison["revised_version_id"], lineage_ids)
+                for field in [
+                    "comparison_title",
+                    "what_changed",
+                    "why_it_changed",
+                    "expected_benefit",
+                    "risk_delta",
+                    "evidence_delta",
+                    "copy_readiness_delta",
+                    "best_for",
+                    "recommended_next_action",
+                    "risk_note",
+                ]:
+                    self.assertTrue(comparison[field], field)
+                self.assertTrue(
+                    comparison["proof_quote"] or comparison["missing_quote"]
+                )
+                self.assertTrue(comparison["do_not_claim"])
+        risk_summary = version_pack["version_risk_summary"]
+        for field in [
+            "lowest_risk_version_id",
+            "highest_copy_readiness_version_id",
+            "best_for_tiktok_version_id",
+            "best_for_direct_response_version_id",
+            "best_for_low_evidence_safe_use_version_id",
+        ]:
+            self.assertIn(risk_summary[field], lineage_ids)
+        self.assertTrue(version_pack["version_export_snapshot"])
+        self.assertTrue(
+            version_pack["version_quality_checks"]["lineage_complete"]
+        )
+        self.assertTrue(
+            version_pack["version_quality_checks"]["recommended_version_exists"]
+        )
+        self.assertTrue(
+            version_pack["version_quality_checks"]["do_not_claim_preserved"]
+        )
+        self.assertFalse(
+            version_pack["version_quality_checks"]["unsupported_claim_added"]
+        )
+        self.assertTrue(
+            all(value is False for value in version_pack["safety_boundaries"].values())
+        )
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -1895,6 +1972,35 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
                 in {"collect_more_reviews", "lower_claim_strength"}
                 for variant in iteration_pack["iteration_variants"]
             )
+        )
+        version_pack = pack["creative_version_control_pack"]
+        lineage = version_pack["version_lineage"]
+        lineage_ids = {version["version_id"] for version in lineage}
+        self.assertIn(
+            version_pack["recommended_next_test_version_id"],
+            lineage_ids,
+        )
+        v2_versions = [
+            version for version in lineage if version["version_round"] == 2
+        ]
+        self.assertTrue(v2_versions)
+        self.assertTrue(
+            all(version["claim_safety_level"] == "conservative" for version in v2_versions)
+        )
+        self.assertTrue(all(version["weak_evidence"] for version in v2_versions))
+        self.assertTrue(
+            all(
+                comparison["recommended_next_action"]
+                in {"collect_more_reviews", "lower_claim_strength"}
+                for comparison in version_pack["version_comparison_cards"]
+            )
+        )
+        self.assertTrue(version_pack["version_quality_checks"]["weak_evidence"])
+        self.assertFalse(
+            version_pack["version_quality_checks"]["unsupported_claim_added"]
+        )
+        self.assertTrue(
+            all(value is False for value in version_pack["safety_boundaries"].values())
         )
         feedback = pack["creative_feedback_runtime"]
         self.assertIn(

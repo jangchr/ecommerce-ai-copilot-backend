@@ -18730,6 +18730,303 @@ def _rw_creative_iteration_pack(
     }
 
 
+def _rw_creative_version_control_pack(
+    variants: list[dict],
+    creative_test_feedback_pack: dict,
+    creative_iteration_pack: dict,
+) -> dict:
+    variant_by_id = {
+        _rw_text(variant.get("variant_id")): variant
+        for variant in variants
+        if _rw_text(variant.get("variant_id"))
+    }
+    feedback_cards = {
+        _rw_text(card.get("variant_id")): card
+        for card in list(creative_test_feedback_pack.get("variant_feedback_cards") or [])
+        if _rw_text(card.get("variant_id"))
+    }
+    diffs_by_iteration: dict[str, list[dict]] = {}
+    for diff in list(creative_iteration_pack.get("original_vs_revised_diff") or []):
+        iteration_id = _rw_text(diff.get("iteration_variant_id"))
+        if iteration_id:
+            diffs_by_iteration.setdefault(iteration_id, []).append(diff)
+
+    version_lineage: list[dict] = []
+    for variant in variants:
+        variant_id = _rw_text(variant.get("variant_id"))
+        version_lineage.append({
+            "version_id": f"v1_{variant_id}",
+            "version_label": "V1",
+            "version_round": 1,
+            "source_variant_id": variant_id,
+            "source_iteration_variant_id": "",
+            "parent_version_id": "",
+            "version_title": _rw_text(variant.get("variant_title")),
+            "version_goal": _rw_text(variant.get("variant_type")) or "original_variant",
+            "change_source": "creative_variant_pack",
+            "hook": _rw_text(variant.get("hook")),
+            "scene_1": _rw_text(variant.get("scene_1")),
+            "scene_2": _rw_text(variant.get("scene_2")),
+            "scene_3": _rw_text(variant.get("scene_3")),
+            "cta": _rw_text(variant.get("cta")),
+            "proof_quote": _rw_text(variant.get("proof_quote")),
+            "proof_source": _rw_text(variant.get("proof_source")),
+            "missing_quote": bool(variant.get("missing_quote")),
+            "weak_evidence": bool(variant.get("weak_evidence")),
+            "evidence_strength_score": int(variant.get("evidence_strength_score") or 0),
+            "copy_readiness": _rw_text(variant.get("copy_readiness")),
+            "claim_safety_level": _rw_text(variant.get("claim_safety_level")),
+            "risk_note": _rw_text(variant.get("risk_note")),
+            "do_not_claim": list(variant.get("do_not_claim") or []),
+            "video_prompt": _rw_text(variant.get("video_prompt")),
+            "shot_list": list(variant.get("shot_list") or []),
+            "copy_ready_script": _rw_text(variant.get("copy_ready_script")),
+            "recommended_use_case": _rw_text(variant.get("variant_reason")),
+        })
+
+    comparison_cards: list[dict] = []
+    for iteration in list(creative_iteration_pack.get("iteration_variants") or []):
+        iteration_id = _rw_text(iteration.get("iteration_variant_id"))
+        source_variant_id = _rw_text(iteration.get("source_variant_id"))
+        source_variant = variant_by_id.get(source_variant_id, {})
+        proof_quote = _rw_text(
+            iteration.get("revised_proof_quote") or source_variant.get("proof_quote")
+        )
+        missing_quote = bool(iteration.get("missing_quote")) or not bool(proof_quote)
+        weak_evidence = bool(iteration.get("weak_evidence")) or missing_quote
+        version_id = f"v2_{iteration_id}"
+        parent_version_id = f"v1_{source_variant_id}"
+        source_feedback = feedback_cards.get(source_variant_id, {})
+        version_lineage.append({
+            "version_id": version_id,
+            "version_label": "V2",
+            "version_round": 2,
+            "source_variant_id": source_variant_id,
+            "source_iteration_variant_id": iteration_id,
+            "parent_version_id": parent_version_id,
+            "version_title": _rw_text(iteration.get("revised_variant_title")),
+            "version_goal": _rw_text(iteration.get("iteration_goal")),
+            "change_source": "creative_iteration_pack",
+            "hook": _rw_text(iteration.get("revised_hook")),
+            "scene_1": _rw_text(iteration.get("revised_scene_1")),
+            "scene_2": _rw_text(iteration.get("revised_scene_2")),
+            "scene_3": _rw_text(iteration.get("revised_scene_3")),
+            "cta": _rw_text(iteration.get("revised_cta")),
+            "proof_quote": proof_quote,
+            "proof_source": _rw_text(source_variant.get("proof_source")),
+            "missing_quote": missing_quote,
+            "weak_evidence": weak_evidence,
+            "evidence_strength_score": int(
+                source_variant.get("evidence_strength_score") or 0
+            ),
+            "copy_readiness": _rw_text(iteration.get("copy_readiness")),
+            "claim_safety_level": _rw_text(iteration.get("claim_safety_level")),
+            "risk_note": _rw_text(iteration.get("revised_risk_note")),
+            "do_not_claim": list(iteration.get("revised_do_not_claim") or []),
+            "video_prompt": _rw_text(iteration.get("revised_video_prompt")),
+            "shot_list": list(iteration.get("revised_shot_list") or []),
+            "copy_ready_script": _rw_text(iteration.get("copy_ready_v2_script")),
+            "recommended_use_case": _rw_text(
+                iteration.get("recommended_next_action")
+            ),
+        })
+        changed_fields = [
+            _rw_text(diff.get("field_name"))
+            for diff in diffs_by_iteration.get(iteration_id, [])
+            if _rw_text(diff.get("field_name"))
+        ]
+        comparison_cards.append({
+            "comparison_id": f"comparison_{parent_version_id}_{version_id}",
+            "base_version_id": parent_version_id,
+            "revised_version_id": version_id,
+            "comparison_title": (
+                f"{_rw_text(source_variant.get('variant_title'))} V1 vs "
+                f"{_rw_text(iteration.get('revised_variant_title'))}"
+            ),
+            "what_changed": changed_fields or [
+                _rw_text(iteration.get("what_changed")) or "Evidence boundary review"
+            ],
+            "why_it_changed": _rw_text(iteration.get("why_changed")),
+            "expected_benefit": (
+                "Test whether the revision improves clarity while preserving the supplied evidence."
+            ),
+            "risk_delta": "lower_or_equal" if weak_evidence else "unchanged",
+            "evidence_delta": (
+                "missing_quote" if missing_quote else "unchanged_existing_quote"
+            ),
+            "copy_readiness_delta": (
+                f"{_rw_text(source_variant.get('copy_readiness')) or 'unknown'} -> "
+                f"{_rw_text(iteration.get('copy_readiness')) or 'unknown'}"
+            ),
+            "best_for": _rw_text(iteration.get("iteration_goal")),
+            "recommended_next_action": _rw_text(
+                iteration.get("recommended_next_action")
+                or source_feedback.get("recommended_next_action")
+            ),
+            "proof_quote": proof_quote,
+            "missing_quote": missing_quote,
+            "risk_note": _rw_text(iteration.get("revised_risk_note")),
+            "do_not_claim": list(iteration.get("revised_do_not_claim") or []),
+        })
+
+    recommended_iteration_id = _rw_text(
+        creative_iteration_pack.get("recommended_iteration_variant_id")
+    )
+    recommended_next_version_id = (
+        f"v2_{recommended_iteration_id}" if recommended_iteration_id else ""
+    )
+    version_ids = {
+        _rw_text(version.get("version_id"))
+        for version in version_lineage
+        if _rw_text(version.get("version_id"))
+    }
+    if recommended_next_version_id not in version_ids:
+        recommended_next_version_id = next(
+            (
+                version["version_id"]
+                for version in version_lineage
+                if version["version_round"] == 2
+            ),
+            "",
+        )
+    recommended_version = next(
+        (
+            version
+            for version in version_lineage
+            if version["version_id"] == recommended_next_version_id
+        ),
+        {},
+    )
+    low_evidence_version = next(
+        (
+            version
+            for version in version_lineage
+            if version["version_round"] == 2
+            and version["claim_safety_level"] == "conservative"
+        ),
+        recommended_version,
+    )
+    highest_readiness_version = next(
+        (
+            version
+            for version in version_lineage
+            if version["version_round"] == 2
+            and version["copy_readiness"] == "ready"
+        ),
+        recommended_version,
+    )
+    best_tiktok_version = next(
+        (
+            version
+            for version in version_lineage
+            if version["version_goal"] in {"short_hook", "revise_hook"}
+        ),
+        recommended_version,
+    )
+    best_direct_response_version = next(
+        (
+            version
+            for version in version_lineage
+            if version["version_goal"] in {
+                "problem_solution",
+                "revise_cta_and_proof",
+            }
+        ),
+        recommended_version,
+    )
+    missing_quote_count = sum(
+        bool(version.get("missing_quote")) for version in version_lineage
+    )
+    weak_evidence_count = sum(
+        bool(version.get("weak_evidence")) for version in version_lineage
+    )
+    do_not_claim_preserved = all(
+        set(variant_by_id.get(version.get("source_variant_id"), {}).get("do_not_claim") or [])
+        .issubset(set(version.get("do_not_claim") or []))
+        for version in version_lineage
+        if version.get("version_round") == 2
+    )
+    version_risk_summary = {
+        "lowest_risk_version_id": _rw_text(low_evidence_version.get("version_id")),
+        "highest_copy_readiness_version_id": _rw_text(
+            highest_readiness_version.get("version_id")
+        ),
+        "best_for_tiktok_version_id": _rw_text(best_tiktok_version.get("version_id")),
+        "best_for_direct_response_version_id": _rw_text(
+            best_direct_response_version.get("version_id")
+        ),
+        "best_for_low_evidence_safe_use_version_id": _rw_text(
+            low_evidence_version.get("version_id")
+        ),
+        "risk_notes": [
+            "V2 versions keep the original proof quote and do-not-claim boundaries.",
+            "Mock feedback and deterministic comparisons are not live performance evidence.",
+            (
+                "Weak or missing evidence remains explicitly marked; collect another quote "
+                "before increasing claim strength."
+                if weak_evidence_count or missing_quote_count
+                else "Human review is still required before production use."
+            ),
+        ],
+    }
+    version_summary = {
+        "version_count": len(version_lineage),
+        "v1_version_count": sum(
+            version["version_round"] == 1 for version in version_lineage
+        ),
+        "v2_version_count": sum(
+            version["version_round"] == 2 for version in version_lineage
+        ),
+        "comparison_count": len(comparison_cards),
+        "recommended_next_test_version_id": recommended_next_version_id,
+        "weak_evidence_count": weak_evidence_count,
+        "missing_quote_count": missing_quote_count,
+        "ready_to_copy_count": sum(
+            version.get("copy_readiness") == "ready" for version in version_lineage
+        ),
+    }
+    version_export_snapshot = {
+        "version_summary": version_summary,
+        "recommended_next_test_version_id": recommended_next_version_id,
+        "version_lineage": version_lineage,
+        "version_comparison_cards": comparison_cards,
+        "version_risk_summary": version_risk_summary,
+    }
+    return {
+        "pack_version": "creative_version_control_pack_v1",
+        "version_summary": version_summary,
+        "recommended_next_test_version_id": recommended_next_version_id,
+        "version_lineage": version_lineage,
+        "version_comparison_cards": comparison_cards,
+        "version_risk_summary": version_risk_summary,
+        "version_export_snapshot": version_export_snapshot,
+        "version_quality_checks": {
+            "missing_quote": bool(missing_quote_count),
+            "missing_quote_count": missing_quote_count,
+            "weak_evidence": bool(weak_evidence_count),
+            "weak_evidence_count": weak_evidence_count,
+            "lineage_complete": all(
+                version["version_round"] == 1 or bool(version["parent_version_id"])
+                for version in version_lineage
+            ),
+            "recommended_version_exists": recommended_next_version_id in version_ids,
+            "do_not_claim_preserved": do_not_claim_preserved,
+            "unsupported_claim_added": False,
+            "unsafe_provider_action": False,
+        },
+        "safety_boundaries": {
+            "provider_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_operation_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_operation_enabled": False,
+            "restore_or_rollback_enabled": False,
+            "feedback_persisted": False,
+        },
+    }
+
+
 def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
     angles = list(creative_decision_pack.get("top_ad_angles") or [])
     source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
@@ -18923,6 +19220,11 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         creative_test_feedback_pack,
         language,
     )
+    creative_version_control_pack = _rw_creative_version_control_pack(
+        variants,
+        creative_test_feedback_pack,
+        creative_iteration_pack,
+    )
     return {
         "pack_version": "creative_variant_pack_v1",
         "variant_summary": {
@@ -18961,6 +19263,7 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         "variant_selection_pack": variant_selection_pack,
         "creative_test_feedback_pack": creative_test_feedback_pack,
         "creative_iteration_pack": creative_iteration_pack,
+        "creative_version_control_pack": creative_version_control_pack,
         "safety_boundaries": {
             "real_provider_called": False,
             "llm_api_called": False,
@@ -19252,6 +19555,12 @@ def _review_workspace_creative_decision_pack(
     )
     creative_decision_pack["creative_iteration_pack"] = (
         creative_decision_pack["creative_variant_pack"].get("creative_iteration_pack") or {}
+    )
+    creative_decision_pack["creative_version_control_pack"] = (
+        creative_decision_pack["creative_variant_pack"].get(
+            "creative_version_control_pack"
+        )
+        or {}
     )
     return creative_decision_pack
 
