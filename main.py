@@ -18171,6 +18171,257 @@ def _rw_creative_variant_selection_pack(
     }
 
 
+def _rw_creative_test_feedback_pack(
+    variants: list[dict],
+    variant_selection_pack: dict,
+    unsupported_claims: list[str],
+) -> dict:
+    selection_cards = list(variant_selection_pack.get("selection_cards") or [])
+    selection_by_variant = {
+        card.get("variant_id"): card
+        for card in selection_cards
+        if card.get("variant_id")
+    }
+    ordered_variants = sorted(
+        variants,
+        key=lambda variant: (
+            int(selection_by_variant.get(variant.get("variant_id"), {}).get("selection_rank") or 999),
+            variant.get("variant_id", ""),
+        ),
+    )
+    performance_by_rank = {
+        1: ("strong", "strong", "moderate", "positive", "winner"),
+        2: ("moderate", "strong", "moderate", "positive", "challenger"),
+        3: ("moderate", "moderate", "moderate", "mixed", "promising"),
+        4: ("weak", "moderate", "weak", "mixed", "revise"),
+        5: ("weak", "weak", "weak", "unclear", "pause"),
+    }
+    variant_feedback_cards: list[dict] = []
+    for index, variant in enumerate(ordered_variants, start=1):
+        selection = selection_by_variant.get(variant.get("variant_id"), {})
+        watch_signal, click_signal, conversion_signal, sentiment_signal, tier = (
+            performance_by_rank.get(index, performance_by_rank[5])
+        )
+        missing_quote = bool(variant.get("missing_quote"))
+        weak_evidence = bool(variant.get("weak_evidence"))
+        if missing_quote:
+            watch_signal = click_signal = conversion_signal = "insufficient_evidence"
+            sentiment_signal = "unverified"
+            tier = "evidence_blocked"
+        elif weak_evidence:
+            conversion_signal = "insufficient_evidence"
+            tier = "needs_evidence_review"
+        keep_or_change = "keep" if index == 1 and not weak_evidence else "change"
+        next_action = (
+            "collect_more_reviews"
+            if missing_quote
+            else "lower_claim_strength"
+            if weak_evidence
+            else "keep_winner"
+            if index == 1
+            else "revise_hook"
+            if watch_signal == "weak"
+            else "revise_cta"
+        )
+        what_worked = (
+            f"The {variant.get('variant_type', 'creative')} framing preserves the selected proof quote "
+            f"and is ranked for {selection.get('best_for', 'controlled testing')}."
+            if variant.get("proof_quote")
+            else "The format remains conservative, but there is no quote-backed proof to validate performance."
+        )
+        what_to_improve = (
+            "Collect another specific buyer quote before changing the claim or treating this result as a winner."
+            if missing_quote
+            else "Lower claim strength and keep the visible-sample limitation in the hook, scenes, and CTA."
+            if weak_evidence
+            else "Test one hook or CTA change at a time while keeping the proof quote and scenes constant."
+        )
+        variant_feedback_cards.append(
+            {
+                "feedback_id": f"feedback_{variant.get('variant_id', index)}",
+                "variant_id": variant.get("variant_id", ""),
+                "variant_type": variant.get("variant_type", ""),
+                "variant_title": variant.get("variant_title", ""),
+                "test_status": "mock_signal_ready" if not weak_evidence else "evidence_review_required",
+                "mock_performance_signal": True,
+                "watch_rate_signal": watch_signal,
+                "click_intent_signal": click_signal,
+                "conversion_intent_signal": conversion_signal,
+                "comment_sentiment_signal": sentiment_signal,
+                "performance_tier": tier,
+                "keep_or_change": keep_or_change,
+                "what_worked": what_worked,
+                "what_to_improve": what_to_improve,
+                "next_hook_direction": (
+                    variant.get("hook", "")
+                    if keep_or_change == "keep"
+                    else "Shorten the existing hook while retaining the same buyer quote and concern."
+                ),
+                "next_scene_direction": (
+                    "Keep the existing three-scene evidence sequence; tighten only pacing and visual clarity."
+                    if not weak_evidence
+                    else "Use a conservative product inspection scene and avoid implying the concern is resolved."
+                ),
+                "next_cta_direction": (
+                    "Keep the CTA as a buyer check, not a guaranteed outcome."
+                    if not missing_quote
+                    else "Ask viewers to compare their use case; do not make a product-performance claim."
+                ),
+                "risk_note": variant.get("risk_note", ""),
+                "do_not_claim": list(variant.get("do_not_claim") or []),
+                "evidence_note": (
+                    f"Grounded to supplied quote: {variant.get('proof_quote')}"
+                    if variant.get("proof_quote")
+                    else "missing_quote: performance feedback is a review draft only."
+                ),
+                "recommended_next_action": next_action,
+            }
+        )
+
+    winner = next(
+        (card for card in variant_feedback_cards if card["keep_or_change"] == "keep"),
+        variant_feedback_cards[0] if variant_feedback_cards else {},
+    )
+    winner_variant = next(
+        (
+            variant
+            for variant in variants
+            if variant.get("variant_id") == winner.get("variant_id")
+        ),
+        {},
+    )
+    any_weak = any(variant.get("weak_evidence") for variant in variants)
+    any_missing = any(variant.get("missing_quote") for variant in variants)
+    action_specs = [
+        {
+            "action_type": "keep_winner",
+            "source_variant_id": winner.get("variant_id", ""),
+            "action_title": "Keep the strongest evidence-grounded framing",
+            "action_reason": "It leads the deterministic selection ranking while preserving the existing proof and safety boundary.",
+            "suggested_copy_change": "Keep the winner hook as the control version.",
+            "suggested_video_prompt_change": "Keep the winner shot order and visual proof as the control.",
+        },
+        {
+            "action_type": "revise_hook",
+            "source_variant_id": winner.get("variant_id", ""),
+            "action_title": "Create one hook-only challenger",
+            "action_reason": "A hook-only change isolates the first-seconds effect without changing the evidence.",
+            "suggested_copy_change": "Shorten the hook, but keep the same proof quote and concern.",
+            "suggested_video_prompt_change": "Change only the opening frame and overlay; keep later shots constant.",
+        },
+        {
+            "action_type": "revise_cta",
+            "source_variant_id": winner.get("variant_id", ""),
+            "action_title": "Create one CTA-only challenger",
+            "action_reason": "A CTA-only change tests click intent without introducing a new product claim.",
+            "suggested_copy_change": "Use a clearer buyer-check CTA with no guaranteed outcome.",
+            "suggested_video_prompt_change": "Keep all scenes constant and change only the closing overlay.",
+        },
+    ]
+    if any_missing:
+        action_specs.extend(
+            [
+                {
+                    "action_type": "strengthen_proof_quote",
+                    "source_variant_id": winner.get("variant_id", ""),
+                    "action_title": "Strengthen quote coverage",
+                    "action_reason": "One or more variants lack a usable buyer quote.",
+                    "suggested_copy_change": "Add a specific supplied review quote before selecting a production winner.",
+                    "suggested_video_prompt_change": "Do not add a proof overlay until a real quote is available.",
+                },
+                {
+                    "action_type": "collect_more_reviews",
+                    "source_variant_id": winner.get("variant_id", ""),
+                    "action_title": "Collect more review evidence",
+                    "action_reason": "Missing quote coverage prevents a reliable creative iteration decision.",
+                    "suggested_copy_change": "Pause claim expansion until another concrete review is supplied.",
+                    "suggested_video_prompt_change": "Use only conservative inspection footage while evidence is incomplete.",
+                },
+            ]
+        )
+    if any_weak:
+        action_specs.append(
+            {
+                "action_type": "lower_claim_strength",
+                "source_variant_id": winner.get("variant_id", ""),
+                "action_title": "Lower claim strength",
+                "action_reason": "Weak evidence requires a buyer-check framing instead of a product-benefit conclusion.",
+                "suggested_copy_change": "Replace resolution language with a visible-sample buyer check.",
+                "suggested_video_prompt_change": "Show inspection steps; do not visualize a guaranteed before/after result.",
+            }
+        )
+    if len(variant_feedback_cards) > 1:
+        action_specs.append(
+            {
+                "action_type": "pause_variant",
+                "source_variant_id": variant_feedback_cards[-1].get("variant_id", ""),
+                "action_title": "Pause the lowest-priority challenger",
+                "action_reason": "The lowest deterministic performance tier should not absorb the first test budget.",
+                "suggested_copy_change": "Keep the draft for later review instead of expanding its claim.",
+                "suggested_video_prompt_change": "Do not send this draft to a provider.",
+            }
+        )
+    iteration_actions = [
+        {
+            "action_id": f"iteration_action_{index}_{spec['action_type']}",
+            "priority": index,
+            **spec,
+            "evidence_requirement": (
+                "Use the existing proof quote and visible-sample boundary; collect a quote first if missing."
+            ),
+            "risk_control": "Guidance only. No provider, media, paid, registry, or rollback action is triggered.",
+        }
+        for index, spec in enumerate(action_specs, start=1)
+    ]
+    return {
+        "pack_version": "creative_test_feedback_pack_v1",
+        "feedback_summary": {
+            "feedback_status": (
+                "needs_evidence_review" if any_weak or any_missing else "mock_test_feedback_ready"
+            ),
+            "variant_feedback_count": len(variant_feedback_cards),
+            "mock_signal_only": True,
+            "winner_reason": (
+                "Selected from deterministic variant ranking; this is not live ad-platform performance data."
+            ),
+        },
+        "recommended_winner_variant_id": winner.get("variant_id", ""),
+        "recommended_next_iteration": {
+            "source_variant_id": winner.get("variant_id", ""),
+            "hook_direction": winner.get("next_hook_direction", ""),
+            "scene_direction": winner.get("next_scene_direction", ""),
+            "cta_direction": winner.get("next_cta_direction", ""),
+            "proof_quote_direction": (
+                f"Keep this supplied quote visible: {winner_variant.get('proof_quote')}"
+                if winner_variant.get("proof_quote")
+                else "Collect a specific buyer quote before increasing claim strength."
+            ),
+            "iteration_note": "Change one variable at a time and keep the product, audience, proof, and evidence boundary constant.",
+        },
+        "variant_feedback_cards": variant_feedback_cards,
+        "iteration_actions": iteration_actions,
+        "feedback_quality_checks": {
+            "missing_metric": False,
+            "mock_metric_only": True,
+            "weak_evidence": any_weak,
+            "missing_quote": any_missing,
+            "unsupported_claim": bool(unsupported_claims),
+            "unsupported_claim_terms": unsupported_claims,
+            "unsafe_provider_action": False,
+        },
+        "safety_boundaries": {
+            "provider_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_operation_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_operation_enabled": False,
+            "restore_or_rollback_enabled": False,
+            "feedback_persisted": False,
+        },
+    }
+
+
 def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
     angles = list(creative_decision_pack.get("top_ad_angles") or [])
     source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
@@ -18354,6 +18605,11 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         variants,
         recommended_variant.get("variant_id", ""),
     )
+    creative_test_feedback_pack = _rw_creative_test_feedback_pack(
+        variants,
+        variant_selection_pack,
+        unsupported_claims,
+    )
     return {
         "pack_version": "creative_variant_pack_v1",
         "variant_summary": {
@@ -18390,6 +18646,7 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
             },
         },
         "variant_selection_pack": variant_selection_pack,
+        "creative_test_feedback_pack": creative_test_feedback_pack,
         "safety_boundaries": {
             "real_provider_called": False,
             "llm_api_called": False,

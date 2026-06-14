@@ -1695,6 +1695,53 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
             "registry_operation_enabled",
         ]:
             self.assertFalse(selection_pack["safety_boundaries"][boundary])
+        feedback_pack = variant_pack["creative_test_feedback_pack"]
+        self.assertEqual(
+            feedback_pack["pack_version"],
+            "creative_test_feedback_pack_v1",
+        )
+        variant_ids = {variant["variant_id"] for variant in variant_pack["variants"]}
+        self.assertIn(feedback_pack["recommended_winner_variant_id"], variant_ids)
+        self.assertGreaterEqual(len(feedback_pack["variant_feedback_cards"]), 3)
+        for card in feedback_pack["variant_feedback_cards"]:
+            with self.subTest(feedback_id=card["feedback_id"]):
+                self.assertIn(card["variant_id"], variant_ids)
+                for field in [
+                    "performance_tier",
+                    "keep_or_change",
+                    "what_worked",
+                    "what_to_improve",
+                    "recommended_next_action",
+                ]:
+                    self.assertTrue(card[field], field)
+        action_types = {
+            action["action_type"] for action in feedback_pack["iteration_actions"]
+        }
+        self.assertTrue({"keep_winner", "revise_hook", "revise_cta"}.issubset(action_types))
+        next_iteration = feedback_pack["recommended_next_iteration"]
+        for field in [
+            "hook_direction",
+            "scene_direction",
+            "cta_direction",
+            "proof_quote_direction",
+        ]:
+            self.assertTrue(next_iteration[field], field)
+        for field in [
+            "missing_metric",
+            "weak_evidence",
+            "unsupported_claim",
+            "unsafe_provider_action",
+        ]:
+            self.assertIn(field, feedback_pack["feedback_quality_checks"])
+        for boundary in [
+            "provider_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_operation_enabled",
+            "paid_operation_enabled",
+            "registry_operation_enabled",
+        ]:
+            self.assertFalse(feedback_pack["safety_boundaries"][boundary])
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -1756,6 +1803,27 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
             selection_pack["selection_quality_checks"][
                 "high_claim_safety_recommended_without_quote"
             ]
+        )
+        feedback_pack = variant_pack["creative_test_feedback_pack"]
+        action_types = {
+            action["action_type"] for action in feedback_pack["iteration_actions"]
+        }
+        self.assertTrue(
+            {"lower_claim_strength", "collect_more_reviews"}.intersection(action_types)
+        )
+        self.assertTrue(feedback_pack["feedback_quality_checks"]["weak_evidence"])
+        self.assertTrue(
+            all(
+                card["recommended_next_action"]
+                in {"lower_claim_strength", "collect_more_reviews"}
+                for card in feedback_pack["variant_feedback_cards"]
+            )
+        )
+        self.assertFalse(
+            any(
+                card["claim_safety_level"] == "evidence_grounded"
+                for card in selection_pack["selection_cards"]
+            )
         )
         feedback = pack["creative_feedback_runtime"]
         self.assertIn(
