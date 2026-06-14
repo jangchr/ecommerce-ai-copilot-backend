@@ -18761,6 +18761,7 @@ def _rw_creative_version_control_pack(
             "source_variant_id": variant_id,
             "source_iteration_variant_id": "",
             "parent_version_id": "",
+            "variant_type": _rw_text(variant.get("variant_type")),
             "version_title": _rw_text(variant.get("variant_title")),
             "version_goal": _rw_text(variant.get("variant_type")) or "original_variant",
             "change_source": "creative_variant_pack",
@@ -18804,6 +18805,10 @@ def _rw_creative_version_control_pack(
             "source_variant_id": source_variant_id,
             "source_iteration_variant_id": iteration_id,
             "parent_version_id": parent_version_id,
+            "variant_type": _rw_text(
+                iteration.get("source_variant_type")
+                or source_variant.get("variant_type")
+            ),
             "version_title": _rw_text(iteration.get("revised_variant_title")),
             "version_goal": _rw_text(iteration.get("iteration_goal")),
             "change_source": "creative_iteration_pack",
@@ -18948,12 +18953,22 @@ def _rw_creative_version_control_pack(
     )
     version_risk_summary = {
         "lowest_risk_version_id": _rw_text(low_evidence_version.get("version_id")),
+        "highest_readiness_version_id": _rw_text(
+            highest_readiness_version.get("version_id")
+        ),
         "highest_copy_readiness_version_id": _rw_text(
             highest_readiness_version.get("version_id")
         ),
+        "best_tiktok_version_id": _rw_text(best_tiktok_version.get("version_id")),
         "best_for_tiktok_version_id": _rw_text(best_tiktok_version.get("version_id")),
+        "best_direct_response_version_id": _rw_text(
+            best_direct_response_version.get("version_id")
+        ),
         "best_for_direct_response_version_id": _rw_text(
             best_direct_response_version.get("version_id")
+        ),
+        "low_evidence_safe_version_id": _rw_text(
+            low_evidence_version.get("version_id")
         ),
         "best_for_low_evidence_safe_use_version_id": _rw_text(
             low_evidence_version.get("version_id")

@@ -1808,6 +1808,7 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         for version in lineage:
             with self.subTest(version_id=version["version_id"]):
                 for field in [
+                    "variant_type",
                     "hook",
                     "scene_1",
                     "scene_2",
@@ -1847,6 +1848,10 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         risk_summary = version_pack["version_risk_summary"]
         for field in [
             "lowest_risk_version_id",
+            "highest_readiness_version_id",
+            "best_tiktok_version_id",
+            "best_direct_response_version_id",
+            "low_evidence_safe_version_id",
             "highest_copy_readiness_version_id",
             "best_for_tiktok_version_id",
             "best_for_direct_response_version_id",
