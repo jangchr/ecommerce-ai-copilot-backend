@@ -8205,6 +8205,104 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertNotIn("fetch(", creative_section)
         self.assertNotIn("????", html)
 
+    def test_multi_platform_asset_pack_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace multi platform asset pack bundle",
+            "PROJECT_WORKSPACE_MULTI_PLATFORM_ASSET_PACK_MARKER",
+            "latestProjectMultiPlatformAssetPack",
+            "projectWorkspaceMultiPlatformAssetPackFromWorkspace",
+            "projectWorkspaceExportMultiPlatformAssetPackSnapshot",
+            "projectWorkspaceExportMultiPlatformAssetPackMarkdown",
+            "renderProjectWorkspaceMultiPlatformAssetPackSummaryPanel",
+            "renderProjectWorkspaceMultiPlatformAssetPackCardsPanel",
+            "renderProjectWorkspaceMultiPlatformAssetPackComparePanel",
+            "copyProjectWorkspacePlatformAssetPack",
+            "copyProjectWorkspaceDurationAssetPack",
+            "copyProjectWorkspaceMultiPlatformAssetPack",
+            "multi_platform_asset_pack: projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace)",
+            "Multi-Platform Asset Pack",
+            "TikTok Pack",
+            "Instagram Reels Pack",
+            "YouTube Shorts Pack",
+            "15s Pack",
+            "30s Pack",
+            "45s Pack",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.multi_platform_summary",
+            "pack.platform_packs",
+            "pack.recommended_platform_pack_id",
+            "item.platform",
+            "item.duration_seconds",
+            "item.opening_hook",
+            "item.pacing_strategy",
+            "item.claim_safety_level",
+            "item.asset_readiness",
+            "item.recommended_next_action",
+        ]:
+            self.assertIn(runtime_field, html)
+
+    def test_multi_platform_asset_pack_has_bilingual_guard_export_and_collapsed_governance(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "multiPlatformAssetPackTitle",
+            "multiPlatformCardsTitle",
+            "multiPlatformCompareTitle",
+            "multiPlatformTikTokPackTitle",
+            "multiPlatformReelsPackTitle",
+            "multiPlatformShortsPackTitle",
+            "multiPlatformCopyTikTok",
+            "multiPlatformCopyReels",
+            "multiPlatformCopyShorts",
+            "multiPlatformCopy15",
+            "multiPlatformCopy30",
+            "multiPlatformCopy45",
+            "multiPlatformCopyFullPack",
+            "multiPlatformCopied",
+            "multiPlatformCopyFailed",
+            "multiPlatformCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace multi platform asset pack bundle", script)
+            self.assertIn("project_workspace_multi_platform_asset_pack_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportMultiPlatformAssetPackMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceMultiPlatformAssetPack",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "multiPlatformAssetPackTitle",
+            "multiPlatformTikTokPackTitle",
+            "multiPlatformReelsPackTitle",
+            "multiPlatformShortsPackTitle",
+            "multiPlatformDuration15",
+            "multiPlatformDuration30",
+            "multiPlatformDuration45",
+            "creativeAssetSafetyNotesTitle",
+        ]:
+            self.assertIn(key, markdown)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
+        creative_section = html[
+            html.index("const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER"):
+            governance_start
+        ]
+        self.assertNotIn("fetch(", creative_section)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

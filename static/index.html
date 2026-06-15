@@ -3597,6 +3597,7 @@
         let latestProjectCreativeIterationPack = {};
         let latestProjectCreativeVersionControlPack = {};
         let latestProjectCreativeAssetPack = {};
+        let latestProjectMultiPlatformAssetPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8865,6 +8866,9 @@
                     || {};
                 latestProjectCreativeAssetPack = latestProjectCreativeDecisionPack.creative_asset_pack
                     || latestProjectCreativeVariantPack.creative_asset_pack
+                    || {};
+                latestProjectMultiPlatformAssetPack = latestProjectCreativeDecisionPack.multi_platform_asset_pack
+                    || latestProjectCreativeVariantPack.multi_platform_asset_pack
                     || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -14699,6 +14703,7 @@
         const PROJECT_WORKSPACE_CREATIVE_ITERATION_MARKER = 'Project Workspace creative iteration bundle';
         const PROJECT_WORKSPACE_CREATIVE_VERSION_CONTROL_MARKER = 'Project Workspace creative version control bundle';
         const PROJECT_WORKSPACE_CREATIVE_ASSET_PACK_MARKER = 'Project Workspace creative asset pack bundle';
+        const PROJECT_WORKSPACE_MULTI_PLATFORM_ASSET_PACK_MARKER = 'Project Workspace multi platform asset pack bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -15572,6 +15577,135 @@
 
         function copyProjectWorkspaceCreativeFullAssetPack() {
             return copyProjectWorkspaceCreativeAssetText('full');
+        }
+
+        function projectWorkspaceMultiPlatformAssetPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectMultiPlatformAssetPack
+                && Object.keys(latestProjectMultiPlatformAssetPack).length) {
+                return latestProjectMultiPlatformAssetPack;
+            }
+            const decisionPack = projectWorkspaceCreativeDecisionPackFromWorkspace(workspace);
+            return decisionPack?.multi_platform_asset_pack
+                || decisionPack?.creative_variant_pack?.multi_platform_asset_pack
+                || {};
+        }
+
+        function projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceMultiPlatformAssetPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_MULTI_PLATFORM_ASSET_PACK_MARKER,
+                has_multi_platform_asset_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                multi_platform_summary: pack.multi_platform_summary || {},
+                source_asset_pack_id: pack.source_asset_pack_id || '',
+                recommended_platform_pack_id: pack.recommended_platform_pack_id || '',
+                platform_packs: Array.isArray(pack.platform_packs) ? pack.platform_packs : [],
+                platform_quality_checks: pack.platform_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePlatformAssetPackText(platformPack = {}) {
+            if (!platformPack.platform_pack_id) return '';
+            const script = platformPack.shooting_script || {};
+            return [
+                `${platformPack.platform_title || platformPack.platform} · ${platformPack.duration_seconds || 0}s`,
+                `${t('multiPlatformBestUse')}: ${platformPack.best_use || t('none')}`,
+                `${t('multiPlatformPacing')}: ${platformPack.pacing_strategy || t('none')}`,
+                `${t('multiPlatformOpeningHook')}: ${platformPack.opening_hook || t('none')}`,
+                `${t('creativeAssetShootingScriptTitle')}:`,
+                `${t('creativeAssetHook')}: ${script.hook || t('none')}`,
+                ...(script.scenes || []).map((scene) =>
+                    `${t('creativeAssetScene')} ${scene.scene_number}: ${scene.scene_text || t('none')}`
+                ),
+                `${t('creativeAssetCta')}: ${script.cta || t('none')}`,
+                `${t('creativeAssetProofQuote')}: ${script.proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('multiPlatformCaption')}: ${platformPack.caption_variants?.platform_caption || t('none')}`,
+                `${t('creativeAssetThumbnailPrompt')}: ${platformPack.thumbnail_prompt || t('none')}`,
+                `${t('creativeAssetRiskNote')}: ${(platformPack.risk_notes || []).join(' | ') || t('none')}`,
+                `${t('creativeAssetDoNotClaim')}: ${(platformPack.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportMultiPlatformAssetPackMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace);
+            if (!pack.has_multi_platform_asset_pack) return '';
+            const sections = [
+                ['tiktok', 'multiPlatformTikTokPackTitle'],
+                ['instagram_reels', 'multiPlatformReelsPackTitle'],
+                ['youtube_shorts', 'multiPlatformShortsPackTitle']
+            ];
+            return [
+                `## ${t('multiPlatformAssetPackTitle')}`,
+                `${t('multiPlatformSourceAssetPack')}: ${pack.source_asset_pack_id || t('none')}`,
+                `${t('multiPlatformRecommendedPack')}: ${pack.recommended_platform_pack_id || t('none')}`,
+                '',
+                ...sections.flatMap(([platform, titleKey]) => [
+                    `### ${t(titleKey)}`,
+                    ...pack.platform_packs
+                        .filter((item) => item.platform === platform)
+                        .sort((a, b) => a.duration_seconds - b.duration_seconds)
+                        .flatMap((item) => [
+                            `#### ${item.duration_seconds}s`,
+                            projectWorkspacePlatformAssetPackText(item),
+                            ''
+                        ])
+                ]),
+                `### ${t('multiPlatformDuration15')}`,
+                projectWorkspacePlatformAssetPackText(
+                    pack.platform_packs.find((item) => item.duration_seconds === 15) || {}
+                ),
+                '',
+                `### ${t('multiPlatformDuration30')}`,
+                projectWorkspacePlatformAssetPackText(
+                    pack.platform_packs.find((item) => item.duration_seconds === 30) || {}
+                ),
+                '',
+                `### ${t('multiPlatformDuration45')}`,
+                projectWorkspacePlatformAssetPackText(
+                    pack.platform_packs.find((item) => item.duration_seconds === 45) || {}
+                ),
+                '',
+                `### ${t('creativeAssetSafetyNotesTitle')}`,
+                `${t('creativeAssetDoNotClaim')}: ${[
+                    ...new Set(pack.platform_packs.flatMap((item) => item.do_not_claim || []))
+                ].join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceMultiPlatformAssetPack(kind = 'full', value = '') {
+            const status = document.getElementById('projectWorkspaceMultiPlatformAssetPackStatus');
+            const pack = projectWorkspaceExportMultiPlatformAssetPackSnapshot();
+            let selected = [];
+            if (kind === 'platform') {
+                selected = pack.platform_packs.filter((item) => item.platform === value);
+            } else if (kind === 'duration') {
+                selected = pack.platform_packs.filter(
+                    (item) => item.duration_seconds === Number(value)
+                );
+            }
+            const text = kind === 'full'
+                ? projectWorkspaceExportMultiPlatformAssetPackMarkdown()
+                : selected.map(projectWorkspacePlatformAssetPackText).filter(Boolean).join('\n\n');
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('multiPlatformCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('multiPlatformCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('multiPlatformCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('multiPlatformCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspacePlatformAssetPack(platform) {
+            return copyProjectWorkspaceMultiPlatformAssetPack('platform', platform);
+        }
+
+        function copyProjectWorkspaceDurationAssetPack(durationSeconds) {
+            return copyProjectWorkspaceMultiPlatformAssetPack('duration', durationSeconds);
         }
 
         function projectWorkspaceExportCreativeIterationSnapshot(workspace = latestProjectWorkspace) {
@@ -16612,6 +16746,113 @@
             `;
         }
 
+        function renderProjectWorkspaceMultiPlatformAssetPackSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace);
+            if (!pack.has_multi_platform_asset_pack) return '';
+            const summary = pack.multi_platform_summary || {};
+            const recommended = pack.platform_packs.find((item) =>
+                item.platform_pack_id === pack.recommended_platform_pack_id
+            ) || {};
+            return `
+                <div class="section-block" id="projectWorkspaceMultiPlatformAssetPackSummaryPanel"
+                    data-multi-platform-asset-pack-marker="${PROJECT_WORKSPACE_MULTI_PLATFORM_ASSET_PACK_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('multiPlatformAssetPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('multiPlatformAssetPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button"
+                            onclick="copyProjectWorkspaceMultiPlatformAssetPack()">${escapeHTML(t('multiPlatformCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('multiPlatformPlatformCount'), String(summary.platform_count || 0))}
+                        ${metricPill(t('multiPlatformDurationCount'), String(summary.duration_count || 0))}
+                        ${metricPill(t('multiPlatformPackCount'), String(summary.platform_pack_count || 0))}
+                        ${metricPill(t('creativeAssetReadiness'), summary.asset_readiness || t('none'))}
+                        ${metricPill(t('creativeAssetEvidenceScore'), String(summary.evidence_strength_score || 0))}
+                    </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(t('multiPlatformRecommendedPack'))}:</strong>
+                        ${escapeHTML(recommended.platform_title || pack.recommended_platform_pack_id || t('multiPlatformNoData'))}
+                        ${recommended.duration_seconds ? ` · ${escapeHTML(String(recommended.duration_seconds))}s` : ''}
+                    </div>
+                    <div><strong>${escapeHTML(t('multiPlatformSourceAssetPack'))}:</strong> ${escapeHTML(pack.source_asset_pack_id || t('none'))}</div>
+                    <div class="demo-warning">${escapeHTML(summary.risk_summary || t('multiPlatformNoData'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceMultiPlatformAssetPackStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceMultiPlatformAssetPackCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace);
+            if (!pack.has_multi_platform_asset_pack) return '';
+            const platformLabels = {
+                tiktok: t('multiPlatformTikTokPackTitle'),
+                instagram_reels: t('multiPlatformReelsPackTitle'),
+                youtube_shorts: t('multiPlatformShortsPackTitle')
+            };
+            return `
+                <div class="section-block" id="projectWorkspaceMultiPlatformAssetPackCardsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('multiPlatformCardsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('multiPlatformCardsHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspacePlatformAssetPack('tiktok')">${escapeHTML(t('multiPlatformCopyTikTok'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspacePlatformAssetPack('instagram_reels')">${escapeHTML(t('multiPlatformCopyReels'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspacePlatformAssetPack('youtube_shorts')">${escapeHTML(t('multiPlatformCopyShorts'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-grid">${pack.platform_packs.map((item) => `
+                        <div class="graph-os-card" data-platform-pack-id="${escapeHTML(item.platform_pack_id || '')}">
+                            <div class="section-header">
+                                <strong>${escapeHTML(platformLabels[item.platform] || item.platform_title || item.platform || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(String(item.duration_seconds || 0))}s</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('multiPlatformOpeningHook'))}:</strong> ${escapeHTML(item.opening_hook || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('multiPlatformPacing'))}:</strong> ${escapeHTML(item.pacing_strategy || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('multiPlatformBestUse'))}:</strong> ${escapeHTML(item.best_use || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('multiPlatformCaption'))}:</strong> ${escapeHTML(item.caption_variants?.platform_caption || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeAssetThumbnailPrompt'))}:</strong> ${escapeHTML(item.thumbnail_prompt || t('none'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('creativeAssetRiskNote'))}:</strong> ${escapeHTML((item.risk_notes || []).join(' | ') || t('none'))}</div>
+                            <div class="field-helper"><strong>${escapeHTML(t('creativeAssetDoNotClaim'))}:</strong> ${escapeHTML((item.do_not_claim || []).join(' | ') || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceMultiPlatformAssetPackComparePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace);
+            if (!pack.has_multi_platform_asset_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceMultiPlatformAssetPackComparePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('multiPlatformCompareTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('multiPlatformCompareHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDurationAssetPack(15)">${escapeHTML(t('multiPlatformCopy15'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDurationAssetPack(30)">${escapeHTML(t('multiPlatformCopy30'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDurationAssetPack(45)">${escapeHTML(t('multiPlatformCopy45'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">${pack.platform_packs.map((item) => `
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(item.platform_title || item.platform || t('none'))} · ${escapeHTML(String(item.duration_seconds || 0))}s</strong>
+                            <div><strong>${escapeHTML(t('multiPlatformBestUse'))}:</strong> ${escapeHTML(item.best_use || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('multiPlatformPacing'))}:</strong> ${escapeHTML(item.pacing_strategy || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('multiPlatformClaimSafety'))}:</strong> ${escapeHTML(item.claim_safety_level || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeAssetReadiness'))}:</strong> ${escapeHTML(item.asset_readiness || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('multiPlatformNextAction'))}:</strong> ${escapeHTML(item.recommended_next_action || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -16979,6 +17220,7 @@
                 projectWorkspaceExportCreativeIterationMarkdown(workspace),
                 projectWorkspaceExportCreativeVersionControlMarkdown(workspace),
                 projectWorkspaceExportCreativeAssetPackMarkdown(workspace),
+                projectWorkspaceExportMultiPlatformAssetPackMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -17057,6 +17299,7 @@
                 creative_iteration_pack: projectWorkspaceExportCreativeIterationSnapshot(workspace),
                 creative_version_control_pack: projectWorkspaceExportCreativeVersionControlSnapshot(workspace),
                 creative_asset_pack: projectWorkspaceExportCreativeAssetPackSnapshot(workspace),
+                multi_platform_asset_pack: projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -29472,6 +29715,9 @@
                     ${renderProjectWorkspaceCreativeShootingScriptPanel(workspace)}
                     ${renderProjectWorkspaceCreativeVideoAssetsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCaptionAssetsPanel(workspace)}
+                    ${renderProjectWorkspaceMultiPlatformAssetPackSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceMultiPlatformAssetPackCardsPanel(workspace)}
+                    ${renderProjectWorkspaceMultiPlatformAssetPackComparePanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -36491,6 +36737,80 @@
             creativeAssetGuidanceOnly: '\u4ec5\u4f5c\u5efa\u8bae\u3002\u4e0d\u6267\u884c provider\u3001LLM\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001restore\u3001rollback \u6216\u53cd\u9988\u6301\u4e45\u5316\u64cd\u4f5c\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            multiPlatformAssetPackTitle: 'Multi-Platform Asset Pack',
+            multiPlatformAssetPackHelper: 'Adapt the evidence-grounded source asset into TikTok, Instagram Reels, and YouTube Shorts packs at 15s, 30s, and 45s.',
+            multiPlatformPlatformCount: 'Platforms',
+            multiPlatformDurationCount: 'Durations',
+            multiPlatformPackCount: 'Platform packs',
+            multiPlatformRecommendedPack: 'Recommended platform pack',
+            multiPlatformSourceAssetPack: 'Source asset pack',
+            multiPlatformCardsTitle: 'Platform Pack Cards',
+            multiPlatformCardsHelper: 'Compare the opening hook, pacing, caption, thumbnail, and safety boundary for every platform-duration combination.',
+            multiPlatformCompareTitle: 'Platform / Duration Compare',
+            multiPlatformCompareHelper: 'Choose the best use, pacing, claim safety, readiness, and next action without increasing claim strength.',
+            multiPlatformTikTokPackTitle: 'TikTok Pack',
+            multiPlatformReelsPackTitle: 'Instagram Reels Pack',
+            multiPlatformShortsPackTitle: 'YouTube Shorts Pack',
+            multiPlatformDuration15: '15s Pack',
+            multiPlatformDuration30: '30s Pack',
+            multiPlatformDuration45: '45s Pack',
+            multiPlatformOpeningHook: 'Opening hook',
+            multiPlatformPacing: 'Pacing strategy',
+            multiPlatformBestUse: 'Best use',
+            multiPlatformCaption: 'Platform caption',
+            multiPlatformClaimSafety: 'Claim safety',
+            multiPlatformNextAction: 'Recommended next action',
+            multiPlatformCopyTikTok: 'Copy TikTok Pack',
+            multiPlatformCopyReels: 'Copy Reels Pack',
+            multiPlatformCopyShorts: 'Copy Shorts Pack',
+            multiPlatformCopy15: 'Copy 15s Pack',
+            multiPlatformCopy30: 'Copy 30s Pack',
+            multiPlatformCopy45: 'Copy 45s Pack',
+            multiPlatformCopyFullPack: 'Copy Full Multi-Platform Pack',
+            multiPlatformCopied: 'Multi-platform asset content copied.',
+            multiPlatformCopyFailed: 'Unable to copy multi-platform asset content.',
+            multiPlatformCopyNoData: 'No multi-platform asset content is available to copy.',
+            multiPlatformNoData: 'No multi-platform asset pack is available.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            multiPlatformAssetPackTitle: '\u591a\u5e73\u53f0\u7d20\u6750\u5305',
+            multiPlatformAssetPackHelper: '\u628a\u8bc1\u636e\u578b\u6e90\u8d44\u4ea7\u9002\u914d\u4e3a TikTok\u3001Instagram Reels \u548c YouTube Shorts \u7684 15s\u300130s\u300145s \u7248\u672c\u3002',
+            multiPlatformPlatformCount: '\u5e73\u53f0\u6570',
+            multiPlatformDurationCount: '\u65f6\u957f\u6570',
+            multiPlatformPackCount: '\u5e73\u53f0\u7d20\u6750\u5305\u6570',
+            multiPlatformRecommendedPack: '\u63a8\u8350\u5e73\u53f0\u7d20\u6750\u5305',
+            multiPlatformSourceAssetPack: '\u6e90\u521b\u610f\u8d44\u4ea7\u5305',
+            multiPlatformCardsTitle: '\u5e73\u53f0\u7d20\u6750\u5305\u5361\u7247',
+            multiPlatformCardsHelper: '\u5bf9\u6bd4\u6bcf\u4e2a\u5e73\u53f0\u4e0e\u65f6\u957f\u7ec4\u5408\u7684\u5f00\u573a Hook\u3001\u8282\u594f\u3001\u6587\u6848\u3001\u5c01\u9762\u548c\u5b89\u5168\u8fb9\u754c\u3002',
+            multiPlatformCompareTitle: '\u5e73\u53f0 / \u65f6\u957f\u5bf9\u6bd4',
+            multiPlatformCompareHelper: '\u5728\u4e0d\u63d0\u9ad8\u4e3b\u5f20\u5f3a\u5ea6\u7684\u524d\u63d0\u4e0b\uff0c\u5bf9\u6bd4\u9002\u7528\u573a\u666f\u3001\u8282\u594f\u3001\u4e3b\u5f20\u5b89\u5168\u3001\u5c31\u7eea\u5ea6\u548c\u4e0b\u4e00\u6b65\u3002',
+            multiPlatformTikTokPackTitle: 'TikTok \u7d20\u6750\u5305',
+            multiPlatformReelsPackTitle: 'Instagram Reels \u7d20\u6750\u5305',
+            multiPlatformShortsPackTitle: 'YouTube Shorts \u7d20\u6750\u5305',
+            multiPlatformDuration15: '15 \u79d2\u7d20\u6750\u5305',
+            multiPlatformDuration30: '30 \u79d2\u7d20\u6750\u5305',
+            multiPlatformDuration45: '45 \u79d2\u7d20\u6750\u5305',
+            multiPlatformOpeningHook: '\u5f00\u573a Hook',
+            multiPlatformPacing: '\u8282\u594f\u7b56\u7565',
+            multiPlatformBestUse: '\u6700\u9002\u7528\u9014',
+            multiPlatformCaption: '\u5e73\u53f0\u6587\u6848',
+            multiPlatformClaimSafety: '\u4e3b\u5f20\u5b89\u5168',
+            multiPlatformNextAction: '\u5efa\u8bae\u4e0b\u4e00\u6b65',
+            multiPlatformCopyTikTok: '\u590d\u5236 TikTok \u7d20\u6750\u5305',
+            multiPlatformCopyReels: '\u590d\u5236 Reels \u7d20\u6750\u5305',
+            multiPlatformCopyShorts: '\u590d\u5236 Shorts \u7d20\u6750\u5305',
+            multiPlatformCopy15: '\u590d\u5236 15 \u79d2\u7d20\u6750\u5305',
+            multiPlatformCopy30: '\u590d\u5236 30 \u79d2\u7d20\u6750\u5305',
+            multiPlatformCopy45: '\u590d\u5236 45 \u79d2\u7d20\u6750\u5305',
+            multiPlatformCopyFullPack: '\u590d\u5236\u5b8c\u6574\u591a\u5e73\u53f0\u7d20\u6750\u5305',
+            multiPlatformCopied: '\u591a\u5e73\u53f0\u7d20\u6750\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            multiPlatformCopyFailed: '\u65e0\u6cd5\u590d\u5236\u591a\u5e73\u53f0\u7d20\u6750\u5185\u5bb9\u3002',
+            multiPlatformCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u591a\u5e73\u53f0\u7d20\u6750\u5185\u5bb9\u3002',
+            multiPlatformNoData: '\u6682\u65e0\u591a\u5e73\u53f0\u7d20\u6750\u5305\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -37876,6 +38196,9 @@ async function analyzeExtensionWorkspace() {
       || {};
     latestProjectCreativeAssetPack = latestProjectCreativeDecisionPack.creative_asset_pack
       || latestProjectCreativeVariantPack.creative_asset_pack
+      || {};
+    latestProjectMultiPlatformAssetPack = latestProjectCreativeDecisionPack.multi_platform_asset_pack
+      || latestProjectCreativeVariantPack.multi_platform_asset_pack
       || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
