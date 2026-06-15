@@ -19274,6 +19274,396 @@ def _rw_creative_asset_pack(
     }
 
 
+def _rw_multi_platform_asset_pack(
+    creative_asset_pack: dict,
+    language: str,
+) -> dict:
+    asset_packs = list(creative_asset_pack.get("asset_packs") or [])
+    recommended_asset_pack_id = _rw_text(
+        creative_asset_pack.get("recommended_asset_pack_id")
+    )
+    source_asset = next(
+        (
+            asset
+            for asset in asset_packs
+            if _rw_text(asset.get("asset_pack_id")) == recommended_asset_pack_id
+        ),
+        asset_packs[0] if asset_packs else {},
+    )
+    source_asset_pack_id = _rw_text(source_asset.get("asset_pack_id"))
+    is_zh = language == "zh-CN"
+    source_script = dict(source_asset.get("shooting_script") or {})
+    source_scenes = [
+        _rw_text(source_script.get("scene_1")),
+        _rw_text(source_script.get("scene_2")),
+        _rw_text(source_script.get("scene_3")),
+    ]
+    source_hook = _rw_text(source_script.get("hook"))
+    source_cta = _rw_text(source_script.get("cta"))
+    proof_quote = _rw_text(source_script.get("proof_quote"))
+    missing_quote = bool(source_script.get("missing_quote")) or not bool(proof_quote)
+    weak_evidence = (
+        missing_quote
+        or _rw_text(source_asset.get("asset_readiness")) == "needs_evidence"
+    )
+    do_not_claim = list(source_asset.get("do_not_claim") or [])
+    safe_claim_notes = list(
+        dict.fromkeys(
+            [
+                *do_not_claim,
+                (
+                    "\u53ea\u80fd\u4f7f\u7528\u5df2\u63d0\u4f9b\u7684\u4ea7\u54c1\u548c\u4e70\u5bb6\u8bc1\u636e\u3002"
+                    if is_zh
+                    else "Use only the supplied product and buyer evidence."
+                ),
+                (
+                    "\u5e73\u53f0\u6539\u5199\u4e0d\u5f97\u63d0\u9ad8\u539f\u59cb\u7d20\u6750\u5305\u7684\u4e3b\u5f20\u5f3a\u5ea6\u3002"
+                    if is_zh
+                    else "Platform adaptation must not increase the source asset pack claim strength."
+                ),
+            ]
+        )
+    )
+    if weak_evidence:
+        safe_claim_notes.append(
+            (
+                "\u8bc1\u636e\u504f\u5f31\uff0c\u4ec5\u4fdd\u7559\u4fdd\u5b88\u7684\u68c0\u67e5\u548c\u5f15\u5bfc\u6587\u6848\u3002"
+                if is_zh
+                else "Evidence is weak; keep the script to conservative inspection and guidance language."
+            )
+        )
+
+    platform_definitions = {
+        "tiktok": {
+            "title": "TikTok",
+            "format": "vertical_short_video",
+            "fit_reason": (
+                "\u7528\u66f4\u77ed Hook\u3001\u5feb\u8282\u594f\u955c\u5934\u548c\u76f4\u63a5 CTA \u9002\u914d TikTok\u3002"
+                if is_zh
+                else "Use a shorter hook, faster cuts, and a direct CTA for TikTok."
+            ),
+            "pacing": (
+                "\u5feb\u8282\u594f\uff0c\u524d 2 \u79d2\u8fdb\u5165 Hook\uff0c\u753b\u9762\u548c\u53e3\u8bed\u5b57\u5e55\u540c\u6b65\u3002"
+                if is_zh
+                else "Fast pacing; land the hook in the first two seconds with conversational subtitles."
+            ),
+            "cta": source_cta,
+            "subtitle_style": (
+                "\u53e3\u8bed\u5316\u3001\u77ed\u53e5\u3001\u9ad8\u9891\u6362\u884c"
+                if is_zh
+                else "Conversational, short lines, frequent line breaks"
+            ),
+        },
+        "instagram_reels": {
+            "title": "Instagram Reels",
+            "format": "vertical_lifestyle_reel",
+            "fit_reason": (
+                "\u5f3a\u5316\u4ea7\u54c1\u89c6\u89c9\u3001\u751f\u6d3b\u65b9\u5f0f\u573a\u666f\u548c\u4fdd\u5b88\u7684\u4e70\u5bb6\u4ef7\u503c\u6587\u6848\u3002"
+                if is_zh
+                else "Strengthen product visuals, lifestyle context, and conservative buyer-led captions."
+            ),
+            "pacing": (
+                "\u6d41\u7545\u89c6\u89c9\u8f6c\u573a\uff0c\u4fdd\u7559\u4ea7\u54c1\u7ec6\u8282\u548c\u4e70\u5bb6\u8bc1\u636e\u3002"
+                if is_zh
+                else "Use smooth visual transitions while retaining product detail and buyer evidence."
+            ),
+            "cta": (
+                "\u4fdd\u5b58\u8fd9\u4efd\u8d2d\u4e70\u68c0\u67e5\uff0c\u5bf9\u7167\u539f\u8bdd\u518d\u505a\u51b3\u5b9a\u3002"
+                if is_zh
+                else "Save this buyer check and compare it with the supplied review before deciding."
+            ),
+            "subtitle_style": (
+                "\u7b80\u6d01\u751f\u6d3b\u65b9\u5f0f\u5b57\u5e55\uff0c\u7559\u51fa\u753b\u9762\u547c\u5438\u611f"
+                if is_zh
+                else "Clean lifestyle subtitles with room for the product visuals"
+            ),
+        },
+        "youtube_shorts": {
+            "title": "YouTube Shorts",
+            "format": "vertical_explainer_short",
+            "fit_reason": (
+                "\u4f7f\u7528\u66f4\u89e3\u91ca\u578b\u7684\u7ed3\u6784\u3001\u7a33\u5b9a\u8282\u594f\u548c\u5bf9\u6bd4\u578b CTA\u3002"
+                if is_zh
+                else "Use a more explanatory structure, steadier pacing, and a compare-or-learn CTA."
+            ),
+            "pacing": (
+                "\u8282\u594f\u7a0d\u7a33\uff0c\u6309 Hook\u3001\u8bc1\u636e\u3001\u68c0\u67e5\u3001CTA \u9012\u8fdb\u3002"
+                if is_zh
+                else "Steady pacing through hook, evidence, inspection, and CTA."
+            ),
+            "cta": (
+                "\u7ee7\u7eed\u4e86\u89e3\u6216\u5bf9\u6bd4\u8fd9\u6761\u4e70\u5bb6\u8bc1\u636e\uff0c\u518d\u5224\u65ad\u662f\u5426\u9002\u5408\u4f60\u3002"
+                if is_zh
+                else "Learn more or compare this buyer evidence before deciding whether it fits your use case."
+            ),
+            "subtitle_style": (
+                "\u89e3\u91ca\u578b\u5b57\u5e55\uff0c\u5b8c\u6574\u77ed\u53e5\uff0c\u5173\u952e\u8bc1\u636e\u5355\u72ec\u5f3a\u8c03"
+                if is_zh
+                else "Explanatory full-sentence subtitles with the proof quote isolated"
+            ),
+        },
+    }
+
+    duration_definitions = {
+        15: {
+            "best_use": "fast_hook_test",
+            "scene_count": 2,
+            "duration_note": (
+                "\u4ec5\u4fdd\u7559\u6700\u5f3a Hook\u3001\u4e24\u4e2a\u6838\u5fc3\u955c\u5934\u548c\u77ed CTA\u3002"
+                if is_zh
+                else "Keep only the strongest hook, two core scenes, and a short CTA."
+            ),
+        },
+        30: {
+            "best_use": "standard_three_scene_story",
+            "scene_count": 3,
+            "duration_note": (
+                "\u4fdd\u7559\u5b8c\u6574\u4e09\u955c\u5934\u7ed3\u6784\u548c\u8bc1\u636e\u6536\u5c3e\u3002"
+                if is_zh
+                else "Retain the complete three-scene structure and evidence-led close."
+            ),
+        },
+        45: {
+            "best_use": "proof_and_objection_explainer",
+            "scene_count": 3,
+            "duration_note": (
+                "\u589e\u52a0\u8bc1\u636e\u3001\u987e\u8651\u548c\u6bd4\u8f83\u89e3\u91ca\uff0c\u4f46\u4e0d\u589e\u52a0\u672a\u8bc1\u5b9e\u4e3b\u5f20\u3002"
+                if is_zh
+                else "Add proof, objection, and comparison context without adding unsupported claims."
+            ),
+        },
+    }
+
+    platform_packs: list[dict] = []
+    for platform, platform_config in platform_definitions.items():
+        for duration, duration_config in duration_definitions.items():
+            selected_scenes = source_scenes[: duration_config["scene_count"]]
+            opening_hook = source_hook
+            if duration == 15:
+                opening_hook = source_hook.split(".")[0].strip() or source_hook
+            duration_cta = platform_config["cta"]
+            if duration == 15:
+                duration_cta = duration_cta.split(".")[0].strip() or duration_cta
+            script_scenes = [
+                {
+                    "scene_number": index,
+                    "scene_text": scene,
+                    "duration_hint_seconds": max(
+                        2,
+                        (duration - 4) // max(len(selected_scenes), 1),
+                    ),
+                    "proof_quote": proof_quote,
+                    "do_not_claim": safe_claim_notes,
+                }
+                for index, scene in enumerate(selected_scenes, start=1)
+                if scene
+            ]
+            if duration == 45:
+                script_scenes.append(
+                    {
+                        "scene_number": len(script_scenes) + 1,
+                        "scene_text": (
+                            f"\u7528\u5df2\u6709\u539f\u8bdd\u56de\u770b\u8d2d\u4e70\u987e\u8651\uff1a{proof_quote}"
+                            if is_zh and proof_quote
+                            else f"Revisit the buyer concern using the supplied quote: {proof_quote}"
+                            if proof_quote
+                            else (
+                                "\u8bc1\u636e\u4e0d\u8db3\uff1a\u4fdd\u7559\u987e\u8651\uff0c\u4e0d\u5ba3\u79f0\u5df2\u89e3\u51b3\u3002"
+                                if is_zh
+                                else "Evidence gap: retain the concern and do not claim it is resolved."
+                            )
+                        ),
+                        "duration_hint_seconds": 8,
+                        "proof_quote": proof_quote,
+                        "do_not_claim": safe_claim_notes,
+                    }
+                )
+            platform_pack_id = f"{platform}_{duration}s_{source_asset_pack_id}"
+            keyframes = [
+                {
+                    **dict(keyframe),
+                    "platform": platform,
+                    "duration_seconds": duration,
+                    "platform_visual_note": platform_config["pacing"],
+                    "do_not_claim": safe_claim_notes,
+                }
+                for keyframe in list(source_asset.get("keyframe_prompts") or [])[
+                    : max(2, duration_config["scene_count"])
+                ]
+            ]
+            subtitles = [
+                {
+                    **dict(line),
+                    "subtitle_style": platform_config["subtitle_style"],
+                }
+                for line in list(source_asset.get("subtitle_lines") or [])[
+                    : max(2, duration_config["scene_count"])
+                ]
+            ]
+            source_captions = dict(source_asset.get("caption_variants") or {})
+            caption_variants = {
+                **source_captions,
+                "platform_caption": (
+                    source_captions.get("short_caption")
+                    if platform == "tiktok"
+                    else source_captions.get("benefit_caption")
+                    if platform == "instagram_reels"
+                    else source_captions.get("safe_claim_caption")
+                )
+                or opening_hook,
+                "duration_caption": f"{duration}s | {opening_hook}",
+            }
+            platform_packs.append(
+                {
+                    "platform_pack_id": platform_pack_id,
+                    "source_asset_pack_id": source_asset_pack_id,
+                    "platform": platform,
+                    "format": platform_config["format"],
+                    "duration_seconds": duration,
+                    "platform_title": platform_config["title"],
+                    "platform_fit_reason": platform_config["fit_reason"],
+                    "best_use": duration_config["best_use"],
+                    "pacing_strategy": (
+                        f"{platform_config['pacing']} {duration_config['duration_note']}"
+                    ),
+                    "opening_hook": opening_hook,
+                    "shooting_script": {
+                        "hook": opening_hook,
+                        "scenes": script_scenes,
+                        "cta": duration_cta,
+                        "proof_quote": proof_quote,
+                        "missing_quote": missing_quote,
+                        "risk_note": _rw_text(source_script.get("risk_note")),
+                        "do_not_claim": safe_claim_notes,
+                    },
+                    "shot_list": script_scenes,
+                    "keyframe_prompts": keyframes,
+                    "subtitle_style": platform_config["subtitle_style"],
+                    "subtitle_lines": subtitles,
+                    "caption_variants": caption_variants,
+                    "thumbnail_prompt": (
+                        f"{_rw_text(source_asset.get('thumbnail_prompt'))} "
+                        f"Platform: {platform_config['title']}; duration: {duration}s; "
+                        f"keep the supplied evidence visible."
+                    ).strip(),
+                    "b_roll_notes": list(source_asset.get("b_roll_notes") or []),
+                    "on_screen_text": list(source_asset.get("on_screen_text") or []),
+                    "voiceover_script": "\n".join(
+                        [
+                            opening_hook,
+                            *[
+                                _rw_text(scene.get("scene_text"))
+                                for scene in script_scenes
+                            ],
+                            duration_cta,
+                        ]
+                    ),
+                    "safe_claim_notes": safe_claim_notes,
+                    "proof_quotes": [proof_quote] if proof_quote else [],
+                    "risk_notes": list(source_asset.get("risk_notes") or []),
+                    "do_not_claim": safe_claim_notes,
+                    "asset_readiness": (
+                        "needs_evidence"
+                        if weak_evidence
+                        else _rw_text(source_asset.get("asset_readiness"))
+                        or "ready_for_human_review"
+                    ),
+                    "evidence_strength_score": int(
+                        source_asset.get("evidence_strength_score") or 0
+                    ),
+                    "claim_safety_level": (
+                        "conservative"
+                        if weak_evidence
+                        else "evidence_grounded"
+                    ),
+                    "recommended_next_action": (
+                        "collect_more_reviews"
+                        if missing_quote
+                        else "lower_claim_strength"
+                        if weak_evidence
+                        else "human_review_before_platform_export"
+                    ),
+                }
+            )
+
+    recommended_pack = next(
+        (
+            pack
+            for pack in platform_packs
+            if pack["platform"] == "tiktok"
+            and pack["duration_seconds"] == 30
+        ),
+        platform_packs[0] if platform_packs else {},
+    )
+    required_platforms = set(platform_definitions)
+    required_durations = set(duration_definitions)
+    present_platforms = {pack["platform"] for pack in platform_packs}
+    present_durations = {pack["duration_seconds"] for pack in platform_packs}
+    return {
+        "pack_version": "multi_platform_asset_pack_v1",
+        "multi_platform_summary": {
+            "platform_pack_count": len(platform_packs),
+            "platform_count": len(present_platforms),
+            "duration_count": len(present_durations),
+            "platforms": sorted(present_platforms),
+            "durations_seconds": sorted(present_durations),
+            "source_asset_pack_id": source_asset_pack_id,
+            "recommended_platform_pack_id": _rw_text(
+                recommended_pack.get("platform_pack_id")
+            ),
+            "asset_readiness": _rw_text(
+                recommended_pack.get("asset_readiness")
+            ),
+            "evidence_strength_score": int(
+                recommended_pack.get("evidence_strength_score") or 0
+            ),
+            "risk_summary": (
+                "\u5f31\u8bc1\u636e\u6a21\u5f0f\uff1a\u6240\u6709\u5e73\u53f0\u5305\u4fdd\u6301\u4fdd\u5b88\u4e3b\u5f20\u3002"
+                if is_zh and weak_evidence
+                else "Weak-evidence mode: all platform packs retain conservative claims."
+                if weak_evidence
+                else (
+                    "\u6240\u6709\u5e73\u53f0\u5305\u4fdd\u7559\u539f\u59cb\u8bc1\u636e\u548c\u7981\u6b62\u4e3b\u5f20\u8fb9\u754c\u3002"
+                    if is_zh
+                    else "All platform packs preserve source evidence and do-not-claim boundaries."
+                )
+            ),
+        },
+        "source_asset_pack_id": source_asset_pack_id,
+        "recommended_platform_pack_id": _rw_text(
+            recommended_pack.get("platform_pack_id")
+        ),
+        "platform_packs": platform_packs,
+        "platform_quality_checks": {
+            "missing_quote": missing_quote if source_asset else True,
+            "weak_evidence": weak_evidence if source_asset else True,
+            "unsupported_claim": False,
+            "unsupported_claim_terms": [],
+            "unsafe_provider_action": False,
+            "missing_platform_variant": sorted(
+                required_platforms - present_platforms
+            ),
+            "missing_duration_variant": sorted(
+                required_durations - present_durations
+            ),
+            "do_not_claim_preserved": all(
+                set(do_not_claim).issubset(set(pack.get("do_not_claim") or []))
+                for pack in platform_packs
+            ),
+        },
+        "safety_boundaries": {
+            "provider_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_operation_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_operation_enabled": False,
+            "restore_or_rollback_enabled": False,
+            "feedback_persisted": False,
+        },
+    }
+
+
 def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
     angles = list(creative_decision_pack.get("top_ad_angles") or [])
     source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
@@ -19477,6 +19867,10 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         _rw_text(video_pack.get("product_context")),
         language,
     )
+    multi_platform_asset_pack = _rw_multi_platform_asset_pack(
+        creative_asset_pack,
+        language,
+    )
     return {
         "pack_version": "creative_variant_pack_v1",
         "variant_summary": {
@@ -19517,6 +19911,7 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         "creative_iteration_pack": creative_iteration_pack,
         "creative_version_control_pack": creative_version_control_pack,
         "creative_asset_pack": creative_asset_pack,
+        "multi_platform_asset_pack": multi_platform_asset_pack,
         "safety_boundaries": {
             "real_provider_called": False,
             "llm_api_called": False,
@@ -19817,6 +20212,12 @@ def _review_workspace_creative_decision_pack(
     )
     creative_decision_pack["creative_asset_pack"] = (
         creative_decision_pack["creative_variant_pack"].get("creative_asset_pack")
+        or {}
+    )
+    creative_decision_pack["multi_platform_asset_pack"] = (
+        creative_decision_pack["creative_variant_pack"].get(
+            "multi_platform_asset_pack"
+        )
         or {}
     )
     return creative_decision_pack

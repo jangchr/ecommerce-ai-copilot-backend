@@ -1946,6 +1946,77 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertTrue(
             all(value is False for value in asset_pack["safety_boundaries"].values())
         )
+        multi_platform_pack = pack["multi_platform_asset_pack"]
+        self.assertEqual(
+            multi_platform_pack["pack_version"],
+            "multi_platform_asset_pack_v1",
+        )
+        self.assertIn(
+            multi_platform_pack["source_asset_pack_id"],
+            {item["asset_pack_id"] for item in asset_pack["asset_packs"]},
+        )
+        self.assertTrue(multi_platform_pack["recommended_platform_pack_id"])
+        platform_packs = multi_platform_pack["platform_packs"]
+        self.assertGreaterEqual(len(platform_packs), 9)
+        self.assertEqual(
+            {"tiktok", "instagram_reels", "youtube_shorts"},
+            {item["platform"] for item in platform_packs},
+        )
+        self.assertEqual(
+            {15, 30, 45},
+            {item["duration_seconds"] for item in platform_packs},
+        )
+        for platform_pack in platform_packs:
+            with self.subTest(platform_pack_id=platform_pack["platform_pack_id"]):
+                for field in [
+                    "opening_hook",
+                    "shooting_script",
+                    "shot_list",
+                    "keyframe_prompts",
+                    "subtitle_lines",
+                    "caption_variants",
+                    "thumbnail_prompt",
+                    "do_not_claim",
+                ]:
+                    self.assertTrue(platform_pack[field], field)
+                self.assertEqual(
+                    platform_pack["proof_quotes"],
+                    recommended_asset["proof_quotes"],
+                )
+                self.assertTrue(
+                    set(recommended_asset["do_not_claim"]).issubset(
+                        set(platform_pack["do_not_claim"])
+                    )
+                )
+        tiktok_15 = next(
+            item
+            for item in platform_packs
+            if item["platform"] == "tiktok"
+            and item["duration_seconds"] == 15
+        )
+        self.assertLessEqual(len(tiktok_15["shooting_script"]["scenes"]), 2)
+        self.assertIn("Fast pacing", tiktok_15["pacing_strategy"])
+        for long_pack in [
+            item for item in platform_packs if item["duration_seconds"] == 45
+        ]:
+            self.assertEqual(long_pack["proof_quotes"], recommended_asset["proof_quotes"])
+            self.assertTrue(
+                set(recommended_asset["do_not_claim"]).issubset(
+                    set(long_pack["do_not_claim"])
+                )
+            )
+        quality = multi_platform_pack["platform_quality_checks"]
+        self.assertFalse(quality["unsupported_claim"])
+        self.assertFalse(quality["unsafe_provider_action"])
+        self.assertFalse(quality["missing_platform_variant"])
+        self.assertFalse(quality["missing_duration_variant"])
+        self.assertTrue(quality["do_not_claim_preserved"])
+        self.assertTrue(
+            all(
+                value is False
+                for value in multi_platform_pack["safety_boundaries"].values()
+            )
+        )
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -2097,6 +2168,39 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
         self.assertFalse(asset_pack["asset_quality_checks"]["unsupported_claim"])
         self.assertTrue(
             all(value is False for value in asset_pack["safety_boundaries"].values())
+        )
+        multi_platform_pack = pack["multi_platform_asset_pack"]
+        self.assertEqual(len(multi_platform_pack["platform_packs"]), 9)
+        self.assertTrue(
+            all(
+                item["asset_readiness"] == "needs_evidence"
+                for item in multi_platform_pack["platform_packs"]
+            )
+        )
+        self.assertTrue(
+            all(
+                item["claim_safety_level"] == "conservative"
+                for item in multi_platform_pack["platform_packs"]
+            )
+        )
+        self.assertTrue(
+            all(
+                item["recommended_next_action"]
+                in {"collect_more_reviews", "lower_claim_strength"}
+                for item in multi_platform_pack["platform_packs"]
+            )
+        )
+        self.assertTrue(
+            multi_platform_pack["platform_quality_checks"]["weak_evidence"]
+        )
+        self.assertFalse(
+            multi_platform_pack["platform_quality_checks"]["unsupported_claim"]
+        )
+        self.assertTrue(
+            all(
+                value is False
+                for value in multi_platform_pack["safety_boundaries"].values()
+            )
         )
         feedback = pack["creative_feedback_runtime"]
         self.assertIn(
