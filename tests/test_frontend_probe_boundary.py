@@ -8399,6 +8399,125 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertNotIn("fetch(", creative_section)
         self.assertNotIn("????", html)
 
+    def test_campaign_export_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace campaign export pack bundle",
+            "PROJECT_WORKSPACE_CAMPAIGN_EXPORT_PACK_MARKER",
+            "latestProjectCampaignExportPack",
+            "projectWorkspaceCampaignExportPackFromWorkspace",
+            "projectWorkspaceExportCampaignPackSnapshot",
+            "projectWorkspaceExportCampaignPackMarkdown",
+            "renderProjectWorkspaceCampaignExportSummaryPanel",
+            "renderProjectWorkspaceCampaignBriefPanel",
+            "renderProjectWorkspaceCampaignSectionsPanel",
+            "renderProjectWorkspaceCampaignExportManifestPanel",
+            "copyProjectWorkspaceCampaignBrief",
+            "copyProjectWorkspaceCampaignEvidenceSection",
+            "copyProjectWorkspaceCampaignCreativeScriptSection",
+            "copyProjectWorkspaceCampaignPlatformAssetsSection",
+            "copyProjectWorkspaceCampaignQualityGateSection",
+            "copyProjectWorkspaceCampaignTestPlanSection",
+            "copyProjectWorkspaceCampaignSafetyNotes",
+            "copyProjectWorkspaceFullCampaignExportPack",
+            "campaign_export_pack: projectWorkspaceExportCampaignPackSnapshot(workspace)",
+            "Campaign Export Pack",
+            "Campaign Brief",
+            "Campaign Sections",
+            "Export Manifest",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.campaign_summary",
+            "pack.campaign_brief",
+            "pack.evidence_section",
+            "pack.creative_section",
+            "pack.platform_assets_section",
+            "pack.quality_gate_section",
+            "pack.test_plan_section",
+            "pack.safety_section",
+            "pack.export_manifest",
+            "pack.campaign_quality_checks",
+            "pack.safety_boundaries",
+        ]:
+            self.assertIn(runtime_field, html)
+        quality_fix = html.index(
+            "${renderProjectWorkspaceAssetQualityFixActionsPanel(workspace)}"
+        )
+        campaign_summary = html.index(
+            "${renderProjectWorkspaceCampaignExportSummaryPanel(workspace)}"
+        )
+        creative_export = html.index(
+            "${renderProjectWorkspaceCreativeExportPanel(workspace)}"
+        )
+        self.assertLess(quality_fix, campaign_summary)
+        self.assertLess(campaign_summary, creative_export)
+
+    def test_campaign_export_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "campaignExportPackTitle",
+            "campaignExportCampaignBriefTitle",
+            "campaignExportEvidenceTitle",
+            "campaignExportCreativeScriptTitle",
+            "campaignExportPlatformAssetsTitle",
+            "campaignExportQualityGateTitle",
+            "campaignExportAbTestPlanTitle",
+            "campaignExportSafetyNotesTitle",
+            "campaignExportManifestTitle",
+            "campaignExportCopyCampaignBrief",
+            "campaignExportCopyEvidence",
+            "campaignExportCopyCreativeScript",
+            "campaignExportCopyPlatformAssets",
+            "campaignExportCopyQualityGate",
+            "campaignExportCopyTestPlan",
+            "campaignExportCopySafetyNotes",
+            "campaignExportCopyFullPack",
+            "campaignExportCopied",
+            "campaignExportCopyFailed",
+            "campaignExportCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace campaign export pack bundle", script)
+            self.assertIn("project_workspace_campaign_export_pack_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportCampaignPackMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceCampaignExportText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "campaignExportPackTitle",
+            "campaignExportCampaignBriefTitle",
+            "campaignExportEvidenceTitle",
+            "campaignExportCreativeScriptTitle",
+            "campaignExportPlatformAssetsTitle",
+            "campaignExportQualityGateTitle",
+            "campaignExportAbTestPlanTitle",
+            "campaignExportSafetyNotesTitle",
+            "campaignExportManifestTitle",
+        ]:
+            self.assertIn(key, markdown)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
+        creative_section = html[
+            html.index("const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER"):
+            governance_start
+        ]
+        self.assertNotIn("fetch(", creative_section)
+        self.assertIn("feedback persistence remain disabled", html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

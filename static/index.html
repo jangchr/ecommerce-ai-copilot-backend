@@ -3599,6 +3599,7 @@
         let latestProjectCreativeAssetPack = {};
         let latestProjectMultiPlatformAssetPack = {};
         let latestProjectAssetQualityGatePack = {};
+        let latestProjectCampaignExportPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8874,6 +8875,7 @@
                 latestProjectAssetQualityGatePack = latestProjectCreativeDecisionPack.asset_quality_gate_pack
                     || latestProjectCreativeVariantPack.asset_quality_gate_pack
                     || {};
+                latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14709,6 +14711,7 @@
         const PROJECT_WORKSPACE_CREATIVE_ASSET_PACK_MARKER = 'Project Workspace creative asset pack bundle';
         const PROJECT_WORKSPACE_MULTI_PLATFORM_ASSET_PACK_MARKER = 'Project Workspace multi platform asset pack bundle';
         const PROJECT_WORKSPACE_ASSET_QUALITY_GATE_MARKER = 'Project Workspace asset quality gate bundle';
+        const PROJECT_WORKSPACE_CAMPAIGN_EXPORT_PACK_MARKER = 'Project Workspace campaign export pack bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -14742,6 +14745,7 @@
                 creative_feedback_runtime: pack.creative_feedback_runtime || {},
                 creative_variant_pack: pack.creative_variant_pack || {},
                 creative_version_control_pack: pack.creative_version_control_pack || {},
+                campaign_export_pack: pack.campaign_export_pack || {},
                 weak_evidence_reason: pack.weak_evidence_reason || '',
                 safety_boundaries: pack.safety_boundaries || {}
             };
@@ -15857,6 +15861,238 @@
 
         function copyProjectWorkspaceFullAssetQualityPack() {
             return copyProjectWorkspaceAssetQualityText('full');
+        }
+
+        function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCampaignExportPack
+                && Object.keys(latestProjectCampaignExportPack).length) {
+                return latestProjectCampaignExportPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.campaign_export_pack || {};
+        }
+
+        function projectWorkspaceExportCampaignPackSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCampaignExportPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CAMPAIGN_EXPORT_PACK_MARKER,
+                has_campaign_export_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                recommended_campaign_id: pack.recommended_campaign_id || '',
+                campaign_summary: pack.campaign_summary || {},
+                campaign_brief: pack.campaign_brief || {},
+                evidence_section: pack.evidence_section || {},
+                creative_section: pack.creative_section || {},
+                platform_assets_section: pack.platform_assets_section || {},
+                quality_gate_section: pack.quality_gate_section || {},
+                test_plan_section: pack.test_plan_section || {},
+                safety_section: pack.safety_section || {},
+                export_manifest: pack.export_manifest || {},
+                campaign_quality_checks: pack.campaign_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCampaignListText(items = []) {
+            return (Array.isArray(items) ? items : [])
+                .map((item) => typeof item === 'string' ? item : JSON.stringify(item))
+                .filter(Boolean)
+                .map((item) => `- ${item}`)
+                .join('\n');
+        }
+
+        function projectWorkspaceCampaignBriefText(pack = projectWorkspaceExportCampaignPackSnapshot()) {
+            const brief = pack.campaign_brief || {};
+            if (!pack.has_campaign_export_pack) return '';
+            return [
+                t('campaignExportCampaignBriefTitle'),
+                `${t('campaignExportTargetCustomer')}: ${brief.target_customer || t('none')}`,
+                `${t('campaignExportBuyerPain')}: ${brief.buyer_pain || t('none')}`,
+                `${t('campaignExportBuyerObjection')}: ${brief.buyer_objection || t('none')}`,
+                `${t('campaignExportCreativeAngle')}: ${brief.creative_angle || t('none')}`,
+                `${t('campaignExportRecommendedMessage')}: ${brief.recommended_message || t('none')}`,
+                `${t('campaignExportProofQuote')}: ${brief.proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('campaignExportRiskNote')}: ${brief.risk_note || t('none')}`,
+                `${t('campaignExportDoNotClaim')}: ${(brief.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCampaignSectionText(kind, pack = projectWorkspaceExportCampaignPackSnapshot()) {
+            if (!pack.has_campaign_export_pack) return '';
+            const section = {
+                evidence: pack.evidence_section,
+                creative: pack.creative_section,
+                platform: pack.platform_assets_section,
+                quality: pack.quality_gate_section,
+                test: pack.test_plan_section,
+                safety: pack.safety_section
+            }[kind] || {};
+            if (!Object.keys(section).length) return '';
+            if (kind === 'evidence') {
+                return [
+                    t('campaignExportEvidenceTitle'),
+                    `${t('campaignExportEvidenceSummary')}: ${section.evidence_brief_summary || t('none')}`,
+                    `${t('campaignExportProofQuotes')}:`,
+                    projectWorkspaceCampaignListText(section.proof_quotes),
+                    `${t('campaignExportEvidenceWarnings')}:`,
+                    projectWorkspaceCampaignListText(section.evidence_warnings),
+                    `${t('campaignExportSourceBreakdown')}:`,
+                    projectWorkspaceCampaignListText(section.source_breakdown_summary)
+                ].join('\n');
+            }
+            if (kind === 'creative') {
+                return [
+                    t('campaignExportCreativeScriptTitle'),
+                    `${t('campaignExportRecommendedHook')}: ${section.recommended_hook || t('none')}`,
+                    `${t('campaignExportScene')} 1: ${section.scene_1 || t('none')}`,
+                    `${t('campaignExportScene')} 2: ${section.scene_2 || t('none')}`,
+                    `${t('campaignExportScene')} 3: ${section.scene_3 || t('none')}`,
+                    `${t('campaignExportCta')}: ${section.cta || t('none')}`,
+                    `${t('campaignExportCopyReadyScript')}:`,
+                    section.copy_ready_script || section.recommended_version_script || t('none')
+                ].join('\n');
+            }
+            if (kind === 'platform') {
+                return [
+                    t('campaignExportPlatformAssetsTitle'),
+                    `${t('campaignExportShootingScript')}: ${JSON.stringify(section.shooting_script || {})}`,
+                    `${t('campaignExportShotList')}:`,
+                    projectWorkspaceCampaignListText(section.shot_list),
+                    `${t('campaignExportKeyframePrompts')}:`,
+                    projectWorkspaceCampaignListText(section.keyframe_prompts),
+                    `${t('campaignExportSubtitleLines')}:`,
+                    projectWorkspaceCampaignListText(section.subtitle_lines),
+                    `${t('campaignExportCaptionVariants')}: ${JSON.stringify(section.caption_variants || {})}`,
+                    `${t('campaignExportThumbnailPrompt')}: ${section.thumbnail_prompt || t('none')}`
+                ].join('\n');
+            }
+            if (kind === 'quality') {
+                return [
+                    t('campaignExportQualityGateTitle'),
+                    `${t('campaignExportRecommendedReadyPack')}: ${section.recommended_ready_pack_id || t('none')}`,
+                    `${t('campaignExportQualityScore')}: ${section.overall_quality_score ?? 0}`,
+                    `${t('campaignExportQualityTier')}: ${section.quality_tier || t('none')}`,
+                    `${t('campaignExportDeliveryReadiness')}: ${section.delivery_readiness || t('none')}`,
+                    `${t('campaignExportFixRecommendations')}:`,
+                    projectWorkspaceCampaignListText(section.fix_recommendations)
+                ].join('\n');
+            }
+            if (kind === 'test') {
+                return [
+                    t('campaignExportAbTestPlanTitle'),
+                    `${t('campaignExportHypothesis')}: ${section.ab_test_hypothesis || t('none')}`,
+                    `${t('campaignExportPrimaryMetric')}: ${section.primary_metric || t('none')}`,
+                    `${t('campaignExportSecondaryMetric')}: ${section.secondary_metric || t('none')}`,
+                    `${t('campaignExportSafeLaunchNote')}: ${section.safe_launch_note || t('none')}`
+                ].join('\n');
+            }
+            return [
+                t('campaignExportSafetyNotesTitle'),
+                `${t('campaignExportDoNotClaim')}:`,
+                projectWorkspaceCampaignListText(section.do_not_claim),
+                `${t('campaignExportRiskNotes')}:`,
+                projectWorkspaceCampaignListText(section.risk_notes),
+                `${t('campaignExportDisabledOperations')}:`,
+                projectWorkspaceCampaignListText(section.disabled_real_operations)
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportCampaignPackMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
+            if (!pack.has_campaign_export_pack) return '';
+            const summary = pack.campaign_summary || {};
+            const manifest = pack.export_manifest || {};
+            return [
+                `## ${t('campaignExportPackTitle')}`,
+                `${t('campaignExportCampaignTitle')}: ${summary.campaign_title || t('none')}`,
+                `${t('campaignExportRecommendedVersion')}: ${summary.recommended_version_id || t('none')}`,
+                `${t('campaignExportRecommendedPlatformPack')}: ${summary.recommended_platform_pack_id || t('none')}`,
+                `${t('campaignExportRecommendedReadyPack')}: ${summary.recommended_ready_pack_id || t('none')}`,
+                `${t('campaignExportReadiness')}: ${summary.campaign_readiness || t('none')}`,
+                `${t('campaignExportQualityScore')}: ${summary.overall_quality_score ?? 0}`,
+                `${t('campaignExportTopRisk')}: ${summary.top_risk_note || t('none')}`,
+                `${t('campaignExportNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                '',
+                `### ${t('campaignExportCampaignBriefTitle')}`,
+                projectWorkspaceCampaignBriefText(pack),
+                '',
+                `### ${t('campaignExportEvidenceTitle')}`,
+                projectWorkspaceCampaignSectionText('evidence', pack),
+                '',
+                `### ${t('campaignExportCreativeScriptTitle')}`,
+                projectWorkspaceCampaignSectionText('creative', pack),
+                '',
+                `### ${t('campaignExportPlatformAssetsTitle')}`,
+                projectWorkspaceCampaignSectionText('platform', pack),
+                '',
+                `### ${t('campaignExportQualityGateTitle')}`,
+                projectWorkspaceCampaignSectionText('quality', pack),
+                '',
+                `### ${t('campaignExportAbTestPlanTitle')}`,
+                projectWorkspaceCampaignSectionText('test', pack),
+                '',
+                `### ${t('campaignExportSafetyNotesTitle')}`,
+                projectWorkspaceCampaignSectionText('safety', pack),
+                '',
+                `### ${t('campaignExportManifestTitle')}`,
+                `${t('campaignExportIncludedSections')}: ${(manifest.included_sections || []).join(', ') || t('none')}`,
+                `${t('campaignExportCopyTargets')}: ${(manifest.copy_targets || []).join(', ') || t('none')}`,
+                `${t('campaignExportMarkdownReady')}: ${boolText(Boolean(manifest.markdown_export_ready))}`,
+                `${t('campaignExportJsonReady')}: ${boolText(Boolean(manifest.json_export_ready))}`,
+                `${t('campaignExportExcludedOperations')}: ${(manifest.excluded_real_operations || []).join(', ') || t('none')}`
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCampaignExportText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceCampaignExportStatus');
+            const pack = projectWorkspaceExportCampaignPackSnapshot();
+            const text = kind === 'brief'
+                ? projectWorkspaceCampaignBriefText(pack)
+                : kind === 'full'
+                    ? projectWorkspaceExportCampaignPackMarkdown()
+                    : projectWorkspaceCampaignSectionText(kind, pack);
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('campaignExportCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('campaignExportCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('campaignExportCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('campaignExportCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceCampaignBrief() {
+            return copyProjectWorkspaceCampaignExportText('brief');
+        }
+
+        function copyProjectWorkspaceCampaignEvidenceSection() {
+            return copyProjectWorkspaceCampaignExportText('evidence');
+        }
+
+        function copyProjectWorkspaceCampaignCreativeScriptSection() {
+            return copyProjectWorkspaceCampaignExportText('creative');
+        }
+
+        function copyProjectWorkspaceCampaignPlatformAssetsSection() {
+            return copyProjectWorkspaceCampaignExportText('platform');
+        }
+
+        function copyProjectWorkspaceCampaignQualityGateSection() {
+            return copyProjectWorkspaceCampaignExportText('quality');
+        }
+
+        function copyProjectWorkspaceCampaignTestPlanSection() {
+            return copyProjectWorkspaceCampaignExportText('test');
+        }
+
+        function copyProjectWorkspaceCampaignSafetyNotes() {
+            return copyProjectWorkspaceCampaignExportText('safety');
+        }
+
+        function copyProjectWorkspaceFullCampaignExportPack() {
+            return copyProjectWorkspaceCampaignExportText('full');
         }
 
         function projectWorkspaceExportCreativeIterationSnapshot(workspace = latestProjectWorkspace) {
@@ -17128,6 +17364,120 @@
             `;
         }
 
+        function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
+            if (!pack.has_campaign_export_pack) return '';
+            const summary = pack.campaign_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCampaignExportSummaryPanel"
+                    data-campaign-export-pack-marker="${PROJECT_WORKSPACE_CAMPAIGN_EXPORT_PACK_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('campaignExportPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('campaignExportPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button"
+                            onclick="copyProjectWorkspaceFullCampaignExportPack()">${escapeHTML(t('campaignExportCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('campaignExportReadiness'), summary.campaign_readiness || t('none'))}
+                        ${metricPill(t('campaignExportQualityScore'), String(summary.overall_quality_score ?? 0))}
+                        ${metricPill(t('campaignExportRecommendedVersion'), summary.recommended_version_id || t('none'))}
+                        ${metricPill(t('campaignExportRecommendedPlatformPack'), summary.recommended_platform_pack_id || t('none'))}
+                    </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(summary.campaign_title || pack.recommended_campaign_id || t('campaignExportNoData'))}</strong>
+                        <div><strong>${escapeHTML(t('campaignExportRecommendedReadyPack'))}:</strong> ${escapeHTML(summary.recommended_ready_pack_id || t('none'))}</div>
+                        <div><strong>${escapeHTML(t('campaignExportNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('campaignExportTopRisk'))}:</strong> ${escapeHTML(summary.top_risk_note || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('campaignExportGuidanceOnly'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCampaignExportStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCampaignBriefPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
+            if (!pack.has_campaign_export_pack) return '';
+            const brief = pack.campaign_brief || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCampaignBriefPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('campaignExportCampaignBriefTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('campaignExportCampaignBriefHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceCampaignBrief()">${escapeHTML(t('campaignExportCopyCampaignBrief'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('campaignExportTargetCustomer'))}</strong><div>${escapeHTML(brief.target_customer || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('campaignExportBuyerPain'))}</strong><div>${escapeHTML(brief.buyer_pain || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('campaignExportBuyerObjection'))}</strong><div>${escapeHTML(brief.buyer_objection || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('campaignExportCreativeAngle'))}</strong><div>${escapeHTML(brief.creative_angle || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('campaignExportRecommendedMessage'))}</strong><div>${escapeHTML(brief.recommended_message || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('campaignExportProofQuote'))}</strong><div>${escapeHTML(brief.proof_quote || t('creativeDecisionMissingQuote'))}</div></div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('campaignExportRiskNote'))}:</strong> ${escapeHTML(brief.risk_note || t('none'))}</div>
+                    <div class="field-helper"><strong>${escapeHTML(t('campaignExportDoNotClaim'))}:</strong> ${escapeHTML((brief.do_not_claim || []).join(' | ') || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCampaignSectionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
+            if (!pack.has_campaign_export_pack) return '';
+            const evidence = pack.evidence_section || {};
+            const creative = pack.creative_section || {};
+            const platform = pack.platform_assets_section || {};
+            const quality = pack.quality_gate_section || {};
+            const testPlan = pack.test_plan_section || {};
+            const safety = pack.safety_section || {};
+            const cards = [
+                ['campaignExportEvidenceTitle', 'campaignExportCopyEvidence', 'copyProjectWorkspaceCampaignEvidenceSection()', `${(evidence.proof_quotes || []).length} ${t('campaignExportProofQuotes')}`],
+                ['campaignExportCreativeScriptTitle', 'campaignExportCopyCreativeScript', 'copyProjectWorkspaceCampaignCreativeScriptSection()', creative.recommended_hook || t('campaignExportNoData')],
+                ['campaignExportPlatformAssetsTitle', 'campaignExportCopyPlatformAssets', 'copyProjectWorkspaceCampaignPlatformAssetsSection()', `${(platform.shot_list || []).length} ${t('campaignExportShotList')}`],
+                ['campaignExportQualityGateTitle', 'campaignExportCopyQualityGate', 'copyProjectWorkspaceCampaignQualityGateSection()', `${quality.overall_quality_score ?? 0} · ${quality.delivery_readiness || t('none')}`],
+                ['campaignExportAbTestPlanTitle', 'campaignExportCopyTestPlan', 'copyProjectWorkspaceCampaignTestPlanSection()', testPlan.ab_test_hypothesis || t('campaignExportNoData')],
+                ['campaignExportSafetyNotesTitle', 'campaignExportCopySafetyNotes', 'copyProjectWorkspaceCampaignSafetyNotes()', `${(safety.disabled_real_operations || []).length} ${t('campaignExportDisabledOperations')}`]
+            ];
+            return `
+                <div class="section-block" id="projectWorkspaceCampaignSectionsPanel">
+                    <div class="json-key">${escapeHTML(t('campaignExportSectionsTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('campaignExportSectionsHelper'))}</div>
+                    <div class="graph-os-compact-grid">${cards.map(([titleKey, buttonKey, handler, summary]) => `
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t(titleKey))}</strong>
+                            <div>${escapeHTML(summary)}</div>
+                            <button class="btn-secondary" type="button" onclick="${handler}">${escapeHTML(t(buttonKey))}</button>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCampaignExportManifestPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
+            if (!pack.has_campaign_export_pack) return '';
+            const manifest = pack.export_manifest || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCampaignExportManifestPanel">
+                    <div class="json-key">${escapeHTML(t('campaignExportManifestTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('campaignExportManifestHelper'))}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('campaignExportMarkdownReady'), boolText(Boolean(manifest.markdown_export_ready)))}
+                        ${metricPill(t('campaignExportJsonReady'), boolText(Boolean(manifest.json_export_ready)))}
+                        ${metricPill(t('campaignExportIncludedSections'), String((manifest.included_sections || []).length))}
+                        ${metricPill(t('campaignExportCopyTargets'), String((manifest.copy_targets || []).length))}
+                    </div>
+                    <div><strong>${escapeHTML(t('campaignExportIncludedSections'))}:</strong> ${escapeHTML((manifest.included_sections || []).join(', ') || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('campaignExportCopyTargets'))}:</strong> ${escapeHTML((manifest.copy_targets || []).join(', ') || t('none'))}</div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('campaignExportExcludedOperations'))}:</strong> ${escapeHTML((manifest.excluded_real_operations || []).join(' | ') || t('none'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -17497,6 +17847,7 @@
                 projectWorkspaceExportCreativeAssetPackMarkdown(workspace),
                 projectWorkspaceExportMultiPlatformAssetPackMarkdown(workspace),
                 projectWorkspaceExportAssetQualityGateMarkdown(workspace),
+                projectWorkspaceExportCampaignPackMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -17577,6 +17928,7 @@
                 creative_asset_pack: projectWorkspaceExportCreativeAssetPackSnapshot(workspace),
                 multi_platform_asset_pack: projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace),
                 asset_quality_gate_pack: projectWorkspaceExportAssetQualityGateSnapshot(workspace),
+                campaign_export_pack: projectWorkspaceExportCampaignPackSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -29999,6 +30351,10 @@
                     ${renderProjectWorkspaceAssetQualityCardsPanel(workspace)}
                     ${renderProjectWorkspaceMissingAssetChecklistPanel(workspace)}
                     ${renderProjectWorkspaceAssetQualityFixActionsPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignExportSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignBriefPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignSectionsPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignExportManifestPanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -37178,6 +37534,154 @@
             assetQualityGuidanceOnly: '\u4ec5\u4f5c\u5efa\u8bae\u3002\u4e0d\u6267\u884c provider\u3001LLM\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001restore\u3001rollback \u6216\u53cd\u9988\u6301\u4e45\u5316\u64cd\u4f5c\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            campaignExportPackTitle: 'Campaign Export Pack',
+            campaignExportPackHelper: 'Review and copy the evidence, creative, platform, quality, test, and safety handoff without running external operations.',
+            campaignExportCampaignTitle: 'Campaign title',
+            campaignExportRecommendedVersion: 'Recommended version',
+            campaignExportRecommendedPlatformPack: 'Recommended platform pack',
+            campaignExportRecommendedReadyPack: 'Recommended ready pack',
+            campaignExportReadiness: 'Campaign readiness',
+            campaignExportQualityScore: 'Quality score',
+            campaignExportTopRisk: 'Top risk note',
+            campaignExportNextAction: 'Recommended next action',
+            campaignExportGuidanceOnly: 'Copy/export guidance only. Provider, LLM, video, media, paid, registry, restore, rollback, and feedback persistence remain disabled.',
+            campaignExportCampaignBriefTitle: 'Campaign Brief',
+            campaignExportCampaignBriefHelper: 'Keep the target customer, evidence, message, risk, and claim boundary together for production handoff.',
+            campaignExportTargetCustomer: 'Target customer',
+            campaignExportBuyerPain: 'Buyer pain',
+            campaignExportBuyerObjection: 'Buyer objection',
+            campaignExportCreativeAngle: 'Creative angle',
+            campaignExportRecommendedMessage: 'Recommended message',
+            campaignExportProofQuote: 'Proof quote',
+            campaignExportRiskNote: 'Risk note',
+            campaignExportDoNotClaim: 'Do not claim',
+            campaignExportSectionsTitle: 'Campaign Sections',
+            campaignExportSectionsHelper: 'Copy each campaign handoff section independently or copy the full pack.',
+            campaignExportEvidenceTitle: 'Evidence',
+            campaignExportCreativeScriptTitle: 'Creative Script',
+            campaignExportPlatformAssetsTitle: 'Platform Assets',
+            campaignExportQualityGateTitle: 'Quality Gate',
+            campaignExportAbTestPlanTitle: 'A-B Test Plan',
+            campaignExportSafetyNotesTitle: 'Safety Notes',
+            campaignExportEvidenceSummary: 'Evidence summary',
+            campaignExportProofQuotes: 'Proof quotes',
+            campaignExportEvidenceWarnings: 'Evidence warnings',
+            campaignExportSourceBreakdown: 'Source breakdown',
+            campaignExportRecommendedHook: 'Recommended hook',
+            campaignExportScene: 'Scene',
+            campaignExportCta: 'CTA',
+            campaignExportCopyReadyScript: 'Copy-ready script',
+            campaignExportShootingScript: 'Shooting script',
+            campaignExportShotList: 'Shot list',
+            campaignExportKeyframePrompts: 'Keyframe prompts',
+            campaignExportSubtitleLines: 'Subtitle lines',
+            campaignExportCaptionVariants: 'Caption variants',
+            campaignExportThumbnailPrompt: 'Thumbnail prompt',
+            campaignExportQualityTier: 'Quality tier',
+            campaignExportDeliveryReadiness: 'Delivery readiness',
+            campaignExportFixRecommendations: 'Fix recommendations',
+            campaignExportHypothesis: 'A/B test hypothesis',
+            campaignExportPrimaryMetric: 'Primary metric',
+            campaignExportSecondaryMetric: 'Secondary metric',
+            campaignExportSafeLaunchNote: 'Safe launch note',
+            campaignExportRiskNotes: 'Risk notes',
+            campaignExportDisabledOperations: 'Disabled real operations',
+            campaignExportManifestTitle: 'Export Manifest',
+            campaignExportManifestHelper: 'Confirm included sections, copy targets, export readiness, and excluded real operations.',
+            campaignExportIncludedSections: 'Included sections',
+            campaignExportCopyTargets: 'Copy targets',
+            campaignExportMarkdownReady: 'Markdown export ready',
+            campaignExportJsonReady: 'JSON export ready',
+            campaignExportExcludedOperations: 'Excluded real operations',
+            campaignExportCopyCampaignBrief: 'Copy full campaign brief',
+            campaignExportCopyEvidence: 'Copy evidence section',
+            campaignExportCopyCreativeScript: 'Copy creative script section',
+            campaignExportCopyPlatformAssets: 'Copy platform assets section',
+            campaignExportCopyQualityGate: 'Copy quality gate section',
+            campaignExportCopyTestPlan: 'Copy test plan section',
+            campaignExportCopySafetyNotes: 'Copy safety notes',
+            campaignExportCopyFullPack: 'Copy full campaign export pack',
+            campaignExportCopied: 'Campaign export content copied.',
+            campaignExportCopyFailed: 'Unable to copy campaign export content.',
+            campaignExportCopyNoData: 'No campaign export content is available to copy.',
+            campaignExportNoData: 'No campaign export pack is available.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            campaignExportPackTitle: '\u6d3b\u52a8\u5bfc\u51fa\u5305',
+            campaignExportPackHelper: '\u5728\u4e0d\u6267\u884c\u5916\u90e8\u64cd\u4f5c\u7684\u524d\u63d0\u4e0b\uff0c\u5ba1\u9605\u5e76\u590d\u5236\u8bc1\u636e\u3001\u521b\u610f\u3001\u5e73\u53f0\u8d44\u4ea7\u3001\u8d28\u91cf\u3001\u6d4b\u8bd5\u548c\u5b89\u5168\u4ea4\u63a5\u5185\u5bb9\u3002',
+            campaignExportCampaignTitle: '\u6d3b\u52a8\u6807\u9898',
+            campaignExportRecommendedVersion: '\u63a8\u8350\u7248\u672c',
+            campaignExportRecommendedPlatformPack: '\u63a8\u8350\u5e73\u53f0\u7d20\u6750\u5305',
+            campaignExportRecommendedReadyPack: '\u63a8\u8350\u5c31\u7eea\u7d20\u6750\u5305',
+            campaignExportReadiness: '\u6d3b\u52a8\u5c31\u7eea\u5ea6',
+            campaignExportQualityScore: '\u8d28\u91cf\u8bc4\u5206',
+            campaignExportTopRisk: '\u9996\u8981\u98ce\u9669\u63d0\u793a',
+            campaignExportNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            campaignExportGuidanceOnly: '\u4ec5\u7528\u4e8e\u590d\u5236\u548c\u5bfc\u51fa\u5efa\u8bae\u3002Provider\u3001LLM\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001restore\u3001rollback \u548c\u53cd\u9988\u6301\u4e45\u5316\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            campaignExportCampaignBriefTitle: '\u6d3b\u52a8\u7b80\u62a5',
+            campaignExportCampaignBriefHelper: '\u628a\u76ee\u6807\u7528\u6237\u3001\u8bc1\u636e\u3001\u4fe1\u606f\u3001\u98ce\u9669\u548c\u4e3b\u5f20\u8fb9\u754c\u653e\u5728\u540c\u4e00\u4e2a\u5236\u4f5c\u4ea4\u63a5\u4e2d\u3002',
+            campaignExportTargetCustomer: '\u76ee\u6807\u7528\u6237',
+            campaignExportBuyerPain: '\u4e70\u5bb6\u75db\u70b9',
+            campaignExportBuyerObjection: '\u8d2d\u4e70\u987e\u8651',
+            campaignExportCreativeAngle: '\u521b\u610f\u89d2\u5ea6',
+            campaignExportRecommendedMessage: '\u63a8\u8350\u4fe1\u606f',
+            campaignExportProofQuote: '\u8bc1\u636e\u539f\u8bdd',
+            campaignExportRiskNote: '\u98ce\u9669\u63d0\u793a',
+            campaignExportDoNotClaim: '\u7981\u6b62\u4e3b\u5f20',
+            campaignExportSectionsTitle: '\u6d3b\u52a8\u5206\u533a',
+            campaignExportSectionsHelper: '\u53ef\u5206\u522b\u590d\u5236\u5404\u4e2a\u6d3b\u52a8\u4ea4\u63a5\u5206\u533a\uff0c\u4e5f\u53ef\u590d\u5236\u5b8c\u6574\u5bfc\u51fa\u5305\u3002',
+            campaignExportEvidenceTitle: '\u8bc1\u636e',
+            campaignExportCreativeScriptTitle: '\u521b\u610f\u811a\u672c',
+            campaignExportPlatformAssetsTitle: '\u5e73\u53f0\u8d44\u4ea7',
+            campaignExportQualityGateTitle: '\u8d28\u91cf\u95e8\u7981',
+            campaignExportAbTestPlanTitle: 'A-B \u6d4b\u8bd5\u8ba1\u5212',
+            campaignExportSafetyNotesTitle: '\u5b89\u5168\u63d0\u793a',
+            campaignExportEvidenceSummary: '\u8bc1\u636e\u6458\u8981',
+            campaignExportProofQuotes: '\u8bc1\u636e\u539f\u8bdd',
+            campaignExportEvidenceWarnings: '\u8bc1\u636e\u8b66\u544a',
+            campaignExportSourceBreakdown: '\u6765\u6e90\u5206\u5e03',
+            campaignExportRecommendedHook: '\u63a8\u8350 Hook',
+            campaignExportScene: '\u955c\u5934',
+            campaignExportCta: 'CTA',
+            campaignExportCopyReadyScript: '\u53ef\u590d\u5236\u811a\u672c',
+            campaignExportShootingScript: '\u62cd\u6444\u811a\u672c',
+            campaignExportShotList: '\u955c\u5934\u6e05\u5355',
+            campaignExportKeyframePrompts: '\u5173\u952e\u5e27\u63d0\u793a\u8bcd',
+            campaignExportSubtitleLines: '\u5b57\u5e55\u884c',
+            campaignExportCaptionVariants: '\u53d1\u5e03\u6587\u6848\u53d8\u4f53',
+            campaignExportThumbnailPrompt: '\u5c01\u9762\u63d0\u793a\u8bcd',
+            campaignExportQualityTier: '\u8d28\u91cf\u7b49\u7ea7',
+            campaignExportDeliveryReadiness: '\u4ea4\u4ed8\u5c31\u7eea\u5ea6',
+            campaignExportFixRecommendations: '\u4fee\u590d\u5efa\u8bae',
+            campaignExportHypothesis: 'A/B \u6d4b\u8bd5\u5047\u8bbe',
+            campaignExportPrimaryMetric: '\u4e3b\u8981\u6307\u6807',
+            campaignExportSecondaryMetric: '\u6b21\u8981\u6307\u6807',
+            campaignExportSafeLaunchNote: '\u5b89\u5168\u542f\u52a8\u8bf4\u660e',
+            campaignExportRiskNotes: '\u98ce\u9669\u63d0\u793a',
+            campaignExportDisabledOperations: '\u5df2\u7981\u7528\u7684\u771f\u5b9e\u64cd\u4f5c',
+            campaignExportManifestTitle: '\u5bfc\u51fa\u6e05\u5355',
+            campaignExportManifestHelper: '\u786e\u8ba4\u5305\u542b\u7684\u5206\u533a\u3001\u590d\u5236\u76ee\u6807\u3001\u5bfc\u51fa\u5c31\u7eea\u5ea6\u548c\u5df2\u6392\u9664\u7684\u771f\u5b9e\u64cd\u4f5c\u3002',
+            campaignExportIncludedSections: '\u5305\u542b\u5206\u533a',
+            campaignExportCopyTargets: '\u590d\u5236\u76ee\u6807',
+            campaignExportMarkdownReady: 'Markdown \u5bfc\u51fa\u5df2\u5c31\u7eea',
+            campaignExportJsonReady: 'JSON \u5bfc\u51fa\u5df2\u5c31\u7eea',
+            campaignExportExcludedOperations: '\u5df2\u6392\u9664\u7684\u771f\u5b9e\u64cd\u4f5c',
+            campaignExportCopyCampaignBrief: '\u590d\u5236\u5b8c\u6574\u6d3b\u52a8\u7b80\u62a5',
+            campaignExportCopyEvidence: '\u590d\u5236\u8bc1\u636e\u5206\u533a',
+            campaignExportCopyCreativeScript: '\u590d\u5236\u521b\u610f\u811a\u672c\u5206\u533a',
+            campaignExportCopyPlatformAssets: '\u590d\u5236\u5e73\u53f0\u8d44\u4ea7\u5206\u533a',
+            campaignExportCopyQualityGate: '\u590d\u5236\u8d28\u91cf\u95e8\u7981\u5206\u533a',
+            campaignExportCopyTestPlan: '\u590d\u5236\u6d4b\u8bd5\u8ba1\u5212\u5206\u533a',
+            campaignExportCopySafetyNotes: '\u590d\u5236\u5b89\u5168\u63d0\u793a',
+            campaignExportCopyFullPack: '\u590d\u5236\u5b8c\u6574\u6d3b\u52a8\u5bfc\u51fa\u5305',
+            campaignExportCopied: '\u6d3b\u52a8\u5bfc\u51fa\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            campaignExportCopyFailed: '\u65e0\u6cd5\u590d\u5236\u6d3b\u52a8\u5bfc\u51fa\u5185\u5bb9\u3002',
+            campaignExportCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u6d3b\u52a8\u5bfc\u51fa\u5185\u5bb9\u3002',
+            campaignExportNoData: '\u6682\u65e0\u6d3b\u52a8\u5bfc\u51fa\u5305\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -38570,6 +39074,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectAssetQualityGatePack = latestProjectCreativeDecisionPack.asset_quality_gate_pack
       || latestProjectCreativeVariantPack.asset_quality_gate_pack
       || {};
+    latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
