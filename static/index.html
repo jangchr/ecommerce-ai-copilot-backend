@@ -3596,6 +3596,7 @@
         let latestProjectCreativeTestFeedbackPack = {};
         let latestProjectCreativeIterationPack = {};
         let latestProjectCreativeVersionControlPack = {};
+        let latestProjectCreativeAssetPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8861,6 +8862,9 @@
                     || {};
                 latestProjectCreativeVersionControlPack = latestProjectCreativeDecisionPack.creative_version_control_pack
                     || latestProjectCreativeVariantPack.creative_version_control_pack
+                    || {};
+                latestProjectCreativeAssetPack = latestProjectCreativeDecisionPack.creative_asset_pack
+                    || latestProjectCreativeVariantPack.creative_asset_pack
                     || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -14694,6 +14698,7 @@
         const PROJECT_WORKSPACE_CREATIVE_TEST_FEEDBACK_MARKER = 'Project Workspace creative test feedback bundle';
         const PROJECT_WORKSPACE_CREATIVE_ITERATION_MARKER = 'Project Workspace creative iteration bundle';
         const PROJECT_WORKSPACE_CREATIVE_VERSION_CONTROL_MARKER = 'Project Workspace creative version control bundle';
+        const PROJECT_WORKSPACE_CREATIVE_ASSET_PACK_MARKER = 'Project Workspace creative asset pack bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -15411,6 +15416,162 @@
 
         function copyProjectWorkspaceCreativeVersionRiskSummary() {
             return copyProjectWorkspaceCreativeVersionControlText('risk');
+        }
+
+        function projectWorkspaceCreativeAssetPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCreativeAssetPack
+                && Object.keys(latestProjectCreativeAssetPack).length) {
+                return latestProjectCreativeAssetPack;
+            }
+            const decisionPack = projectWorkspaceCreativeDecisionPackFromWorkspace(workspace);
+            return decisionPack?.creative_asset_pack
+                || decisionPack?.creative_variant_pack?.creative_asset_pack
+                || {};
+        }
+
+        function projectWorkspaceExportCreativeAssetPackSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCreativeAssetPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CREATIVE_ASSET_PACK_MARKER,
+                has_creative_asset_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                asset_pack_summary: pack.asset_pack_summary || {},
+                source_version_id: pack.source_version_id || '',
+                recommended_asset_pack_id: pack.recommended_asset_pack_id || '',
+                asset_packs: Array.isArray(pack.asset_packs) ? pack.asset_packs : [],
+                asset_quality_checks: pack.asset_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceRecommendedCreativeAsset(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeAssetPackSnapshot(workspace);
+            return pack.asset_packs.find((asset) =>
+                asset.asset_pack_id === pack.recommended_asset_pack_id
+            ) || pack.asset_packs[0] || {};
+        }
+
+        function projectWorkspaceCreativeShootingScriptText(asset = {}) {
+            const script = asset.shooting_script || {};
+            if (!script.hook && !script.scene_1) return '';
+            return [
+                `${t('creativeAssetHook')}: ${script.hook || t('none')}`,
+                `${t('creativeAssetScene')} 1: ${script.scene_1 || t('none')}`,
+                `${t('creativeAssetScene')} 2: ${script.scene_2 || t('none')}`,
+                `${t('creativeAssetScene')} 3: ${script.scene_3 || t('none')}`,
+                `${t('creativeAssetCta')}: ${script.cta || t('none')}`,
+                `${t('creativeAssetProofQuote')}: ${script.proof_quote || t('creativeDecisionMissingQuote')}`,
+                `${t('creativeAssetRiskNote')}: ${script.risk_note || t('none')}`,
+                `${t('creativeAssetDoNotClaim')}: ${(script.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCreativeKeyframePromptsText(asset = {}) {
+            return (asset.keyframe_prompts || []).map((keyframe) => [
+                `${keyframe.keyframe_id || keyframe.scene_ref || t('creativeAssetKeyframePromptsTitle')}`,
+                `${t('creativeAssetSceneRef')}: ${keyframe.scene_ref || t('none')}`,
+                `${t('creativeAssetPrompt')}: ${keyframe.prompt || t('none')}`,
+                `${t('creativeAssetVisualStyle')}: ${keyframe.visual_style || t('none')}`,
+                `${t('creativeAssetEvidenceLink')}: ${keyframe.evidence_link || t('creativeDecisionMissingQuote')}`,
+                `${t('creativeAssetDoNotClaim')}: ${(keyframe.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n')).join('\n\n');
+        }
+
+        function projectWorkspaceCreativeSubtitleLinesText(asset = {}) {
+            return (asset.subtitle_lines || []).map((line) =>
+                `${line.timestamp_hint || ''} [${line.scene_ref || ''}] ${line.subtitle_text || ''}`.trim()
+            ).filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceCreativeCaptionVariantsText(asset = {}) {
+            const captions = asset.caption_variants || {};
+            return [
+                `${t('creativeAssetShortCaption')}: ${captions.short_caption || t('none')}`,
+                `${t('creativeAssetBenefitCaption')}: ${captions.benefit_caption || t('none')}`,
+                `${t('creativeAssetProofCaption')}: ${captions.proof_caption || t('none')}`,
+                `${t('creativeAssetSafeClaimCaption')}: ${captions.safe_claim_caption || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportCreativeAssetPackMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeAssetPackSnapshot(workspace);
+            const asset = projectWorkspaceRecommendedCreativeAsset(workspace);
+            if (!pack.has_creative_asset_pack || !asset.asset_pack_id) return '';
+            return [
+                `## ${t('creativeAssetPackTitle')}`,
+                `${t('creativeAssetSourceVersion')}: ${asset.source_version_id || pack.source_version_id || t('none')}`,
+                `${t('creativeAssetReadiness')}: ${asset.asset_readiness || t('none')}`,
+                `${t('creativeAssetTargetPlatform')}: ${asset.target_platform || t('none')}`,
+                `${t('creativeAssetTargetFormat')}: ${asset.target_format || t('none')}`,
+                `${t('creativeAssetTargetLength')}: ${asset.target_length_seconds || 0}s`,
+                '',
+                `### ${t('creativeAssetShootingScriptTitle')}`,
+                projectWorkspaceCreativeShootingScriptText(asset),
+                '',
+                `### ${t('creativeAssetKeyframePromptsTitle')}`,
+                projectWorkspaceCreativeKeyframePromptsText(asset),
+                '',
+                `### ${t('creativeAssetSubtitleLinesTitle')}`,
+                projectWorkspaceCreativeSubtitleLinesText(asset),
+                '',
+                `### ${t('creativeAssetCaptionVariantsTitle')}`,
+                projectWorkspaceCreativeCaptionVariantsText(asset),
+                '',
+                `### ${t('creativeAssetThumbnailPrompt')}`,
+                asset.thumbnail_prompt || t('none'),
+                '',
+                `### ${t('creativeAssetSafetyNotesTitle')}`,
+                `${t('creativeAssetRiskNote')}: ${(asset.risk_notes || []).join(' | ') || t('none')}`,
+                `${t('creativeAssetDoNotClaim')}: ${(asset.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCreativeAssetText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceCreativeAssetPackStatus');
+            const asset = projectWorkspaceRecommendedCreativeAsset();
+            let text = '';
+            if (kind === 'script') {
+                text = projectWorkspaceCreativeShootingScriptText(asset);
+            } else if (kind === 'keyframes') {
+                text = projectWorkspaceCreativeKeyframePromptsText(asset);
+            } else if (kind === 'subtitles') {
+                text = projectWorkspaceCreativeSubtitleLinesText(asset);
+            } else if (kind === 'captions') {
+                text = projectWorkspaceCreativeCaptionVariantsText(asset);
+            } else {
+                text = projectWorkspaceExportCreativeAssetPackMarkdown();
+            }
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('creativeAssetCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('creativeAssetCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('creativeAssetCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('creativeAssetCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceCreativeShootingScript() {
+            return copyProjectWorkspaceCreativeAssetText('script');
+        }
+
+        function copyProjectWorkspaceCreativeKeyframePrompts() {
+            return copyProjectWorkspaceCreativeAssetText('keyframes');
+        }
+
+        function copyProjectWorkspaceCreativeSubtitleLines() {
+            return copyProjectWorkspaceCreativeAssetText('subtitles');
+        }
+
+        function copyProjectWorkspaceCreativeCaptionVariants() {
+            return copyProjectWorkspaceCreativeAssetText('captions');
+        }
+
+        function copyProjectWorkspaceCreativeFullAssetPack() {
+            return copyProjectWorkspaceCreativeAssetText('full');
         }
 
         function projectWorkspaceExportCreativeIterationSnapshot(workspace = latestProjectWorkspace) {
@@ -16310,6 +16471,147 @@
             `;
         }
 
+        function renderProjectWorkspaceCreativeAssetPackSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCreativeAssetPackSnapshot(workspace);
+            if (!pack.has_creative_asset_pack) return '';
+            const summary = pack.asset_pack_summary || {};
+            const asset = projectWorkspaceRecommendedCreativeAsset(workspace);
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeAssetPackSummaryPanel"
+                    data-creative-asset-pack-marker="${PROJECT_WORKSPACE_CREATIVE_ASSET_PACK_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeAssetPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeAssetPackHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-primary" type="button"
+                                onclick="copyProjectWorkspaceCreativeFullAssetPack()">${escapeHTML(t('creativeAssetCopyFullPack'))}</button>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('creativeAssetPackCount'), String(summary.asset_pack_count || 0))}
+                        ${metricPill(t('creativeAssetSourceVersion'), asset.source_version_id || pack.source_version_id || t('none'))}
+                        ${metricPill(t('creativeAssetReadiness'), asset.asset_readiness || summary.asset_readiness || t('none'))}
+                        ${metricPill(t('creativeAssetEvidenceScore'), String(asset.evidence_strength_score || summary.evidence_strength_score || 0))}
+                    </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(asset.asset_pack_title || t('creativeAssetNoData'))}</strong>
+                        <div>${escapeHTML(t('creativeAssetTargetPlatform'))}: ${escapeHTML(asset.target_platform || t('none'))}</div>
+                        <div>${escapeHTML(t('creativeAssetTargetFormat'))}: ${escapeHTML(asset.target_format || t('none'))}</div>
+                        <div>${escapeHTML(t('creativeAssetTargetLength'))}: ${escapeHTML(String(asset.target_length_seconds || 0))}s</div>
+                    </div>
+                    <div class="field-helper">${escapeHTML(t('creativeAssetGuidanceOnly'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCreativeAssetPackStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeShootingScriptPanel(workspace = latestProjectWorkspace) {
+            const asset = projectWorkspaceRecommendedCreativeAsset(workspace);
+            if (!asset.asset_pack_id) return '';
+            const script = asset.shooting_script || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeShootingScriptPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeAssetShootingScriptTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeAssetShootingScriptHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceCreativeShootingScript()">${escapeHTML(t('creativeAssetCopyShootingScript'))}</button>
+                    </div>
+                    <div class="graph-os-card">
+                        <div><strong>${escapeHTML(t('creativeAssetHook'))}:</strong> ${escapeHTML(script.hook || t('none'))}</div>
+                        <div><strong>${escapeHTML(t('creativeAssetScene'))} 1:</strong> ${escapeHTML(script.scene_1 || t('none'))}</div>
+                        <div><strong>${escapeHTML(t('creativeAssetScene'))} 2:</strong> ${escapeHTML(script.scene_2 || t('none'))}</div>
+                        <div><strong>${escapeHTML(t('creativeAssetScene'))} 3:</strong> ${escapeHTML(script.scene_3 || t('none'))}</div>
+                        <div><strong>${escapeHTML(t('creativeAssetCta'))}:</strong> ${escapeHTML(script.cta || t('none'))}</div>
+                        <div class="feedback-box"><strong>${escapeHTML(t('creativeAssetProofQuote'))}:</strong> ${escapeHTML(script.proof_quote || t('creativeDecisionMissingQuote'))}</div>
+                        <div class="demo-warning"><strong>${escapeHTML(t('creativeAssetRiskNote'))}:</strong> ${escapeHTML(script.risk_note || t('none'))}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeVideoAssetsPanel(workspace = latestProjectWorkspace) {
+            const asset = projectWorkspaceRecommendedCreativeAsset(workspace);
+            if (!asset.asset_pack_id) return '';
+            const keyframes = asset.keyframe_prompts || [];
+            const bRollNotes = asset.b_roll_notes || [];
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeVideoAssetsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeAssetKeyframePromptsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeAssetVideoAssetsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceCreativeKeyframePrompts()">${escapeHTML(t('creativeAssetCopyKeyframes'))}</button>
+                    </div>
+                    <div class="graph-os-grid">${keyframes.map((keyframe) => `
+                        <div class="graph-os-card">
+                            <div class="section-header">
+                                <strong>${escapeHTML(keyframe.keyframe_id || keyframe.scene_ref || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(keyframe.scene_ref || t('none'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('creativeAssetPrompt'))}:</strong> ${escapeHTML(keyframe.prompt || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('creativeAssetVisualStyle'))}:</strong> ${escapeHTML(keyframe.visual_style || t('none'))}</div>
+                            <div class="feedback-box"><strong>${escapeHTML(t('creativeAssetEvidenceLink'))}:</strong> ${escapeHTML(keyframe.evidence_link || t('creativeDecisionMissingQuote'))}</div>
+                        </div>
+                    `).join('')}</div>
+                    <div class="json-key">${escapeHTML(t('creativeAssetThumbnailPrompt'))}</div>
+                    <div class="feedback-box">${escapeHTML(asset.thumbnail_prompt || t('none'))}</div>
+                    <div class="json-key">${escapeHTML(t('creativeAssetBRollNotes'))}</div>
+                    ${bRollNotes.length
+                        ? bRollNotes.map((note) => `<div class="artifact-timeline-row">${escapeHTML(note)}</div>`).join('')
+                        : `<div class="recent-empty">${escapeHTML(t('creativeAssetNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCreativeCaptionAssetsPanel(workspace = latestProjectWorkspace) {
+            const asset = projectWorkspaceRecommendedCreativeAsset(workspace);
+            if (!asset.asset_pack_id) return '';
+            const subtitles = asset.subtitle_lines || [];
+            const captions = asset.caption_variants || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCreativeCaptionAssetsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('creativeAssetSubtitleLinesTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('creativeAssetCaptionAssetsHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeSubtitleLines()">${escapeHTML(t('creativeAssetCopySubtitles'))}</button>
+                            <button class="btn-secondary" type="button"
+                                onclick="copyProjectWorkspaceCreativeCaptionVariants()">${escapeHTML(t('creativeAssetCopyCaptions'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">${subtitles.map((line) => `
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(line.timestamp_hint || line.line_id || t('none'))}</strong>
+                            <div>${escapeHTML(line.subtitle_text || t('none'))}</div>
+                            <div class="field-helper">${escapeHTML(line.scene_ref || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>
+                    <div class="json-key">${escapeHTML(t('creativeAssetCaptionVariantsTitle'))}</div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeAssetShortCaption'))}</strong><div>${escapeHTML(captions.short_caption || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeAssetBenefitCaption'))}</strong><div>${escapeHTML(captions.benefit_caption || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeAssetProofCaption'))}</strong><div>${escapeHTML(captions.proof_caption || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('creativeAssetSafeClaimCaption'))}</strong><div>${escapeHTML(captions.safe_claim_caption || t('none'))}</div></div>
+                    </div>
+                    <div class="demo-warning">
+                        <strong>${escapeHTML(t('creativeAssetSafetyNotesTitle'))}</strong>
+                        <div>${escapeHTML((asset.risk_notes || []).join(' | ') || t('none'))}</div>
+                        <div>${escapeHTML((asset.do_not_claim || []).join(' | ') || t('none'))}</div>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -16676,6 +16978,7 @@
                 projectWorkspaceExportCreativeTestFeedbackMarkdown(workspace),
                 projectWorkspaceExportCreativeIterationMarkdown(workspace),
                 projectWorkspaceExportCreativeVersionControlMarkdown(workspace),
+                projectWorkspaceExportCreativeAssetPackMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -16753,6 +17056,7 @@
                 creative_test_feedback_pack: projectWorkspaceExportCreativeTestFeedbackSnapshot(workspace),
                 creative_iteration_pack: projectWorkspaceExportCreativeIterationSnapshot(workspace),
                 creative_version_control_pack: projectWorkspaceExportCreativeVersionControlSnapshot(workspace),
+                creative_asset_pack: projectWorkspaceExportCreativeAssetPackSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -29164,6 +29468,10 @@
                     ${renderProjectWorkspaceCreativeVersionTimelinePanel(workspace)}
                     ${renderProjectWorkspaceCreativeVersionComparisonPanel(workspace)}
                     ${renderProjectWorkspaceCreativeVersionRiskSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeAssetPackSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeShootingScriptPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeVideoAssetsPanel(workspace)}
+                    ${renderProjectWorkspaceCreativeCaptionAssetsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -36091,6 +36399,98 @@
             creativeVersionGuidanceOnly: '\u4ec5\u4f5c\u5efa\u8bae\u3002\u672c\u5de5\u4f5c\u533a\u4e0d\u8c03\u7528 provider\u3001\u4e0d\u751f\u6210\u5a92\u4f53\u3001\u4e0d\u6301\u4e45\u5316\u53cd\u9988\u3001\u4e0d\u6267\u884c\u4ed8\u8d39\u64cd\u4f5c\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            creativeAssetPackTitle: 'Creative Asset Pack',
+            creativeAssetPackHelper: 'Turn the recommended evidence-grounded version into a copy-ready production handoff.',
+            creativeAssetPackCount: 'Asset packs',
+            creativeAssetSourceVersion: 'Source version',
+            creativeAssetReadiness: 'Asset readiness',
+            creativeAssetEvidenceScore: 'Evidence score',
+            creativeAssetTargetPlatform: 'Target platform',
+            creativeAssetTargetFormat: 'Target format',
+            creativeAssetTargetLength: 'Target length',
+            creativeAssetShootingScriptTitle: 'Shooting Script',
+            creativeAssetShootingScriptHelper: 'Use the evidence-bound hook, three scenes, CTA, quote, and risk note as the shooting spine.',
+            creativeAssetKeyframePromptsTitle: 'Keyframe Prompts',
+            creativeAssetVideoAssetsHelper: 'Prepare keyframes, thumbnail direction, and B-roll notes without triggering media generation.',
+            creativeAssetSubtitleLinesTitle: 'Subtitle Lines',
+            creativeAssetCaptionAssetsHelper: 'Review timed subtitles and safe caption variants before production.',
+            creativeAssetCaptionVariantsTitle: 'Caption Variants',
+            creativeAssetThumbnailPrompt: 'Thumbnail Prompt',
+            creativeAssetBRollNotes: 'B-roll Notes',
+            creativeAssetSafetyNotesTitle: 'Safety Notes',
+            creativeAssetHook: 'Hook',
+            creativeAssetScene: 'Scene',
+            creativeAssetCta: 'CTA',
+            creativeAssetProofQuote: 'Proof quote',
+            creativeAssetRiskNote: 'Risk note',
+            creativeAssetDoNotClaim: 'Do not claim',
+            creativeAssetSceneRef: 'Scene reference',
+            creativeAssetPrompt: 'Prompt',
+            creativeAssetVisualStyle: 'Visual style',
+            creativeAssetEvidenceLink: 'Evidence link',
+            creativeAssetShortCaption: 'Short caption',
+            creativeAssetBenefitCaption: 'Buyer-led caption',
+            creativeAssetProofCaption: 'Proof caption',
+            creativeAssetSafeClaimCaption: 'Safe-claim caption',
+            creativeAssetCopyFullPack: 'Copy Full Asset Pack',
+            creativeAssetCopyShootingScript: 'Copy Shooting Script',
+            creativeAssetCopyKeyframes: 'Copy Keyframe Prompts',
+            creativeAssetCopySubtitles: 'Copy Subtitle Lines',
+            creativeAssetCopyCaptions: 'Copy Caption Variants',
+            creativeAssetCopied: 'Creative asset content copied.',
+            creativeAssetCopyFailed: 'Unable to copy creative asset content.',
+            creativeAssetCopyNoData: 'No creative asset content is available to copy.',
+            creativeAssetNoData: 'No creative asset pack is available.',
+            creativeAssetGuidanceOnly: 'Guidance only. No provider, LLM, video, media, paid, registry, restore, rollback, or feedback persistence action is performed.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            creativeAssetPackTitle: '\u521b\u610f\u8d44\u4ea7\u5305',
+            creativeAssetPackHelper: '\u628a\u63a8\u8350\u7684\u8bc1\u636e\u578b\u7248\u672c\u6574\u7406\u4e3a\u53ef\u590d\u5236\u7684\u5236\u4f5c\u4ea4\u63a5\u5305\u3002',
+            creativeAssetPackCount: '\u8d44\u4ea7\u5305\u6570',
+            creativeAssetSourceVersion: '\u6765\u6e90\u7248\u672c',
+            creativeAssetReadiness: '\u8d44\u4ea7\u5c31\u7eea\u5ea6',
+            creativeAssetEvidenceScore: '\u8bc1\u636e\u5f3a\u5ea6',
+            creativeAssetTargetPlatform: '\u76ee\u6807\u5e73\u53f0',
+            creativeAssetTargetFormat: '\u76ee\u6807\u683c\u5f0f',
+            creativeAssetTargetLength: '\u76ee\u6807\u65f6\u957f',
+            creativeAssetShootingScriptTitle: '\u62cd\u6444\u811a\u672c',
+            creativeAssetShootingScriptHelper: '\u4f7f\u7528\u53d7\u8bc1\u636e\u7ea6\u675f\u7684 Hook\u3001\u4e09\u4e2a\u955c\u5934\u3001CTA\u3001\u539f\u8bdd\u548c\u98ce\u9669\u63d0\u793a\u4f5c\u4e3a\u62cd\u6444\u4e3b\u7ebf\u3002',
+            creativeAssetKeyframePromptsTitle: '\u5173\u952e\u5e27\u63d0\u793a\u8bcd',
+            creativeAssetVideoAssetsHelper: '\u6574\u7406\u5173\u952e\u5e27\u3001\u5c01\u9762\u65b9\u5411\u548c B-roll \u5907\u6ce8\uff0c\u4e0d\u89e6\u53d1\u5a92\u4f53\u751f\u6210\u3002',
+            creativeAssetSubtitleLinesTitle: '\u5b57\u5e55\u884c',
+            creativeAssetCaptionAssetsHelper: '\u5236\u4f5c\u524d\u5ba1\u9605\u5e26\u65f6\u95f4\u63d0\u793a\u7684\u5b57\u5e55\u548c\u5b89\u5168\u53d1\u5e03\u6587\u6848\u3002',
+            creativeAssetCaptionVariantsTitle: '\u53d1\u5e03\u6587\u6848\u53d8\u4f53',
+            creativeAssetThumbnailPrompt: '\u5c01\u9762\u63d0\u793a\u8bcd',
+            creativeAssetBRollNotes: 'B-roll \u5907\u6ce8',
+            creativeAssetSafetyNotesTitle: '\u5b89\u5168\u63d0\u793a',
+            creativeAssetHook: '\u5f00\u573a Hook',
+            creativeAssetScene: '\u955c\u5934',
+            creativeAssetCta: 'CTA',
+            creativeAssetProofQuote: '\u8bc1\u636e\u539f\u8bdd',
+            creativeAssetRiskNote: '\u98ce\u9669\u63d0\u793a',
+            creativeAssetDoNotClaim: '\u7981\u6b62\u4e3b\u5f20',
+            creativeAssetSceneRef: '\u5bf9\u5e94\u955c\u5934',
+            creativeAssetPrompt: '\u63d0\u793a\u8bcd',
+            creativeAssetVisualStyle: '\u753b\u9762\u98ce\u683c',
+            creativeAssetEvidenceLink: '\u8bc1\u636e\u5173\u8054',
+            creativeAssetShortCaption: '\u77ed\u6587\u6848',
+            creativeAssetBenefitCaption: '\u4e70\u5bb6\u89c6\u89d2\u6587\u6848',
+            creativeAssetProofCaption: '\u8bc1\u636e\u6587\u6848',
+            creativeAssetSafeClaimCaption: '\u5b89\u5168\u4e3b\u5f20\u6587\u6848',
+            creativeAssetCopyFullPack: '\u590d\u5236\u5b8c\u6574\u8d44\u4ea7\u5305',
+            creativeAssetCopyShootingScript: '\u590d\u5236\u62cd\u6444\u811a\u672c',
+            creativeAssetCopyKeyframes: '\u590d\u5236\u5173\u952e\u5e27\u63d0\u793a\u8bcd',
+            creativeAssetCopySubtitles: '\u590d\u5236\u5b57\u5e55\u884c',
+            creativeAssetCopyCaptions: '\u590d\u5236\u53d1\u5e03\u6587\u6848',
+            creativeAssetCopied: '\u521b\u610f\u8d44\u4ea7\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            creativeAssetCopyFailed: '\u65e0\u6cd5\u590d\u5236\u521b\u610f\u8d44\u4ea7\u5185\u5bb9\u3002',
+            creativeAssetCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u521b\u610f\u8d44\u4ea7\u5185\u5bb9\u3002',
+            creativeAssetNoData: '\u6682\u65e0\u521b\u610f\u8d44\u4ea7\u5305\u3002',
+            creativeAssetGuidanceOnly: '\u4ec5\u4f5c\u5efa\u8bae\u3002\u4e0d\u6267\u884c provider\u3001LLM\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001restore\u3001rollback \u6216\u53cd\u9988\u6301\u4e45\u5316\u64cd\u4f5c\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -37473,6 +37873,9 @@ async function analyzeExtensionWorkspace() {
       || {};
     latestProjectCreativeVersionControlPack = latestProjectCreativeDecisionPack.creative_version_control_pack
       || latestProjectCreativeVariantPack.creative_version_control_pack
+      || {};
+    latestProjectCreativeAssetPack = latestProjectCreativeDecisionPack.creative_asset_pack
+      || latestProjectCreativeVariantPack.creative_asset_pack
       || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),

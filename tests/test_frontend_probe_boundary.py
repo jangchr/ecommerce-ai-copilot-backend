@@ -8098,6 +8098,113 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertNotIn("fetch(", creative_section)
         self.assertNotIn("????", html)
 
+    def test_creative_asset_pack_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace creative asset pack bundle",
+            "PROJECT_WORKSPACE_CREATIVE_ASSET_PACK_MARKER",
+            "latestProjectCreativeAssetPack",
+            "projectWorkspaceCreativeAssetPackFromWorkspace",
+            "projectWorkspaceExportCreativeAssetPackSnapshot",
+            "projectWorkspaceExportCreativeAssetPackMarkdown",
+            "renderProjectWorkspaceCreativeAssetPackSummaryPanel",
+            "renderProjectWorkspaceCreativeShootingScriptPanel",
+            "renderProjectWorkspaceCreativeVideoAssetsPanel",
+            "renderProjectWorkspaceCreativeCaptionAssetsPanel",
+            "copyProjectWorkspaceCreativeShootingScript",
+            "copyProjectWorkspaceCreativeKeyframePrompts",
+            "copyProjectWorkspaceCreativeSubtitleLines",
+            "copyProjectWorkspaceCreativeCaptionVariants",
+            "copyProjectWorkspaceCreativeFullAssetPack",
+            "creative_asset_pack: projectWorkspaceExportCreativeAssetPackSnapshot(workspace)",
+            "Creative Asset Pack",
+            "Shooting Script",
+            "Keyframe Prompts",
+            "Subtitle Lines",
+            "Caption Variants",
+            "Thumbnail Prompt",
+            "B-roll Notes",
+            "Copy Full Asset Pack",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.asset_pack_summary",
+            "pack.asset_packs",
+            "pack.recommended_asset_pack_id",
+            "asset.shooting_script",
+            "asset.keyframe_prompts",
+            "asset.subtitle_lines",
+            "asset.caption_variants",
+            "asset.thumbnail_prompt",
+            "asset.b_roll_notes",
+            "asset.do_not_claim",
+        ]:
+            self.assertIn(runtime_field, html)
+        version_risk = html.index(
+            "${renderProjectWorkspaceCreativeVersionRiskSummaryPanel(workspace)}"
+        )
+        asset_summary = html.index(
+            "${renderProjectWorkspaceCreativeAssetPackSummaryPanel(workspace)}"
+        )
+        creative_export = html.index(
+            "${renderProjectWorkspaceCreativeExportPanel(workspace)}"
+        )
+        self.assertLess(version_risk, asset_summary)
+        self.assertLess(asset_summary, creative_export)
+
+    def test_creative_asset_pack_has_bilingual_copy_guard_and_safe_workspace_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "creativeAssetPackTitle",
+            "creativeAssetShootingScriptTitle",
+            "creativeAssetKeyframePromptsTitle",
+            "creativeAssetSubtitleLinesTitle",
+            "creativeAssetCaptionVariantsTitle",
+            "creativeAssetThumbnailPrompt",
+            "creativeAssetBRollNotes",
+            "creativeAssetCopyFullPack",
+            "creativeAssetCopied",
+            "creativeAssetCopyFailed",
+            "creativeAssetCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace creative asset pack bundle", script)
+            self.assertIn("project_workspace_creative_asset_pack_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportCreativeAssetPackMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceCreativeAssetText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "creativeAssetPackTitle",
+            "creativeAssetShootingScriptTitle",
+            "creativeAssetKeyframePromptsTitle",
+            "creativeAssetSubtitleLinesTitle",
+            "creativeAssetCaptionVariantsTitle",
+            "creativeAssetThumbnailPrompt",
+            "creativeAssetSafetyNotesTitle",
+        ]:
+            self.assertIn(key, markdown)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
+        creative_section = html[
+            html.index("const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER"):
+            governance_start
+        ]
+        self.assertNotIn("fetch(", creative_section)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
