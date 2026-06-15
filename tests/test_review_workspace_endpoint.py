@@ -2017,6 +2017,54 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
                 for value in multi_platform_pack["safety_boundaries"].values()
             )
         )
+        quality_gate = pack["asset_quality_gate_pack"]
+        self.assertEqual(
+            quality_gate["pack_version"],
+            "asset_quality_gate_pack_v1",
+        )
+        self.assertTrue(quality_gate["recommended_ready_pack_id"])
+        quality_cards = quality_gate["quality_cards"]
+        self.assertGreaterEqual(len(quality_cards), 9)
+        self.assertEqual(
+            {"tiktok", "instagram_reels", "youtube_shorts"},
+            {card["platform"] for card in quality_cards},
+        )
+        self.assertEqual(
+            {15, 30, 45},
+            {card["duration_seconds"] for card in quality_cards},
+        )
+        for card in quality_cards:
+            with self.subTest(quality_card_id=card["quality_card_id"]):
+                for score_name in [
+                    "overall_quality_score",
+                    "completeness_score",
+                    "script_readiness_score",
+                    "video_prompt_readiness_score",
+                    "evidence_coverage_score",
+                    "safety_score",
+                ]:
+                    self.assertGreaterEqual(card[score_name], 0)
+                    self.assertLessEqual(card[score_name], 100)
+                self.assertTrue(card["delivery_readiness"])
+                self.assertTrue(card["quality_tier"])
+                self.assertIsInstance(card["missing_items"], list)
+                self.assertIsInstance(card["risk_items"], list)
+                self.assertIsInstance(card["fix_recommendations"], list)
+        self.assertEqual(
+            1,
+            sum(card["is_recommended_ready_pack"] for card in quality_cards),
+        )
+        self.assertIsInstance(quality_gate["missing_asset_checklist"], list)
+        self.assertIsInstance(quality_gate["recommended_fix_actions"], list)
+        self.assertTrue(quality_gate["quality_export_snapshot"])
+        self.assertFalse(quality_gate["quality_checks"]["unsupported_claim"])
+        self.assertFalse(quality_gate["quality_checks"]["unsafe_provider_action"])
+        self.assertTrue(
+            all(
+                value is False
+                for value in quality_gate["safety_boundaries"].values()
+            )
+        )
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -2200,6 +2248,41 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
             all(
                 value is False
                 for value in multi_platform_pack["safety_boundaries"].values()
+            )
+        )
+        quality_gate = pack["asset_quality_gate_pack"]
+        self.assertFalse(quality_gate["recommended_ready_pack_id"])
+        self.assertTrue(quality_gate["quality_checks"]["weak_evidence"])
+        self.assertTrue(
+            quality_gate["quality_checks"]["low_evidence_marked_not_ready"]
+        )
+        self.assertTrue(
+            all(
+                card["delivery_readiness"] != "ready_for_human_review"
+                for card in quality_gate["quality_cards"]
+            )
+        )
+        self.assertTrue(
+            all(
+                card["safety_score"] <= 60
+                for card in quality_gate["quality_cards"]
+            )
+        )
+        self.assertTrue(
+            {
+                "strengthen_proof_quote",
+                "lower_claim_strength",
+            }.intersection(
+                {
+                    action["action_type"]
+                    for action in quality_gate["recommended_fix_actions"]
+                }
+            )
+        )
+        self.assertTrue(
+            all(
+                value is False
+                for value in quality_gate["safety_boundaries"].values()
             )
         )
         feedback = pack["creative_feedback_runtime"]

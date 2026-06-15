@@ -19664,6 +19664,437 @@ def _rw_multi_platform_asset_pack(
     }
 
 
+def _rw_asset_quality_gate_pack(
+    multi_platform_asset_pack: dict,
+    language: str,
+) -> dict:
+    platform_packs = list(multi_platform_asset_pack.get("platform_packs") or [])
+    platform_quality = dict(
+        multi_platform_asset_pack.get("platform_quality_checks") or {}
+    )
+    is_zh = language == "zh-CN"
+    quality_cards: list[dict] = []
+    missing_asset_checklist: list[dict] = []
+    recommended_fix_actions: list[dict] = []
+
+    def _score(parts: list[bool]) -> int:
+        return round(100 * sum(bool(part) for part in parts) / max(len(parts), 1))
+
+    def _add_missing(
+        pack_id: str,
+        check_type: str,
+        missing_item: str,
+        severity: str,
+        why_it_matters: str,
+        recommended_fix: str,
+        blocks_delivery: bool,
+    ) -> None:
+        check_id = f"{pack_id}_{check_type}_{len(missing_asset_checklist) + 1}"
+        missing_asset_checklist.append(
+            {
+                "check_id": check_id,
+                "platform_pack_id": pack_id,
+                "check_type": check_type,
+                "severity": severity,
+                "missing_item": missing_item,
+                "why_it_matters": why_it_matters,
+                "recommended_fix": recommended_fix,
+                "blocks_delivery": blocks_delivery,
+            }
+        )
+
+    for pack in platform_packs:
+        pack_id = _rw_text(pack.get("platform_pack_id"))
+        script = dict(pack.get("shooting_script") or {})
+        scenes = list(script.get("scenes") or [])
+        keyframes = list(pack.get("keyframe_prompts") or [])
+        subtitles = list(pack.get("subtitle_lines") or [])
+        captions = dict(pack.get("caption_variants") or {})
+        do_not_claim = list(pack.get("do_not_claim") or [])
+        proof_quotes = [
+            _rw_text(quote)
+            for quote in list(pack.get("proof_quotes") or [])
+            if _rw_text(quote)
+        ]
+        missing_quote = bool(script.get("missing_quote")) or not proof_quotes
+        evidence_strength = max(
+            0, min(100, int(pack.get("evidence_strength_score") or 0))
+        )
+        weak_evidence = (
+            missing_quote
+            or evidence_strength < 60
+            or _rw_text(pack.get("asset_readiness")) == "needs_evidence"
+        )
+        expected_scene_count = 2 if int(pack.get("duration_seconds") or 0) == 15 else 3
+
+        completeness_score = _score(
+            [
+                bool(script),
+                bool(pack.get("shot_list")),
+                bool(keyframes),
+                bool(subtitles),
+                bool(captions),
+                bool(_rw_text(pack.get("thumbnail_prompt"))),
+                bool(do_not_claim),
+            ]
+        )
+        script_readiness_score = _score(
+            [
+                bool(_rw_text(script.get("hook"))),
+                len(scenes) >= expected_scene_count,
+                bool(_rw_text(script.get("cta"))),
+                bool(proof_quotes),
+                bool(_rw_text(script.get("risk_note"))),
+            ]
+        )
+        video_prompt_readiness_score = _score(
+            [
+                len(keyframes) >= 2,
+                bool(pack.get("shot_list")),
+                all(_rw_text(item.get("visual_style")) for item in keyframes),
+                all(_rw_text(item.get("product_focus")) for item in keyframes),
+                all(bool(item.get("do_not_claim")) for item in keyframes),
+                bool(_rw_text(pack.get("thumbnail_prompt"))),
+            ]
+        )
+        evidence_coverage_score = evidence_strength
+        if missing_quote:
+            evidence_coverage_score = min(evidence_coverage_score, 35)
+        elif weak_evidence:
+            evidence_coverage_score = min(evidence_coverage_score, 55)
+        safety_score = 100 if do_not_claim else 50
+        if weak_evidence:
+            safety_score = min(safety_score, 60)
+        if missing_quote:
+            safety_score = min(safety_score, 40)
+        if platform_quality.get("unsupported_claim"):
+            safety_score = 0
+
+        missing_items: list[str] = []
+        if not subtitles:
+            missing_items.append("subtitle_lines")
+            _add_missing(
+                pack_id,
+                "subtitle",
+                "subtitle_lines",
+                "medium",
+                "Readable subtitles are required for short-form delivery.",
+                "Add concise subtitle lines aligned to the existing script.",
+                False,
+            )
+        if not keyframes:
+            missing_items.append("keyframe_prompts")
+            _add_missing(
+                pack_id,
+                "keyframe",
+                "keyframe_prompts",
+                "high",
+                "The visual handoff cannot be reviewed without keyframe prompts.",
+                "Add evidence-grounded keyframe prompts for the existing scenes.",
+                True,
+            )
+        if not _rw_text(pack.get("thumbnail_prompt")):
+            missing_items.append("thumbnail_prompt")
+            _add_missing(
+                pack_id,
+                "thumbnail",
+                "thumbnail_prompt",
+                "medium",
+                "The platform pack lacks a reviewable opening-frame direction.",
+                "Add a product-first thumbnail prompt without stronger claims.",
+                False,
+            )
+        if not do_not_claim:
+            missing_items.append("do_not_claim")
+            _add_missing(
+                pack_id,
+                "claim_boundary",
+                "do_not_claim",
+                "high",
+                "Delivery cannot be approved without explicit claim boundaries.",
+                "Add do-not-claim notes from the source evidence pack.",
+                True,
+            )
+        if missing_quote:
+            missing_items.append("proof_quote")
+            _add_missing(
+                pack_id,
+                "evidence",
+                "proof_quote",
+                "high",
+                "A buyer quote is required before an evidence claim can be delivered.",
+                "Collect a verifiable quote or keep the asset in weak-evidence mode.",
+                True,
+            )
+
+        risk_items = list(dict.fromkeys([
+            *list(pack.get("risk_notes") or []),
+            *(
+                ["weak_evidence"]
+                if weak_evidence
+                else []
+            ),
+            *(
+                ["unsupported_claim"]
+                if platform_quality.get("unsupported_claim")
+                else []
+            ),
+        ]))
+        evidence_warnings = [
+            warning
+            for warning, active in (
+                ("missing_quote", missing_quote),
+                ("weak_evidence", weak_evidence),
+            )
+            if active
+        ]
+        blocking_missing = any(
+            item["platform_pack_id"] == pack_id and item["blocks_delivery"]
+            for item in missing_asset_checklist
+        )
+        overall_quality_score = round(
+            completeness_score * 0.25
+            + script_readiness_score * 0.25
+            + video_prompt_readiness_score * 0.20
+            + evidence_coverage_score * 0.15
+            + safety_score * 0.15
+        )
+        delivery_readiness = (
+            "ready_for_human_review"
+            if overall_quality_score >= 75
+            and safety_score >= 75
+            and not weak_evidence
+            and not blocking_missing
+            else "blocked_by_evidence"
+            if weak_evidence
+            else "needs_asset_fix"
+        )
+        quality_tier = (
+            "high"
+            if overall_quality_score >= 80 and delivery_readiness == "ready_for_human_review"
+            else "medium"
+            if overall_quality_score >= 60
+            else "low"
+        )
+        fix_recommendations = list(dict.fromkeys([
+            *(
+                ["strengthen_proof_quote", "lower_claim_strength"]
+                if weak_evidence
+                else []
+            ),
+            *(
+                ["add_missing_subtitle"]
+                if "subtitle_lines" in missing_items
+                else []
+            ),
+            *(
+                ["clarify_keyframe_prompt"]
+                if "keyframe_prompts" in missing_items
+                else []
+            ),
+            *(
+                ["improve_thumbnail_prompt"]
+                if "thumbnail_prompt" in missing_items
+                else []
+            ),
+            *(
+                ["add_do_not_claim"]
+                if "do_not_claim" in missing_items
+                else []
+            ),
+        ]))
+        recommended_next_action = (
+            fix_recommendations[0]
+            if fix_recommendations
+            else _rw_text(pack.get("recommended_next_action"))
+            or "human_review_before_delivery"
+        )
+        quality_cards.append(
+            {
+                "quality_card_id": f"quality_{pack_id}",
+                "platform_pack_id": pack_id,
+                "platform": _rw_text(pack.get("platform")),
+                "duration_seconds": int(pack.get("duration_seconds") or 0),
+                "asset_pack_title": (
+                    f"{_rw_text(pack.get('platform_title'))} "
+                    f"{int(pack.get('duration_seconds') or 0)}s"
+                ).strip(),
+                "overall_quality_score": overall_quality_score,
+                "completeness_score": completeness_score,
+                "script_readiness_score": script_readiness_score,
+                "video_prompt_readiness_score": video_prompt_readiness_score,
+                "evidence_coverage_score": evidence_coverage_score,
+                "safety_score": safety_score,
+                "delivery_readiness": delivery_readiness,
+                "quality_tier": quality_tier,
+                "is_recommended_ready_pack": False,
+                "strengths": [
+                    name
+                    for name, score in (
+                        ("complete_asset_structure", completeness_score),
+                        ("script_ready", script_readiness_score),
+                        ("video_prompt_ready", video_prompt_readiness_score),
+                        ("claim_boundaries_present", safety_score),
+                    )
+                    if score >= 80
+                ],
+                "missing_items": missing_items,
+                "risk_items": risk_items,
+                "evidence_warnings": evidence_warnings,
+                "fix_recommendations": fix_recommendations,
+                "proof_quote_status": (
+                    "missing_quote"
+                    if missing_quote
+                    else "weak_evidence"
+                    if weak_evidence
+                    else "quote_present"
+                ),
+                "do_not_claim_status": (
+                    "present" if do_not_claim else "missing_do_not_claim"
+                ),
+                "recommended_next_action": recommended_next_action,
+            }
+        )
+
+    ready_cards = [
+        card
+        for card in quality_cards
+        if card["delivery_readiness"] == "ready_for_human_review"
+    ]
+    preferred_pack_id = _rw_text(
+        multi_platform_asset_pack.get("recommended_platform_pack_id")
+    )
+    recommended_card = next(
+        (card for card in ready_cards if card["platform_pack_id"] == preferred_pack_id),
+        max(ready_cards, key=lambda card: card["overall_quality_score"], default={}),
+    )
+    recommended_ready_pack_id = _rw_text(
+        recommended_card.get("platform_pack_id")
+    )
+    for card in quality_cards:
+        card["is_recommended_ready_pack"] = (
+            card["platform_pack_id"] == recommended_ready_pack_id
+        )
+
+    action_types_seen: set[tuple[str, str]] = set()
+    for card in quality_cards:
+        for action_type in card["fix_recommendations"]:
+            action_key = (card["platform_pack_id"], action_type)
+            if action_key in action_types_seen:
+                continue
+            action_types_seen.add(action_key)
+            recommended_fix_actions.append(
+                {
+                    "action_id": f"fix_{len(recommended_fix_actions) + 1}",
+                    "priority": (
+                        "high"
+                        if action_type
+                        in {"strengthen_proof_quote", "lower_claim_strength", "add_do_not_claim"}
+                        else "medium"
+                    ),
+                    "target_platform_pack_id": card["platform_pack_id"],
+                    "action_type": action_type,
+                    "action_title": action_type.replace("_", " ").title(),
+                    "action_reason": (
+                        "Evidence or claim safety is below the delivery threshold."
+                        if action_type
+                        in {"strengthen_proof_quote", "lower_claim_strength", "add_do_not_claim"}
+                        else "A required creative asset is incomplete."
+                    ),
+                    "suggested_fix": (
+                        "Use an existing verifiable buyer quote and keep claims conservative."
+                        if action_type == "strengthen_proof_quote"
+                        else "Reduce claim strength to what the supplied evidence directly supports."
+                        if action_type == "lower_claim_strength"
+                        else "Complete the named asset using the existing script and evidence."
+                    ),
+                    "risk_control": "Do not add unsupported product outcomes.",
+                    "evidence_requirement": (
+                        "Existing proof quote required."
+                        if action_type == "strengthen_proof_quote"
+                        else "Use only supplied evidence and product fields."
+                    ),
+                }
+            )
+
+    blocked_count = sum(
+        card["delivery_readiness"] != "ready_for_human_review"
+        for card in quality_cards
+    )
+    quality_summary = {
+        "quality_card_count": len(quality_cards),
+        "ready_pack_count": len(ready_cards),
+        "blocked_pack_count": blocked_count,
+        "recommended_ready_pack_id": recommended_ready_pack_id,
+        "average_quality_score": round(
+            sum(card["overall_quality_score"] for card in quality_cards)
+            / max(len(quality_cards), 1)
+        ),
+        "missing_asset_count": len(missing_asset_checklist),
+        "recommended_fix_count": len(recommended_fix_actions),
+        "summary": (
+            "\u5df2\u9009\u51fa\u53ef\u4eba\u5de5\u5ba1\u6838\u7684\u63a8\u8350\u7d20\u6750\u5305\u3002"
+            if is_zh and recommended_ready_pack_id
+            else "A recommended asset pack is ready for human review."
+            if recommended_ready_pack_id
+            else (
+                "\u5f53\u524d\u7d20\u6750\u5305\u9700\u5148\u8865\u8bc1\u636e\u6216\u5b8c\u6210\u7f3a\u5931\u8d44\u4ea7\u3002"
+                if is_zh
+                else "Current packs need stronger evidence or missing asset fixes before delivery."
+            )
+        ),
+    }
+    quality_checks = {
+        "missing_quote": any(
+            card["proof_quote_status"] == "missing_quote" for card in quality_cards
+        ),
+        "weak_evidence": any(
+            "weak_evidence" in card["evidence_warnings"] for card in quality_cards
+        ),
+        "unsupported_claim": bool(platform_quality.get("unsupported_claim")),
+        "unsafe_provider_action": False,
+        "missing_script_part": any(
+            item["check_type"] == "script" for item in missing_asset_checklist
+        ),
+        "missing_platform_variant": list(
+            platform_quality.get("missing_platform_variant") or []
+        ),
+        "missing_duration_variant": list(
+            platform_quality.get("missing_duration_variant") or []
+        ),
+        "low_evidence_marked_not_ready": all(
+            card["delivery_readiness"] != "ready_for_human_review"
+            for card in quality_cards
+            if card["proof_quote_status"] in {"missing_quote", "weak_evidence"}
+        ),
+    }
+    return {
+        "pack_version": "asset_quality_gate_pack_v1",
+        "quality_summary": quality_summary,
+        "recommended_ready_pack_id": recommended_ready_pack_id,
+        "quality_cards": quality_cards,
+        "missing_asset_checklist": missing_asset_checklist,
+        "recommended_fix_actions": recommended_fix_actions,
+        "quality_export_snapshot": {
+            "recommended_ready_pack_id": recommended_ready_pack_id,
+            "quality_cards": quality_cards,
+            "missing_asset_checklist": missing_asset_checklist,
+            "recommended_fix_actions": recommended_fix_actions,
+        },
+        "quality_checks": quality_checks,
+        "safety_boundaries": {
+            "provider_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_operation_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_operation_enabled": False,
+            "restore_or_rollback_enabled": False,
+            "feedback_persisted": False,
+        },
+    }
+
+
 def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
     angles = list(creative_decision_pack.get("top_ad_angles") or [])
     source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
@@ -19871,6 +20302,10 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         creative_asset_pack,
         language,
     )
+    asset_quality_gate_pack = _rw_asset_quality_gate_pack(
+        multi_platform_asset_pack,
+        language,
+    )
     return {
         "pack_version": "creative_variant_pack_v1",
         "variant_summary": {
@@ -19912,6 +20347,7 @@ def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> di
         "creative_version_control_pack": creative_version_control_pack,
         "creative_asset_pack": creative_asset_pack,
         "multi_platform_asset_pack": multi_platform_asset_pack,
+        "asset_quality_gate_pack": asset_quality_gate_pack,
         "safety_boundaries": {
             "real_provider_called": False,
             "llm_api_called": False,
@@ -20217,6 +20653,12 @@ def _review_workspace_creative_decision_pack(
     creative_decision_pack["multi_platform_asset_pack"] = (
         creative_decision_pack["creative_variant_pack"].get(
             "multi_platform_asset_pack"
+        )
+        or {}
+    )
+    creative_decision_pack["asset_quality_gate_pack"] = (
+        creative_decision_pack["creative_variant_pack"].get(
+            "asset_quality_gate_pack"
         )
         or {}
     )
