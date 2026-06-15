@@ -8303,6 +8303,102 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertNotIn("fetch(", creative_section)
         self.assertNotIn("????", html)
 
+    def test_asset_quality_gate_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace asset quality gate bundle",
+            "PROJECT_WORKSPACE_ASSET_QUALITY_GATE_MARKER",
+            "latestProjectAssetQualityGatePack",
+            "projectWorkspaceAssetQualityGatePackFromWorkspace",
+            "projectWorkspaceExportAssetQualityGateSnapshot",
+            "projectWorkspaceExportAssetQualityGateMarkdown",
+            "renderProjectWorkspaceAssetQualitySummaryPanel",
+            "renderProjectWorkspaceAssetQualityCardsPanel",
+            "renderProjectWorkspaceMissingAssetChecklistPanel",
+            "renderProjectWorkspaceAssetQualityFixActionsPanel",
+            "copyProjectWorkspaceAssetQualitySummary",
+            "copyProjectWorkspaceAssetQualityCard",
+            "copyProjectWorkspaceMissingAssetChecklist",
+            "copyProjectWorkspaceAssetQualityFixActions",
+            "copyProjectWorkspaceFullAssetQualityPack",
+            "asset_quality_gate_pack: projectWorkspaceExportAssetQualityGateSnapshot(workspace)",
+            "Asset Quality Gate",
+            "Quality Scores",
+            "Missing Asset Checklist",
+            "Recommended Fix Actions",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.quality_summary",
+            "pack.quality_cards",
+            "pack.missing_asset_checklist",
+            "pack.recommended_fix_actions",
+            "card.overall_quality_score",
+            "card.completeness_score",
+            "card.evidence_coverage_score",
+            "card.safety_score",
+            "card.delivery_readiness",
+            "card.fix_recommendations",
+        ]:
+            self.assertIn(runtime_field, html)
+
+    def test_asset_quality_gate_has_bilingual_guard_export_and_collapsed_governance(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "assetQualityGateTitle",
+            "assetQualityScoresTitle",
+            "assetQualityMissingChecklistTitle",
+            "assetQualityFixActionsTitle",
+            "assetQualityRecommendedPack",
+            "assetQualityOverallScore",
+            "assetQualityCompletenessScore",
+            "assetQualityEvidenceScore",
+            "assetQualitySafetyScore",
+            "assetQualityCopySummary",
+            "assetQualityCopyCard",
+            "assetQualityCopyChecklist",
+            "assetQualityCopyFixActions",
+            "assetQualityCopyFullPack",
+            "assetQualityCopied",
+            "assetQualityCopyFailed",
+            "assetQualityCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace asset quality gate bundle", script)
+            self.assertIn("project_workspace_asset_quality_gate_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportAssetQualityGateMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceAssetQualityText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "assetQualityGateTitle",
+            "assetQualityScoresTitle",
+            "assetQualityMissingChecklistTitle",
+            "assetQualityFixActionsTitle",
+            "creativeAssetSafetyNotesTitle",
+        ]:
+            self.assertIn(key, markdown)
+        governance_start = html.index("function renderProjectWorkspaceProviderGovernanceGroup")
+        governance_end = html.index("function projectWorkspaceExportPackMarkdownText", governance_start)
+        governance = html[governance_start:governance_end]
+        self.assertIn('<details class="section-block" id="projectWorkspaceProviderGovernanceGroup">', governance)
+        self.assertNotIn("<details open", governance)
+        creative_section = html[
+            html.index("const PROJECT_WORKSPACE_CREATIVE_DECISION_PACK_MARKER"):
+            governance_start
+        ]
+        self.assertNotIn("fetch(", creative_section)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

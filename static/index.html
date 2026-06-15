@@ -3598,6 +3598,7 @@
         let latestProjectCreativeVersionControlPack = {};
         let latestProjectCreativeAssetPack = {};
         let latestProjectMultiPlatformAssetPack = {};
+        let latestProjectAssetQualityGatePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8869,6 +8870,9 @@
                     || {};
                 latestProjectMultiPlatformAssetPack = latestProjectCreativeDecisionPack.multi_platform_asset_pack
                     || latestProjectCreativeVariantPack.multi_platform_asset_pack
+                    || {};
+                latestProjectAssetQualityGatePack = latestProjectCreativeDecisionPack.asset_quality_gate_pack
+                    || latestProjectCreativeVariantPack.asset_quality_gate_pack
                     || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
@@ -14704,6 +14708,7 @@
         const PROJECT_WORKSPACE_CREATIVE_VERSION_CONTROL_MARKER = 'Project Workspace creative version control bundle';
         const PROJECT_WORKSPACE_CREATIVE_ASSET_PACK_MARKER = 'Project Workspace creative asset pack bundle';
         const PROJECT_WORKSPACE_MULTI_PLATFORM_ASSET_PACK_MARKER = 'Project Workspace multi platform asset pack bundle';
+        const PROJECT_WORKSPACE_ASSET_QUALITY_GATE_MARKER = 'Project Workspace asset quality gate bundle';
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -15706,6 +15711,152 @@
 
         function copyProjectWorkspaceDurationAssetPack(durationSeconds) {
             return copyProjectWorkspaceMultiPlatformAssetPack('duration', durationSeconds);
+        }
+
+        function projectWorkspaceAssetQualityGatePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectAssetQualityGatePack
+                && Object.keys(latestProjectAssetQualityGatePack).length) {
+                return latestProjectAssetQualityGatePack;
+            }
+            const decisionPack = projectWorkspaceCreativeDecisionPackFromWorkspace(workspace);
+            return decisionPack?.asset_quality_gate_pack
+                || decisionPack?.creative_variant_pack?.asset_quality_gate_pack
+                || {};
+        }
+
+        function projectWorkspaceExportAssetQualityGateSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceAssetQualityGatePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_ASSET_QUALITY_GATE_MARKER,
+                has_asset_quality_gate_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                quality_summary: pack.quality_summary || {},
+                recommended_ready_pack_id: pack.recommended_ready_pack_id || '',
+                quality_cards: Array.isArray(pack.quality_cards) ? pack.quality_cards : [],
+                missing_asset_checklist: Array.isArray(pack.missing_asset_checklist)
+                    ? pack.missing_asset_checklist
+                    : [],
+                recommended_fix_actions: Array.isArray(pack.recommended_fix_actions)
+                    ? pack.recommended_fix_actions
+                    : [],
+                quality_checks: pack.quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceAssetQualityCardText(card = {}) {
+            if (!card.quality_card_id) return '';
+            return [
+                `${card.asset_pack_title || card.platform_pack_id}`,
+                `${t('assetQualityOverallScore')}: ${card.overall_quality_score ?? 0}`,
+                `${t('assetQualityCompletenessScore')}: ${card.completeness_score ?? 0}`,
+                `${t('assetQualityScriptScore')}: ${card.script_readiness_score ?? 0}`,
+                `${t('assetQualityVideoPromptScore')}: ${card.video_prompt_readiness_score ?? 0}`,
+                `${t('assetQualityEvidenceScore')}: ${card.evidence_coverage_score ?? 0}`,
+                `${t('assetQualitySafetyScore')}: ${card.safety_score ?? 0}`,
+                `${t('assetQualityDeliveryReadiness')}: ${card.delivery_readiness || t('none')}`,
+                `${t('assetQualityTier')}: ${card.quality_tier || t('none')}`,
+                `${t('assetQualityStrengths')}: ${(card.strengths || []).join(' | ') || t('none')}`,
+                `${t('assetQualityMissingItems')}: ${(card.missing_items || []).join(' | ') || t('none')}`,
+                `${t('assetQualityRiskItems')}: ${(card.risk_items || []).join(' | ') || t('none')}`,
+                `${t('assetQualityFixRecommendations')}: ${(card.fix_recommendations || []).join(' | ') || t('none')}`,
+                `${t('multiPlatformNextAction')}: ${card.recommended_next_action || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportAssetQualityGateMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAssetQualityGateSnapshot(workspace);
+            if (!pack.has_asset_quality_gate_pack) return '';
+            const summary = pack.quality_summary || {};
+            return [
+                `## ${t('assetQualityGateTitle')}`,
+                `${t('assetQualityRecommendedPack')}: ${pack.recommended_ready_pack_id || t('none')}`,
+                `${t('assetQualityAverageScore')}: ${summary.average_quality_score ?? 0}`,
+                `${t('assetQualityReadyCount')}: ${summary.ready_pack_count ?? 0}`,
+                `${t('assetQualityBlockedCount')}: ${summary.blocked_pack_count ?? 0}`,
+                `${t('assetQualitySummary')}: ${summary.summary || t('none')}`,
+                '',
+                `### ${t('assetQualityScoresTitle')}`,
+                ...pack.quality_cards.flatMap((card) => [
+                    `#### ${card.asset_pack_title || card.platform_pack_id}`,
+                    projectWorkspaceAssetQualityCardText(card),
+                    ''
+                ]),
+                `### ${t('assetQualityMissingChecklistTitle')}`,
+                ...(pack.missing_asset_checklist.length
+                    ? pack.missing_asset_checklist.map((item) =>
+                        `- [${item.severity}] ${item.platform_pack_id}: ${item.missing_item} - ${item.recommended_fix}`
+                    )
+                    : [`- ${t('assetQualityNoMissingItems')}`]),
+                '',
+                `### ${t('assetQualityFixActionsTitle')}`,
+                ...(pack.recommended_fix_actions.length
+                    ? pack.recommended_fix_actions.map((action) =>
+                        `- [${action.priority}] ${action.action_title}: ${action.suggested_fix}`
+                    )
+                    : [`- ${t('assetQualityNoFixActions')}`]),
+                '',
+                `### ${t('creativeAssetSafetyNotesTitle')}`,
+                `${t('assetQualityChecks')}: ${JSON.stringify(pack.quality_checks)}`,
+                t('assetQualityGuidanceOnly')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceAssetQualityText(kind = 'full', cardId = '') {
+            const status = document.getElementById('projectWorkspaceAssetQualityStatus');
+            const pack = projectWorkspaceExportAssetQualityGateSnapshot();
+            let text = '';
+            if (kind === 'summary') {
+                text = [
+                    `${t('assetQualityRecommendedPack')}: ${pack.recommended_ready_pack_id || t('none')}`,
+                    `${t('assetQualitySummary')}: ${pack.quality_summary?.summary || t('none')}`
+                ].join('\n');
+            } else if (kind === 'card') {
+                text = projectWorkspaceAssetQualityCardText(
+                    pack.quality_cards.find((card) => card.quality_card_id === cardId) || {}
+                );
+            } else if (kind === 'checklist') {
+                text = pack.missing_asset_checklist.map((item) =>
+                    `${item.platform_pack_id}: ${item.missing_item} - ${item.recommended_fix}`
+                ).join('\n');
+            } else if (kind === 'actions') {
+                text = pack.recommended_fix_actions.map((action) =>
+                    `${action.action_title}: ${action.suggested_fix}`
+                ).join('\n');
+            } else {
+                text = projectWorkspaceExportAssetQualityGateMarkdown();
+            }
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('assetQualityCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('assetQualityCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('assetQualityCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('assetQualityCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceAssetQualitySummary() {
+            return copyProjectWorkspaceAssetQualityText('summary');
+        }
+
+        function copyProjectWorkspaceAssetQualityCard(cardId) {
+            return copyProjectWorkspaceAssetQualityText('card', cardId);
+        }
+
+        function copyProjectWorkspaceMissingAssetChecklist() {
+            return copyProjectWorkspaceAssetQualityText('checklist');
+        }
+
+        function copyProjectWorkspaceAssetQualityFixActions() {
+            return copyProjectWorkspaceAssetQualityText('actions');
+        }
+
+        function copyProjectWorkspaceFullAssetQualityPack() {
+            return copyProjectWorkspaceAssetQualityText('full');
         }
 
         function projectWorkspaceExportCreativeIterationSnapshot(workspace = latestProjectWorkspace) {
@@ -16853,6 +17004,130 @@
             `;
         }
 
+        function renderProjectWorkspaceAssetQualitySummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAssetQualityGateSnapshot(workspace);
+            if (!pack.has_asset_quality_gate_pack) return '';
+            const summary = pack.quality_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceAssetQualitySummaryPanel"
+                    data-asset-quality-gate-marker="${PROJECT_WORKSPACE_ASSET_QUALITY_GATE_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('assetQualityGateTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('assetQualityGateHelper'))}</div>
+                        </div>
+                        <div class="quick-use-pack-actions">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAssetQualitySummary()">${escapeHTML(t('assetQualityCopySummary'))}</button>
+                            <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullAssetQualityPack()">${escapeHTML(t('assetQualityCopyFullPack'))}</button>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('assetQualityAverageScore'), String(summary.average_quality_score ?? 0))}
+                        ${metricPill(t('assetQualityReadyCount'), String(summary.ready_pack_count ?? 0))}
+                        ${metricPill(t('assetQualityBlockedCount'), String(summary.blocked_pack_count ?? 0))}
+                        ${metricPill(t('assetQualityMissingCount'), String(summary.missing_asset_count ?? 0))}
+                    </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(t('assetQualityRecommendedPack'))}:</strong>
+                        ${escapeHTML(pack.recommended_ready_pack_id || t('assetQualityNoReadyPack'))}
+                    </div>
+                    <div class="field-helper">${escapeHTML(summary.summary || t('assetQualityNoData'))}</div>
+                    <div class="demo-warning">${escapeHTML(t('assetQualityGuidanceOnly'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceAssetQualityStatus"></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceAssetQualityCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAssetQualityGateSnapshot(workspace);
+            if (!pack.has_asset_quality_gate_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceAssetQualityCardsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('assetQualityScoresTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('assetQualityScoresHelper'))}</div>
+                        </div>
+                    </div>
+                    <div class="graph-os-grid">${pack.quality_cards.map((card) => `
+                        <div class="graph-os-card" data-quality-card-id="${escapeHTML(card.quality_card_id || '')}">
+                            <div class="section-header">
+                                <strong>${escapeHTML(card.asset_pack_title || card.platform_pack_id || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(card.quality_tier || t('none'))}</span>
+                            </div>
+                            <div class="metric-strip">
+                                ${metricPill(t('assetQualityOverallScore'), String(card.overall_quality_score ?? 0))}
+                                ${metricPill(t('assetQualityCompletenessScore'), String(card.completeness_score ?? 0))}
+                                ${metricPill(t('assetQualityEvidenceScore'), String(card.evidence_coverage_score ?? 0))}
+                                ${metricPill(t('assetQualitySafetyScore'), String(card.safety_score ?? 0))}
+                            </div>
+                            <div><strong>${escapeHTML(t('assetQualityDeliveryReadiness'))}:</strong> ${escapeHTML(card.delivery_readiness || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('assetQualityMissingItems'))}:</strong> ${escapeHTML((card.missing_items || []).join(' | ') || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('assetQualityRiskItems'))}:</strong> ${escapeHTML((card.risk_items || []).join(' | ') || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('assetQualityFixRecommendations'))}:</strong> ${escapeHTML((card.fix_recommendations || []).join(' | ') || t('none'))}</div>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAssetQualityCard('${escapeHTML(card.quality_card_id || '')}')">${escapeHTML(t('assetQualityCopyCard'))}</button>
+                        </div>
+                    `).join('')}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceMissingAssetChecklistPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAssetQualityGateSnapshot(workspace);
+            if (!pack.has_asset_quality_gate_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceMissingAssetChecklistPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('assetQualityMissingChecklistTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('assetQualityMissingChecklistHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMissingAssetChecklist()">${escapeHTML(t('assetQualityCopyChecklist'))}</button>
+                    </div>
+                    ${pack.missing_asset_checklist.length ? `
+                        <div class="graph-os-compact-grid">${pack.missing_asset_checklist.map((item) => `
+                            <div class="graph-os-card">
+                                <strong>${escapeHTML(item.missing_item || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(item.severity || t('none'))}</span>
+                                <div>${escapeHTML(item.platform_pack_id || t('none'))}</div>
+                                <div>${escapeHTML(item.why_it_matters || t('none'))}</div>
+                                <div class="field-helper">${escapeHTML(item.recommended_fix || t('none'))}</div>
+                            </div>
+                        `).join('')}</div>
+                    ` : `<div class="feedback-box">${escapeHTML(t('assetQualityNoMissingItems'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceAssetQualityFixActionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAssetQualityGateSnapshot(workspace);
+            if (!pack.has_asset_quality_gate_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceAssetQualityFixActionsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('assetQualityFixActionsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('assetQualityFixActionsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAssetQualityFixActions()">${escapeHTML(t('assetQualityCopyFixActions'))}</button>
+                    </div>
+                    ${pack.recommended_fix_actions.length ? `
+                        <div class="graph-os-compact-grid">${pack.recommended_fix_actions.map((action) => `
+                            <div class="graph-os-card">
+                                <div class="section-header">
+                                    <strong>${escapeHTML(action.action_title || action.action_type || t('none'))}</strong>
+                                    <span class="badge">${escapeHTML(action.priority || t('none'))}</span>
+                                </div>
+                                <div>${escapeHTML(action.action_reason || t('none'))}</div>
+                                <div class="field-helper">${escapeHTML(action.suggested_fix || t('none'))}</div>
+                                <div class="demo-warning">${escapeHTML(action.risk_control || t('none'))}</div>
+                            </div>
+                        `).join('')}</div>
+                    ` : `<div class="feedback-box">${escapeHTML(t('assetQualityNoFixActions'))}</div>`}
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -17221,6 +17496,7 @@
                 projectWorkspaceExportCreativeVersionControlMarkdown(workspace),
                 projectWorkspaceExportCreativeAssetPackMarkdown(workspace),
                 projectWorkspaceExportMultiPlatformAssetPackMarkdown(workspace),
+                projectWorkspaceExportAssetQualityGateMarkdown(workspace),
                 '',
                 projectWorkspaceExportSafetyChainMarkdown(workspace),
                 '',
@@ -17300,6 +17576,7 @@
                 creative_version_control_pack: projectWorkspaceExportCreativeVersionControlSnapshot(workspace),
                 creative_asset_pack: projectWorkspaceExportCreativeAssetPackSnapshot(workspace),
                 multi_platform_asset_pack: projectWorkspaceExportMultiPlatformAssetPackSnapshot(workspace),
+                asset_quality_gate_pack: projectWorkspaceExportAssetQualityGateSnapshot(workspace),
                 real_execution_safety_chain: projectWorkspaceExportSafetyChainSnapshot(workspace),
                 real_execution_safety_timeline: projectWorkspaceExportSafetyTimelineSnapshot(workspace),
                 runner_event_ledger_summary: projectWorkspaceExportRunnerEventLedgerSnapshot(workspace),
@@ -29718,6 +29995,10 @@
                     ${renderProjectWorkspaceMultiPlatformAssetPackSummaryPanel(workspace)}
                     ${renderProjectWorkspaceMultiPlatformAssetPackCardsPanel(workspace)}
                     ${renderProjectWorkspaceMultiPlatformAssetPackComparePanel(workspace)}
+                    ${renderProjectWorkspaceAssetQualitySummaryPanel(workspace)}
+                    ${renderProjectWorkspaceAssetQualityCardsPanel(workspace)}
+                    ${renderProjectWorkspaceMissingAssetChecklistPanel(workspace)}
+                    ${renderProjectWorkspaceAssetQualityFixActionsPanel(workspace)}
                     ${renderProjectWorkspaceCreativeExportPanel(workspace)}
                     ${renderProjectWorkspaceCreativeFeedbackRuntimePanel(workspace)}
                     <div class="metric-strip">
@@ -36811,6 +37092,92 @@
             multiPlatformNoData: '\u6682\u65e0\u591a\u5e73\u53f0\u7d20\u6750\u5305\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            assetQualityGateTitle: 'Asset Quality Gate',
+            assetQualityGateHelper: 'Score completeness, evidence coverage, safety, and delivery readiness before a platform pack is handed off.',
+            assetQualitySummary: 'Quality summary',
+            assetQualityRecommendedPack: 'Recommended ready pack',
+            assetQualityNoReadyPack: 'No pack is ready for delivery',
+            assetQualityAverageScore: 'Average quality score',
+            assetQualityReadyCount: 'Ready packs',
+            assetQualityBlockedCount: 'Blocked packs',
+            assetQualityMissingCount: 'Missing assets',
+            assetQualityScoresTitle: 'Quality Scores',
+            assetQualityScoresHelper: 'Compare script, video prompt, evidence, completeness, and claim safety scores for every platform-duration pack.',
+            assetQualityOverallScore: 'Overall score',
+            assetQualityCompletenessScore: 'Completeness',
+            assetQualityScriptScore: 'Script readiness',
+            assetQualityVideoPromptScore: 'Video prompt readiness',
+            assetQualityEvidenceScore: 'Evidence coverage',
+            assetQualitySafetyScore: 'Safety score',
+            assetQualityDeliveryReadiness: 'Delivery readiness',
+            assetQualityTier: 'Quality tier',
+            assetQualityStrengths: 'Strengths',
+            assetQualityMissingItems: 'Missing items',
+            assetQualityRiskItems: 'Risk items',
+            assetQualityFixRecommendations: 'Fix recommendations',
+            assetQualityMissingChecklistTitle: 'Missing Asset Checklist',
+            assetQualityMissingChecklistHelper: 'Review only the missing assets that affect delivery; weak evidence remains a blocking issue.',
+            assetQualityFixActionsTitle: 'Recommended Fix Actions',
+            assetQualityFixActionsHelper: 'Guidance for closing evidence, script, prompt, subtitle, thumbnail, and claim-safety gaps.',
+            assetQualityChecks: 'Quality checks',
+            assetQualityCopySummary: 'Copy quality summary',
+            assetQualityCopyCard: 'Copy quality card',
+            assetQualityCopyChecklist: 'Copy missing checklist',
+            assetQualityCopyFixActions: 'Copy fix actions',
+            assetQualityCopyFullPack: 'Copy Full Quality Pack',
+            assetQualityCopied: 'Asset quality content copied.',
+            assetQualityCopyFailed: 'Unable to copy asset quality content.',
+            assetQualityCopyNoData: 'No asset quality content is available to copy.',
+            assetQualityNoData: 'No asset quality gate data is available.',
+            assetQualityNoMissingItems: 'No blocking asset gaps were found.',
+            assetQualityNoFixActions: 'No fix actions are required before human review.',
+            assetQualityGuidanceOnly: 'Guidance only. No provider, LLM, video, media, paid, registry, restore, rollback, or feedback persistence action is performed.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            assetQualityGateTitle: '\u8d44\u4ea7\u8d28\u91cf\u95e8\u7981',
+            assetQualityGateHelper: '\u5728\u5e73\u53f0\u7d20\u6750\u5305\u4ea4\u63a5\u524d\uff0c\u68c0\u67e5\u5b8c\u6574\u5ea6\u3001\u8bc1\u636e\u8986\u76d6\u3001\u5b89\u5168\u6027\u548c\u4ea4\u4ed8\u5c31\u7eea\u5ea6\u3002',
+            assetQualitySummary: '\u8d28\u91cf\u6458\u8981',
+            assetQualityRecommendedPack: '\u63a8\u8350\u5c31\u7eea\u7d20\u6750\u5305',
+            assetQualityNoReadyPack: '\u6682\u65e0\u53ef\u4ea4\u4ed8\u7684\u7d20\u6750\u5305',
+            assetQualityAverageScore: '\u5e73\u5747\u8d28\u91cf\u5206',
+            assetQualityReadyCount: '\u5c31\u7eea\u7d20\u6750\u5305',
+            assetQualityBlockedCount: '\u53d7\u963b\u7d20\u6750\u5305',
+            assetQualityMissingCount: '\u7f3a\u5931\u8d44\u4ea7',
+            assetQualityScoresTitle: '\u8d28\u91cf\u8bc4\u5206',
+            assetQualityScoresHelper: '\u5bf9\u6bd4\u6bcf\u4e2a\u5e73\u53f0\u4e0e\u65f6\u957f\u7d20\u6750\u5305\u7684\u811a\u672c\u3001\u89c6\u9891\u63d0\u793a\u8bcd\u3001\u8bc1\u636e\u3001\u5b8c\u6574\u5ea6\u548c\u4e3b\u5f20\u5b89\u5168\u8bc4\u5206\u3002',
+            assetQualityOverallScore: '\u7efc\u5408\u8bc4\u5206',
+            assetQualityCompletenessScore: '\u5b8c\u6574\u5ea6',
+            assetQualityScriptScore: '\u811a\u672c\u5c31\u7eea\u5ea6',
+            assetQualityVideoPromptScore: '\u89c6\u9891\u63d0\u793a\u8bcd\u5c31\u7eea\u5ea6',
+            assetQualityEvidenceScore: '\u8bc1\u636e\u8986\u76d6',
+            assetQualitySafetyScore: '\u5b89\u5168\u8bc4\u5206',
+            assetQualityDeliveryReadiness: '\u4ea4\u4ed8\u5c31\u7eea\u5ea6',
+            assetQualityTier: '\u8d28\u91cf\u7b49\u7ea7',
+            assetQualityStrengths: '\u4f18\u52bf',
+            assetQualityMissingItems: '\u7f3a\u5931\u9879',
+            assetQualityRiskItems: '\u98ce\u9669\u9879',
+            assetQualityFixRecommendations: '\u4fee\u590d\u5efa\u8bae',
+            assetQualityMissingChecklistTitle: '\u7f3a\u5931\u8d44\u4ea7\u6e05\u5355',
+            assetQualityMissingChecklistHelper: '\u53ea\u68c0\u67e5\u5f71\u54cd\u4ea4\u4ed8\u7684\u7f3a\u5931\u8d44\u4ea7\uff1b\u5f31\u8bc1\u636e\u4ecd\u4f1a\u963b\u6b62\u4ea4\u4ed8\u3002',
+            assetQualityFixActionsTitle: '\u5efa\u8bae\u4fee\u590d\u52a8\u4f5c',
+            assetQualityFixActionsHelper: '\u7528\u4e8e\u8865\u9f50\u8bc1\u636e\u3001\u811a\u672c\u3001\u63d0\u793a\u8bcd\u3001\u5b57\u5e55\u3001\u5c01\u9762\u548c\u4e3b\u5f20\u5b89\u5168\u7f3a\u53e3\u7684\u5efa\u8bae\u3002',
+            assetQualityChecks: '\u8d28\u91cf\u68c0\u67e5',
+            assetQualityCopySummary: '\u590d\u5236\u8d28\u91cf\u6458\u8981',
+            assetQualityCopyCard: '\u590d\u5236\u8d28\u91cf\u5361',
+            assetQualityCopyChecklist: '\u590d\u5236\u7f3a\u5931\u6e05\u5355',
+            assetQualityCopyFixActions: '\u590d\u5236\u4fee\u590d\u52a8\u4f5c',
+            assetQualityCopyFullPack: '\u590d\u5236\u5b8c\u6574\u8d28\u91cf\u5305',
+            assetQualityCopied: '\u8d44\u4ea7\u8d28\u91cf\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            assetQualityCopyFailed: '\u65e0\u6cd5\u590d\u5236\u8d44\u4ea7\u8d28\u91cf\u5185\u5bb9\u3002',
+            assetQualityCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u8d44\u4ea7\u8d28\u91cf\u5185\u5bb9\u3002',
+            assetQualityNoData: '\u6682\u65e0\u8d44\u4ea7\u8d28\u91cf\u95e8\u7981\u6570\u636e\u3002',
+            assetQualityNoMissingItems: '\u672a\u53d1\u73b0\u963b\u6b62\u4ea4\u4ed8\u7684\u8d44\u4ea7\u7f3a\u53e3\u3002',
+            assetQualityNoFixActions: '\u4eba\u5de5\u5ba1\u6838\u524d\u6682\u65e0\u9700\u8981\u6267\u884c\u7684\u4fee\u590d\u52a8\u4f5c\u3002',
+            assetQualityGuidanceOnly: '\u4ec5\u4f5c\u5efa\u8bae\u3002\u4e0d\u6267\u884c provider\u3001LLM\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001restore\u3001rollback \u6216\u53cd\u9988\u6301\u4e45\u5316\u64cd\u4f5c\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -38199,6 +38566,9 @@ async function analyzeExtensionWorkspace() {
       || {};
     latestProjectMultiPlatformAssetPack = latestProjectCreativeDecisionPack.multi_platform_asset_pack
       || latestProjectCreativeVariantPack.multi_platform_asset_pack
+      || {};
+    latestProjectAssetQualityGatePack = latestProjectCreativeDecisionPack.asset_quality_gate_pack
+      || latestProjectCreativeVariantPack.asset_quality_gate_pack
       || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),

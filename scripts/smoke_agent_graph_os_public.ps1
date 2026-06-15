@@ -140,6 +140,7 @@ Add-Check "project_workspace_creative_iteration_marker" ($page.Content -match "P
 Add-Check "project_workspace_creative_version_control_marker" ($page.Content -match "Project Workspace creative version control bundle")
 Add-Check "project_workspace_creative_asset_pack_marker" ($page.Content -match "Project Workspace creative asset pack bundle")
 Add-Check "project_workspace_multi_platform_asset_pack_marker" ($page.Content -match "Project Workspace multi platform asset pack bundle")
+Add-Check "project_workspace_asset_quality_gate_marker" ($page.Content -match "Project Workspace asset quality gate bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
