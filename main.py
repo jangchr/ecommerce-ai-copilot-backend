@@ -20095,6 +20095,463 @@ def _rw_asset_quality_gate_pack(
     }
 
 
+def _rw_campaign_export_pack(
+    creative_decision_pack: dict,
+    language: str,
+) -> dict:
+    evidence_brief = dict(creative_decision_pack.get("evidence_brief") or {})
+    top_angles = list(creative_decision_pack.get("top_ad_angles") or [])
+    recommended_angle_id = _rw_text(
+        creative_decision_pack.get("recommended_angle_id")
+    )
+    recommended_angle = next(
+        (
+            angle
+            for angle in top_angles
+            if _rw_text(angle.get("angle_id")) == recommended_angle_id
+        ),
+        top_angles[0] if top_angles else {},
+    )
+    variant_pack = dict(creative_decision_pack.get("creative_variant_pack") or {})
+    selection_pack = dict(variant_pack.get("variant_selection_pack") or {})
+    version_pack = dict(
+        creative_decision_pack.get("creative_version_control_pack") or {}
+    )
+    asset_pack = dict(creative_decision_pack.get("creative_asset_pack") or {})
+    multi_platform_pack = dict(
+        creative_decision_pack.get("multi_platform_asset_pack") or {}
+    )
+    quality_gate = dict(
+        creative_decision_pack.get("asset_quality_gate_pack") or {}
+    )
+    video_prompt_pack = dict(creative_decision_pack.get("video_prompt_pack") or {})
+    is_zh = language == "zh-CN"
+
+    recommended_version_id = _rw_text(
+        version_pack.get("recommended_next_test_version_id")
+    )
+    recommended_version = next(
+        (
+            version
+            for version in list(version_pack.get("version_lineage") or [])
+            if _rw_text(version.get("version_id")) == recommended_version_id
+        ),
+        {},
+    )
+    recommended_platform_pack_id = _rw_text(
+        multi_platform_pack.get("recommended_platform_pack_id")
+    )
+    recommended_platform_pack = next(
+        (
+            pack
+            for pack in list(multi_platform_pack.get("platform_packs") or [])
+            if _rw_text(pack.get("platform_pack_id"))
+            == recommended_platform_pack_id
+        ),
+        {},
+    )
+    recommended_ready_pack_id = _rw_text(
+        quality_gate.get("recommended_ready_pack_id")
+    )
+    recommended_quality_card = next(
+        (
+            card
+            for card in list(quality_gate.get("quality_cards") or [])
+            if _rw_text(card.get("platform_pack_id")) == recommended_ready_pack_id
+        ),
+        {},
+    )
+    selected_platform_pack = recommended_platform_pack
+    if recommended_ready_pack_id:
+        selected_platform_pack = next(
+            (
+                pack
+                for pack in list(multi_platform_pack.get("platform_packs") or [])
+                if _rw_text(pack.get("platform_pack_id"))
+                == recommended_ready_pack_id
+            ),
+            recommended_platform_pack,
+        )
+
+    proof_quote = _rw_text(
+        recommended_version.get("proof_quote")
+        or recommended_angle.get("proof_quote")
+    )
+    missing_quote = bool(recommended_version.get("missing_quote")) or not proof_quote
+    weak_evidence = (
+        missing_quote
+        or bool(recommended_version.get("weak_evidence"))
+        or bool(creative_decision_pack.get("quality_checks", {}).get("weak_evidence"))
+    )
+    quality_score = int(
+        recommended_quality_card.get("overall_quality_score")
+        or quality_gate.get("quality_summary", {}).get("average_quality_score")
+        or 0
+    )
+    evidence_strength_score = int(
+        recommended_version.get("evidence_strength_score")
+        or recommended_angle.get("evidence_strength_score")
+        or 0
+    )
+    do_not_claim = list(dict.fromkeys([
+        *list(video_prompt_pack.get("do_not_claim") or []),
+        *list(recommended_version.get("do_not_claim") or []),
+        *list(selected_platform_pack.get("do_not_claim") or []),
+    ]))
+    safe_claim_notes = list(dict.fromkeys([
+        *list(selected_platform_pack.get("safe_claim_notes") or []),
+        *do_not_claim,
+    ]))
+    risk_notes = list(dict.fromkeys([
+        _rw_text(recommended_version.get("risk_note")),
+        _rw_text(recommended_angle.get("risk_note")),
+        *[
+            _rw_text(item)
+            for item in list(selected_platform_pack.get("risk_notes") or [])
+        ],
+        *[
+            _rw_text(item)
+            for item in list(recommended_quality_card.get("risk_items") or [])
+        ],
+    ]))
+    risk_notes = [note for note in risk_notes if note]
+    top_risk_note = risk_notes[0] if risk_notes else ""
+    campaign_readiness = (
+        "ready_to_launch"
+        if recommended_ready_pack_id
+        and not weak_evidence
+        and recommended_quality_card.get("delivery_readiness")
+        == "ready_for_human_review"
+        else "needs_evidence_review"
+        if weak_evidence
+        else "needs_asset_fix"
+    )
+    recommended_next_action = (
+        "collect_more_reviews"
+        if missing_quote
+        else "lower_claim_strength"
+        if weak_evidence
+        else _rw_text(recommended_quality_card.get("recommended_next_action"))
+        or "human_review_before_launch"
+    )
+    campaign_id = (
+        f"campaign_{recommended_version_id or 'unversioned'}_"
+        f"{recommended_ready_pack_id or recommended_platform_pack_id or 'unassigned'}"
+    )
+    product_context = _rw_text(
+        video_prompt_pack.get("product_context")
+        or selected_platform_pack.get("product_context")
+    )
+
+    def _theme_labels(key: str) -> list[str]:
+        return [
+            _rw_text(item.get("label"))
+            for item in list(evidence_brief.get(key) or [])
+            if isinstance(item, dict) and _rw_text(item.get("label"))
+        ]
+
+    proof_quotes = list(dict.fromkeys([
+        proof_quote,
+        *[
+            _rw_text(quote)
+            for quote in list(evidence_brief.get("high_signal_quotes") or [])
+        ],
+    ]))
+    proof_quotes = [quote for quote in proof_quotes if quote]
+    selection_cards = list(selection_pack.get("selection_cards") or [])
+    recommended_first_variant_id = _rw_text(
+        selection_pack.get("recommended_first_variant_id")
+    )
+    recommended_first_variant = next(
+        (
+            card
+            for card in selection_cards
+            if _rw_text(card.get("variant_id")) == recommended_first_variant_id
+        ),
+        {},
+    )
+    ab_test_plan = dict(selection_pack.get("ab_test_plan") or {})
+    ab_pair = dict(selection_pack.get("recommended_ab_pair") or {})
+    script = dict(selected_platform_pack.get("shooting_script") or {})
+    scenes = list(script.get("scenes") or [])
+    scene_texts = [
+        _rw_text(scene.get("scene_text"))
+        for scene in scenes
+        if isinstance(scene, dict)
+    ]
+    while len(scene_texts) < 3:
+        scene_texts.append("")
+    copy_ready_script = _rw_text(
+        recommended_version.get("copy_ready_script")
+    ) or "\n".join(
+        text
+        for text in [
+            f"Hook: {_rw_text(script.get('hook'))}",
+            f"Scene 1: {scene_texts[0]}",
+            f"Scene 2: {scene_texts[1]}",
+            f"Scene 3: {scene_texts[2]}",
+            f"CTA: {_rw_text(script.get('cta'))}",
+            f"Proof quote: {proof_quote or 'missing_quote'}",
+            f"Risk note: {top_risk_note}",
+        ]
+        if text.split(": ", 1)[-1]
+    )
+    disabled_real_operations = [
+        "provider_call",
+        "llm_api_call",
+        "video_generation",
+        "media_upload",
+        "media_download",
+        "paid_operation",
+        "registry_write",
+        "restore_or_rollback",
+        "feedback_persistence",
+    ]
+    included_sections = [
+        "campaign_summary",
+        "campaign_brief",
+        "evidence_section",
+        "creative_section",
+        "platform_assets_section",
+        "quality_gate_section",
+        "test_plan_section",
+        "safety_section",
+        "export_manifest",
+    ]
+    missing_export_sections = [
+        section
+        for section, present in (
+            ("evidence_section", bool(evidence_brief)),
+            ("creative_section", bool(recommended_version or recommended_angle)),
+            ("platform_assets_section", bool(selected_platform_pack)),
+            ("quality_gate_section", bool(quality_gate)),
+            ("test_plan_section", bool(ab_test_plan)),
+            ("safety_section", bool(do_not_claim)),
+        )
+        if not present
+    ]
+    campaign_quality_checks = {
+        "missing_evidence": not bool(proof_quotes),
+        "missing_asset_pack": not bool(selected_platform_pack),
+        "missing_quality_gate": not bool(quality_gate),
+        "unsupported_claim": bool(
+            creative_decision_pack.get("quality_checks", {}).get(
+                "unsupported_claim"
+            )
+        ),
+        "unsupported_claim_warnings": list(
+            creative_decision_pack.get("quality_checks", {}).get(
+                "unsupported_claim_terms"
+            )
+            or []
+        ),
+        "unsafe_provider_action": False,
+        "missing_export_section": bool(missing_export_sections),
+        "missing_export_sections": missing_export_sections,
+        "weak_evidence": weak_evidence,
+        "missing_quote": missing_quote,
+        "ready_to_launch_requires_strong_evidence": (
+            campaign_readiness != "ready_to_launch"
+            if weak_evidence or missing_quote
+            else True
+        ),
+    }
+    return {
+        "pack_version": "campaign_export_pack_v1",
+        "campaign_summary": {
+            "campaign_id": campaign_id,
+            "campaign_title": (
+                f"{product_context} \u6d3b\u52a8\u4ea4\u4ed8\u5305"
+                if is_zh
+                else f"{product_context} campaign handoff pack"
+            ).strip(),
+            "source_product_context": product_context,
+            "recommended_version_id": recommended_version_id,
+            "recommended_platform_pack_id": recommended_platform_pack_id,
+            "recommended_ready_pack_id": recommended_ready_pack_id,
+            "primary_platform": _rw_text(selected_platform_pack.get("platform")),
+            "primary_duration_seconds": int(
+                selected_platform_pack.get("duration_seconds") or 0
+            ),
+            "campaign_readiness": campaign_readiness,
+            "overall_quality_score": quality_score,
+            "evidence_strength_score": evidence_strength_score,
+            "top_risk_note": top_risk_note,
+            "recommended_next_action": recommended_next_action,
+        },
+        "recommended_campaign_id": campaign_id,
+        "campaign_brief": {
+            "brief_title": _rw_text(recommended_angle.get("title")),
+            "target_customer": _rw_text(recommended_angle.get("target_audience")),
+            "buyer_pain": _rw_text(recommended_angle.get("buyer_pain")),
+            "buyer_objection": _rw_text(
+                recommended_angle.get("buyer_objection")
+            ),
+            "liked_point": _rw_text(
+                recommended_angle.get("liked_point_or_positive_reversal")
+            ),
+            "creative_angle": _rw_text(recommended_angle.get("title")),
+            "recommended_message": _rw_text(
+                recommended_version.get("hook")
+                or recommended_angle.get("hook")
+            ),
+            "proof_quote": proof_quote,
+            "risk_note": top_risk_note,
+            "do_not_claim": do_not_claim,
+        },
+        "evidence_section": {
+            "evidence_brief_summary": _rw_text(
+                evidence_brief.get("sample_size_note")
+            ),
+            "top_pain_points": _theme_labels("pain_points"),
+            "buyer_objections": _theme_labels("objections"),
+            "liked_points": _theme_labels("liked_points"),
+            "use_cases": _theme_labels("use_cases"),
+            "proof_quotes": proof_quotes[:12],
+            "evidence_warnings": [
+                warning
+                for warning, active in (
+                    ("missing_quote", missing_quote),
+                    ("weak_evidence", weak_evidence),
+                )
+                if active
+            ],
+            "source_breakdown_summary": list(
+                evidence_brief.get("source_breakdown_summary") or []
+            ),
+        },
+        "creative_section": {
+            "recommended_version_script": copy_ready_script,
+            "recommended_hook": _rw_text(
+                recommended_version.get("hook") or script.get("hook")
+            ),
+            "scene_1": _rw_text(recommended_version.get("scene_1")) or scene_texts[0],
+            "scene_2": _rw_text(recommended_version.get("scene_2")) or scene_texts[1],
+            "scene_3": _rw_text(recommended_version.get("scene_3")) or scene_texts[2],
+            "cta": _rw_text(recommended_version.get("cta") or script.get("cta")),
+            "version_lineage_note": (
+                f"Recommended version {recommended_version_id} comes from the existing creative version lineage."
+            ),
+            "original_vs_revised_note": _rw_text(
+                version_pack.get("version_risk_summary", {}).get("summary")
+            ),
+            "copy_ready_script": copy_ready_script,
+        },
+        "platform_assets_section": {
+            "recommended_platform_pack": selected_platform_pack,
+            "platform_pack_count": len(
+                list(multi_platform_pack.get("platform_packs") or [])
+            ),
+            "duration_count": int(
+                multi_platform_pack.get("multi_platform_summary", {}).get(
+                    "duration_count"
+                )
+                or 0
+            ),
+            "platforms": list(
+                multi_platform_pack.get("multi_platform_summary", {}).get(
+                    "platforms"
+                )
+                or []
+            ),
+            "shooting_script": script,
+            "shot_list": list(selected_platform_pack.get("shot_list") or []),
+            "keyframe_prompts": list(
+                selected_platform_pack.get("keyframe_prompts") or []
+            ),
+            "subtitle_lines": list(
+                selected_platform_pack.get("subtitle_lines") or []
+            ),
+            "caption_variants": dict(
+                selected_platform_pack.get("caption_variants") or {}
+            ),
+            "thumbnail_prompt": _rw_text(
+                selected_platform_pack.get("thumbnail_prompt")
+            ),
+            "b_roll_notes": list(
+                selected_platform_pack.get("b_roll_notes") or []
+            ),
+        },
+        "quality_gate_section": {
+            "recommended_ready_pack_id": recommended_ready_pack_id,
+            "overall_quality_score": quality_score,
+            "quality_tier": _rw_text(
+                recommended_quality_card.get("quality_tier")
+            ),
+            "delivery_readiness": _rw_text(
+                recommended_quality_card.get("delivery_readiness")
+            ),
+            "missing_items": list(
+                recommended_quality_card.get("missing_items") or []
+            ),
+            "risk_items": list(
+                recommended_quality_card.get("risk_items") or []
+            ),
+            "fix_recommendations": list(
+                recommended_quality_card.get("fix_recommendations") or []
+            ),
+        },
+        "test_plan_section": {
+            "recommended_first_variant": recommended_first_variant,
+            "recommended_ab_pair": ab_pair,
+            "ab_test_hypothesis": _rw_text(ab_test_plan.get("hypothesis")),
+            "primary_metric": _rw_text(ab_test_plan.get("primary_metric")),
+            "secondary_metric": _rw_text(ab_test_plan.get("secondary_metric")),
+            "safe_launch_note": _rw_text(ab_test_plan.get("safe_launch_note")),
+            "next_iteration_recommendation": _rw_text(
+                recommended_first_variant.get("recommended_next_action")
+            ),
+        },
+        "safety_section": {
+            "do_not_claim": do_not_claim,
+            "safe_claim_notes": safe_claim_notes,
+            "risk_notes": risk_notes,
+            "unsupported_claim_warnings": campaign_quality_checks[
+                "unsupported_claim_warnings"
+            ],
+            "provider_governance_status": "real_execution_disabled",
+            "disabled_real_operations": disabled_real_operations,
+        },
+        "export_manifest": {
+            "manifest_id": f"manifest_{campaign_id}",
+            "included_sections": included_sections,
+            "copy_targets": [
+                "campaign_brief",
+                "evidence_section",
+                "creative_section",
+                "platform_assets_section",
+                "quality_gate_section",
+                "test_plan_section",
+                "safety_section",
+                "full_campaign_export_pack",
+            ],
+            "markdown_export_ready": not bool(missing_export_sections),
+            "json_export_ready": True,
+            "created_from_packs": [
+                "creative_decision_pack_v1",
+                _rw_text(version_pack.get("pack_version")),
+                _rw_text(asset_pack.get("pack_version")),
+                _rw_text(multi_platform_pack.get("pack_version")),
+                _rw_text(quality_gate.get("pack_version")),
+                _rw_text(selection_pack.get("pack_version")),
+            ],
+            "excluded_real_operations": disabled_real_operations,
+        },
+        "campaign_quality_checks": campaign_quality_checks,
+        "safety_boundaries": {
+            "provider_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_operation_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_operation_enabled": False,
+            "restore_or_rollback_enabled": False,
+            "feedback_persisted": False,
+            "secret_read": False,
+        },
+    }
+
+
 def _rw_creative_variant_pack(creative_decision_pack: dict, language: str) -> dict:
     angles = list(creative_decision_pack.get("top_ad_angles") or [])
     source_angle = next((angle for angle in angles if angle.get("is_recommended")), angles[0] if angles else {})
@@ -20661,6 +21118,10 @@ def _review_workspace_creative_decision_pack(
             "asset_quality_gate_pack"
         )
         or {}
+    )
+    creative_decision_pack["campaign_export_pack"] = _rw_campaign_export_pack(
+        creative_decision_pack,
+        language,
     )
     return creative_decision_pack
 

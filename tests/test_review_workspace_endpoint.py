@@ -2065,6 +2065,110 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
                 for value in quality_gate["safety_boundaries"].values()
             )
         )
+        campaign = pack["campaign_export_pack"]
+        self.assertEqual(
+            campaign["pack_version"],
+            "campaign_export_pack_v1",
+        )
+        self.assertTrue(campaign["recommended_campaign_id"])
+        campaign_summary = campaign["campaign_summary"]
+        for field in [
+            "recommended_version_id",
+            "recommended_platform_pack_id",
+            "recommended_ready_pack_id",
+        ]:
+            self.assertTrue(campaign_summary[field], field)
+
+        campaign_brief = campaign["campaign_brief"]
+        for field in [
+            "buyer_pain",
+            "buyer_objection",
+            "creative_angle",
+            "proof_quote",
+            "risk_note",
+            "do_not_claim",
+        ]:
+            self.assertIn(field, campaign_brief)
+        self.assertTrue(campaign_brief["creative_angle"])
+        self.assertTrue(campaign_brief["proof_quote"])
+        self.assertTrue(campaign_brief["risk_note"])
+        self.assertTrue(campaign_brief["do_not_claim"])
+
+        evidence_section = campaign["evidence_section"]
+        for field in [
+            "proof_quotes",
+            "evidence_warnings",
+            "source_breakdown_summary",
+        ]:
+            self.assertIn(field, evidence_section)
+        self.assertTrue(evidence_section["proof_quotes"])
+        self.assertTrue(evidence_section["source_breakdown_summary"])
+
+        creative_section = campaign["creative_section"]
+        for field in [
+            "copy_ready_script",
+            "recommended_hook",
+            "scene_1",
+            "scene_2",
+            "scene_3",
+            "cta",
+        ]:
+            self.assertTrue(creative_section[field], field)
+
+        platform_assets = campaign["platform_assets_section"]
+        for field in [
+            "shooting_script",
+            "shot_list",
+            "keyframe_prompts",
+            "subtitle_lines",
+            "caption_variants",
+            "thumbnail_prompt",
+        ]:
+            self.assertTrue(platform_assets[field], field)
+
+        quality_section = campaign["quality_gate_section"]
+        self.assertEqual(
+            quality_section["recommended_ready_pack_id"],
+            quality_gate["recommended_ready_pack_id"],
+        )
+        recommended_quality_card = next(
+            card
+            for card in quality_cards
+            if card["platform_pack_id"]
+            == quality_gate["recommended_ready_pack_id"]
+        )
+        self.assertEqual(
+            quality_section["overall_quality_score"],
+            recommended_quality_card["overall_quality_score"],
+        )
+        self.assertEqual(
+            quality_section["fix_recommendations"],
+            recommended_quality_card["fix_recommendations"],
+        )
+
+        test_plan = campaign["test_plan_section"]
+        for field in [
+            "ab_test_hypothesis",
+            "primary_metric",
+            "safe_launch_note",
+        ]:
+            self.assertTrue(test_plan[field], field)
+        self.assertTrue(campaign["safety_section"]["disabled_real_operations"])
+
+        export_manifest = campaign["export_manifest"]
+        self.assertTrue(export_manifest["included_sections"])
+        self.assertTrue(export_manifest["markdown_export_ready"])
+        self.assertTrue(export_manifest["json_export_ready"])
+        self.assertTrue(campaign["campaign_quality_checks"])
+        for boundary in [
+            "provider_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_operation_enabled",
+            "paid_operation_enabled",
+            "registry_operation_enabled",
+        ]:
+            self.assertFalse(campaign["safety_boundaries"][boundary])
 
     def test_review_workspace_marks_weak_evidence_instead_of_inventing_angles(self):
         response = self.client.post(
@@ -2285,6 +2389,27 @@ class ReviewWorkspaceCreativeDecisionPackTest(unittest.TestCase):
                 for value in quality_gate["safety_boundaries"].values()
             )
         )
+        campaign = pack["campaign_export_pack"]
+        self.assertNotEqual(
+            campaign["campaign_summary"]["campaign_readiness"],
+            "ready_to_launch",
+        )
+        self.assertTrue(campaign["campaign_quality_checks"]["weak_evidence"])
+        self.assertTrue(
+            campaign["campaign_quality_checks"][
+                "ready_to_launch_requires_strong_evidence"
+            ]
+        )
+        self.assertTrue(campaign["safety_section"]["disabled_real_operations"])
+        for boundary in [
+            "provider_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_operation_enabled",
+            "paid_operation_enabled",
+            "registry_operation_enabled",
+        ]:
+            self.assertFalse(campaign["safety_boundaries"][boundary])
         feedback = pack["creative_feedback_runtime"]
         self.assertIn(
             feedback["feedback_summary"]["recommended_next_step"],
