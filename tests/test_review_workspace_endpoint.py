@@ -163,6 +163,190 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertIn("\u53bb\u91cd\u540e 2 \u6761\u8fdb\u5165\u5206\u6790", note)
         self.assertIn("1 \u6761\u4e3a\u91cd\u590d\u8bc4\u8bba", note)
 
+    def test_review_workspace_returns_review_import_pack_for_mixed_intake(self):
+        duplicate_text = "The handle cracked after two uses and made the product feel unsafe."
+        payload = {
+            "workspace_id": "review-import-mixed",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "url": "https://www.amazon.com/dp/MAIN001",
+                    "asin": "MAIN001",
+                    "title": "Manual Import Main Product",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Cracked handle",
+                            "text": duplicate_text,
+                            "source_section": "amazon_visible_review",
+                            "helpful_count": 6,
+                        },
+                        {
+                            "rating": 2,
+                            "title": "Same issue",
+                            "text": duplicate_text,
+                            "source_section": "amazon_visible_review",
+                        },
+                    ],
+                },
+                {
+                    "platform": "unknown",
+                    "title": "Manual Import Main Product",
+                    "reviews": [
+                        {
+                            "title": "Manual short row",
+                            "text": "Bad.",
+                            "source_section": "manual_review",
+                        },
+                        {
+                            "rating": 5,
+                            "title": "Manual liked point",
+                            "text": "I use it every morning and it cleans up quickly after breakfast.",
+                            "source_section": "manual_review",
+                        },
+                    ],
+                },
+                {
+                    "platform": "csv",
+                    "title": "CSV Rows",
+                    "reviews": [
+                        {
+                            "rating": 4,
+                            "title": "CSV good row",
+                            "text": "CSV row says the product works well for travel but the lid is tight.",
+                            "source_section": "csv_row",
+                        },
+                        {
+                            "rating": 5,
+                            "title": "CSV empty row",
+                            "text": "",
+                            "source_section": "csv_row",
+                        },
+                    ],
+                },
+                {
+                    "platform": "competitor",
+                    "title": "Competitor Product",
+                    "reviews": [
+                        {
+                            "rating": 3,
+                            "title": "Competitor comparison",
+                            "text": "Compared with a competitor, this one is easier to rinse but feels less sturdy.",
+                            "source_section": "competitor_review",
+                        }
+                    ],
+                },
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        pack = body["creative_decision_pack"]["review_import_pack"]
+        summary = pack["import_summary"]
+        self.assertEqual(pack["pack_version"], "review_import_pack_v1")
+        self.assertEqual(summary["raw_import_count"], 7)
+        self.assertEqual(summary["normalized_review_count"], 7)
+        self.assertEqual(summary["duplicate_review_count"], 1)
+        self.assertGreaterEqual(summary["usable_review_count"], 1)
+        self.assertEqual(
+            summary["source_type_counts"],
+            {
+                "amazon_visible": 2,
+                "competitor": 1,
+                "csv": 2,
+                "manual": 2,
+            },
+        )
+        self.assertFalse(pack["import_quality_checks"]["ready_as_strong_evidence"])
+        self.assertIn("weak_review_sample", pack["quality_warnings"])
+        self.assertIn("empty_review_text", pack["quality_warnings"])
+        self.assertIn("missing_rating", pack["quality_warnings"])
+        self.assertIn("duplicate_review", pack["quality_warnings"])
+        self.assertIn("very_short_review", pack["quality_warnings"])
+
+        normalized = pack["normalized_reviews"]
+        self.assertEqual(len(normalized), 7)
+        first_review = normalized[0]
+        duplicate_review = normalized[1]
+        self.assertEqual(first_review["review_text"], duplicate_text)
+        self.assertEqual(first_review["normalized_text"], duplicate_text)
+        self.assertFalse(first_review["is_duplicate"])
+        self.assertTrue(duplicate_review["is_duplicate"])
+        self.assertEqual(duplicate_review["duplicate_of"], first_review["review_id"])
+        self.assertIn(duplicate_review["quality_tier"], {"weak", "empty"})
+        for review in normalized:
+            self.assertIn("quality_score", review)
+            self.assertIn("quality_tier", review)
+            self.assertIn("detected_signals", review)
+
+        self.assertEqual(pack["source_breakdown"]["raw_review_count"], 7)
+        self.assertEqual(pack["source_breakdown"]["total_reviews"], body["source_breakdown"]["total_reviews"])
+        self.assertEqual(pack["source_breakdown"]["duplicate_review_count"], body["source_breakdown"]["duplicate_review_count"])
+        self.assertEqual(pack["duplicate_report"]["duplicate_review_count"], 1)
+        self.assertTrue(pack["duplicate_report"]["duplicate_pairs"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
+    def test_review_import_pack_normalizes_csv_style_rows_without_changing_review_text(self):
+        payload = {
+            "workspace_id": "review-import-csv",
+            "source": "csv_upload",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "csv",
+                    "title": "CSV Import Product",
+                    "reviews": [
+                        {
+                            "rating": "1 out of 5 stars",
+                            "title": "CSV row 1",
+                            "text": "  CSV row: the seal leaked in my backpack, but customer support replaced it.  ",
+                            "source_section": "csv_row",
+                        },
+                        {
+                            "rating": "5",
+                            "title": "CSV row 2",
+                            "text": "CSV row: easy to clean after lunch and useful for travel.",
+                            "source_section": "csv_row",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        pack = response.json()["creative_decision_pack"]["review_import_pack"]
+        summary = pack["import_summary"]
+        self.assertEqual(summary["source_type_counts"], {"csv": 2})
+        self.assertEqual(summary["raw_import_count"], 2)
+        self.assertEqual(summary["duplicate_review_count"], 0)
+        self.assertEqual(pack["normalized_reviews"][0]["review_text"], payload["products"][0]["reviews"][0]["text"])
+        self.assertEqual(
+            pack["normalized_reviews"][0]["normalized_text"],
+            "CSV row: the seal leaked in my backpack, but customer support replaced it.",
+        )
+        self.assertEqual(pack["normalized_reviews"][0]["source_type"], "csv")
+        self.assertGreater(pack["normalized_reviews"][0]["quality_score"], 0)
+        self.assertIn(pack["normalized_reviews"][0]["quality_tier"], {"usable", "strong"})
+
 
 
 

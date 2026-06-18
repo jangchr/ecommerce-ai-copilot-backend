@@ -14802,6 +14802,298 @@ def _rw_duplicate_review_count(payload: ReviewWorkspaceRequest, rows: list[dict]
     return max(0, _rw_raw_review_count(payload) - len(rows))
 
 
+_REVIEW_IMPORT_SUPPORTED_SOURCE_TYPES = {
+    "amazon_visible",
+    "csv",
+    "manual",
+    "competitor",
+    "unknown",
+}
+
+
+def _rw_import_normalized_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9\u4e00-\u9fff]+", " ", _rw_text(value).lower()).strip()
+
+
+def _rw_import_source_type(payload: ReviewWorkspaceRequest, product, review) -> str:
+    product_blob = " ".join(
+        [
+            getattr(product, "platform", ""),
+            getattr(product, "url", ""),
+            getattr(product, "asin", ""),
+            getattr(product, "title", ""),
+            getattr(product, "brand", ""),
+        ]
+    ).lower()
+    review_blob = " ".join(
+        [
+            getattr(review, "source_section", ""),
+            getattr(review, "title", ""),
+            getattr(review, "text", ""),
+            getattr(payload, "source", ""),
+        ]
+    ).lower()
+    blob = f"{product_blob} {review_blob}"
+
+    if "competitor" in blob or "comparison" in blob or "compare" in blob:
+        return "competitor"
+    if "csv" in blob or "spreadsheet" in blob or "sheet" in blob:
+        return "csv"
+    if (
+        "amazon" in blob
+        or "amazon.com" in blob
+        or "amazon_visible" in blob
+        or "visible_review" in blob
+    ):
+        return "amazon_visible"
+    if "manual" in blob or getattr(payload, "source", "") == "manual":
+        return "manual"
+    return "unknown"
+
+
+def _rw_import_source_label(source_type: str) -> str:
+    return {
+        "amazon_visible": "Amazon visible review",
+        "csv": "CSV row",
+        "manual": "Manual review",
+        "competitor": "Competitor review",
+        "unknown": "Unknown source review",
+    }.get(source_type, "Unknown source review")
+
+
+def _rw_import_detected_signals(review, normalized_text: str, metadata: dict, source_type: str) -> list[str]:
+    lowered = normalized_text.lower()
+    signals: list[str] = []
+    rating = _rw_rating_value(getattr(review, "rating", None))
+    if rating is not None and rating <= 3:
+        signals.append("low_rating")
+    if rating is not None and rating >= 4:
+        signals.append("positive_rating")
+    if metadata.get("verified_purchase"):
+        signals.append("verified_purchase")
+    if metadata.get("helpful_count"):
+        signals.append("helpful_votes")
+    if any(marker in lowered for marker in _REVIEW_WORKSPACE_OBJECTION_MARKERS):
+        signals.append("objection_language")
+    if any(marker in lowered for marker in _REVIEW_WORKSPACE_LIKE_MARKERS):
+        signals.append("positive_language")
+    if any(marker in lowered for marker in _REVIEW_WORKSPACE_USE_CASE_MARKERS):
+        signals.append("use_case_language")
+    if source_type == "competitor":
+        signals.append("competitor_context")
+    return signals
+
+
+def _rw_import_quality_score(review, normalized_text: str, metadata: dict, is_duplicate: bool) -> int:
+    if not normalized_text:
+        return 0
+
+    score = min(55, len(normalized_text) // 3)
+    rating = _rw_rating_value(getattr(review, "rating", None))
+    if rating is not None:
+        score += 10
+        if rating <= 3:
+            score += 8
+    if metadata.get("verified_purchase"):
+        score += 8
+    if metadata.get("helpful_count"):
+        score += min(10, int(metadata.get("helpful_count") or 0))
+    lowered = normalized_text.lower()
+    if any(marker in lowered for marker in _REVIEW_WORKSPACE_OBJECTION_MARKERS):
+        score += 8
+    if any(marker in lowered for marker in _REVIEW_WORKSPACE_LIKE_MARKERS):
+        score += 5
+    if is_duplicate:
+        score = min(score, 25)
+    return max(0, min(100, score))
+
+
+def _rw_import_quality_tier(score: int, normalized_text: str, is_duplicate: bool) -> str:
+    if not normalized_text:
+        return "empty"
+    if is_duplicate or score < 35:
+        return "weak"
+    if score < 65:
+        return "usable"
+    return "strong"
+
+
+def _rw_import_readiness(usable_review_count: int, average_quality_score: float, duplicate_count: int) -> str:
+    if usable_review_count >= 30 and average_quality_score >= 55:
+        return "ready_for_creative_testing"
+    if usable_review_count >= 5 and average_quality_score >= 40:
+        return "usable_directional_sample"
+    if usable_review_count > 0:
+        return "weak_sample"
+    return "not_ready"
+
+
+def _rw_review_import_pack(
+    payload: ReviewWorkspaceRequest,
+    source_breakdown: ReviewSourceBreakdown,
+) -> dict:
+    normalized_reviews: list[dict] = []
+    quality_warnings: list[str] = []
+    import_errors: list[dict] = []
+    source_type_counts = Counter()
+    first_seen_by_key: dict[str, str] = {}
+    duplicate_pairs: list[dict] = []
+    unsupported_source_types = set()
+
+    raw_index = 0
+    for product_index, product in enumerate(payload.products or [], start=1):
+        for review_index, review in enumerate(getattr(product, "reviews", []) or [], start=1):
+            raw_index += 1
+            review_id = f"review_{raw_index}"
+            review_text = str(getattr(review, "text", "") or "")
+            normalized_text = _rw_text(review_text)
+            normalized_key = _rw_import_normalized_key(normalized_text)
+            duplicate_of = first_seen_by_key.get(normalized_key, "") if normalized_key else ""
+            is_duplicate = bool(duplicate_of)
+            if normalized_key and not duplicate_of:
+                first_seen_by_key[normalized_key] = review_id
+            if is_duplicate:
+                duplicate_pairs.append({"review_id": review_id, "duplicate_of": duplicate_of})
+
+            source_type = _rw_import_source_type(payload, product, review)
+            if source_type not in _REVIEW_IMPORT_SUPPORTED_SOURCE_TYPES:
+                unsupported_source_types.add(source_type)
+                source_type = "unknown"
+            source_type_counts[source_type] += 1
+
+            metadata = _rw_extract_review_metadata(review)
+            rating = _rw_rating_value(getattr(review, "rating", None))
+            helpful_votes = metadata.get("helpful_count")
+            if helpful_votes is None:
+                helpful_votes = getattr(review, "helpful_count", None)
+            try:
+                helpful_votes = int(helpful_votes) if helpful_votes is not None else None
+            except (TypeError, ValueError):
+                helpful_votes = None
+
+            quality_score = _rw_import_quality_score(review, normalized_text, metadata, is_duplicate)
+            quality_tier = _rw_import_quality_tier(quality_score, normalized_text, is_duplicate)
+            if not normalized_text:
+                quality_warnings.append("empty_review_text")
+                import_errors.append(
+                    {
+                        "review_id": review_id,
+                        "error_type": "empty_review_text",
+                        "detail": "Review text is empty and cannot be used as evidence.",
+                    }
+                )
+            if rating is None:
+                quality_warnings.append("missing_rating")
+            if is_duplicate:
+                quality_warnings.append("duplicate_review")
+            if normalized_text and len(normalized_text) < 35:
+                quality_warnings.append("very_short_review")
+
+            normalized_reviews.append(
+                {
+                    "review_id": review_id,
+                    "source_type": source_type,
+                    "source_label": _rw_import_source_label(source_type),
+                    "rating": rating,
+                    "review_title": _rw_text(getattr(review, "title", "")),
+                    "review_text": review_text,
+                    "review_date": metadata.get("review_date", ""),
+                    "verified_purchase": bool(metadata.get("verified_purchase")),
+                    "helpful_votes": helpful_votes,
+                    "variant_hint": metadata.get("size") or metadata.get("color") or "",
+                    "language_hint": getattr(payload, "output_language", "") or "unknown",
+                    "normalized_text": normalized_text,
+                    "is_duplicate": is_duplicate,
+                    "duplicate_of": duplicate_of,
+                    "quality_score": quality_score,
+                    "quality_tier": quality_tier,
+                    "detected_signals": _rw_import_detected_signals(
+                        review,
+                        normalized_text,
+                        metadata,
+                        source_type,
+                    ),
+                    "product_hint": _rw_text(getattr(product, "title", "")),
+                    "product_index": product_index,
+                    "review_index": review_index,
+                }
+            )
+
+    usable_review_count = sum(
+        1
+        for review in normalized_reviews
+        if review["normalized_text"] and not review["is_duplicate"] and review["quality_tier"] in {"usable", "strong"}
+    )
+    duplicate_review_count = sum(1 for review in normalized_reviews if review["is_duplicate"])
+    quality_scores = [int(review["quality_score"]) for review in normalized_reviews if review["normalized_text"]]
+    average_quality_score = round(sum(quality_scores) / len(quality_scores), 1) if quality_scores else 0.0
+    if unsupported_source_types:
+        quality_warnings.append("unsupported_source_type")
+    if usable_review_count < 5:
+        quality_warnings.append("weak_review_sample")
+
+    import_readiness = _rw_import_readiness(
+        usable_review_count,
+        average_quality_score,
+        duplicate_review_count,
+    )
+    recommended_next_action = {
+        "ready_for_creative_testing": "Proceed with evidence-grounded creative testing.",
+        "usable_directional_sample": "Use directionally, then collect more high-signal reviews before paid launch.",
+        "weak_sample": "Collect more non-duplicate reviews before treating this as strong evidence.",
+        "not_ready": "Import usable review text before running creative analysis.",
+    }[import_readiness]
+
+    return {
+        "pack_version": "review_import_pack_v1",
+        "intended_use": "deterministic_review_intake_normalization",
+        "import_summary": {
+            "raw_import_count": raw_index,
+            "normalized_review_count": len(normalized_reviews),
+            "duplicate_review_count": duplicate_review_count,
+            "usable_review_count": usable_review_count,
+            "source_type_counts": dict(sorted(source_type_counts.items())),
+            "average_quality_score": average_quality_score,
+            "import_readiness": import_readiness,
+            "recommended_next_action": recommended_next_action,
+        },
+        "normalized_reviews": normalized_reviews,
+        "source_breakdown": {
+            "total_reviews": getattr(source_breakdown, "total_reviews", 0),
+            "raw_review_count": getattr(source_breakdown, "raw_review_count", 0),
+            "duplicate_review_count": getattr(source_breakdown, "duplicate_review_count", 0),
+            "source_groups": _rw_packet_source_groups(source_breakdown),
+            "source_type_counts": dict(sorted(source_type_counts.items())),
+        },
+        "duplicate_report": {
+            "duplicate_review_count": duplicate_review_count,
+            "duplicate_pairs": duplicate_pairs,
+            "dedupe_rule": "exact normalized_text lower/strip punctuation-insensitive match",
+        },
+        "quality_warnings": sorted(set(quality_warnings)),
+        "import_errors": import_errors,
+        "import_quality_checks": {
+            "weak_sample": usable_review_count < 5,
+            "has_empty_review_text": "empty_review_text" in quality_warnings,
+            "has_missing_rating": "missing_rating" in quality_warnings,
+            "has_duplicates": duplicate_review_count > 0,
+            "ready_as_strong_evidence": usable_review_count >= 30 and average_quality_score >= 55,
+        },
+        "safety_boundaries": {
+            "provider_calls_enabled": False,
+            "llm_api_enabled": False,
+            "video_generation_enabled": False,
+            "media_upload_enabled": False,
+            "media_download_enabled": False,
+            "paid_operation_enabled": False,
+            "registry_write_enabled": False,
+            "rollback_enabled": False,
+            "external_scraping_enabled": False,
+            "database_persistence_enabled": False,
+        },
+    }
+
+
 
 def _rw_primary_asin(payload: ReviewWorkspaceRequest) -> str:
     for product in payload.products or []:
@@ -21132,6 +21424,7 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
     high_signal_rows = [row for row in rows if row["score"] >= 4]
     source_breakdown = _rw_source_breakdown(payload, rows)
+    review_import_pack = _rw_review_import_pack(payload, source_breakdown)
 
     workspace_signal_rows = high_signal_rows or rows
     common_pain_points = _rw_theme_summaries(
@@ -21198,6 +21491,7 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         sample_interpretation,
         llm_evidence_packet,
     )
+    creative_decision_pack["review_import_pack"] = review_import_pack
 
     return ReviewWorkspaceResponse(
         workspace_id=payload.workspace_id,
