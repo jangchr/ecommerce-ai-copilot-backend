@@ -21418,6 +21418,332 @@ def _review_workspace_creative_decision_pack(
     return creative_decision_pack
 
 
+def _rw_competitor_review_profile(reviews: list[dict], profile_id: str) -> dict:
+    review_count = len(reviews)
+    usable_reviews = [
+        review for review in reviews
+        if review.get("normalized_text")
+        and not review.get("is_duplicate")
+        and review.get("quality_tier") in {"usable", "strong"}
+    ]
+    ratings = [
+        float(review["rating"])
+        for review in reviews
+        if isinstance(review.get("rating"), (int, float))
+    ]
+    signal_counts = Counter(
+        signal
+        for review in reviews
+        for signal in list(review.get("detected_signals") or [])
+        if signal
+    )
+    top_signals = [
+        {"signal": signal, "review_count": count}
+        for signal, count in signal_counts.most_common(6)
+    ]
+    high_quality_quotes = [
+        {
+            "review_id": review.get("review_id", ""),
+            "source_type": review.get("source_type", ""),
+            "rating": review.get("rating"),
+            "evidence_quote": _rw_quote_snippet(review.get("review_text", ""), 220),
+            "quality_score": review.get("quality_score", 0),
+            "quality_tier": review.get("quality_tier", ""),
+            "detected_signals": list(review.get("detected_signals") or []),
+        }
+        for review in sorted(
+            reviews,
+            key=lambda item: int(item.get("quality_score") or 0),
+            reverse=True,
+        )[:6]
+        if _rw_text(review.get("review_text", ""))
+    ]
+    average_rating = round(sum(ratings) / len(ratings), 2) if ratings else None
+    average_quality_score = (
+        round(
+            sum(int(review.get("quality_score") or 0) for review in reviews) / review_count,
+            1,
+        )
+        if review_count
+        else 0.0
+    )
+    return {
+        "profile_id": profile_id,
+        "review_count": review_count,
+        "competitor_review_count": review_count if profile_id == "competitor" else 0,
+        "usable_review_count": len(usable_reviews),
+        "average_rating": average_rating,
+        "average_quality_score": average_quality_score,
+        "top_detected_signals": top_signals,
+        "high_quality_quotes": high_quality_quotes,
+    }
+
+
+def _rw_competitor_claim_safety(
+    quote: str,
+    own_quote: str,
+    competitor_count: int,
+    weak_evidence: bool,
+) -> str:
+    if weak_evidence or not quote or competitor_count < 2:
+        return "low"
+    if own_quote:
+        return "moderate"
+    return "low"
+
+
+def _rw_competitor_review_comparison_pack(
+    creative_decision_pack: dict,
+    review_import_pack: dict,
+    language: str,
+) -> dict:
+    normalized_reviews = list(review_import_pack.get("normalized_reviews") or [])
+    competitor_reviews = [
+        review for review in normalized_reviews
+        if review.get("source_type") == "competitor"
+    ]
+    own_reviews = [
+        review for review in normalized_reviews
+        if review.get("source_type") != "competitor"
+    ]
+    source_type_counts = dict(
+        review_import_pack.get("import_summary", {}).get("source_type_counts") or {}
+    )
+    do_not_claim = list(
+        creative_decision_pack.get("video_prompt_pack", {}).get("do_not_claim") or []
+    )
+    do_not_claim.extend(
+        [
+            "Do not claim competitor superiority without supplied competitor review evidence.",
+            "Do not state that CrossGrowth's product fixes a competitor issue unless own-product supplied reviews support it.",
+            "Do not use competitor reviews as proof of own-product performance.",
+        ]
+    )
+    do_not_claim = sorted(set(_rw_text(item) for item in do_not_claim if _rw_text(item)))
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+    }
+
+    competitor_profile = _rw_competitor_review_profile(competitor_reviews, "competitor")
+    own_profile = _rw_competitor_review_profile(own_reviews, "own")
+    weak_evidence = (
+        competitor_profile["usable_review_count"] < 2
+        or competitor_profile["average_quality_score"] < 45
+    )
+    missing_quote = not bool(competitor_profile["high_quality_quotes"])
+
+    if not competitor_reviews:
+        return {
+            "pack_version": "competitor_review_comparison_pack_v1",
+            "intended_use": "deterministic_competitor_review_comparison",
+            "comparison_summary": {
+                "comparison_readiness": "needs_competitor_reviews",
+                "recommended_next_action": "Import competitor reviews with source_type=competitor before comparing review profiles.",
+                "own_review_count": len(own_reviews),
+                "competitor_review_count": 0,
+                "source_type_counts": source_type_counts,
+                "weak_evidence": True,
+                "missing_competitor_quote": True,
+                "claim_safety_level": "low",
+            },
+            "own_review_profile": own_profile,
+            "competitor_review_profile": competitor_profile,
+            "comparison_cards": [],
+            "gap_opportunity_cards": [],
+            "differentiation_angle_cards": [],
+            "competitor_risk_notes": [
+                "No competitor reviews were supplied; competitor comparison is not ready.",
+                "Do not infer competitor weaknesses from own-product reviews.",
+            ],
+            "recommended_competitor_actions": [
+                "Add visible competitor reviews through manual, CSV, or browser intake with source_type=competitor.",
+                "Re-run review workspace analysis after competitor review intake.",
+            ],
+            "comparison_quality_checks": {
+                "has_competitor_reviews": False,
+                "weak_evidence": True,
+                "missing_competitor_quote": True,
+                "ready_for_comparison": False,
+                "high_claim_safety_allowed": False,
+            },
+            "safety_boundaries": safety_boundaries,
+            "do_not_claim": do_not_claim,
+        }
+
+    own_signal_set = {
+        signal
+        for review in own_reviews
+        for signal in list(review.get("detected_signals") or [])
+        if signal
+    }
+    competitor_signal_set = {
+        signal
+        for review in competitor_reviews
+        for signal in list(review.get("detected_signals") or [])
+        if signal
+    }
+    competitor_only_signals = sorted(competitor_signal_set - own_signal_set) or sorted(competitor_signal_set)
+    shared_signals = sorted(competitor_signal_set & own_signal_set)
+
+    comparison_cards = []
+    for index, signal in enumerate((shared_signals or sorted(competitor_signal_set))[:4], start=1):
+        competitor_quote = next(
+            (
+                _rw_quote_snippet(review.get("review_text", ""), 220)
+                for review in competitor_reviews
+                if signal in list(review.get("detected_signals") or [])
+            ),
+            "",
+        )
+        own_quote = next(
+            (
+                _rw_quote_snippet(review.get("review_text", ""), 220)
+                for review in own_reviews
+                if signal in list(review.get("detected_signals") or [])
+            ),
+            "",
+        )
+        comparison_cards.append(
+            {
+                "comparison_id": f"comparison_{index}",
+                "signal": signal,
+                "own_evidence_quote": own_quote,
+                "competitor_evidence_quote": competitor_quote,
+                "comparison_note": (
+                    "Shared review signal; compare wording without claiming a product win."
+                    if own_quote
+                    else "Competitor review signal is present, but own-product evidence is missing."
+                ),
+                "weak_evidence": weak_evidence or not competitor_quote or not own_quote,
+                "claim_safety_level": _rw_competitor_claim_safety(
+                    competitor_quote,
+                    own_quote,
+                    competitor_profile["usable_review_count"],
+                    weak_evidence,
+                ),
+                "do_not_claim": do_not_claim,
+            }
+        )
+
+    gap_opportunity_cards = []
+    for index, signal in enumerate(competitor_only_signals[:4], start=1):
+        competitor_review = next(
+            (
+                review for review in competitor_reviews
+                if signal in list(review.get("detected_signals") or [])
+            ),
+            competitor_reviews[0],
+        )
+        evidence_quote = _rw_quote_snippet(competitor_review.get("review_text", ""), 220)
+        gap_opportunity_cards.append(
+            {
+                "gap_id": f"competitor_gap_{index}",
+                "signal": signal,
+                "opportunity_type": "competitor_review_signal",
+                "evidence_quote": evidence_quote,
+                "weak_evidence": weak_evidence or not evidence_quote,
+                "risk_note": "Use as a research prompt only; do not claim own-product advantage without own-review support.",
+                "do_not_claim": do_not_claim,
+                "claim_safety_level": _rw_competitor_claim_safety(
+                    evidence_quote,
+                    "",
+                    competitor_profile["usable_review_count"],
+                    weak_evidence,
+                ),
+            }
+        )
+
+    differentiation_angle_cards = []
+    top_angles = list(creative_decision_pack.get("top_ad_angles") or [])
+    for index, angle in enumerate((top_angles or [{}])[:4], start=1):
+        competitor_review = competitor_reviews[min(index - 1, len(competitor_reviews) - 1)]
+        evidence_quote = _rw_quote_snippet(competitor_review.get("review_text", ""), 220)
+        angle_quote = _rw_quote_snippet(angle.get("proof_quote", ""), 220)
+        missing_angle_quote = not bool(angle_quote)
+        differentiation_angle_cards.append(
+            {
+                "angle_id": f"competitor_angle_{index}",
+                "source_angle_id": angle.get("angle_id", ""),
+                "angle_title": angle.get("title", "Competitor-informed review angle"),
+                "competitor_evidence_quote": evidence_quote,
+                "own_evidence_quote": angle_quote,
+                "weak_evidence": weak_evidence or missing_angle_quote or not evidence_quote,
+                "missing_quote": missing_angle_quote or not evidence_quote,
+                "risk_note": "Keep this as a contrast hypothesis unless both own and competitor supplied quotes support it.",
+                "do_not_claim": do_not_claim,
+                "claim_safety_level": _rw_competitor_claim_safety(
+                    evidence_quote,
+                    angle_quote,
+                    competitor_profile["usable_review_count"],
+                    weak_evidence or missing_angle_quote,
+                ),
+            }
+        )
+
+    comparison_readiness = (
+        "ready"
+        if competitor_profile["usable_review_count"] >= 2
+        and not missing_quote
+        and not creative_decision_pack.get("quality_checks", {}).get("weak_evidence")
+        else "weak_competitor_sample"
+    )
+    high_claim_allowed = False
+
+    return {
+        "pack_version": "competitor_review_comparison_pack_v1",
+        "intended_use": "deterministic_competitor_review_comparison",
+        "comparison_summary": {
+            "comparison_readiness": comparison_readiness,
+            "recommended_next_action": (
+                "Use competitor comparison as a directional research brief and collect more quote-backed own and competitor reviews."
+                if comparison_readiness != "ready"
+                else "Use quote-backed comparison cards for internal creative planning; keep claims evidence-bounded."
+            ),
+            "own_review_count": len(own_reviews),
+            "competitor_review_count": len(competitor_reviews),
+            "source_type_counts": source_type_counts,
+            "competitor_signal_count": len(competitor_signal_set),
+            "shared_signal_count": len(shared_signals),
+            "weak_evidence": weak_evidence,
+            "missing_competitor_quote": missing_quote,
+            "claim_safety_level": "moderate" if comparison_readiness == "ready" else "low",
+        },
+        "own_review_profile": own_profile,
+        "competitor_review_profile": competitor_profile,
+        "comparison_cards": comparison_cards,
+        "gap_opportunity_cards": gap_opportunity_cards,
+        "differentiation_angle_cards": differentiation_angle_cards,
+        "competitor_risk_notes": [
+            "Competitor reviews are competitor evidence only, not proof of own-product performance.",
+            "Weak evidence or missing quotes keep claim safety low.",
+            "Keep do_not_claim constraints attached to any competitor-informed angle.",
+        ],
+        "recommended_competitor_actions": [
+            "Collect more competitor reviews for repeated signals before using comparison in paid creative.",
+            "Pair each competitor gap with an own-product review quote before making a differentiation claim.",
+            "Use comparison cards as research prompts, not external-facing superiority claims.",
+        ],
+        "comparison_quality_checks": {
+            "has_competitor_reviews": True,
+            "weak_evidence": weak_evidence,
+            "missing_competitor_quote": missing_quote,
+            "ready_for_comparison": comparison_readiness == "ready",
+            "high_claim_safety_allowed": high_claim_allowed,
+        },
+        "safety_boundaries": safety_boundaries,
+        "do_not_claim": do_not_claim,
+    }
+
+
 
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
@@ -21492,6 +21818,13 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         llm_evidence_packet,
     )
     creative_decision_pack["review_import_pack"] = review_import_pack
+    creative_decision_pack["competitor_review_comparison_pack"] = (
+        _rw_competitor_review_comparison_pack(
+            creative_decision_pack,
+            review_import_pack,
+            payload.output_language,
+        )
+    )
 
     return ReviewWorkspaceResponse(
         workspace_id=payload.workspace_id,

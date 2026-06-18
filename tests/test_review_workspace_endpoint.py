@@ -347,6 +347,131 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertGreater(pack["normalized_reviews"][0]["quality_score"], 0)
         self.assertIn(pack["normalized_reviews"][0]["quality_tier"], {"usable", "strong"})
 
+    def test_competitor_review_comparison_pack_uses_competitor_reviews_only(self):
+        payload = {
+            "workspace_id": "competitor-comparison",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "title": "Own Travel Bottle",
+                    "reviews": [
+                        {
+                            "rating": 5,
+                            "title": "Easy cleaning",
+                            "text": "Our bottle is easy to clean after lunch and feels sturdy in a backpack.",
+                            "source_section": "amazon_visible_review",
+                        },
+                        {
+                            "rating": 4,
+                            "title": "Travel use",
+                            "text": "I use it for travel because the cap is simple to rinse and convenient.",
+                            "source_section": "manual_review",
+                        },
+                    ],
+                },
+                {
+                    "platform": "competitor",
+                    "title": "Competitor Bottle",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Competitor leaks",
+                            "text": "The competitor bottle leaked in my backpack and was hard to clean after coffee.",
+                            "source_section": "competitor_review",
+                        },
+                        {
+                            "rating": 3,
+                            "title": "Competitor sturdy but messy",
+                            "text": "Competitor feels sturdy, but the lid is tight and cleaning takes too long.",
+                            "source_section": "competitor_review",
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn("competitor_review_comparison_pack", creative_pack)
+        pack = creative_pack["competitor_review_comparison_pack"]
+        summary = pack["comparison_summary"]
+        self.assertEqual(pack["pack_version"], "competitor_review_comparison_pack_v1")
+        self.assertIn(summary["comparison_readiness"], {"ready", "weak_competitor_sample"})
+        self.assertGreater(pack["competitor_review_profile"]["competitor_review_count"], 0)
+        self.assertEqual(summary["source_type_counts"]["competitor"], 2)
+        self.assertGreaterEqual(len(pack["gap_opportunity_cards"]), 1)
+        self.assertGreaterEqual(len(pack["differentiation_angle_cards"]), 1)
+        gap = pack["gap_opportunity_cards"][0]
+        angle = pack["differentiation_angle_cards"][0]
+        self.assertTrue(gap.get("evidence_quote") or gap.get("weak_evidence"))
+        self.assertTrue(angle.get("competitor_evidence_quote") or angle.get("weak_evidence"))
+        self.assertTrue(gap["risk_note"])
+        self.assertTrue(angle["risk_note"])
+        self.assertTrue(gap["do_not_claim"])
+        self.assertTrue(angle["do_not_claim"])
+        self.assertIn("Do not use competitor reviews as proof of own-product performance.", pack["do_not_claim"])
+        self.assertNotEqual(summary["claim_safety_level"], "high")
+        self.assertFalse(pack["comparison_quality_checks"]["high_claim_safety_allowed"])
+        self.assertTrue(pack["competitor_risk_notes"])
+        self.assertTrue(pack["recommended_competitor_actions"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
+    def test_competitor_review_comparison_pack_requires_competitor_reviews(self):
+        payload = {
+            "workspace_id": "competitor-comparison-no-data",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "title": "Own Product Only",
+                    "reviews": [
+                        {
+                            "rating": 4,
+                            "title": "Own product review",
+                            "text": "The product is easy to clean and useful for travel.",
+                            "source_section": "amazon_visible_review",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        pack = response.json()["creative_decision_pack"]["competitor_review_comparison_pack"]
+        summary = pack["comparison_summary"]
+        self.assertEqual(summary["comparison_readiness"], "needs_competitor_reviews")
+        self.assertNotEqual(summary["comparison_readiness"], "ready")
+        self.assertEqual(pack["competitor_review_profile"]["competitor_review_count"], 0)
+        self.assertEqual(pack["comparison_cards"], [])
+        self.assertEqual(pack["gap_opportunity_cards"], [])
+        self.assertEqual(pack["differentiation_angle_cards"], [])
+        self.assertFalse(pack["comparison_quality_checks"]["ready_for_comparison"])
+        self.assertFalse(pack["comparison_quality_checks"]["high_claim_safety_allowed"])
+        self.assertEqual(summary["claim_safety_level"], "low")
+        self.assertIn("needs_competitor_reviews", summary["comparison_readiness"])
+
 
 
 
