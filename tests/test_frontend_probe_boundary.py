@@ -8518,6 +8518,163 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertIn("feedback persistence remain disabled", html)
         self.assertNotIn("????", html)
 
+    def test_review_import_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace review import pack bundle",
+            "PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER",
+            "latestProjectReviewImportPack",
+            "projectWorkspaceReviewImportPackFromWorkspace",
+            "projectWorkspaceExportReviewImportPackSnapshot",
+            "projectWorkspaceExportReviewImportPackMarkdown",
+            "renderProjectWorkspaceReviewImportSummaryPanel",
+            "renderProjectWorkspaceNormalizedReviewsPanel",
+            "renderProjectWorkspaceReviewImportSourcePanel",
+            "renderProjectWorkspaceReviewImportQualityPanel",
+            "copyProjectWorkspaceReviewImportSummary",
+            "copyProjectWorkspaceNormalizedReviews",
+            "copyProjectWorkspaceReviewImportSourceBreakdown",
+            "copyProjectWorkspaceReviewImportQualityWarnings",
+            "copyProjectWorkspaceFullReviewImportPack",
+            "review_import_pack: projectWorkspaceExportReviewImportPackSnapshot(workspace)",
+            "Review Import Pack",
+            "Import Summary",
+            "Normalized Reviews",
+            "Source Breakdown / Duplicate Report",
+            "Quality Warnings / Import Errors",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.import_summary",
+            "pack.normalized_reviews",
+            "pack.source_breakdown",
+            "pack.duplicate_report",
+            "pack.quality_warnings",
+            "pack.import_errors",
+            "pack.import_quality_checks",
+            "pack.safety_boundaries",
+            "summary.raw_import_count",
+            "summary.normalized_review_count",
+            "summary.duplicate_review_count",
+            "summary.usable_review_count",
+            "summary.source_type_counts",
+            "summary.average_quality_score",
+            "summary.import_readiness",
+            "summary.recommended_next_action",
+            "review.review_id",
+            "review.source_type",
+            "review.rating",
+            "review.review_title",
+            "review.review_text",
+            "review.normalized_text",
+            "review.is_duplicate",
+            "review.duplicate_of",
+            "review.quality_score",
+            "review.quality_tier",
+            "review.detected_signals",
+        ]:
+            self.assertIn(runtime_field, html)
+        for source_type in [
+            "csv",
+            "manual",
+            "amazon_visible",
+            "competitor",
+            "unknown",
+        ]:
+            self.assertIn(source_type, html)
+        supervisor = html.index(
+            "${renderProjectWorkspaceSupervisorNextActionsPanel(workspace)}"
+        )
+        review_summary = html.index(
+            "${renderProjectWorkspaceReviewImportSummaryPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(supervisor, review_summary)
+        self.assertLess(review_summary, creative_core)
+
+    def test_review_import_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "reviewImportPackTitle",
+            "reviewImportPackHelper",
+            "reviewImportSummaryTitle",
+            "reviewImportRawCount",
+            "reviewImportNormalizedCount",
+            "reviewImportDuplicateCount",
+            "reviewImportUsableCount",
+            "reviewImportSourceTypeCounts",
+            "reviewImportAverageQualityScore",
+            "reviewImportReadiness",
+            "reviewImportRecommendedNextAction",
+            "reviewImportNormalizedReviewsTitle",
+            "reviewImportSourcePanelTitle",
+            "reviewImportQualityPanelTitle",
+            "reviewImportDuplicateReportTitle",
+            "reviewImportQualityWarnings",
+            "reviewImportImportErrors",
+            "reviewImportQualityChecks",
+            "reviewImportSafetyNotesTitle",
+            "reviewImportSafetyNote",
+            "reviewImportCopySummary",
+            "reviewImportCopyNormalized",
+            "reviewImportCopySource",
+            "reviewImportCopyQuality",
+            "reviewImportCopyFullPack",
+            "reviewImportCopied",
+            "reviewImportCopyFailed",
+            "reviewImportCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace review import pack bundle", script)
+            self.assertIn("project_workspace_review_import_pack_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportReviewImportPackMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceReviewImportText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "reviewImportPackTitle",
+            "reviewImportSummaryTitle",
+            "reviewImportNormalizedReviewsTitle",
+            "reviewImportSourcePanelTitle",
+            "reviewImportQualityPanelTitle",
+            "reviewImportSafetyNotesTitle",
+            "reviewImportSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        review_import_section = html[
+            html.index("const PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", review_import_section)
+        for disabled_boundary in [
+            "provider",
+            "LLM",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertIn("empty_review_text", html)
+        self.assertIn("missing_rating", html)
+        self.assertIn("duplicate_review", html)
+        self.assertIn("very_short_review", html)
+        self.assertIn("unsupported_source_type", html)
+        self.assertIn("weak_review_sample", html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

@@ -3600,6 +3600,7 @@
         let latestProjectMultiPlatformAssetPack = {};
         let latestProjectAssetQualityGatePack = {};
         let latestProjectCampaignExportPack = {};
+        let latestProjectReviewImportPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8876,6 +8877,7 @@
                     || latestProjectCreativeVariantPack.asset_quality_gate_pack
                     || {};
                 latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
+                latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14712,6 +14714,15 @@
         const PROJECT_WORKSPACE_MULTI_PLATFORM_ASSET_PACK_MARKER = 'Project Workspace multi platform asset pack bundle';
         const PROJECT_WORKSPACE_ASSET_QUALITY_GATE_MARKER = 'Project Workspace asset quality gate bundle';
         const PROJECT_WORKSPACE_CAMPAIGN_EXPORT_PACK_MARKER = 'Project Workspace campaign export pack bundle';
+        const PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER = 'Project Workspace review import pack bundle';
+        const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
+            'empty_review_text',
+            'missing_rating',
+            'duplicate_review',
+            'very_short_review',
+            'unsupported_source_type',
+            'weak_review_sample'
+        ];
 
         function projectWorkspaceCreativeDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCreativeDecisionPack && Object.keys(latestProjectCreativeDecisionPack).length) {
@@ -15861,6 +15872,182 @@
 
         function copyProjectWorkspaceFullAssetQualityPack() {
             return copyProjectWorkspaceAssetQualityText('full');
+        }
+
+        function projectWorkspaceReviewImportPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectReviewImportPack
+                && Object.keys(latestProjectReviewImportPack).length) {
+                return latestProjectReviewImportPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.review_import_pack || {};
+        }
+
+        function projectWorkspaceExportReviewImportPackSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceReviewImportPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER,
+                has_review_import_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                import_summary: pack.import_summary || {},
+                normalized_reviews: Array.isArray(pack.normalized_reviews) ? pack.normalized_reviews : [],
+                source_breakdown: pack.source_breakdown || {},
+                duplicate_report: pack.duplicate_report || {},
+                quality_warning_types: PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES,
+                quality_warnings: Array.isArray(pack.quality_warnings) ? pack.quality_warnings : [],
+                import_errors: Array.isArray(pack.import_errors) ? pack.import_errors : [],
+                import_quality_checks: pack.import_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceReviewImportListText(items = []) {
+            return (Array.isArray(items) ? items : [])
+                .map((item) => typeof item === 'string' ? item : JSON.stringify(item))
+                .filter(Boolean)
+                .map((item) => `- ${item}`)
+                .join('\n');
+        }
+
+        function projectWorkspaceReviewImportSourceCountsText(counts = {}) {
+            const sourceTypes = ['csv', 'manual', 'amazon_visible', 'competitor', 'unknown'];
+            return sourceTypes
+                .map((sourceType) => `${sourceType}: ${Number(counts[sourceType] || 0)}`)
+                .join('\n');
+        }
+
+        function projectWorkspaceReviewImportSummaryText(pack = projectWorkspaceExportReviewImportPackSnapshot()) {
+            if (!pack.has_review_import_pack) return '';
+            const summary = pack.import_summary || {};
+            return [
+                t('reviewImportSummaryTitle'),
+                `${t('reviewImportRawCount')}: ${summary.raw_import_count ?? 0}`,
+                `${t('reviewImportNormalizedCount')}: ${summary.normalized_review_count ?? 0}`,
+                `${t('reviewImportDuplicateCount')}: ${summary.duplicate_review_count ?? 0}`,
+                `${t('reviewImportUsableCount')}: ${summary.usable_review_count ?? 0}`,
+                `${t('reviewImportSourceTypeCounts')}:`,
+                projectWorkspaceReviewImportSourceCountsText(summary.source_type_counts || {}),
+                `${t('reviewImportAverageQualityScore')}: ${summary.average_quality_score ?? 0}`,
+                `${t('reviewImportReadiness')}: ${summary.import_readiness || t('none')}`,
+                `${t('reviewImportRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceNormalizedReviewsText(pack = projectWorkspaceExportReviewImportPackSnapshot()) {
+            if (!pack.has_review_import_pack) return '';
+            return (pack.normalized_reviews || []).map((review) => [
+                `## ${review.review_id || t('none')}`,
+                `${t('reviewImportSourceType')}: ${review.source_type || t('none')}`,
+                `${t('reviewImportRating')}: ${review.rating ?? t('none')}`,
+                `${t('reviewImportReviewTitle')}: ${review.review_title || t('none')}`,
+                `${t('reviewImportReviewText')}: ${review.review_text || t('none')}`,
+                `${t('reviewImportNormalizedText')}: ${review.normalized_text || t('none')}`,
+                `${t('reviewImportIsDuplicate')}: ${boolText(Boolean(review.is_duplicate))}`,
+                `${t('reviewImportDuplicateOf')}: ${review.duplicate_of || t('none')}`,
+                `${t('reviewImportQualityScore')}: ${review.quality_score ?? 0}`,
+                `${t('reviewImportQualityTier')}: ${review.quality_tier || t('none')}`,
+                `${t('reviewImportDetectedSignals')}: ${(review.detected_signals || []).join(', ') || t('none')}`
+            ].join('\n')).join('\n\n');
+        }
+
+        function projectWorkspaceReviewImportSourceText(pack = projectWorkspaceExportReviewImportPackSnapshot()) {
+            if (!pack.has_review_import_pack) return '';
+            const breakdown = pack.source_breakdown || {};
+            const duplicate = pack.duplicate_report || {};
+            return [
+                t('reviewImportSourcePanelTitle'),
+                `${t('reviewImportSourceTypeCounts')}:`,
+                projectWorkspaceReviewImportSourceCountsText(breakdown.source_type_counts || pack.import_summary?.source_type_counts || {}),
+                `${t('reviewImportUsableVsDuplicate')}: ${(pack.import_summary || {}).usable_review_count ?? 0} / ${duplicate.duplicate_review_count ?? 0}`,
+                `${t('reviewImportRawCount')}: ${breakdown.raw_review_count ?? 0}`,
+                `${t('reviewImportNormalizedCount')}: ${breakdown.total_reviews ?? 0}`,
+                `${t('reviewImportDuplicateCount')}: ${breakdown.duplicate_review_count ?? 0}`,
+                `${t('reviewImportDuplicateReportTitle')}:`,
+                projectWorkspaceReviewImportListText(duplicate.duplicate_pairs || []),
+                `${t('reviewImportDedupeRule')}: ${duplicate.dedupe_rule || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceReviewImportQualityText(pack = projectWorkspaceExportReviewImportPackSnapshot()) {
+            if (!pack.has_review_import_pack) return '';
+            return [
+                t('reviewImportQualityPanelTitle'),
+                `${t('reviewImportQualityWarningTypes')}:`,
+                projectWorkspaceReviewImportListText(pack.quality_warning_types || PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES),
+                `${t('reviewImportQualityWarnings')}:`,
+                projectWorkspaceReviewImportListText(pack.quality_warnings || []),
+                `${t('reviewImportImportErrors')}:`,
+                projectWorkspaceReviewImportListText(pack.import_errors || []),
+                `${t('reviewImportQualityChecks')}: ${JSON.stringify(pack.import_quality_checks || {})}`,
+                `${t('reviewImportSafetyNotesTitle')}:`,
+                projectWorkspaceReviewImportListText(Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value}`))
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportReviewImportPackMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewImportPackSnapshot(workspace);
+            if (!pack.has_review_import_pack) return '';
+            return [
+                `## ${t('reviewImportPackTitle')}`,
+                `### ${t('reviewImportSummaryTitle')}`,
+                projectWorkspaceReviewImportSummaryText(pack),
+                '',
+                `### ${t('reviewImportNormalizedReviewsTitle')}`,
+                projectWorkspaceNormalizedReviewsText(pack),
+                '',
+                `### ${t('reviewImportSourcePanelTitle')}`,
+                projectWorkspaceReviewImportSourceText(pack),
+                '',
+                `### ${t('reviewImportQualityPanelTitle')}`,
+                projectWorkspaceReviewImportQualityText(pack),
+                '',
+                `### ${t('reviewImportSafetyNotesTitle')}`,
+                t('reviewImportSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceReviewImportText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceReviewImportStatus');
+            const pack = projectWorkspaceExportReviewImportPackSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceReviewImportSummaryText(pack)
+                : kind === 'normalized'
+                    ? projectWorkspaceNormalizedReviewsText(pack)
+                    : kind === 'source'
+                        ? projectWorkspaceReviewImportSourceText(pack)
+                        : kind === 'quality'
+                            ? projectWorkspaceReviewImportQualityText(pack)
+                            : projectWorkspaceExportReviewImportPackMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('reviewImportCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('reviewImportCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('reviewImportCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('reviewImportCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceReviewImportSummary() {
+            return copyProjectWorkspaceReviewImportText('summary');
+        }
+
+        function copyProjectWorkspaceNormalizedReviews() {
+            return copyProjectWorkspaceReviewImportText('normalized');
+        }
+
+        function copyProjectWorkspaceReviewImportSourceBreakdown() {
+            return copyProjectWorkspaceReviewImportText('source');
+        }
+
+        function copyProjectWorkspaceReviewImportQualityWarnings() {
+            return copyProjectWorkspaceReviewImportText('quality');
+        }
+
+        function copyProjectWorkspaceFullReviewImportPack() {
+            return copyProjectWorkspaceReviewImportText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -17364,6 +17551,145 @@
             `;
         }
 
+        function renderProjectWorkspaceReviewImportSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewImportPackSnapshot(workspace);
+            if (!pack.has_review_import_pack) return '';
+            const summary = pack.import_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceReviewImportSummaryPanel"
+                    data-review-import-pack-marker="${PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('reviewImportPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('reviewImportPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button"
+                            onclick="copyProjectWorkspaceFullReviewImportPack()">${escapeHTML(t('reviewImportCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('reviewImportRawCount'), String(summary.raw_import_count ?? 0))}
+                        ${metricPill(t('reviewImportNormalizedCount'), String(summary.normalized_review_count ?? 0))}
+                        ${metricPill(t('reviewImportDuplicateCount'), String(summary.duplicate_review_count ?? 0))}
+                        ${metricPill(t('reviewImportUsableCount'), String(summary.usable_review_count ?? 0))}
+                        ${metricPill(t('reviewImportAverageQualityScore'), String(summary.average_quality_score ?? 0))}
+                        ${metricPill(t('reviewImportReadiness'), summary.import_readiness || t('none'))}
+                    </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(t('reviewImportRecommendedNextAction'))}:</strong>
+                        ${escapeHTML(summary.recommended_next_action || t('reviewImportNoData'))}
+                    </div>
+                    <div class="field-helper"><strong>${escapeHTML(t('reviewImportSourceTypeCounts'))}:</strong> ${escapeHTML(projectWorkspaceReviewImportSourceCountsText(summary.source_type_counts || {}).replace(/\n/g, ' | '))}</div>
+                    <div class="field-helper">${escapeHTML(t('reviewImportSafetyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceReviewImportStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReviewImportSummary()">${escapeHTML(t('reviewImportCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceNormalizedReviewsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewImportPackSnapshot(workspace);
+            if (!pack.has_review_import_pack) return '';
+            const reviews = (pack.normalized_reviews || []).slice(0, 12);
+            return `
+                <div class="section-block" id="projectWorkspaceNormalizedReviewsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('reviewImportNormalizedReviewsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('reviewImportNormalizedReviewsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceNormalizedReviews()">${escapeHTML(t('reviewImportCopyNormalized'))}</button>
+                    </div>
+                    ${reviews.length ? `<div class="graph-os-compact-grid">${reviews.map((review) => `
+                        <div class="graph-os-card">
+                            <div class="section-header">
+                                <strong>${escapeHTML(review.review_id || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(review.quality_tier || t('none'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('reviewImportSourceType'))}:</strong> ${escapeHTML(review.source_type || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportRating'))}:</strong> ${escapeHTML(String(review.rating ?? t('none')))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportReviewTitle'))}:</strong> ${escapeHTML(review.review_title || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportReviewText'))}:</strong> ${escapeHTML(review.review_text || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportNormalizedText'))}:</strong> ${escapeHTML(review.normalized_text || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportIsDuplicate'))}:</strong> ${escapeHTML(boolText(Boolean(review.is_duplicate)))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportDuplicateOf'))}:</strong> ${escapeHTML(review.duplicate_of || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportQualityScore'))}:</strong> ${escapeHTML(String(review.quality_score ?? 0))}</div>
+                            <div><strong>${escapeHTML(t('reviewImportDetectedSignals'))}:</strong> ${escapeHTML((review.detected_signals || []).join(', ') || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>` : `<div class="feedback-box">${escapeHTML(t('reviewImportNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceReviewImportSourcePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewImportPackSnapshot(workspace);
+            if (!pack.has_review_import_pack) return '';
+            const breakdown = pack.source_breakdown || {};
+            const duplicate = pack.duplicate_report || {};
+            const counts = breakdown.source_type_counts || pack.import_summary?.source_type_counts || {};
+            return `
+                <div class="section-block" id="projectWorkspaceReviewImportSourcePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('reviewImportSourcePanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('reviewImportSourcePanelHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceReviewImportSourceBreakdown()">${escapeHTML(t('reviewImportCopySource'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill('csv', String(counts.csv || 0))}
+                        ${metricPill('manual', String(counts.manual || 0))}
+                        ${metricPill('amazon_visible', String(counts.amazon_visible || 0))}
+                        ${metricPill('competitor', String(counts.competitor || 0))}
+                        ${metricPill('unknown', String(counts.unknown || 0))}
+                        ${metricPill(t('reviewImportUsableVsDuplicate'), `${(pack.import_summary || {}).usable_review_count ?? 0} / ${duplicate.duplicate_review_count ?? 0}`)}
+                    </div>
+                    <div><strong>${escapeHTML(t('reviewImportDuplicateReportTitle'))}:</strong> ${escapeHTML(duplicate.dedupe_rule || t('none'))}</div>
+                    ${(duplicate.duplicate_pairs || []).length ? `
+                        <div class="artifact-timeline-list">${duplicate.duplicate_pairs.map((pair) => `
+                            <div class="artifact-timeline-row">
+                                <strong>${escapeHTML(pair.review_id || t('none'))}</strong>
+                                <span>${escapeHTML(t('reviewImportDuplicateOf'))}: ${escapeHTML(pair.duplicate_of || t('none'))}</span>
+                            </div>
+                        `).join('')}</div>
+                    ` : `<div class="field-helper">${escapeHTML(t('reviewImportNoDuplicates'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceReviewImportQualityPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewImportPackSnapshot(workspace);
+            if (!pack.has_review_import_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceReviewImportQualityPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('reviewImportQualityPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('reviewImportQualityPanelHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceReviewImportQualityWarnings()">${escapeHTML(t('reviewImportCopyQuality'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('reviewImportQualityWarningTypes'))}</strong>
+                            ${projectWorkspaceReviewImportListText(pack.quality_warning_types || PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES).split('\n').filter(Boolean).map((line) => `<div>${escapeHTML(line.replace(/^- /, ''))}</div>`).join('')}
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('reviewImportQualityWarnings'))}</strong>
+                            ${projectWorkspaceReviewImportListText(pack.quality_warnings || []).split('\n').filter(Boolean).map((line) => `<div>${escapeHTML(line.replace(/^- /, ''))}</div>`).join('') || `<div>${escapeHTML(t('none'))}</div>`}
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('reviewImportImportErrors'))}</strong>
+                            ${projectWorkspaceReviewImportListText(pack.import_errors || []).split('\n').filter(Boolean).map((line) => `<div>${escapeHTML(line.replace(/^- /, ''))}</div>`).join('') || `<div>${escapeHTML(t('none'))}</div>`}
+                        </div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('reviewImportSafetyNotesTitle'))}:</strong> ${escapeHTML(t('reviewImportSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -17838,6 +18164,8 @@
                 '',
                 projectWorkspaceExportAgentCapabilityRuntimeMarkdown(workspace),
                 '',
+                projectWorkspaceExportReviewImportPackMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -17919,6 +18247,7 @@
                 project_id: workspace?.project?.project_id || latestProjectId || 'demo_project_default',
                 graph_summary: workspace?.project?.graph_summary || {},
                 agent_capability_runtime: projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace),
+                review_import_pack: projectWorkspaceExportReviewImportPackSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -30315,6 +30644,10 @@
                     ${renderProjectWorkspaceAgentCapabilitySummaryStrip(workspace)}
                     ${renderProjectWorkspaceAgentTaskBoardPanel(workspace)}
                     ${renderProjectWorkspaceSupervisorNextActionsPanel(workspace)}
+                    ${renderProjectWorkspaceReviewImportSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceNormalizedReviewsPanel(workspace)}
+                    ${renderProjectWorkspaceReviewImportSourcePanel(workspace)}
+                    ${renderProjectWorkspaceReviewImportQualityPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -37682,6 +38015,108 @@
             campaignExportNoData: '\u6682\u65e0\u6d3b\u52a8\u5bfc\u51fa\u5305\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceReviewImportPackMarker: 'Project Workspace review import pack bundle',
+            reviewImportPackTitle: 'Review Import Pack',
+            reviewImportPackHelper: 'Inspect deterministic review intake, normalization, duplicates, source mix, and quality warnings before using reviews as evidence.',
+            reviewImportSummaryTitle: 'Import Summary',
+            reviewImportRawCount: 'Raw import count',
+            reviewImportNormalizedCount: 'Normalized review count',
+            reviewImportDuplicateCount: 'Duplicate review count',
+            reviewImportUsableCount: 'Usable review count',
+            reviewImportSourceTypeCounts: 'Source type counts',
+            reviewImportAverageQualityScore: 'Average quality score',
+            reviewImportReadiness: 'Import readiness',
+            reviewImportRecommendedNextAction: 'Recommended next action',
+            reviewImportNormalizedReviewsTitle: 'Normalized Reviews',
+            reviewImportNormalizedReviewsHelper: 'Original review text is preserved; normalized text is added for analysis and export.',
+            reviewImportSourcePanelTitle: 'Source Breakdown / Duplicate Report',
+            reviewImportSourcePanelHelper: 'Review csv, manual, amazon_visible, competitor, and unknown source counts alongside duplicate handling.',
+            reviewImportQualityPanelTitle: 'Quality Warnings / Import Errors',
+            reviewImportQualityPanelHelper: 'Warnings are risk notes only; weak samples do not block existing workspace analysis.',
+            reviewImportDuplicateReportTitle: 'Duplicate report',
+            reviewImportQualityWarningTypes: 'Tracked warning types',
+            reviewImportQualityWarnings: 'Quality warnings',
+            reviewImportImportErrors: 'Import errors',
+            reviewImportQualityChecks: 'Import quality checks',
+            reviewImportSafetyNotesTitle: 'Safety Notes',
+            reviewImportSafetyNote: 'Read-only review import guidance. Provider, LLM, video, media, paid, registry, rollback, scraping, and database persistence remain disabled.',
+            reviewImportReviewId: 'Review ID',
+            reviewImportSourceType: 'Source type',
+            reviewImportRating: 'Rating',
+            reviewImportReviewTitle: 'Review title',
+            reviewImportReviewText: 'Review text',
+            reviewImportNormalizedText: 'Normalized text',
+            reviewImportIsDuplicate: 'Is duplicate',
+            reviewImportDuplicateOf: 'Duplicate of',
+            reviewImportQualityScore: 'Quality score',
+            reviewImportQualityTier: 'Quality tier',
+            reviewImportDetectedSignals: 'Detected signals',
+            reviewImportUsableVsDuplicate: 'Usable vs duplicate',
+            reviewImportDedupeRule: 'Dedupe rule',
+            reviewImportNoDuplicates: 'No duplicate reviews detected.',
+            reviewImportNoData: 'No review import pack is available.',
+            reviewImportCopySummary: 'Copy import summary',
+            reviewImportCopyNormalized: 'Copy normalized reviews',
+            reviewImportCopySource: 'Copy source breakdown',
+            reviewImportCopyQuality: 'Copy quality warnings',
+            reviewImportCopyFullPack: 'Copy full review import pack',
+            reviewImportCopied: 'Review import content copied.',
+            reviewImportCopyFailed: 'Unable to copy review import content.',
+            reviewImportCopyNoData: 'No review import content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceReviewImportPackMarker: 'Project Workspace review import pack bundle',
+            reviewImportPackTitle: '\u8bc4\u8bba\u5bfc\u5165\u5305',
+            reviewImportPackHelper: '\u5728\u628a\u8bc4\u8bba\u4f5c\u4e3a\u8bc1\u636e\u524d\uff0c\u68c0\u67e5\u786e\u5b9a\u6027\u5bfc\u5165\u3001\u6807\u51c6\u5316\u3001\u91cd\u590d\u3001\u6765\u6e90\u7ec4\u6210\u548c\u8d28\u91cf\u8b66\u544a\u3002',
+            reviewImportSummaryTitle: '\u5bfc\u5165\u6458\u8981',
+            reviewImportRawCount: '\u539f\u59cb\u5bfc\u5165\u6570',
+            reviewImportNormalizedCount: '\u6807\u51c6\u5316\u8bc4\u8bba\u6570',
+            reviewImportDuplicateCount: '\u91cd\u590d\u8bc4\u8bba\u6570',
+            reviewImportUsableCount: '\u53ef\u7528\u8bc4\u8bba\u6570',
+            reviewImportSourceTypeCounts: '\u6765\u6e90\u7c7b\u578b\u6570',
+            reviewImportAverageQualityScore: '\u5e73\u5747\u8d28\u91cf\u8bc4\u5206',
+            reviewImportReadiness: '\u5bfc\u5165\u5c31\u7eea\u5ea6',
+            reviewImportRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            reviewImportNormalizedReviewsTitle: '\u6807\u51c6\u5316\u8bc4\u8bba',
+            reviewImportNormalizedReviewsHelper: '\u4fdd\u7559\u539f\u59cb\u8bc4\u8bba\u6587\u672c\uff0c\u53e6\u5916\u589e\u52a0\u7528\u4e8e\u5206\u6790\u548c\u5bfc\u51fa\u7684\u6807\u51c6\u5316\u6587\u672c\u3002',
+            reviewImportSourcePanelTitle: '\u6765\u6e90\u5206\u5e03 / \u91cd\u590d\u62a5\u544a',
+            reviewImportSourcePanelHelper: '\u68c0\u67e5 csv\u3001manual\u3001amazon_visible\u3001competitor \u548c unknown \u6765\u6e90\u6570\uff0c\u5e76\u6838\u5bf9\u91cd\u590d\u5904\u7406\u3002',
+            reviewImportQualityPanelTitle: '\u8d28\u91cf\u8b66\u544a / \u5bfc\u5165\u9519\u8bef',
+            reviewImportQualityPanelHelper: '\u8b66\u544a\u53ea\u662f\u98ce\u9669\u63d0\u793a\uff1b\u5f31\u6837\u672c\u4e0d\u4f1a\u963b\u65ad\u73b0\u6709\u5de5\u4f5c\u533a\u5206\u6790\u3002',
+            reviewImportDuplicateReportTitle: '\u91cd\u590d\u62a5\u544a',
+            reviewImportQualityWarningTypes: '\u5df2\u8ddf\u8e2a\u7684\u8b66\u544a\u7c7b\u578b',
+            reviewImportQualityWarnings: '\u8d28\u91cf\u8b66\u544a',
+            reviewImportImportErrors: '\u5bfc\u5165\u9519\u8bef',
+            reviewImportQualityChecks: '\u5bfc\u5165\u8d28\u91cf\u68c0\u67e5',
+            reviewImportSafetyNotesTitle: '\u5b89\u5168\u8bf4\u660e',
+            reviewImportSafetyNote: '\u4ec5\u4f5c\u4e3a\u53ea\u8bfb\u8bc4\u8bba\u5bfc\u5165\u6307\u5f15\u3002Provider\u3001LLM\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u6293\u53d6\u548c\u6570\u636e\u5e93\u6301\u4e45\u5316\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            reviewImportReviewId: '\u8bc4\u8bba ID',
+            reviewImportSourceType: '\u6765\u6e90\u7c7b\u578b',
+            reviewImportRating: '\u8bc4\u5206',
+            reviewImportReviewTitle: '\u8bc4\u8bba\u6807\u9898',
+            reviewImportReviewText: '\u8bc4\u8bba\u539f\u6587',
+            reviewImportNormalizedText: '\u6807\u51c6\u5316\u6587\u672c',
+            reviewImportIsDuplicate: '\u662f\u5426\u91cd\u590d',
+            reviewImportDuplicateOf: '\u91cd\u590d\u4e8e',
+            reviewImportQualityScore: '\u8d28\u91cf\u8bc4\u5206',
+            reviewImportQualityTier: '\u8d28\u91cf\u7b49\u7ea7',
+            reviewImportDetectedSignals: '\u68c0\u6d4b\u5230\u7684\u4fe1\u53f7',
+            reviewImportUsableVsDuplicate: '\u53ef\u7528 / \u91cd\u590d',
+            reviewImportDedupeRule: '\u53bb\u91cd\u89c4\u5219',
+            reviewImportNoDuplicates: '\u672a\u68c0\u6d4b\u5230\u91cd\u590d\u8bc4\u8bba\u3002',
+            reviewImportNoData: '\u6682\u65e0\u8bc4\u8bba\u5bfc\u5165\u5305\u3002',
+            reviewImportCopySummary: '\u590d\u5236\u5bfc\u5165\u6458\u8981',
+            reviewImportCopyNormalized: '\u590d\u5236\u6807\u51c6\u5316\u8bc4\u8bba',
+            reviewImportCopySource: '\u590d\u5236\u6765\u6e90\u5206\u5e03',
+            reviewImportCopyQuality: '\u590d\u5236\u8d28\u91cf\u8b66\u544a',
+            reviewImportCopyFullPack: '\u590d\u5236\u5b8c\u6574\u8bc4\u8bba\u5bfc\u5165\u5305',
+            reviewImportCopied: '\u8bc4\u8bba\u5bfc\u5165\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            reviewImportCopyFailed: '\u65e0\u6cd5\u590d\u5236\u8bc4\u8bba\u5bfc\u5165\u5185\u5bb9\u3002',
+            reviewImportCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u8bc4\u8bba\u5bfc\u5165\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -39075,6 +39510,7 @@ async function analyzeExtensionWorkspace() {
       || latestProjectCreativeVariantPack.asset_quality_gate_pack
       || {};
     latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
+    latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
