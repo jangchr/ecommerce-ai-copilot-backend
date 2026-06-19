@@ -472,6 +472,114 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertEqual(summary["claim_safety_level"], "low")
         self.assertIn("needs_competitor_reviews", summary["comparison_readiness"])
 
+    def test_llm_assist_dry_run_pack_is_evidence_bound_and_never_executes(self):
+        payload = {
+            "workspace_id": "llm-assist-dry-run",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "title": "Own Travel Bottle",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Leaked in a bag",
+                            "text": "The lid leaked in my backpack during a commute and was difficult to clean after coffee.",
+                            "source_section": "amazon_visible_review",
+                        },
+                        {
+                            "rating": 5,
+                            "title": "Useful for travel",
+                            "text": "I use this bottle for travel because it feels sturdy and is easy to rinse after lunch.",
+                            "source_section": "manual_review",
+                        },
+                    ],
+                },
+                {
+                    "platform": "competitor",
+                    "title": "Competitor Bottle",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Competitor lid",
+                            "text": "The competitor lid is tight and the bottle leaked in my backpack.",
+                            "source_section": "competitor_review",
+                        }
+                    ],
+                },
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn("review_import_pack", creative_pack)
+        self.assertIn("competitor_review_comparison_pack", creative_pack)
+        self.assertIn("llm_assist_dry_run_pack", creative_pack)
+        pack = creative_pack["llm_assist_dry_run_pack"]
+        self.assertEqual(pack["pack_version"], "llm_assist_dry_run_pack_v1")
+        self.assertIn("dry_run", pack["dry_run_summary"]["mode"])
+        self.assertEqual(pack["dry_run_summary"]["real_call_status"], "disabled")
+        self.assertEqual(pack["prompt_plan"]["prompt_type"], "evidence_bound_dry_run")
+        self.assertIn(
+            "EVIDENCE-BOUND LLM ASSIST DRY-RUN PROMPT",
+            pack["prompt_plan"]["user_prompt_preview"],
+        )
+        self.assertTrue(pack["evidence_bundle"])
+        self.assertTrue(pack["evidence_bundle"]["evidence_brief"])
+        self.assertIn("allowed_claims", pack)
+        self.assertTrue(pack["do_not_claim"])
+        self.assertFalse(pack["mock_llm_response"]["is_real_llm_output"])
+        self.assertEqual(
+            pack["mock_llm_response"]["response_type"],
+            "deterministic_placeholder",
+        )
+        self.assertIn("No real LLM", pack["mock_llm_response"]["message"])
+        self.assertTrue(pack["approval_gate"]["approval_required"])
+        self.assertFalse(pack["approval_gate"]["real_llm_call_allowed"])
+        self.assertFalse(pack["approval_gate"]["provider_call_allowed"])
+        self.assertFalse(pack["output_contract"]["high_confidence_allowed"])
+        self.assertTrue(pack["risk_checks"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "api_key_or_secret_read_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
+    def test_llm_assist_dry_run_pack_lowers_readiness_without_quotes(self):
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json={"workspace_id": "llm-dry-run-empty", "products": []},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        pack = creative_pack["llm_assist_dry_run_pack"]
+        self.assertNotEqual(pack["dry_run_summary"]["readiness"], "ready_to_call")
+        self.assertIn(
+            pack["dry_run_summary"]["readiness"],
+            {"needs_stronger_evidence", "needs_evidence_quotes"},
+        )
+        self.assertTrue(pack["dry_run_summary"]["weak_evidence"])
+        self.assertTrue(pack["dry_run_summary"]["missing_quotes"])
+        self.assertFalse(pack["output_contract"]["high_confidence_allowed"])
+        self.assertFalse(pack["approval_gate"]["real_llm_call_allowed"])
+        self.assertEqual(pack["mock_llm_response"]["status"], "not_executed")
+
 
 
 

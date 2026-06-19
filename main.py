@@ -21745,6 +21745,219 @@ def _rw_competitor_review_comparison_pack(
 
 
 
+def _rw_llm_assist_dry_run_pack(creative_decision_pack: dict) -> dict:
+    evidence_brief = dict(creative_decision_pack.get("evidence_brief") or {})
+    review_import_pack = dict(creative_decision_pack.get("review_import_pack") or {})
+    competitor_pack = dict(
+        creative_decision_pack.get("competitor_review_comparison_pack") or {}
+    )
+    high_signal_quotes = [
+        _rw_quote_snippet(quote, 240)
+        for quote in list(evidence_brief.get("high_signal_quotes") or [])[:12]
+        if _rw_text(quote)
+    ]
+    top_angles = list(creative_decision_pack.get("top_ad_angles") or [])[:6]
+    quote_backed_angles = [
+        {
+            "angle_id": _rw_text(angle.get("angle_id")),
+            "title": _rw_text(angle.get("title")),
+            "proof_quote": _rw_quote_snippet(angle.get("proof_quote", ""), 240),
+            "evidence_strength": _rw_text(angle.get("evidence_strength")),
+        }
+        for angle in top_angles
+        if _rw_text(angle.get("proof_quote"))
+    ]
+    import_summary = dict(review_import_pack.get("import_summary") or {})
+    comparison_summary = dict(competitor_pack.get("comparison_summary") or {})
+    quality_checks = dict(creative_decision_pack.get("quality_checks") or {})
+    weak_evidence = bool(
+        quality_checks.get("weak_evidence")
+        or review_import_pack.get("import_quality_checks", {}).get(
+            "ready_as_strong_evidence"
+        )
+        is False
+        or comparison_summary.get("weak_evidence")
+    )
+    missing_quotes = not high_signal_quotes or any(
+        bool(angle.get("missing_quote")) for angle in top_angles
+    )
+    readiness = (
+        "needs_stronger_evidence"
+        if weak_evidence
+        else "needs_evidence_quotes"
+        if missing_quotes
+        else "ready_for_human_review"
+    )
+
+    inherited_do_not_claim = [
+        *list(
+            creative_decision_pack.get("video_prompt_pack", {}).get(
+                "do_not_claim"
+            )
+            or []
+        ),
+        *list(competitor_pack.get("do_not_claim") or []),
+    ]
+    strengthened_boundaries = [
+        "Do not invent review quotes, product facts, outcomes, or performance claims.",
+        "Do not convert weak, missing, or single-review evidence into a high-confidence claim.",
+        "Do not use competitor reviews as proof of own-product performance.",
+        "Do not treat this deterministic dry-run placeholder as real LLM output.",
+    ]
+    do_not_claim = list(
+        dict.fromkeys(
+            _rw_text(item)
+            for item in [*inherited_do_not_claim, *strengthened_boundaries]
+            if _rw_text(item)
+        )
+    )
+    allowed_claims = [
+        {
+            "claim_scope": "quote_bounded_creative_hypothesis",
+            "angle_id": item["angle_id"],
+            "angle_title": item["title"],
+            "supporting_quote": item["proof_quote"],
+            "confidence": (
+                "moderate"
+                if not weak_evidence and item["evidence_strength"] == "strong"
+                else "low"
+            ),
+            "usage_boundary": "Present as a supplied-review observation, not a verified product outcome.",
+        }
+        for item in quote_backed_angles
+    ]
+    evidence_bundle = {
+        "evidence_brief": evidence_brief,
+        "review_import_summary": import_summary,
+        "competitor_comparison_summary": comparison_summary,
+        "quote_backed_angles": quote_backed_angles,
+        "supplied_quotes": high_signal_quotes,
+    }
+    user_prompt_preview = "\n".join(
+        [
+            "EVIDENCE-BOUND LLM ASSIST DRY-RUN PROMPT",
+            "Use only the supplied evidence bundle. Do not infer missing product facts.",
+            f"Evidence quotes available: {len(high_signal_quotes)}",
+            f"Quote-backed angles available: {len(quote_backed_angles)}",
+            f"Imported reviews: {int(import_summary.get('normalized_review_count') or 0)}",
+            f"Competitor reviews: {int(comparison_summary.get('competitor_review_count') or 0)}",
+            "Return only the declared output contract and retain every do_not_claim boundary.",
+        ]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "api_key_or_secret_read_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+    }
+
+    return {
+        "pack_version": "llm_assist_dry_run_pack_v1",
+        "dry_run_summary": {
+            "mode": "deterministic_dry_run",
+            "real_call_status": "disabled",
+            "readiness": readiness,
+            "weak_evidence": weak_evidence,
+            "missing_quotes": missing_quotes,
+            "evidence_quote_count": len(high_signal_quotes),
+            "allowed_claim_count": len(allowed_claims),
+            "recommended_next_action": (
+                "Collect stronger repeated evidence and quote coverage before human approval."
+                if readiness != "ready_for_human_review"
+                else "Review the prompt, evidence, output contract, and claim boundaries; real LLM calls remain disabled."
+            ),
+        },
+        "prompt_plan": {
+            "prompt_type": "evidence_bound_dry_run",
+            "system_instruction": (
+                "Draft only evidence-bound creative assistance from supplied review evidence. "
+                "Never invent claims or imply that this preview executed an LLM."
+            ),
+            "user_prompt_preview": user_prompt_preview,
+            "input_sections": [
+                "evidence_brief",
+                "review_import_pack",
+                "competitor_review_comparison_pack",
+                "creative_decision_pack",
+                "do_not_claim",
+            ],
+        },
+        "evidence_bundle": evidence_bundle,
+        "allowed_claims": allowed_claims,
+        "do_not_claim": do_not_claim,
+        "output_contract": {
+            "contract_version": "evidence_bound_creative_assist_v1",
+            "response_format": "structured_json_preview",
+            "required_fields": [
+                "summary",
+                "evidence_citations",
+                "creative_directions",
+                "risk_notes",
+                "do_not_claim",
+            ],
+            "confidence_levels_allowed": ["low", "moderate"],
+            "high_confidence_allowed": False,
+            "citation_required_for_each_direction": True,
+        },
+        "mock_llm_response": {
+            "response_type": "deterministic_placeholder",
+            "is_real_llm_output": False,
+            "status": "not_executed",
+            "message": "Deterministic placeholder only. No real LLM or provider call was made.",
+            "preview": {
+                "summary": "Awaiting an approved future LLM integration; no generated content is present.",
+                "evidence_citations": [],
+                "creative_directions": [],
+                "risk_notes": do_not_claim,
+            },
+        },
+        "risk_checks": [
+            {
+                "check": "weak_evidence",
+                "triggered": weak_evidence,
+                "effect": "readiness_lowered",
+            },
+            {
+                "check": "missing_quotes",
+                "triggered": missing_quotes,
+                "effect": "high_confidence_disabled",
+            },
+            {
+                "check": "do_not_claim_preserved",
+                "triggered": False,
+                "effect": "all_inherited_boundaries_preserved_and_strengthened",
+            },
+            {
+                "check": "real_llm_execution",
+                "triggered": False,
+                "effect": "disabled",
+            },
+        ],
+        "approval_gate": {
+            "approval_required": True,
+            "approval_status": "not_requested",
+            "real_llm_call_allowed": False,
+            "provider_call_allowed": False,
+            "blocking_reasons": [
+                "Real LLM and provider execution are outside this dry-run capability.",
+                *(
+                    ["Evidence quality or quote coverage requires improvement."]
+                    if readiness != "ready_for_human_review"
+                    else []
+                ),
+            ],
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -21824,6 +22037,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
             review_import_pack,
             payload.output_language,
         )
+    )
+    creative_decision_pack["llm_assist_dry_run_pack"] = (
+        _rw_llm_assist_dry_run_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
