@@ -8980,6 +8980,197 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_video_provider_orchestration_dry_run_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace video provider orchestration dry-run bundle",
+            "PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER",
+            "latestProjectVideoProviderOrchestrationDryRunPack",
+            "projectWorkspaceVideoProviderOrchestrationDryRunPackFromWorkspace",
+            "projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot",
+            "projectWorkspaceExportVideoProviderOrchestrationDryRunMarkdown",
+            "renderProjectWorkspaceVideoOrchestrationSummaryPanel",
+            "renderProjectWorkspaceVideoJobPlanPanel",
+            "renderProjectWorkspaceProviderCapabilityPlanPanel",
+            "renderProjectWorkspaceVideoInputAssetsPanel",
+            "renderProjectWorkspaceVideoCostMockPanel",
+            "renderProjectWorkspaceVideoApprovalSafetyPanel",
+            "copyProjectWorkspaceVideoDryRunSummary",
+            "copyProjectWorkspaceVideoJobPlan",
+            "copyProjectWorkspaceProviderCapabilityPlan",
+            "copyProjectWorkspaceVideoInputAssetBundle",
+            "copyProjectWorkspaceMockProviderResponse",
+            "copyProjectWorkspaceVideoApprovalAbortRollbackPlan",
+            "copyProjectWorkspaceFullVideoOrchestrationDryRunPack",
+            "video_provider_orchestration_dry_run_pack: projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace)",
+            "Video Provider Orchestration Dry-Run",
+            "Video Job Plan",
+            "Provider Capability Plan",
+            "Input Asset Bundle",
+            "Platform Delivery Specs",
+            "Cost Placeholder",
+            "Mock Provider Response",
+            "Approval Gate",
+            "Abort Plan",
+            "Rollback Plan",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.dry_run_summary",
+            "pack.video_job_plan",
+            "pack.provider_capability_plan",
+            "pack.input_asset_bundle",
+            "pack.platform_delivery_specs",
+            "pack.cost_estimate_placeholder",
+            "pack.mock_provider_response",
+            "pack.risk_checks",
+            "pack.approval_gate",
+            "pack.abort_plan",
+            "pack.rollback_plan",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.readiness",
+            "summary.real_call_status",
+            "summary.recommended_next_action",
+            "gate.real_video_call_allowed",
+            "gate.approval_required",
+            "plan.source_campaign_id",
+            "plan.source_asset_pack_id",
+            "plan.keyframe_prompt",
+            "plan.target_platform",
+            "plan.target_duration_seconds",
+            "plan.target_format",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        llm_safety = html.index(
+            "${renderProjectWorkspaceLlmDryRunApprovalSafetyPanel(workspace)}"
+        )
+        video_summary = html.index(
+            "${renderProjectWorkspaceVideoOrchestrationSummaryPanel(workspace)}"
+        )
+        video_safety = html.index(
+            "${renderProjectWorkspaceVideoApprovalSafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(llm_safety, video_summary)
+        self.assertLess(video_summary, video_safety)
+        self.assertLess(video_safety, creative_core)
+
+    def test_video_orchestration_dry_run_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "videoOrchestrationPackTitle",
+            "videoOrchestrationPackHelper",
+            "videoOrchestrationSummaryTitle",
+            "videoOrchestrationMode",
+            "videoOrchestrationReadiness",
+            "videoOrchestrationRealCallStatus",
+            "videoOrchestrationRealVideoAllowed",
+            "videoOrchestrationApprovalRequired",
+            "videoOrchestrationRecommendedNextAction",
+            "videoOrchestrationJobPlanTitle",
+            "videoOrchestrationJobObjective",
+            "videoOrchestrationCreativeSource",
+            "videoOrchestrationAssetSource",
+            "videoOrchestrationPromptDirection",
+            "videoOrchestrationTargetPlatform",
+            "videoOrchestrationTargetDuration",
+            "videoOrchestrationOutputFormat",
+            "videoOrchestrationProviderPlanTitle",
+            "videoOrchestrationCapabilityMatching",
+            "videoOrchestrationProviderOptions",
+            "videoOrchestrationCapabilityLimitations",
+            "videoOrchestrationInputAssetsPanelTitle",
+            "videoOrchestrationInputAssetTitle",
+            "videoOrchestrationPlatformSpecsTitle",
+            "videoOrchestrationCostMockPanelTitle",
+            "videoOrchestrationCostPlaceholderTitle",
+            "videoOrchestrationCostPlaceholderWarning",
+            "videoOrchestrationMockProviderTitle",
+            "videoOrchestrationMockProviderWarning",
+            "videoOrchestrationApprovalSafetyTitle",
+            "videoOrchestrationApprovalGateTitle",
+            "videoOrchestrationRiskChecksTitle",
+            "videoOrchestrationAbortPlanTitle",
+            "videoOrchestrationRollbackPlanTitle",
+            "videoOrchestrationSafetyBoundariesTitle",
+            "videoOrchestrationSafetyNote",
+            "videoOrchestrationCopySummary",
+            "videoOrchestrationCopyJobPlan",
+            "videoOrchestrationCopyProviderPlan",
+            "videoOrchestrationCopyInputAssets",
+            "videoOrchestrationCopyMockProvider",
+            "videoOrchestrationCopyApprovalPlans",
+            "videoOrchestrationCopyFullPack",
+            "videoOrchestrationCopied",
+            "videoOrchestrationCopyFailed",
+            "videoOrchestrationCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn(
+                "Project Workspace video provider orchestration dry-run bundle",
+                script,
+            )
+            self.assertIn(
+                "project_workspace_video_provider_orchestration_dry_run_marker",
+                script,
+            )
+        markdown_start = html.index(
+            "function projectWorkspaceVideoDryRunSummaryText"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceVideoOrchestrationText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "videoOrchestrationPackTitle",
+            "videoOrchestrationJobPlanTitle",
+            "videoOrchestrationProviderPlanTitle",
+            "videoOrchestrationInputAssetTitle",
+            "videoOrchestrationPlatformSpecsTitle",
+            "videoOrchestrationCostPlaceholderTitle",
+            "videoOrchestrationMockProviderTitle",
+            "videoOrchestrationApprovalGateTitle",
+            "videoOrchestrationAbortPlanTitle",
+            "videoOrchestrationRollbackPlanTitle",
+            "videoOrchestrationSafetyBoundariesTitle",
+            "videoOrchestrationSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        dry_run_section = html[
+            html.index(
+                "const PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER"
+            ):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", dry_run_section)
+        self.assertIn("Deterministic placeholder only", html)
+        self.assertIn("not real provider output", html)
+        self.assertIn("not a real quote", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

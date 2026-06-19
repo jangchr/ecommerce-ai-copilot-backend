@@ -3603,6 +3603,7 @@
         let latestProjectReviewImportPack = {};
         let latestProjectCompetitorReviewComparisonPack = {};
         let latestProjectLlmAssistDryRunPack = {};
+        let latestProjectVideoProviderOrchestrationDryRunPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8882,6 +8883,7 @@
                 latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
                 latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
                 latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
+                latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14721,6 +14723,7 @@
         const PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER = 'Project Workspace review import pack bundle';
         const PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER = 'Project Workspace competitor review comparison bundle';
         const PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER = 'Project Workspace LLM assist dry-run bundle';
+        const PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER = 'Project Workspace video provider orchestration dry-run bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -16413,6 +16416,208 @@
 
         function copyProjectWorkspaceFullLlmDryRunPack() {
             return copyProjectWorkspaceLlmDryRunText('full');
+        }
+
+        function projectWorkspaceVideoProviderOrchestrationDryRunPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectVideoProviderOrchestrationDryRunPack
+                && Object.keys(latestProjectVideoProviderOrchestrationDryRunPack).length) {
+                return latestProjectVideoProviderOrchestrationDryRunPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.video_provider_orchestration_dry_run_pack || {};
+        }
+
+        function projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceVideoProviderOrchestrationDryRunPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER,
+                has_video_provider_orchestration_dry_run_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                dry_run_summary: pack.dry_run_summary || {},
+                video_job_plan: pack.video_job_plan || {},
+                provider_capability_plan: pack.provider_capability_plan || {},
+                input_asset_bundle: pack.input_asset_bundle || {},
+                platform_delivery_specs: Array.isArray(pack.platform_delivery_specs) ? pack.platform_delivery_specs : [],
+                cost_estimate_placeholder: pack.cost_estimate_placeholder || {},
+                mock_provider_response: pack.mock_provider_response || {},
+                risk_checks: Array.isArray(pack.risk_checks) ? pack.risk_checks : [],
+                approval_gate: pack.approval_gate || {},
+                abort_plan: pack.abort_plan || {},
+                rollback_plan: pack.rollback_plan || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceVideoDryRunJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceVideoDryRunSummaryText(pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot()) {
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            const summary = pack.dry_run_summary || {};
+            const gate = pack.approval_gate || {};
+            return [
+                t('videoOrchestrationSummaryTitle'),
+                `${t('videoOrchestrationMode')}: ${summary.mode || t('none')}`,
+                `${t('videoOrchestrationReadiness')}: ${summary.readiness || t('none')}`,
+                `${t('videoOrchestrationRealCallStatus')}: ${summary.real_call_status || t('videoOrchestrationDisabled')}`,
+                `${t('videoOrchestrationRealVideoAllowed')}: ${String(gate.real_video_call_allowed === true)}`,
+                `${t('videoOrchestrationApprovalRequired')}: ${String(gate.approval_required === true)}`,
+                `${t('videoOrchestrationRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceVideoJobPlanText(pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot()) {
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            const plan = pack.video_job_plan || {};
+            return [
+                t('videoOrchestrationJobPlanTitle'),
+                `${t('videoOrchestrationJobObjective')}: ${plan.plan_mode || t('none')}`,
+                `${t('videoOrchestrationCreativeSource')}: ${plan.source_campaign_id || t('none')}`,
+                `${t('videoOrchestrationAssetSource')}: ${plan.source_asset_pack_id || plan.source_platform_pack_id || t('none')}`,
+                `${t('videoOrchestrationPromptDirection')}: ${plan.keyframe_prompt || projectWorkspaceVideoDryRunJsonText(plan.keyframe_prompts) || t('none')}`,
+                `${t('videoOrchestrationTargetPlatform')}: ${plan.target_platform || t('none')}`,
+                `${t('videoOrchestrationTargetDuration')}: ${plan.target_duration_seconds ?? 0}`,
+                `${t('videoOrchestrationOutputFormat')}: ${plan.target_format || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceVideoProviderCapabilityText(pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot()) {
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            const plan = pack.provider_capability_plan || {};
+            return [
+                t('videoOrchestrationProviderPlanTitle'),
+                `${t('videoOrchestrationCapabilityMatching')}: ${plan.matching_mode || t('none')}`,
+                `${t('videoOrchestrationProviderOptions')}: ${projectWorkspaceVideoDryRunJsonText(plan.capability_candidates) || t('videoOrchestrationNoProviderSelected')}`,
+                `${t('videoOrchestrationRequiredCapabilities')}: ${(plan.required_capabilities || []).join(' | ') || t('none')}`,
+                `${t('videoOrchestrationCapabilityLimitations')}: ${plan.match_status || t('none')}`,
+                `${t('videoOrchestrationRealProviderDisabled')}: ${String(plan.provider_call_performed === true)}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceVideoInputAssetsText(pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot()) {
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            return [
+                `## ${t('videoOrchestrationInputAssetTitle')}`,
+                projectWorkspaceVideoDryRunJsonText(pack.input_asset_bundle) || t('videoOrchestrationNoData'),
+                '',
+                `## ${t('videoOrchestrationPlatformSpecsTitle')}`,
+                projectWorkspaceVideoDryRunJsonText(pack.platform_delivery_specs) || t('videoOrchestrationNoData')
+            ].join('\n');
+        }
+
+        function projectWorkspaceVideoMockProviderText(pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot()) {
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            return [
+                `## ${t('videoOrchestrationCostPlaceholderTitle')}`,
+                t('videoOrchestrationCostPlaceholderWarning'),
+                projectWorkspaceVideoDryRunJsonText(pack.cost_estimate_placeholder),
+                '',
+                `## ${t('videoOrchestrationMockProviderTitle')}`,
+                t('videoOrchestrationMockProviderWarning'),
+                projectWorkspaceVideoDryRunJsonText(pack.mock_provider_response)
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceVideoApprovalPlansText(pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot()) {
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            return [
+                `## ${t('videoOrchestrationApprovalGateTitle')}`,
+                projectWorkspaceVideoDryRunJsonText(pack.approval_gate),
+                '',
+                `## ${t('videoOrchestrationRiskChecksTitle')}`,
+                projectWorkspaceVideoDryRunJsonText(pack.risk_checks),
+                '',
+                `## ${t('videoOrchestrationAbortPlanTitle')}`,
+                projectWorkspaceVideoDryRunJsonText(pack.abort_plan),
+                '',
+                `## ${t('videoOrchestrationRollbackPlanTitle')}`,
+                projectWorkspaceVideoDryRunJsonText(pack.rollback_plan),
+                '',
+                `## ${t('videoOrchestrationSafetyBoundariesTitle')}`,
+                projectWorkspaceVideoDryRunJsonText(pack.safety_boundaries),
+                t('videoOrchestrationSafetyNote')
+            ].filter((item) => item !== undefined && item !== null).join('\n');
+        }
+
+        function projectWorkspaceExportVideoProviderOrchestrationDryRunMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace);
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            return [
+                `## ${t('videoOrchestrationPackTitle')}`,
+                projectWorkspaceVideoDryRunSummaryText(pack),
+                '',
+                `## ${t('videoOrchestrationJobPlanTitle')}`,
+                projectWorkspaceVideoJobPlanText(pack),
+                '',
+                `## ${t('videoOrchestrationProviderPlanTitle')}`,
+                projectWorkspaceVideoProviderCapabilityText(pack),
+                '',
+                projectWorkspaceVideoInputAssetsText(pack),
+                '',
+                projectWorkspaceVideoMockProviderText(pack),
+                '',
+                projectWorkspaceVideoApprovalPlansText(pack)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceVideoOrchestrationText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceVideoOrchestrationStatus');
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceVideoDryRunSummaryText(pack)
+                : kind === 'job'
+                    ? projectWorkspaceVideoJobPlanText(pack)
+                    : kind === 'provider'
+                        ? projectWorkspaceVideoProviderCapabilityText(pack)
+                        : kind === 'assets'
+                            ? projectWorkspaceVideoInputAssetsText(pack)
+                            : kind === 'mock'
+                                ? projectWorkspaceVideoMockProviderText(pack)
+                                : kind === 'approval'
+                                    ? projectWorkspaceVideoApprovalPlansText(pack)
+                                    : projectWorkspaceExportVideoProviderOrchestrationDryRunMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('videoOrchestrationCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('videoOrchestrationCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('videoOrchestrationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('videoOrchestrationCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceVideoDryRunSummary() {
+            return copyProjectWorkspaceVideoOrchestrationText('summary');
+        }
+
+        function copyProjectWorkspaceVideoJobPlan() {
+            return copyProjectWorkspaceVideoOrchestrationText('job');
+        }
+
+        function copyProjectWorkspaceProviderCapabilityPlan() {
+            return copyProjectWorkspaceVideoOrchestrationText('provider');
+        }
+
+        function copyProjectWorkspaceVideoInputAssetBundle() {
+            return copyProjectWorkspaceVideoOrchestrationText('assets');
+        }
+
+        function copyProjectWorkspaceMockProviderResponse() {
+            return copyProjectWorkspaceVideoOrchestrationText('mock');
+        }
+
+        function copyProjectWorkspaceVideoApprovalAbortRollbackPlan() {
+            return copyProjectWorkspaceVideoOrchestrationText('approval');
+        }
+
+        function copyProjectWorkspaceFullVideoOrchestrationDryRunPack() {
+            return copyProjectWorkspaceVideoOrchestrationText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -18354,6 +18559,173 @@
             `;
         }
 
+        function renderProjectWorkspaceVideoOrchestrationSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace);
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            const summary = pack.dry_run_summary || {};
+            const gate = pack.approval_gate || {};
+            return `
+                <div class="section-block" id="projectWorkspaceVideoOrchestrationSummaryPanel"
+                    data-video-provider-orchestration-dry-run-marker="${PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('videoOrchestrationPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('videoOrchestrationPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullVideoOrchestrationDryRunPack()">${escapeHTML(t('videoOrchestrationCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('videoOrchestrationMode'), summary.mode || t('none'))}
+                        ${metricPill(t('videoOrchestrationReadiness'), summary.readiness || t('none'))}
+                        ${metricPill(t('videoOrchestrationRealCallStatus'), summary.real_call_status || t('videoOrchestrationDisabled'))}
+                        ${metricPill(t('videoOrchestrationRealVideoAllowed'), String(gate.real_video_call_allowed === true))}
+                        ${metricPill(t('videoOrchestrationApprovalRequired'), String(gate.approval_required === true))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('videoOrchestrationRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('videoOrchestrationSafetyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceVideoOrchestrationStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVideoDryRunSummary()">${escapeHTML(t('videoOrchestrationCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceVideoJobPlanPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace);
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            const plan = pack.video_job_plan || {};
+            return `
+                <div class="section-block" id="projectWorkspaceVideoJobPlanPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('videoOrchestrationJobPlanTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('videoOrchestrationJobPlanHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVideoJobPlan()">${escapeHTML(t('videoOrchestrationCopyJobPlan'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('videoOrchestrationJobObjective'), plan.plan_mode || t('none'))}
+                        ${metricPill(t('videoOrchestrationTargetPlatform'), plan.target_platform || t('none'))}
+                        ${metricPill(t('videoOrchestrationTargetDuration'), String(plan.target_duration_seconds ?? 0))}
+                        ${metricPill(t('videoOrchestrationOutputFormat'), plan.target_format || t('none'))}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationCreativeSource'))}</strong><div>${escapeHTML(plan.source_campaign_id || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationAssetSource'))}</strong><div>${escapeHTML(plan.source_asset_pack_id || plan.source_platform_pack_id || t('none'))}</div></div>
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('videoOrchestrationPromptDirection'))}:</strong> ${escapeHTML(plan.keyframe_prompt || projectWorkspaceVideoDryRunJsonText(plan.keyframe_prompts) || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceProviderCapabilityPlanPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace);
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            const plan = pack.provider_capability_plan || {};
+            return `
+                <div class="section-block" id="projectWorkspaceProviderCapabilityPlanPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('videoOrchestrationProviderPlanTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('videoOrchestrationProviderPlanHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderCapabilityPlan()">${escapeHTML(t('videoOrchestrationCopyProviderPlan'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('videoOrchestrationCapabilityMatching'), plan.matching_mode || t('none'))}
+                        ${metricPill(t('videoOrchestrationMatchStatus'), plan.match_status || t('none'))}
+                        ${metricPill(t('videoOrchestrationProviderSelected'), String(plan.provider_selected === true))}
+                        ${metricPill(t('videoOrchestrationRealProviderDisabled'), String(plan.provider_call_performed === true))}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationRequiredCapabilities'))}</strong><div>${escapeHTML((plan.required_capabilities || []).join(' | ') || t('none'))}</div></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationProviderOptions'))}</strong><div>${escapeHTML(projectWorkspaceVideoDryRunJsonText(plan.capability_candidates) || t('videoOrchestrationNoProviderSelected'))}</div></div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('videoOrchestrationCapabilityLimitations'))}:</strong> ${escapeHTML(plan.match_status || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceVideoInputAssetsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace);
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceVideoInputAssetsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('videoOrchestrationInputAssetsPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('videoOrchestrationInputAssetsPanelHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVideoInputAssetBundle()">${escapeHTML(t('videoOrchestrationCopyInputAssets'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('videoOrchestrationInputAssetTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(pack.input_asset_bundle) || t('videoOrchestrationNoData'))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('videoOrchestrationPlatformSpecsTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(pack.platform_delivery_specs) || t('videoOrchestrationNoData'))}</pre>
+                        </div>
+                    </div>
+                    <div class="field-helper">${escapeHTML(t('videoOrchestrationPromptAssetReferences'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceVideoCostMockPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace);
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceVideoCostMockPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('videoOrchestrationCostMockPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('videoOrchestrationCostMockPanelHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMockProviderResponse()">${escapeHTML(t('videoOrchestrationCopyMockProvider'))}</button>
+                    </div>
+                    <div class="demo-warning">${escapeHTML(t('videoOrchestrationCostPlaceholderWarning'))}</div>
+                    <div class="demo-warning">${escapeHTML(t('videoOrchestrationMockProviderWarning'))}</div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationCostPlaceholderTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(pack.cost_estimate_placeholder) || t('videoOrchestrationNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationMockProviderTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(pack.mock_provider_response) || t('videoOrchestrationNoData'))}</pre></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceVideoApprovalSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace);
+            if (!pack.has_video_provider_orchestration_dry_run_pack) return '';
+            const gate = pack.approval_gate || {};
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('videoOrchestrationDisabled') : String(value)}`).join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceVideoApprovalSafetyPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('videoOrchestrationApprovalSafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('videoOrchestrationApprovalSafetyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVideoApprovalAbortRollbackPlan()">${escapeHTML(t('videoOrchestrationCopyApprovalPlans'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('videoOrchestrationApprovalRequired'), String(gate.approval_required === true))}
+                        ${metricPill(t('videoOrchestrationApprovalStatus'), gate.approval_status || t('none'))}
+                        ${metricPill(t('videoOrchestrationRealVideoAllowed'), String(gate.real_video_call_allowed === true))}
+                        ${metricPill(t('videoOrchestrationProviderCallAllowed'), String(gate.provider_call_allowed === true))}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationApprovalGateTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(gate) || t('videoOrchestrationNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationRiskChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(pack.risk_checks) || t('videoOrchestrationNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationAbortPlanTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(pack.abort_plan) || t('videoOrchestrationNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('videoOrchestrationRollbackPlanTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceVideoDryRunJsonText(pack.rollback_plan) || t('videoOrchestrationNoData'))}</pre></div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('videoOrchestrationSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('videoOrchestrationSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -18834,6 +19206,8 @@
                 '',
                 projectWorkspaceExportLlmAssistDryRunMarkdown(workspace),
                 '',
+                projectWorkspaceExportVideoProviderOrchestrationDryRunMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -18918,6 +19292,7 @@
                 review_import_pack: projectWorkspaceExportReviewImportPackSnapshot(workspace),
                 competitor_review_comparison_pack: projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace),
                 llm_assist_dry_run_pack: projectWorkspaceExportLlmAssistDryRunSnapshot(workspace),
+                video_provider_orchestration_dry_run_pack: projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -31327,6 +31702,12 @@
                     ${renderProjectWorkspaceLlmDryRunEvidenceClaimsPanel(workspace)}
                     ${renderProjectWorkspaceLlmDryRunMockResponsePanel(workspace)}
                     ${renderProjectWorkspaceLlmDryRunApprovalSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceVideoOrchestrationSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceVideoJobPlanPanel(workspace)}
+                    ${renderProjectWorkspaceProviderCapabilityPlanPanel(workspace)}
+                    ${renderProjectWorkspaceVideoInputAssetsPanel(workspace)}
+                    ${renderProjectWorkspaceVideoCostMockPanel(workspace)}
+                    ${renderProjectWorkspaceVideoApprovalSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -39012,6 +39393,136 @@
             llmDryRunCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 LLM \u9884\u6f14\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceVideoProviderOrchestrationDryRunMarker: 'Project Workspace video provider orchestration dry-run bundle',
+            videoOrchestrationPackTitle: 'Video Provider Orchestration Dry-Run',
+            videoOrchestrationPackHelper: 'Preview a video provider job, capability match, assets, delivery specs, and gates without calling a provider.',
+            videoOrchestrationSummaryTitle: 'Video Orchestration Dry-Run Summary',
+            videoOrchestrationMode: 'Mode',
+            videoOrchestrationReadiness: 'Readiness',
+            videoOrchestrationRealCallStatus: 'Real video call status',
+            videoOrchestrationRealVideoAllowed: 'Real video call allowed',
+            videoOrchestrationApprovalRequired: 'Approval required',
+            videoOrchestrationRecommendedNextAction: 'Recommended next action',
+            videoOrchestrationDisabled: 'disabled',
+            videoOrchestrationJobPlanTitle: 'Video Job Plan',
+            videoOrchestrationJobPlanHelper: 'Inspect the planned objective, creative sources, prompt direction, target platform, duration, and format.',
+            videoOrchestrationJobObjective: 'Job objective',
+            videoOrchestrationCreativeSource: 'Selected creative source',
+            videoOrchestrationAssetSource: 'Selected asset source',
+            videoOrchestrationPromptDirection: 'Video prompt direction',
+            videoOrchestrationTargetPlatform: 'Target platform',
+            videoOrchestrationTargetDuration: 'Target duration',
+            videoOrchestrationOutputFormat: 'Expected output format',
+            videoOrchestrationProviderPlanTitle: 'Provider Capability Plan',
+            videoOrchestrationProviderPlanHelper: 'Review static capability matching and limitations without querying or selecting a real provider.',
+            videoOrchestrationCapabilityMatching: 'Provider capability matching',
+            videoOrchestrationProviderOptions: 'Provider options / mock provider',
+            videoOrchestrationRequiredCapabilities: 'Required capabilities',
+            videoOrchestrationCapabilityLimitations: 'Capability limitations',
+            videoOrchestrationRealProviderDisabled: 'Real provider call performed',
+            videoOrchestrationMatchStatus: 'Match status',
+            videoOrchestrationProviderSelected: 'Provider selected',
+            videoOrchestrationNoProviderSelected: 'No real provider was queried or selected.',
+            videoOrchestrationInputAssetsPanelTitle: 'Input Asset Bundle / Platform Delivery Specs',
+            videoOrchestrationInputAssetsPanelHelper: 'Review supplied assets, prompt references, keyframes, subtitles, captions, and platform delivery contracts.',
+            videoOrchestrationInputAssetTitle: 'Input Asset Bundle',
+            videoOrchestrationPlatformSpecsTitle: 'Platform Delivery Specs',
+            videoOrchestrationPromptAssetReferences: 'Prompt, keyframe, subtitle, and caption references remain read-only inputs.',
+            videoOrchestrationCostMockPanelTitle: 'Cost Placeholder / Mock Provider Response',
+            videoOrchestrationCostMockPanelHelper: 'The cost and provider response are deterministic placeholders, not live commercial or provider data.',
+            videoOrchestrationCostPlaceholderTitle: 'Cost Placeholder',
+            videoOrchestrationCostPlaceholderWarning: 'Deterministic placeholder only. No pricing was queried and this is not a real quote.',
+            videoOrchestrationMockProviderTitle: 'Mock Provider Response',
+            videoOrchestrationMockProviderWarning: 'Deterministic placeholder only. This is not real provider output and no video was generated.',
+            videoOrchestrationApprovalSafetyTitle: 'Approval Gate / Abort / Rollback / Safety Boundaries',
+            videoOrchestrationApprovalSafetyHelper: 'Review approval, risks, dry-run abort and rollback plans, and disabled execution boundaries.',
+            videoOrchestrationApprovalGateTitle: 'Approval Gate',
+            videoOrchestrationRiskChecksTitle: 'Risk Checks',
+            videoOrchestrationAbortPlanTitle: 'Abort Plan',
+            videoOrchestrationRollbackPlanTitle: 'Rollback Plan',
+            videoOrchestrationSafetyBoundariesTitle: 'Safety Boundaries',
+            videoOrchestrationApprovalStatus: 'Approval status',
+            videoOrchestrationProviderCallAllowed: 'Provider call allowed',
+            videoOrchestrationSafetyNote: 'Dry-run preview only. Real LLM, provider, video, media, paid, registry, rollback, external scraping, and database persistence remain disabled.',
+            videoOrchestrationNoData: 'No video orchestration dry-run data is available.',
+            videoOrchestrationCopySummary: 'Copy video dry-run summary',
+            videoOrchestrationCopyJobPlan: 'Copy video job plan',
+            videoOrchestrationCopyProviderPlan: 'Copy provider capability plan',
+            videoOrchestrationCopyInputAssets: 'Copy input asset bundle',
+            videoOrchestrationCopyMockProvider: 'Copy mock provider response',
+            videoOrchestrationCopyApprovalPlans: 'Copy approval / abort / rollback plan',
+            videoOrchestrationCopyFullPack: 'Copy full video orchestration dry-run pack',
+            videoOrchestrationCopied: 'Video orchestration dry-run content copied.',
+            videoOrchestrationCopyFailed: 'Unable to copy video orchestration dry-run content.',
+            videoOrchestrationCopyNoData: 'No video orchestration dry-run content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceVideoProviderOrchestrationDryRunMarker: 'Project Workspace video provider orchestration dry-run bundle',
+            videoOrchestrationPackTitle: '\u89c6\u9891 Provider \u7f16\u6392\u9884\u6f14',
+            videoOrchestrationPackHelper: '\u5728\u4e0d\u8c03\u7528 provider \u7684\u524d\u63d0\u4e0b\uff0c\u9884\u89c8\u89c6\u9891\u4efb\u52a1\u3001\u80fd\u529b\u5339\u914d\u3001\u8f93\u5165\u8d44\u4ea7\u3001\u4ea4\u4ed8\u89c4\u683c\u548c\u95e8\u7981\u3002',
+            videoOrchestrationSummaryTitle: '\u89c6\u9891\u7f16\u6392\u9884\u6f14\u6458\u8981',
+            videoOrchestrationMode: '\u6a21\u5f0f',
+            videoOrchestrationReadiness: '\u5c31\u7eea\u5ea6',
+            videoOrchestrationRealCallStatus: '\u771f\u5b9e\u89c6\u9891\u8c03\u7528\u72b6\u6001',
+            videoOrchestrationRealVideoAllowed: '\u5141\u8bb8\u771f\u5b9e\u89c6\u9891\u8c03\u7528',
+            videoOrchestrationApprovalRequired: '\u9700\u8981\u5ba1\u6279',
+            videoOrchestrationRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            videoOrchestrationDisabled: '\u5df2\u7981\u7528',
+            videoOrchestrationJobPlanTitle: '\u89c6\u9891\u4efb\u52a1\u8ba1\u5212',
+            videoOrchestrationJobPlanHelper: '\u68c0\u67e5\u4efb\u52a1\u76ee\u6807\u3001\u521b\u610f\u6765\u6e90\u3001\u8d44\u4ea7\u6765\u6e90\u3001\u63d0\u793a\u65b9\u5411\u3001\u76ee\u6807\u5e73\u53f0\u3001\u65f6\u957f\u548c\u683c\u5f0f\u3002',
+            videoOrchestrationJobObjective: '\u4efb\u52a1\u76ee\u6807',
+            videoOrchestrationCreativeSource: '\u9009\u5b9a\u7684\u521b\u610f\u6765\u6e90',
+            videoOrchestrationAssetSource: '\u9009\u5b9a\u7684\u8d44\u4ea7\u6765\u6e90',
+            videoOrchestrationPromptDirection: '\u89c6\u9891\u63d0\u793a\u65b9\u5411',
+            videoOrchestrationTargetPlatform: '\u76ee\u6807\u5e73\u53f0',
+            videoOrchestrationTargetDuration: '\u76ee\u6807\u65f6\u957f',
+            videoOrchestrationOutputFormat: '\u9884\u671f\u8f93\u51fa\u683c\u5f0f',
+            videoOrchestrationProviderPlanTitle: 'Provider \u80fd\u529b\u8ba1\u5212',
+            videoOrchestrationProviderPlanHelper: '\u68c0\u67e5\u9759\u6001\u80fd\u529b\u5339\u914d\u4e0e\u9650\u5236\uff0c\u4e0d\u67e5\u8be2\u4e5f\u4e0d\u9009\u62e9\u771f\u5b9e provider\u3002',
+            videoOrchestrationCapabilityMatching: 'Provider \u80fd\u529b\u5339\u914d',
+            videoOrchestrationProviderOptions: 'Provider \u9009\u9879 / \u6a21\u62df provider',
+            videoOrchestrationRequiredCapabilities: '\u6240\u9700\u80fd\u529b',
+            videoOrchestrationCapabilityLimitations: '\u80fd\u529b\u9650\u5236',
+            videoOrchestrationRealProviderDisabled: '\u5df2\u6267\u884c\u771f\u5b9e provider \u8c03\u7528',
+            videoOrchestrationMatchStatus: '\u5339\u914d\u72b6\u6001',
+            videoOrchestrationProviderSelected: '\u5df2\u9009 provider',
+            videoOrchestrationNoProviderSelected: '\u672a\u67e5\u8be2\u6216\u9009\u62e9\u771f\u5b9e provider\u3002',
+            videoOrchestrationInputAssetsPanelTitle: '\u8f93\u5165\u8d44\u4ea7\u5305 / \u5e73\u53f0\u4ea4\u4ed8\u89c4\u683c',
+            videoOrchestrationInputAssetsPanelHelper: '\u68c0\u67e5\u5df2\u63d0\u4f9b\u8d44\u4ea7\u3001\u63d0\u793a\u5f15\u7528\u3001\u5173\u952e\u5e27\u3001\u5b57\u5e55\u3001\u6587\u6848\u548c\u5e73\u53f0\u4ea4\u4ed8\u5951\u7ea6\u3002',
+            videoOrchestrationInputAssetTitle: '\u8f93\u5165\u8d44\u4ea7\u5305',
+            videoOrchestrationPlatformSpecsTitle: '\u5e73\u53f0\u4ea4\u4ed8\u89c4\u683c',
+            videoOrchestrationPromptAssetReferences: '\u63d0\u793a\u3001\u5173\u952e\u5e27\u3001\u5b57\u5e55\u548c\u6587\u6848\u5f15\u7528\u4ec5\u4f5c\u4e3a\u53ea\u8bfb\u8f93\u5165\u3002',
+            videoOrchestrationCostMockPanelTitle: '\u6210\u672c\u5360\u4f4d / \u6a21\u62df Provider \u54cd\u5e94',
+            videoOrchestrationCostMockPanelHelper: '\u6210\u672c\u548c provider \u54cd\u5e94\u5747\u4e3a\u786e\u5b9a\u6027\u5360\u4f4d\uff0c\u4e0d\u662f\u5b9e\u65f6\u5546\u4e1a\u6216 provider \u6570\u636e\u3002',
+            videoOrchestrationCostPlaceholderTitle: '\u6210\u672c\u5360\u4f4d',
+            videoOrchestrationCostPlaceholderWarning: '\u4ec5\u4e3a\u786e\u5b9a\u6027\u5360\u4f4d\u3002\u672a\u67e5\u8be2\u4ef7\u683c\uff0c\u8fd9\u4e0d\u662f\u771f\u5b9e\u62a5\u4ef7\u3002',
+            videoOrchestrationMockProviderTitle: '\u6a21\u62df Provider \u54cd\u5e94',
+            videoOrchestrationMockProviderWarning: '\u4ec5\u4e3a\u786e\u5b9a\u6027\u5360\u4f4d\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e provider \u8f93\u51fa\uff0c\u4e5f\u672a\u751f\u6210\u89c6\u9891\u3002',
+            videoOrchestrationApprovalSafetyTitle: '\u5ba1\u6279\u95e8 / \u4e2d\u6b62 / \u56de\u6eda / \u5b89\u5168\u8fb9\u754c',
+            videoOrchestrationApprovalSafetyHelper: '\u68c0\u67e5\u5ba1\u6279\u3001\u98ce\u9669\u3001\u9884\u6f14\u4e2d\u6b62\u4e0e\u56de\u6eda\u8ba1\u5212\uff0c\u4ee5\u53ca\u7981\u7528\u6267\u884c\u8fb9\u754c\u3002',
+            videoOrchestrationApprovalGateTitle: '\u5ba1\u6279\u95e8',
+            videoOrchestrationRiskChecksTitle: '\u98ce\u9669\u68c0\u67e5',
+            videoOrchestrationAbortPlanTitle: '\u4e2d\u6b62\u8ba1\u5212',
+            videoOrchestrationRollbackPlanTitle: '\u56de\u6eda\u8ba1\u5212',
+            videoOrchestrationSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            videoOrchestrationApprovalStatus: '\u5ba1\u6279\u72b6\u6001',
+            videoOrchestrationProviderCallAllowed: '\u5141\u8bb8 provider \u8c03\u7528',
+            videoOrchestrationSafetyNote: '\u4ec5\u4f5c\u9884\u6f14\u9884\u89c8\u3002\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u548c\u6570\u636e\u5e93\u6301\u4e45\u5316\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            videoOrchestrationNoData: '\u6682\u65e0\u89c6\u9891\u7f16\u6392\u9884\u6f14\u6570\u636e\u3002',
+            videoOrchestrationCopySummary: '\u590d\u5236\u89c6\u9891\u9884\u6f14\u6458\u8981',
+            videoOrchestrationCopyJobPlan: '\u590d\u5236\u89c6\u9891\u4efb\u52a1\u8ba1\u5212',
+            videoOrchestrationCopyProviderPlan: '\u590d\u5236 provider \u80fd\u529b\u8ba1\u5212',
+            videoOrchestrationCopyInputAssets: '\u590d\u5236\u8f93\u5165\u8d44\u4ea7\u5305',
+            videoOrchestrationCopyMockProvider: '\u590d\u5236\u6a21\u62df provider \u54cd\u5e94',
+            videoOrchestrationCopyApprovalPlans: '\u590d\u5236\u5ba1\u6279 / \u4e2d\u6b62 / \u56de\u6eda\u8ba1\u5212',
+            videoOrchestrationCopyFullPack: '\u590d\u5236\u5b8c\u6574\u89c6\u9891\u7f16\u6392\u9884\u6f14\u5305',
+            videoOrchestrationCopied: '\u89c6\u9891\u7f16\u6392\u9884\u6f14\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            videoOrchestrationCopyFailed: '\u65e0\u6cd5\u590d\u5236\u89c6\u9891\u7f16\u6392\u9884\u6f14\u5185\u5bb9\u3002',
+            videoOrchestrationCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u89c6\u9891\u7f16\u6392\u9884\u6f14\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -40408,6 +40919,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
     latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
     latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
+    latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
