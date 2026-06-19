@@ -1,6 +1,7 @@
 import re
 import json
 import os
+import hashlib
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -22269,6 +22270,229 @@ def _rw_video_provider_orchestration_dry_run_pack(
     }
 
 
+def _rw_workspace_session_snapshot_pack(
+    payload: ReviewWorkspaceRequest,
+    source_breakdown: ReviewSourceBreakdown,
+    creative_decision_pack: dict,
+) -> dict:
+    review_import_pack = dict(
+        creative_decision_pack.get("review_import_pack") or {}
+    )
+    import_summary = dict(review_import_pack.get("import_summary") or {})
+    known_pack_names = [
+        "review_import_pack",
+        "competitor_review_comparison_pack",
+        "llm_assist_dry_run_pack",
+        "video_provider_orchestration_dry_run_pack",
+        "creative_variant_pack",
+        "creative_iteration_pack",
+        "creative_version_control_pack",
+        "creative_asset_pack",
+        "multi_platform_asset_pack",
+        "asset_quality_gate_pack",
+        "campaign_export_pack",
+    ]
+    pack_inventory = [
+        {
+            "pack_name": pack_name,
+            "present": bool(creative_decision_pack.get(pack_name)),
+            "pack_version": _rw_text(
+                (creative_decision_pack.get(pack_name) or {}).get("pack_version")
+            ),
+            "snapshot_included": True,
+        }
+        for pack_name in known_pack_names
+    ]
+    pack_inventory.append(
+        {
+            "pack_name": "workspace_session_snapshot_pack",
+            "present": True,
+            "pack_version": "workspace_session_snapshot_pack_v1",
+            "snapshot_included": True,
+        }
+    )
+    source_type_counts = dict(import_summary.get("source_type_counts") or {})
+    product_summaries = [
+        {
+            "platform": _rw_text(product.platform),
+            "asin": _rw_text(product.asin),
+            "title": _rw_text(product.title),
+            "review_count": len(product.reviews),
+        }
+        for product in payload.products
+    ]
+    input_source_summary = {
+        "workspace_source": _rw_text(payload.source) or "manual",
+        "product_count": len(payload.products),
+        "raw_review_count": int(
+            getattr(source_breakdown, "raw_review_count", 0) or 0
+        ),
+        "unique_review_count": int(
+            getattr(source_breakdown, "total_reviews", 0) or 0
+        ),
+        "duplicate_review_count": int(
+            getattr(source_breakdown, "duplicate_review_count", 0) or 0
+        ),
+        "normalized_review_count": int(
+            import_summary.get("normalized_review_count") or 0
+        ),
+        "source_type_counts": source_type_counts,
+        "products": product_summaries,
+        "goal": _rw_text(payload.goal),
+        "output_language": _rw_text(payload.output_language),
+    }
+    signature_basis = {
+        "workspace_id": _rw_text(payload.workspace_id),
+        "source": input_source_summary["workspace_source"],
+        "goal": input_source_summary["goal"],
+        "output_language": input_source_summary["output_language"],
+        "product_summaries": product_summaries,
+        "raw_review_count": input_source_summary["raw_review_count"],
+        "unique_review_count": input_source_summary["unique_review_count"],
+        "duplicate_review_count": input_source_summary[
+            "duplicate_review_count"
+        ],
+        "source_type_counts": source_type_counts,
+        "pack_presence": {
+            item["pack_name"]: item["present"]
+            for item in pack_inventory
+        },
+    }
+    signature_text = json.dumps(
+        signature_basis,
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    run_id = f"wsrun_{hashlib.sha256(signature_text.encode('utf-8')).hexdigest()[:12]}"
+    present_pack_count = sum(1 for item in pack_inventory if item["present"])
+    missing_packs = [
+        item["pack_name"] for item in pack_inventory if not item["present"]
+    ]
+    snapshot_sections = [
+        "session_summary",
+        "run_identity",
+        "input_source_summary",
+        "pack_inventory",
+        "export_manifest",
+        "restore_plan",
+        "history_entry_preview",
+        "quality_checks",
+        "risk_notes",
+        "safety_boundaries",
+    ]
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "user_account_read_enabled": False,
+        "user_history_write_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_session_snapshot_pack_v1",
+        "session_summary": {
+            "mode": "deterministic_workspace_snapshot",
+            "snapshot_status": "exportable_preview",
+            "run_id": run_id,
+            "workspace_id": _rw_text(payload.workspace_id),
+            "present_pack_count": present_pack_count,
+            "inventory_pack_count": len(pack_inventory),
+            "database_record_created": False,
+            "history_saved": False,
+            "recommended_next_action": (
+                "Export the snapshot for user-controlled storage; no server-side history or database record is created."
+            ),
+        },
+        "run_identity": {
+            "run_id": run_id,
+            "id_type": "deterministic_sha256_prefix",
+            "id_version": "workspace_snapshot_identity_v1",
+            "stable_for_same_input": True,
+            "workspace_id": _rw_text(payload.workspace_id),
+            "signature_basis": signature_basis,
+            "timestamp_included_in_identity": False,
+        },
+        "input_source_summary": input_source_summary,
+        "pack_inventory": pack_inventory,
+        "export_manifest": {
+            "manifest_type": "exportable_workspace_snapshot",
+            "exportable_snapshot": True,
+            "is_persisted_record": False,
+            "database_write_performed": False,
+            "history_write_performed": False,
+            "included_sections": snapshot_sections,
+            "included_packs": [
+                item["pack_name"]
+                for item in pack_inventory
+                if item["snapshot_included"]
+            ],
+            "recommended_formats": ["json", "markdown"],
+            "storage_boundary": "User-controlled export only; not stored by the backend.",
+        },
+        "restore_plan": {
+            "plan_mode": "dry_run_preview",
+            "restore_executed": False,
+            "restore_allowed": False,
+            "database_read_performed": False,
+            "registry_read_performed": False,
+            "source_run_id": run_id,
+            "requirements": [
+                "A user-supplied exported snapshot",
+                "Schema and pack-version compatibility review",
+                "Explicit human approval for any future restore capability",
+            ],
+            "preview_steps": [
+                "Validate the exported snapshot structure without writing state.",
+                "Compare pack versions and list incompatible sections.",
+                "Render a restore preview only; do not apply changes.",
+            ],
+        },
+        "history_entry_preview": {
+            "entry_type": "workspace_run_snapshot_preview",
+            "run_id": run_id,
+            "workspace_id": _rw_text(payload.workspace_id),
+            "preview_only": True,
+            "history_written": False,
+            "database_written": False,
+            "summary": {
+                "source": input_source_summary["workspace_source"],
+                "product_count": input_source_summary["product_count"],
+                "review_count": input_source_summary["unique_review_count"],
+                "present_pack_count": present_pack_count,
+            },
+        },
+        "quality_checks": {
+            "run_id_present": bool(run_id),
+            "run_id_deterministic": True,
+            "input_source_summary_present": bool(input_source_summary),
+            "pack_inventory_complete": all(
+                any(item["pack_name"] == name for item in pack_inventory)
+                for name in known_pack_names
+            ),
+            "export_manifest_complete": True,
+            "missing_packs": missing_packs,
+            "database_persistence_disabled": True,
+            "history_persistence_disabled": True,
+            "restore_execution_disabled": True,
+        },
+        "risk_notes": [
+            "This snapshot is an export preview, not a server-side session record.",
+            "The deterministic run ID is an input signature prefix, not an account or authentication identifier.",
+            "No user account, saved history, database record, media object, or registry state was read or written.",
+            "Restore instructions are preview-only and do not execute rollback or state mutation.",
+        ],
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -22354,6 +22578,13 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["video_provider_orchestration_dry_run_pack"] = (
         _rw_video_provider_orchestration_dry_run_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_session_snapshot_pack"] = (
+        _rw_workspace_session_snapshot_pack(
+            payload,
+            source_breakdown,
+            creative_decision_pack,
+        )
     )
 
     return ReviewWorkspaceResponse(

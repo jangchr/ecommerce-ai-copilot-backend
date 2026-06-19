@@ -697,6 +697,134 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertEqual(pack["abort_plan"]["plan_mode"], "dry_run_only")
         self.assertEqual(pack["rollback_plan"]["plan_mode"], "dry_run_only")
 
+    def test_workspace_session_snapshot_pack_is_stable_and_never_persists(self):
+        payload = {
+            "workspace_id": "workspace-session-snapshot",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "asin": "SNAP001",
+                    "title": "Snapshot Travel Bottle",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Leaked during commute",
+                            "text": "The lid leaked in my backpack during a commute and was difficult to clean after coffee.",
+                            "source_section": "amazon_visible_review",
+                        },
+                        {
+                            "rating": 5,
+                            "title": "Easy travel cleanup",
+                            "text": "I use it for travel because it feels sturdy and is easy to rinse after lunch.",
+                            "source_section": "manual_review",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        first_response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json=payload,
+        )
+        second_response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json=payload,
+        )
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        creative_pack = first_response.json()["creative_decision_pack"]
+        second_creative_pack = second_response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_session_snapshot_pack"]
+        second_pack = second_creative_pack["workspace_session_snapshot_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_session_snapshot_pack_v1",
+        )
+        run_identity = pack["run_identity"]
+        self.assertTrue(run_identity["run_id"])
+        self.assertTrue(run_identity["run_id"].startswith("wsrun_"))
+        self.assertEqual(
+            run_identity["run_id"],
+            second_pack["run_identity"]["run_id"],
+        )
+        self.assertTrue(run_identity["stable_for_same_input"])
+        self.assertFalse(run_identity["timestamp_included_in_identity"])
+        self.assertTrue(pack["input_source_summary"])
+        self.assertEqual(pack["input_source_summary"]["product_count"], 1)
+        self.assertEqual(pack["input_source_summary"]["raw_review_count"], 2)
+
+        inventory = {
+            item["pack_name"]: item
+            for item in pack["pack_inventory"]
+        }
+        for pack_name in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+        ]:
+            with self.subTest(inventory_pack=pack_name):
+                self.assertIn(pack_name, inventory)
+                self.assertTrue(inventory[pack_name]["present"])
+                self.assertTrue(inventory[pack_name]["snapshot_included"])
+
+        manifest = pack["export_manifest"]
+        self.assertEqual(
+            manifest["manifest_type"],
+            "exportable_workspace_snapshot",
+        )
+        self.assertTrue(manifest["exportable_snapshot"])
+        self.assertFalse(manifest["is_persisted_record"])
+        self.assertFalse(manifest["database_write_performed"])
+        self.assertFalse(manifest["history_write_performed"])
+        self.assertIn("workspace_session_snapshot_pack", manifest["included_packs"])
+
+        restore_plan = pack["restore_plan"]
+        self.assertEqual(restore_plan["plan_mode"], "dry_run_preview")
+        self.assertFalse(restore_plan["restore_executed"])
+        self.assertFalse(restore_plan["restore_allowed"])
+        history = pack["history_entry_preview"]
+        self.assertTrue(history["preview_only"])
+        self.assertFalse(history["history_written"])
+        self.assertFalse(history["database_written"])
+        self.assertTrue(pack["quality_checks"])
+        self.assertTrue(pack["quality_checks"]["run_id_deterministic"])
+        self.assertTrue(pack["risk_notes"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "user_account_read_enabled",
+            "user_history_write_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 
 
