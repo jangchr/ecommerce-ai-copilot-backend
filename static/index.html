@@ -3601,6 +3601,7 @@
         let latestProjectAssetQualityGatePack = {};
         let latestProjectCampaignExportPack = {};
         let latestProjectReviewImportPack = {};
+        let latestProjectCompetitorReviewComparisonPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8878,6 +8879,7 @@
                     || {};
                 latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
                 latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
+                latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14715,6 +14717,7 @@
         const PROJECT_WORKSPACE_ASSET_QUALITY_GATE_MARKER = 'Project Workspace asset quality gate bundle';
         const PROJECT_WORKSPACE_CAMPAIGN_EXPORT_PACK_MARKER = 'Project Workspace campaign export pack bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER = 'Project Workspace review import pack bundle';
+        const PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER = 'Project Workspace competitor review comparison bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -16048,6 +16051,185 @@
 
         function copyProjectWorkspaceFullReviewImportPack() {
             return copyProjectWorkspaceReviewImportText('full');
+        }
+
+        function projectWorkspaceCompetitorReviewComparisonPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectCompetitorReviewComparisonPack
+                && Object.keys(latestProjectCompetitorReviewComparisonPack).length) {
+                return latestProjectCompetitorReviewComparisonPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.competitor_review_comparison_pack || {};
+        }
+
+        function projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCompetitorReviewComparisonPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER,
+                has_competitor_review_comparison_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                comparison_summary: pack.comparison_summary || {},
+                own_review_profile: pack.own_review_profile || {},
+                competitor_review_profile: pack.competitor_review_profile || {},
+                comparison_cards: Array.isArray(pack.comparison_cards) ? pack.comparison_cards : [],
+                gap_opportunity_cards: Array.isArray(pack.gap_opportunity_cards) ? pack.gap_opportunity_cards : [],
+                differentiation_angle_cards: Array.isArray(pack.differentiation_angle_cards) ? pack.differentiation_angle_cards : [],
+                competitor_risk_notes: Array.isArray(pack.competitor_risk_notes) ? pack.competitor_risk_notes : [],
+                recommended_competitor_actions: Array.isArray(pack.recommended_competitor_actions) ? pack.recommended_competitor_actions : [],
+                comparison_quality_checks: pack.comparison_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {},
+                do_not_claim: Array.isArray(pack.do_not_claim) ? pack.do_not_claim : []
+            };
+        }
+
+        function projectWorkspaceCompetitorListText(items = []) {
+            return (Array.isArray(items) ? items : [])
+                .map((item) => typeof item === 'string' ? item : JSON.stringify(item))
+                .filter(Boolean)
+                .map((item) => `- ${item}`)
+                .join('\n');
+        }
+
+        function projectWorkspaceCompetitorProfileText(profile = {}) {
+            const signals = profile.top_detected_signals || [];
+            const quotes = profile.high_quality_quotes || [];
+            return [
+                `${t('competitorComparisonReviewCount')}: ${profile.review_count ?? 0}`,
+                `${t('competitorComparisonUsableCount')}: ${profile.usable_review_count ?? 0}`,
+                `${t('competitorComparisonAverageRating')}: ${profile.average_rating ?? t('none')}`,
+                `${t('competitorComparisonAverageQuality')}: ${profile.average_quality_score ?? 0}`,
+                `${t('competitorComparisonPainPoints')}: ${projectWorkspaceCompetitorListText(signals.map((item) => item.signal || item)) || t('none')}`,
+                `${t('competitorComparisonEvidenceQuotes')}:`,
+                projectWorkspaceCompetitorListText(quotes.map((item) => item.evidence_quote || item))
+            ].join('\n');
+        }
+
+        function projectWorkspaceCompetitorSummaryText(pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot()) {
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            const summary = pack.comparison_summary || {};
+            const topGap = (pack.gap_opportunity_cards || [])[0] || {};
+            const topAngle = (pack.differentiation_angle_cards || [])[0] || {};
+            return [
+                t('competitorComparisonSummaryTitle'),
+                `${t('competitorComparisonOwnReviewCount')}: ${summary.own_review_count ?? 0}`,
+                `${t('competitorComparisonCompetitorReviewCount')}: ${summary.competitor_review_count ?? 0}`,
+                `${t('competitorComparisonReadiness')}: ${summary.comparison_readiness || t('none')}`,
+                `${t('competitorComparisonTopGap')}: ${topGap.gap_title || topGap.signal || t('none')}`,
+                `${t('competitorComparisonTopAngle')}: ${topAngle.angle_title || topAngle.source_angle_id || t('none')}`,
+                `${t('competitorComparisonRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceCompetitorProfileMarkdown(pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot()) {
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            const sourceCounts = pack.comparison_summary?.source_type_counts || {};
+            return [
+                t('competitorComparisonProfileTitle'),
+                `### ${t('competitorComparisonOwnProfileTitle')}`,
+                projectWorkspaceCompetitorProfileText(pack.own_review_profile || {}),
+                '',
+                `### ${t('competitorComparisonCompetitorProfileTitle')}`,
+                projectWorkspaceCompetitorProfileText(pack.competitor_review_profile || {}),
+                '',
+                `${t('competitorComparisonSourceTypeCounts')}: ${Object.entries(sourceCounts).map(([key, value]) => `${key}: ${value}`).join(' | ') || t('none')}`,
+                `${t('competitorComparisonRiskWarnings')}:`,
+                projectWorkspaceCompetitorListText(pack.competitor_risk_notes || [])
+            ].join('\n');
+        }
+
+        function projectWorkspaceCompetitorGapText(pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot()) {
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            return (pack.gap_opportunity_cards || []).map((card, index) => [
+                `### ${index + 1}. ${card.gap_title || card.signal || card.gap_id || t('none')}`,
+                `${t('competitorComparisonCompetitorPain')}: ${card.competitor_pain || card.signal || t('none')}`,
+                `${t('competitorComparisonOurPossibleAngle')}: ${card.our_possible_angle || card.opportunity_type || t('none')}`,
+                `${t('competitorComparisonEvidenceQuote')}: ${card.evidence_quote || t('none')}`,
+                `${t('competitorComparisonEvidenceStrength')}: ${card.evidence_strength || (card.weak_evidence ? 'weak' : 'directional')}`,
+                `${t('competitorComparisonClaimSafety')}: ${card.claim_safety_level || t('none')}`,
+                `${t('competitorComparisonRiskNote')}: ${card.risk_note || t('none')}`,
+                `${t('competitorComparisonDoNotClaim')}:`,
+                projectWorkspaceCompetitorListText(card.do_not_claim || [])
+            ].join('\n')).join('\n\n') || t('competitorComparisonNoData');
+        }
+
+        function projectWorkspaceCompetitorAngleText(pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot()) {
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            return (pack.differentiation_angle_cards || []).map((card, index) => [
+                `### ${index + 1}. ${card.angle_title || card.angle_id || t('none')}`,
+                `${t('competitorComparisonCreativeHook')}: ${card.creative_hook || card.angle_title || t('none')}`,
+                `${t('competitorComparisonCompetitorContext')}: ${card.competitor_context || card.competitor_evidence_quote || t('none')}`,
+                `${t('competitorComparisonOurPositioning')}: ${card.our_positioning || card.own_evidence_quote || t('none')}`,
+                `${t('competitorComparisonScriptDirection')}: ${card.script_direction || card.risk_note || t('none')}`,
+                `${t('competitorComparisonVideoPromptDirection')}: ${card.video_prompt_direction || card.risk_note || t('none')}`,
+                `${t('competitorComparisonRiskNote')}: ${card.risk_note || t('none')}`,
+                `${t('competitorComparisonDoNotClaim')}:`,
+                projectWorkspaceCompetitorListText(card.do_not_claim || [])
+            ].join('\n')).join('\n\n') || t('competitorComparisonNoData');
+        }
+
+        function projectWorkspaceExportCompetitorReviewComparisonMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace);
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            return [
+                `## ${t('competitorComparisonPackTitle')}`,
+                projectWorkspaceCompetitorSummaryText(pack),
+                '',
+                `## ${t('competitorComparisonProfileTitle')}`,
+                projectWorkspaceCompetitorProfileMarkdown(pack),
+                '',
+                `## ${t('competitorComparisonGapTitle')}`,
+                projectWorkspaceCompetitorGapText(pack),
+                '',
+                `## ${t('competitorComparisonAnglesTitle')}`,
+                projectWorkspaceCompetitorAngleText(pack),
+                '',
+                `## ${t('competitorComparisonSafetyNotesTitle')}`,
+                t('competitorComparisonSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCompetitorComparisonText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceCompetitorComparisonStatus');
+            const pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceCompetitorSummaryText(pack)
+                : kind === 'profile'
+                    ? projectWorkspaceCompetitorProfileMarkdown(pack)
+                    : kind === 'gaps'
+                        ? projectWorkspaceCompetitorGapText(pack)
+                        : kind === 'angles'
+                            ? projectWorkspaceCompetitorAngleText(pack)
+                            : projectWorkspaceExportCompetitorReviewComparisonMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('competitorComparisonCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('competitorComparisonCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('competitorComparisonCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('competitorComparisonCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceCompetitorComparisonSummary() {
+            return copyProjectWorkspaceCompetitorComparisonText('summary');
+        }
+
+        function copyProjectWorkspaceCompetitorProfile() {
+            return copyProjectWorkspaceCompetitorComparisonText('profile');
+        }
+
+        function copyProjectWorkspaceCompetitorGaps() {
+            return copyProjectWorkspaceCompetitorComparisonText('gaps');
+        }
+
+        function copyProjectWorkspaceCompetitorAngles() {
+            return copyProjectWorkspaceCompetitorComparisonText('angles');
+        }
+
+        function copyProjectWorkspaceFullCompetitorComparisonPack() {
+            return copyProjectWorkspaceCompetitorComparisonText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -17690,6 +17872,147 @@
             `;
         }
 
+        function renderProjectWorkspaceCompetitorComparisonSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace);
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            const summary = pack.comparison_summary || {};
+            const topGap = (pack.gap_opportunity_cards || [])[0] || {};
+            const topAngle = (pack.differentiation_angle_cards || [])[0] || {};
+            return `
+                <div class="section-block" id="projectWorkspaceCompetitorComparisonSummaryPanel"
+                    data-competitor-review-comparison-marker="${PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('competitorComparisonPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('competitorComparisonPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button"
+                            onclick="copyProjectWorkspaceFullCompetitorComparisonPack()">${escapeHTML(t('competitorComparisonCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('competitorComparisonOwnReviewCount'), String(summary.own_review_count ?? 0))}
+                        ${metricPill(t('competitorComparisonCompetitorReviewCount'), String(summary.competitor_review_count ?? 0))}
+                        ${metricPill(t('competitorComparisonReadiness'), summary.comparison_readiness || t('none'))}
+                        ${metricPill(t('competitorComparisonClaimSafety'), summary.claim_safety_level || t('none'))}
+                    </div>
+                    <div class="feedback-box">
+                        <strong>${escapeHTML(t('competitorComparisonTopGap'))}:</strong>
+                        ${escapeHTML(topGap.gap_title || topGap.signal || t('competitorComparisonNoData'))}
+                        <br>
+                        <strong>${escapeHTML(t('competitorComparisonTopAngle'))}:</strong>
+                        ${escapeHTML(topAngle.angle_title || topAngle.source_angle_id || t('competitorComparisonNoData'))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('competitorComparisonRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('competitorComparisonSafetyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceCompetitorComparisonStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCompetitorComparisonSummary()">${escapeHTML(t('competitorComparisonCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCompetitorProfilePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace);
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            const sourceCounts = pack.comparison_summary?.source_type_counts || {};
+            const profileCard = (title, profile) => `
+                <div class="graph-os-card">
+                    <strong>${escapeHTML(title)}</strong>
+                    <div>${escapeHTML(t('competitorComparisonPainPoints'))}: ${escapeHTML((profile.top_detected_signals || []).map((item) => item.signal || item).join(', ') || t('none'))}</div>
+                    <div>${escapeHTML(t('competitorComparisonObjections'))}: ${escapeHTML((profile.top_detected_signals || []).map((item) => item.signal || item).join(', ') || t('none'))}</div>
+                    <div>${escapeHTML(t('competitorComparisonLikedPoints'))}: ${escapeHTML((profile.top_detected_signals || []).map((item) => item.signal || item).join(', ') || t('none'))}</div>
+                    <div>${escapeHTML(t('competitorComparisonUseCases'))}: ${escapeHTML((profile.high_quality_quotes || []).map((item) => item.evidence_quote || '').filter(Boolean).slice(0, 2).join(' | ') || t('none'))}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('competitorComparisonReviewCount'), String(profile.review_count ?? 0))}
+                        ${metricPill(t('competitorComparisonUsableCount'), String(profile.usable_review_count ?? 0))}
+                        ${metricPill(t('competitorComparisonAverageQuality'), String(profile.average_quality_score ?? 0))}
+                    </div>
+                </div>
+            `;
+            return `
+                <div class="section-block" id="projectWorkspaceCompetitorProfilePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('competitorComparisonProfileTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('competitorComparisonProfileHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceCompetitorProfile()">${escapeHTML(t('competitorComparisonCopyProfile'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${profileCard(t('competitorComparisonOwnProfileTitle'), pack.own_review_profile || {})}
+                        ${profileCard(t('competitorComparisonCompetitorProfileTitle'), pack.competitor_review_profile || {})}
+                    </div>
+                    <div class="field-helper"><strong>${escapeHTML(t('competitorComparisonSourceTypeCounts'))}:</strong> ${escapeHTML(Object.entries(sourceCounts).map(([key, value]) => `${key}: ${value}`).join(' | ') || t('none'))}</div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('competitorComparisonRiskWarnings'))}:</strong> ${escapeHTML((pack.competitor_risk_notes || []).join(' | ') || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCompetitorGapPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace);
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            const cards = pack.gap_opportunity_cards || [];
+            return `
+                <div class="section-block" id="projectWorkspaceCompetitorGapPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('competitorComparisonGapTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('competitorComparisonGapHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceCompetitorGaps()">${escapeHTML(t('competitorComparisonCopyGaps'))}</button>
+                    </div>
+                    ${cards.length ? `<div class="graph-os-grid">${cards.map((card) => `
+                        <div class="graph-os-card">
+                            <div class="section-header">
+                                <strong>${escapeHTML(card.gap_title || card.signal || card.gap_id || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(card.claim_safety_level || t('none'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('competitorComparisonCompetitorPain'))}:</strong> ${escapeHTML(card.competitor_pain || card.signal || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonOurPossibleAngle'))}:</strong> ${escapeHTML(card.our_possible_angle || card.opportunity_type || t('none'))}</div>
+                            <div class="feedback-box"><strong>${escapeHTML(t('competitorComparisonEvidenceQuote'))}:</strong> ${escapeHTML(card.evidence_quote || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonEvidenceStrength'))}:</strong> ${escapeHTML(card.evidence_strength || (card.weak_evidence ? 'weak' : 'directional'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('competitorComparisonRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonDoNotClaim'))}:</strong> ${escapeHTML((card.do_not_claim || []).join(' | ') || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>` : `<div class="feedback-box">${escapeHTML(t('competitorComparisonNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceCompetitorAnglesPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace);
+            if (!pack.has_competitor_review_comparison_pack) return '';
+            const cards = pack.differentiation_angle_cards || [];
+            return `
+                <div class="section-block" id="projectWorkspaceCompetitorAnglesPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('competitorComparisonAnglesTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('competitorComparisonAnglesHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button"
+                            onclick="copyProjectWorkspaceCompetitorAngles()">${escapeHTML(t('competitorComparisonCopyAngles'))}</button>
+                    </div>
+                    ${cards.length ? `<div class="graph-os-grid">${cards.map((card) => `
+                        <div class="graph-os-card">
+                            <div class="section-header">
+                                <strong>${escapeHTML(card.angle_title || card.angle_id || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(card.claim_safety_level || t('none'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('competitorComparisonCreativeHook'))}:</strong> ${escapeHTML(card.creative_hook || card.angle_title || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonCompetitorContext'))}:</strong> ${escapeHTML(card.competitor_context || card.competitor_evidence_quote || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonOurPositioning'))}:</strong> ${escapeHTML(card.our_positioning || card.own_evidence_quote || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonScriptDirection'))}:</strong> ${escapeHTML(card.script_direction || card.risk_note || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonVideoPromptDirection'))}:</strong> ${escapeHTML(card.video_prompt_direction || card.risk_note || t('none'))}</div>
+                            <div class="demo-warning"><strong>${escapeHTML(t('competitorComparisonRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('competitorComparisonDoNotClaim'))}:</strong> ${escapeHTML((card.do_not_claim || []).join(' | ') || t('none'))}</div>
+                        </div>
+                    `).join('')}</div>` : `<div class="feedback-box">${escapeHTML(t('competitorComparisonNoData'))}</div>`}
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -18166,6 +18489,8 @@
                 '',
                 projectWorkspaceExportReviewImportPackMarkdown(workspace),
                 '',
+                projectWorkspaceExportCompetitorReviewComparisonMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -18248,6 +18573,7 @@
                 graph_summary: workspace?.project?.graph_summary || {},
                 agent_capability_runtime: projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace),
                 review_import_pack: projectWorkspaceExportReviewImportPackSnapshot(workspace),
+                competitor_review_comparison_pack: projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -30648,6 +30974,10 @@
                     ${renderProjectWorkspaceNormalizedReviewsPanel(workspace)}
                     ${renderProjectWorkspaceReviewImportSourcePanel(workspace)}
                     ${renderProjectWorkspaceReviewImportQualityPanel(workspace)}
+                    ${renderProjectWorkspaceCompetitorComparisonSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCompetitorProfilePanel(workspace)}
+                    ${renderProjectWorkspaceCompetitorGapPanel(workspace)}
+                    ${renderProjectWorkspaceCompetitorAnglesPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -38117,6 +38447,116 @@
             reviewImportCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u8bc4\u8bba\u5bfc\u5165\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCompetitorReviewComparisonMarker: 'Project Workspace competitor review comparison bundle',
+            competitorComparisonPackTitle: 'Competitor Review Comparison',
+            competitorComparisonPackHelper: 'Compare own and competitor review signals with evidence quotes, claim safety, and disabled execution boundaries.',
+            competitorComparisonSummaryTitle: 'Competitor Comparison Summary',
+            competitorComparisonOwnReviewCount: 'Own review count',
+            competitorComparisonCompetitorReviewCount: 'Competitor review count',
+            competitorComparisonReadiness: 'Comparison readiness',
+            competitorComparisonTopGap: 'Top gap opportunity',
+            competitorComparisonTopAngle: 'Top differentiation angle',
+            competitorComparisonRecommendedNextAction: 'Recommended next action',
+            competitorComparisonProfileTitle: 'Own vs Competitor Review Profile',
+            competitorComparisonProfileHelper: 'Review own and competitor pain points, objections, liked points, use cases, source counts, and risk warnings.',
+            competitorComparisonOwnProfileTitle: 'Own review profile',
+            competitorComparisonCompetitorProfileTitle: 'Competitor review profile',
+            competitorComparisonPainPoints: 'Pain points',
+            competitorComparisonObjections: 'Objections',
+            competitorComparisonLikedPoints: 'Liked points',
+            competitorComparisonUseCases: 'Use cases',
+            competitorComparisonSourceTypeCounts: 'Source type counts',
+            competitorComparisonRiskWarnings: 'Risk warnings',
+            competitorComparisonReviewCount: 'Review count',
+            competitorComparisonUsableCount: 'Usable review count',
+            competitorComparisonAverageRating: 'Average rating',
+            competitorComparisonAverageQuality: 'Average quality score',
+            competitorComparisonEvidenceQuotes: 'Evidence quotes',
+            competitorComparisonGapTitle: 'Gap Opportunities',
+            competitorComparisonGapHelper: 'Use competitor-only signals as research prompts, not unsupported superiority claims.',
+            competitorComparisonCompetitorPain: 'Competitor pain / objection',
+            competitorComparisonOurPossibleAngle: 'Our possible angle',
+            competitorComparisonEvidenceQuote: 'Evidence quote',
+            competitorComparisonEvidenceStrength: 'Evidence strength',
+            competitorComparisonClaimSafety: 'Claim safety',
+            competitorComparisonRiskNote: 'Risk note',
+            competitorComparisonDoNotClaim: 'Do not claim',
+            competitorComparisonAnglesTitle: 'Differentiation Angles',
+            competitorComparisonAnglesHelper: 'Turn quote-backed comparison signals into cautious creative directions.',
+            competitorComparisonCreativeHook: 'Creative hook',
+            competitorComparisonCompetitorContext: 'Competitor context',
+            competitorComparisonOurPositioning: 'Our positioning',
+            competitorComparisonScriptDirection: 'Script direction',
+            competitorComparisonVideoPromptDirection: 'Video prompt direction',
+            competitorComparisonSafetyNotesTitle: 'Safety Notes',
+            competitorComparisonSafetyNote: 'Read-only competitor comparison guidance. Provider, LLM, video, media, paid, registry, rollback, external scraping, and database persistence remain disabled.',
+            competitorComparisonNoData: 'No competitor comparison data is available.',
+            competitorComparisonCopySummary: 'Copy competitor comparison summary',
+            competitorComparisonCopyProfile: 'Copy own vs competitor profile',
+            competitorComparisonCopyGaps: 'Copy gap opportunities',
+            competitorComparisonCopyAngles: 'Copy differentiation angles',
+            competitorComparisonCopyFullPack: 'Copy full competitor comparison pack',
+            competitorComparisonCopied: 'Competitor comparison content copied.',
+            competitorComparisonCopyFailed: 'Unable to copy competitor comparison content.',
+            competitorComparisonCopyNoData: 'No competitor comparison content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCompetitorReviewComparisonMarker: 'Project Workspace competitor review comparison bundle',
+            competitorComparisonPackTitle: '\u7ade\u54c1\u8bc4\u8bba\u5bf9\u6bd4',
+            competitorComparisonPackHelper: '\u7528\u8bc1\u636e\u539f\u8bdd\u3001\u58f0\u79f0\u5b89\u5168\u7b49\u7ea7\u548c\u7981\u7528\u6267\u884c\u8fb9\u754c\uff0c\u5bf9\u6bd4\u81ea\u6709\u4e0e\u7ade\u54c1\u8bc4\u8bba\u4fe1\u53f7\u3002',
+            competitorComparisonSummaryTitle: '\u7ade\u54c1\u5bf9\u6bd4\u6458\u8981',
+            competitorComparisonOwnReviewCount: '\u81ea\u6709\u8bc4\u8bba\u6570',
+            competitorComparisonCompetitorReviewCount: '\u7ade\u54c1\u8bc4\u8bba\u6570',
+            competitorComparisonReadiness: '\u5bf9\u6bd4\u5c31\u7eea\u5ea6',
+            competitorComparisonTopGap: '\u6700\u4f18\u7f3a\u53e3\u673a\u4f1a',
+            competitorComparisonTopAngle: '\u6700\u4f18\u5dee\u5f02\u5316\u89d2\u5ea6',
+            competitorComparisonRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            competitorComparisonProfileTitle: '\u81ea\u6709 vs \u7ade\u54c1\u8bc4\u8bba\u753b\u50cf',
+            competitorComparisonProfileHelper: '\u68c0\u67e5\u81ea\u6709\u4e0e\u7ade\u54c1\u7684\u75db\u70b9\u3001\u987e\u8651\u3001\u597d\u8bc4\u70b9\u3001\u4f7f\u7528\u573a\u666f\u3001\u6765\u6e90\u6570\u548c\u98ce\u9669\u8b66\u544a\u3002',
+            competitorComparisonOwnProfileTitle: '\u81ea\u6709\u8bc4\u8bba\u753b\u50cf',
+            competitorComparisonCompetitorProfileTitle: '\u7ade\u54c1\u8bc4\u8bba\u753b\u50cf',
+            competitorComparisonPainPoints: '\u75db\u70b9',
+            competitorComparisonObjections: '\u987e\u8651',
+            competitorComparisonLikedPoints: '\u597d\u8bc4\u70b9',
+            competitorComparisonUseCases: '\u4f7f\u7528\u573a\u666f',
+            competitorComparisonSourceTypeCounts: '\u6765\u6e90\u7c7b\u578b\u6570',
+            competitorComparisonRiskWarnings: '\u98ce\u9669\u8b66\u544a',
+            competitorComparisonReviewCount: '\u8bc4\u8bba\u6570',
+            competitorComparisonUsableCount: '\u53ef\u7528\u8bc4\u8bba\u6570',
+            competitorComparisonAverageRating: '\u5e73\u5747\u8bc4\u5206',
+            competitorComparisonAverageQuality: '\u5e73\u5747\u8d28\u91cf\u5206',
+            competitorComparisonEvidenceQuotes: '\u8bc1\u636e\u539f\u8bdd',
+            competitorComparisonGapTitle: '\u7f3a\u53e3\u673a\u4f1a',
+            competitorComparisonGapHelper: '\u5c06\u7ade\u54c1\u72ec\u6709\u4fe1\u53f7\u4f5c\u4e3a\u7814\u7a76\u63d0\u793a\uff0c\u4e0d\u4f5c\u65e0\u8bc1\u636e\u7684\u4f18\u52bf\u58f0\u79f0\u3002',
+            competitorComparisonCompetitorPain: '\u7ade\u54c1\u75db\u70b9 / \u987e\u8651',
+            competitorComparisonOurPossibleAngle: '\u6211\u4eec\u53ef\u80fd\u7684\u89d2\u5ea6',
+            competitorComparisonEvidenceQuote: '\u8bc1\u636e\u539f\u8bdd',
+            competitorComparisonEvidenceStrength: '\u8bc1\u636e\u5f3a\u5ea6',
+            competitorComparisonClaimSafety: '\u58f0\u79f0\u5b89\u5168',
+            competitorComparisonRiskNote: '\u98ce\u9669\u8bf4\u660e',
+            competitorComparisonDoNotClaim: '\u4e0d\u8981\u58f0\u79f0',
+            competitorComparisonAnglesTitle: '\u5dee\u5f02\u5316\u89d2\u5ea6',
+            competitorComparisonAnglesHelper: '\u5c06\u6709\u539f\u8bdd\u652f\u6491\u7684\u5bf9\u6bd4\u4fe1\u53f7\u8f6c\u6210\u8c28\u614e\u7684\u521b\u610f\u65b9\u5411\u3002',
+            competitorComparisonCreativeHook: '\u521b\u610f\u5f00\u573a',
+            competitorComparisonCompetitorContext: '\u7ade\u54c1\u8bed\u5883',
+            competitorComparisonOurPositioning: '\u6211\u4eec\u7684\u5b9a\u4f4d',
+            competitorComparisonScriptDirection: '\u811a\u672c\u65b9\u5411',
+            competitorComparisonVideoPromptDirection: '\u89c6\u9891\u63d0\u793a\u65b9\u5411',
+            competitorComparisonSafetyNotesTitle: '\u5b89\u5168\u8bf4\u660e',
+            competitorComparisonSafetyNote: '\u4ec5\u4f5c\u4e3a\u53ea\u8bfb\u7ade\u54c1\u5bf9\u6bd4\u6307\u5f15\u3002Provider\u3001LLM\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u548c\u6570\u636e\u5e93\u6301\u4e45\u5316\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            competitorComparisonNoData: '\u6682\u65e0\u7ade\u54c1\u5bf9\u6bd4\u6570\u636e\u3002',
+            competitorComparisonCopySummary: '\u590d\u5236\u7ade\u54c1\u5bf9\u6bd4\u6458\u8981',
+            competitorComparisonCopyProfile: '\u590d\u5236\u81ea\u6709 vs \u7ade\u54c1\u753b\u50cf',
+            competitorComparisonCopyGaps: '\u590d\u5236\u7f3a\u53e3\u673a\u4f1a',
+            competitorComparisonCopyAngles: '\u590d\u5236\u5dee\u5f02\u5316\u89d2\u5ea6',
+            competitorComparisonCopyFullPack: '\u590d\u5236\u5b8c\u6574\u7ade\u54c1\u5bf9\u6bd4\u5305',
+            competitorComparisonCopied: '\u7ade\u54c1\u5bf9\u6bd4\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            competitorComparisonCopyFailed: '\u65e0\u6cd5\u590d\u5236\u7ade\u54c1\u5bf9\u6bd4\u5185\u5bb9\u3002',
+            competitorComparisonCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u7ade\u54c1\u5bf9\u6bd4\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -39511,6 +39951,7 @@ async function analyzeExtensionWorkspace() {
       || {};
     latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
     latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
+    latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

@@ -8675,6 +8675,148 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
         self.assertIn("weak_review_sample", html)
         self.assertNotIn("????", html)
 
+    def test_competitor_review_comparison_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace competitor review comparison bundle",
+            "PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER",
+            "latestProjectCompetitorReviewComparisonPack",
+            "projectWorkspaceCompetitorReviewComparisonPackFromWorkspace",
+            "projectWorkspaceExportCompetitorReviewComparisonSnapshot",
+            "projectWorkspaceExportCompetitorReviewComparisonMarkdown",
+            "renderProjectWorkspaceCompetitorComparisonSummaryPanel",
+            "renderProjectWorkspaceCompetitorProfilePanel",
+            "renderProjectWorkspaceCompetitorGapPanel",
+            "renderProjectWorkspaceCompetitorAnglesPanel",
+            "copyProjectWorkspaceCompetitorComparisonSummary",
+            "copyProjectWorkspaceCompetitorProfile",
+            "copyProjectWorkspaceCompetitorGaps",
+            "copyProjectWorkspaceCompetitorAngles",
+            "copyProjectWorkspaceFullCompetitorComparisonPack",
+            "competitor_review_comparison_pack: projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace)",
+            "Competitor Review Comparison",
+            "Own vs Competitor Review Profile",
+            "Gap Opportunities",
+            "Differentiation Angles",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.comparison_summary",
+            "pack.own_review_profile",
+            "pack.competitor_review_profile",
+            "pack.comparison_cards",
+            "pack.gap_opportunity_cards",
+            "pack.differentiation_angle_cards",
+            "pack.competitor_risk_notes",
+            "pack.recommended_competitor_actions",
+            "pack.comparison_quality_checks",
+            "pack.safety_boundaries",
+            "summary.own_review_count",
+            "summary.competitor_review_count",
+            "summary.comparison_readiness",
+            "summary.recommended_next_action",
+            "card.gap_title",
+            "card.competitor_pain",
+            "card.our_possible_angle",
+            "card.evidence_quote",
+            "card.evidence_strength",
+            "card.claim_safety_level",
+            "card.risk_note",
+            "card.do_not_claim",
+            "card.angle_title",
+            "card.creative_hook",
+            "card.competitor_context",
+            "card.our_positioning",
+            "card.script_direction",
+            "card.video_prompt_direction",
+        ]:
+            self.assertIn(runtime_field, html)
+        review_quality = html.index(
+            "${renderProjectWorkspaceReviewImportQualityPanel(workspace)}"
+        )
+        competitor_summary = html.index(
+            "${renderProjectWorkspaceCompetitorComparisonSummaryPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(review_quality, competitor_summary)
+        self.assertLess(competitor_summary, creative_core)
+
+    def test_competitor_review_comparison_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "competitorComparisonPackTitle",
+            "competitorComparisonPackHelper",
+            "competitorComparisonSummaryTitle",
+            "competitorComparisonOwnReviewCount",
+            "competitorComparisonCompetitorReviewCount",
+            "competitorComparisonReadiness",
+            "competitorComparisonTopGap",
+            "competitorComparisonTopAngle",
+            "competitorComparisonRecommendedNextAction",
+            "competitorComparisonProfileTitle",
+            "competitorComparisonPainPoints",
+            "competitorComparisonObjections",
+            "competitorComparisonLikedPoints",
+            "competitorComparisonUseCases",
+            "competitorComparisonGapTitle",
+            "competitorComparisonAnglesTitle",
+            "competitorComparisonSafetyNotesTitle",
+            "competitorComparisonSafetyNote",
+            "competitorComparisonCopySummary",
+            "competitorComparisonCopyProfile",
+            "competitorComparisonCopyGaps",
+            "competitorComparisonCopyAngles",
+            "competitorComparisonCopyFullPack",
+            "competitorComparisonCopied",
+            "competitorComparisonCopyFailed",
+            "competitorComparisonCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace competitor review comparison bundle", script)
+            self.assertIn("project_workspace_competitor_review_comparison_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportCompetitorReviewComparisonMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceCompetitorComparisonText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "competitorComparisonPackTitle",
+            "competitorComparisonProfileTitle",
+            "competitorComparisonGapTitle",
+            "competitorComparisonAnglesTitle",
+            "competitorComparisonSafetyNotesTitle",
+            "competitorComparisonSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        competitor_section = html[
+            html.index("const PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", competitor_section)
+        for disabled_boundary in [
+            "Provider",
+            "LLM",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
