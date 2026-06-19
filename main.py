@@ -21958,6 +21958,317 @@ def _rw_llm_assist_dry_run_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_video_provider_orchestration_dry_run_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    video_prompt_pack = dict(creative_decision_pack.get("video_prompt_pack") or {})
+    creative_asset_pack = dict(
+        creative_decision_pack.get("creative_asset_pack") or {}
+    )
+    multi_platform_pack = dict(
+        creative_decision_pack.get("multi_platform_asset_pack") or {}
+    )
+    asset_quality_gate = dict(
+        creative_decision_pack.get("asset_quality_gate_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+    llm_dry_run_pack = dict(
+        creative_decision_pack.get("llm_assist_dry_run_pack") or {}
+    )
+
+    asset_packs = list(creative_asset_pack.get("asset_packs") or [])
+    recommended_asset_pack_id = _rw_text(
+        creative_asset_pack.get("recommended_asset_pack_id")
+    )
+    selected_asset_pack = next(
+        (
+            asset
+            for asset in asset_packs
+            if _rw_text(asset.get("asset_pack_id")) == recommended_asset_pack_id
+        ),
+        asset_packs[0] if asset_packs else {},
+    )
+    platform_packs = list(multi_platform_pack.get("platform_packs") or [])
+    campaign_summary = dict(campaign_pack.get("campaign_summary") or {})
+    selected_platform_pack_id = _rw_text(
+        campaign_summary.get("recommended_ready_pack_id")
+        or campaign_summary.get("recommended_platform_pack_id")
+        or multi_platform_pack.get("recommended_platform_pack_id")
+    )
+    selected_platform_pack = next(
+        (
+            pack
+            for pack in platform_packs
+            if _rw_text(pack.get("platform_pack_id")) == selected_platform_pack_id
+        ),
+        platform_packs[0] if platform_packs else {},
+    )
+    selected_platform_pack_id = _rw_text(
+        selected_platform_pack.get("platform_pack_id")
+        or selected_platform_pack_id
+    )
+
+    keyframe_prompt = _rw_text(video_prompt_pack.get("keyframe_prompt"))
+    shot_list = list(
+        selected_platform_pack.get("shot_list")
+        or video_prompt_pack.get("shot_list")
+        or []
+    )
+    keyframe_prompts = list(
+        selected_platform_pack.get("keyframe_prompts")
+        or selected_asset_pack.get("keyframe_prompts")
+        or []
+    )
+    has_keyframe_prompt = any(
+        _rw_text(item.get("prompt") if isinstance(item, dict) else item)
+        for item in keyframe_prompts
+    )
+    has_shot_prompt = any(
+        _rw_text(
+            item.get("prompt")
+            or item.get("scene_text")
+            or item.get("scene")
+            if isinstance(item, dict)
+            else item
+        )
+        for item in shot_list
+    )
+    missing_video_prompt = not bool(
+        keyframe_prompt or has_keyframe_prompt or has_shot_prompt
+    )
+    weak_evidence = bool(
+        creative_decision_pack.get("quality_checks", {}).get("weak_evidence")
+        or creative_asset_pack.get("asset_quality_checks", {}).get("weak_evidence")
+        or multi_platform_pack.get("platform_quality_checks", {}).get(
+            "weak_evidence"
+        )
+        or llm_dry_run_pack.get("dry_run_summary", {}).get("weak_evidence")
+    )
+    readiness = (
+        "needs_stronger_evidence"
+        if weak_evidence
+        else "needs_video_prompt"
+        if missing_video_prompt
+        else "ready_for_human_approval"
+    )
+    do_not_claim = list(
+        dict.fromkeys(
+            _rw_text(item)
+            for item in [
+                *list(video_prompt_pack.get("do_not_claim") or []),
+                *list(selected_asset_pack.get("do_not_claim") or []),
+                *list(selected_platform_pack.get("do_not_claim") or []),
+                *list(campaign_pack.get("safety_section", {}).get("do_not_claim") or []),
+            ]
+            if _rw_text(item)
+        )
+    )
+    platform_delivery_specs = [
+        {
+            "platform_pack_id": _rw_text(pack.get("platform_pack_id")),
+            "platform": _rw_text(pack.get("platform")),
+            "format": _rw_text(pack.get("format")),
+            "duration_seconds": int(pack.get("duration_seconds") or 0),
+            "subtitle_style": _rw_text(pack.get("subtitle_style")),
+            "asset_readiness": _rw_text(pack.get("asset_readiness")),
+            "claim_safety_level": _rw_text(pack.get("claim_safety_level")),
+        }
+        for pack in platform_packs
+    ]
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "api_key_or_secret_read_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+    }
+
+    return {
+        "pack_version": "video_provider_orchestration_dry_run_pack_v1",
+        "dry_run_summary": {
+            "mode": "deterministic_video_provider_dry_run",
+            "real_call_status": "disabled",
+            "readiness": readiness,
+            "weak_evidence": weak_evidence,
+            "missing_video_prompt": missing_video_prompt,
+            "selected_asset_pack_id": _rw_text(
+                selected_asset_pack.get("asset_pack_id")
+            ),
+            "selected_platform_pack_id": selected_platform_pack_id,
+            "platform_spec_count": len(platform_delivery_specs),
+            "recommended_next_action": (
+                "Collect stronger quote-backed evidence before provider orchestration review."
+                if weak_evidence
+                else "Add a reviewable keyframe or shot prompt before provider orchestration review."
+                if missing_video_prompt
+                else "Review the dry-run job, capability match, cost placeholder, and approval gate; real video calls remain disabled."
+            ),
+        },
+        "video_job_plan": {
+            "plan_mode": "dry_run_preview",
+            "job_status": "not_submitted",
+            "job_execution_performed": False,
+            "source_campaign_id": _rw_text(
+                campaign_summary.get("campaign_id")
+            ),
+            "source_asset_pack_id": _rw_text(
+                selected_asset_pack.get("asset_pack_id")
+            ),
+            "source_platform_pack_id": selected_platform_pack_id,
+            "target_platform": _rw_text(
+                selected_platform_pack.get("platform")
+                or campaign_summary.get("primary_platform")
+            ),
+            "target_format": _rw_text(selected_platform_pack.get("format")),
+            "target_duration_seconds": int(
+                selected_platform_pack.get("duration_seconds")
+                or campaign_summary.get("primary_duration_seconds")
+                or 0
+            ),
+            "keyframe_prompt": keyframe_prompt,
+            "keyframe_prompts": keyframe_prompts,
+            "shot_list": shot_list,
+            "do_not_claim": do_not_claim,
+        },
+        "provider_capability_plan": {
+            "matching_mode": "static_capability_preview",
+            "provider_catalog_queried": False,
+            "provider_selected": False,
+            "provider_call_performed": False,
+            "required_capabilities": [
+                "text_or_keyframe_to_video",
+                "vertical_short_video",
+                "duration_control",
+                "subtitle_safe_area",
+                "deterministic_job_status_contract",
+            ],
+            "capability_candidates": [],
+            "match_status": (
+                "blocked_missing_video_prompt"
+                if missing_video_prompt
+                else "preview_only_not_queried"
+            ),
+        },
+        "input_asset_bundle": {
+            "creative_asset_pack": selected_asset_pack,
+            "platform_asset_pack": selected_platform_pack,
+            "video_prompt_pack": video_prompt_pack,
+            "campaign_summary": campaign_summary,
+            "campaign_brief": dict(campaign_pack.get("campaign_brief") or {}),
+            "llm_dry_run_summary": dict(
+                llm_dry_run_pack.get("dry_run_summary") or {}
+            ),
+            "input_validation": {
+                "has_asset_pack": bool(selected_asset_pack),
+                "has_platform_pack": bool(selected_platform_pack),
+                "has_video_prompt": not missing_video_prompt,
+                "has_do_not_claim": bool(do_not_claim),
+            },
+        },
+        "platform_delivery_specs": platform_delivery_specs,
+        "cost_estimate_placeholder": {
+            "estimate_type": "deterministic_placeholder",
+            "is_real_quote": False,
+            "provider_pricing_queried": False,
+            "currency": "not_applicable",
+            "estimated_amount": None,
+            "billing_operation_performed": False,
+            "message": "Placeholder only. No provider pricing was queried and this is not a real quote.",
+        },
+        "mock_provider_response": {
+            "response_type": "deterministic_placeholder",
+            "is_real_provider_output": False,
+            "provider_called": False,
+            "video_generated": False,
+            "job_id": "",
+            "status": "not_submitted",
+            "media_urls": [],
+            "message": "Deterministic placeholder only. No real video provider was called and no video was generated.",
+        },
+        "risk_checks": [
+            {
+                "check": "weak_evidence",
+                "triggered": weak_evidence,
+                "effect": "readiness_lowered",
+            },
+            {
+                "check": "missing_video_prompt",
+                "triggered": missing_video_prompt,
+                "effect": "ready_to_run_blocked",
+            },
+            {
+                "check": "provider_capability_unverified",
+                "triggered": True,
+                "effect": "real_provider_selection_disabled",
+            },
+            {
+                "check": "cost_not_quoted",
+                "triggered": True,
+                "effect": "placeholder_only",
+            },
+            {
+                "check": "real_video_execution",
+                "triggered": False,
+                "effect": "disabled",
+            },
+        ],
+        "approval_gate": {
+            "approval_required": True,
+            "approval_status": "not_requested",
+            "real_video_call_allowed": False,
+            "provider_call_allowed": False,
+            "paid_operation_allowed": False,
+            "blocking_reasons": [
+                "Real video provider execution is outside this dry-run capability.",
+                *(
+                    ["Evidence quality requires improvement."]
+                    if weak_evidence
+                    else []
+                ),
+                *(
+                    ["A reviewable video prompt is missing."]
+                    if missing_video_prompt
+                    else []
+                ),
+            ],
+        },
+        "abort_plan": {
+            "plan_mode": "dry_run_only",
+            "abort_executed": False,
+            "provider_job_exists": False,
+            "trigger_conditions": [
+                "approval_denied",
+                "weak_evidence_detected",
+                "missing_video_prompt",
+                "capability_mismatch",
+                "cost_limit_not_approved",
+            ],
+            "planned_steps": [
+                "Do not submit a provider job.",
+                "Keep all media and billing operations disabled.",
+                "Return the dry-run pack for human correction.",
+            ],
+        },
+        "rollback_plan": {
+            "plan_mode": "dry_run_only",
+            "rollback_executed": False,
+            "rollback_available": False,
+            "reason": "No provider job, media object, registry record, payment, or database write was created.",
+            "planned_steps": [
+                "No real rollback action is required for this deterministic preview.",
+                "Discard only the in-memory dry-run plan if the reviewer rejects it.",
+            ],
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -22040,6 +22351,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["llm_assist_dry_run_pack"] = (
         _rw_llm_assist_dry_run_pack(creative_decision_pack)
+    )
+    creative_decision_pack["video_provider_orchestration_dry_run_pack"] = (
+        _rw_video_provider_orchestration_dry_run_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

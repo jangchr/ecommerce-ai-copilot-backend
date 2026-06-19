@@ -580,6 +580,123 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         self.assertFalse(pack["approval_gate"]["real_llm_call_allowed"])
         self.assertEqual(pack["mock_llm_response"]["status"], "not_executed")
 
+    def test_video_provider_orchestration_dry_run_pack_never_executes(self):
+        payload = {
+            "workspace_id": "video-provider-orchestration-dry-run",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "title": "Travel Bottle",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Leaked during commute",
+                            "text": "The lid leaked in my backpack during a commute and was difficult to clean after coffee.",
+                            "source_section": "amazon_visible_review",
+                        },
+                        {
+                            "rating": 5,
+                            "title": "Easy travel cleanup",
+                            "text": "I use it for travel because it feels sturdy and is easy to rinse after lunch.",
+                            "source_section": "manual_review",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+        pack = creative_pack["video_provider_orchestration_dry_run_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "video_provider_orchestration_dry_run_pack_v1",
+        )
+        self.assertIn("dry_run", pack["dry_run_summary"]["mode"])
+        self.assertEqual(pack["dry_run_summary"]["real_call_status"], "disabled")
+        self.assertTrue(pack["video_job_plan"])
+        self.assertFalse(pack["video_job_plan"]["job_execution_performed"])
+        self.assertTrue(pack["provider_capability_plan"])
+        self.assertFalse(pack["provider_capability_plan"]["provider_catalog_queried"])
+        self.assertFalse(pack["provider_capability_plan"]["provider_call_performed"])
+        self.assertTrue(pack["input_asset_bundle"])
+        self.assertIn("input_validation", pack["input_asset_bundle"])
+        self.assertTrue(pack["platform_delivery_specs"])
+
+        cost = pack["cost_estimate_placeholder"]
+        self.assertEqual(cost["estimate_type"], "deterministic_placeholder")
+        self.assertFalse(cost["is_real_quote"])
+        self.assertFalse(cost["provider_pricing_queried"])
+        self.assertIn("not a real quote", cost["message"])
+        mock = pack["mock_provider_response"]
+        self.assertEqual(mock["response_type"], "deterministic_placeholder")
+        self.assertFalse(mock["is_real_provider_output"])
+        self.assertFalse(mock["provider_called"])
+        self.assertFalse(mock["video_generated"])
+        self.assertIn("No real video provider", mock["message"])
+
+        self.assertTrue(pack["approval_gate"]["approval_required"])
+        self.assertFalse(pack["approval_gate"]["real_video_call_allowed"])
+        self.assertFalse(pack["approval_gate"]["provider_call_allowed"])
+        self.assertFalse(pack["approval_gate"]["paid_operation_allowed"])
+        self.assertEqual(pack["abort_plan"]["plan_mode"], "dry_run_only")
+        self.assertFalse(pack["abort_plan"]["abort_executed"])
+        self.assertEqual(pack["rollback_plan"]["plan_mode"], "dry_run_only")
+        self.assertFalse(pack["rollback_plan"]["rollback_executed"])
+        self.assertTrue(pack["risk_checks"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "api_key_or_secret_read_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
+    def test_video_provider_dry_run_blocks_ready_to_run_without_prompt(self):
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json={"workspace_id": "video-provider-dry-run-empty", "products": []},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pack = response.json()["creative_decision_pack"][
+            "video_provider_orchestration_dry_run_pack"
+        ]
+        summary = pack["dry_run_summary"]
+        self.assertNotEqual(summary["readiness"], "ready_to_run")
+        self.assertIn(
+            summary["readiness"],
+            {"needs_stronger_evidence", "needs_video_prompt"},
+        )
+        self.assertTrue(summary["weak_evidence"])
+        self.assertTrue(summary["missing_video_prompt"])
+        self.assertFalse(pack["approval_gate"]["real_video_call_allowed"])
+        self.assertFalse(pack["mock_provider_response"]["is_real_provider_output"])
+        self.assertEqual(pack["abort_plan"]["plan_mode"], "dry_run_only")
+        self.assertEqual(pack["rollback_plan"]["plan_mode"], "dry_run_only")
+
 
 
 
