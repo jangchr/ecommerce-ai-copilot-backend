@@ -3602,6 +3602,7 @@
         let latestProjectCampaignExportPack = {};
         let latestProjectReviewImportPack = {};
         let latestProjectCompetitorReviewComparisonPack = {};
+        let latestProjectLlmAssistDryRunPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8880,6 +8881,7 @@
                 latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
                 latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
                 latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
+                latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14718,6 +14720,7 @@
         const PROJECT_WORKSPACE_CAMPAIGN_EXPORT_PACK_MARKER = 'Project Workspace campaign export pack bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_PACK_MARKER = 'Project Workspace review import pack bundle';
         const PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER = 'Project Workspace competitor review comparison bundle';
+        const PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER = 'Project Workspace LLM assist dry-run bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -16230,6 +16233,186 @@
 
         function copyProjectWorkspaceFullCompetitorComparisonPack() {
             return copyProjectWorkspaceCompetitorComparisonText('full');
+        }
+
+        function projectWorkspaceLlmAssistDryRunPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectLlmAssistDryRunPack
+                && Object.keys(latestProjectLlmAssistDryRunPack).length) {
+                return latestProjectLlmAssistDryRunPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.llm_assist_dry_run_pack || {};
+        }
+
+        function projectWorkspaceExportLlmAssistDryRunSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceLlmAssistDryRunPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER,
+                has_llm_assist_dry_run_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                dry_run_summary: pack.dry_run_summary || {},
+                prompt_plan: pack.prompt_plan || {},
+                evidence_bundle: pack.evidence_bundle || {},
+                allowed_claims: Array.isArray(pack.allowed_claims) ? pack.allowed_claims : [],
+                do_not_claim: Array.isArray(pack.do_not_claim) ? pack.do_not_claim : [],
+                output_contract: pack.output_contract || {},
+                mock_llm_response: pack.mock_llm_response || {},
+                risk_checks: Array.isArray(pack.risk_checks) ? pack.risk_checks : [],
+                approval_gate: pack.approval_gate || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceLlmDryRunJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceLlmDryRunSummaryText(pack = projectWorkspaceExportLlmAssistDryRunSnapshot()) {
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            const summary = pack.dry_run_summary || {};
+            const gate = pack.approval_gate || {};
+            return [
+                t('llmDryRunSummaryTitle'),
+                `${t('llmDryRunMode')}: ${summary.mode || t('none')}`,
+                `${t('llmDryRunReadiness')}: ${summary.readiness || t('none')}`,
+                `${t('llmDryRunRealCallStatus')}: ${summary.real_call_status || t('llmDryRunDisabled')}`,
+                `${t('llmDryRunRealCallAllowed')}: ${String(gate.real_llm_call_allowed === true)}`,
+                `${t('llmDryRunApprovalRequired')}: ${String(gate.approval_required === true)}`,
+                `${t('llmDryRunRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceLlmDryRunPromptText(pack = projectWorkspaceExportLlmAssistDryRunSnapshot()) {
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            const plan = pack.prompt_plan || {};
+            return [
+                t('llmDryRunPromptPlanTitle'),
+                `${t('llmDryRunPromptObjective')}: ${plan.system_instruction || t('none')}`,
+                `${t('llmDryRunPromptPreview')}:`,
+                plan.user_prompt_preview || t('none'),
+                `${t('llmDryRunInputEvidenceReferences')}: ${(plan.input_sections || []).join(' | ') || t('none')}`,
+                `${t('llmDryRunOutputRequirements')}: ${projectWorkspaceLlmDryRunJsonText(pack.output_contract) || t('none')}`,
+                `${t('llmDryRunSafetyInstructions')}: ${(pack.do_not_claim || []).join(' | ') || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceLlmDryRunEvidenceText(pack = projectWorkspaceExportLlmAssistDryRunSnapshot()) {
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            return [
+                t('llmDryRunEvidenceBundleTitle'),
+                projectWorkspaceLlmDryRunJsonText(pack.evidence_bundle)
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceLlmDryRunClaimsText(pack = projectWorkspaceExportLlmAssistDryRunSnapshot()) {
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            return [
+                `### ${t('llmDryRunAllowedClaimsTitle')}`,
+                projectWorkspaceLlmDryRunJsonText(pack.allowed_claims) || t('llmDryRunNoData'),
+                '',
+                `### ${t('llmDryRunDoNotClaimTitle')}`,
+                projectWorkspaceLlmDryRunJsonText(pack.do_not_claim) || t('llmDryRunNoData'),
+                '',
+                `### ${t('llmDryRunEvidenceWarningsTitle')}`,
+                `${t('llmDryRunWeakEvidence')}: ${String(pack.dry_run_summary?.weak_evidence === true)}`,
+                `${t('llmDryRunMissingQuotes')}: ${String(pack.dry_run_summary?.missing_quotes === true)}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceLlmDryRunMockResponseText(pack = projectWorkspaceExportLlmAssistDryRunSnapshot()) {
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            return [
+                t('llmDryRunMockResponseTitle'),
+                t('llmDryRunPlaceholderWarning'),
+                projectWorkspaceLlmDryRunJsonText(pack.mock_llm_response),
+                '',
+                `### ${t('llmDryRunOutputContractTitle')}`,
+                projectWorkspaceLlmDryRunJsonText(pack.output_contract)
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceExportLlmAssistDryRunMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportLlmAssistDryRunSnapshot(workspace);
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            return [
+                `## ${t('llmDryRunPackTitle')}`,
+                projectWorkspaceLlmDryRunSummaryText(pack),
+                '',
+                `## ${t('llmDryRunPromptPlanTitle')}`,
+                projectWorkspaceLlmDryRunPromptText(pack),
+                '',
+                `## ${t('llmDryRunEvidenceBundleTitle')}`,
+                projectWorkspaceLlmDryRunEvidenceText(pack),
+                '',
+                `## ${t('llmDryRunAllowedClaimsTitle')}`,
+                projectWorkspaceLlmDryRunJsonText(pack.allowed_claims) || t('llmDryRunNoData'),
+                '',
+                `## ${t('llmDryRunDoNotClaimTitle')}`,
+                projectWorkspaceLlmDryRunJsonText(pack.do_not_claim) || t('llmDryRunNoData'),
+                '',
+                `## ${t('llmDryRunMockResponseTitle')}`,
+                projectWorkspaceLlmDryRunMockResponseText(pack),
+                '',
+                `## ${t('llmDryRunApprovalGateTitle')}`,
+                projectWorkspaceLlmDryRunJsonText(pack.approval_gate),
+                '',
+                `## ${t('llmDryRunSafetyBoundariesTitle')}`,
+                projectWorkspaceLlmDryRunJsonText(pack.safety_boundaries),
+                t('llmDryRunSafetyNote')
+            ].filter((item) => item !== undefined && item !== null).join('\n');
+        }
+
+        async function copyProjectWorkspaceLlmDryRunText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceLlmDryRunStatus');
+            const pack = projectWorkspaceExportLlmAssistDryRunSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceLlmDryRunSummaryText(pack)
+                : kind === 'prompt'
+                    ? projectWorkspaceLlmDryRunPromptText(pack)
+                    : kind === 'evidence'
+                        ? projectWorkspaceLlmDryRunEvidenceText(pack)
+                        : kind === 'claims'
+                            ? projectWorkspaceLlmDryRunClaimsText(pack)
+                            : kind === 'mock'
+                                ? projectWorkspaceLlmDryRunMockResponseText(pack)
+                                : projectWorkspaceExportLlmAssistDryRunMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('llmDryRunCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('llmDryRunCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('llmDryRunCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('llmDryRunCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceLlmDryRunSummary() {
+            return copyProjectWorkspaceLlmDryRunText('summary');
+        }
+
+        function copyProjectWorkspaceLlmDryRunPromptPlan() {
+            return copyProjectWorkspaceLlmDryRunText('prompt');
+        }
+
+        function copyProjectWorkspaceLlmDryRunEvidenceBundle() {
+            return copyProjectWorkspaceLlmDryRunText('evidence');
+        }
+
+        function copyProjectWorkspaceLlmDryRunClaimsGuard() {
+            return copyProjectWorkspaceLlmDryRunText('claims');
+        }
+
+        function copyProjectWorkspaceLlmDryRunMockResponse() {
+            return copyProjectWorkspaceLlmDryRunText('mock');
+        }
+
+        function copyProjectWorkspaceFullLlmDryRunPack() {
+            return copyProjectWorkspaceLlmDryRunText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -18013,6 +18196,164 @@
             `;
         }
 
+        function renderProjectWorkspaceLlmDryRunSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportLlmAssistDryRunSnapshot(workspace);
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            const summary = pack.dry_run_summary || {};
+            const gate = pack.approval_gate || {};
+            return `
+                <div class="section-block" id="projectWorkspaceLlmDryRunSummaryPanel"
+                    data-llm-assist-dry-run-marker="${PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('llmDryRunPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('llmDryRunPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button"
+                            onclick="copyProjectWorkspaceFullLlmDryRunPack()">${escapeHTML(t('llmDryRunCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('llmDryRunMode'), summary.mode || t('none'))}
+                        ${metricPill(t('llmDryRunReadiness'), summary.readiness || t('none'))}
+                        ${metricPill(t('llmDryRunRealCallStatus'), summary.real_call_status || t('llmDryRunDisabled'))}
+                        ${metricPill(t('llmDryRunRealCallAllowed'), String(gate.real_llm_call_allowed === true))}
+                        ${metricPill(t('llmDryRunApprovalRequired'), String(gate.approval_required === true))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('llmDryRunRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('llmDryRunSafetyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceLlmDryRunStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceLlmDryRunSummary()">${escapeHTML(t('llmDryRunCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceLlmDryRunPromptPlanPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportLlmAssistDryRunSnapshot(workspace);
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            const plan = pack.prompt_plan || {};
+            return `
+                <div class="section-block" id="projectWorkspaceLlmDryRunPromptPlanPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('llmDryRunPromptPlanTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('llmDryRunPromptPlanHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceLlmDryRunPromptPlan()">${escapeHTML(t('llmDryRunCopyPromptPlan'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunPromptObjective'))}</strong>
+                            <div>${escapeHTML(plan.system_instruction || t('none'))}</div>
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunInputEvidenceReferences'))}</strong>
+                            <div>${escapeHTML((plan.input_sections || []).join(' | ') || t('none'))}</div>
+                        </div>
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('llmDryRunPromptPreview'))}:</strong><br>${escapeHTML(plan.user_prompt_preview || t('none'))}</div>
+                    <div class="field-helper"><strong>${escapeHTML(t('llmDryRunOutputRequirements'))}:</strong> ${escapeHTML((pack.output_contract?.required_fields || []).join(' | ') || t('none'))}</div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('llmDryRunSafetyInstructions'))}:</strong> ${escapeHTML((pack.do_not_claim || []).join(' | ') || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceLlmDryRunEvidenceClaimsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportLlmAssistDryRunSnapshot(workspace);
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            const summary = pack.dry_run_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceLlmDryRunEvidenceClaimsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('llmDryRunEvidenceClaimsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('llmDryRunEvidenceClaimsHelper'))}</div>
+                        </div>
+                        <div>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceLlmDryRunEvidenceBundle()">${escapeHTML(t('llmDryRunCopyEvidenceBundle'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceLlmDryRunClaimsGuard()">${escapeHTML(t('llmDryRunCopyClaimsGuard'))}</button>
+                        </div>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('llmDryRunWeakEvidence'), String(summary.weak_evidence === true))}
+                        ${metricPill(t('llmDryRunMissingQuotes'), String(summary.missing_quotes === true))}
+                        ${metricPill(t('llmDryRunEvidenceQuoteCount'), String(summary.evidence_quote_count ?? 0))}
+                        ${metricPill(t('llmDryRunAllowedClaimCount'), String(summary.allowed_claim_count ?? 0))}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunEvidenceBundleTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceLlmDryRunJsonText(pack.evidence_bundle) || t('llmDryRunNoData'))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunAllowedClaimsTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceLlmDryRunJsonText(pack.allowed_claims) || t('llmDryRunNoData'))}</pre>
+                        </div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('llmDryRunDoNotClaimTitle'))}:</strong> ${escapeHTML((pack.do_not_claim || []).join(' | ') || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceLlmDryRunMockResponsePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportLlmAssistDryRunSnapshot(workspace);
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceLlmDryRunMockResponsePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('llmDryRunMockResponseTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('llmDryRunMockResponseHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceLlmDryRunMockResponse()">${escapeHTML(t('llmDryRunCopyMockResponse'))}</button>
+                    </div>
+                    <div class="demo-warning">${escapeHTML(t('llmDryRunPlaceholderWarning'))}</div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunMockResponseTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceLlmDryRunJsonText(pack.mock_llm_response) || t('llmDryRunNoData'))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunOutputContractTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceLlmDryRunJsonText(pack.output_contract) || t('llmDryRunNoData'))}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceLlmDryRunApprovalSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportLlmAssistDryRunSnapshot(workspace);
+            if (!pack.has_llm_assist_dry_run_pack) return '';
+            const gate = pack.approval_gate || {};
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {})
+                .map(([key, value]) => `${key}: ${value === false ? t('llmDryRunDisabled') : String(value)}`)
+                .join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceLlmDryRunApprovalSafetyPanel">
+                    <div class="json-key">${escapeHTML(t('llmDryRunApprovalSafetyTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('llmDryRunApprovalSafetyHelper'))}</div>
+                    <div class="metric-strip">
+                        ${metricPill(t('llmDryRunApprovalRequired'), String(gate.approval_required === true))}
+                        ${metricPill(t('llmDryRunApprovalStatus'), gate.approval_status || t('none'))}
+                        ${metricPill(t('llmDryRunRealCallAllowed'), String(gate.real_llm_call_allowed === true))}
+                        ${metricPill(t('llmDryRunProviderCallAllowed'), String(gate.provider_call_allowed === true))}
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunApprovalGateTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceLlmDryRunJsonText(gate) || t('llmDryRunNoData'))}</pre>
+                        </div>
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(t('llmDryRunRiskChecksTitle'))}</strong>
+                            <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceLlmDryRunJsonText(pack.risk_checks) || t('llmDryRunNoData'))}</pre>
+                        </div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('llmDryRunSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('llmDryRunSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -18491,6 +18832,8 @@
                 '',
                 projectWorkspaceExportCompetitorReviewComparisonMarkdown(workspace),
                 '',
+                projectWorkspaceExportLlmAssistDryRunMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -18574,6 +18917,7 @@
                 agent_capability_runtime: projectWorkspaceExportAgentCapabilityRuntimeSnapshot(workspace),
                 review_import_pack: projectWorkspaceExportReviewImportPackSnapshot(workspace),
                 competitor_review_comparison_pack: projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace),
+                llm_assist_dry_run_pack: projectWorkspaceExportLlmAssistDryRunSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -30978,6 +31322,11 @@
                     ${renderProjectWorkspaceCompetitorProfilePanel(workspace)}
                     ${renderProjectWorkspaceCompetitorGapPanel(workspace)}
                     ${renderProjectWorkspaceCompetitorAnglesPanel(workspace)}
+                    ${renderProjectWorkspaceLlmDryRunSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceLlmDryRunPromptPlanPanel(workspace)}
+                    ${renderProjectWorkspaceLlmDryRunEvidenceClaimsPanel(workspace)}
+                    ${renderProjectWorkspaceLlmDryRunMockResponsePanel(workspace)}
+                    ${renderProjectWorkspaceLlmDryRunApprovalSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -38557,6 +38906,112 @@
             competitorComparisonCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u7ade\u54c1\u5bf9\u6bd4\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceLlmAssistDryRunMarker: 'Project Workspace LLM assist dry-run bundle',
+            llmDryRunPackTitle: 'LLM Assist Dry-Run',
+            llmDryRunPackHelper: 'Preview an evidence-bound LLM request without reading secrets or calling an LLM or provider.',
+            llmDryRunSummaryTitle: 'LLM Dry-Run Summary',
+            llmDryRunMode: 'Mode',
+            llmDryRunReadiness: 'Readiness',
+            llmDryRunRealCallStatus: 'Real LLM call status',
+            llmDryRunRealCallAllowed: 'Real LLM call allowed',
+            llmDryRunApprovalRequired: 'Approval required',
+            llmDryRunRecommendedNextAction: 'Recommended next action',
+            llmDryRunDisabled: 'disabled',
+            llmDryRunPromptPlanTitle: 'Prompt Plan',
+            llmDryRunPromptPlanHelper: 'Inspect the objective, preview text, evidence references, output requirements, and safety instructions.',
+            llmDryRunPromptObjective: 'Prompt objective',
+            llmDryRunPromptPreview: 'Prompt preview',
+            llmDryRunInputEvidenceReferences: 'Input evidence references',
+            llmDryRunOutputRequirements: 'Output requirements',
+            llmDryRunSafetyInstructions: 'Safety instructions',
+            llmDryRunEvidenceClaimsTitle: 'Evidence Bundle / Claims Guard',
+            llmDryRunEvidenceClaimsHelper: 'Keep allowed claims quote-bounded and surface weak evidence or missing quote warnings.',
+            llmDryRunEvidenceBundleTitle: 'Evidence Bundle',
+            llmDryRunAllowedClaimsTitle: 'Allowed Claims',
+            llmDryRunDoNotClaimTitle: 'Do Not Claim',
+            llmDryRunEvidenceWarningsTitle: 'Evidence warnings',
+            llmDryRunWeakEvidence: 'Weak evidence',
+            llmDryRunMissingQuotes: 'Missing quotes',
+            llmDryRunEvidenceQuoteCount: 'Evidence quote count',
+            llmDryRunAllowedClaimCount: 'Allowed claim count',
+            llmDryRunMockResponseTitle: 'Mock LLM Response',
+            llmDryRunMockResponseHelper: 'Review the deterministic placeholder beside the structured output contract.',
+            llmDryRunPlaceholderWarning: 'Deterministic placeholder only. This is not real LLM output and no model was called.',
+            llmDryRunOutputContractTitle: 'Output Contract',
+            llmDryRunApprovalSafetyTitle: 'Approval Gate / Safety Boundaries',
+            llmDryRunApprovalSafetyHelper: 'Real execution remains blocked while approval, risk checks, and disabled boundaries stay visible.',
+            llmDryRunApprovalGateTitle: 'Approval Gate',
+            llmDryRunRiskChecksTitle: 'Risk Checks',
+            llmDryRunSafetyBoundariesTitle: 'Safety Boundaries',
+            llmDryRunApprovalStatus: 'Approval status',
+            llmDryRunProviderCallAllowed: 'Provider call allowed',
+            llmDryRunSafetyNote: 'Dry-run preview only. Real LLM, provider, video, media, paid, registry, rollback, external scraping, and database persistence remain disabled.',
+            llmDryRunNoData: 'No LLM dry-run data is available.',
+            llmDryRunCopySummary: 'Copy dry-run summary',
+            llmDryRunCopyPromptPlan: 'Copy prompt plan',
+            llmDryRunCopyEvidenceBundle: 'Copy evidence bundle',
+            llmDryRunCopyClaimsGuard: 'Copy claims guard',
+            llmDryRunCopyMockResponse: 'Copy mock response',
+            llmDryRunCopyFullPack: 'Copy full LLM dry-run pack',
+            llmDryRunCopied: 'LLM dry-run content copied.',
+            llmDryRunCopyFailed: 'Unable to copy LLM dry-run content.',
+            llmDryRunCopyNoData: 'No LLM dry-run content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceLlmAssistDryRunMarker: 'Project Workspace LLM assist dry-run bundle',
+            llmDryRunPackTitle: 'LLM \u8f85\u52a9\u9884\u6f14',
+            llmDryRunPackHelper: '\u5728\u4e0d\u8bfb\u53d6\u5bc6\u94a5\u3001\u4e0d\u8c03\u7528 LLM \u6216 provider \u7684\u524d\u63d0\u4e0b\uff0c\u9884\u89c8\u8bc1\u636e\u7ea6\u675f\u8bf7\u6c42\u3002',
+            llmDryRunSummaryTitle: 'LLM \u9884\u6f14\u6458\u8981',
+            llmDryRunMode: '\u6a21\u5f0f',
+            llmDryRunReadiness: '\u5c31\u7eea\u5ea6',
+            llmDryRunRealCallStatus: '\u771f\u5b9e LLM \u8c03\u7528\u72b6\u6001',
+            llmDryRunRealCallAllowed: '\u5141\u8bb8\u771f\u5b9e LLM \u8c03\u7528',
+            llmDryRunApprovalRequired: '\u9700\u8981\u5ba1\u6279',
+            llmDryRunRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            llmDryRunDisabled: '\u5df2\u7981\u7528',
+            llmDryRunPromptPlanTitle: '\u63d0\u793a\u8ba1\u5212',
+            llmDryRunPromptPlanHelper: '\u68c0\u67e5\u76ee\u6807\u3001\u9884\u89c8\u6587\u672c\u3001\u8bc1\u636e\u5f15\u7528\u3001\u8f93\u51fa\u8981\u6c42\u548c\u5b89\u5168\u6307\u4ee4\u3002',
+            llmDryRunPromptObjective: '\u63d0\u793a\u76ee\u6807',
+            llmDryRunPromptPreview: '\u63d0\u793a\u9884\u89c8',
+            llmDryRunInputEvidenceReferences: '\u8f93\u5165\u8bc1\u636e\u5f15\u7528',
+            llmDryRunOutputRequirements: '\u8f93\u51fa\u8981\u6c42',
+            llmDryRunSafetyInstructions: '\u5b89\u5168\u6307\u4ee4',
+            llmDryRunEvidenceClaimsTitle: '\u8bc1\u636e\u5305 / \u58f0\u79f0\u9632\u62a4',
+            llmDryRunEvidenceClaimsHelper: '\u4ec5\u5141\u8bb8\u539f\u8bdd\u652f\u6491\u7684\u58f0\u79f0\uff0c\u5e76\u663e\u793a\u5f31\u8bc1\u636e\u6216\u7f3a\u5931\u539f\u8bdd\u8b66\u544a\u3002',
+            llmDryRunEvidenceBundleTitle: '\u8bc1\u636e\u5305',
+            llmDryRunAllowedClaimsTitle: '\u5141\u8bb8\u7684\u58f0\u79f0',
+            llmDryRunDoNotClaimTitle: '\u7981\u6b62\u58f0\u79f0',
+            llmDryRunEvidenceWarningsTitle: '\u8bc1\u636e\u8b66\u544a',
+            llmDryRunWeakEvidence: '\u5f31\u8bc1\u636e',
+            llmDryRunMissingQuotes: '\u7f3a\u5931\u539f\u8bdd',
+            llmDryRunEvidenceQuoteCount: '\u8bc1\u636e\u539f\u8bdd\u6570',
+            llmDryRunAllowedClaimCount: '\u5141\u8bb8\u58f0\u79f0\u6570',
+            llmDryRunMockResponseTitle: '\u6a21\u62df LLM \u54cd\u5e94',
+            llmDryRunMockResponseHelper: '\u5bf9\u7167\u7ed3\u6784\u5316\u8f93\u51fa\u5951\u7ea6\u68c0\u67e5\u786e\u5b9a\u6027\u5360\u4f4d\u54cd\u5e94\u3002',
+            llmDryRunPlaceholderWarning: '\u4ec5\u4e3a\u786e\u5b9a\u6027\u5360\u4f4d\u5185\u5bb9\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e LLM \u8f93\u51fa\uff0c\u4e5f\u672a\u8c03\u7528\u4efb\u4f55\u6a21\u578b\u3002',
+            llmDryRunOutputContractTitle: '\u8f93\u51fa\u5951\u7ea6',
+            llmDryRunApprovalSafetyTitle: '\u5ba1\u6279\u95e8 / \u5b89\u5168\u8fb9\u754c',
+            llmDryRunApprovalSafetyHelper: '\u771f\u5b9e\u6267\u884c\u4fdd\u6301\u963b\u65ad\uff0c\u540c\u65f6\u5c55\u793a\u5ba1\u6279\u3001\u98ce\u9669\u68c0\u67e5\u548c\u7981\u7528\u8fb9\u754c\u3002',
+            llmDryRunApprovalGateTitle: '\u5ba1\u6279\u95e8',
+            llmDryRunRiskChecksTitle: '\u98ce\u9669\u68c0\u67e5',
+            llmDryRunSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            llmDryRunApprovalStatus: '\u5ba1\u6279\u72b6\u6001',
+            llmDryRunProviderCallAllowed: '\u5141\u8bb8 provider \u8c03\u7528',
+            llmDryRunSafetyNote: '\u4ec5\u4f5c\u9884\u6f14\u9884\u89c8\u3002\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u548c\u6570\u636e\u5e93\u6301\u4e45\u5316\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            llmDryRunNoData: '\u6682\u65e0 LLM \u9884\u6f14\u6570\u636e\u3002',
+            llmDryRunCopySummary: '\u590d\u5236\u9884\u6f14\u6458\u8981',
+            llmDryRunCopyPromptPlan: '\u590d\u5236\u63d0\u793a\u8ba1\u5212',
+            llmDryRunCopyEvidenceBundle: '\u590d\u5236\u8bc1\u636e\u5305',
+            llmDryRunCopyClaimsGuard: '\u590d\u5236\u58f0\u79f0\u9632\u62a4',
+            llmDryRunCopyMockResponse: '\u590d\u5236\u6a21\u62df\u54cd\u5e94',
+            llmDryRunCopyFullPack: '\u590d\u5236\u5b8c\u6574 LLM \u9884\u6f14\u5305',
+            llmDryRunCopied: 'LLM \u9884\u6f14\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            llmDryRunCopyFailed: '\u65e0\u6cd5\u590d\u5236 LLM \u9884\u6f14\u5185\u5bb9\u3002',
+            llmDryRunCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 LLM \u9884\u6f14\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -39952,6 +40407,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectCampaignExportPack = latestProjectCreativeDecisionPack.campaign_export_pack || {};
     latestProjectReviewImportPack = latestProjectCreativeDecisionPack.review_import_pack || {};
     latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
+    latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

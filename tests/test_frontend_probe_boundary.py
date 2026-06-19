@@ -8817,6 +8817,169 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_llm_assist_dry_run_workspace_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace LLM assist dry-run bundle",
+            "PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER",
+            "latestProjectLlmAssistDryRunPack",
+            "projectWorkspaceLlmAssistDryRunPackFromWorkspace",
+            "projectWorkspaceExportLlmAssistDryRunSnapshot",
+            "projectWorkspaceExportLlmAssistDryRunMarkdown",
+            "renderProjectWorkspaceLlmDryRunSummaryPanel",
+            "renderProjectWorkspaceLlmDryRunPromptPlanPanel",
+            "renderProjectWorkspaceLlmDryRunEvidenceClaimsPanel",
+            "renderProjectWorkspaceLlmDryRunMockResponsePanel",
+            "renderProjectWorkspaceLlmDryRunApprovalSafetyPanel",
+            "copyProjectWorkspaceLlmDryRunSummary",
+            "copyProjectWorkspaceLlmDryRunPromptPlan",
+            "copyProjectWorkspaceLlmDryRunEvidenceBundle",
+            "copyProjectWorkspaceLlmDryRunClaimsGuard",
+            "copyProjectWorkspaceLlmDryRunMockResponse",
+            "copyProjectWorkspaceFullLlmDryRunPack",
+            "llm_assist_dry_run_pack: projectWorkspaceExportLlmAssistDryRunSnapshot(workspace)",
+            "LLM Assist Dry-Run",
+            "Prompt Plan",
+            "Evidence Bundle",
+            "Allowed Claims",
+            "Do Not Claim",
+            "Mock LLM Response",
+            "Approval Gate",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.dry_run_summary",
+            "pack.prompt_plan",
+            "pack.evidence_bundle",
+            "pack.allowed_claims",
+            "pack.do_not_claim",
+            "pack.output_contract",
+            "pack.mock_llm_response",
+            "pack.risk_checks",
+            "pack.approval_gate",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.readiness",
+            "summary.real_call_status",
+            "summary.recommended_next_action",
+            "summary.weak_evidence",
+            "summary.missing_quotes",
+            "gate.real_llm_call_allowed",
+            "gate.approval_required",
+            "plan.system_instruction",
+            "plan.user_prompt_preview",
+            "plan.input_sections",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        competitor_angles = html.index(
+            "${renderProjectWorkspaceCompetitorAnglesPanel(workspace)}"
+        )
+        dry_run_summary = html.index(
+            "${renderProjectWorkspaceLlmDryRunSummaryPanel(workspace)}"
+        )
+        dry_run_safety = html.index(
+            "${renderProjectWorkspaceLlmDryRunApprovalSafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(competitor_angles, dry_run_summary)
+        self.assertLess(dry_run_summary, dry_run_safety)
+        self.assertLess(dry_run_safety, creative_core)
+
+    def test_llm_assist_dry_run_has_bilingual_guard_markdown_and_disabled_boundaries(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "llmDryRunPackTitle",
+            "llmDryRunPackHelper",
+            "llmDryRunSummaryTitle",
+            "llmDryRunMode",
+            "llmDryRunReadiness",
+            "llmDryRunRealCallStatus",
+            "llmDryRunRealCallAllowed",
+            "llmDryRunApprovalRequired",
+            "llmDryRunRecommendedNextAction",
+            "llmDryRunPromptPlanTitle",
+            "llmDryRunPromptObjective",
+            "llmDryRunPromptPreview",
+            "llmDryRunInputEvidenceReferences",
+            "llmDryRunOutputRequirements",
+            "llmDryRunSafetyInstructions",
+            "llmDryRunEvidenceClaimsTitle",
+            "llmDryRunEvidenceBundleTitle",
+            "llmDryRunAllowedClaimsTitle",
+            "llmDryRunDoNotClaimTitle",
+            "llmDryRunWeakEvidence",
+            "llmDryRunMissingQuotes",
+            "llmDryRunMockResponseTitle",
+            "llmDryRunPlaceholderWarning",
+            "llmDryRunOutputContractTitle",
+            "llmDryRunApprovalSafetyTitle",
+            "llmDryRunApprovalGateTitle",
+            "llmDryRunRiskChecksTitle",
+            "llmDryRunSafetyBoundariesTitle",
+            "llmDryRunSafetyNote",
+            "llmDryRunCopySummary",
+            "llmDryRunCopyPromptPlan",
+            "llmDryRunCopyEvidenceBundle",
+            "llmDryRunCopyClaimsGuard",
+            "llmDryRunCopyMockResponse",
+            "llmDryRunCopyFullPack",
+            "llmDryRunCopied",
+            "llmDryRunCopyFailed",
+            "llmDryRunCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace LLM assist dry-run bundle", script)
+            self.assertIn("project_workspace_llm_assist_dry_run_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExportLlmAssistDryRunMarkdown"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceLlmDryRunText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "llmDryRunPackTitle",
+            "llmDryRunPromptPlanTitle",
+            "llmDryRunEvidenceBundleTitle",
+            "llmDryRunAllowedClaimsTitle",
+            "llmDryRunDoNotClaimTitle",
+            "llmDryRunMockResponseTitle",
+            "llmDryRunApprovalGateTitle",
+            "llmDryRunSafetyBoundariesTitle",
+            "llmDryRunSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        dry_run_section = html[
+            html.index("const PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", dry_run_section)
+        self.assertIn("Deterministic placeholder only", html)
+        self.assertIn("This is not real LLM output", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
