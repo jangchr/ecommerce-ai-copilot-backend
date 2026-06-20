@@ -10090,6 +10090,187 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_execution_readiness_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace execution readiness bundle",
+            "PROJECT_WORKSPACE_EXECUTION_READINESS_MARKER",
+            "latestProjectWorkspaceExecutionReadinessPack",
+            "projectWorkspaceExecutionReadinessPackFromWorkspace",
+            "projectWorkspaceExportExecutionReadinessSnapshot",
+            "projectWorkspaceExportExecutionReadinessMarkdown",
+            "renderProjectWorkspaceExecutionReadinessSummaryPanel",
+            "renderProjectWorkspaceLaunchLockPanel",
+            "renderProjectWorkspacePreflightManualReviewPanel",
+            "renderProjectWorkspaceBlockedRiskPanel",
+            "renderProjectWorkspaceDryRunReadinessSafetyPanel",
+            "copyProjectWorkspaceReadinessSummary",
+            "copyProjectWorkspaceLaunchLock",
+            "copyProjectWorkspacePreflightChecklist",
+            "copyProjectWorkspaceManualReviewRequirements",
+            "copyProjectWorkspaceBlockedExecutionReasons",
+            "copyProjectWorkspaceExecutionRiskRegister",
+            "copyProjectWorkspaceDryRunEnforcement",
+            "copyProjectWorkspaceFullExecutionReadinessPack",
+            "workspace_execution_readiness_pack: projectWorkspaceExportExecutionReadinessSnapshot(workspace)",
+            "Workspace Execution Readiness / Launch Lock",
+            "Readiness Summary",
+            "Launch Lock",
+            "Preflight Checklist",
+            "Manual Review Requirements",
+            "Blocked Execution Reasons",
+            "Execution Risk Register",
+            "Dry-Run Enforcement",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.readiness_summary",
+            "pack.launch_lock",
+            "pack.preflight_checklist",
+            "pack.blocked_execution_reasons",
+            "pack.manual_review_requirements",
+            "pack.dry_run_enforcement",
+            "pack.approved_for_review_items",
+            "pack.not_approved_items",
+            "pack.execution_risk_register",
+            "pack.readiness_quality_checks",
+            "pack.safety_boundaries",
+            "summary.readiness_status",
+            "summary.launch_lock_status",
+            "summary.blocked_count",
+            "summary.review_ready_count",
+            "summary.manual_review_required_count",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed",
+            "lock.lock_id",
+            "lock.lock_status",
+            "lock.lock_reason",
+            "lock.unlock_requirements",
+            "lock.dry_run_only",
+            "lock.human_approval_required",
+            "lock.real_execution_allowed",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        approval_safety = html.index(
+            "${renderProjectWorkspaceDecisionAuditSafetyPanel(workspace)}"
+        )
+        readiness_summary = html.index(
+            "${renderProjectWorkspaceExecutionReadinessSummaryPanel(workspace)}"
+        )
+        readiness_safety = html.index(
+            "${renderProjectWorkspaceDryRunReadinessSafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(approval_safety, readiness_summary)
+        self.assertLess(readiness_summary, readiness_safety)
+        self.assertLess(readiness_safety, creative_core)
+
+    def test_workspace_execution_readiness_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "executionReadinessPackTitle",
+            "executionReadinessPackHelper",
+            "executionReadinessSummaryTitle",
+            "executionReadinessStatus",
+            "executionReadinessLockStatus",
+            "executionReadinessBlockedCount",
+            "executionReadinessReviewReadyCount",
+            "executionReadinessManualReviewCount",
+            "executionReadinessRecommendedNextAction",
+            "executionReadinessRealExecution",
+            "executionReadinessPreviewNote",
+            "executionReadinessLaunchLockTitle",
+            "executionReadinessLockId",
+            "executionReadinessLockReason",
+            "executionReadinessUnlockRequirements",
+            "executionReadinessDryRunOnly",
+            "executionReadinessHumanApproval",
+            "executionReadinessNeverUnlockedNote",
+            "executionReadinessPreflightManualTitle",
+            "executionReadinessPreflightTitle",
+            "executionReadinessManualReviewTitle",
+            "executionReadinessApprovedReviewTitle",
+            "executionReadinessNotApprovedTitle",
+            "executionReadinessReviewOnlyNote",
+            "executionReadinessBlockedRiskTitle",
+            "executionReadinessBlockedReasonsTitle",
+            "executionReadinessRiskRegisterTitle",
+            "executionReadinessEvidenceRiskNote",
+            "executionReadinessDryQualitySafetyTitle",
+            "executionReadinessDryRunTitle",
+            "executionReadinessQualityChecksTitle",
+            "executionReadinessSafetyBoundariesTitle",
+            "executionReadinessNoWriteNote",
+            "executionReadinessSafetyNote",
+            "executionReadinessCopySummary",
+            "executionReadinessCopyLock",
+            "executionReadinessCopyPreflight",
+            "executionReadinessCopyManualReview",
+            "executionReadinessCopyBlocked",
+            "executionReadinessCopyRisk",
+            "executionReadinessCopyDryRun",
+            "executionReadinessCopyFullPack",
+            "executionReadinessCopied",
+            "executionReadinessCopyFailed",
+            "executionReadinessCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace execution readiness bundle", script)
+            self.assertIn("project_workspace_execution_readiness_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExecutionReadinessSummaryText"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceExecutionReadinessText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "executionReadinessPackTitle",
+            "executionReadinessSummaryTitle",
+            "executionReadinessLaunchLockTitle",
+            "executionReadinessPreflightTitle",
+            "executionReadinessManualReviewTitle",
+            "executionReadinessBlockedReasonsTitle",
+            "executionReadinessRiskRegisterTitle",
+            "executionReadinessDryRunTitle",
+            "executionReadinessSafetyBoundariesTitle",
+            "executionReadinessSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        readiness_section = html[
+            html.index("const PROJECT_WORKSPACE_EXECUTION_READINESS_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", readiness_section)
+        self.assertIn("unlocked_for_real_execution", html)
+        self.assertIn("ready_for_human_review only", html)
+        self.assertIn("Launch lock preview only", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

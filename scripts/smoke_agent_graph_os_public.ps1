@@ -151,6 +151,7 @@ Add-Check "project_workspace_run_snapshot_compare_marker" ($page.Content -match 
 Add-Check "project_workspace_action_queue_marker" ($page.Content -match "Project Workspace action queue bundle")
 Add-Check "project_workspace_action_ticket_marker" ($page.Content -match "Project Workspace action ticket bundle")
 Add-Check "project_workspace_approval_decision_marker" ($page.Content -match "Project Workspace approval decision bundle")
+Add-Check "project_workspace_execution_readiness_marker" ($page.Content -match "Project Workspace execution readiness bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
