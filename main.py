@@ -23127,6 +23127,313 @@ def _rw_workspace_action_queue_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_workspace_action_ticket_pack(creative_decision_pack: dict) -> dict:
+    queue_pack = dict(
+        creative_decision_pack.get("workspace_action_queue_pack") or {}
+    )
+    source_actions = list(queue_pack.get("recommended_actions") or [])
+    ticket_type_by_action = {
+        "fix_evidence_gap": "evidence_gap_ticket",
+        "safety_review_required": "safety_review_ticket",
+        "prepare_llm_prompt": "llm_prompt_review_ticket",
+        "prepare_video_dry_run": "video_dry_run_review_ticket",
+        "export_campaign_pack": "campaign_export_review_ticket",
+        "compare_run_snapshot": "snapshot_compare_review_ticket",
+        "review_competitor_gap": "manual_review_ticket",
+        "manual_review_required": "manual_review_ticket",
+    }
+
+    action_tickets = []
+    for action in source_actions:
+        source_action_id = _rw_text(action.get("action_id"))
+        action_type = _rw_text(action.get("action_type"))
+        blocked_by = [
+            _rw_text(item)
+            for item in list(action.get("blocked_by") or [])
+            if _rw_text(item)
+        ]
+        ticket_type = ticket_type_by_action.get(
+            action_type,
+            "manual_review_ticket",
+        )
+        ticket_digest = hashlib.sha256(
+            source_action_id.encode("utf-8")
+        ).hexdigest()[:10]
+        ticket_id = f"wsticket_{ticket_digest}"
+        approval_status = "blocked" if blocked_by else "pending_review"
+
+        preconditions = [
+            f"Confirm source action {source_action_id or 'unavailable'} is present in workspace_action_queue_pack.",
+            f"Review source pack {_rw_text(action.get('source_pack')) or 'unavailable'} and its evidence reference.",
+            "A human reviewer must confirm risk notes and do-not-claim boundaries.",
+            *(
+                [f"Resolve blocker: {blocker}" for blocker in blocked_by]
+                if blocked_by
+                else ["Confirm the recommendation remains ready for user review only."]
+            ),
+        ]
+        validation_steps = [
+            "Verify the ticket matches its source action ID, type, priority, and source pack.",
+            "Validate that evidence references come only from the current deterministic workspace response.",
+            "Confirm every inherited do-not-claim boundary remains present.",
+            "Confirm real_execution_allowed remains false before and after review.",
+        ]
+        if ticket_type == "evidence_gap_ticket":
+            validation_steps.append(
+                "Verify stronger supplied evidence or quote coverage before clearing evidence blockers."
+            )
+        elif ticket_type == "safety_review_ticket":
+            validation_steps.append(
+                "Review allowed claims, risk checks, and claim-safety limits without calling an LLM."
+            )
+        elif ticket_type == "llm_prompt_review_ticket":
+            validation_steps.append(
+                "Review the deterministic prompt preview and output contract; do not call an LLM or provider."
+            )
+        elif ticket_type == "video_dry_run_review_ticket":
+            validation_steps.append(
+                "Review the provider-neutral job preview; do not submit a video job or create media."
+            )
+        elif ticket_type == "campaign_export_review_ticket":
+            validation_steps.append(
+                "Validate export contents for manual handoff without launch, billing, or provider submission."
+            )
+        elif ticket_type == "snapshot_compare_review_ticket":
+            validation_steps.append(
+                "Validate the current-only or supplied snapshot comparison without reading database history."
+            )
+
+        abort_conditions = list(
+            dict.fromkeys(
+                [
+                    *blocked_by,
+                    "human_approval_denied",
+                    "evidence_reference_missing_or_changed",
+                    "do_not_claim_boundary_missing",
+                    "unsupported_claim_detected",
+                    "real_execution_requested",
+                    "provider_or_external_operation_requested",
+                    "database_persistence_or_restore_requested",
+                ]
+            )
+        )
+        action_tickets.append(
+            {
+                "ticket_id": ticket_id,
+                "source_action_id": source_action_id,
+                "ticket_title": _rw_text(action.get("action_title")),
+                "ticket_type": ticket_type,
+                "priority": _rw_text(action.get("priority")) or "medium",
+                "source_pack": _rw_text(action.get("source_pack")),
+                "approval_status": approval_status,
+                "requires_human_review": True,
+                "real_execution_allowed": False,
+                "preconditions": preconditions,
+                "validation_steps": validation_steps,
+                "abort_conditions": abort_conditions,
+                "expected_user_value": _rw_text(
+                    action.get("expected_user_value")
+                ),
+                "risk_note": _rw_text(action.get("risk_note")),
+                "do_not_claim": list(action.get("do_not_claim") or []),
+                "audit_note": (
+                    "Deterministic approval-packet preview derived from "
+                    f"{source_action_id or 'an unavailable source action ID'}; "
+                    "no queue item, approval record, execution task, or database history entry was created."
+                ),
+            }
+        )
+
+    blocked_tickets = [
+        ticket
+        for ticket in action_tickets
+        if ticket["approval_status"] == "blocked"
+    ]
+    review_tickets = [
+        ticket
+        for ticket in action_tickets
+        if ticket["approval_status"] == "pending_review"
+    ]
+    evidence_or_safety_tickets = [
+        ticket
+        for ticket in action_tickets
+        if ticket["ticket_type"] in {
+            "evidence_gap_ticket",
+            "safety_review_ticket",
+        }
+    ]
+    source_action_ids = {
+        _rw_text(action.get("action_id"))
+        for action in source_actions
+        if _rw_text(action.get("action_id"))
+    }
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "approval_record_write_enabled": False,
+        "ticket_queue_persistence_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_action_ticket_pack_v1",
+        "ticket_summary": {
+            "mode": "deterministic_approval_packet_preview",
+            "packet_status": "review_required",
+            "source_queue_pack_version": _rw_text(
+                queue_pack.get("pack_version")
+            ),
+            "source_action_count": len(source_actions),
+            "ticket_count": len(action_tickets),
+            "blocked_ticket_count": len(blocked_tickets),
+            "pending_review_ticket_count": len(review_tickets),
+            "evidence_or_safety_ticket_count": len(
+                evidence_or_safety_tickets
+            ),
+            "approved_to_execute_count": 0,
+            "real_execution_allowed": False,
+            "recommended_next_action": (
+                "Review blocked evidence and safety tickets first; this packet cannot approve real execution."
+                if blocked_tickets
+                else "Review each ticket manually; approval remains a preview and real execution stays disabled."
+            ),
+        },
+        "action_tickets": action_tickets,
+        "approval_checklist": {
+            "checklist_mode": "human_review_preview",
+            "approval_record_created": False,
+            "required_checks": [
+                "Source action and source pack are present in the current response.",
+                "Evidence references have been reviewed without external fetching.",
+                "All blockers are resolved using user-supplied evidence.",
+                "Risk notes and do-not-claim boundaries are accepted.",
+                "Real execution, provider calls, persistence, restore, and rollback remain disabled.",
+            ],
+            "approval_outcome_allowed": [
+                "pending_review",
+                "review_required",
+                "blocked",
+                "ready_for_review",
+            ],
+            "approved_to_execute_allowed": False,
+        },
+        "pre_execution_requirements": {
+            "requirements_mode": "preview_only_no_execution",
+            "real_execution_requirements_evaluated": False,
+            "requirements": [
+                "Complete human review of every ticket.",
+                "Resolve evidence and safety blockers from the source action queue.",
+                "Validate ticket preconditions and validation steps.",
+                "Keep all real execution boundaries disabled.",
+            ],
+        },
+        "validation_plan": {
+            "plan_mode": "deterministic_ticket_validation_preview",
+            "validation_executed": False,
+            "ticket_validation_steps": [
+                "Match every ticket to exactly one source action.",
+                "Verify ticket type mapping and stable ticket identity.",
+                "Confirm blocked actions remain blocked tickets.",
+                "Confirm ready actions become pending review, never ready for real execution.",
+                "Confirm all safety boundaries remain false.",
+            ],
+        },
+        "abort_conditions": list(
+            dict.fromkeys(
+                condition
+                for ticket in action_tickets
+                for condition in ticket["abort_conditions"]
+            )
+        ),
+        "blocked_ticket_notes": [
+            {
+                "ticket_id": ticket["ticket_id"],
+                "source_action_id": ticket["source_action_id"],
+                "approval_status": ticket["approval_status"],
+                "blocking_conditions": [
+                    condition
+                    for condition in ticket["abort_conditions"]
+                    if condition
+                    not in {
+                        "human_approval_denied",
+                        "evidence_reference_missing_or_changed",
+                        "do_not_claim_boundary_missing",
+                        "unsupported_claim_detected",
+                        "real_execution_requested",
+                        "provider_or_external_operation_requested",
+                        "database_persistence_or_restore_requested",
+                    }
+                ],
+                "note": "Blocked tickets require user-supplied evidence or safety review; no automatic resolution is performed.",
+            }
+            for ticket in blocked_tickets
+        ],
+        "audit_trail_preview": {
+            "preview_only": True,
+            "audit_record_written": False,
+            "database_write_performed": False,
+            "registry_write_performed": False,
+            "history_write_performed": False,
+            "entries": [
+                {
+                    "ticket_id": ticket["ticket_id"],
+                    "source_action_id": ticket["source_action_id"],
+                    "event_type": "ticket_preview_created",
+                    "approval_status": ticket["approval_status"],
+                    "real_execution_allowed": False,
+                }
+                for ticket in action_tickets
+            ],
+        },
+        "ticket_quality_checks": {
+            "source_queue_present": bool(queue_pack),
+            "source_actions_present": bool(source_actions),
+            "ticket_count_matches_source_actions": len(action_tickets)
+            == len(source_actions),
+            "ticket_ids_unique": len(
+                {ticket["ticket_id"] for ticket in action_tickets}
+            )
+            == len(action_tickets),
+            "all_tickets_trace_to_source_action": all(
+                ticket["source_action_id"] in source_action_ids
+                for ticket in action_tickets
+            ),
+            "all_tickets_require_human_review": all(
+                ticket["requires_human_review"]
+                for ticket in action_tickets
+            ),
+            "all_real_execution_disabled": all(
+                not ticket["real_execution_allowed"]
+                for ticket in action_tickets
+            ),
+            "no_ticket_approved_to_execute": all(
+                ticket["approval_status"] != "approved_to_execute"
+                for ticket in action_tickets
+            ),
+            "evidence_and_safety_actions_ticketed": bool(
+                evidence_or_safety_tickets
+            )
+            if queue_pack.get("evidence_gap_actions")
+            or queue_pack.get("safety_review_actions")
+            else True,
+            "audit_preview_only": True,
+            "database_write_performed": False,
+            "ticket_queue_persisted": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -23225,6 +23532,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_action_queue_pack"] = (
         _rw_workspace_action_queue_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_action_ticket_pack"] = (
+        _rw_workspace_action_ticket_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

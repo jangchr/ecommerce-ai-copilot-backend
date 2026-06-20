@@ -1073,6 +1073,151 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_action_ticket_pack_is_traceable_and_never_executes(self):
+        payload = {
+            "workspace_id": "workspace-action-ticket",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "manual",
+                    "asin": "TICKET001",
+                    "title": "Compact Travel Mug",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Too short",
+                            "text": "Leaks.",
+                            "source_section": "manual_review",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+            "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_action_ticket_pack"]
+        self.assertEqual(pack["pack_version"], "workspace_action_ticket_pack_v1")
+        summary = pack["ticket_summary"]
+        self.assertTrue(summary)
+        self.assertEqual(
+            summary["mode"],
+            "deterministic_approval_packet_preview",
+        )
+        self.assertFalse(summary["real_execution_allowed"])
+        self.assertEqual(summary["approved_to_execute_count"], 0)
+
+        tickets = pack["action_tickets"]
+        queue_actions = creative_pack["workspace_action_queue_pack"][
+            "recommended_actions"
+        ]
+        self.assertGreaterEqual(len(tickets), 1)
+        self.assertEqual(len(tickets), len(queue_actions))
+        source_action_ids = {action["action_id"] for action in queue_actions}
+        required_ticket_fields = [
+            "ticket_id",
+            "source_action_id",
+            "ticket_title",
+            "ticket_type",
+            "priority",
+            "source_pack",
+            "approval_status",
+            "requires_human_review",
+            "real_execution_allowed",
+            "preconditions",
+            "validation_steps",
+            "abort_conditions",
+            "expected_user_value",
+            "risk_note",
+            "do_not_claim",
+            "audit_note",
+        ]
+        for ticket in tickets:
+            with self.subTest(ticket=ticket["ticket_id"]):
+                for field in required_ticket_fields:
+                    self.assertIn(field, ticket)
+                self.assertTrue(ticket["ticket_id"])
+                self.assertIn(ticket["source_action_id"], source_action_ids)
+                self.assertTrue(ticket["ticket_type"])
+                self.assertTrue(ticket["priority"])
+                self.assertIn(
+                    ticket["approval_status"],
+                    {"pending_review", "review_required", "blocked"},
+                )
+                self.assertTrue(ticket["requires_human_review"])
+                self.assertFalse(ticket["real_execution_allowed"])
+                self.assertTrue(ticket["preconditions"])
+                self.assertTrue(ticket["validation_steps"])
+                self.assertTrue(ticket["abort_conditions"])
+
+        ticket_types = {ticket["ticket_type"] for ticket in tickets}
+        self.assertTrue(
+            {"evidence_gap_ticket", "safety_review_ticket"}
+            & ticket_types
+        )
+        self.assertTrue(pack["approval_checklist"])
+        self.assertFalse(
+            pack["approval_checklist"]["approved_to_execute_allowed"]
+        )
+        self.assertTrue(pack["pre_execution_requirements"])
+        self.assertTrue(pack["validation_plan"])
+        self.assertTrue(pack["abort_conditions"])
+        self.assertTrue(pack["blocked_ticket_notes"])
+
+        audit = pack["audit_trail_preview"]
+        self.assertTrue(audit["preview_only"])
+        self.assertFalse(audit["audit_record_written"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["registry_write_performed"])
+        self.assertFalse(audit["history_write_performed"])
+        self.assertEqual(len(audit["entries"]), len(tickets))
+
+        checks = pack["ticket_quality_checks"]
+        self.assertTrue(checks["ticket_count_matches_source_actions"])
+        self.assertTrue(checks["ticket_ids_unique"])
+        self.assertTrue(checks["all_tickets_trace_to_source_action"])
+        self.assertTrue(checks["all_tickets_require_human_review"])
+        self.assertTrue(checks["all_real_execution_disabled"])
+        self.assertTrue(checks["no_ticket_approved_to_execute"])
+        self.assertTrue(checks["evidence_and_safety_actions_ticketed"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["ticket_queue_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+            "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 
 
