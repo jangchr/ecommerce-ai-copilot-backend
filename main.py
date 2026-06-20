@@ -24416,6 +24416,381 @@ def _rw_workspace_execution_rehearsal_pack(creative_decision_pack: dict) -> dict
     }
 
 
+def _rw_workspace_rehearsal_result_pack(creative_decision_pack: dict) -> dict:
+    rehearsal_pack = dict(
+        creative_decision_pack.get("workspace_execution_rehearsal_pack") or {}
+    )
+    rehearsal_summary = dict(
+        rehearsal_pack.get("rehearsal_summary") or {}
+    )
+    runbook = dict(rehearsal_pack.get("rehearsal_runbook") or {})
+    steps = list(rehearsal_pack.get("step_sequence") or [])
+    checkpoint_plan = dict(rehearsal_pack.get("checkpoint_plan") or {})
+    failure_checks = dict(
+        rehearsal_pack.get("failure_injection_checks") or {}
+    )
+    abort_triggers = list(rehearsal_pack.get("abort_triggers") or [])
+    rollback_plan = dict(
+        rehearsal_pack.get("rollback_rehearsal_plan") or {}
+    )
+    operator_notes = dict(rehearsal_pack.get("operator_notes") or {})
+    blocked_reasons = list(
+        operator_notes.get("blocked_execution_reasons") or []
+    )
+    launch_lock_status = _rw_text(
+        rehearsal_summary.get("launch_lock_status")
+    ) or "unavailable"
+    launch_locked = launch_lock_status in {
+        "locked",
+        "blocked",
+        "dry_run_only",
+    }
+
+    review_step_types = {
+        "verify_evidence",
+        "review_approval_gate",
+        "manual_review_checkpoint",
+    }
+    simulated_step_types = {
+        "preview_llm_prompt",
+        "preview_video_provider_plan",
+        "validate_export_manifest",
+        "confirm_launch_lock",
+        "simulate_abort",
+        "simulate_rollback",
+    }
+    step_result_cards = []
+    for step in steps:
+        step_type = _rw_text(step.get("step_type"))
+        source_present = bool(step.get("source_pack_present", True))
+        if not source_present:
+            simulated_status = "blocked"
+            validation_result = "blocked_missing_source_pack"
+            follow_up_action = (
+                "Provide the missing deterministic source pack and repeat the rehearsal preview."
+            )
+        elif step_type in review_step_types or (
+            step_type == "confirm_launch_lock" and not launch_locked
+        ):
+            simulated_status = "review_required"
+            validation_result = "pending_operator_review"
+            follow_up_action = (
+                "Complete human review while keeping real execution disabled."
+            )
+        else:
+            simulated_status = "deterministic_simulated_pass"
+            validation_result = "simulated_check_passed"
+            follow_up_action = (
+                "Retain this simulated observation for the next rehearsal review."
+            )
+        step_result_cards.append(
+            {
+                "step_id": _rw_text(step.get("step_id")),
+                "step_title": _rw_text(step.get("step_title")),
+                "step_type": step_type,
+                "source_pack": _rw_text(step.get("source_pack")),
+                "simulated_status": simulated_status,
+                "expected_observation": _rw_text(
+                    step.get("expected_observation")
+                ),
+                "observed_placeholder": (
+                    "Deterministic rehearsal placeholder: no real operation or observation occurred."
+                ),
+                "validation_result": validation_result,
+                "validation_check": _rw_text(
+                    step.get("validation_check")
+                ),
+                "failure_mode": _rw_text(step.get("failure_mode")),
+                "operator_review_required": (
+                    simulated_status in {"review_required", "blocked"}
+                ),
+                "follow_up_action": follow_up_action,
+                "real_execution_allowed": False,
+                "risk_note": _rw_text(step.get("risk_note"))
+                or "This result is a rehearsal preview only.",
+            }
+        )
+
+    step_checkpoint_results = [
+        {
+            "step_id": _rw_text(checkpoint.get("step_id")),
+            "validation_check": _rw_text(
+                checkpoint.get("validation_check")
+            ),
+            "simulated_result": next(
+                (
+                    card["validation_result"]
+                    for card in step_result_cards
+                    if card["step_id"]
+                    == _rw_text(checkpoint.get("step_id"))
+                ),
+                "unavailable",
+            ),
+            "human_review_required": bool(
+                checkpoint.get("human_review_required", True)
+            ),
+            "real_checkpoint_executed": False,
+        }
+        for checkpoint in list(checkpoint_plan.get("step_checkpoints") or [])
+    ]
+    checkpoint_results = {
+        "result_mode": "deterministic_checkpoint_result_preview",
+        "opening_checkpoint": {
+            "checkpoint": _rw_text(
+                checkpoint_plan.get("opening_checkpoint")
+            ),
+            "simulated_status": (
+                "deterministic_simulated_pass"
+                if launch_locked
+                else "blocked"
+            ),
+            "real_checkpoint_executed": False,
+        },
+        "step_results": step_checkpoint_results,
+        "closing_checkpoint": {
+            "checkpoint": _rw_text(
+                checkpoint_plan.get("closing_checkpoint")
+            ),
+            "simulated_status": (
+                "review_required"
+                if any(
+                    card["operator_review_required"]
+                    for card in step_result_cards
+                )
+                else "deterministic_simulated_pass"
+            ),
+            "launch_lock_status": launch_lock_status,
+            "real_execution_performed": False,
+        },
+    }
+
+    failure_findings = [
+        {
+            "finding_id": f"failure_preview_{index:02d}",
+            "finding_type": "simulated_failure_check",
+            "source": "failure_injection_checks",
+            "scenario": _rw_text(check),
+            "simulated_status": "deterministic_simulated_pass",
+            "real_failure_triggered": False,
+            "operator_review_required": False,
+            "risk_note": (
+                "The scenario was described only; no real failure was injected."
+            ),
+        }
+        for index, check in enumerate(
+            list(failure_checks.get("checks") or []),
+            start=1,
+        )
+    ]
+    failure_findings.extend(
+        {
+            "finding_id": f"blocked_preview_{index:02d}",
+            "finding_type": "blocked_rehearsal_condition",
+            "source": "operator_notes.blocked_execution_reasons",
+            "scenario": _rw_text(reason),
+            "simulated_status": "review_required",
+            "real_failure_triggered": False,
+            "operator_review_required": True,
+            "risk_note": (
+                "Resolve with evidence and human review; do not unlock execution."
+            ),
+        }
+        for index, reason in enumerate(blocked_reasons, start=1)
+        if _rw_text(reason)
+    )
+
+    operator_review_items = [
+        {
+            "review_id": f"operator_review_{index:02d}",
+            "step_id": card["step_id"],
+            "step_title": card["step_title"],
+            "review_reason": card["validation_result"],
+            "expected_observation": card["expected_observation"],
+            "follow_up_action": card["follow_up_action"],
+            "review_status": "pending_operator_review",
+            "real_execution_allowed": False,
+        }
+        for index, card in enumerate(
+            [
+                card
+                for card in step_result_cards
+                if card["operator_review_required"]
+            ],
+            start=1,
+        )
+    ]
+    blocked_follow_up_items = [
+        {
+            "follow_up_id": f"blocked_follow_up_{index:02d}",
+            "blocking_reason": _rw_text(reason),
+            "recommended_action": (
+                "Resolve using user-supplied evidence and repeat the deterministic rehearsal."
+            ),
+            "status": "blocked_requires_human_review",
+            "real_execution_allowed": False,
+        }
+        for index, reason in enumerate(blocked_reasons, start=1)
+        if _rw_text(reason)
+    ]
+    blocked_follow_up_items.extend(
+        {
+            "follow_up_id": f"blocked_step_{index:02d}",
+            "step_id": card["step_id"],
+            "blocking_reason": card["validation_result"],
+            "recommended_action": card["follow_up_action"],
+            "status": "blocked_requires_human_review",
+            "real_execution_allowed": False,
+        }
+        for index, card in enumerate(
+            [
+                card
+                for card in step_result_cards
+                if card["simulated_status"] == "blocked"
+            ],
+            start=1,
+        )
+    )
+
+    result_signature = json.dumps(
+        {
+            "step_ids": [card["step_id"] for card in step_result_cards],
+            "statuses": [
+                card["simulated_status"] for card in step_result_cards
+            ],
+            "launch_lock_status": launch_lock_status,
+            "blocked_reason_count": len(blocked_reasons),
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    result_id = (
+        "rehearsal_result_"
+        + hashlib.sha256(result_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "failure_injection_execution_enabled": False,
+        "launch_unlock_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_rehearsal_result_pack_v1",
+        "result_summary": {
+            "result_id": result_id,
+            "mode": "deterministic_dry_run_rehearsal_result_preview",
+            "result_status": (
+                "operator_review_required"
+                if operator_review_items or blocked_follow_up_items
+                else "deterministic_simulated_pass"
+            ),
+            "launch_lock_status": launch_lock_status,
+            "dry_run_only": True,
+            "step_result_count": len(step_result_cards),
+            "simulated_pass_count": sum(
+                card["simulated_status"]
+                == "deterministic_simulated_pass"
+                for card in step_result_cards
+            ),
+            "review_required_count": sum(
+                card["simulated_status"] == "review_required"
+                for card in step_result_cards
+            ),
+            "blocked_count": sum(
+                card["simulated_status"] == "blocked"
+                for card in step_result_cards
+            ),
+            "recommended_next_action": (
+                "Review simulated findings, resolve blocked evidence, and repeat the rehearsal while keeping the launch lock closed."
+            ),
+            "real_execution_allowed": False,
+        },
+        "step_result_cards": step_result_cards,
+        "checkpoint_results": checkpoint_results,
+        "failure_findings": failure_findings,
+        "operator_review_items": operator_review_items,
+        "blocked_follow_up_items": blocked_follow_up_items,
+        "next_rehearsal_recommendations": [
+            "Resolve every blocked evidence or safety condition using user-supplied evidence.",
+            "Complete pending operator review without changing approval or execution state.",
+            "Repeat the deterministic checkpoint and failure simulations after review.",
+            "Keep the launch lock closed and all real capabilities disabled.",
+            "Export the result preview only; do not persist it as a real operator log.",
+        ],
+        "result_quality_checks": {
+            "execution_rehearsal_pack_present": bool(rehearsal_pack),
+            "step_count_consistent": len(step_result_cards) == len(steps),
+            "all_step_results_traceable": all(
+                card["step_id"] and card["source_pack"]
+                for card in step_result_cards
+            ),
+            "all_statuses_are_simulated": all(
+                card["simulated_status"]
+                in {
+                    "deterministic_simulated_pass",
+                    "review_required",
+                    "blocked",
+                }
+                for card in step_result_cards
+            ),
+            "all_real_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in step_result_cards
+            ),
+            "launch_lock_preserved": launch_locked,
+            "checkpoint_results_present": bool(checkpoint_results),
+            "failure_findings_are_preview_only": all(
+                not finding["real_failure_triggered"]
+                for finding in failure_findings
+            ),
+            "rollback_not_performed": not bool(
+                rollback_plan.get("rollback_executed")
+            ),
+            "restore_not_performed": not bool(
+                rollback_plan.get("restore_executed")
+            ),
+            "database_write_performed": False,
+            "operator_log_persisted": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_rehearsal_result_preview",
+            "result_id": result_id,
+            "source_pack_version": _rw_text(
+                rehearsal_pack.get("pack_version")
+            ),
+            "source_step_ids": [
+                card["step_id"] for card in step_result_cards
+            ],
+            "source_checkpoint_mode": _rw_text(
+                checkpoint_plan.get("checkpoint_mode")
+            ),
+            "source_failure_mode": _rw_text(failure_checks.get("mode")),
+            "source_rollback_mode": _rw_text(rollback_plan.get("mode")),
+            "is_real_operator_log": False,
+            "database_write_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This audit preview is deterministic and exportable only; it is not a real operator log and is not persisted."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -24526,6 +24901,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_execution_rehearsal_pack"] = (
         _rw_workspace_execution_rehearsal_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_rehearsal_result_pack"] = (
+        _rw_workspace_rehearsal_result_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
