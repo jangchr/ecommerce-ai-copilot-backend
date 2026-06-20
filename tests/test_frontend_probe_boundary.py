@@ -10611,6 +10611,116 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_remediation_verification_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace remediation verification bundle",
+            "PROJECT_WORKSPACE_REMEDIATION_VERIFICATION_MARKER",
+            "latestProjectWorkspaceRemediationVerificationPack",
+            "projectWorkspaceRemediationVerificationPackFromWorkspace",
+            "projectWorkspaceExportRemediationVerificationSnapshot",
+            "projectWorkspaceExportRemediationVerificationMarkdown",
+            "renderProjectWorkspaceRemediationVerificationSummaryPanel",
+            "renderProjectWorkspaceActionVerificationCardsPanel",
+            "renderProjectWorkspaceRetryReadinessGatePanel",
+            "renderProjectWorkspaceVerificationInputsPanel",
+            "renderProjectWorkspaceVerificationSignoffSafetyPanel",
+            "copyProjectWorkspaceRemediationVerificationSummary",
+            "copyProjectWorkspaceActionVerificationCards",
+            "copyProjectWorkspaceRetryReadinessGate",
+            "copyProjectWorkspaceVerificationBlockers",
+            "copyProjectWorkspaceRequiredInputsChecklist",
+            "copyProjectWorkspaceEvidenceReadinessReview",
+            "copyProjectWorkspaceOperatorSignoffPreview",
+            "copyProjectWorkspaceFullRemediationVerificationPack",
+            "workspace_remediation_verification_pack: projectWorkspaceExportRemediationVerificationSnapshot(workspace)",
+            "Workspace Remediation Verification / Retry Readiness",
+            "Verification Summary", "Action Verification Cards",
+            "Retry Readiness Gate", "Remaining Blockers",
+            "Required Inputs Checklist", "Evidence Readiness Review",
+            "Operator Signoff Preview", "Next Retry Scope",
+            "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.verification_summary", "pack.action_verification_cards",
+            "pack.retry_readiness_gate", "pack.remaining_blockers",
+            "pack.required_inputs_checklist", "pack.evidence_readiness_review",
+            "pack.operator_signoff_preview", "pack.next_retry_scope",
+            "pack.verification_quality_checks", "pack.audit_preview",
+            "pack.safety_boundaries", "summary.mode",
+            "summary.verification_status", "summary.action_verification_count",
+            "summary.remaining_blocker_count", "summary.recommended_next_action",
+            "summary.real_execution_allowed", "card.verification_id",
+            "card.source_action_id", "card.source_step_id", "card.issue_type",
+            "card.verification_status", "card.required_input",
+            "card.input_available", "card.validation_before_retry",
+            "card.retry_eligible", "card.remaining_gap",
+            "card.operator_review_required", "card.real_execution_allowed",
+            "card.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        prior = html.index("${renderProjectWorkspaceRehearsalRemediationAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceRemediationVerificationSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceVerificationSignoffSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(prior, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_remediation_verification_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "remediationVerificationPackTitle", "remediationVerificationSummaryTitle",
+            "remediationVerificationCardsTitle", "remediationVerificationRetryGateTitle",
+            "remediationVerificationBlockersTitle", "remediationVerificationRequiredInputsTitle",
+            "remediationVerificationEvidenceReviewTitle", "remediationVerificationSignoffTitle",
+            "remediationVerificationNextScopeTitle", "remediationVerificationAuditTitle",
+            "remediationVerificationSafetyTitle", "remediationVerificationCopySummary",
+            "remediationVerificationCopyCards", "remediationVerificationCopyGate",
+            "remediationVerificationCopyBlockers", "remediationVerificationCopyInputs",
+            "remediationVerificationCopyEvidence", "remediationVerificationCopySignoff",
+            "remediationVerificationCopyFull", "remediationVerificationCopied",
+            "remediationVerificationCopyFailed", "remediationVerificationCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace remediation verification bundle", script)
+            self.assertIn("project_workspace_remediation_verification_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceRemediationVerificationSummaryText"):
+            html.index("async function copyProjectWorkspaceRemediationVerificationText")
+        ]
+        for key in [
+            "remediationVerificationPackTitle", "remediationVerificationSummaryTitle",
+            "remediationVerificationCardsTitle", "remediationVerificationRetryGateTitle",
+            "remediationVerificationBlockersTitle", "remediationVerificationRequiredInputsTitle",
+            "remediationVerificationEvidenceReviewTitle", "remediationVerificationSignoffTitle",
+            "remediationVerificationNextScopeTitle", "remediationVerificationAuditTitle",
+            "remediationVerificationSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_REMEDIATION_VERIFICATION_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("ready_for_next_dry_run only", html)
+        self.assertIn("never returns ready_for_real_execution", html)
+        self.assertIn("No real external data is collected", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
