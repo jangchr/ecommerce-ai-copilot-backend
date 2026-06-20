@@ -148,6 +148,7 @@ Add-Check "project_workspace_llm_assist_dry_run_marker" ($page.Content -match "P
 Add-Check "project_workspace_video_provider_orchestration_dry_run_marker" ($page.Content -match "Project Workspace video provider orchestration dry-run bundle")
 Add-Check "project_workspace_session_snapshot_marker" ($page.Content -match "Project Workspace session snapshot bundle")
 Add-Check "project_workspace_run_snapshot_compare_marker" ($page.Content -match "Project Workspace run snapshot compare bundle")
+Add-Check "project_workspace_action_queue_marker" ($page.Content -match "Project Workspace action queue bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

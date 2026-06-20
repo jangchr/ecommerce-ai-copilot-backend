@@ -9519,6 +9519,192 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_action_queue_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace action queue bundle",
+            "PROJECT_WORKSPACE_ACTION_QUEUE_MARKER",
+            "latestProjectWorkspaceActionQueuePack",
+            "projectWorkspaceActionQueuePackFromWorkspace",
+            "projectWorkspaceExportActionQueueSnapshot",
+            "projectWorkspaceExportActionQueueMarkdown",
+            "renderProjectWorkspaceActionQueueSummaryPanel",
+            "renderProjectWorkspaceRecommendedActionsPanel",
+            "renderProjectWorkspaceBlockedReadyActionsPanel",
+            "renderProjectWorkspaceEvidenceSafetyActionsPanel",
+            "renderProjectWorkspaceActionQueueExportSafetyPanel",
+            "copyProjectWorkspaceActionQueueSummary",
+            "copyProjectWorkspaceRecommendedActions",
+            "copyProjectWorkspaceBlockedActions",
+            "copyProjectWorkspaceEvidenceGapActions",
+            "copyProjectWorkspaceSafetyReviewActions",
+            "copyProjectWorkspaceExportFollowUpActions",
+            "copyProjectWorkspaceFullActionQueuePack",
+            "workspace_action_queue_pack: projectWorkspaceExportActionQueueSnapshot(workspace)",
+            "Workspace Action Recommendation Queue",
+            "Queue Summary",
+            "Recommended Actions",
+            "Blocked Actions",
+            "Ready Actions",
+            "Evidence Gap Actions",
+            "Safety Review Actions",
+            "Export Follow-up Actions",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.queue_summary",
+            "pack.recommended_actions",
+            "pack.blocked_actions",
+            "pack.ready_actions",
+            "pack.evidence_gap_actions",
+            "pack.safety_review_actions",
+            "pack.export_follow_up_actions",
+            "pack.queue_quality_checks",
+            "pack.safety_boundaries",
+            "summary.recommended_action_count",
+            "summary.ready_action_count",
+            "summary.blocked_action_count",
+            "summary.evidence_gap_action_count",
+            "summary.safety_review_action_count",
+            "summary.export_follow_up_action_count",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed",
+            "action.action_title",
+            "action.action_type",
+            "action.priority",
+            "action.source_pack",
+            "action.reason",
+            "action.expected_user_value",
+            "action.recommended_next_step",
+            "action.requires_approval",
+            "action.real_execution_allowed",
+            "action.blocked_by",
+            "action.evidence_reference",
+            "action.risk_note",
+            "action.do_not_claim",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        compare_safety = html.index(
+            "${renderProjectWorkspaceRunFollowUpSafetyPanel(workspace)}"
+        )
+        queue_summary = html.index(
+            "${renderProjectWorkspaceActionQueueSummaryPanel(workspace)}"
+        )
+        queue_safety = html.index(
+            "${renderProjectWorkspaceActionQueueExportSafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(compare_safety, queue_summary)
+        self.assertLess(queue_summary, queue_safety)
+        self.assertLess(queue_safety, creative_core)
+
+    def test_workspace_action_queue_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "actionQueuePackTitle",
+            "actionQueuePackHelper",
+            "actionQueueSummaryTitle",
+            "actionQueueRecommendedCount",
+            "actionQueueReadyCount",
+            "actionQueueBlockedCount",
+            "actionQueueEvidenceGapCount",
+            "actionQueueSafetyReviewCount",
+            "actionQueueExportFollowUpCount",
+            "actionQueueRecommendedNextAction",
+            "actionQueueRealExecution",
+            "actionQueueRecommendationOnlyNote",
+            "actionQueueRecommendedActionsTitle",
+            "actionQueueActionType",
+            "actionQueuePriority",
+            "actionQueueSourcePack",
+            "actionQueueReason",
+            "actionQueueExpectedValue",
+            "actionQueueNextStep",
+            "actionQueueRequiresApproval",
+            "actionQueueRealExecutionAllowed",
+            "actionQueueBlockedReadyTitle",
+            "actionQueueBlockedActionsTitle",
+            "actionQueueReadyActionsTitle",
+            "actionQueueBlockedBy",
+            "actionQueueReadyReviewOnlyNote",
+            "actionQueueEvidenceSafetyTitle",
+            "actionQueueEvidenceGapActionsTitle",
+            "actionQueueSafetyReviewActionsTitle",
+            "actionQueueEvidenceReference",
+            "actionQueueRiskNote",
+            "actionQueueDoNotClaim",
+            "actionQueueExportSafetyTitle",
+            "actionQueueExportFollowUpActionsTitle",
+            "actionQueueQualityChecksTitle",
+            "actionQueueSafetyBoundariesTitle",
+            "actionQueueSafetyNote",
+            "actionQueueCopySummary",
+            "actionQueueCopyRecommended",
+            "actionQueueCopyBlocked",
+            "actionQueueCopyEvidenceGap",
+            "actionQueueCopySafetyReview",
+            "actionQueueCopyExportFollowUp",
+            "actionQueueCopyFullPack",
+            "actionQueueCopied",
+            "actionQueueCopyFailed",
+            "actionQueueCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace action queue bundle", script)
+            self.assertIn("project_workspace_action_queue_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceActionQueueSummaryText"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceActionQueueText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "actionQueuePackTitle",
+            "actionQueueSummaryTitle",
+            "actionQueueRecommendedActionsTitle",
+            "actionQueueBlockedActionsTitle",
+            "actionQueueReadyActionsTitle",
+            "actionQueueEvidenceGapActionsTitle",
+            "actionQueueSafetyReviewActionsTitle",
+            "actionQueueExportFollowUpActionsTitle",
+            "actionQueueSafetyBoundariesTitle",
+            "actionQueueSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        queue_section = html[
+            html.index("const PROJECT_WORKSPACE_ACTION_QUEUE_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", queue_section)
+        self.assertIn("Recommendation queue only", html)
+        self.assertIn("ready for user review only", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

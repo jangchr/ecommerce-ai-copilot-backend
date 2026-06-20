@@ -3606,6 +3606,7 @@
         let latestProjectVideoProviderOrchestrationDryRunPack = {};
         let latestProjectWorkspaceSessionSnapshotPack = {};
         let latestProjectWorkspaceRunComparePack = {};
+        let latestProjectWorkspaceActionQueuePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8888,6 +8889,7 @@
                 latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
                 latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
                 latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
+                latestProjectWorkspaceActionQueuePack = latestProjectCreativeDecisionPack.workspace_action_queue_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14730,6 +14732,7 @@
         const PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER = 'Project Workspace video provider orchestration dry-run bundle';
         const PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER = 'Project Workspace session snapshot bundle';
         const PROJECT_WORKSPACE_RUN_SNAPSHOT_COMPARE_MARKER = 'Project Workspace run snapshot compare bundle';
+        const PROJECT_WORKSPACE_ACTION_QUEUE_MARKER = 'Project Workspace action queue bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -17017,6 +17020,153 @@
 
         function copyProjectWorkspaceFullRunComparePack() {
             return copyProjectWorkspaceRunCompareText('full');
+        }
+
+        function projectWorkspaceActionQueuePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceActionQueuePack
+                && Object.keys(latestProjectWorkspaceActionQueuePack).length) {
+                return latestProjectWorkspaceActionQueuePack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_action_queue_pack || {};
+        }
+
+        function projectWorkspaceExportActionQueueSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceActionQueuePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_ACTION_QUEUE_MARKER,
+                has_workspace_action_queue_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                queue_summary: pack.queue_summary || {},
+                recommended_actions: Array.isArray(pack.recommended_actions) ? pack.recommended_actions : [],
+                blocked_actions: Array.isArray(pack.blocked_actions) ? pack.blocked_actions : [],
+                ready_actions: Array.isArray(pack.ready_actions) ? pack.ready_actions : [],
+                evidence_gap_actions: Array.isArray(pack.evidence_gap_actions) ? pack.evidence_gap_actions : [],
+                safety_review_actions: Array.isArray(pack.safety_review_actions) ? pack.safety_review_actions : [],
+                export_follow_up_actions: Array.isArray(pack.export_follow_up_actions) ? pack.export_follow_up_actions : [],
+                queue_quality_checks: pack.queue_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceActionQueueJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceActionQueueSummaryText(pack = projectWorkspaceExportActionQueueSnapshot()) {
+            if (!pack.has_workspace_action_queue_pack) return '';
+            const summary = pack.queue_summary || {};
+            return [
+                t('actionQueueSummaryTitle'),
+                `${t('actionQueueMode')}: ${summary.mode || t('none')}`,
+                `${t('actionQueueStatus')}: ${summary.queue_status || t('none')}`,
+                `${t('actionQueueRecommendedCount')}: ${summary.recommended_action_count ?? 0}`,
+                `${t('actionQueueReadyCount')}: ${summary.ready_action_count ?? 0}`,
+                `${t('actionQueueBlockedCount')}: ${summary.blocked_action_count ?? 0}`,
+                `${t('actionQueueEvidenceGapCount')}: ${summary.evidence_gap_action_count ?? 0}`,
+                `${t('actionQueueSafetyReviewCount')}: ${summary.safety_review_action_count ?? 0}`,
+                `${t('actionQueueExportFollowUpCount')}: ${summary.export_follow_up_action_count ?? 0}`,
+                `${t('actionQueueRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('actionQueueRealExecution')}: ${summary.real_execution_allowed === false ? t('actionQueueDisabled') : String(summary.real_execution_allowed)}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceActionQueueListText(titleKey, actions = []) {
+            const rows = Array.isArray(actions) ? actions : [];
+            return [
+                `## ${t(titleKey)}`,
+                rows.length
+                    ? rows.map((action) => projectWorkspaceActionQueueJsonText(action)).join('\n\n')
+                    : t('actionQueueNoData')
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportActionQueueMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionQueueSnapshot(workspace);
+            if (!pack.has_workspace_action_queue_pack) return '';
+            return [
+                `## ${t('actionQueuePackTitle')}`,
+                `## ${t('actionQueueSummaryTitle')}`,
+                projectWorkspaceActionQueueSummaryText(pack),
+                '',
+                projectWorkspaceActionQueueListText('actionQueueRecommendedActionsTitle', pack.recommended_actions),
+                '',
+                projectWorkspaceActionQueueListText('actionQueueBlockedActionsTitle', pack.blocked_actions),
+                '',
+                projectWorkspaceActionQueueListText('actionQueueReadyActionsTitle', pack.ready_actions),
+                '',
+                projectWorkspaceActionQueueListText('actionQueueEvidenceGapActionsTitle', pack.evidence_gap_actions),
+                '',
+                projectWorkspaceActionQueueListText('actionQueueSafetyReviewActionsTitle', pack.safety_review_actions),
+                '',
+                projectWorkspaceActionQueueListText('actionQueueExportFollowUpActionsTitle', pack.export_follow_up_actions),
+                '',
+                `## ${t('actionQueueQualityChecksTitle')}`,
+                projectWorkspaceActionQueueJsonText(pack.queue_quality_checks),
+                '',
+                `## ${t('actionQueueSafetyBoundariesTitle')}`,
+                projectWorkspaceActionQueueJsonText(pack.safety_boundaries),
+                t('actionQueueSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceActionQueueText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceActionQueueStatus');
+            const pack = projectWorkspaceExportActionQueueSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceActionQueueSummaryText(pack)
+                : kind === 'recommended'
+                    ? projectWorkspaceActionQueueListText('actionQueueRecommendedActionsTitle', pack.recommended_actions)
+                    : kind === 'blocked'
+                        ? projectWorkspaceActionQueueListText('actionQueueBlockedActionsTitle', pack.blocked_actions)
+                        : kind === 'evidence'
+                            ? projectWorkspaceActionQueueListText('actionQueueEvidenceGapActionsTitle', pack.evidence_gap_actions)
+                            : kind === 'safety'
+                                ? projectWorkspaceActionQueueListText('actionQueueSafetyReviewActionsTitle', pack.safety_review_actions)
+                                : kind === 'export'
+                                    ? projectWorkspaceActionQueueListText('actionQueueExportFollowUpActionsTitle', pack.export_follow_up_actions)
+                                    : projectWorkspaceExportActionQueueMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('actionQueueCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('actionQueueCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('actionQueueCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('actionQueueCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceActionQueueSummary() {
+            return copyProjectWorkspaceActionQueueText('summary');
+        }
+
+        function copyProjectWorkspaceRecommendedActions() {
+            return copyProjectWorkspaceActionQueueText('recommended');
+        }
+
+        function copyProjectWorkspaceBlockedActions() {
+            return copyProjectWorkspaceActionQueueText('blocked');
+        }
+
+        function copyProjectWorkspaceEvidenceGapActions() {
+            return copyProjectWorkspaceActionQueueText('evidence');
+        }
+
+        function copyProjectWorkspaceSafetyReviewActions() {
+            return copyProjectWorkspaceActionQueueText('safety');
+        }
+
+        function copyProjectWorkspaceExportFollowUpActions() {
+            return copyProjectWorkspaceActionQueueText('export');
+        }
+
+        function copyProjectWorkspaceFullActionQueuePack() {
+            return copyProjectWorkspaceActionQueueText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -19385,6 +19535,152 @@
             `;
         }
 
+        function renderProjectWorkspaceActionQueueCards(actions = [], emptyKey = 'actionQueueNoData') {
+            const rows = Array.isArray(actions) ? actions : [];
+            if (!rows.length) return `<div class="feedback-box">${escapeHTML(t(emptyKey))}</div>`;
+            return `<div class="graph-os-compact-grid">${rows.map((action) => `
+                <div class="graph-os-card">
+                    <strong>${escapeHTML(action.action_title || t('none'))}</strong>
+                    <div><strong>${escapeHTML(t('actionQueueActionType'))}:</strong> ${escapeHTML(action.action_type || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('actionQueuePriority'))}:</strong> ${escapeHTML(action.priority || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('actionQueueSourcePack'))}:</strong> ${escapeHTML(action.source_pack || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('actionQueueReason'))}:</strong> ${escapeHTML(action.reason || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('actionQueueExpectedValue'))}:</strong> ${escapeHTML(action.expected_user_value || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('actionQueueNextStep'))}:</strong> ${escapeHTML(action.recommended_next_step || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('actionQueueRequiresApproval'))}:</strong> ${escapeHTML(String(action.requires_approval === true))}</div>
+                    <div><strong>${escapeHTML(t('actionQueueRealExecutionAllowed'))}:</strong> ${escapeHTML(String(action.real_execution_allowed === true))}</div>
+                </div>
+            `).join('')}</div>`;
+        }
+
+        function renderProjectWorkspaceActionQueueSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionQueueSnapshot(workspace);
+            if (!pack.has_workspace_action_queue_pack) return '';
+            const summary = pack.queue_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceActionQueueSummaryPanel"
+                    data-action-queue-marker="${PROJECT_WORKSPACE_ACTION_QUEUE_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionQueuePackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionQueuePackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullActionQueuePack()">${escapeHTML(t('actionQueueCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('actionQueueRecommendedCount'), summary.recommended_action_count ?? 0)}
+                        ${metricPill(t('actionQueueReadyCount'), summary.ready_action_count ?? 0)}
+                        ${metricPill(t('actionQueueBlockedCount'), summary.blocked_action_count ?? 0)}
+                        ${metricPill(t('actionQueueEvidenceGapCount'), summary.evidence_gap_action_count ?? 0)}
+                        ${metricPill(t('actionQueueSafetyReviewCount'), summary.safety_review_action_count ?? 0)}
+                        ${metricPill(t('actionQueueExportFollowUpCount'), summary.export_follow_up_action_count ?? 0)}
+                        ${metricPill(t('actionQueueRealExecution'), summary.real_execution_allowed === false ? t('actionQueueDisabled') : String(summary.real_execution_allowed))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('actionQueueRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('actionQueueRecommendationOnlyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceActionQueueStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceActionQueueSummary()">${escapeHTML(t('actionQueueCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRecommendedActionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionQueueSnapshot(workspace);
+            if (!pack.has_workspace_action_queue_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceRecommendedActionsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionQueueRecommendedActionsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionQueueRecommendedActionsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRecommendedActions()">${escapeHTML(t('actionQueueCopyRecommended'))}</button>
+                    </div>
+                    ${renderProjectWorkspaceActionQueueCards(pack.recommended_actions)}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceBlockedReadyActionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionQueueSnapshot(workspace);
+            if (!pack.has_workspace_action_queue_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceBlockedReadyActionsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionQueueBlockedReadyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionQueueBlockedReadyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedActions()">${escapeHTML(t('actionQueueCopyBlocked'))}</button>
+                    </div>
+                    <div class="json-key">${escapeHTML(t('actionQueueBlockedActionsTitle'))}</div>
+                    ${(pack.blocked_actions || []).length ? (pack.blocked_actions || []).map((action) => `
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(action.action_title || t('none'))}</strong>
+                            <div><strong>${escapeHTML(t('actionQueueBlockedBy'))}:</strong> ${escapeHTML((action.blocked_by || []).join(', ') || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionQueueRiskNote'))}:</strong> ${escapeHTML(action.risk_note || t('none'))}</div>
+                        </div>
+                    `).join('') : `<div class="feedback-box">${escapeHTML(t('actionQueueNoBlockedActions'))}</div>`}
+                    <div class="json-key">${escapeHTML(t('actionQueueReadyActionsTitle'))}</div>
+                    <div class="demo-warning">${escapeHTML(t('actionQueueReadyReviewOnlyNote'))}</div>
+                    ${renderProjectWorkspaceActionQueueCards(pack.ready_actions, 'actionQueueNoReadyActions')}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceEvidenceSafetyActionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionQueueSnapshot(workspace);
+            if (!pack.has_workspace_action_queue_pack) return '';
+            const detailCards = (actions) => (actions || []).map((action) => `
+                <div class="graph-os-card">
+                    <strong>${escapeHTML(action.action_title || t('none'))}</strong>
+                    <div><strong>${escapeHTML(t('actionQueueRiskNote'))}:</strong> ${escapeHTML(action.risk_note || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('actionQueueEvidenceReference'))}:</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionQueueJsonText(action.evidence_reference) || t('actionQueueNoData'))}</pre></div>
+                    <div><strong>${escapeHTML(t('actionQueueDoNotClaim'))}:</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionQueueJsonText(action.do_not_claim) || t('actionQueueNoData'))}</pre></div>
+                </div>
+            `).join('');
+            return `
+                <div class="section-block" id="projectWorkspaceEvidenceSafetyActionsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionQueueEvidenceSafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionQueueEvidenceSafetyHelper'))}</div>
+                        </div>
+                        <div class="action-row">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceGapActions()">${escapeHTML(t('actionQueueCopyEvidenceGap'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSafetyReviewActions()">${escapeHTML(t('actionQueueCopySafetyReview'))}</button>
+                        </div>
+                    </div>
+                    <div class="json-key">${escapeHTML(t('actionQueueEvidenceGapActionsTitle'))}</div>
+                    ${detailCards(pack.evidence_gap_actions) || `<div class="feedback-box">${escapeHTML(t('actionQueueNoEvidenceGapActions'))}</div>`}
+                    <div class="json-key">${escapeHTML(t('actionQueueSafetyReviewActionsTitle'))}</div>
+                    ${detailCards(pack.safety_review_actions) || `<div class="feedback-box">${escapeHTML(t('actionQueueNoSafetyReviewActions'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceActionQueueExportSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionQueueSnapshot(workspace);
+            if (!pack.has_workspace_action_queue_pack) return '';
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('actionQueueDisabled') : String(value)}`).join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceActionQueueExportSafetyPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionQueueExportSafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionQueueExportSafetyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceExportFollowUpActions()">${escapeHTML(t('actionQueueCopyExportFollowUp'))}</button>
+                    </div>
+                    <div class="json-key">${escapeHTML(t('actionQueueExportFollowUpActionsTitle'))}</div>
+                    ${renderProjectWorkspaceActionQueueCards(pack.export_follow_up_actions)}
+                    <div class="feedback-box"><strong>${escapeHTML(t('actionQueueQualityChecksTitle'))}:</strong><pre style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionQueueJsonText(pack.queue_quality_checks) || t('actionQueueNoData'))}</pre></div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('actionQueueSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('actionQueueSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -19871,6 +20167,8 @@
                 '',
                 projectWorkspaceExportRunCompareMarkdown(workspace),
                 '',
+                projectWorkspaceExportActionQueueMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -19958,6 +20256,7 @@
                 video_provider_orchestration_dry_run_pack: projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace),
                 workspace_session_snapshot_pack: projectWorkspaceExportSessionSnapshot(workspace),
                 workspace_run_compare_pack: projectWorkspaceExportRunCompareSnapshot(workspace),
+                workspace_action_queue_pack: projectWorkspaceExportActionQueueSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -32383,6 +32682,11 @@
                     ${renderProjectWorkspaceRunPackReadinessPanel(workspace)}
                     ${renderProjectWorkspaceRunDeltaPanel(workspace)}
                     ${renderProjectWorkspaceRunFollowUpSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceActionQueueSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceRecommendedActionsPanel(workspace)}
+                    ${renderProjectWorkspaceBlockedReadyActionsPanel(workspace)}
+                    ${renderProjectWorkspaceEvidenceSafetyActionsPanel(workspace)}
+                    ${renderProjectWorkspaceActionQueueExportSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -40422,6 +40726,132 @@
             runCompareCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u8fd0\u884c\u5feb\u7167\u5bf9\u6bd4\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceActionQueueMarker: 'Project Workspace action queue bundle',
+            actionQueuePackTitle: 'Workspace Action Recommendation Queue',
+            actionQueuePackHelper: 'Review deterministic next-step recommendations derived from current Workspace packs. Nothing is executed automatically.',
+            actionQueueSummaryTitle: 'Queue Summary',
+            actionQueueMode: 'Queue mode',
+            actionQueueStatus: 'Queue status',
+            actionQueueRecommendedCount: 'Recommended actions',
+            actionQueueReadyCount: 'Ready for review',
+            actionQueueBlockedCount: 'Blocked actions',
+            actionQueueEvidenceGapCount: 'Evidence gap actions',
+            actionQueueSafetyReviewCount: 'Safety review actions',
+            actionQueueExportFollowUpCount: 'Export follow-up actions',
+            actionQueueRecommendedNextAction: 'Recommended next action',
+            actionQueueRealExecution: 'Real execution',
+            actionQueueDisabled: 'disabled',
+            actionQueueRecommendationOnlyNote: 'Recommendation queue only. Ready means ready for user review, never ready for real execution.',
+            actionQueueRecommendedActionsTitle: 'Recommended Actions',
+            actionQueueRecommendedActionsHelper: 'Each recommendation shows its source pack, evidence reason, expected value, approval requirement, and execution boundary.',
+            actionQueueActionType: 'Action type',
+            actionQueuePriority: 'Priority',
+            actionQueueSourcePack: 'Source pack',
+            actionQueueReason: 'Reason',
+            actionQueueExpectedValue: 'Expected user value',
+            actionQueueNextStep: 'Recommended next step',
+            actionQueueRequiresApproval: 'Requires approval',
+            actionQueueRealExecutionAllowed: 'Real execution allowed',
+            actionQueueBlockedReadyTitle: 'Blocked / Ready Actions',
+            actionQueueBlockedReadyHelper: 'Separate evidence-blocked recommendations from items ready for manual user review.',
+            actionQueueBlockedActionsTitle: 'Blocked Actions',
+            actionQueueReadyActionsTitle: 'Ready Actions',
+            actionQueueBlockedBy: 'Blocked by',
+            actionQueueRiskNote: 'Risk note',
+            actionQueueNoBlockedActions: 'No blocked recommendations are present.',
+            actionQueueNoReadyActions: 'No recommendations are ready for user review.',
+            actionQueueReadyReviewOnlyNote: 'Ready actions are ready for user review only. Real execution remains disabled.',
+            actionQueueEvidenceSafetyTitle: 'Evidence Gap / Safety Review Actions',
+            actionQueueEvidenceSafetyHelper: 'Inspect evidence references, risk notes, and do-not-claim boundaries before approving any future workflow.',
+            actionQueueEvidenceGapActionsTitle: 'Evidence Gap Actions',
+            actionQueueSafetyReviewActionsTitle: 'Safety Review Actions',
+            actionQueueEvidenceReference: 'Evidence reference',
+            actionQueueDoNotClaim: 'Do not claim',
+            actionQueueNoEvidenceGapActions: 'No evidence gap recommendations are present.',
+            actionQueueNoSafetyReviewActions: 'No safety review recommendations are present.',
+            actionQueueExportSafetyTitle: 'Export Follow-up / Quality / Safety Boundaries',
+            actionQueueExportSafetyHelper: 'Review export follow-ups and quality checks without launching, persisting, restoring, or executing anything.',
+            actionQueueExportFollowUpActionsTitle: 'Export Follow-up Actions',
+            actionQueueQualityChecksTitle: 'Queue Quality Checks',
+            actionQueueSafetyBoundariesTitle: 'Safety Boundaries',
+            actionQueueSafetyNote: 'Recommendation only. Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            actionQueueNoData: 'No workspace action queue data is available.',
+            actionQueueCopySummary: 'Copy action queue summary',
+            actionQueueCopyRecommended: 'Copy recommended actions',
+            actionQueueCopyBlocked: 'Copy blocked actions',
+            actionQueueCopyEvidenceGap: 'Copy evidence gap actions',
+            actionQueueCopySafetyReview: 'Copy safety review actions',
+            actionQueueCopyExportFollowUp: 'Copy export follow-up actions',
+            actionQueueCopyFullPack: 'Copy full workspace action queue pack',
+            actionQueueCopied: 'Workspace action queue content copied.',
+            actionQueueCopyFailed: 'Unable to copy workspace action queue content.',
+            actionQueueCopyNoData: 'No workspace action queue content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceActionQueueMarker: 'Project Workspace action queue bundle',
+            actionQueuePackTitle: '\u5de5\u4f5c\u533a\u884c\u52a8\u5efa\u8bae\u961f\u5217',
+            actionQueuePackHelper: '\u68c0\u67e5\u4ece\u5f53\u524d Workspace packs \u786e\u5b9a\u6027\u6d3e\u751f\u7684\u4e0b\u4e00\u6b65\u5efa\u8bae\u3002\u4e0d\u4f1a\u81ea\u52a8\u6267\u884c\u4efb\u4f55\u64cd\u4f5c\u3002',
+            actionQueueSummaryTitle: '\u961f\u5217\u6458\u8981',
+            actionQueueMode: '\u961f\u5217\u6a21\u5f0f',
+            actionQueueStatus: '\u961f\u5217\u72b6\u6001',
+            actionQueueRecommendedCount: '\u5efa\u8bae\u884c\u52a8',
+            actionQueueReadyCount: '\u53ef\u4f9b\u5ba1\u9605',
+            actionQueueBlockedCount: '\u5df2\u963b\u585e\u884c\u52a8',
+            actionQueueEvidenceGapCount: '\u8bc1\u636e\u7f3a\u53e3\u884c\u52a8',
+            actionQueueSafetyReviewCount: '\u5b89\u5168\u5ba1\u9605\u884c\u52a8',
+            actionQueueExportFollowUpCount: '\u5bfc\u51fa\u540e\u7eed\u884c\u52a8',
+            actionQueueRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            actionQueueRealExecution: '\u771f\u5b9e\u6267\u884c',
+            actionQueueDisabled: '\u5df2\u7981\u7528',
+            actionQueueRecommendationOnlyNote: '\u4ec5\u4e3a\u5efa\u8bae\u961f\u5217\u3002\u53ef\u7528\u4ec5\u8868\u793a\u53ef\u4f9b\u7528\u6237\u5ba1\u9605\uff0c\u7edd\u4e0d\u8868\u793a\u53ef\u771f\u5b9e\u6267\u884c\u3002',
+            actionQueueRecommendedActionsTitle: '\u5efa\u8bae\u884c\u52a8',
+            actionQueueRecommendedActionsHelper: '\u6bcf\u6761\u5efa\u8bae\u90fd\u663e\u793a\u6765\u6e90 pack\u3001\u8bc1\u636e\u7406\u7531\u3001\u9884\u671f\u4ef7\u503c\u3001\u5ba1\u6279\u8981\u6c42\u548c\u6267\u884c\u8fb9\u754c\u3002',
+            actionQueueActionType: '\u884c\u52a8\u7c7b\u578b',
+            actionQueuePriority: '\u4f18\u5148\u7ea7',
+            actionQueueSourcePack: '\u6765\u6e90 pack',
+            actionQueueReason: '\u7406\u7531',
+            actionQueueExpectedValue: '\u9884\u671f\u7528\u6237\u4ef7\u503c',
+            actionQueueNextStep: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            actionQueueRequiresApproval: '\u9700\u8981\u5ba1\u6279',
+            actionQueueRealExecutionAllowed: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            actionQueueBlockedReadyTitle: '\u5df2\u963b\u585e / \u53ef\u5ba1\u9605\u884c\u52a8',
+            actionQueueBlockedReadyHelper: '\u533a\u5206\u53d7\u8bc1\u636e\u963b\u585e\u7684\u5efa\u8bae\u4e0e\u53ef\u4f9b\u7528\u6237\u624b\u52a8\u5ba1\u9605\u7684\u6761\u76ee\u3002',
+            actionQueueBlockedActionsTitle: '\u5df2\u963b\u585e\u884c\u52a8',
+            actionQueueReadyActionsTitle: '\u53ef\u5ba1\u9605\u884c\u52a8',
+            actionQueueBlockedBy: '\u963b\u585e\u539f\u56e0',
+            actionQueueRiskNote: '\u98ce\u9669\u8bf4\u660e',
+            actionQueueNoBlockedActions: '\u6682\u65e0\u5df2\u963b\u585e\u5efa\u8bae\u3002',
+            actionQueueNoReadyActions: '\u6682\u65e0\u53ef\u4f9b\u7528\u6237\u5ba1\u9605\u7684\u5efa\u8bae\u3002',
+            actionQueueReadyReviewOnlyNote: '\u53ef\u7528\u884c\u52a8\u4ec5\u53ef\u4f9b\u7528\u6237\u5ba1\u9605\u3002\u771f\u5b9e\u6267\u884c\u4ecd\u7981\u7528\u3002',
+            actionQueueEvidenceSafetyTitle: '\u8bc1\u636e\u7f3a\u53e3 / \u5b89\u5168\u5ba1\u9605\u884c\u52a8',
+            actionQueueEvidenceSafetyHelper: '\u5728\u5ba1\u6279\u4efb\u4f55\u672a\u6765\u6d41\u7a0b\u524d\uff0c\u68c0\u67e5\u8bc1\u636e\u5f15\u7528\u3001\u98ce\u9669\u8bf4\u660e\u548c\u7981\u6b62\u58f0\u79f0\u8fb9\u754c\u3002',
+            actionQueueEvidenceGapActionsTitle: '\u8bc1\u636e\u7f3a\u53e3\u884c\u52a8',
+            actionQueueSafetyReviewActionsTitle: '\u5b89\u5168\u5ba1\u9605\u884c\u52a8',
+            actionQueueEvidenceReference: '\u8bc1\u636e\u5f15\u7528',
+            actionQueueDoNotClaim: '\u7981\u6b62\u58f0\u79f0',
+            actionQueueNoEvidenceGapActions: '\u6682\u65e0\u8bc1\u636e\u7f3a\u53e3\u5efa\u8bae\u3002',
+            actionQueueNoSafetyReviewActions: '\u6682\u65e0\u5b89\u5168\u5ba1\u9605\u5efa\u8bae\u3002',
+            actionQueueExportSafetyTitle: '\u5bfc\u51fa\u540e\u7eed / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            actionQueueExportSafetyHelper: '\u68c0\u67e5\u5bfc\u51fa\u540e\u7eed\u548c\u8d28\u91cf\u68c0\u67e5\uff0c\u4e0d\u542f\u52a8\u3001\u6301\u4e45\u5316\u3001\u6062\u590d\u6216\u6267\u884c\u4efb\u4f55\u64cd\u4f5c\u3002',
+            actionQueueExportFollowUpActionsTitle: '\u5bfc\u51fa\u540e\u7eed\u884c\u52a8',
+            actionQueueQualityChecksTitle: '\u961f\u5217\u8d28\u91cf\u68c0\u67e5',
+            actionQueueSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            actionQueueSafetyNote: '\u4ec5\u4e3a\u5efa\u8bae\u3002\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            actionQueueNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u884c\u52a8\u961f\u5217\u6570\u636e\u3002',
+            actionQueueCopySummary: '\u590d\u5236\u884c\u52a8\u961f\u5217\u6458\u8981',
+            actionQueueCopyRecommended: '\u590d\u5236\u5efa\u8bae\u884c\u52a8',
+            actionQueueCopyBlocked: '\u590d\u5236\u5df2\u963b\u585e\u884c\u52a8',
+            actionQueueCopyEvidenceGap: '\u590d\u5236\u8bc1\u636e\u7f3a\u53e3\u884c\u52a8',
+            actionQueueCopySafetyReview: '\u590d\u5236\u5b89\u5168\u5ba1\u9605\u884c\u52a8',
+            actionQueueCopyExportFollowUp: '\u590d\u5236\u5bfc\u51fa\u540e\u7eed\u884c\u52a8',
+            actionQueueCopyFullPack: '\u590d\u5236\u5b8c\u6574\u5de5\u4f5c\u533a\u884c\u52a8\u961f\u5217\u5305',
+            actionQueueCopied: '\u5de5\u4f5c\u533a\u884c\u52a8\u961f\u5217\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            actionQueueCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u884c\u52a8\u961f\u5217\u5185\u5bb9\u3002',
+            actionQueueCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u884c\u52a8\u961f\u5217\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -41821,6 +42251,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
     latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
     latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
+    latestProjectWorkspaceActionQueuePack = latestProjectCreativeDecisionPack.workspace_action_queue_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
