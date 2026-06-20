@@ -3611,6 +3611,7 @@
         let latestProjectWorkspaceApprovalDecisionPack = {};
         let latestProjectWorkspaceExecutionReadinessPack = {};
         let latestProjectWorkspaceExecutionRehearsalPack = {};
+        let latestProjectWorkspaceRehearsalResultPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8897,6 +8898,8 @@
                 latestProjectWorkspaceActionTicketPack = latestProjectCreativeDecisionPack.workspace_action_ticket_pack || {};
                 latestProjectWorkspaceApprovalDecisionPack = latestProjectCreativeDecisionPack.workspace_approval_decision_pack || {};
                 latestProjectWorkspaceExecutionReadinessPack = latestProjectCreativeDecisionPack.workspace_execution_readiness_pack || {};
+                latestProjectWorkspaceExecutionRehearsalPack = latestProjectCreativeDecisionPack.workspace_execution_rehearsal_pack || {};
+                latestProjectWorkspaceRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_rehearsal_result_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14744,6 +14747,7 @@
         const PROJECT_WORKSPACE_APPROVAL_DECISION_MARKER = 'Project Workspace approval decision bundle';
         const PROJECT_WORKSPACE_EXECUTION_READINESS_MARKER = 'Project Workspace execution readiness bundle';
         const PROJECT_WORKSPACE_EXECUTION_REHEARSAL_MARKER = 'Project Workspace execution rehearsal bundle';
+        const PROJECT_WORKSPACE_REHEARSAL_RESULT_MARKER = 'Project Workspace rehearsal result bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -17782,6 +17786,154 @@
 
         function copyProjectWorkspaceFullExecutionRehearsalPack() {
             return copyProjectWorkspaceExecutionRehearsalText('full');
+        }
+
+        function projectWorkspaceRehearsalResultPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceRehearsalResultPack
+                && Object.keys(latestProjectWorkspaceRehearsalResultPack).length) {
+                return latestProjectWorkspaceRehearsalResultPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_rehearsal_result_pack || {};
+        }
+
+        function projectWorkspaceExportRehearsalResultSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceRehearsalResultPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_REHEARSAL_RESULT_MARKER,
+                has_workspace_rehearsal_result_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                result_summary: pack.result_summary || {},
+                step_result_cards: Array.isArray(pack.step_result_cards) ? pack.step_result_cards : [],
+                checkpoint_results: pack.checkpoint_results || {},
+                failure_findings: Array.isArray(pack.failure_findings) ? pack.failure_findings : [],
+                operator_review_items: Array.isArray(pack.operator_review_items) ? pack.operator_review_items : [],
+                blocked_follow_up_items: Array.isArray(pack.blocked_follow_up_items) ? pack.blocked_follow_up_items : [],
+                next_rehearsal_recommendations: Array.isArray(pack.next_rehearsal_recommendations) ? pack.next_rehearsal_recommendations : [],
+                result_quality_checks: pack.result_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceRehearsalResultJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceRehearsalResultSummaryText(pack = projectWorkspaceExportRehearsalResultSnapshot()) {
+            if (!pack.has_workspace_rehearsal_result_pack) return '';
+            const summary = pack.result_summary || {};
+            return [
+                t('rehearsalResultSummaryTitle'),
+                `${t('rehearsalResultMode')}: ${summary.mode || t('none')}`,
+                `${t('rehearsalResultStatus')}: ${summary.result_status || t('none')}`,
+                `${t('rehearsalResultLockStatus')}: ${summary.launch_lock_status || t('none')}`,
+                `${t('rehearsalResultDryRunOnly')}: ${String(summary.dry_run_only === true)}`,
+                `${t('rehearsalResultSimulatedPassCount')}: ${summary.simulated_pass_count ?? 0}`,
+                `${t('rehearsalResultReviewRequiredCount')}: ${summary.review_required_count ?? 0}`,
+                `${t('rehearsalResultBlockedCount')}: ${summary.blocked_count ?? 0}`,
+                `${t('rehearsalResultRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('rehearsalResultRealExecution')}: ${summary.real_execution_allowed === false ? t('rehearsalResultDisabled') : String(summary.real_execution_allowed)}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceRehearsalResultSectionText(titleKey, value) {
+            return [
+                `## ${t(titleKey)}`,
+                projectWorkspaceRehearsalResultJsonText(value) || t('rehearsalResultNoData')
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportRehearsalResultMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalResultSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_result_pack) return '';
+            return [
+                `## ${t('rehearsalResultPackTitle')}`,
+                `## ${t('rehearsalResultSummaryTitle')}`,
+                projectWorkspaceRehearsalResultSummaryText(pack),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultStepCardsTitle', pack.step_result_cards),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultCheckpointResultsTitle', pack.checkpoint_results),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultFailureFindingsTitle', pack.failure_findings),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultOperatorReviewTitle', pack.operator_review_items),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultBlockedFollowUpTitle', pack.blocked_follow_up_items),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultNextRecommendationsTitle', pack.next_rehearsal_recommendations),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultAuditPreviewTitle', pack.audit_preview),
+                '',
+                projectWorkspaceRehearsalResultSectionText('rehearsalResultSafetyBoundariesTitle', pack.safety_boundaries),
+                t('rehearsalResultSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRehearsalResultText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceRehearsalResultStatus');
+            const pack = projectWorkspaceExportRehearsalResultSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceRehearsalResultSummaryText(pack)
+                : kind === 'steps'
+                    ? projectWorkspaceRehearsalResultSectionText('rehearsalResultStepCardsTitle', pack.step_result_cards)
+                    : kind === 'checkpoints'
+                        ? projectWorkspaceRehearsalResultSectionText('rehearsalResultCheckpointResultsTitle', pack.checkpoint_results)
+                        : kind === 'failures'
+                            ? projectWorkspaceRehearsalResultSectionText('rehearsalResultFailureFindingsTitle', pack.failure_findings)
+                            : kind === 'operator'
+                                ? projectWorkspaceRehearsalResultSectionText('rehearsalResultOperatorReviewTitle', pack.operator_review_items)
+                                : kind === 'recommendations'
+                                    ? projectWorkspaceRehearsalResultSectionText('rehearsalResultNextRecommendationsTitle', pack.next_rehearsal_recommendations)
+                                    : kind === 'audit'
+                                        ? projectWorkspaceRehearsalResultSectionText('rehearsalResultAuditPreviewTitle', pack.audit_preview)
+                                        : projectWorkspaceExportRehearsalResultMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('rehearsalResultCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('rehearsalResultCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('rehearsalResultCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('rehearsalResultCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceRehearsalResultSummary() {
+            return copyProjectWorkspaceRehearsalResultText('summary');
+        }
+
+        function copyProjectWorkspaceRehearsalStepResults() {
+            return copyProjectWorkspaceRehearsalResultText('steps');
+        }
+
+        function copyProjectWorkspaceRehearsalCheckpointResults() {
+            return copyProjectWorkspaceRehearsalResultText('checkpoints');
+        }
+
+        function copyProjectWorkspaceRehearsalFailureFindings() {
+            return copyProjectWorkspaceRehearsalResultText('failures');
+        }
+
+        function copyProjectWorkspaceOperatorReviewItems() {
+            return copyProjectWorkspaceRehearsalResultText('operator');
+        }
+
+        function copyProjectWorkspaceNextRehearsalRecommendations() {
+            return copyProjectWorkspaceRehearsalResultText('recommendations');
+        }
+
+        function copyProjectWorkspaceRehearsalAuditPreview() {
+            return copyProjectWorkspaceRehearsalResultText('audit');
+        }
+
+        function copyProjectWorkspaceFullRehearsalResultPack() {
+            return copyProjectWorkspaceRehearsalResultText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -20882,6 +21034,149 @@
             `;
         }
 
+        function renderProjectWorkspaceRehearsalResultSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalResultSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_result_pack) return '';
+            const summary = pack.result_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceRehearsalResultSummaryPanel"
+                    data-rehearsal-result-marker="${PROJECT_WORKSPACE_REHEARSAL_RESULT_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('rehearsalResultPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('rehearsalResultPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullRehearsalResultPack()">${escapeHTML(t('rehearsalResultCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('rehearsalResultMode'), summary.mode || t('none'))}
+                        ${metricPill(t('rehearsalResultStatus'), summary.result_status || t('none'))}
+                        ${metricPill(t('rehearsalResultLockStatus'), summary.launch_lock_status || t('none'))}
+                        ${metricPill(t('rehearsalResultDryRunOnly'), String(summary.dry_run_only === true))}
+                        ${metricPill(t('rehearsalResultSimulatedPassCount'), summary.simulated_pass_count ?? 0)}
+                        ${metricPill(t('rehearsalResultReviewRequiredCount'), summary.review_required_count ?? 0)}
+                        ${metricPill(t('rehearsalResultBlockedCount'), summary.blocked_count ?? 0)}
+                        ${metricPill(t('rehearsalResultRealExecution'), summary.real_execution_allowed === false ? t('rehearsalResultDisabled') : String(summary.real_execution_allowed))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('rehearsalResultRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('rehearsalResultPreviewNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRehearsalResultStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalResultSummary()">${escapeHTML(t('rehearsalResultCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRehearsalStepResultsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalResultSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_result_pack) return '';
+            const cards = (pack.step_result_cards || []).map((result) => `
+                <div class="graph-os-card">
+                    <div class="section-header">
+                        <strong>${escapeHTML(result.step_title || result.step_id || t('rehearsalResultStepCardsTitle'))}</strong>
+                        <span class="metric-pill">${escapeHTML(result.simulated_status || t('none'))}</span>
+                    </div>
+                    <div><strong>${escapeHTML(t('rehearsalResultStepId'))}:</strong> ${escapeHTML(result.step_id || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalResultStepType'))}:</strong> ${escapeHTML(result.step_type || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalResultSourcePack'))}:</strong> ${escapeHTML(result.source_pack || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalResultOperatorReviewRequired'))}:</strong> ${escapeHTML(String(result.operator_review_required === true))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalResultRealExecution'))}:</strong> ${escapeHTML(result.real_execution_allowed === false ? t('rehearsalResultDisabled') : String(result.real_execution_allowed))}</div>
+                    <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText({
+                        expected_observation: result.expected_observation || '',
+                        observed_placeholder: result.observed_placeholder || '',
+                        validation_result: result.validation_result || '',
+                        failure_mode: result.failure_mode || '',
+                        follow_up_action: result.follow_up_action || '',
+                        risk_note: result.risk_note || ''
+                    }) || t('rehearsalResultNoData'))}</pre>
+                </div>
+            `).join('');
+            return `
+                <div class="section-block" id="projectWorkspaceRehearsalStepResultsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('rehearsalResultStepCardsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('rehearsalResultStepCardsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalStepResults()">${escapeHTML(t('rehearsalResultCopyStepCards'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('rehearsalResultNoData'))}</div>`}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRehearsalCheckpointFailurePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalResultSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_result_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceRehearsalCheckpointFailurePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('rehearsalResultCheckpointFailureTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('rehearsalResultCheckpointFailureHelper'))}</div>
+                        </div>
+                        <div class="action-row">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalCheckpointResults()">${escapeHTML(t('rehearsalResultCopyCheckpoints'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalFailureFindings()">${escapeHTML(t('rehearsalResultCopyFailures'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('rehearsalResultCheckpointResultsTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText(pack.checkpoint_results) || t('rehearsalResultNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('rehearsalResultFailureFindingsTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText(pack.failure_findings) || t('rehearsalResultNoData'))}</pre></div>
+                    </div>
+                    <div class="field-helper">${escapeHTML(t('rehearsalResultSimulatedStatusNote'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRehearsalOperatorReviewPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalResultSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_result_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceRehearsalOperatorReviewPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('rehearsalResultOperatorFollowUpTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('rehearsalResultOperatorFollowUpHelper'))}</div>
+                        </div>
+                        <div class="action-row">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorReviewItems()">${escapeHTML(t('rehearsalResultCopyOperatorReview'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNextRehearsalRecommendations()">${escapeHTML(t('rehearsalResultCopyRecommendations'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('rehearsalResultOperatorReviewTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText(pack.operator_review_items) || t('rehearsalResultNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('rehearsalResultBlockedFollowUpTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText(pack.blocked_follow_up_items) || t('rehearsalResultNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('rehearsalResultNextRecommendationsTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText(pack.next_rehearsal_recommendations) || t('rehearsalResultNoData'))}</pre></div>
+                    </div>
+                    <div class="demo-warning">${escapeHTML(t('rehearsalResultOperatorPreviewNote'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRehearsalAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalResultSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_result_pack) return '';
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('rehearsalResultDisabled') : String(value)}`).join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceRehearsalAuditSafetyPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('rehearsalResultAuditQualitySafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('rehearsalResultAuditQualitySafetyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalAuditPreview()">${escapeHTML(t('rehearsalResultCopyAudit'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('rehearsalResultAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText(pack.audit_preview) || t('rehearsalResultNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('rehearsalResultQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalResultJsonText(pack.result_quality_checks) || t('rehearsalResultNoData'))}</pre></div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('rehearsalResultSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('rehearsalResultNoWriteNote'))}</div>
+                    <div class="field-helper">${escapeHTML(t('rehearsalResultSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -21378,6 +21673,8 @@
                 '',
                 projectWorkspaceExportExecutionRehearsalMarkdown(workspace),
                 '',
+                projectWorkspaceExportRehearsalResultMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -21470,6 +21767,7 @@
                 workspace_approval_decision_pack: projectWorkspaceExportApprovalDecisionSnapshot(workspace),
                 workspace_execution_readiness_pack: projectWorkspaceExportExecutionReadinessSnapshot(workspace),
                 workspace_execution_rehearsal_pack: projectWorkspaceExportExecutionRehearsalSnapshot(workspace),
+                workspace_rehearsal_result_pack: projectWorkspaceExportRehearsalResultSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -33921,6 +34219,11 @@
                     ${renderProjectWorkspaceExecutionRehearsalCheckpointTimelinePanel(workspace)}
                     ${renderProjectWorkspaceExecutionRehearsalFailurePanel(workspace)}
                     ${renderProjectWorkspaceExecutionRehearsalQualitySafetyPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalResultSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalStepResultsPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalCheckpointFailurePanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalOperatorReviewPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -42552,6 +42855,114 @@
             executionRehearsalCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u6267\u884c\u6f14\u7ec3\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRehearsalResultMarker: 'Project Workspace rehearsal result bundle',
+            rehearsalResultPackTitle: 'Workspace Rehearsal Result / Operator Review',
+            rehearsalResultPackHelper: 'Inspect deterministic rehearsal results and operator review items without treating them as real execution output.',
+            rehearsalResultSummaryTitle: 'Rehearsal Result Summary',
+            rehearsalResultMode: 'Result mode',
+            rehearsalResultStatus: 'Simulated status',
+            rehearsalResultLockStatus: 'Launch lock status',
+            rehearsalResultDryRunOnly: 'Dry-run only',
+            rehearsalResultSimulatedPassCount: 'Simulated pass count',
+            rehearsalResultReviewRequiredCount: 'Review required count',
+            rehearsalResultBlockedCount: 'Blocked count',
+            rehearsalResultRecommendedNextAction: 'Recommended next action',
+            rehearsalResultRealExecution: 'Real execution',
+            rehearsalResultDisabled: 'disabled',
+            rehearsalResultPreviewNote: 'Rehearsal result preview only. Locked and dry-run-only states remain enforced; no real execution completed.',
+            rehearsalResultStepCardsTitle: 'Step Result Cards',
+            rehearsalResultStepCardsHelper: 'Review deterministic step placeholders, simulated validation results, risks, and operator follow-up actions.',
+            rehearsalResultStepId: 'Step ID',
+            rehearsalResultStepType: 'Step type',
+            rehearsalResultSourcePack: 'Source pack',
+            rehearsalResultOperatorReviewRequired: 'Operator review required',
+            rehearsalResultCheckpointFailureTitle: 'Checkpoint Results / Failure Findings',
+            rehearsalResultCheckpointFailureHelper: 'Inspect checkpoint previews and descriptive failure findings without triggering a real failure.',
+            rehearsalResultCheckpointResultsTitle: 'Checkpoint Results',
+            rehearsalResultFailureFindingsTitle: 'Failure Findings',
+            rehearsalResultSimulatedStatusNote: 'Blocked, review_required, and deterministic simulated pass are preview states only.',
+            rehearsalResultOperatorFollowUpTitle: 'Operator Review / Blocked Follow-up',
+            rehearsalResultOperatorFollowUpHelper: 'Review pending operator items, blocked follow-up, and recommendations without authorizing execution.',
+            rehearsalResultOperatorReviewTitle: 'Operator Review Items',
+            rehearsalResultBlockedFollowUpTitle: 'Blocked Follow-up Items',
+            rehearsalResultNextRecommendationsTitle: 'Next Rehearsal Recommendations',
+            rehearsalResultOperatorPreviewNote: 'Operator review preview only. These items are not real execution results or a persisted operator log.',
+            rehearsalResultAuditQualitySafetyTitle: 'Audit Preview / Quality / Safety Boundaries',
+            rehearsalResultAuditQualitySafetyHelper: 'Inspect deterministic audit and quality checks while every real capability remains disabled.',
+            rehearsalResultAuditPreviewTitle: 'Audit Preview',
+            rehearsalResultQualityChecksTitle: 'Result Quality Checks',
+            rehearsalResultSafetyBoundariesTitle: 'Safety Boundaries',
+            rehearsalResultNoWriteNote: 'Audit preview is not written to a database. No operator log, real failure injection, restore, rollback, or execution is performed.',
+            rehearsalResultSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            rehearsalResultNoData: 'No workspace rehearsal result data is available.',
+            rehearsalResultCopySummary: 'Copy rehearsal result summary',
+            rehearsalResultCopyStepCards: 'Copy step result cards',
+            rehearsalResultCopyCheckpoints: 'Copy checkpoint results',
+            rehearsalResultCopyFailures: 'Copy failure findings',
+            rehearsalResultCopyOperatorReview: 'Copy operator review items',
+            rehearsalResultCopyRecommendations: 'Copy next rehearsal recommendations',
+            rehearsalResultCopyAudit: 'Copy audit preview',
+            rehearsalResultCopyFullPack: 'Copy full rehearsal result pack',
+            rehearsalResultCopied: 'Workspace rehearsal result content copied.',
+            rehearsalResultCopyFailed: 'Unable to copy workspace rehearsal result content.',
+            rehearsalResultCopyNoData: 'No workspace rehearsal result content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRehearsalResultMarker: 'Project Workspace rehearsal result bundle',
+            rehearsalResultPackTitle: '\u5de5\u4f5c\u533a\u6f14\u7ec3\u7ed3\u679c / \u64cd\u4f5c\u5458\u5ba1\u9605',
+            rehearsalResultPackHelper: '\u68c0\u67e5\u786e\u5b9a\u6027\u6f14\u7ec3\u7ed3\u679c\u548c\u64cd\u4f5c\u5458\u5ba1\u9605\u9879\uff0c\u4e0d\u5c06\u5176\u89c6\u4e3a\u771f\u5b9e\u6267\u884c\u8f93\u51fa\u3002',
+            rehearsalResultSummaryTitle: '\u6f14\u7ec3\u7ed3\u679c\u6458\u8981',
+            rehearsalResultMode: '\u7ed3\u679c\u6a21\u5f0f',
+            rehearsalResultStatus: '\u6a21\u62df\u72b6\u6001',
+            rehearsalResultLockStatus: '\u542f\u52a8\u9501\u72b6\u6001',
+            rehearsalResultDryRunOnly: '\u4ec5 dry-run',
+            rehearsalResultSimulatedPassCount: '\u6a21\u62df\u901a\u8fc7\u6570',
+            rehearsalResultReviewRequiredCount: '\u9700\u5ba1\u9605\u6570',
+            rehearsalResultBlockedCount: '\u963b\u585e\u6570',
+            rehearsalResultRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            rehearsalResultRealExecution: '\u771f\u5b9e\u6267\u884c',
+            rehearsalResultDisabled: '\u5df2\u7981\u7528',
+            rehearsalResultPreviewNote: '\u4ec5\u4e3a\u6f14\u7ec3\u7ed3\u679c\u9884\u89c8\u3002\u9501\u5b9a\u548c\u4ec5 dry-run \u72b6\u6001\u4ecd\u5f3a\u5236\u751f\u6548\uff0c\u672a\u5b8c\u6210\u4efb\u4f55\u771f\u5b9e\u6267\u884c\u3002',
+            rehearsalResultStepCardsTitle: '\u6b65\u9aa4\u7ed3\u679c\u5361',
+            rehearsalResultStepCardsHelper: '\u68c0\u67e5\u786e\u5b9a\u6027\u6b65\u9aa4\u5360\u4f4d\u3001\u6a21\u62df\u9a8c\u8bc1\u7ed3\u679c\u3001\u98ce\u9669\u548c\u64cd\u4f5c\u5458\u8ddf\u8fdb\u64cd\u4f5c\u3002',
+            rehearsalResultStepId: '\u6b65\u9aa4 ID',
+            rehearsalResultStepType: '\u6b65\u9aa4\u7c7b\u578b',
+            rehearsalResultSourcePack: '\u6765\u6e90 pack',
+            rehearsalResultOperatorReviewRequired: '\u9700\u8981\u64cd\u4f5c\u5458\u5ba1\u9605',
+            rehearsalResultCheckpointFailureTitle: '\u68c0\u67e5\u70b9\u7ed3\u679c / \u5931\u8d25\u53d1\u73b0',
+            rehearsalResultCheckpointFailureHelper: '\u68c0\u67e5\u68c0\u67e5\u70b9\u9884\u89c8\u548c\u63cf\u8ff0\u6027\u5931\u8d25\u53d1\u73b0\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e\u5931\u8d25\u3002',
+            rehearsalResultCheckpointResultsTitle: '\u68c0\u67e5\u70b9\u7ed3\u679c',
+            rehearsalResultFailureFindingsTitle: '\u5931\u8d25\u53d1\u73b0',
+            rehearsalResultSimulatedStatusNote: '\u963b\u585e\u3001review_required \u548c\u786e\u5b9a\u6027\u6a21\u62df\u901a\u8fc7\u90fd\u4ec5\u662f\u9884\u89c8\u72b6\u6001\u3002',
+            rehearsalResultOperatorFollowUpTitle: '\u64cd\u4f5c\u5458\u5ba1\u9605 / \u963b\u585e\u8ddf\u8fdb',
+            rehearsalResultOperatorFollowUpHelper: '\u68c0\u67e5\u5f85\u5904\u7406\u7684\u64cd\u4f5c\u5458\u9879\u3001\u963b\u585e\u8ddf\u8fdb\u548c\u5efa\u8bae\uff0c\u4e0d\u6388\u6743\u6267\u884c\u3002',
+            rehearsalResultOperatorReviewTitle: '\u64cd\u4f5c\u5458\u5ba1\u9605\u9879',
+            rehearsalResultBlockedFollowUpTitle: '\u963b\u585e\u8ddf\u8fdb\u9879',
+            rehearsalResultNextRecommendationsTitle: '\u4e0b\u6b21\u6f14\u7ec3\u5efa\u8bae',
+            rehearsalResultOperatorPreviewNote: '\u4ec5\u4e3a\u64cd\u4f5c\u5458\u5ba1\u9605\u9884\u89c8\u3002\u8fd9\u4e9b\u9879\u4e0d\u662f\u771f\u5b9e\u6267\u884c\u7ed3\u679c\uff0c\u4e5f\u4e0d\u662f\u5df2\u6301\u4e45\u5316\u7684\u64cd\u4f5c\u5458\u65e5\u5fd7\u3002',
+            rehearsalResultAuditQualitySafetyTitle: '\u5ba1\u8ba1\u9884\u89c8 / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            rehearsalResultAuditQualitySafetyHelper: '\u68c0\u67e5\u786e\u5b9a\u6027\u5ba1\u8ba1\u548c\u8d28\u91cf\u68c0\u67e5\uff0c\u6240\u6709\u771f\u5b9e\u80fd\u529b\u4ecd\u4fdd\u6301\u7981\u7528\u3002',
+            rehearsalResultAuditPreviewTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            rehearsalResultQualityChecksTitle: '\u7ed3\u679c\u8d28\u91cf\u68c0\u67e5',
+            rehearsalResultSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            rehearsalResultNoWriteNote: '\u5ba1\u8ba1\u9884\u89c8\u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002\u4e0d\u6267\u884c\u64cd\u4f5c\u5458\u65e5\u5fd7\u6301\u4e45\u5316\u3001\u771f\u5b9e\u5931\u8d25\u6ce8\u5165\u3001restore\u3001rollback \u6216\u6267\u884c\u3002',
+            rehearsalResultSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            rehearsalResultNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u6f14\u7ec3\u7ed3\u679c\u6570\u636e\u3002',
+            rehearsalResultCopySummary: '\u590d\u5236\u6f14\u7ec3\u7ed3\u679c\u6458\u8981',
+            rehearsalResultCopyStepCards: '\u590d\u5236\u6b65\u9aa4\u7ed3\u679c\u5361',
+            rehearsalResultCopyCheckpoints: '\u590d\u5236\u68c0\u67e5\u70b9\u7ed3\u679c',
+            rehearsalResultCopyFailures: '\u590d\u5236\u5931\u8d25\u53d1\u73b0',
+            rehearsalResultCopyOperatorReview: '\u590d\u5236\u64cd\u4f5c\u5458\u5ba1\u9605\u9879',
+            rehearsalResultCopyRecommendations: '\u590d\u5236\u4e0b\u6b21\u6f14\u7ec3\u5efa\u8bae',
+            rehearsalResultCopyAudit: '\u590d\u5236\u5ba1\u8ba1\u9884\u89c8',
+            rehearsalResultCopyFullPack: '\u590d\u5236\u5b8c\u6574\u6f14\u7ec3\u7ed3\u679c pack',
+            rehearsalResultCopied: '\u5de5\u4f5c\u533a\u6f14\u7ec3\u7ed3\u679c\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            rehearsalResultCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u6f14\u7ec3\u7ed3\u679c\u5185\u5bb9\u3002',
+            rehearsalResultCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u6f14\u7ec3\u7ed3\u679c\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -43956,7 +44367,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceApprovalDecisionPack = latestProjectCreativeDecisionPack.workspace_approval_decision_pack || {};
     latestProjectWorkspaceExecutionReadinessPack = latestProjectCreativeDecisionPack.workspace_execution_readiness_pack || {};
     latestProjectWorkspaceExecutionRehearsalPack = latestProjectCreativeDecisionPack.workspace_execution_rehearsal_pack || {};
-                latestProjectWorkspaceExecutionRehearsalPack = latestProjectCreativeDecisionPack.workspace_execution_rehearsal_pack || {};
+    latestProjectWorkspaceRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_rehearsal_result_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
