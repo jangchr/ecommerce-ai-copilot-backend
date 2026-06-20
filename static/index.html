@@ -3608,6 +3608,7 @@
         let latestProjectWorkspaceRunComparePack = {};
         let latestProjectWorkspaceActionQueuePack = {};
         let latestProjectWorkspaceActionTicketPack = {};
+        let latestProjectWorkspaceApprovalDecisionPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8892,6 +8893,7 @@
                 latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
                 latestProjectWorkspaceActionQueuePack = latestProjectCreativeDecisionPack.workspace_action_queue_pack || {};
                 latestProjectWorkspaceActionTicketPack = latestProjectCreativeDecisionPack.workspace_action_ticket_pack || {};
+                latestProjectWorkspaceApprovalDecisionPack = latestProjectCreativeDecisionPack.workspace_approval_decision_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14736,6 +14738,7 @@
         const PROJECT_WORKSPACE_RUN_SNAPSHOT_COMPARE_MARKER = 'Project Workspace run snapshot compare bundle';
         const PROJECT_WORKSPACE_ACTION_QUEUE_MARKER = 'Project Workspace action queue bundle';
         const PROJECT_WORKSPACE_ACTION_TICKET_MARKER = 'Project Workspace action ticket bundle';
+        const PROJECT_WORKSPACE_APPROVAL_DECISION_MARKER = 'Project Workspace approval decision bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -17318,6 +17321,161 @@
 
         function copyProjectWorkspaceFullActionTicketPack() {
             return copyProjectWorkspaceActionTicketText('full');
+        }
+
+        function projectWorkspaceApprovalDecisionPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceApprovalDecisionPack
+                && Object.keys(latestProjectWorkspaceApprovalDecisionPack).length) {
+                return latestProjectWorkspaceApprovalDecisionPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_approval_decision_pack || {};
+        }
+
+        function projectWorkspaceExportApprovalDecisionSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceApprovalDecisionPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_APPROVAL_DECISION_MARKER,
+                has_workspace_approval_decision_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                approval_summary: pack.approval_summary || {},
+                decision_ledger: Array.isArray(pack.decision_ledger) ? pack.decision_ledger : [],
+                pending_decisions: Array.isArray(pack.pending_decisions) ? pack.pending_decisions : [],
+                blocked_decisions: Array.isArray(pack.blocked_decisions) ? pack.blocked_decisions : [],
+                review_ready_decisions: Array.isArray(pack.review_ready_decisions) ? pack.review_ready_decisions : [],
+                human_review_requirements: pack.human_review_requirements || {},
+                gate_checks: pack.gate_checks || {},
+                decision_audit_preview: pack.decision_audit_preview || {},
+                approval_quality_checks: pack.approval_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceApprovalDecisionJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceApprovalDecisionSummaryText(pack = projectWorkspaceExportApprovalDecisionSnapshot()) {
+            if (!pack.has_workspace_approval_decision_pack) return '';
+            const summary = pack.approval_summary || {};
+            return [
+                t('approvalDecisionSummaryTitle'),
+                `${t('approvalDecisionMode')}: ${summary.mode || t('none')}`,
+                `${t('approvalDecisionStatus')}: ${summary.ledger_status || t('none')}`,
+                `${t('approvalDecisionTotalCount')}: ${summary.decision_count ?? 0}`,
+                `${t('approvalDecisionPendingCount')}: ${summary.pending_decision_count ?? 0}`,
+                `${t('approvalDecisionBlockedCount')}: ${summary.blocked_decision_count ?? 0}`,
+                `${t('approvalDecisionReviewReadyCount')}: ${summary.review_ready_decision_count ?? 0}`,
+                `${t('approvalDecisionRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('approvalDecisionRealExecution')}: ${summary.real_execution_allowed === false ? t('approvalDecisionDisabled') : String(summary.real_execution_allowed)}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceApprovalDecisionSectionText(titleKey, value) {
+            return [
+                `## ${t(titleKey)}`,
+                projectWorkspaceApprovalDecisionJsonText(value) || t('approvalDecisionNoData')
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportApprovalDecisionMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportApprovalDecisionSnapshot(workspace);
+            if (!pack.has_workspace_approval_decision_pack) return '';
+            return [
+                `## ${t('approvalDecisionPackTitle')}`,
+                `## ${t('approvalDecisionSummaryTitle')}`,
+                projectWorkspaceApprovalDecisionSummaryText(pack),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionLedgerTitle', pack.decision_ledger),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionPendingTitle', pack.pending_decisions),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionBlockedTitle', pack.blocked_decisions),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionReviewReadyTitle', pack.review_ready_decisions),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionHumanReviewTitle', pack.human_review_requirements),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionGateChecksTitle', pack.gate_checks),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionAuditPreviewTitle', pack.decision_audit_preview),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionQualityChecksTitle', pack.approval_quality_checks),
+                '',
+                projectWorkspaceApprovalDecisionSectionText('approvalDecisionSafetyBoundariesTitle', pack.safety_boundaries),
+                t('approvalDecisionSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceApprovalDecisionText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceApprovalDecisionStatus');
+            const pack = projectWorkspaceExportApprovalDecisionSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceApprovalDecisionSummaryText(pack)
+                : kind === 'ledger'
+                    ? projectWorkspaceApprovalDecisionSectionText('approvalDecisionLedgerTitle', pack.decision_ledger)
+                    : kind === 'pending'
+                        ? projectWorkspaceApprovalDecisionSectionText('approvalDecisionPendingTitle', pack.pending_decisions)
+                        : kind === 'blocked'
+                            ? projectWorkspaceApprovalDecisionSectionText('approvalDecisionBlockedTitle', pack.blocked_decisions)
+                            : kind === 'ready'
+                                ? projectWorkspaceApprovalDecisionSectionText('approvalDecisionReviewReadyTitle', pack.review_ready_decisions)
+                                : kind === 'human'
+                                    ? projectWorkspaceApprovalDecisionSectionText('approvalDecisionHumanReviewTitle', pack.human_review_requirements)
+                                    : kind === 'checks'
+                                        ? projectWorkspaceApprovalDecisionSectionText('approvalDecisionGateChecksTitle', pack.gate_checks)
+                                        : kind === 'audit'
+                                            ? projectWorkspaceApprovalDecisionSectionText('approvalDecisionAuditPreviewTitle', pack.decision_audit_preview)
+                                            : projectWorkspaceExportApprovalDecisionMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('approvalDecisionCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('approvalDecisionCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('approvalDecisionCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('approvalDecisionCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceApprovalSummary() {
+            return copyProjectWorkspaceApprovalDecisionText('summary');
+        }
+
+        function copyProjectWorkspaceDecisionLedger() {
+            return copyProjectWorkspaceApprovalDecisionText('ledger');
+        }
+
+        function copyProjectWorkspacePendingDecisions() {
+            return copyProjectWorkspaceApprovalDecisionText('pending');
+        }
+
+        function copyProjectWorkspaceBlockedDecisions() {
+            return copyProjectWorkspaceApprovalDecisionText('blocked');
+        }
+
+        function copyProjectWorkspaceReviewReadyDecisions() {
+            return copyProjectWorkspaceApprovalDecisionText('ready');
+        }
+
+        function copyProjectWorkspaceHumanReviewRequirements() {
+            return copyProjectWorkspaceApprovalDecisionText('human');
+        }
+
+        function copyProjectWorkspaceGateChecks() {
+            return copyProjectWorkspaceApprovalDecisionText('checks');
+        }
+
+        function copyProjectWorkspaceDecisionAuditPreview() {
+            return copyProjectWorkspaceApprovalDecisionText('audit');
+        }
+
+        function copyProjectWorkspaceFullApprovalDecisionPack() {
+            return copyProjectWorkspaceApprovalDecisionText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -19978,6 +20136,158 @@
             `;
         }
 
+        function renderProjectWorkspaceApprovalDecisionSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportApprovalDecisionSnapshot(workspace);
+            if (!pack.has_workspace_approval_decision_pack) return '';
+            const summary = pack.approval_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceApprovalDecisionSummaryPanel"
+                    data-approval-decision-marker="${PROJECT_WORKSPACE_APPROVAL_DECISION_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('approvalDecisionPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('approvalDecisionPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullApprovalDecisionPack()">${escapeHTML(t('approvalDecisionCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('approvalDecisionTotalCount'), summary.decision_count ?? 0)}
+                        ${metricPill(t('approvalDecisionPendingCount'), summary.pending_decision_count ?? 0)}
+                        ${metricPill(t('approvalDecisionBlockedCount'), summary.blocked_decision_count ?? 0)}
+                        ${metricPill(t('approvalDecisionReviewReadyCount'), summary.review_ready_decision_count ?? 0)}
+                        ${metricPill(t('approvalDecisionRealExecution'), summary.real_execution_allowed === false ? t('approvalDecisionDisabled') : String(summary.real_execution_allowed))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('approvalDecisionRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('approvalDecisionPreviewOnlyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceApprovalDecisionStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalSummary()">${escapeHTML(t('approvalDecisionCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceDecisionLedgerPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportApprovalDecisionSnapshot(workspace);
+            if (!pack.has_workspace_approval_decision_pack) return '';
+            const decisions = pack.decision_ledger || [];
+            return `
+                <div class="section-block" id="projectWorkspaceDecisionLedgerPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('approvalDecisionLedgerTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('approvalDecisionLedgerHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDecisionLedger()">${escapeHTML(t('approvalDecisionCopyLedger'))}</button>
+                    </div>
+                    ${decisions.length ? `<div class="graph-os-compact-grid">${decisions.map((decision) => `
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(decision.decision_title || t('none'))}</strong>
+                            <div><strong>${escapeHTML(t('approvalDecisionId'))}:</strong> ${escapeHTML(decision.decision_id || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionSourceTicketId'))}:</strong> ${escapeHTML(decision.source_ticket_id || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionType'))}:</strong> ${escapeHTML(decision.decision_type || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionPriority'))}:</strong> ${escapeHTML(decision.priority || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionSourcePack'))}:</strong> ${escapeHTML(decision.source_pack || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionTicketStatus'))}:</strong> ${escapeHTML(decision.ticket_approval_status || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionGateStatus'))}:</strong> ${escapeHTML(decision.gate_status || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionDecisionStatus'))}:</strong> ${escapeHTML(decision.decision_status || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionHumanReviewRequired'))}:</strong> ${escapeHTML(String(decision.human_review_required === true))}</div>
+                            <div><strong>${escapeHTML(t('approvalDecisionRealExecutionAllowed'))}:</strong> ${escapeHTML(String(decision.real_execution_allowed === true))}</div>
+                        </div>
+                    `).join('')}</div>` : `<div class="feedback-box">${escapeHTML(t('approvalDecisionNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceDecisionBucketsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportApprovalDecisionSnapshot(workspace);
+            if (!pack.has_workspace_approval_decision_pack) return '';
+            const bucket = (titleKey, rows, emptyKey) => `
+                <div class="graph-os-card">
+                    <strong>${escapeHTML(t(titleKey))}</strong>
+                    ${(rows || []).length ? (rows || []).map((decision) => `
+                        <div class="feedback-box">
+                            <strong>${escapeHTML(decision.decision_title || t('none'))}</strong>
+                            <div>${escapeHTML(t('approvalDecisionBlockingReasons'))}: ${escapeHTML((decision.blocking_reasons || []).join(', ') || t('none'))}</div>
+                            <div>${escapeHTML(t('approvalDecisionRequiredEvidence'))}: ${escapeHTML((decision.required_evidence || []).join(' | ') || t('none'))}</div>
+                        </div>
+                    `).join('') : `<div class="feedback-box">${escapeHTML(t(emptyKey))}</div>`}
+                </div>`;
+            return `
+                <div class="section-block" id="projectWorkspaceDecisionBucketsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('approvalDecisionBucketsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('approvalDecisionBucketsHelper'))}</div>
+                        </div>
+                        <div class="action-row">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspacePendingDecisions()">${escapeHTML(t('approvalDecisionCopyPending'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedDecisions()">${escapeHTML(t('approvalDecisionCopyBlocked'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReviewReadyDecisions()">${escapeHTML(t('approvalDecisionCopyReviewReady'))}</button>
+                        </div>
+                    </div>
+                    <div class="demo-warning">${escapeHTML(t('approvalDecisionReviewReadyNote'))}</div>
+                    <div class="graph-os-compact-grid">
+                        ${bucket('approvalDecisionPendingTitle', pack.pending_decisions, 'approvalDecisionNoPending')}
+                        ${bucket('approvalDecisionBlockedTitle', pack.blocked_decisions, 'approvalDecisionNoBlocked')}
+                        ${bucket('approvalDecisionReviewReadyTitle', pack.review_ready_decisions, 'approvalDecisionNoReviewReady')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceHumanReviewGatePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportApprovalDecisionSnapshot(workspace);
+            if (!pack.has_workspace_approval_decision_pack) return '';
+            const decisionReviewDetails = (pack.decision_ledger || []).map((decision) => ({
+                decision_id: decision.decision_id,
+                validation_required: decision.validation_required || [],
+                risk_note: decision.risk_note || '',
+                do_not_claim: decision.do_not_claim || []
+            }));
+            return `
+                <div class="section-block" id="projectWorkspaceHumanReviewGatePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('approvalDecisionHumanGateTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('approvalDecisionHumanGateHelper'))}</div>
+                        </div>
+                        <div class="action-row">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewRequirements()">${escapeHTML(t('approvalDecisionCopyHumanReview'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceGateChecks()">${escapeHTML(t('approvalDecisionCopyGateChecks'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('approvalDecisionHumanReviewTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceApprovalDecisionJsonText(pack.human_review_requirements) || t('approvalDecisionNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('approvalDecisionGateChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceApprovalDecisionJsonText(pack.gate_checks) || t('approvalDecisionNoData'))}</pre></div>
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('approvalDecisionValidationRiskTitle'))}:</strong><pre style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceApprovalDecisionJsonText(decisionReviewDetails) || t('approvalDecisionNoData'))}</pre></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceDecisionAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportApprovalDecisionSnapshot(workspace);
+            if (!pack.has_workspace_approval_decision_pack) return '';
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('approvalDecisionDisabled') : String(value)}`).join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceDecisionAuditSafetyPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('approvalDecisionAuditSafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('approvalDecisionAuditSafetyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDecisionAuditPreview()">${escapeHTML(t('approvalDecisionCopyAudit'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('approvalDecisionAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceApprovalDecisionJsonText(pack.decision_audit_preview) || t('approvalDecisionNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('approvalDecisionQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceApprovalDecisionJsonText(pack.approval_quality_checks) || t('approvalDecisionNoData'))}</pre></div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('approvalDecisionSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('approvalDecisionAuditNoWriteNote'))}</div>
+                    <div class="field-helper">${escapeHTML(t('approvalDecisionSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -20468,6 +20778,8 @@
                 '',
                 projectWorkspaceExportActionTicketMarkdown(workspace),
                 '',
+                projectWorkspaceExportApprovalDecisionMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -20557,6 +20869,7 @@
                 workspace_run_compare_pack: projectWorkspaceExportRunCompareSnapshot(workspace),
                 workspace_action_queue_pack: projectWorkspaceExportActionQueueSnapshot(workspace),
                 workspace_action_ticket_pack: projectWorkspaceExportActionTicketSnapshot(workspace),
+                workspace_approval_decision_pack: projectWorkspaceExportApprovalDecisionSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -32992,6 +33305,11 @@
                     ${renderProjectWorkspaceActionTicketApprovalPanel(workspace)}
                     ${renderProjectWorkspaceActionTicketValidationPanel(workspace)}
                     ${renderProjectWorkspaceActionTicketAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceApprovalDecisionSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceDecisionLedgerPanel(workspace)}
+                    ${renderProjectWorkspaceDecisionBucketsPanel(workspace)}
+                    ${renderProjectWorkspaceHumanReviewGatePanel(workspace)}
+                    ${renderProjectWorkspaceDecisionAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -41277,6 +41595,136 @@
             actionTicketCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u884c\u52a8\u5de5\u5355\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceApprovalDecisionMarker: 'Project Workspace approval decision bundle',
+            approvalDecisionPackTitle: 'Workspace Approval Decision / Gate Ledger',
+            approvalDecisionPackHelper: 'Inspect deterministic gate decisions derived from action tickets. This ledger never performs or authorizes real approval execution.',
+            approvalDecisionSummaryTitle: 'Approval Summary',
+            approvalDecisionMode: 'Ledger mode',
+            approvalDecisionStatus: 'Ledger status',
+            approvalDecisionTotalCount: 'Total decisions',
+            approvalDecisionPendingCount: 'Pending decisions',
+            approvalDecisionBlockedCount: 'Blocked decisions',
+            approvalDecisionReviewReadyCount: 'Review ready decisions',
+            approvalDecisionRecommendedNextAction: 'Recommended next action',
+            approvalDecisionRealExecution: 'Real execution',
+            approvalDecisionDisabled: 'disabled',
+            approvalDecisionPreviewOnlyNote: 'Approval preview only. No gate can approve or trigger real execution.',
+            approvalDecisionLedgerTitle: 'Decision Ledger',
+            approvalDecisionLedgerHelper: 'Each decision remains traceable to its source ticket, source pack, gate state, and human-review boundary.',
+            approvalDecisionId: 'Decision ID',
+            approvalDecisionSourceTicketId: 'Source ticket ID',
+            approvalDecisionType: 'Decision type',
+            approvalDecisionPriority: 'Priority',
+            approvalDecisionSourcePack: 'Source pack',
+            approvalDecisionTicketStatus: 'Ticket approval status',
+            approvalDecisionGateStatus: 'Gate status',
+            approvalDecisionDecisionStatus: 'Decision status',
+            approvalDecisionHumanReviewRequired: 'Human review required',
+            approvalDecisionRealExecutionAllowed: 'Real execution allowed',
+            approvalDecisionBucketsTitle: 'Pending / Blocked / Review Ready Decisions',
+            approvalDecisionBucketsHelper: 'Separate blocked gates from review-only decisions without creating execution authorization.',
+            approvalDecisionPendingTitle: 'Pending Decisions',
+            approvalDecisionBlockedTitle: 'Blocked Decisions',
+            approvalDecisionReviewReadyTitle: 'Review Ready Decisions',
+            approvalDecisionBlockingReasons: 'Blocking reasons',
+            approvalDecisionRequiredEvidence: 'Required evidence',
+            approvalDecisionNoPending: 'No pending decisions are present.',
+            approvalDecisionNoBlocked: 'No blocked decisions are present.',
+            approvalDecisionNoReviewReady: 'No decisions are ready for human review.',
+            approvalDecisionReviewReadyNote: 'Review ready means ready_for_human_review only. It is never authorization for real execution.',
+            approvalDecisionHumanGateTitle: 'Human Review Requirements / Gate Checks',
+            approvalDecisionHumanGateHelper: 'Review gate requirements, validation steps, risk notes, and do-not-claim boundaries without executing a gate.',
+            approvalDecisionHumanReviewTitle: 'Human Review Requirements',
+            approvalDecisionGateChecksTitle: 'Gate Checks',
+            approvalDecisionValidationRiskTitle: 'Validation Required / Risk Notes / Do Not Claim',
+            approvalDecisionAuditSafetyTitle: 'Decision Audit Preview / Quality / Safety Boundaries',
+            approvalDecisionAuditSafetyHelper: 'Read-only decision audit preview. No approval, history, registry, queue, or database record is written.',
+            approvalDecisionAuditPreviewTitle: 'Decision Audit Preview',
+            approvalDecisionQualityChecksTitle: 'Approval Quality Checks',
+            approvalDecisionSafetyBoundariesTitle: 'Safety Boundaries',
+            approvalDecisionAuditNoWriteNote: 'Audit preview only. No database, approval, decision-ledger, history, registry, or queue write is performed.',
+            approvalDecisionSafetyNote: 'The decision ledger performs no real approval or operation. Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            approvalDecisionNoData: 'No workspace approval decision data is available.',
+            approvalDecisionCopySummary: 'Copy approval summary',
+            approvalDecisionCopyLedger: 'Copy decision ledger',
+            approvalDecisionCopyPending: 'Copy pending decisions',
+            approvalDecisionCopyBlocked: 'Copy blocked decisions',
+            approvalDecisionCopyReviewReady: 'Copy review ready decisions',
+            approvalDecisionCopyHumanReview: 'Copy human review requirements',
+            approvalDecisionCopyGateChecks: 'Copy gate checks',
+            approvalDecisionCopyAudit: 'Copy audit preview',
+            approvalDecisionCopyFullPack: 'Copy full approval decision pack',
+            approvalDecisionCopied: 'Workspace approval decision content copied.',
+            approvalDecisionCopyFailed: 'Unable to copy workspace approval decision content.',
+            approvalDecisionCopyNoData: 'No workspace approval decision content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceApprovalDecisionMarker: 'Project Workspace approval decision bundle',
+            approvalDecisionPackTitle: '\u5de5\u4f5c\u533a\u5ba1\u6279\u51b3\u7b56 / \u95e8\u63a7\u53f0\u8d26',
+            approvalDecisionPackHelper: '\u68c0\u67e5\u4ece\u884c\u52a8\u5de5\u5355\u6d3e\u751f\u7684\u786e\u5b9a\u6027\u95e8\u63a7\u51b3\u7b56\u3002\u6b64\u53f0\u8d26\u7edd\u4e0d\u6267\u884c\u6216\u6388\u6743\u771f\u5b9e\u5ba1\u6279\u6267\u884c\u3002',
+            approvalDecisionSummaryTitle: '\u5ba1\u6279\u6458\u8981',
+            approvalDecisionMode: '\u53f0\u8d26\u6a21\u5f0f',
+            approvalDecisionStatus: '\u53f0\u8d26\u72b6\u6001',
+            approvalDecisionTotalCount: '\u51b3\u7b56\u603b\u6570',
+            approvalDecisionPendingCount: '\u5f85\u5ba1\u51b3\u7b56',
+            approvalDecisionBlockedCount: '\u5df2\u963b\u585e\u51b3\u7b56',
+            approvalDecisionReviewReadyCount: '\u53ef\u5ba1\u9605\u51b3\u7b56',
+            approvalDecisionRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            approvalDecisionRealExecution: '\u771f\u5b9e\u6267\u884c',
+            approvalDecisionDisabled: '\u5df2\u7981\u7528',
+            approvalDecisionPreviewOnlyNote: '\u4ec5\u4e3a\u5ba1\u6279\u9884\u89c8\u3002\u4efb\u4f55\u95e8\u63a7\u90fd\u4e0d\u80fd\u6279\u51c6\u6216\u89e6\u53d1\u771f\u5b9e\u6267\u884c\u3002',
+            approvalDecisionLedgerTitle: '\u51b3\u7b56\u53f0\u8d26',
+            approvalDecisionLedgerHelper: '\u6bcf\u6761\u51b3\u7b56\u90fd\u53ef\u8ffd\u6eaf\u81f3\u6765\u6e90\u5de5\u5355\u3001\u6765\u6e90 pack\u3001\u95e8\u63a7\u72b6\u6001\u548c\u4eba\u5de5\u5ba1\u9605\u8fb9\u754c\u3002',
+            approvalDecisionId: '\u51b3\u7b56 ID',
+            approvalDecisionSourceTicketId: '\u6765\u6e90\u5de5\u5355 ID',
+            approvalDecisionType: '\u51b3\u7b56\u7c7b\u578b',
+            approvalDecisionPriority: '\u4f18\u5148\u7ea7',
+            approvalDecisionSourcePack: '\u6765\u6e90 pack',
+            approvalDecisionTicketStatus: '\u5de5\u5355\u5ba1\u6279\u72b6\u6001',
+            approvalDecisionGateStatus: '\u95e8\u63a7\u72b6\u6001',
+            approvalDecisionDecisionStatus: '\u51b3\u7b56\u72b6\u6001',
+            approvalDecisionHumanReviewRequired: '\u9700\u8981\u4eba\u5de5\u5ba1\u9605',
+            approvalDecisionRealExecutionAllowed: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            approvalDecisionBucketsTitle: '\u5f85\u5ba1 / \u5df2\u963b\u585e / \u53ef\u5ba1\u9605\u51b3\u7b56',
+            approvalDecisionBucketsHelper: '\u533a\u5206\u5df2\u963b\u585e\u95e8\u63a7\u4e0e\u4ec5\u4f9b\u5ba1\u9605\u7684\u51b3\u7b56\uff0c\u4e0d\u521b\u5efa\u6267\u884c\u6388\u6743\u3002',
+            approvalDecisionPendingTitle: '\u5f85\u5ba1\u51b3\u7b56',
+            approvalDecisionBlockedTitle: '\u5df2\u963b\u585e\u51b3\u7b56',
+            approvalDecisionReviewReadyTitle: '\u53ef\u5ba1\u9605\u51b3\u7b56',
+            approvalDecisionBlockingReasons: '\u963b\u585e\u539f\u56e0',
+            approvalDecisionRequiredEvidence: '\u6240\u9700\u8bc1\u636e',
+            approvalDecisionNoPending: '\u6682\u65e0\u5f85\u5ba1\u51b3\u7b56\u3002',
+            approvalDecisionNoBlocked: '\u6682\u65e0\u5df2\u963b\u585e\u51b3\u7b56\u3002',
+            approvalDecisionNoReviewReady: '\u6682\u65e0\u53ef\u4f9b\u4eba\u5de5\u5ba1\u9605\u7684\u51b3\u7b56\u3002',
+            approvalDecisionReviewReadyNote: 'Review ready \u4ec5\u8868\u793a ready_for_human_review\u3002\u5b83\u7edd\u4e0d\u662f\u771f\u5b9e\u6267\u884c\u6388\u6743\u3002',
+            approvalDecisionHumanGateTitle: '\u4eba\u5de5\u5ba1\u9605\u8981\u6c42 / \u95e8\u63a7\u68c0\u67e5',
+            approvalDecisionHumanGateHelper: '\u68c0\u67e5\u95e8\u63a7\u8981\u6c42\u3001\u9a8c\u8bc1\u6b65\u9aa4\u3001\u98ce\u9669\u8bf4\u660e\u548c\u7981\u6b62\u58f0\u79f0\u8fb9\u754c\uff0c\u4e0d\u6267\u884c\u95e8\u63a7\u3002',
+            approvalDecisionHumanReviewTitle: '\u4eba\u5de5\u5ba1\u9605\u8981\u6c42',
+            approvalDecisionGateChecksTitle: '\u95e8\u63a7\u68c0\u67e5',
+            approvalDecisionValidationRiskTitle: '\u5fc5\u9700\u9a8c\u8bc1 / \u98ce\u9669\u8bf4\u660e / \u7981\u6b62\u58f0\u79f0',
+            approvalDecisionAuditSafetyTitle: '\u51b3\u7b56\u5ba1\u8ba1\u9884\u89c8 / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            approvalDecisionAuditSafetyHelper: '\u53ea\u8bfb\u51b3\u7b56\u5ba1\u8ba1\u9884\u89c8\u3002\u4e0d\u5199\u5165\u5ba1\u6279\u3001\u5386\u53f2\u3001registry\u3001\u961f\u5217\u6216\u6570\u636e\u5e93\u8bb0\u5f55\u3002',
+            approvalDecisionAuditPreviewTitle: '\u51b3\u7b56\u5ba1\u8ba1\u9884\u89c8',
+            approvalDecisionQualityChecksTitle: '\u5ba1\u6279\u8d28\u91cf\u68c0\u67e5',
+            approvalDecisionSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            approvalDecisionAuditNoWriteNote: '\u4ec5\u4e3a\u5ba1\u8ba1\u9884\u89c8\u3002\u4e0d\u6267\u884c\u6570\u636e\u5e93\u3001\u5ba1\u6279\u3001\u51b3\u7b56\u53f0\u8d26\u3001\u5386\u53f2\u3001registry \u6216\u961f\u5217\u5199\u5165\u3002',
+            approvalDecisionSafetyNote: '\u51b3\u7b56\u53f0\u8d26\u4e0d\u6267\u884c\u771f\u5b9e\u5ba1\u6279\u6216\u64cd\u4f5c\u3002\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            approvalDecisionNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u5ba1\u6279\u51b3\u7b56\u6570\u636e\u3002',
+            approvalDecisionCopySummary: '\u590d\u5236\u5ba1\u6279\u6458\u8981',
+            approvalDecisionCopyLedger: '\u590d\u5236\u51b3\u7b56\u53f0\u8d26',
+            approvalDecisionCopyPending: '\u590d\u5236\u5f85\u5ba1\u51b3\u7b56',
+            approvalDecisionCopyBlocked: '\u590d\u5236\u5df2\u963b\u585e\u51b3\u7b56',
+            approvalDecisionCopyReviewReady: '\u590d\u5236\u53ef\u5ba1\u9605\u51b3\u7b56',
+            approvalDecisionCopyHumanReview: '\u590d\u5236\u4eba\u5de5\u5ba1\u9605\u8981\u6c42',
+            approvalDecisionCopyGateChecks: '\u590d\u5236\u95e8\u63a7\u68c0\u67e5',
+            approvalDecisionCopyAudit: '\u590d\u5236\u5ba1\u8ba1\u9884\u89c8',
+            approvalDecisionCopyFullPack: '\u590d\u5236\u5b8c\u6574\u5ba1\u6279\u51b3\u7b56\u5305',
+            approvalDecisionCopied: '\u5de5\u4f5c\u533a\u5ba1\u6279\u51b3\u7b56\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            approvalDecisionCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u5ba1\u6279\u51b3\u7b56\u5185\u5bb9\u3002',
+            approvalDecisionCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u5ba1\u6279\u51b3\u7b56\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -42678,6 +43126,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
     latestProjectWorkspaceActionQueuePack = latestProjectCreativeDecisionPack.workspace_action_queue_pack || {};
     latestProjectWorkspaceActionTicketPack = latestProjectCreativeDecisionPack.workspace_action_ticket_pack || {};
+    latestProjectWorkspaceApprovalDecisionPack = latestProjectCreativeDecisionPack.workspace_approval_decision_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

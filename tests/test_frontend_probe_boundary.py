@@ -9894,6 +9894,202 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_approval_decision_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace approval decision bundle",
+            "PROJECT_WORKSPACE_APPROVAL_DECISION_MARKER",
+            "latestProjectWorkspaceApprovalDecisionPack",
+            "projectWorkspaceApprovalDecisionPackFromWorkspace",
+            "projectWorkspaceExportApprovalDecisionSnapshot",
+            "projectWorkspaceExportApprovalDecisionMarkdown",
+            "renderProjectWorkspaceApprovalDecisionSummaryPanel",
+            "renderProjectWorkspaceDecisionLedgerPanel",
+            "renderProjectWorkspaceDecisionBucketsPanel",
+            "renderProjectWorkspaceHumanReviewGatePanel",
+            "renderProjectWorkspaceDecisionAuditSafetyPanel",
+            "copyProjectWorkspaceApprovalSummary",
+            "copyProjectWorkspaceDecisionLedger",
+            "copyProjectWorkspacePendingDecisions",
+            "copyProjectWorkspaceBlockedDecisions",
+            "copyProjectWorkspaceReviewReadyDecisions",
+            "copyProjectWorkspaceHumanReviewRequirements",
+            "copyProjectWorkspaceGateChecks",
+            "copyProjectWorkspaceDecisionAuditPreview",
+            "copyProjectWorkspaceFullApprovalDecisionPack",
+            "workspace_approval_decision_pack: projectWorkspaceExportApprovalDecisionSnapshot(workspace)",
+            "Workspace Approval Decision / Gate Ledger",
+            "Approval Summary",
+            "Decision Ledger",
+            "Pending Decisions",
+            "Blocked Decisions",
+            "Review Ready Decisions",
+            "Human Review Requirements",
+            "Gate Checks",
+            "Decision Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.approval_summary",
+            "pack.decision_ledger",
+            "pack.pending_decisions",
+            "pack.blocked_decisions",
+            "pack.review_ready_decisions",
+            "pack.human_review_requirements",
+            "pack.gate_checks",
+            "pack.decision_audit_preview",
+            "pack.approval_quality_checks",
+            "pack.safety_boundaries",
+            "summary.decision_count",
+            "summary.pending_decision_count",
+            "summary.blocked_decision_count",
+            "summary.review_ready_decision_count",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed",
+            "decision.decision_id",
+            "decision.source_ticket_id",
+            "decision.decision_title",
+            "decision.decision_type",
+            "decision.priority",
+            "decision.source_pack",
+            "decision.ticket_approval_status",
+            "decision.gate_status",
+            "decision.decision_status",
+            "decision.human_review_required",
+            "decision.real_execution_allowed",
+            "decision.blocking_reasons",
+            "decision.required_evidence",
+            "decision.validation_required",
+            "decision.risk_note",
+            "decision.do_not_claim",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        ticket_safety = html.index(
+            "${renderProjectWorkspaceActionTicketAuditSafetyPanel(workspace)}"
+        )
+        approval_summary = html.index(
+            "${renderProjectWorkspaceApprovalDecisionSummaryPanel(workspace)}"
+        )
+        approval_safety = html.index(
+            "${renderProjectWorkspaceDecisionAuditSafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(ticket_safety, approval_summary)
+        self.assertLess(approval_summary, approval_safety)
+        self.assertLess(approval_safety, creative_core)
+
+    def test_workspace_approval_decision_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "approvalDecisionPackTitle",
+            "approvalDecisionPackHelper",
+            "approvalDecisionSummaryTitle",
+            "approvalDecisionTotalCount",
+            "approvalDecisionPendingCount",
+            "approvalDecisionBlockedCount",
+            "approvalDecisionReviewReadyCount",
+            "approvalDecisionRecommendedNextAction",
+            "approvalDecisionRealExecution",
+            "approvalDecisionPreviewOnlyNote",
+            "approvalDecisionLedgerTitle",
+            "approvalDecisionId",
+            "approvalDecisionSourceTicketId",
+            "approvalDecisionType",
+            "approvalDecisionPriority",
+            "approvalDecisionSourcePack",
+            "approvalDecisionTicketStatus",
+            "approvalDecisionGateStatus",
+            "approvalDecisionDecisionStatus",
+            "approvalDecisionHumanReviewRequired",
+            "approvalDecisionRealExecutionAllowed",
+            "approvalDecisionBucketsTitle",
+            "approvalDecisionPendingTitle",
+            "approvalDecisionBlockedTitle",
+            "approvalDecisionReviewReadyTitle",
+            "approvalDecisionBlockingReasons",
+            "approvalDecisionRequiredEvidence",
+            "approvalDecisionReviewReadyNote",
+            "approvalDecisionHumanGateTitle",
+            "approvalDecisionHumanReviewTitle",
+            "approvalDecisionGateChecksTitle",
+            "approvalDecisionValidationRiskTitle",
+            "approvalDecisionAuditSafetyTitle",
+            "approvalDecisionAuditPreviewTitle",
+            "approvalDecisionQualityChecksTitle",
+            "approvalDecisionSafetyBoundariesTitle",
+            "approvalDecisionAuditNoWriteNote",
+            "approvalDecisionSafetyNote",
+            "approvalDecisionCopySummary",
+            "approvalDecisionCopyLedger",
+            "approvalDecisionCopyPending",
+            "approvalDecisionCopyBlocked",
+            "approvalDecisionCopyReviewReady",
+            "approvalDecisionCopyHumanReview",
+            "approvalDecisionCopyGateChecks",
+            "approvalDecisionCopyAudit",
+            "approvalDecisionCopyFullPack",
+            "approvalDecisionCopied",
+            "approvalDecisionCopyFailed",
+            "approvalDecisionCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace approval decision bundle", script)
+            self.assertIn("project_workspace_approval_decision_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceApprovalDecisionSummaryText"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceApprovalDecisionText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "approvalDecisionPackTitle",
+            "approvalDecisionSummaryTitle",
+            "approvalDecisionLedgerTitle",
+            "approvalDecisionPendingTitle",
+            "approvalDecisionBlockedTitle",
+            "approvalDecisionReviewReadyTitle",
+            "approvalDecisionHumanReviewTitle",
+            "approvalDecisionGateChecksTitle",
+            "approvalDecisionAuditPreviewTitle",
+            "approvalDecisionSafetyBoundariesTitle",
+            "approvalDecisionSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        approval_section = html[
+            html.index("const PROJECT_WORKSPACE_APPROVAL_DECISION_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", approval_section)
+        self.assertIn("Approval preview only", html)
+        self.assertIn("ready_for_human_review only", html)
+        self.assertIn("Audit preview only", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
