@@ -22791,6 +22791,342 @@ def _rw_workspace_run_compare_pack(
     }
 
 
+def _rw_workspace_action_queue_pack(creative_decision_pack: dict) -> dict:
+    review_import_pack = dict(
+        creative_decision_pack.get("review_import_pack") or {}
+    )
+    competitor_pack = dict(
+        creative_decision_pack.get("competitor_review_comparison_pack") or {}
+    )
+    llm_pack = dict(
+        creative_decision_pack.get("llm_assist_dry_run_pack") or {}
+    )
+    video_pack = dict(
+        creative_decision_pack.get(
+            "video_provider_orchestration_dry_run_pack"
+        )
+        or {}
+    )
+    campaign_pack = dict(
+        creative_decision_pack.get("campaign_export_pack") or {}
+    )
+    snapshot_pack = dict(
+        creative_decision_pack.get("workspace_session_snapshot_pack") or {}
+    )
+    compare_pack = dict(
+        creative_decision_pack.get("workspace_run_compare_pack") or {}
+    )
+
+    quality_checks = dict(creative_decision_pack.get("quality_checks") or {})
+    import_checks = dict(review_import_pack.get("import_quality_checks") or {})
+    llm_summary = dict(llm_pack.get("dry_run_summary") or {})
+    video_summary = dict(video_pack.get("dry_run_summary") or {})
+    competitor_summary = dict(competitor_pack.get("comparison_summary") or {})
+    campaign_summary = dict(campaign_pack.get("campaign_summary") or {})
+    snapshot_summary = dict(snapshot_pack.get("session_summary") or {})
+    compare_summary = dict(compare_pack.get("compare_summary") or {})
+
+    weak_evidence = bool(
+        quality_checks.get("weak_evidence")
+        or import_checks.get("ready_as_strong_evidence") is False
+        or llm_summary.get("weak_evidence")
+    )
+    missing_quote = bool(
+        quality_checks.get("missing_quote")
+        or llm_summary.get("missing_quotes")
+        or campaign_pack.get("campaign_quality_checks", {}).get(
+            "missing_quote"
+        )
+    )
+    inherited_do_not_claim = list(
+        dict.fromkeys(
+            _rw_text(item)
+            for item in [
+                *list(creative_decision_pack.get("video_prompt_pack", {}).get("do_not_claim") or []),
+                *list(competitor_pack.get("do_not_claim") or []),
+                *list(llm_pack.get("do_not_claim") or []),
+                *list(campaign_pack.get("safety_section", {}).get("do_not_claim") or []),
+            ]
+            if _rw_text(item)
+        )
+    )
+    queue_do_not_claim = inherited_do_not_claim or [
+        "Do not invent evidence, review quotes, product outcomes, or historical run data.",
+        "Do not treat a recommendation as approval for real execution.",
+    ]
+
+    actions: list[dict] = []
+
+    def add_action(
+        *,
+        action_id: str,
+        action_title: str,
+        action_type: str,
+        priority: str,
+        source_pack: str,
+        reason: str,
+        evidence_reference,
+        expected_user_value: str,
+        blocked_by: list[str],
+        recommended_next_step: str,
+        risk_note: str,
+    ) -> None:
+        actions.append(
+            {
+                "action_id": action_id,
+                "action_title": action_title,
+                "action_type": action_type,
+                "priority": priority,
+                "source_pack": source_pack,
+                "reason": reason,
+                "evidence_reference": evidence_reference,
+                "expected_user_value": expected_user_value,
+                "blocked_by": blocked_by,
+                "requires_approval": True,
+                "real_execution_allowed": False,
+                "recommended_next_step": recommended_next_step,
+                "risk_note": risk_note,
+                "do_not_claim": queue_do_not_claim,
+            }
+        )
+
+    if weak_evidence or missing_quote:
+        evidence_blockers = [
+            blocker
+            for blocker, active in (
+                ("weak_evidence", weak_evidence),
+                ("missing_quote", missing_quote),
+            )
+            if active
+        ]
+        add_action(
+            action_id="action_01_fix_evidence_gap",
+            action_title="Strengthen evidence and quote coverage",
+            action_type="fix_evidence_gap",
+            priority="high",
+            source_pack="review_import_pack",
+            reason="Existing quality checks identify evidence or quote coverage gaps.",
+            evidence_reference={
+                "creative_quality_checks": quality_checks,
+                "import_quality_checks": import_checks,
+                "llm_dry_run_summary": llm_summary,
+            },
+            expected_user_value="Improves the reliability of later creative and export review.",
+            blocked_by=evidence_blockers,
+            recommended_next_step="Add or review supplied quotes, then rerun the deterministic workspace analysis.",
+            risk_note="Weak or missing evidence must not be promoted into a strong product claim.",
+        )
+        add_action(
+            action_id="action_02_safety_review",
+            action_title="Review claim safety boundaries",
+            action_type="safety_review_required",
+            priority="high",
+            source_pack="llm_assist_dry_run_pack",
+            reason="Weak evidence or missing quotes require explicit human claim review.",
+            evidence_reference={
+                "allowed_claims": list(llm_pack.get("allowed_claims") or []),
+                "do_not_claim": list(llm_pack.get("do_not_claim") or []),
+                "risk_checks": list(llm_pack.get("risk_checks") or []),
+            },
+            expected_user_value="Keeps future copy bounded to supplied evidence.",
+            blocked_by=evidence_blockers,
+            recommended_next_step="Review allowed claims and do-not-claim boundaries without calling an LLM or provider.",
+            risk_note="Approval remains required and does not enable real execution.",
+        )
+
+    competitor_readiness = _rw_text(
+        competitor_summary.get("comparison_readiness")
+    )
+    if competitor_readiness not in {"ready", "ready_for_review"}:
+        add_action(
+            action_id="action_03_review_competitor_gap",
+            action_title="Review competitor evidence coverage",
+            action_type="review_competitor_gap",
+            priority="medium",
+            source_pack="competitor_review_comparison_pack",
+            reason="Competitor comparison is not ready for evidence-backed differentiation review.",
+            evidence_reference=competitor_summary,
+            expected_user_value="Clarifies whether competitor gaps are supported by supplied competitor reviews.",
+            blocked_by=["needs_competitor_reviews_or_stronger_evidence"],
+            recommended_next_step="Supply or review source_type=competitor reviews; do not scrape external sites.",
+            risk_note="Competitor reviews cannot prove own-product performance.",
+        )
+
+    llm_readiness = _rw_text(llm_summary.get("readiness"))
+    add_action(
+        action_id="action_04_prepare_llm_prompt",
+        action_title="Review the evidence-bound LLM prompt preview",
+        action_type="prepare_llm_prompt",
+        priority="medium",
+        source_pack="llm_assist_dry_run_pack",
+        reason="A deterministic prompt plan is available for human review.",
+        evidence_reference={
+            "readiness": llm_readiness,
+            "prompt_type": _rw_text(llm_pack.get("prompt_plan", {}).get("prompt_type")),
+            "real_llm_call_allowed": bool(llm_pack.get("approval_gate", {}).get("real_llm_call_allowed")),
+        },
+        expected_user_value="Makes prompt, evidence, output contract, and claim boundaries reviewable before any future integration.",
+        blocked_by=(
+            []
+            if llm_readiness == "ready_for_human_review"
+            else [llm_readiness or "llm_dry_run_not_ready"]
+        ),
+        recommended_next_step="Review the dry-run prompt and output contract; keep real LLM calls disabled.",
+        risk_note="The mock response is a deterministic placeholder, not real LLM output.",
+    )
+
+    video_readiness = _rw_text(video_summary.get("readiness"))
+    add_action(
+        action_id="action_05_prepare_video_dry_run",
+        action_title="Review the video orchestration dry-run",
+        action_type="prepare_video_dry_run",
+        priority="medium",
+        source_pack="video_provider_orchestration_dry_run_pack",
+        reason="A provider-neutral video job preview is available for human review.",
+        evidence_reference={
+            "readiness": video_readiness,
+            "missing_video_prompt": bool(video_summary.get("missing_video_prompt")),
+            "real_video_call_allowed": bool(video_pack.get("approval_gate", {}).get("real_video_call_allowed")),
+        },
+        expected_user_value="Surfaces prompt, asset, platform, cost-placeholder, and abort-plan gaps safely.",
+        blocked_by=(
+            []
+            if video_readiness == "ready_for_human_approval"
+            else [video_readiness or "video_dry_run_not_ready"]
+        ),
+        recommended_next_step="Review the deterministic job plan without submitting a provider job.",
+        risk_note="No provider quote, media generation, billing operation, abort, or rollback is executed.",
+    )
+
+    export_blockers = [
+        blocker
+        for blocker, active in (
+            ("weak_evidence", weak_evidence),
+            ("missing_quote", missing_quote),
+            ("campaign_pack_missing", not bool(campaign_pack)),
+        )
+        if active
+    ]
+    add_action(
+        action_id="action_06_export_campaign_pack",
+        action_title="Export the campaign handoff pack",
+        action_type="export_campaign_pack",
+        priority="medium",
+        source_pack="campaign_export_pack",
+        reason="The campaign pack can be exported for user-controlled review without executing a campaign.",
+        evidence_reference={
+            "campaign_id": _rw_text(campaign_summary.get("campaign_id")),
+            "campaign_readiness": _rw_text(campaign_summary.get("campaign_readiness")),
+            "snapshot_status": _rw_text(snapshot_summary.get("snapshot_status")),
+        },
+        expected_user_value="Provides a portable, reviewable campaign handoff artifact.",
+        blocked_by=export_blockers,
+        recommended_next_step="Export JSON or Markdown for manual review; do not submit paid or provider operations.",
+        risk_note="Export readiness is not launch approval and does not override evidence warnings.",
+    )
+    add_action(
+        action_id="action_07_compare_run_snapshot",
+        action_title="Review the workspace snapshot comparison",
+        action_type="compare_run_snapshot",
+        priority="low",
+        source_pack="workspace_run_compare_pack",
+        reason="The current snapshot comparison preview is available without reading database history.",
+        evidence_reference={
+            "comparison_mode": _rw_text(compare_summary.get("comparison_mode")),
+            "comparison_status": _rw_text(compare_summary.get("comparison_status")),
+            "previous_snapshot_available": bool(compare_summary.get("previous_snapshot_available")),
+        },
+        expected_user_value="Makes current-only or supplied-baseline differences explicit and exportable.",
+        blocked_by=[],
+        recommended_next_step="Review or export the comparison preview; provide a user-controlled snapshot for a future baseline.",
+        risk_note="No real history lookup, restore, persistence, or rollback is performed.",
+    )
+
+    blocked_actions = [action for action in actions if action["blocked_by"]]
+    ready_actions = [action for action in actions if not action["blocked_by"]]
+    evidence_gap_actions = [
+        action
+        for action in actions
+        if action["action_type"] == "fix_evidence_gap"
+    ]
+    safety_review_actions = [
+        action
+        for action in actions
+        if action["action_type"] in {
+            "safety_review_required",
+            "manual_review_required",
+        }
+    ]
+    export_follow_up_actions = [
+        action
+        for action in actions
+        if action["action_type"] in {
+            "export_campaign_pack",
+            "compare_run_snapshot",
+        }
+    ]
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "automatic_queue_execution_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_action_queue_pack_v1",
+        "queue_summary": {
+            "mode": "deterministic_recommendation_queue",
+            "queue_status": "review_only",
+            "recommended_action_count": len(actions),
+            "blocked_action_count": len(blocked_actions),
+            "ready_action_count": len(ready_actions),
+            "evidence_gap_action_count": len(evidence_gap_actions),
+            "safety_review_action_count": len(safety_review_actions),
+            "export_follow_up_action_count": len(export_follow_up_actions),
+            "top_action_id": actions[0]["action_id"] if actions else "",
+            "real_execution_allowed": False,
+            "recommended_next_action": (
+                actions[0]["recommended_next_step"]
+                if actions
+                else "Review the workspace packs manually; no automatic action is available."
+            ),
+        },
+        "recommended_actions": actions,
+        "blocked_actions": blocked_actions,
+        "ready_actions": ready_actions,
+        "evidence_gap_actions": evidence_gap_actions,
+        "safety_review_actions": safety_review_actions,
+        "export_follow_up_actions": export_follow_up_actions,
+        "queue_quality_checks": {
+            "actions_present": bool(actions),
+            "action_ids_unique": len({action["action_id"] for action in actions}) == len(actions),
+            "all_actions_have_source_pack": all(action["source_pack"] for action in actions),
+            "all_actions_have_evidence_reference": all(action["evidence_reference"] is not None for action in actions),
+            "all_actions_require_approval": all(action["requires_approval"] for action in actions),
+            "all_real_execution_disabled": all(not action["real_execution_allowed"] for action in actions),
+            "weak_evidence_routed_to_review": (
+                bool(evidence_gap_actions or safety_review_actions)
+                if weak_evidence or missing_quote
+                else True
+            ),
+            "ready_actions_are_recommendations_only": all(not action["real_execution_allowed"] for action in ready_actions),
+            "queue_execution_performed": False,
+            "database_write_performed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -22886,6 +23222,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_run_compare_pack"] = (
         _rw_workspace_run_compare_pack(payload, creative_decision_pack)
+    )
+    creative_decision_pack["workspace_action_queue_pack"] = (
+        _rw_workspace_action_queue_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

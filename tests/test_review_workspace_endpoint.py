@@ -953,6 +953,126 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
         )
         self.assertFalse(compared_pack["safety_boundaries"]["real_restore_enabled"])
 
+    def test_workspace_action_queue_pack_is_deterministic_and_never_executes(self):
+        payload = {
+            "workspace_id": "workspace-action-queue",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "manual",
+                    "asin": "QUEUE001",
+                    "title": "Compact Travel Mug",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Short review",
+                            "text": "Leaks.",
+                            "source_section": "manual_review",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+            "workspace_action_queue_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_action_queue_pack"]
+        self.assertEqual(pack["pack_version"], "workspace_action_queue_pack_v1")
+        self.assertTrue(pack["queue_summary"])
+        self.assertEqual(
+            pack["queue_summary"]["mode"],
+            "deterministic_recommendation_queue",
+        )
+        self.assertFalse(pack["queue_summary"]["real_execution_allowed"])
+        actions = pack["recommended_actions"]
+        self.assertGreaterEqual(len(actions), 1)
+        required_action_fields = [
+            "action_id",
+            "action_title",
+            "action_type",
+            "priority",
+            "source_pack",
+            "reason",
+            "evidence_reference",
+            "expected_user_value",
+            "blocked_by",
+            "requires_approval",
+            "real_execution_allowed",
+            "recommended_next_step",
+            "risk_note",
+            "do_not_claim",
+        ]
+        for action in actions:
+            with self.subTest(action=action["action_id"]):
+                for field in required_action_fields:
+                    self.assertIn(field, action)
+                self.assertTrue(action["action_id"])
+                self.assertTrue(action["action_type"])
+                self.assertTrue(action["priority"])
+                self.assertTrue(action["source_pack"])
+                self.assertTrue(action["reason"])
+                self.assertTrue(action["requires_approval"])
+                self.assertFalse(action["real_execution_allowed"])
+
+        self.assertTrue(pack["blocked_actions"])
+        self.assertTrue(
+            pack["evidence_gap_actions"] or pack["safety_review_actions"]
+        )
+        self.assertTrue(pack["export_follow_up_actions"])
+        export_types = {
+            action["action_type"]
+            for action in pack["export_follow_up_actions"]
+        }
+        self.assertIn("export_campaign_pack", export_types)
+        self.assertIn("compare_run_snapshot", export_types)
+        self.assertTrue(
+            all(
+                not action["real_execution_allowed"]
+                for action in pack["ready_actions"]
+            )
+        )
+        checks = pack["queue_quality_checks"]
+        self.assertTrue(checks["actions_present"])
+        self.assertTrue(checks["action_ids_unique"])
+        self.assertTrue(checks["weak_evidence_routed_to_review"])
+        self.assertTrue(checks["all_real_execution_disabled"])
+        self.assertFalse(checks["queue_execution_performed"])
+        self.assertFalse(checks["database_write_performed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+            "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 
 
