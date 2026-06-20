@@ -9705,6 +9705,195 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_action_ticket_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace action ticket bundle",
+            "PROJECT_WORKSPACE_ACTION_TICKET_MARKER",
+            "latestProjectWorkspaceActionTicketPack",
+            "projectWorkspaceActionTicketPackFromWorkspace",
+            "projectWorkspaceExportActionTicketSnapshot",
+            "projectWorkspaceExportActionTicketMarkdown",
+            "renderProjectWorkspaceActionTicketSummaryPanel",
+            "renderProjectWorkspaceActionTicketsPanel",
+            "renderProjectWorkspaceActionTicketApprovalPanel",
+            "renderProjectWorkspaceActionTicketValidationPanel",
+            "renderProjectWorkspaceActionTicketAuditSafetyPanel",
+            "copyProjectWorkspaceActionTicketSummary",
+            "copyProjectWorkspaceActionTickets",
+            "copyProjectWorkspaceApprovalChecklist",
+            "copyProjectWorkspacePreExecutionRequirements",
+            "copyProjectWorkspaceActionTicketValidationPlan",
+            "copyProjectWorkspaceActionTicketAbortConditions",
+            "copyProjectWorkspaceActionTicketAuditPreview",
+            "copyProjectWorkspaceFullActionTicketPack",
+            "workspace_action_ticket_pack: projectWorkspaceExportActionTicketSnapshot(workspace)",
+            "Workspace Action Ticket / Approval Packet",
+            "Ticket Summary",
+            "Action Tickets",
+            "Approval Checklist",
+            "Pre-Execution Requirements",
+            "Validation Plan",
+            "Abort Conditions",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.ticket_summary",
+            "pack.action_tickets",
+            "pack.approval_checklist",
+            "pack.pre_execution_requirements",
+            "pack.validation_plan",
+            "pack.abort_conditions",
+            "pack.blocked_ticket_notes",
+            "pack.audit_trail_preview",
+            "pack.ticket_quality_checks",
+            "pack.safety_boundaries",
+            "summary.ticket_count",
+            "summary.pending_review_ticket_count",
+            "summary.blocked_ticket_count",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed",
+            "ticket.ticket_id",
+            "ticket.ticket_title",
+            "ticket.ticket_type",
+            "ticket.priority",
+            "ticket.source_pack",
+            "ticket.approval_status",
+            "ticket.requires_human_review",
+            "ticket.real_execution_allowed",
+            "ticket.preconditions",
+            "ticket.validation_steps",
+            "ticket.abort_conditions",
+            "ticket.expected_user_value",
+            "ticket.risk_note",
+            "ticket.do_not_claim",
+            "ticket.audit_note",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        queue_safety = html.index(
+            "${renderProjectWorkspaceActionQueueExportSafetyPanel(workspace)}"
+        )
+        ticket_summary = html.index(
+            "${renderProjectWorkspaceActionTicketSummaryPanel(workspace)}"
+        )
+        ticket_safety = html.index(
+            "${renderProjectWorkspaceActionTicketAuditSafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(queue_safety, ticket_summary)
+        self.assertLess(ticket_summary, ticket_safety)
+        self.assertLess(ticket_safety, creative_core)
+
+    def test_workspace_action_ticket_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "actionTicketPackTitle",
+            "actionTicketPackHelper",
+            "actionTicketSummaryTitle",
+            "actionTicketTotalCount",
+            "actionTicketPendingCount",
+            "actionTicketBlockedCount",
+            "actionTicketReviewRequiredCount",
+            "actionTicketRecommendedNextAction",
+            "actionTicketRealExecution",
+            "actionTicketReviewOnlyNote",
+            "actionTicketTicketsTitle",
+            "actionTicketId",
+            "actionTicketType",
+            "actionTicketPriority",
+            "actionTicketSourcePack",
+            "actionTicketApprovalStatus",
+            "actionTicketHumanReview",
+            "actionTicketRealExecutionAllowed",
+            "actionTicketExpectedValue",
+            "actionTicketRiskNote",
+            "actionTicketDoNotClaim",
+            "actionTicketApprovalPanelTitle",
+            "actionTicketApprovalChecklistTitle",
+            "actionTicketPreExecutionTitle",
+            "actionTicketPreconditionsTitle",
+            "actionTicketApprovalNotAuthorization",
+            "actionTicketValidationAbortTitle",
+            "actionTicketValidationPlanTitle",
+            "actionTicketAbortConditionsTitle",
+            "actionTicketTicketValidationTitle",
+            "actionTicketBlockedNotesTitle",
+            "actionTicketAuditSafetyTitle",
+            "actionTicketAuditPreviewTitle",
+            "actionTicketQualityChecksTitle",
+            "actionTicketSafetyBoundariesTitle",
+            "actionTicketAuditNoWriteNote",
+            "actionTicketSafetyNote",
+            "actionTicketCopySummary",
+            "actionTicketCopyTickets",
+            "actionTicketCopyApproval",
+            "actionTicketCopyRequirements",
+            "actionTicketCopyValidation",
+            "actionTicketCopyAbort",
+            "actionTicketCopyAudit",
+            "actionTicketCopyFullPack",
+            "actionTicketCopied",
+            "actionTicketCopyFailed",
+            "actionTicketCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace action ticket bundle", script)
+            self.assertIn("project_workspace_action_ticket_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceActionTicketSummaryText"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceActionTicketText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "actionTicketPackTitle",
+            "actionTicketSummaryTitle",
+            "actionTicketTicketsTitle",
+            "actionTicketApprovalChecklistTitle",
+            "actionTicketPreExecutionTitle",
+            "actionTicketValidationPlanTitle",
+            "actionTicketAbortConditionsTitle",
+            "actionTicketAuditPreviewTitle",
+            "actionTicketSafetyBoundariesTitle",
+            "actionTicketSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        ticket_section = html[
+            html.index("const PROJECT_WORKSPACE_ACTION_TICKET_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", ticket_section)
+        self.assertIn("Approval packet review only", html)
+        self.assertIn("not authorization for real execution", html)
+        self.assertIn("Audit preview only", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

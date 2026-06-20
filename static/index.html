@@ -3607,6 +3607,7 @@
         let latestProjectWorkspaceSessionSnapshotPack = {};
         let latestProjectWorkspaceRunComparePack = {};
         let latestProjectWorkspaceActionQueuePack = {};
+        let latestProjectWorkspaceActionTicketPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8890,6 +8891,7 @@
                 latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
                 latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
                 latestProjectWorkspaceActionQueuePack = latestProjectCreativeDecisionPack.workspace_action_queue_pack || {};
+                latestProjectWorkspaceActionTicketPack = latestProjectCreativeDecisionPack.workspace_action_ticket_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14733,6 +14735,7 @@
         const PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER = 'Project Workspace session snapshot bundle';
         const PROJECT_WORKSPACE_RUN_SNAPSHOT_COMPARE_MARKER = 'Project Workspace run snapshot compare bundle';
         const PROJECT_WORKSPACE_ACTION_QUEUE_MARKER = 'Project Workspace action queue bundle';
+        const PROJECT_WORKSPACE_ACTION_TICKET_MARKER = 'Project Workspace action ticket bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -17167,6 +17170,154 @@
 
         function copyProjectWorkspaceFullActionQueuePack() {
             return copyProjectWorkspaceActionQueueText('full');
+        }
+
+        function projectWorkspaceActionTicketPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceActionTicketPack
+                && Object.keys(latestProjectWorkspaceActionTicketPack).length) {
+                return latestProjectWorkspaceActionTicketPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_action_ticket_pack || {};
+        }
+
+        function projectWorkspaceExportActionTicketSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceActionTicketPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_ACTION_TICKET_MARKER,
+                has_workspace_action_ticket_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                ticket_summary: pack.ticket_summary || {},
+                action_tickets: Array.isArray(pack.action_tickets) ? pack.action_tickets : [],
+                approval_checklist: pack.approval_checklist || {},
+                pre_execution_requirements: pack.pre_execution_requirements || {},
+                validation_plan: pack.validation_plan || {},
+                abort_conditions: Array.isArray(pack.abort_conditions) ? pack.abort_conditions : [],
+                blocked_ticket_notes: Array.isArray(pack.blocked_ticket_notes) ? pack.blocked_ticket_notes : [],
+                audit_trail_preview: pack.audit_trail_preview || {},
+                ticket_quality_checks: pack.ticket_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceActionTicketJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceActionTicketSummaryText(pack = projectWorkspaceExportActionTicketSnapshot()) {
+            if (!pack.has_workspace_action_ticket_pack) return '';
+            const summary = pack.ticket_summary || {};
+            const reviewRequiredCount = (pack.action_tickets || []).filter((ticket) => ticket.approval_status === 'review_required').length;
+            return [
+                t('actionTicketSummaryTitle'),
+                `${t('actionTicketMode')}: ${summary.mode || t('none')}`,
+                `${t('actionTicketStatus')}: ${summary.packet_status || t('none')}`,
+                `${t('actionTicketTotalCount')}: ${summary.ticket_count ?? 0}`,
+                `${t('actionTicketPendingCount')}: ${summary.pending_review_ticket_count ?? 0}`,
+                `${t('actionTicketBlockedCount')}: ${summary.blocked_ticket_count ?? 0}`,
+                `${t('actionTicketReviewRequiredCount')}: ${reviewRequiredCount}`,
+                `${t('actionTicketRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('actionTicketRealExecution')}: ${summary.real_execution_allowed === false ? t('actionTicketDisabled') : String(summary.real_execution_allowed)}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceActionTicketSectionText(titleKey, value) {
+            return [
+                `## ${t(titleKey)}`,
+                projectWorkspaceActionTicketJsonText(value) || t('actionTicketNoData')
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportActionTicketMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionTicketSnapshot(workspace);
+            if (!pack.has_workspace_action_ticket_pack) return '';
+            return [
+                `## ${t('actionTicketPackTitle')}`,
+                `## ${t('actionTicketSummaryTitle')}`,
+                projectWorkspaceActionTicketSummaryText(pack),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketTicketsTitle', pack.action_tickets),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketApprovalChecklistTitle', pack.approval_checklist),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketPreExecutionTitle', pack.pre_execution_requirements),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketValidationPlanTitle', pack.validation_plan),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketAbortConditionsTitle', pack.abort_conditions),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketAuditPreviewTitle', pack.audit_trail_preview),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketQualityChecksTitle', pack.ticket_quality_checks),
+                '',
+                projectWorkspaceActionTicketSectionText('actionTicketSafetyBoundariesTitle', pack.safety_boundaries),
+                t('actionTicketSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceActionTicketText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceActionTicketStatus');
+            const pack = projectWorkspaceExportActionTicketSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceActionTicketSummaryText(pack)
+                : kind === 'tickets'
+                    ? projectWorkspaceActionTicketSectionText('actionTicketTicketsTitle', pack.action_tickets)
+                    : kind === 'approval'
+                        ? projectWorkspaceActionTicketSectionText('actionTicketApprovalChecklistTitle', pack.approval_checklist)
+                        : kind === 'requirements'
+                            ? projectWorkspaceActionTicketSectionText('actionTicketPreExecutionTitle', pack.pre_execution_requirements)
+                            : kind === 'validation'
+                                ? projectWorkspaceActionTicketSectionText('actionTicketValidationPlanTitle', pack.validation_plan)
+                                : kind === 'abort'
+                                    ? projectWorkspaceActionTicketSectionText('actionTicketAbortConditionsTitle', pack.abort_conditions)
+                                    : kind === 'audit'
+                                        ? projectWorkspaceActionTicketSectionText('actionTicketAuditPreviewTitle', pack.audit_trail_preview)
+                                        : projectWorkspaceExportActionTicketMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('actionTicketCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('actionTicketCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('actionTicketCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('actionTicketCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceActionTicketSummary() {
+            return copyProjectWorkspaceActionTicketText('summary');
+        }
+
+        function copyProjectWorkspaceActionTickets() {
+            return copyProjectWorkspaceActionTicketText('tickets');
+        }
+
+        function copyProjectWorkspaceApprovalChecklist() {
+            return copyProjectWorkspaceActionTicketText('approval');
+        }
+
+        function copyProjectWorkspacePreExecutionRequirements() {
+            return copyProjectWorkspaceActionTicketText('requirements');
+        }
+
+        function copyProjectWorkspaceActionTicketValidationPlan() {
+            return copyProjectWorkspaceActionTicketText('validation');
+        }
+
+        function copyProjectWorkspaceActionTicketAbortConditions() {
+            return copyProjectWorkspaceActionTicketText('abort');
+        }
+
+        function copyProjectWorkspaceActionTicketAuditPreview() {
+            return copyProjectWorkspaceActionTicketText('audit');
+        }
+
+        function copyProjectWorkspaceFullActionTicketPack() {
+            return copyProjectWorkspaceActionTicketText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -19681,6 +19832,152 @@
             `;
         }
 
+        function renderProjectWorkspaceActionTicketSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionTicketSnapshot(workspace);
+            if (!pack.has_workspace_action_ticket_pack) return '';
+            const summary = pack.ticket_summary || {};
+            const reviewRequiredCount = (pack.action_tickets || []).filter((ticket) => ticket.approval_status === 'review_required').length;
+            return `
+                <div class="section-block" id="projectWorkspaceActionTicketSummaryPanel"
+                    data-action-ticket-marker="${PROJECT_WORKSPACE_ACTION_TICKET_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionTicketPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionTicketPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullActionTicketPack()">${escapeHTML(t('actionTicketCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('actionTicketTotalCount'), summary.ticket_count ?? 0)}
+                        ${metricPill(t('actionTicketPendingCount'), summary.pending_review_ticket_count ?? 0)}
+                        ${metricPill(t('actionTicketBlockedCount'), summary.blocked_ticket_count ?? 0)}
+                        ${metricPill(t('actionTicketReviewRequiredCount'), reviewRequiredCount)}
+                        ${metricPill(t('actionTicketRealExecution'), summary.real_execution_allowed === false ? t('actionTicketDisabled') : String(summary.real_execution_allowed))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('actionTicketRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('actionTicketReviewOnlyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceActionTicketStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceActionTicketSummary()">${escapeHTML(t('actionTicketCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceActionTicketsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionTicketSnapshot(workspace);
+            if (!pack.has_workspace_action_ticket_pack) return '';
+            const tickets = pack.action_tickets || [];
+            return `
+                <div class="section-block" id="projectWorkspaceActionTicketsPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionTicketTicketsTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionTicketTicketsHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceActionTickets()">${escapeHTML(t('actionTicketCopyTickets'))}</button>
+                    </div>
+                    ${tickets.length ? `<div class="graph-os-compact-grid">${tickets.map((ticket) => `
+                        <div class="graph-os-card">
+                            <strong>${escapeHTML(ticket.ticket_title || t('none'))}</strong>
+                            <div><strong>${escapeHTML(t('actionTicketId'))}:</strong> ${escapeHTML(ticket.ticket_id || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketType'))}:</strong> ${escapeHTML(ticket.ticket_type || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketPriority'))}:</strong> ${escapeHTML(ticket.priority || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketSourcePack'))}:</strong> ${escapeHTML(ticket.source_pack || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketApprovalStatus'))}:</strong> ${escapeHTML(ticket.approval_status || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketHumanReview'))}:</strong> ${escapeHTML(String(ticket.requires_human_review === true))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketRealExecutionAllowed'))}:</strong> ${escapeHTML(String(ticket.real_execution_allowed === true))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketExpectedValue'))}:</strong> ${escapeHTML(ticket.expected_user_value || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketRiskNote'))}:</strong> ${escapeHTML(ticket.risk_note || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('actionTicketDoNotClaim'))}:</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(ticket.do_not_claim) || t('actionTicketNoData'))}</pre></div>
+                        </div>
+                    `).join('')}</div>` : `<div class="feedback-box">${escapeHTML(t('actionTicketNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceActionTicketApprovalPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionTicketSnapshot(workspace);
+            if (!pack.has_workspace_action_ticket_pack) return '';
+            const preconditions = (pack.action_tickets || []).map((ticket) => ({
+                ticket_id: ticket.ticket_id,
+                preconditions: ticket.preconditions || []
+            }));
+            return `
+                <div class="section-block" id="projectWorkspaceActionTicketApprovalPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionTicketApprovalPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionTicketApprovalPanelHelper'))}</div>
+                        </div>
+                        <div class="action-row">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalChecklist()">${escapeHTML(t('actionTicketCopyApproval'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspacePreExecutionRequirements()">${escapeHTML(t('actionTicketCopyRequirements'))}</button>
+                        </div>
+                    </div>
+                    <div class="demo-warning">${escapeHTML(t('actionTicketApprovalNotAuthorization'))}</div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('actionTicketApprovalChecklistTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(pack.approval_checklist) || t('actionTicketNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('actionTicketPreExecutionTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(pack.pre_execution_requirements) || t('actionTicketNoData'))}</pre></div>
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('actionTicketPreconditionsTitle'))}:</strong><pre style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(preconditions) || t('actionTicketNoData'))}</pre></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceActionTicketValidationPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionTicketSnapshot(workspace);
+            if (!pack.has_workspace_action_ticket_pack) return '';
+            const ticketValidation = (pack.action_tickets || []).map((ticket) => ({
+                ticket_id: ticket.ticket_id,
+                validation_steps: ticket.validation_steps || [],
+                abort_conditions: ticket.abort_conditions || [],
+                audit_note: ticket.audit_note || ''
+            }));
+            return `
+                <div class="section-block" id="projectWorkspaceActionTicketValidationPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionTicketValidationAbortTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionTicketValidationAbortHelper'))}</div>
+                        </div>
+                        <div class="action-row">
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceActionTicketValidationPlan()">${escapeHTML(t('actionTicketCopyValidation'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceActionTicketAbortConditions()">${escapeHTML(t('actionTicketCopyAbort'))}</button>
+                        </div>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('actionTicketValidationPlanTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(pack.validation_plan) || t('actionTicketNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('actionTicketAbortConditionsTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(pack.abort_conditions) || t('actionTicketNoData'))}</pre></div>
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('actionTicketTicketValidationTitle'))}:</strong><pre style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(ticketValidation) || t('actionTicketNoData'))}</pre></div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('actionTicketBlockedNotesTitle'))}:</strong><pre style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(pack.blocked_ticket_notes) || t('actionTicketNoData'))}</pre></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceActionTicketAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportActionTicketSnapshot(workspace);
+            if (!pack.has_workspace_action_ticket_pack) return '';
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('actionTicketDisabled') : String(value)}`).join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceActionTicketAuditSafetyPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('actionTicketAuditSafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('actionTicketAuditSafetyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceActionTicketAuditPreview()">${escapeHTML(t('actionTicketCopyAudit'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('actionTicketAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(pack.audit_trail_preview) || t('actionTicketNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('actionTicketQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceActionTicketJsonText(pack.ticket_quality_checks) || t('actionTicketNoData'))}</pre></div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('actionTicketSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('actionTicketAuditNoWriteNote'))}</div>
+                    <div class="field-helper">${escapeHTML(t('actionTicketSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -20169,6 +20466,8 @@
                 '',
                 projectWorkspaceExportActionQueueMarkdown(workspace),
                 '',
+                projectWorkspaceExportActionTicketMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -20257,6 +20556,7 @@
                 workspace_session_snapshot_pack: projectWorkspaceExportSessionSnapshot(workspace),
                 workspace_run_compare_pack: projectWorkspaceExportRunCompareSnapshot(workspace),
                 workspace_action_queue_pack: projectWorkspaceExportActionQueueSnapshot(workspace),
+                workspace_action_ticket_pack: projectWorkspaceExportActionTicketSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -32687,6 +32987,11 @@
                     ${renderProjectWorkspaceBlockedReadyActionsPanel(workspace)}
                     ${renderProjectWorkspaceEvidenceSafetyActionsPanel(workspace)}
                     ${renderProjectWorkspaceActionQueueExportSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceActionTicketSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceActionTicketsPanel(workspace)}
+                    ${renderProjectWorkspaceActionTicketApprovalPanel(workspace)}
+                    ${renderProjectWorkspaceActionTicketValidationPanel(workspace)}
+                    ${renderProjectWorkspaceActionTicketAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -40852,6 +41157,126 @@
             actionQueueCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u884c\u52a8\u961f\u5217\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceActionTicketMarker: 'Project Workspace action ticket bundle',
+            actionTicketPackTitle: 'Workspace Action Ticket / Approval Packet',
+            actionTicketPackHelper: 'Inspect traceable review tickets derived from the recommendation queue. This packet never authorizes real execution.',
+            actionTicketSummaryTitle: 'Ticket Summary',
+            actionTicketMode: 'Packet mode',
+            actionTicketStatus: 'Packet status',
+            actionTicketTotalCount: 'Total tickets',
+            actionTicketPendingCount: 'Pending review',
+            actionTicketBlockedCount: 'Blocked tickets',
+            actionTicketReviewRequiredCount: 'Review required',
+            actionTicketRecommendedNextAction: 'Recommended next action',
+            actionTicketRealExecution: 'Real execution',
+            actionTicketDisabled: 'disabled',
+            actionTicketReviewOnlyNote: 'Approval packet review only. No ticket can approve or trigger real execution.',
+            actionTicketTicketsTitle: 'Action Tickets',
+            actionTicketTicketsHelper: 'Each ticket remains linked to its source action, source pack, approval state, risk, and claim boundaries.',
+            actionTicketId: 'Ticket ID',
+            actionTicketType: 'Ticket type',
+            actionTicketPriority: 'Priority',
+            actionTicketSourcePack: 'Source pack',
+            actionTicketApprovalStatus: 'Approval status',
+            actionTicketHumanReview: 'Requires human review',
+            actionTicketRealExecutionAllowed: 'Real execution allowed',
+            actionTicketExpectedValue: 'Expected user value',
+            actionTicketRiskNote: 'Risk note',
+            actionTicketDoNotClaim: 'Do not claim',
+            actionTicketApprovalPanelTitle: 'Approval Checklist / Pre-Execution Requirements',
+            actionTicketApprovalPanelHelper: 'Review checklist and preconditions without creating an approval record or execution authorization.',
+            actionTicketApprovalChecklistTitle: 'Approval Checklist',
+            actionTicketPreExecutionTitle: 'Pre-Execution Requirements',
+            actionTicketPreconditionsTitle: 'Ticket Preconditions',
+            actionTicketApprovalNotAuthorization: 'This approval packet is review guidance only. It is not authorization for real execution.',
+            actionTicketValidationAbortTitle: 'Validation / Abort Conditions',
+            actionTicketValidationAbortHelper: 'Inspect validation steps, abort conditions, blocked notes, and audit notes before any future workflow design.',
+            actionTicketValidationPlanTitle: 'Validation Plan',
+            actionTicketAbortConditionsTitle: 'Abort Conditions',
+            actionTicketTicketValidationTitle: 'Ticket Validation Steps / Audit Notes',
+            actionTicketBlockedNotesTitle: 'Blocked Ticket Notes',
+            actionTicketAuditSafetyTitle: 'Audit Preview / Quality / Safety Boundaries',
+            actionTicketAuditSafetyHelper: 'Read-only audit and quality preview. No ticket, approval, history, registry, or database record is written.',
+            actionTicketAuditPreviewTitle: 'Audit Preview',
+            actionTicketQualityChecksTitle: 'Ticket Quality Checks',
+            actionTicketSafetyBoundariesTitle: 'Safety Boundaries',
+            actionTicketAuditNoWriteNote: 'Audit preview only. No database, history, registry, approval, or ticket queue write is performed.',
+            actionTicketSafetyNote: 'Tickets do not execute operations. Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            actionTicketNoData: 'No workspace action ticket data is available.',
+            actionTicketCopySummary: 'Copy ticket summary',
+            actionTicketCopyTickets: 'Copy action tickets',
+            actionTicketCopyApproval: 'Copy approval checklist',
+            actionTicketCopyRequirements: 'Copy pre-execution requirements',
+            actionTicketCopyValidation: 'Copy validation plan',
+            actionTicketCopyAbort: 'Copy abort conditions',
+            actionTicketCopyAudit: 'Copy audit preview',
+            actionTicketCopyFullPack: 'Copy full action ticket pack',
+            actionTicketCopied: 'Workspace action ticket content copied.',
+            actionTicketCopyFailed: 'Unable to copy workspace action ticket content.',
+            actionTicketCopyNoData: 'No workspace action ticket content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceActionTicketMarker: 'Project Workspace action ticket bundle',
+            actionTicketPackTitle: '\u5de5\u4f5c\u533a\u884c\u52a8\u5de5\u5355 / \u5ba1\u6279\u5305',
+            actionTicketPackHelper: '\u68c0\u67e5\u4ece\u5efa\u8bae\u961f\u5217\u6d3e\u751f\u7684\u53ef\u8ffd\u8e2a\u5ba1\u9605\u5de5\u5355\u3002\u6b64\u5ba1\u6279\u5305\u7edd\u4e0d\u6388\u6743\u771f\u5b9e\u6267\u884c\u3002',
+            actionTicketSummaryTitle: '\u5de5\u5355\u6458\u8981',
+            actionTicketMode: '\u5ba1\u6279\u5305\u6a21\u5f0f',
+            actionTicketStatus: '\u5ba1\u6279\u5305\u72b6\u6001',
+            actionTicketTotalCount: '\u5de5\u5355\u603b\u6570',
+            actionTicketPendingCount: '\u5f85\u5ba1\u9605',
+            actionTicketBlockedCount: '\u5df2\u963b\u585e\u5de5\u5355',
+            actionTicketReviewRequiredCount: '\u9700\u8981\u5ba1\u9605',
+            actionTicketRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            actionTicketRealExecution: '\u771f\u5b9e\u6267\u884c',
+            actionTicketDisabled: '\u5df2\u7981\u7528',
+            actionTicketReviewOnlyNote: '\u5ba1\u6279\u5305\u4ec5\u4f9b\u5ba1\u9605\u3002\u4efb\u4f55\u5de5\u5355\u90fd\u4e0d\u80fd\u6279\u51c6\u6216\u89e6\u53d1\u771f\u5b9e\u6267\u884c\u3002',
+            actionTicketTicketsTitle: '\u884c\u52a8\u5de5\u5355',
+            actionTicketTicketsHelper: '\u6bcf\u4e2a\u5de5\u5355\u90fd\u4e0e\u6765\u6e90\u884c\u52a8\u3001\u6765\u6e90 pack\u3001\u5ba1\u6279\u72b6\u6001\u3001\u98ce\u9669\u548c\u58f0\u79f0\u8fb9\u754c\u4fdd\u6301\u5173\u8054\u3002',
+            actionTicketId: '\u5de5\u5355 ID',
+            actionTicketType: '\u5de5\u5355\u7c7b\u578b',
+            actionTicketPriority: '\u4f18\u5148\u7ea7',
+            actionTicketSourcePack: '\u6765\u6e90 pack',
+            actionTicketApprovalStatus: '\u5ba1\u6279\u72b6\u6001',
+            actionTicketHumanReview: '\u9700\u8981\u4eba\u5de5\u5ba1\u9605',
+            actionTicketRealExecutionAllowed: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            actionTicketExpectedValue: '\u9884\u671f\u7528\u6237\u4ef7\u503c',
+            actionTicketRiskNote: '\u98ce\u9669\u8bf4\u660e',
+            actionTicketDoNotClaim: '\u7981\u6b62\u58f0\u79f0',
+            actionTicketApprovalPanelTitle: '\u5ba1\u6279\u68c0\u67e5\u6e05\u5355 / \u6267\u884c\u524d\u8981\u6c42',
+            actionTicketApprovalPanelHelper: '\u68c0\u67e5\u6e05\u5355\u548c\u524d\u7f6e\u6761\u4ef6\uff0c\u4e0d\u521b\u5efa\u5ba1\u6279\u8bb0\u5f55\u6216\u6267\u884c\u6388\u6743\u3002',
+            actionTicketApprovalChecklistTitle: '\u5ba1\u6279\u68c0\u67e5\u6e05\u5355',
+            actionTicketPreExecutionTitle: '\u6267\u884c\u524d\u8981\u6c42',
+            actionTicketPreconditionsTitle: '\u5de5\u5355\u524d\u7f6e\u6761\u4ef6',
+            actionTicketApprovalNotAuthorization: '\u6b64\u5ba1\u6279\u5305\u4ec5\u4e3a\u5ba1\u9605\u6307\u5357\u3002\u5b83\u4e0d\u662f\u771f\u5b9e\u6267\u884c\u6388\u6743\u3002',
+            actionTicketValidationAbortTitle: '\u9a8c\u8bc1 / \u4e2d\u6b62\u6761\u4ef6',
+            actionTicketValidationAbortHelper: '\u5728\u8bbe\u8ba1\u4efb\u4f55\u672a\u6765\u6d41\u7a0b\u524d\uff0c\u68c0\u67e5\u9a8c\u8bc1\u6b65\u9aa4\u3001\u4e2d\u6b62\u6761\u4ef6\u3001\u963b\u585e\u8bf4\u660e\u548c\u5ba1\u8ba1\u5907\u6ce8\u3002',
+            actionTicketValidationPlanTitle: '\u9a8c\u8bc1\u8ba1\u5212',
+            actionTicketAbortConditionsTitle: '\u4e2d\u6b62\u6761\u4ef6',
+            actionTicketTicketValidationTitle: '\u5de5\u5355\u9a8c\u8bc1\u6b65\u9aa4 / \u5ba1\u8ba1\u5907\u6ce8',
+            actionTicketBlockedNotesTitle: '\u5df2\u963b\u585e\u5de5\u5355\u8bf4\u660e',
+            actionTicketAuditSafetyTitle: '\u5ba1\u8ba1\u9884\u89c8 / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            actionTicketAuditSafetyHelper: '\u53ea\u8bfb\u5ba1\u8ba1\u4e0e\u8d28\u91cf\u9884\u89c8\u3002\u4e0d\u5199\u5165\u5de5\u5355\u3001\u5ba1\u6279\u3001\u5386\u53f2\u3001registry \u6216\u6570\u636e\u5e93\u8bb0\u5f55\u3002',
+            actionTicketAuditPreviewTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            actionTicketQualityChecksTitle: '\u5de5\u5355\u8d28\u91cf\u68c0\u67e5',
+            actionTicketSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            actionTicketAuditNoWriteNote: '\u4ec5\u4e3a\u5ba1\u8ba1\u9884\u89c8\u3002\u4e0d\u6267\u884c\u6570\u636e\u5e93\u3001\u5386\u53f2\u3001registry\u3001\u5ba1\u6279\u6216\u5de5\u5355\u961f\u5217\u5199\u5165\u3002',
+            actionTicketSafetyNote: '\u5de5\u5355\u4e0d\u6267\u884c\u64cd\u4f5c\u3002\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            actionTicketNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u884c\u52a8\u5de5\u5355\u6570\u636e\u3002',
+            actionTicketCopySummary: '\u590d\u5236\u5de5\u5355\u6458\u8981',
+            actionTicketCopyTickets: '\u590d\u5236\u884c\u52a8\u5de5\u5355',
+            actionTicketCopyApproval: '\u590d\u5236\u5ba1\u6279\u68c0\u67e5\u6e05\u5355',
+            actionTicketCopyRequirements: '\u590d\u5236\u6267\u884c\u524d\u8981\u6c42',
+            actionTicketCopyValidation: '\u590d\u5236\u9a8c\u8bc1\u8ba1\u5212',
+            actionTicketCopyAbort: '\u590d\u5236\u4e2d\u6b62\u6761\u4ef6',
+            actionTicketCopyAudit: '\u590d\u5236\u5ba1\u8ba1\u9884\u89c8',
+            actionTicketCopyFullPack: '\u590d\u5236\u5b8c\u6574\u884c\u52a8\u5de5\u5355\u5305',
+            actionTicketCopied: '\u5de5\u4f5c\u533a\u884c\u52a8\u5de5\u5355\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            actionTicketCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u884c\u52a8\u5de5\u5355\u5185\u5bb9\u3002',
+            actionTicketCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u884c\u52a8\u5de5\u5355\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -42252,6 +42677,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
     latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
     latestProjectWorkspaceActionQueuePack = latestProjectCreativeDecisionPack.workspace_action_queue_pack || {};
+    latestProjectWorkspaceActionTicketPack = latestProjectCreativeDecisionPack.workspace_action_ticket_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
