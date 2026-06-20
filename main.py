@@ -25591,6 +25591,450 @@ def _rw_workspace_remediation_verification_pack(
     }
 
 
+def _rw_workspace_retry_rehearsal_plan_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    verification_pack = dict(
+        creative_decision_pack.get("workspace_remediation_verification_pack")
+        or {}
+    )
+    verification_summary = dict(
+        verification_pack.get("verification_summary") or {}
+    )
+    verification_cards = list(
+        verification_pack.get("action_verification_cards") or []
+    )
+    readiness_gate = dict(
+        verification_pack.get("retry_readiness_gate") or {}
+    )
+    remaining_blockers = list(
+        verification_pack.get("remaining_blockers") or []
+    )
+    required_inputs = list(
+        verification_pack.get("required_inputs_checklist") or []
+    )
+    evidence_review = dict(
+        verification_pack.get("evidence_readiness_review") or {}
+    )
+    signoff_preview = dict(
+        verification_pack.get("operator_signoff_preview") or {}
+    )
+    next_retry_scope = dict(
+        verification_pack.get("next_retry_scope") or {}
+    )
+
+    input_by_verification = {
+        _rw_text(item.get("source_verification_id")): item
+        for item in required_inputs
+        if _rw_text(item.get("source_verification_id"))
+    }
+    blockers_by_verification = {}
+    for blocker in remaining_blockers:
+        verification_id = _rw_text(
+            blocker.get("source_verification_id")
+        )
+        if verification_id:
+            blockers_by_verification.setdefault(verification_id, []).append(
+                blocker
+            )
+
+    second_pass_step_sequence = []
+    for index, card in enumerate(verification_cards, start=1):
+        verification_id = _rw_text(card.get("verification_id"))
+        source_input = dict(
+            input_by_verification.get(verification_id) or {}
+        )
+        card_blockers = list(
+            blockers_by_verification.get(verification_id) or []
+        )
+        issue_type = _rw_text(card.get("issue_type"))
+        retry_eligible = bool(card.get("retry_eligible"))
+        if issue_type == "evidence_gap":
+            step_type = "second_pass_evidence_validation"
+            step_title = "Re-validate evidence inputs"
+        elif issue_type == "approval_gate_review":
+            step_type = "second_pass_gate_review"
+            step_title = "Re-run approval gate review"
+        elif issue_type == "operator_review":
+            step_type = "second_pass_operator_checkpoint"
+            step_title = "Re-run operator review checkpoint"
+        else:
+            step_type = "second_pass_rehearsal_validation"
+            step_title = "Re-run deterministic rehearsal validation"
+        retry_step_signature = json.dumps(
+            {
+                "index": index,
+                "verification_id": verification_id,
+                "source_action_id": _rw_text(
+                    card.get("source_action_id")
+                ),
+                "step_type": step_type,
+            },
+            ensure_ascii=True,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        preconditions = [
+            "Keep the launch lock closed and all real capabilities disabled.",
+            "Complete human review of the source verification card.",
+        ]
+        required_input = _rw_text(card.get("required_input")) or _rw_text(
+            source_input.get("required_input")
+        )
+        if required_input:
+            preconditions.append(
+                f"Provide and validate this user-supplied input: {required_input}"
+            )
+        for blocker in card_blockers:
+            remaining_gap = _rw_text(blocker.get("remaining_gap"))
+            if remaining_gap:
+                preconditions.append(
+                    f"Resolve carried blocker: {remaining_gap}"
+                )
+        second_pass_step_sequence.append(
+            {
+                "retry_step_id": "retry_step_"
+                + hashlib.sha256(
+                    retry_step_signature.encode("utf-8")
+                ).hexdigest()[:10],
+                "source_verification_id": verification_id,
+                "source_action_id": _rw_text(
+                    card.get("source_action_id")
+                ),
+                "source_step_id": _rw_text(card.get("source_step_id")),
+                "step_title": step_title,
+                "step_type": step_type,
+                "retry_reason": _rw_text(card.get("remaining_gap"))
+                or _rw_text(card.get("verification_status")),
+                "preconditions": list(dict.fromkeys(preconditions)),
+                "dry_run_retry_action": (
+                    "Repeat only the deterministic preview for this verified scope; do not invoke any real system."
+                ),
+                "tightened_validation_check": _rw_text(
+                    card.get("validation_before_retry")
+                )
+                or "Confirm all required inputs and carried blockers are resolved before recording a simulated result.",
+                "expected_observation": (
+                    "A deterministic second-pass observation showing whether the item is eligible for another dry-run rehearsal."
+                ),
+                "remaining_gap": _rw_text(card.get("remaining_gap")),
+                "abort_trigger": (
+                    "Abort the rehearsal preview if required input, human signoff, or safety boundaries are missing."
+                ),
+                "retry_eligible": retry_eligible,
+                "real_execution_allowed": False,
+                "risk_note": _rw_text(card.get("risk_note"))
+                or "Second-pass retry remains a dry-run preview only.",
+            }
+        )
+
+    carry_forward_blockers = [
+        {
+            "carry_id": f"carry_blocker_{index:02d}",
+            "source_blocker_id": _rw_text(blocker.get("blocker_id")),
+            "source_verification_id": _rw_text(
+                blocker.get("source_verification_id")
+            ),
+            "source_action_id": _rw_text(
+                blocker.get("source_action_id")
+            ),
+            "source_step_id": _rw_text(blocker.get("source_step_id")),
+            "blocker_type": _rw_text(blocker.get("blocker_type")),
+            "remaining_gap": _rw_text(blocker.get("remaining_gap")),
+            "resolution_required": _rw_text(
+                blocker.get("resolution_required")
+            ),
+            "blocks_second_pass": bool(
+                blocker.get("blocks_next_dry_run", True)
+            ),
+            "real_execution_allowed": False,
+        }
+        for index, blocker in enumerate(remaining_blockers, start=1)
+    ]
+
+    retry_validation_matrix = [
+        {
+            "matrix_id": f"retry_validation_{index:02d}",
+            "retry_step_id": step["retry_step_id"],
+            "source_verification_id": step["source_verification_id"],
+            "precondition_count": len(step["preconditions"]),
+            "validation_condition": step["tightened_validation_check"],
+            "success_observation": step["expected_observation"],
+            "failure_handling": step["abort_trigger"],
+            "current_status": (
+                "eligible_for_second_pass_dry_run"
+                if step["retry_eligible"]
+                else "blocked_pending_inputs_or_review"
+            ),
+            "real_execution_allowed": False,
+        }
+        for index, step in enumerate(second_pass_step_sequence, start=1)
+    ]
+    tightened_checkpoint_plan = {
+        "checkpoint_mode": "tightened_second_pass_dry_run_checkpoints",
+        "opening_checks": [
+            "Verify the retry scope is limited to a dry-run rehearsal.",
+            "Verify all real execution and provider boundaries remain disabled.",
+            "Verify required inputs are user-supplied and human-reviewed.",
+            "Verify operator signoff preview is complete without creating approval.",
+        ],
+        "step_checkpoints": [
+            {
+                "retry_step_id": step["retry_step_id"],
+                "rerun_required": True,
+                "must_satisfy": step["preconditions"],
+                "validation_check": step[
+                    "tightened_validation_check"
+                ],
+                "abort_trigger": step["abort_trigger"],
+            }
+            for step in second_pass_step_sequence
+        ],
+        "closing_checks": [
+            "Confirm every observation is deterministic and simulated.",
+            "Confirm carry-forward blockers remain visible if unresolved.",
+            "Confirm no retry, approval, ticket, persistence, or real execution occurred.",
+        ],
+        "checkpoint_execution_performed": False,
+    }
+    operator_review_before_retry = {
+        "review_mode": "operator_review_before_second_pass_preview",
+        "source_signoff_status": _rw_text(
+            signoff_preview.get("signoff_status")
+        ),
+        "source_review_items": list(
+            signoff_preview.get("review_items") or []
+        ),
+        "required_input_checks": required_inputs,
+        "evidence_review_status": (
+            "ready"
+            if evidence_review.get("all_evidence_ready")
+            else "missing_evidence"
+        ),
+        "operator_review_required": bool(
+            second_pass_step_sequence
+            or carry_forward_blockers
+            or required_inputs
+        ),
+        "review_completed": False,
+        "approval_created": False,
+        "ticket_created": False,
+        "operator_log_written": False,
+        "real_execution_allowed": False,
+    }
+    mock_retry_timeline = {
+        "timeline_type": "deterministic_mock_second_pass_timeline",
+        "is_real_execution_log": False,
+        "is_real_retry_log": False,
+        "events": [
+            {
+                "sequence": index,
+                "mock_time": f"T+{(index - 1) * 5:02d}m",
+                "retry_step_id": step["retry_step_id"],
+                "mock_status": (
+                    "blocked_preview"
+                    if not step["retry_eligible"]
+                    else "eligible_preview"
+                ),
+                "real_retry_performed": False,
+                "real_execution_performed": False,
+            }
+            for index, step in enumerate(
+                second_pass_step_sequence,
+                start=1,
+            )
+        ],
+        "note": (
+            "This is a deterministic mock retry timeline, not a real retry or execution log."
+        ),
+    }
+    retry_abort_plan = {
+        "abort_mode": "second_pass_rehearsal_abort_preview",
+        "abort_triggers": list(
+            dict.fromkeys(
+                [
+                    "required_input_missing_or_unverified",
+                    "operator_review_or_signoff_missing",
+                    "evidence_gap_or_blocker_unresolved",
+                    "real_provider_or_execution_request_detected",
+                    "database_persistence_or_external_collection_requested",
+                    "restore_or_rollback_request_detected",
+                    *[
+                        step["abort_trigger"]
+                        for step in second_pass_step_sequence
+                    ],
+                ]
+            )
+        ),
+        "abort_action": (
+            "Stop only the deterministic mock timeline and retain unresolved blockers for human review."
+        ),
+        "real_abort_executed": False,
+        "real_restore_executed": False,
+        "real_rollback_executed": False,
+        "real_execution_allowed": False,
+    }
+
+    all_steps_eligible = bool(second_pass_step_sequence) and all(
+        step["retry_eligible"] for step in second_pass_step_sequence
+    )
+    retry_scope = {
+        "scope_mode": "second_pass_dry_run_rehearsal_scope_preview",
+        "retry_type": "next_dry_run_rehearsal_only",
+        "source_scope": list(next_retry_scope.get("source_scope") or []),
+        "source_verified_action_ids": list(
+            next_retry_scope.get("verified_action_ids") or []
+        ),
+        "source_blocked_action_ids": list(
+            next_retry_scope.get("blocked_action_ids") or []
+        ),
+        "second_pass_step_ids": [
+            step["retry_step_id"] for step in second_pass_step_sequence
+        ],
+        "entry_criteria": list(
+            next_retry_scope.get("entry_criteria") or []
+        ),
+        "scope_ready": all_steps_eligible
+        and not carry_forward_blockers
+        and not required_inputs,
+        "real_retry_started": False,
+        "real_execution_allowed": False,
+    }
+    plan_signature = json.dumps(
+        {
+            "verification_run_id": _rw_text(
+                verification_summary.get("verification_run_id")
+            ),
+            "retry_step_ids": [
+                step["retry_step_id"]
+                for step in second_pass_step_sequence
+            ],
+            "carry_forward_count": len(carry_forward_blockers),
+            "gate_status": _rw_text(readiness_gate.get("gate_status")),
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    retry_plan_id = (
+        "retry_rehearsal_plan_"
+        + hashlib.sha256(plan_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "approval_creation_enabled": False,
+        "launch_unlock_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_retry_rehearsal_plan_pack_v1",
+        "retry_rehearsal_summary": {
+            "retry_plan_id": retry_plan_id,
+            "mode": "deterministic_retry_rehearsal_plan_second_pass_dry_run_preview",
+            "plan_status": (
+                "blocked_pending_inputs_or_review"
+                if carry_forward_blockers or required_inputs
+                else "ready_for_second_pass_dry_run_review"
+            ),
+            "source_verification_run_id": _rw_text(
+                verification_summary.get("verification_run_id")
+            ),
+            "source_gate_status": _rw_text(
+                readiness_gate.get("gate_status")
+            ),
+            "second_pass_step_count": len(second_pass_step_sequence),
+            "carry_forward_blocker_count": len(carry_forward_blockers),
+            "operator_review_required": operator_review_before_retry[
+                "operator_review_required"
+            ],
+            "recommended_next_action": (
+                "Resolve carried blockers and required inputs, then review the second-pass dry-run runbook."
+            ),
+            "real_retry_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "retry_scope": retry_scope,
+        "second_pass_step_sequence": second_pass_step_sequence,
+        "carry_forward_blockers": carry_forward_blockers,
+        "tightened_checkpoint_plan": tightened_checkpoint_plan,
+        "retry_validation_matrix": retry_validation_matrix,
+        "operator_review_before_retry": operator_review_before_retry,
+        "mock_retry_timeline": mock_retry_timeline,
+        "retry_abort_plan": retry_abort_plan,
+        "retry_quality_checks": {
+            "remediation_verification_pack_present": bool(
+                verification_pack
+            ),
+            "step_count_consistent": len(second_pass_step_sequence)
+            == len(verification_cards),
+            "all_steps_traceable": all(
+                step["retry_step_id"]
+                and step["source_verification_id"]
+                and step["source_action_id"]
+                for step in second_pass_step_sequence
+            ),
+            "all_steps_are_dry_run_actions": all(
+                "deterministic preview"
+                in step["dry_run_retry_action"]
+                for step in second_pass_step_sequence
+            ),
+            "all_steps_execution_disabled": all(
+                not step["real_execution_allowed"]
+                for step in second_pass_step_sequence
+            ),
+            "blockers_carried_forward": len(carry_forward_blockers)
+            == len(remaining_blockers),
+            "validation_matrix_complete": len(retry_validation_matrix)
+            == len(second_pass_step_sequence),
+            "mock_timeline_not_real": True,
+            "operator_review_not_completed": True,
+            "external_data_collected": False,
+            "approval_created": False,
+            "ticket_created": False,
+            "database_write_performed": False,
+            "real_retry_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_second_pass_runbook_preview",
+            "retry_plan_id": retry_plan_id,
+            "source_verification_run_id": _rw_text(
+                verification_summary.get("verification_run_id")
+            ),
+            "source_verification_ids": [
+                step["source_verification_id"]
+                for step in second_pass_step_sequence
+            ],
+            "retry_step_ids": [
+                step["retry_step_id"] for step in second_pass_step_sequence
+            ],
+            "is_real_retry_log": False,
+            "is_real_execution_log": False,
+            "database_write_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This audit is a deterministic second-pass runbook preview only; no retry, execution, approval, ticket, operator log, or database record was created."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -25710,6 +26154,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_remediation_verification_pack"] = (
         _rw_workspace_remediation_verification_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_retry_rehearsal_plan_pack"] = (
+        _rw_workspace_retry_rehearsal_plan_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
