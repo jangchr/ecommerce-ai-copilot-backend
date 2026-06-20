@@ -1854,6 +1854,179 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_rehearsal_remediation_pack_is_dry_run_only(self):
+        payload = {
+            "workspace_id": "workspace-rehearsal-remediation",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "manual",
+                    "asin": "REMEDIATE001",
+                    "title": "Compact Travel Mug",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Too short",
+                            "text": "Leaks.",
+                            "source_section": "manual_review",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+            "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_rehearsal_remediation_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_rehearsal_remediation_pack_v1",
+        )
+        summary = pack["remediation_summary"]
+        self.assertTrue(summary["remediation_id"])
+        self.assertIn("remediation_plan", summary["mode"])
+        self.assertIn("dry_run_follow_up", summary["mode"])
+        self.assertIn("preview", summary["mode"])
+        self.assertEqual(summary["launch_lock_status"], "locked")
+        self.assertFalse(summary["real_execution_allowed"])
+
+        actions = pack["remediation_action_items"]
+        self.assertTrue(actions)
+        source_results = creative_pack["workspace_rehearsal_result_pack"][
+            "step_result_cards"
+        ]
+        source_step_ids = {result["step_id"] for result in source_results}
+        for action in actions:
+            for field in [
+                "action_id",
+                "source_step_id",
+                "issue_type",
+                "validation_before_retry",
+            ]:
+                with self.subTest(
+                    action=action["action_id"], field=field
+                ):
+                    self.assertTrue(action[field])
+            self.assertIn(action["source_step_id"], source_step_ids)
+            self.assertTrue(action["source_pack"])
+            self.assertTrue(action["required_input"])
+            self.assertEqual(action["owner"], "human_operator")
+            self.assertFalse(action["retry_eligible"])
+            self.assertFalse(action["real_execution_allowed"])
+
+        retry_plan = pack["retry_plan"]
+        self.assertIn("dry_run", retry_plan["mode"])
+        self.assertEqual(
+            retry_plan["retry_type"], "dry_run_rehearsal_only"
+        )
+        self.assertTrue(retry_plan["pre_retry_requirements"])
+        self.assertTrue(retry_plan["retry_sequence"])
+        self.assertFalse(retry_plan["real_retry_executed"])
+        self.assertFalse(retry_plan["real_execution_allowed"])
+
+        self.assertIsInstance(pack["evidence_gap_fixes"], list)
+        self.assertTrue(pack["evidence_gap_fixes"])
+        self.assertTrue(
+            all(
+                not fix["fix_applied"]
+                and not fix["real_execution_allowed"]
+                and "do not scrape" in fix["collection_boundary"]
+                for fix in pack["evidence_gap_fixes"]
+            )
+        )
+        follow_up = pack["operator_follow_up_plan"]
+        self.assertEqual(
+            follow_up["plan_mode"], "human_review_preview_only"
+        )
+        self.assertFalse(follow_up["real_ticket_created"])
+        self.assertFalse(follow_up["operator_log_written"])
+        self.assertFalse(follow_up["real_execution_allowed"])
+
+        blocked_plan = pack["blocked_item_resolution_plan"]
+        self.assertIsInstance(blocked_plan, list)
+        self.assertTrue(blocked_plan)
+        self.assertTrue(
+            all(
+                item["resolution_status"]
+                == "not_started_preview_only"
+                and not item["retry_eligible"]
+                and not item["real_execution_allowed"]
+                for item in blocked_plan
+            )
+        )
+        next_plan = pack["next_rehearsal_plan"]
+        self.assertEqual(
+            next_plan["mode"], "next_dry_run_rehearsal_preview"
+        )
+        self.assertTrue(next_plan["entry_criteria"])
+        self.assertFalse(next_plan["next_rehearsal_started"])
+        self.assertFalse(next_plan["real_execution_allowed"])
+        self.assertTrue(pack["remediation_priority_rationale"])
+
+        checks = pack["remediation_quality_checks"]
+        self.assertTrue(checks["rehearsal_result_pack_present"])
+        self.assertTrue(checks["all_actions_traceable"])
+        self.assertTrue(checks["all_actions_execution_disabled"])
+        self.assertTrue(checks["blocked_items_have_resolution_preview"])
+        self.assertTrue(checks["review_required_steps_have_actions"])
+        self.assertTrue(checks["retry_plan_is_dry_run_only"])
+        self.assertTrue(checks["evidence_collection_not_performed"])
+        self.assertFalse(checks["real_ticket_created"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["remediation_executed"])
+        self.assertFalse(checks["real_retry_executed"])
+        self.assertFalse(checks["real_execution_performed"])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["remediation_id"])
+        self.assertFalse(audit["is_real_ticket_log"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_persisted"])
+        self.assertIn("no ticket", audit["note"])
+        self.assertIn("no ticket, operator log, fix, retry", audit["note"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+            "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 
 

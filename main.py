@@ -24791,6 +24791,431 @@ def _rw_workspace_rehearsal_result_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_workspace_rehearsal_remediation_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    result_pack = dict(
+        creative_decision_pack.get("workspace_rehearsal_result_pack") or {}
+    )
+    result_summary = dict(result_pack.get("result_summary") or {})
+    step_results = list(result_pack.get("step_result_cards") or [])
+    failure_findings = list(result_pack.get("failure_findings") or [])
+    operator_review_items = list(
+        result_pack.get("operator_review_items") or []
+    )
+    blocked_follow_ups = list(
+        result_pack.get("blocked_follow_up_items") or []
+    )
+    source_recommendations = list(
+        result_pack.get("next_rehearsal_recommendations") or []
+    )
+    launch_lock_status = _rw_text(
+        result_summary.get("launch_lock_status")
+    ) or "unavailable"
+
+    operator_review_step_ids = {
+        _rw_text(item.get("step_id"))
+        for item in operator_review_items
+        if _rw_text(item.get("step_id"))
+    }
+    actionable_steps = [
+        result
+        for result in step_results
+        if _rw_text(result.get("simulated_status"))
+        in {"review_required", "blocked"}
+        or bool(result.get("operator_review_required"))
+        or _rw_text(result.get("step_id")) in operator_review_step_ids
+    ]
+
+    remediation_action_items = []
+    for result in actionable_steps:
+        step_id = _rw_text(result.get("step_id"))
+        step_type = _rw_text(result.get("step_type"))
+        simulated_status = _rw_text(result.get("simulated_status"))
+        combined_issue_text = " ".join(
+            [
+                step_type,
+                simulated_status,
+                _rw_text(result.get("validation_result")),
+                _rw_text(result.get("failure_mode")),
+                _rw_text(result.get("risk_note")),
+            ]
+        ).lower()
+        if any(
+            token in combined_issue_text
+            for token in {"evidence", "quote", "claim", "missing", "weak"}
+        ):
+            issue_type = "evidence_gap"
+            required_input = (
+                "User-supplied source review, quote, or evidence reference that resolves the stated gap."
+            )
+            priority = "critical" if simulated_status == "blocked" else "high"
+        elif step_type == "review_approval_gate":
+            issue_type = "approval_gate_review"
+            required_input = (
+                "Human review of the existing deterministic gate decision and its validation requirements."
+            )
+            priority = "high"
+        elif step_type == "manual_review_checkpoint":
+            issue_type = "operator_review"
+            required_input = (
+                "Human operator review notes based only on the current rehearsal preview."
+            )
+            priority = "medium"
+        else:
+            issue_type = "rehearsal_validation"
+            required_input = (
+                "Human confirmation of the simulated observation and existing source-pack references."
+            )
+            priority = "high" if simulated_status == "blocked" else "medium"
+        action_signature = json.dumps(
+            {
+                "step_id": step_id,
+                "issue_type": issue_type,
+                "source_pack": _rw_text(result.get("source_pack")),
+            },
+            ensure_ascii=True,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        remediation_action_items.append(
+            {
+                "action_id": "remediation_"
+                + hashlib.sha256(
+                    action_signature.encode("utf-8")
+                ).hexdigest()[:10],
+                "source_step_id": step_id,
+                "source_pack": _rw_text(result.get("source_pack")),
+                "issue_type": issue_type,
+                "remediation_title": (
+                    f"Prepare retry inputs for {_rw_text(result.get('step_title')) or step_type}"
+                ),
+                "remediation_detail": _rw_text(
+                    result.get("follow_up_action")
+                )
+                or (
+                    "Review the simulated result and prepare evidence-bound inputs for the next dry-run rehearsal."
+                ),
+                "required_input": required_input,
+                "owner": "human_operator",
+                "priority": priority,
+                "validation_before_retry": _rw_text(
+                    result.get("validation_check")
+                )
+                or _rw_text(result.get("validation_result"))
+                or "Confirm the issue is resolved in human review before another dry-run rehearsal.",
+                "retry_eligible": False,
+                "real_execution_allowed": False,
+                "risk_note": _rw_text(result.get("risk_note"))
+                or "Remediation is a planning preview and does not execute a fix.",
+            }
+        )
+
+    evidence_gap_fixes = [
+        {
+            "fix_id": f"evidence_fix_{index:02d}",
+            "source_action_id": action["action_id"],
+            "source_step_id": action["source_step_id"],
+            "gap_type": action["issue_type"],
+            "required_evidence": action["required_input"],
+            "collection_boundary": (
+                "Use only user-supplied or already imported evidence; do not scrape or fetch external data."
+            ),
+            "validation_before_retry": action[
+                "validation_before_retry"
+            ],
+            "fix_applied": False,
+            "real_execution_allowed": False,
+        }
+        for index, action in enumerate(
+            [
+                action
+                for action in remediation_action_items
+                if action["issue_type"] == "evidence_gap"
+            ],
+            start=1,
+        )
+    ]
+    known_evidence_reasons = {
+        _rw_text(item.get("blocking_reason"))
+        for item in blocked_follow_ups
+        if any(
+            token in _rw_text(item.get("blocking_reason")).lower()
+            for token in {"evidence", "quote", "claim", "missing", "weak"}
+        )
+    }
+    for reason in sorted(value for value in known_evidence_reasons if value):
+        if any(fix["gap_type"] == reason for fix in evidence_gap_fixes):
+            continue
+        evidence_gap_fixes.append(
+            {
+                "fix_id": f"evidence_fix_{len(evidence_gap_fixes) + 1:02d}",
+                "source_action_id": "",
+                "source_step_id": "",
+                "gap_type": reason,
+                "required_evidence": (
+                    "User-supplied source quote or review evidence that resolves this blocked condition."
+                ),
+                "collection_boundary": (
+                    "Use only user-supplied or already imported evidence; do not scrape or fetch external data."
+                ),
+                "validation_before_retry": (
+                    "Confirm the evidence is traceable and does not introduce an unsupported claim."
+                ),
+                "fix_applied": False,
+                "real_execution_allowed": False,
+            }
+        )
+
+    blocked_item_resolution_plan = [
+        {
+            "resolution_id": f"blocked_resolution_{index:02d}",
+            "source_follow_up_id": _rw_text(
+                item.get("follow_up_id")
+            ),
+            "source_step_id": _rw_text(item.get("step_id")),
+            "blocking_reason": _rw_text(item.get("blocking_reason")),
+            "resolution_preview": _rw_text(
+                item.get("recommended_action")
+            )
+            or "Resolve the blocked condition through evidence-bound human review.",
+            "validation_before_retry": (
+                "Human reviewer confirms the blocking reason is resolved while the launch lock remains closed."
+            ),
+            "resolution_status": "not_started_preview_only",
+            "retry_eligible": False,
+            "real_execution_allowed": False,
+        }
+        for index, item in enumerate(blocked_follow_ups, start=1)
+    ]
+
+    retry_blockers = list(
+        dict.fromkeys(
+            [
+                *[
+                    _rw_text(item.get("blocking_reason"))
+                    for item in blocked_follow_ups
+                    if _rw_text(item.get("blocking_reason"))
+                ],
+                *[
+                    _rw_text(action.get("issue_type"))
+                    for action in remediation_action_items
+                    if not action.get("retry_eligible")
+                ],
+            ]
+        )
+    )
+    retry_plan = {
+        "mode": "deterministic_dry_run_rehearsal_retry_preview",
+        "retry_type": "dry_run_rehearsal_only",
+        "retry_status": (
+            "blocked_pending_remediation"
+            if retry_blockers
+            else "ready_for_human_review_of_dry_run_retry"
+        ),
+        "retry_blockers": retry_blockers,
+        "pre_retry_requirements": [
+            "Complete every remediation validation through human review.",
+            "Resolve evidence gaps using user-supplied or already imported evidence only.",
+            "Confirm the launch lock remains closed and real execution remains disabled.",
+            "Rebuild only the deterministic rehearsal preview from current workspace packs.",
+        ],
+        "retry_sequence": [
+            "Review remediation action items by priority.",
+            "Validate evidence-gap and blocked-item resolution previews.",
+            "Repeat deterministic checkpoint and failure simulations.",
+            "Generate a new rehearsal result preview for operator review.",
+        ],
+        "real_retry_executed": False,
+        "real_execution_allowed": False,
+    }
+    operator_follow_up_plan = {
+        "plan_mode": "human_review_preview_only",
+        "source_operator_review_count": len(operator_review_items),
+        "review_items": [
+            {
+                "review_id": _rw_text(item.get("review_id")),
+                "source_step_id": _rw_text(item.get("step_id")),
+                "review_reason": _rw_text(item.get("review_reason")),
+                "follow_up_action": _rw_text(
+                    item.get("follow_up_action")
+                ),
+                "review_status": "pending_human_review",
+            }
+            for item in operator_review_items
+        ],
+        "real_ticket_created": False,
+        "operator_log_written": False,
+        "real_execution_allowed": False,
+    }
+    next_rehearsal_plan = {
+        "mode": "next_dry_run_rehearsal_preview",
+        "source_recommendations": source_recommendations,
+        "entry_criteria": [
+            "All critical and high remediation items have human validation.",
+            "Blocked-item resolution previews have been reviewed.",
+            "Evidence gaps are resolved without external scraping.",
+            "Launch lock remains closed and all real capabilities remain disabled.",
+        ],
+        "planned_scope": [
+            _rw_text(action.get("source_step_id"))
+            for action in remediation_action_items
+            if _rw_text(action.get("source_step_id"))
+        ],
+        "next_rehearsal_started": False,
+        "real_execution_allowed": False,
+    }
+
+    priority_counts = {
+        priority: sum(
+            action["priority"] == priority
+            for action in remediation_action_items
+        )
+        for priority in ["critical", "high", "medium"]
+    }
+    remediation_signature = json.dumps(
+        {
+            "result_id": _rw_text(result_summary.get("result_id")),
+            "action_ids": [
+                action["action_id"] for action in remediation_action_items
+            ],
+            "blocked_resolution_count": len(blocked_item_resolution_plan),
+            "launch_lock_status": launch_lock_status,
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    remediation_id = (
+        "rehearsal_remediation_"
+        + hashlib.sha256(
+            remediation_signature.encode("utf-8")
+        ).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "failure_injection_execution_enabled": False,
+        "remediation_execution_enabled": False,
+        "launch_unlock_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_rehearsal_remediation_pack_v1",
+        "remediation_summary": {
+            "remediation_id": remediation_id,
+            "mode": "deterministic_remediation_plan_dry_run_follow_up_preview",
+            "remediation_status": (
+                "action_required_before_dry_run_retry"
+                if remediation_action_items or blocked_item_resolution_plan
+                else "human_review_before_dry_run_retry"
+            ),
+            "source_result_id": _rw_text(
+                result_summary.get("result_id")
+            ),
+            "launch_lock_status": launch_lock_status,
+            "action_count": len(remediation_action_items),
+            "evidence_gap_fix_count": len(evidence_gap_fixes),
+            "blocked_resolution_count": len(
+                blocked_item_resolution_plan
+            ),
+            "recommended_next_action": (
+                "Complete evidence-bound human review of remediation items before another dry-run rehearsal."
+            ),
+            "real_execution_allowed": False,
+        },
+        "remediation_action_items": remediation_action_items,
+        "retry_plan": retry_plan,
+        "evidence_gap_fixes": evidence_gap_fixes,
+        "operator_follow_up_plan": operator_follow_up_plan,
+        "blocked_item_resolution_plan": blocked_item_resolution_plan,
+        "next_rehearsal_plan": next_rehearsal_plan,
+        "remediation_priority_rationale": {
+            "priority_counts": priority_counts,
+            "critical": (
+                "Blocked evidence or safety conditions prevent retry eligibility."
+            ),
+            "high": (
+                "Evidence or approval review is required before the next rehearsal."
+            ),
+            "medium": (
+                "Operator review and simulated validation must be completed before retry."
+            ),
+            "ordering": ["critical", "high", "medium"],
+        },
+        "remediation_quality_checks": {
+            "rehearsal_result_pack_present": bool(result_pack),
+            "all_actions_traceable": all(
+                action["source_step_id"] and action["source_pack"]
+                for action in remediation_action_items
+            ),
+            "all_actions_execution_disabled": all(
+                not action["real_execution_allowed"]
+                for action in remediation_action_items
+            ),
+            "blocked_items_have_resolution_preview": (
+                len(blocked_item_resolution_plan)
+                == len(blocked_follow_ups)
+            ),
+            "review_required_steps_have_actions": all(
+                any(
+                    action["source_step_id"]
+                    == _rw_text(result.get("step_id"))
+                    for action in remediation_action_items
+                )
+                for result in actionable_steps
+            ),
+            "retry_plan_is_dry_run_only": True,
+            "evidence_collection_not_performed": True,
+            "real_ticket_created": False,
+            "database_write_performed": False,
+            "remediation_executed": False,
+            "real_retry_executed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_remediation_plan_preview",
+            "remediation_id": remediation_id,
+            "source_result_id": _rw_text(
+                result_summary.get("result_id")
+            ),
+            "source_action_ids": [
+                action["action_id"] for action in remediation_action_items
+            ],
+            "source_failure_finding_ids": [
+                _rw_text(finding.get("finding_id"))
+                for finding in failure_findings
+                if _rw_text(finding.get("finding_id"))
+            ],
+            "source_operator_review_ids": [
+                _rw_text(item.get("review_id"))
+                for item in operator_review_items
+                if _rw_text(item.get("review_id"))
+            ],
+            "is_real_ticket_log": False,
+            "database_write_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This audit is a deterministic remediation preview only; no ticket, operator log, fix, retry, or database record was created."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -24904,6 +25329,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_rehearsal_result_pack"] = (
         _rw_workspace_rehearsal_result_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_rehearsal_remediation_pack"] = (
+        _rw_workspace_rehearsal_remediation_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
