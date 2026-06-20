@@ -3604,6 +3604,7 @@
         let latestProjectCompetitorReviewComparisonPack = {};
         let latestProjectLlmAssistDryRunPack = {};
         let latestProjectVideoProviderOrchestrationDryRunPack = {};
+        let latestProjectWorkspaceSessionSnapshotPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8884,6 +8885,7 @@
                 latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
                 latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
                 latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
+                latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14724,6 +14726,7 @@
         const PROJECT_WORKSPACE_COMPETITOR_REVIEW_COMPARISON_MARKER = 'Project Workspace competitor review comparison bundle';
         const PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER = 'Project Workspace LLM assist dry-run bundle';
         const PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER = 'Project Workspace video provider orchestration dry-run bundle';
+        const PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER = 'Project Workspace session snapshot bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -16618,6 +16621,205 @@
 
         function copyProjectWorkspaceFullVideoOrchestrationDryRunPack() {
             return copyProjectWorkspaceVideoOrchestrationText('full');
+        }
+
+        function projectWorkspaceSessionSnapshotPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceSessionSnapshotPack
+                && Object.keys(latestProjectWorkspaceSessionSnapshotPack).length) {
+                return latestProjectWorkspaceSessionSnapshotPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_session_snapshot_pack || {};
+        }
+
+        function projectWorkspaceExportSessionSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceSessionSnapshotPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER,
+                has_workspace_session_snapshot_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                session_summary: pack.session_summary || {},
+                run_identity: pack.run_identity || {},
+                input_source_summary: pack.input_source_summary || {},
+                pack_inventory: Array.isArray(pack.pack_inventory) ? pack.pack_inventory : [],
+                export_manifest: pack.export_manifest || {},
+                restore_plan: pack.restore_plan || {},
+                history_entry_preview: pack.history_entry_preview || {},
+                quality_checks: pack.quality_checks || {},
+                risk_notes: Array.isArray(pack.risk_notes) ? pack.risk_notes : [],
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceSessionJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceSessionSummaryText(pack = projectWorkspaceExportSessionSnapshot()) {
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            const summary = pack.session_summary || {};
+            const identity = pack.run_identity || {};
+            const boundaries = pack.safety_boundaries || {};
+            return [
+                t('workspaceSessionSummaryTitle'),
+                `${t('workspaceSessionRunId')}: ${identity.run_id || summary.run_id || t('none')}`,
+                `${t('workspaceSessionMode')}: ${summary.mode || t('none')}`,
+                `${t('workspaceSessionReadiness')}: ${summary.snapshot_status || t('none')}`,
+                `${t('workspaceSessionDatabasePersistence')}: ${boundaries.database_persistence_enabled === false ? t('workspaceSessionDisabled') : String(boundaries.database_persistence_enabled)}`,
+                `${t('workspaceSessionRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceSessionInputSourceText(pack = projectWorkspaceExportSessionSnapshot()) {
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            const input = pack.input_source_summary || {};
+            const sourceCounts = input.source_type_counts || {};
+            return [
+                t('workspaceSessionInputSourceTitle'),
+                `${t('workspaceSessionInputSourceType')}: ${input.workspace_source || t('none')}`,
+                `${t('workspaceSessionProductCount')}: ${input.product_count ?? 0}`,
+                `${t('workspaceSessionRawReviewCount')}: ${input.raw_review_count ?? 0}`,
+                `${t('workspaceSessionUniqueReviewCount')}: ${input.unique_review_count ?? 0}`,
+                `${t('workspaceSessionDuplicateReviewCount')}: ${input.duplicate_review_count ?? 0}`,
+                `${t('workspaceSessionNormalizedReviewCount')}: ${input.normalized_review_count ?? 0}`,
+                `${t('workspaceSessionSourceCounts')}: ${Object.entries(sourceCounts).map(([key, value]) => `${key}: ${value}`).join(' | ') || t('none')}`,
+                `${t('workspaceSessionProducts')}: ${projectWorkspaceSessionJsonText(input.products) || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceSessionPackInventoryText(pack = projectWorkspaceExportSessionSnapshot()) {
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            return [
+                t('workspaceSessionPackInventoryTitle'),
+                ...(pack.pack_inventory || []).map((item) => [
+                    `${item.pack_name || t('none')}`,
+                    `${t('workspaceSessionPackPresent')}: ${String(item.present === true)}`,
+                    `${t('workspaceSessionPackVersion')}: ${item.pack_version || t('none')}`,
+                    `${t('workspaceSessionSnapshotIncluded')}: ${String(item.snapshot_included === true)}`
+                ].join('\n'))
+            ].join('\n\n');
+        }
+
+        function projectWorkspaceSessionExportManifestText(pack = projectWorkspaceExportSessionSnapshot()) {
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            return [
+                t('workspaceSessionExportManifestTitle'),
+                t('workspaceSessionExportableWarning'),
+                projectWorkspaceSessionJsonText(pack.export_manifest)
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceSessionHistoryPreviewText(pack = projectWorkspaceExportSessionSnapshot()) {
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            return [
+                t('workspaceSessionHistoryPreviewTitle'),
+                t('workspaceSessionHistoryPreviewWarning'),
+                projectWorkspaceSessionJsonText(pack.history_entry_preview)
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceSessionRestorePlanText(pack = projectWorkspaceExportSessionSnapshot()) {
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            return [
+                `## ${t('workspaceSessionRestorePlanTitle')}`,
+                t('workspaceSessionRestorePreviewWarning'),
+                projectWorkspaceSessionJsonText(pack.restore_plan),
+                '',
+                `## ${t('workspaceSessionQualityChecksTitle')}`,
+                projectWorkspaceSessionJsonText(pack.quality_checks),
+                '',
+                `## ${t('workspaceSessionRiskNotesTitle')}`,
+                projectWorkspaceSessionJsonText(pack.risk_notes),
+                '',
+                `## ${t('workspaceSessionSafetyBoundariesTitle')}`,
+                projectWorkspaceSessionJsonText(pack.safety_boundaries),
+                t('workspaceSessionSafetyNote')
+            ].filter((item) => item !== undefined && item !== null).join('\n');
+        }
+
+        function projectWorkspaceExportSessionSnapshotMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSessionSnapshot(workspace);
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            return [
+                `## ${t('workspaceSessionPackTitle')}`,
+                projectWorkspaceSessionSummaryText(pack),
+                '',
+                `## ${t('workspaceSessionRunIdentityTitle')}`,
+                projectWorkspaceSessionJsonText(pack.run_identity),
+                '',
+                `## ${t('workspaceSessionInputSourceTitle')}`,
+                projectWorkspaceSessionInputSourceText(pack),
+                '',
+                `## ${t('workspaceSessionPackInventoryTitle')}`,
+                projectWorkspaceSessionPackInventoryText(pack),
+                '',
+                `## ${t('workspaceSessionExportManifestTitle')}`,
+                projectWorkspaceSessionExportManifestText(pack),
+                '',
+                `## ${t('workspaceSessionHistoryPreviewTitle')}`,
+                projectWorkspaceSessionHistoryPreviewText(pack),
+                '',
+                projectWorkspaceSessionRestorePlanText(pack)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceSessionSnapshotText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceSessionSnapshotStatus');
+            const pack = projectWorkspaceExportSessionSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceSessionSummaryText(pack)
+                : kind === 'input'
+                    ? projectWorkspaceSessionInputSourceText(pack)
+                    : kind === 'inventory'
+                        ? projectWorkspaceSessionPackInventoryText(pack)
+                        : kind === 'manifest'
+                            ? projectWorkspaceSessionExportManifestText(pack)
+                            : kind === 'history'
+                                ? projectWorkspaceSessionHistoryPreviewText(pack)
+                                : kind === 'restore'
+                                    ? projectWorkspaceSessionRestorePlanText(pack)
+                                    : projectWorkspaceExportSessionSnapshotMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('workspaceSessionCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('workspaceSessionCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('workspaceSessionCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('workspaceSessionCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceSessionSummary() {
+            return copyProjectWorkspaceSessionSnapshotText('summary');
+        }
+
+        function copyProjectWorkspaceSessionInputSource() {
+            return copyProjectWorkspaceSessionSnapshotText('input');
+        }
+
+        function copyProjectWorkspaceSessionPackInventory() {
+            return copyProjectWorkspaceSessionSnapshotText('inventory');
+        }
+
+        function copyProjectWorkspaceSessionExportManifest() {
+            return copyProjectWorkspaceSessionSnapshotText('manifest');
+        }
+
+        function copyProjectWorkspaceSessionHistoryPreview() {
+            return copyProjectWorkspaceSessionSnapshotText('history');
+        }
+
+        function copyProjectWorkspaceSessionRestorePlan() {
+            return copyProjectWorkspaceSessionSnapshotText('restore');
+        }
+
+        function copyProjectWorkspaceFullSessionSnapshotPack() {
+            return copyProjectWorkspaceSessionSnapshotText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -18726,6 +18928,140 @@
             `;
         }
 
+        function renderProjectWorkspaceSessionSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSessionSnapshot(workspace);
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            const summary = pack.session_summary || {};
+            const identity = pack.run_identity || {};
+            const boundaries = pack.safety_boundaries || {};
+            return `
+                <div class="section-block" id="projectWorkspaceSessionSummaryPanel"
+                    data-workspace-session-snapshot-marker="${PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('workspaceSessionPackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('workspaceSessionPackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullSessionSnapshotPack()">${escapeHTML(t('workspaceSessionCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('workspaceSessionRunId'), identity.run_id || summary.run_id || t('none'))}
+                        ${metricPill(t('workspaceSessionMode'), summary.mode || t('none'))}
+                        ${metricPill(t('workspaceSessionReadiness'), summary.snapshot_status || t('none'))}
+                        ${metricPill(t('workspaceSessionDatabasePersistence'), boundaries.database_persistence_enabled === false ? t('workspaceSessionDisabled') : String(boundaries.database_persistence_enabled))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('workspaceSessionRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('workspaceSessionSafetyNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceSessionSnapshotStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSessionSummary()">${escapeHTML(t('workspaceSessionCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceSessionInputSourcePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSessionSnapshot(workspace);
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            const input = pack.input_source_summary || {};
+            const sourceCounts = input.source_type_counts || {};
+            return `
+                <div class="section-block" id="projectWorkspaceSessionInputSourcePanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('workspaceSessionInputSourceTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('workspaceSessionInputSourceHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSessionInputSource()">${escapeHTML(t('workspaceSessionCopyInputSource'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('workspaceSessionInputSourceType'), input.workspace_source || t('none'))}
+                        ${metricPill(t('workspaceSessionRawReviewCount'), String(input.raw_review_count ?? 0))}
+                        ${metricPill(t('workspaceSessionUniqueReviewCount'), String(input.unique_review_count ?? 0))}
+                        ${metricPill(t('workspaceSessionDuplicateReviewCount'), String(input.duplicate_review_count ?? 0))}
+                        ${metricPill(t('workspaceSessionNormalizedReviewCount'), String(input.normalized_review_count ?? 0))}
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('workspaceSessionSourceCounts'))}:</strong> ${escapeHTML(Object.entries(sourceCounts).map(([key, value]) => `${key}: ${value}`).join(' | ') || t('none'))}</div>
+                    <div class="graph-os-compact-grid">
+                        ${['manual', 'csv', 'amazon_visible', 'competitor', 'unknown'].map((sourceType) => `<div class="graph-os-card"><strong>${escapeHTML(sourceType)}</strong><div>${escapeHTML(String(sourceCounts[sourceType] ?? 0))}</div></div>`).join('')}
+                    </div>
+                    <div class="field-helper"><strong>${escapeHTML(t('workspaceSessionProducts'))}:</strong> ${escapeHTML(projectWorkspaceSessionJsonText(input.products) || t('none'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceSessionPackInventoryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSessionSnapshot(workspace);
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            const inventory = pack.pack_inventory || [];
+            return `
+                <div class="section-block" id="projectWorkspaceSessionPackInventoryPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('workspaceSessionPackInventoryTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('workspaceSessionPackInventoryHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSessionPackInventory()">${escapeHTML(t('workspaceSessionCopyPackInventory'))}</button>
+                    </div>
+                    ${inventory.length ? `<div class="graph-os-grid">${inventory.map((item) => `
+                        <div class="graph-os-card">
+                            <div class="section-header">
+                                <strong>${escapeHTML(item.pack_name || t('none'))}</strong>
+                                <span class="badge">${escapeHTML(item.present ? t('workspaceSessionPresent') : t('workspaceSessionMissing'))}</span>
+                            </div>
+                            <div><strong>${escapeHTML(t('workspaceSessionPackVersion'))}:</strong> ${escapeHTML(item.pack_version || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('workspaceSessionPackStatus'))}:</strong> ${escapeHTML(item.present ? t('workspaceSessionPresent') : t('workspaceSessionMissing'))}</div>
+                            <div><strong>${escapeHTML(t('workspaceSessionSnapshotIncluded'))}:</strong> ${escapeHTML(String(item.snapshot_included === true))}</div>
+                        </div>
+                    `).join('')}</div>` : `<div class="feedback-box">${escapeHTML(t('workspaceSessionNoData'))}</div>`}
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceSessionExportHistoryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSessionSnapshot(workspace);
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceSessionExportHistoryPanel">
+                    <div class="json-key">${escapeHTML(t('workspaceSessionExportHistoryTitle'))}</div>
+                    <div class="field-helper">${escapeHTML(t('workspaceSessionExportHistoryHelper'))}</div>
+                    <div class="demo-warning">${escapeHTML(t('workspaceSessionExportableWarning'))}</div>
+                    <div class="demo-warning">${escapeHTML(t('workspaceSessionHistoryPreviewWarning'))}</div>
+                    <div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSessionExportManifest()">${escapeHTML(t('workspaceSessionCopyExportManifest'))}</button>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSessionHistoryPreview()">${escapeHTML(t('workspaceSessionCopyHistoryPreview'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('workspaceSessionExportManifestTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceSessionJsonText(pack.export_manifest) || t('workspaceSessionNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('workspaceSessionHistoryPreviewTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceSessionJsonText(pack.history_entry_preview) || t('workspaceSessionNoData'))}</pre></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceSessionRestoreSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSessionSnapshot(workspace);
+            if (!pack.has_workspace_session_snapshot_pack) return '';
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('workspaceSessionDisabled') : String(value)}`).join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceSessionRestoreSafetyPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('workspaceSessionRestoreSafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('workspaceSessionRestoreSafetyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSessionRestorePlan()">${escapeHTML(t('workspaceSessionCopyRestorePlan'))}</button>
+                    </div>
+                    <div class="demo-warning">${escapeHTML(t('workspaceSessionRestorePreviewWarning'))}</div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('workspaceSessionRestorePlanTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceSessionJsonText(pack.restore_plan) || t('workspaceSessionNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('workspaceSessionQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceSessionJsonText(pack.quality_checks) || t('workspaceSessionNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('workspaceSessionRiskNotesTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceSessionJsonText(pack.risk_notes) || t('workspaceSessionNoData'))}</pre></div>
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('workspaceSessionSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('workspaceSessionSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -19208,6 +19544,8 @@
                 '',
                 projectWorkspaceExportVideoProviderOrchestrationDryRunMarkdown(workspace),
                 '',
+                projectWorkspaceExportSessionSnapshotMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -19293,6 +19631,7 @@
                 competitor_review_comparison_pack: projectWorkspaceExportCompetitorReviewComparisonSnapshot(workspace),
                 llm_assist_dry_run_pack: projectWorkspaceExportLlmAssistDryRunSnapshot(workspace),
                 video_provider_orchestration_dry_run_pack: projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace),
+                workspace_session_snapshot_pack: projectWorkspaceExportSessionSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -31708,6 +32047,11 @@
                     ${renderProjectWorkspaceVideoInputAssetsPanel(workspace)}
                     ${renderProjectWorkspaceVideoCostMockPanel(workspace)}
                     ${renderProjectWorkspaceVideoApprovalSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceSessionSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceSessionInputSourcePanel(workspace)}
+                    ${renderProjectWorkspaceSessionPackInventoryPanel(workspace)}
+                    ${renderProjectWorkspaceSessionExportHistoryPanel(workspace)}
+                    ${renderProjectWorkspaceSessionRestoreSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -39523,6 +39867,120 @@
             videoOrchestrationCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u89c6\u9891\u7f16\u6392\u9884\u6f14\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceSessionSnapshotMarker: 'Project Workspace session snapshot bundle',
+            workspaceSessionPackTitle: 'Workspace Session Snapshot',
+            workspaceSessionPackHelper: 'Review an exportable run snapshot without creating a database record or saved user history.',
+            workspaceSessionSummaryTitle: 'Workspace Session Summary',
+            workspaceSessionRunId: 'Run ID',
+            workspaceSessionMode: 'Session mode',
+            workspaceSessionReadiness: 'Snapshot readiness',
+            workspaceSessionDatabasePersistence: 'Database persistence',
+            workspaceSessionRecommendedNextAction: 'Recommended next action',
+            workspaceSessionDisabled: 'disabled',
+            workspaceSessionRunIdentityTitle: 'Run Identity',
+            workspaceSessionInputSourceTitle: 'Input Source Summary',
+            workspaceSessionInputSourceHelper: 'Review source type, review counts, products, and imported source signals.',
+            workspaceSessionInputSourceType: 'Input source type',
+            workspaceSessionProductCount: 'Product count',
+            workspaceSessionRawReviewCount: 'Raw review count',
+            workspaceSessionUniqueReviewCount: 'Unique review count',
+            workspaceSessionDuplicateReviewCount: 'Duplicate review count',
+            workspaceSessionNormalizedReviewCount: 'Normalized review count',
+            workspaceSessionSourceCounts: 'Source counts',
+            workspaceSessionProducts: 'Products',
+            workspaceSessionPackInventoryTitle: 'Pack Inventory',
+            workspaceSessionPackInventoryHelper: 'Inspect the presence, version, and snapshot inclusion status of each workspace pack.',
+            workspaceSessionPackPresent: 'Pack present',
+            workspaceSessionPackVersion: 'Pack version',
+            workspaceSessionPackStatus: 'Pack status / readiness',
+            workspaceSessionSnapshotIncluded: 'Included in snapshot',
+            workspaceSessionPresent: 'present',
+            workspaceSessionMissing: 'missing',
+            workspaceSessionExportHistoryTitle: 'Export Manifest / History Preview',
+            workspaceSessionExportHistoryHelper: 'Review the export contract and a history-shaped preview without saving server-side history.',
+            workspaceSessionExportManifestTitle: 'Export Manifest',
+            workspaceSessionHistoryPreviewTitle: 'History Entry Preview',
+            workspaceSessionExportableWarning: 'Exportable snapshot only. This is not a persisted database record.',
+            workspaceSessionHistoryPreviewWarning: 'History preview only. No user history or database entry was written.',
+            workspaceSessionRestoreSafetyTitle: 'Restore Plan / Quality / Safety Boundaries',
+            workspaceSessionRestoreSafetyHelper: 'Review a restore preview, quality checks, risks, and disabled execution boundaries.',
+            workspaceSessionRestorePlanTitle: 'Restore Plan',
+            workspaceSessionQualityChecksTitle: 'Quality Checks',
+            workspaceSessionRiskNotesTitle: 'Risk Notes',
+            workspaceSessionSafetyBoundariesTitle: 'Safety Boundaries',
+            workspaceSessionRestorePreviewWarning: 'Restore is preview-only. No real restore, rollback, registry, or state mutation is executed.',
+            workspaceSessionSafetyNote: 'Snapshot preview only. Real LLM, provider, video, media, paid, registry, rollback, external scraping, and database persistence remain disabled.',
+            workspaceSessionNoData: 'No workspace session snapshot data is available.',
+            workspaceSessionCopySummary: 'Copy session summary',
+            workspaceSessionCopyInputSource: 'Copy input source summary',
+            workspaceSessionCopyPackInventory: 'Copy pack inventory',
+            workspaceSessionCopyExportManifest: 'Copy export manifest',
+            workspaceSessionCopyHistoryPreview: 'Copy history preview',
+            workspaceSessionCopyRestorePlan: 'Copy restore plan',
+            workspaceSessionCopyFullPack: 'Copy full workspace session snapshot pack',
+            workspaceSessionCopied: 'Workspace session snapshot content copied.',
+            workspaceSessionCopyFailed: 'Unable to copy workspace session snapshot content.',
+            workspaceSessionCopyNoData: 'No workspace session snapshot content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceSessionSnapshotMarker: 'Project Workspace session snapshot bundle',
+            workspaceSessionPackTitle: '\u5de5\u4f5c\u533a\u4f1a\u8bdd\u5feb\u7167',
+            workspaceSessionPackHelper: '\u68c0\u67e5\u53ef\u5bfc\u51fa\u7684\u8fd0\u884c\u5feb\u7167\uff0c\u4e0d\u521b\u5efa\u6570\u636e\u5e93\u8bb0\u5f55\u6216\u5df2\u4fdd\u5b58\u7528\u6237\u5386\u53f2\u3002',
+            workspaceSessionSummaryTitle: '\u5de5\u4f5c\u533a\u4f1a\u8bdd\u6458\u8981',
+            workspaceSessionRunId: '\u8fd0\u884c ID',
+            workspaceSessionMode: '\u4f1a\u8bdd\u6a21\u5f0f',
+            workspaceSessionReadiness: '\u5feb\u7167\u5c31\u7eea\u5ea6',
+            workspaceSessionDatabasePersistence: '\u6570\u636e\u5e93\u6301\u4e45\u5316',
+            workspaceSessionRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            workspaceSessionDisabled: '\u5df2\u7981\u7528',
+            workspaceSessionRunIdentityTitle: '\u8fd0\u884c\u6807\u8bc6',
+            workspaceSessionInputSourceTitle: '\u8f93\u5165\u6765\u6e90\u6458\u8981',
+            workspaceSessionInputSourceHelper: '\u68c0\u67e5\u6765\u6e90\u7c7b\u578b\u3001\u8bc4\u8bba\u6570\u3001\u4ea7\u54c1\u548c\u5bfc\u5165\u6765\u6e90\u4fe1\u53f7\u3002',
+            workspaceSessionInputSourceType: '\u8f93\u5165\u6765\u6e90\u7c7b\u578b',
+            workspaceSessionProductCount: '\u4ea7\u54c1\u6570',
+            workspaceSessionRawReviewCount: '\u539f\u59cb\u8bc4\u8bba\u6570',
+            workspaceSessionUniqueReviewCount: '\u552f\u4e00\u8bc4\u8bba\u6570',
+            workspaceSessionDuplicateReviewCount: '\u91cd\u590d\u8bc4\u8bba\u6570',
+            workspaceSessionNormalizedReviewCount: '\u6807\u51c6\u5316\u8bc4\u8bba\u6570',
+            workspaceSessionSourceCounts: '\u6765\u6e90\u6570',
+            workspaceSessionProducts: '\u4ea7\u54c1',
+            workspaceSessionPackInventoryTitle: 'Pack \u6e05\u5355',
+            workspaceSessionPackInventoryHelper: '\u68c0\u67e5\u6bcf\u4e2a\u5de5\u4f5c\u533a pack \u7684\u5b58\u5728\u3001\u7248\u672c\u548c\u5feb\u7167\u5305\u542b\u72b6\u6001\u3002',
+            workspaceSessionPackPresent: 'Pack \u5b58\u5728',
+            workspaceSessionPackVersion: 'Pack \u7248\u672c',
+            workspaceSessionPackStatus: 'Pack \u72b6\u6001 / \u5c31\u7eea\u5ea6',
+            workspaceSessionSnapshotIncluded: '\u5df2\u5305\u542b\u5728\u5feb\u7167',
+            workspaceSessionPresent: '\u5df2\u5b58\u5728',
+            workspaceSessionMissing: '\u7f3a\u5931',
+            workspaceSessionExportHistoryTitle: '\u5bfc\u51fa\u6e05\u5355 / \u5386\u53f2\u9884\u89c8',
+            workspaceSessionExportHistoryHelper: '\u68c0\u67e5\u5bfc\u51fa\u5951\u7ea6\u548c\u5386\u53f2\u5f62\u5f0f\u9884\u89c8\uff0c\u4e0d\u4fdd\u5b58\u670d\u52a1\u5668\u5386\u53f2\u3002',
+            workspaceSessionExportManifestTitle: '\u5bfc\u51fa\u6e05\u5355',
+            workspaceSessionHistoryPreviewTitle: '\u5386\u53f2\u6761\u76ee\u9884\u89c8',
+            workspaceSessionExportableWarning: '\u4ec5\u4e3a\u53ef\u5bfc\u51fa\u5feb\u7167\u3002\u8fd9\u4e0d\u662f\u5df2\u6301\u4e45\u5316\u7684\u6570\u636e\u5e93\u8bb0\u5f55\u3002',
+            workspaceSessionHistoryPreviewWarning: '\u4ec5\u4e3a\u5386\u53f2\u9884\u89c8\u3002\u672a\u5199\u5165\u7528\u6237\u5386\u53f2\u6216\u6570\u636e\u5e93\u6761\u76ee\u3002',
+            workspaceSessionRestoreSafetyTitle: '\u6062\u590d\u8ba1\u5212 / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            workspaceSessionRestoreSafetyHelper: '\u68c0\u67e5\u6062\u590d\u9884\u89c8\u3001\u8d28\u91cf\u68c0\u67e5\u3001\u98ce\u9669\u548c\u7981\u7528\u6267\u884c\u8fb9\u754c\u3002',
+            workspaceSessionRestorePlanTitle: '\u6062\u590d\u8ba1\u5212',
+            workspaceSessionQualityChecksTitle: '\u8d28\u91cf\u68c0\u67e5',
+            workspaceSessionRiskNotesTitle: '\u98ce\u9669\u8bf4\u660e',
+            workspaceSessionSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            workspaceSessionRestorePreviewWarning: '\u6062\u590d\u4ec5\u4e3a\u9884\u89c8\u3002\u4e0d\u6267\u884c\u771f\u5b9e restore\u3001rollback\u3001registry \u6216\u72b6\u6001\u53d8\u66f4\u3002',
+            workspaceSessionSafetyNote: '\u4ec5\u4f5c\u5feb\u7167\u9884\u89c8\u3002\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u548c\u6570\u636e\u5e93\u6301\u4e45\u5316\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            workspaceSessionNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u4f1a\u8bdd\u5feb\u7167\u6570\u636e\u3002',
+            workspaceSessionCopySummary: '\u590d\u5236\u4f1a\u8bdd\u6458\u8981',
+            workspaceSessionCopyInputSource: '\u590d\u5236\u8f93\u5165\u6765\u6e90\u6458\u8981',
+            workspaceSessionCopyPackInventory: '\u590d\u5236 pack \u6e05\u5355',
+            workspaceSessionCopyExportManifest: '\u590d\u5236\u5bfc\u51fa\u6e05\u5355',
+            workspaceSessionCopyHistoryPreview: '\u590d\u5236\u5386\u53f2\u9884\u89c8',
+            workspaceSessionCopyRestorePlan: '\u590d\u5236\u6062\u590d\u8ba1\u5212',
+            workspaceSessionCopyFullPack: '\u590d\u5236\u5b8c\u6574\u5de5\u4f5c\u533a\u4f1a\u8bdd\u5feb\u7167\u5305',
+            workspaceSessionCopied: '\u5de5\u4f5c\u533a\u4f1a\u8bdd\u5feb\u7167\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            workspaceSessionCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u4f1a\u8bdd\u5feb\u7167\u5185\u5bb9\u3002',
+            workspaceSessionCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u4f1a\u8bdd\u5feb\u7167\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -40920,6 +41378,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectCompetitorReviewComparisonPack = latestProjectCreativeDecisionPack.competitor_review_comparison_pack || {};
     latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
     latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
+    latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

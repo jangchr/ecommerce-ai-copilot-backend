@@ -9171,6 +9171,181 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_session_snapshot_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace session snapshot bundle",
+            "PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER",
+            "latestProjectWorkspaceSessionSnapshotPack",
+            "projectWorkspaceSessionSnapshotPackFromWorkspace",
+            "projectWorkspaceExportSessionSnapshot",
+            "projectWorkspaceExportSessionSnapshotMarkdown",
+            "renderProjectWorkspaceSessionSummaryPanel",
+            "renderProjectWorkspaceSessionInputSourcePanel",
+            "renderProjectWorkspaceSessionPackInventoryPanel",
+            "renderProjectWorkspaceSessionExportHistoryPanel",
+            "renderProjectWorkspaceSessionRestoreSafetyPanel",
+            "copyProjectWorkspaceSessionSummary",
+            "copyProjectWorkspaceSessionInputSource",
+            "copyProjectWorkspaceSessionPackInventory",
+            "copyProjectWorkspaceSessionExportManifest",
+            "copyProjectWorkspaceSessionHistoryPreview",
+            "copyProjectWorkspaceSessionRestorePlan",
+            "copyProjectWorkspaceFullSessionSnapshotPack",
+            "workspace_session_snapshot_pack: projectWorkspaceExportSessionSnapshot(workspace)",
+            "Workspace Session Snapshot",
+            "Run Identity",
+            "Input Source Summary",
+            "Pack Inventory",
+            "Export Manifest",
+            "History Entry Preview",
+            "Restore Plan",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.session_summary",
+            "pack.run_identity",
+            "pack.input_source_summary",
+            "pack.pack_inventory",
+            "pack.export_manifest",
+            "pack.restore_plan",
+            "pack.history_entry_preview",
+            "pack.quality_checks",
+            "pack.risk_notes",
+            "pack.safety_boundaries",
+            "identity.run_id",
+            "summary.mode",
+            "summary.snapshot_status",
+            "summary.recommended_next_action",
+            "boundaries.database_persistence_enabled",
+            "input.workspace_source",
+            "input.raw_review_count",
+            "input.unique_review_count",
+            "input.duplicate_review_count",
+            "input.normalized_review_count",
+            "input.source_type_counts",
+            "item.pack_name",
+            "item.present",
+            "item.pack_version",
+            "item.snapshot_included",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        video_safety = html.index(
+            "${renderProjectWorkspaceVideoApprovalSafetyPanel(workspace)}"
+        )
+        session_summary = html.index(
+            "${renderProjectWorkspaceSessionSummaryPanel(workspace)}"
+        )
+        session_safety = html.index(
+            "${renderProjectWorkspaceSessionRestoreSafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(video_safety, session_summary)
+        self.assertLess(session_summary, session_safety)
+        self.assertLess(session_safety, creative_core)
+
+    def test_workspace_session_snapshot_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "workspaceSessionPackTitle",
+            "workspaceSessionPackHelper",
+            "workspaceSessionSummaryTitle",
+            "workspaceSessionRunId",
+            "workspaceSessionMode",
+            "workspaceSessionReadiness",
+            "workspaceSessionDatabasePersistence",
+            "workspaceSessionRecommendedNextAction",
+            "workspaceSessionRunIdentityTitle",
+            "workspaceSessionInputSourceTitle",
+            "workspaceSessionInputSourceType",
+            "workspaceSessionRawReviewCount",
+            "workspaceSessionUniqueReviewCount",
+            "workspaceSessionDuplicateReviewCount",
+            "workspaceSessionNormalizedReviewCount",
+            "workspaceSessionSourceCounts",
+            "workspaceSessionPackInventoryTitle",
+            "workspaceSessionPackPresent",
+            "workspaceSessionPackVersion",
+            "workspaceSessionPackStatus",
+            "workspaceSessionSnapshotIncluded",
+            "workspaceSessionExportHistoryTitle",
+            "workspaceSessionExportManifestTitle",
+            "workspaceSessionHistoryPreviewTitle",
+            "workspaceSessionExportableWarning",
+            "workspaceSessionHistoryPreviewWarning",
+            "workspaceSessionRestoreSafetyTitle",
+            "workspaceSessionRestorePlanTitle",
+            "workspaceSessionQualityChecksTitle",
+            "workspaceSessionRiskNotesTitle",
+            "workspaceSessionSafetyBoundariesTitle",
+            "workspaceSessionRestorePreviewWarning",
+            "workspaceSessionSafetyNote",
+            "workspaceSessionCopySummary",
+            "workspaceSessionCopyInputSource",
+            "workspaceSessionCopyPackInventory",
+            "workspaceSessionCopyExportManifest",
+            "workspaceSessionCopyHistoryPreview",
+            "workspaceSessionCopyRestorePlan",
+            "workspaceSessionCopyFullPack",
+            "workspaceSessionCopied",
+            "workspaceSessionCopyFailed",
+            "workspaceSessionCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace session snapshot bundle", script)
+            self.assertIn("project_workspace_session_snapshot_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceSessionSummaryText"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceSessionSnapshotText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "workspaceSessionPackTitle",
+            "workspaceSessionRunIdentityTitle",
+            "workspaceSessionInputSourceTitle",
+            "workspaceSessionPackInventoryTitle",
+            "workspaceSessionExportManifestTitle",
+            "workspaceSessionHistoryPreviewTitle",
+            "workspaceSessionRestorePlanTitle",
+            "workspaceSessionSafetyBoundariesTitle",
+            "workspaceSessionSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        session_section = html[
+            html.index("const PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", session_section)
+        self.assertIn("Exportable snapshot only", html)
+        self.assertIn("not a persisted database record", html)
+        self.assertIn("History preview only", html)
+        self.assertIn("Restore is preview-only", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
