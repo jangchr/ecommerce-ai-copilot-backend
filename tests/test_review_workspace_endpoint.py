@@ -1218,6 +1218,169 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_approval_decision_pack_is_gated_and_never_executes(self):
+        payload = {
+            "workspace_id": "workspace-approval-decision",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "manual",
+                    "asin": "DECISION001",
+                    "title": "Compact Travel Mug",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Too short",
+                            "text": "Leaks.",
+                            "source_section": "manual_review",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+            "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_approval_decision_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_approval_decision_pack_v1",
+        )
+        summary = pack["approval_summary"]
+        self.assertTrue(summary)
+        self.assertEqual(
+            summary["mode"],
+            "deterministic_approval_gate_preview",
+        )
+        self.assertEqual(summary["approved_for_real_execution_count"], 0)
+        self.assertTrue(summary["human_review_required"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        decisions = pack["decision_ledger"]
+        source_tickets = creative_pack["workspace_action_ticket_pack"][
+            "action_tickets"
+        ]
+        self.assertGreaterEqual(len(decisions), 1)
+        self.assertEqual(len(decisions), len(source_tickets))
+        source_ticket_ids = {ticket["ticket_id"] for ticket in source_tickets}
+        required_decision_fields = [
+            "decision_id",
+            "source_ticket_id",
+            "decision_title",
+            "decision_type",
+            "priority",
+            "source_pack",
+            "ticket_approval_status",
+            "gate_status",
+            "decision_status",
+            "human_review_required",
+            "real_execution_allowed",
+            "approval_reason",
+            "blocking_reasons",
+            "required_evidence",
+            "validation_required",
+            "risk_note",
+            "do_not_claim",
+            "audit_note",
+        ]
+        for decision in decisions:
+            with self.subTest(decision=decision["decision_id"]):
+                for field in required_decision_fields:
+                    self.assertIn(field, decision)
+                self.assertTrue(decision["decision_id"])
+                self.assertIn(decision["source_ticket_id"], source_ticket_ids)
+                self.assertTrue(decision["decision_type"])
+                self.assertTrue(decision["gate_status"])
+                self.assertIn(
+                    decision["decision_status"],
+                    {"pending_review", "blocked", "review_ready"},
+                )
+                self.assertTrue(decision["human_review_required"])
+                self.assertFalse(decision["real_execution_allowed"])
+                self.assertTrue(decision["required_evidence"])
+                self.assertTrue(decision["validation_required"])
+
+        self.assertIsInstance(pack["pending_decisions"], list)
+        self.assertIsInstance(pack["blocked_decisions"], list)
+        self.assertIsInstance(pack["review_ready_decisions"], list)
+        self.assertTrue(pack["blocked_decisions"])
+        self.assertTrue(pack["review_ready_decisions"])
+        self.assertTrue(
+            all(
+                decision["gate_status"] == "ready_for_human_review"
+                and not decision["real_execution_allowed"]
+                for decision in pack["review_ready_decisions"]
+            )
+        )
+        gated_types = {
+            decision["decision_type"]
+            for decision in pack["blocked_decisions"]
+        }
+        self.assertTrue(
+            {"evidence_gap_decision", "safety_review_decision"}
+            & gated_types
+        )
+
+        self.assertTrue(pack["human_review_requirements"])
+        self.assertTrue(pack["gate_checks"])
+        self.assertFalse(pack["gate_checks"]["gate_execution_performed"])
+        audit = pack["decision_audit_preview"]
+        self.assertTrue(audit["preview_only"])
+        self.assertFalse(audit["decision_record_written"])
+        self.assertFalse(audit["approval_record_written"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["registry_write_performed"])
+        self.assertFalse(audit["history_write_performed"])
+        self.assertEqual(len(audit["entries"]), len(decisions))
+
+        checks = pack["approval_quality_checks"]
+        self.assertTrue(checks["decision_count_matches_source_tickets"])
+        self.assertTrue(checks["decision_ids_unique"])
+        self.assertTrue(checks["all_decisions_trace_to_source_ticket"])
+        self.assertTrue(checks["all_decisions_require_human_review"])
+        self.assertTrue(checks["all_real_execution_disabled"])
+        self.assertTrue(checks["no_decision_approved_for_real_execution"])
+        self.assertTrue(checks["evidence_and_safety_tickets_gated"])
+        self.assertTrue(checks["blocked_tickets_remain_blocked"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["decision_ledger_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+            "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 
 
