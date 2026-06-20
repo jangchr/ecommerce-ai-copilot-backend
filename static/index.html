@@ -3612,6 +3612,7 @@
         let latestProjectWorkspaceExecutionReadinessPack = {};
         let latestProjectWorkspaceExecutionRehearsalPack = {};
         let latestProjectWorkspaceRehearsalResultPack = {};
+        let latestProjectWorkspaceRehearsalRemediationPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8900,6 +8901,7 @@
                 latestProjectWorkspaceExecutionReadinessPack = latestProjectCreativeDecisionPack.workspace_execution_readiness_pack || {};
                 latestProjectWorkspaceExecutionRehearsalPack = latestProjectCreativeDecisionPack.workspace_execution_rehearsal_pack || {};
                 latestProjectWorkspaceRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_rehearsal_result_pack || {};
+                latestProjectWorkspaceRehearsalRemediationPack = latestProjectCreativeDecisionPack.workspace_rehearsal_remediation_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14748,6 +14750,7 @@
         const PROJECT_WORKSPACE_EXECUTION_READINESS_MARKER = 'Project Workspace execution readiness bundle';
         const PROJECT_WORKSPACE_EXECUTION_REHEARSAL_MARKER = 'Project Workspace execution rehearsal bundle';
         const PROJECT_WORKSPACE_REHEARSAL_RESULT_MARKER = 'Project Workspace rehearsal result bundle';
+        const PROJECT_WORKSPACE_REHEARSAL_REMEDIATION_MARKER = 'Project Workspace rehearsal remediation bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -17935,6 +17938,127 @@
         function copyProjectWorkspaceFullRehearsalResultPack() {
             return copyProjectWorkspaceRehearsalResultText('full');
         }
+
+        function projectWorkspaceRehearsalRemediationPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceRehearsalRemediationPack
+                && Object.keys(latestProjectWorkspaceRehearsalRemediationPack).length) {
+                return latestProjectWorkspaceRehearsalRemediationPack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_rehearsal_remediation_pack || {};
+        }
+
+        function projectWorkspaceExportRehearsalRemediationSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceRehearsalRemediationPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_REHEARSAL_REMEDIATION_MARKER,
+                has_workspace_rehearsal_remediation_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                remediation_summary: pack.remediation_summary || {},
+                remediation_action_items: Array.isArray(pack.remediation_action_items) ? pack.remediation_action_items : [],
+                retry_plan: pack.retry_plan || {},
+                evidence_gap_fixes: Array.isArray(pack.evidence_gap_fixes) ? pack.evidence_gap_fixes : [],
+                operator_follow_up_plan: pack.operator_follow_up_plan || {},
+                blocked_item_resolution_plan: Array.isArray(pack.blocked_item_resolution_plan) ? pack.blocked_item_resolution_plan : [],
+                next_rehearsal_plan: pack.next_rehearsal_plan || {},
+                remediation_priority_rationale: pack.remediation_priority_rationale || {},
+                remediation_quality_checks: pack.remediation_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceRehearsalRemediationJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceRehearsalRemediationSummaryText(pack = projectWorkspaceExportRehearsalRemediationSnapshot()) {
+            if (!pack.has_workspace_rehearsal_remediation_pack) return '';
+            const summary = pack.remediation_summary || {};
+            const retry = pack.retry_plan || {};
+            return [
+                t('rehearsalRemediationSummaryTitle'),
+                `${t('rehearsalRemediationMode')}: ${summary.mode || t('none')}`,
+                `${t('rehearsalRemediationActionCount')}: ${summary.action_count ?? 0}`,
+                `${t('rehearsalRemediationRetryReadiness')}: ${retry.retry_status || summary.remediation_status || t('none')}`,
+                `${t('rehearsalRemediationLockStatus')}: ${summary.launch_lock_status || t('none')}`,
+                `${t('rehearsalRemediationRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('rehearsalRemediationRealExecution')}: ${summary.real_execution_allowed === false ? t('rehearsalRemediationDisabled') : String(summary.real_execution_allowed)}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceRehearsalRemediationSectionText(titleKey, value) {
+            return [`## ${t(titleKey)}`, projectWorkspaceRehearsalRemediationJsonText(value) || t('rehearsalRemediationNoData')].join('\n');
+        }
+
+        function projectWorkspaceExportRehearsalRemediationMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalRemediationSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_remediation_pack) return '';
+            return [
+                `## ${t('rehearsalRemediationPackTitle')}`,
+                `## ${t('rehearsalRemediationSummaryTitle')}`,
+                projectWorkspaceRehearsalRemediationSummaryText(pack),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationActionItemsTitle', pack.remediation_action_items),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationRetryPlanTitle', pack.retry_plan),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationEvidenceFixesTitle', pack.evidence_gap_fixes),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationOperatorFollowUpTitle', pack.operator_follow_up_plan),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationBlockedResolutionTitle', pack.blocked_item_resolution_plan),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationNextPlanTitle', pack.next_rehearsal_plan),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationAuditPreviewTitle', pack.audit_preview),
+                '',
+                projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationSafetyBoundariesTitle', pack.safety_boundaries),
+                t('rehearsalRemediationSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRehearsalRemediationText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceRehearsalRemediationStatus');
+            const pack = projectWorkspaceExportRehearsalRemediationSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceRehearsalRemediationSummaryText(pack)
+                : kind === 'actions'
+                    ? projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationActionItemsTitle', pack.remediation_action_items)
+                    : kind === 'retry'
+                        ? projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationRetryPlanTitle', pack.retry_plan)
+                        : kind === 'evidence'
+                            ? projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationEvidenceFixesTitle', pack.evidence_gap_fixes)
+                            : kind === 'operator'
+                                ? projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationOperatorFollowUpTitle', pack.operator_follow_up_plan)
+                                : kind === 'blocked'
+                                    ? projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationBlockedResolutionTitle', pack.blocked_item_resolution_plan)
+                                    : kind === 'audit'
+                                        ? projectWorkspaceRehearsalRemediationSectionText('rehearsalRemediationAuditPreviewTitle', pack.audit_preview)
+                                        : projectWorkspaceExportRehearsalRemediationMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('rehearsalRemediationCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('rehearsalRemediationCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('rehearsalRemediationCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('rehearsalRemediationCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceRehearsalRemediationSummary() { return copyProjectWorkspaceRehearsalRemediationText('summary'); }
+        function copyProjectWorkspaceRehearsalRemediationActions() { return copyProjectWorkspaceRehearsalRemediationText('actions'); }
+        function copyProjectWorkspaceRehearsalRetryPlan() { return copyProjectWorkspaceRehearsalRemediationText('retry'); }
+        function copyProjectWorkspaceEvidenceGapFixes() { return copyProjectWorkspaceRehearsalRemediationText('evidence'); }
+        function copyProjectWorkspaceRemediationOperatorFollowUp() { return copyProjectWorkspaceRehearsalRemediationText('operator'); }
+        function copyProjectWorkspaceBlockedResolutionPlan() { return copyProjectWorkspaceRehearsalRemediationText('blocked'); }
+        function copyProjectWorkspaceRemediationAuditPreview() { return copyProjectWorkspaceRehearsalRemediationText('audit'); }
+        function copyProjectWorkspaceFullRehearsalRemediationPack() { return copyProjectWorkspaceRehearsalRemediationText('full'); }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
@@ -21177,6 +21301,64 @@
             `;
         }
 
+        function renderProjectWorkspaceRehearsalRemediationSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalRemediationSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_remediation_pack) return '';
+            const summary = pack.remediation_summary || {};
+            const retry = pack.retry_plan || {};
+            return `
+                <div class="section-block" id="projectWorkspaceRehearsalRemediationSummaryPanel" data-rehearsal-remediation-marker="${PROJECT_WORKSPACE_REHEARSAL_REMEDIATION_MARKER}">
+                    <div class="section-header"><div><div class="json-key">${escapeHTML(t('rehearsalRemediationPackTitle'))}</div><div class="field-helper">${escapeHTML(t('rehearsalRemediationPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullRehearsalRemediationPack()">${escapeHTML(t('rehearsalRemediationCopyFullPack'))}</button></div>
+                    <div class="metric-strip">
+                        ${metricPill(t('rehearsalRemediationMode'), summary.mode || t('none'))}
+                        ${metricPill(t('rehearsalRemediationActionCount'), summary.action_count ?? 0)}
+                        ${metricPill(t('rehearsalRemediationRetryReadiness'), retry.retry_status || summary.remediation_status || t('none'))}
+                        ${metricPill(t('rehearsalRemediationLockStatus'), summary.launch_lock_status || t('none'))}
+                        ${metricPill(t('rehearsalRemediationRealExecution'), summary.real_execution_allowed === false ? t('rehearsalRemediationDisabled') : String(summary.real_execution_allowed))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('rehearsalRemediationRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('rehearsalRemediationPreviewNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRehearsalRemediationStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalRemediationSummary()">${escapeHTML(t('rehearsalRemediationCopySummary'))}</button>
+                </div>`;
+        }
+
+        function renderProjectWorkspaceRehearsalRemediationActionsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalRemediationSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_remediation_pack) return '';
+            const cards = (pack.remediation_action_items || []).map((action) => `
+                <div class="graph-os-card">
+                    <div class="section-header"><strong>${escapeHTML(action.remediation_title || action.action_id || t('rehearsalRemediationActionItemsTitle'))}</strong><span class="metric-pill">${escapeHTML(action.priority || t('none'))}</span></div>
+                    <div><strong>${escapeHTML(t('rehearsalRemediationActionId'))}:</strong> ${escapeHTML(action.action_id || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalRemediationSourceStepId'))}:</strong> ${escapeHTML(action.source_step_id || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalRemediationIssueType'))}:</strong> ${escapeHTML(action.issue_type || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalRemediationOwner'))}:</strong> ${escapeHTML(action.owner || t('none'))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalRemediationRetryEligible'))}:</strong> ${escapeHTML(String(action.retry_eligible === true))}</div>
+                    <div><strong>${escapeHTML(t('rehearsalRemediationRealExecution'))}:</strong> ${escapeHTML(action.real_execution_allowed === false ? t('rehearsalRemediationDisabled') : String(action.real_execution_allowed))}</div>
+                    <pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText({source_pack: action.source_pack || '', remediation_detail: action.remediation_detail || '', required_input: action.required_input || '', validation_before_retry: action.validation_before_retry || '', risk_note: action.risk_note || ''}) || t('rehearsalRemediationNoData'))}</pre>
+                </div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceRehearsalRemediationActionsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('rehearsalRemediationActionItemsTitle'))}</div><div class="field-helper">${escapeHTML(t('rehearsalRemediationActionItemsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalRemediationActions()">${escapeHTML(t('rehearsalRemediationCopyActions'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('rehearsalRemediationNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceRehearsalRetryPlanPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalRemediationSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_remediation_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceRehearsalRetryPlanPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('rehearsalRemediationRetryNextTitle'))}</div><div class="field-helper">${escapeHTML(t('rehearsalRemediationRetryNextHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRehearsalRetryPlan()">${escapeHTML(t('rehearsalRemediationCopyRetry'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationRetryPlanTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.retry_plan) || t('rehearsalRemediationNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationNextPlanTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.next_rehearsal_plan) || t('rehearsalRemediationNoData'))}</pre></div></div><div class="demo-warning">${escapeHTML(t('rehearsalRemediationRetryNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceRehearsalResolutionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalRemediationSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_remediation_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceRehearsalResolutionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('rehearsalRemediationResolutionTitle'))}</div><div class="field-helper">${escapeHTML(t('rehearsalRemediationResolutionHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceGapFixes()">${escapeHTML(t('rehearsalRemediationCopyEvidence'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRemediationOperatorFollowUp()">${escapeHTML(t('rehearsalRemediationCopyOperator'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedResolutionPlan()">${escapeHTML(t('rehearsalRemediationCopyBlocked'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationEvidenceFixesTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.evidence_gap_fixes) || t('rehearsalRemediationNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationOperatorFollowUpTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.operator_follow_up_plan) || t('rehearsalRemediationNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationBlockedResolutionTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.blocked_item_resolution_plan) || t('rehearsalRemediationNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('rehearsalRemediationResolutionNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceRehearsalRemediationAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRehearsalRemediationSnapshot(workspace);
+            if (!pack.has_workspace_rehearsal_remediation_pack) return '';
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('rehearsalRemediationDisabled') : String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceRehearsalRemediationAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('rehearsalRemediationAuditQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('rehearsalRemediationAuditQualitySafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRemediationAuditPreview()">${escapeHTML(t('rehearsalRemediationCopyAudit'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.remediation_quality_checks) || t('rehearsalRemediationNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.audit_preview) || t('rehearsalRemediationNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('rehearsalRemediationPriorityTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRehearsalRemediationJsonText(pack.remediation_priority_rationale) || t('rehearsalRemediationNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('rehearsalRemediationSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div><div class="field-helper">${escapeHTML(t('rehearsalRemediationNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('rehearsalRemediationSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -21675,6 +21857,8 @@
                 '',
                 projectWorkspaceExportRehearsalResultMarkdown(workspace),
                 '',
+                projectWorkspaceExportRehearsalRemediationMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -21768,6 +21952,7 @@
                 workspace_execution_readiness_pack: projectWorkspaceExportExecutionReadinessSnapshot(workspace),
                 workspace_execution_rehearsal_pack: projectWorkspaceExportExecutionRehearsalSnapshot(workspace),
                 workspace_rehearsal_result_pack: projectWorkspaceExportRehearsalResultSnapshot(workspace),
+                workspace_rehearsal_remediation_pack: projectWorkspaceExportRehearsalRemediationSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -34224,6 +34409,11 @@
                     ${renderProjectWorkspaceRehearsalCheckpointFailurePanel(workspace)}
                     ${renderProjectWorkspaceRehearsalOperatorReviewPanel(workspace)}
                     ${renderProjectWorkspaceRehearsalAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalRemediationSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalRemediationActionsPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalRetryPlanPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalResolutionPanel(workspace)}
+                    ${renderProjectWorkspaceRehearsalRemediationAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -42963,6 +43153,112 @@
             rehearsalResultCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u6f14\u7ec3\u7ed3\u679c\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRehearsalRemediationMarker: 'Project Workspace rehearsal remediation bundle',
+            rehearsalRemediationPackTitle: 'Workspace Rehearsal Remediation / Retry Plan',
+            rehearsalRemediationPackHelper: 'Inspect deterministic remediation and dry-run retry preparation without executing fixes or creating tickets.',
+            rehearsalRemediationSummaryTitle: 'Remediation Summary',
+            rehearsalRemediationMode: 'Remediation mode',
+            rehearsalRemediationActionCount: 'Action count',
+            rehearsalRemediationRetryReadiness: 'Retry readiness',
+            rehearsalRemediationLockStatus: 'Launch lock status',
+            rehearsalRemediationRecommendedNextAction: 'Recommended next action',
+            rehearsalRemediationRealExecution: 'Real execution',
+            rehearsalRemediationDisabled: 'disabled',
+            rehearsalRemediationPreviewNote: 'Remediation preview only. No fix, ticket, retry, or real execution is performed.',
+            rehearsalRemediationActionItemsTitle: 'Remediation Action Items',
+            rehearsalRemediationActionItemsHelper: 'Review traceable issues, required inputs, priorities, validation, and retry eligibility.',
+            rehearsalRemediationActionId: 'Action ID',
+            rehearsalRemediationSourceStepId: 'Source step ID',
+            rehearsalRemediationIssueType: 'Issue type',
+            rehearsalRemediationOwner: 'Owner',
+            rehearsalRemediationRetryEligible: 'Retry eligible',
+            rehearsalRemediationRetryNextTitle: 'Retry Plan / Next Rehearsal Plan',
+            rehearsalRemediationRetryNextHelper: 'Inspect the next dry-run retry sequence and entry criteria without starting it.',
+            rehearsalRemediationRetryPlanTitle: 'Retry Plan',
+            rehearsalRemediationNextPlanTitle: 'Next Rehearsal Plan',
+            rehearsalRemediationRetryNote: 'Only a dry-run rehearsal retry is allowed. This plan cannot start real execution.',
+            rehearsalRemediationResolutionTitle: 'Evidence Gap / Operator Follow-up / Blocked Resolution',
+            rehearsalRemediationResolutionHelper: 'Review evidence, human follow-up, and blocked-item plans without external collection or ticket creation.',
+            rehearsalRemediationEvidenceFixesTitle: 'Evidence Gap Fixes',
+            rehearsalRemediationOperatorFollowUpTitle: 'Operator Follow-up Plan',
+            rehearsalRemediationBlockedResolutionTitle: 'Blocked Item Resolution Plan',
+            rehearsalRemediationResolutionNote: 'Missing or weak evidence remains human-review-only. No real ticket or external data collection occurs.',
+            rehearsalRemediationAuditQualitySafetyTitle: 'Quality / Audit Preview / Safety Boundaries',
+            rehearsalRemediationAuditQualitySafetyHelper: 'Verify plan quality and audit provenance while all real capabilities stay disabled.',
+            rehearsalRemediationQualityChecksTitle: 'Remediation Quality Checks',
+            rehearsalRemediationAuditPreviewTitle: 'Audit Preview',
+            rehearsalRemediationPriorityTitle: 'Priority Rationale',
+            rehearsalRemediationSafetyBoundariesTitle: 'Safety Boundaries',
+            rehearsalRemediationNoWriteNote: 'Audit preview is not written to a database. The remediation plan does not mean a real fix was completed.',
+            rehearsalRemediationSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            rehearsalRemediationNoData: 'No workspace rehearsal remediation data is available.',
+            rehearsalRemediationCopySummary: 'Copy remediation summary',
+            rehearsalRemediationCopyActions: 'Copy remediation action items',
+            rehearsalRemediationCopyRetry: 'Copy retry plan',
+            rehearsalRemediationCopyEvidence: 'Copy evidence gap fixes',
+            rehearsalRemediationCopyOperator: 'Copy operator follow-up plan',
+            rehearsalRemediationCopyBlocked: 'Copy blocked resolution plan',
+            rehearsalRemediationCopyAudit: 'Copy audit preview',
+            rehearsalRemediationCopyFullPack: 'Copy full remediation pack',
+            rehearsalRemediationCopied: 'Workspace rehearsal remediation content copied.',
+            rehearsalRemediationCopyFailed: 'Unable to copy workspace rehearsal remediation content.',
+            rehearsalRemediationCopyNoData: 'No workspace rehearsal remediation content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRehearsalRemediationMarker: 'Project Workspace rehearsal remediation bundle',
+            rehearsalRemediationPackTitle: '\u5de5\u4f5c\u533a\u6f14\u7ec3\u4fee\u590d / \u91cd\u8bd5\u8ba1\u5212',
+            rehearsalRemediationPackHelper: '\u68c0\u67e5\u786e\u5b9a\u6027\u4fee\u590d\u548c dry-run \u91cd\u8bd5\u51c6\u5907\uff0c\u4e0d\u6267\u884c\u4fee\u590d\u6216\u521b\u5efa\u5de5\u5355\u3002',
+            rehearsalRemediationSummaryTitle: '\u4fee\u590d\u6458\u8981',
+            rehearsalRemediationMode: '\u4fee\u590d\u6a21\u5f0f',
+            rehearsalRemediationActionCount: '\u64cd\u4f5c\u6570',
+            rehearsalRemediationRetryReadiness: '\u91cd\u8bd5\u5c31\u7eea\u5ea6',
+            rehearsalRemediationLockStatus: '\u542f\u52a8\u9501\u72b6\u6001',
+            rehearsalRemediationRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            rehearsalRemediationRealExecution: '\u771f\u5b9e\u6267\u884c',
+            rehearsalRemediationDisabled: '\u5df2\u7981\u7528',
+            rehearsalRemediationPreviewNote: '\u4ec5\u4e3a\u4fee\u590d\u9884\u89c8\u3002\u4e0d\u6267\u884c\u4fee\u590d\u3001\u5de5\u5355\u3001\u91cd\u8bd5\u6216\u771f\u5b9e\u6267\u884c\u3002',
+            rehearsalRemediationActionItemsTitle: '\u4fee\u590d\u64cd\u4f5c\u9879',
+            rehearsalRemediationActionItemsHelper: '\u68c0\u67e5\u53ef\u8ffd\u6eaf\u95ee\u9898\u3001\u6240\u9700\u8f93\u5165\u3001\u4f18\u5148\u7ea7\u3001\u9a8c\u8bc1\u548c\u91cd\u8bd5\u8d44\u683c\u3002',
+            rehearsalRemediationActionId: '\u64cd\u4f5c ID',
+            rehearsalRemediationSourceStepId: '\u6765\u6e90\u6b65\u9aa4 ID',
+            rehearsalRemediationIssueType: '\u95ee\u9898\u7c7b\u578b',
+            rehearsalRemediationOwner: '\u8d1f\u8d23\u4eba',
+            rehearsalRemediationRetryEligible: '\u53ef\u91cd\u8bd5',
+            rehearsalRemediationRetryNextTitle: '\u91cd\u8bd5\u8ba1\u5212 / \u4e0b\u6b21\u6f14\u7ec3\u8ba1\u5212',
+            rehearsalRemediationRetryNextHelper: '\u68c0\u67e5\u4e0b\u4e00\u8f6e dry-run \u91cd\u8bd5\u5e8f\u5217\u548c\u8fdb\u5165\u6761\u4ef6\uff0c\u4e0d\u542f\u52a8\u5b83\u3002',
+            rehearsalRemediationRetryPlanTitle: '\u91cd\u8bd5\u8ba1\u5212',
+            rehearsalRemediationNextPlanTitle: '\u4e0b\u6b21\u6f14\u7ec3\u8ba1\u5212',
+            rehearsalRemediationRetryNote: '\u4ec5\u5141\u8bb8 dry-run \u6f14\u7ec3\u91cd\u8bd5\u3002\u6b64\u8ba1\u5212\u4e0d\u80fd\u542f\u52a8\u771f\u5b9e\u6267\u884c\u3002',
+            rehearsalRemediationResolutionTitle: '\u8bc1\u636e\u7f3a\u53e3 / \u64cd\u4f5c\u5458\u8ddf\u8fdb / \u963b\u585e\u89e3\u51b3',
+            rehearsalRemediationResolutionHelper: '\u68c0\u67e5\u8bc1\u636e\u3001\u4eba\u5de5\u8ddf\u8fdb\u548c\u963b\u585e\u9879\u8ba1\u5212\uff0c\u4e0d\u8fdb\u884c\u5916\u90e8\u91c7\u96c6\u6216\u521b\u5efa\u5de5\u5355\u3002',
+            rehearsalRemediationEvidenceFixesTitle: '\u8bc1\u636e\u7f3a\u53e3\u4fee\u590d',
+            rehearsalRemediationOperatorFollowUpTitle: '\u64cd\u4f5c\u5458\u8ddf\u8fdb\u8ba1\u5212',
+            rehearsalRemediationBlockedResolutionTitle: '\u963b\u585e\u9879\u89e3\u51b3\u8ba1\u5212',
+            rehearsalRemediationResolutionNote: '\u7f3a\u5931\u6216\u5f31\u8bc1\u636e\u4ecd\u4ec5\u9650\u4eba\u5de5\u5ba1\u9605\u3002\u4e0d\u521b\u5efa\u771f\u5b9e\u5de5\u5355\uff0c\u4e0d\u91c7\u96c6\u5916\u90e8\u6570\u636e\u3002',
+            rehearsalRemediationAuditQualitySafetyTitle: '\u8d28\u91cf / \u5ba1\u8ba1\u9884\u89c8 / \u5b89\u5168\u8fb9\u754c',
+            rehearsalRemediationAuditQualitySafetyHelper: '\u9a8c\u8bc1\u8ba1\u5212\u8d28\u91cf\u548c\u5ba1\u8ba1\u6765\u6e90\uff0c\u6240\u6709\u771f\u5b9e\u80fd\u529b\u4ecd\u4fdd\u6301\u7981\u7528\u3002',
+            rehearsalRemediationQualityChecksTitle: '\u4fee\u590d\u8d28\u91cf\u68c0\u67e5',
+            rehearsalRemediationAuditPreviewTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            rehearsalRemediationPriorityTitle: '\u4f18\u5148\u7ea7\u4f9d\u636e',
+            rehearsalRemediationSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            rehearsalRemediationNoWriteNote: '\u5ba1\u8ba1\u9884\u89c8\u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002\u4fee\u590d\u8ba1\u5212\u4e0d\u4ee3\u8868\u771f\u5b9e\u4fee\u590d\u5df2\u5b8c\u6210\u3002',
+            rehearsalRemediationSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            rehearsalRemediationNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u6f14\u7ec3\u4fee\u590d\u6570\u636e\u3002',
+            rehearsalRemediationCopySummary: '\u590d\u5236\u4fee\u590d\u6458\u8981',
+            rehearsalRemediationCopyActions: '\u590d\u5236\u4fee\u590d\u64cd\u4f5c\u9879',
+            rehearsalRemediationCopyRetry: '\u590d\u5236\u91cd\u8bd5\u8ba1\u5212',
+            rehearsalRemediationCopyEvidence: '\u590d\u5236\u8bc1\u636e\u7f3a\u53e3\u4fee\u590d',
+            rehearsalRemediationCopyOperator: '\u590d\u5236\u64cd\u4f5c\u5458\u8ddf\u8fdb\u8ba1\u5212',
+            rehearsalRemediationCopyBlocked: '\u590d\u5236\u963b\u585e\u89e3\u51b3\u8ba1\u5212',
+            rehearsalRemediationCopyAudit: '\u590d\u5236\u5ba1\u8ba1\u9884\u89c8',
+            rehearsalRemediationCopyFullPack: '\u590d\u5236\u5b8c\u6574\u4fee\u590d pack',
+            rehearsalRemediationCopied: '\u5de5\u4f5c\u533a\u6f14\u7ec3\u4fee\u590d\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            rehearsalRemediationCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u6f14\u7ec3\u4fee\u590d\u5185\u5bb9\u3002',
+            rehearsalRemediationCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u6f14\u7ec3\u4fee\u590d\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -44367,7 +44663,8 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceApprovalDecisionPack = latestProjectCreativeDecisionPack.workspace_approval_decision_pack || {};
     latestProjectWorkspaceExecutionReadinessPack = latestProjectCreativeDecisionPack.workspace_execution_readiness_pack || {};
     latestProjectWorkspaceExecutionRehearsalPack = latestProjectCreativeDecisionPack.workspace_execution_rehearsal_pack || {};
-    latestProjectWorkspaceRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_rehearsal_result_pack || {};
+                latestProjectWorkspaceRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_rehearsal_result_pack || {};
+                latestProjectWorkspaceRehearsalRemediationPack = latestProjectCreativeDecisionPack.workspace_rehearsal_remediation_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
