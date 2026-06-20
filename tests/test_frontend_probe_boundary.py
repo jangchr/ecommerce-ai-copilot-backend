@@ -10271,6 +10271,199 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(disabled_boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_execution_rehearsal_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace execution rehearsal bundle",
+            "PROJECT_WORKSPACE_EXECUTION_REHEARSAL_MARKER",
+            "latestProjectWorkspaceExecutionRehearsalPack",
+            "projectWorkspaceExecutionRehearsalPackFromWorkspace",
+            "projectWorkspaceExportExecutionRehearsalSnapshot",
+            "projectWorkspaceExportExecutionRehearsalMarkdown",
+            "renderProjectWorkspaceExecutionRehearsalSummaryPanel",
+            "renderProjectWorkspaceExecutionRehearsalRunbookPanel",
+            "renderProjectWorkspaceExecutionRehearsalStepsPanel",
+            "renderProjectWorkspaceExecutionRehearsalCheckpointTimelinePanel",
+            "renderProjectWorkspaceExecutionRehearsalFailurePanel",
+            "renderProjectWorkspaceExecutionRehearsalQualitySafetyPanel",
+            "copyProjectWorkspaceExecutionRehearsalSummary",
+            "copyProjectWorkspaceExecutionRehearsalRunbook",
+            "copyProjectWorkspaceExecutionRehearsalSteps",
+            "copyProjectWorkspaceExecutionRehearsalCheckpoints",
+            "copyProjectWorkspaceExecutionRehearsalTimeline",
+            "copyProjectWorkspaceExecutionRehearsalFailureChecks",
+            "copyProjectWorkspaceExecutionRehearsalAbortRollback",
+            "copyProjectWorkspaceFullExecutionRehearsalPack",
+            "workspace_execution_rehearsal_pack: projectWorkspaceExportExecutionRehearsalSnapshot(workspace)",
+            "Workspace Execution Rehearsal / Dry-Run Runbook",
+            "Execution Rehearsal Summary",
+            "Rehearsal Runbook",
+            "Step Sequence",
+            "Checkpoint Plan",
+            "Mock Execution Timeline",
+            "Failure Injection Checks",
+            "Abort Triggers",
+            "Rollback Rehearsal Plan",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for runtime_field in [
+            "pack.rehearsal_summary",
+            "pack.rehearsal_runbook",
+            "pack.step_sequence",
+            "pack.checkpoint_plan",
+            "pack.mock_execution_timeline",
+            "pack.expected_outputs",
+            "pack.failure_injection_checks",
+            "pack.abort_triggers",
+            "pack.rollback_rehearsal_plan",
+            "pack.operator_notes",
+            "pack.rehearsal_quality_checks",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.rehearsal_status",
+            "summary.readiness_status",
+            "summary.launch_lock_status",
+            "summary.step_count",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed",
+            "step.step_id",
+            "step.step_title",
+            "step.step_type",
+            "step.source_pack",
+            "step.preconditions",
+            "step.dry_run_action",
+            "step.expected_observation",
+            "step.validation_check",
+            "step.failure_mode",
+            "step.abort_trigger",
+            "step.real_execution_allowed",
+            "step.risk_note",
+        ]:
+            with self.subTest(runtime_field=runtime_field):
+                self.assertIn(runtime_field, html)
+        readiness_safety = html.index(
+            "${renderProjectWorkspaceDryRunReadinessSafetyPanel(workspace)}"
+        )
+        rehearsal_summary = html.index(
+            "${renderProjectWorkspaceExecutionRehearsalSummaryPanel(workspace)}"
+        )
+        rehearsal_safety = html.index(
+            "${renderProjectWorkspaceExecutionRehearsalQualitySafetyPanel(workspace)}"
+        )
+        creative_core = html.index(
+            "${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}"
+        )
+        self.assertLess(readiness_safety, rehearsal_summary)
+        self.assertLess(rehearsal_summary, rehearsal_safety)
+        self.assertLess(rehearsal_safety, creative_core)
+
+    def test_workspace_execution_rehearsal_has_bilingual_guard_markdown_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "executionRehearsalPackTitle",
+            "executionRehearsalPackHelper",
+            "executionRehearsalSummaryTitle",
+            "executionRehearsalMode",
+            "executionRehearsalReadiness",
+            "executionRehearsalLockStatus",
+            "executionRehearsalStepCount",
+            "executionRehearsalRecommendedNextAction",
+            "executionRehearsalRealExecution",
+            "executionRehearsalDisabled",
+            "executionRehearsalPreviewNote",
+            "executionRehearsalRunbookTitle",
+            "executionRehearsalRunbookHelper",
+            "executionRehearsalOperatorNotesTitle",
+            "executionRehearsalExpectedOutputsTitle",
+            "executionRehearsalRunbookNote",
+            "executionRehearsalStepSequenceTitle",
+            "executionRehearsalStepSequenceHelper",
+            "executionRehearsalStepId",
+            "executionRehearsalSourcePack",
+            "executionRehearsalCheckpointTimelineTitle",
+            "executionRehearsalCheckpointTimelineHelper",
+            "executionRehearsalCheckpointPlanTitle",
+            "executionRehearsalMockTimelineTitle",
+            "executionRehearsalMockTimelineNote",
+            "executionRehearsalFailurePanelTitle",
+            "executionRehearsalFailurePanelHelper",
+            "executionRehearsalFailureChecksTitle",
+            "executionRehearsalAbortTriggersTitle",
+            "executionRehearsalRollbackTitle",
+            "executionRehearsalRollbackNote",
+            "executionRehearsalQualitySafetyTitle",
+            "executionRehearsalQualitySafetyHelper",
+            "executionRehearsalSafetyBoundariesTitle",
+            "executionRehearsalNoWriteNote",
+            "executionRehearsalSafetyNote",
+            "executionRehearsalNoData",
+            "executionRehearsalCopySummary",
+            "executionRehearsalCopyRunbook",
+            "executionRehearsalCopySteps",
+            "executionRehearsalCopyCheckpoints",
+            "executionRehearsalCopyTimeline",
+            "executionRehearsalCopyFailureChecks",
+            "executionRehearsalCopyAbortRollback",
+            "executionRehearsalCopyFullPack",
+            "executionRehearsalCopied",
+            "executionRehearsalCopyFailed",
+            "executionRehearsalCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace execution rehearsal bundle", script)
+            self.assertIn("project_workspace_execution_rehearsal_marker", script)
+        markdown_start = html.index(
+            "function projectWorkspaceExecutionRehearsalSummaryText"
+        )
+        markdown_end = html.index(
+            "async function copyProjectWorkspaceExecutionRehearsalText",
+            markdown_start,
+        )
+        markdown = html[markdown_start:markdown_end]
+        for key in [
+            "executionRehearsalPackTitle",
+            "executionRehearsalSummaryTitle",
+            "executionRehearsalRunbookTitle",
+            "executionRehearsalStepSequenceTitle",
+            "executionRehearsalCheckpointPlanTitle",
+            "executionRehearsalMockTimelineTitle",
+            "executionRehearsalFailureChecksTitle",
+            "executionRehearsalAbortTriggersTitle",
+            "executionRehearsalRollbackTitle",
+            "executionRehearsalSafetyBoundariesTitle",
+            "executionRehearsalSafetyNote",
+        ]:
+            self.assertIn(key, markdown)
+        rehearsal_section = html[
+            html.index("const PROJECT_WORKSPACE_EXECUTION_REHEARSAL_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", rehearsal_section)
+        self.assertIn("deterministic placeholder, not a real execution log", html)
+        self.assertIn("never performs real rollback or restore", html)
+        self.assertIn("No database write, real failure injection", html)
+        for disabled_boundary in [
+            "Real LLM",
+            "provider",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            self.assertIn(disabled_boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
