@@ -2027,7 +2027,194 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_remediation_verification_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-remediation-verification",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "manual",
+                    "asin": "VERIFY001",
+                    "title": "Compact Travel Mug",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Too short",
+                            "text": "Leaks.",
+                            "source_section": "manual_review",
+                        }
+                    ],
+                }
+            ],
+        }
 
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+            "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_remediation_verification_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_remediation_verification_pack_v1",
+        )
+        summary = pack["verification_summary"]
+        self.assertTrue(summary["verification_run_id"])
+        self.assertIn("remediation_verification", summary["mode"])
+        self.assertIn("retry_readiness_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["ready_for_real_execution"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        source_actions = creative_pack[
+            "workspace_rehearsal_remediation_pack"
+        ]["remediation_action_items"]
+        cards = pack["action_verification_cards"]
+        self.assertTrue(cards)
+        self.assertEqual(len(cards), len(source_actions))
+        source_action_ids = {
+            action["action_id"] for action in source_actions
+        }
+        for card in cards:
+            for field in [
+                "verification_id",
+                "source_action_id",
+                "verification_status",
+                "validation_before_retry",
+            ]:
+                with self.subTest(
+                    card=card["verification_id"], field=field
+                ):
+                    self.assertTrue(card[field])
+            self.assertIn(card["source_action_id"], source_action_ids)
+            self.assertTrue(card["source_step_id"])
+            self.assertTrue(card["required_input"])
+            self.assertFalse(card["input_available"])
+            self.assertFalse(card["retry_eligible"])
+            self.assertTrue(card["remaining_gap"])
+            self.assertTrue(card["operator_review_required"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        gate = pack["retry_readiness_gate"]
+        self.assertEqual(
+            gate["gate_mode"],
+            "next_dry_run_rehearsal_readiness_preview",
+        )
+        self.assertEqual(gate["gate_status"], "blocked_for_next_dry_run")
+        self.assertFalse(gate["ready_for_next_dry_run"])
+        self.assertFalse(gate["ready_for_real_execution"])
+        self.assertFalse(gate["real_execution_gate"])
+        self.assertFalse(gate["real_execution_allowed"])
+
+        self.assertIsInstance(pack["remaining_blockers"], list)
+        self.assertTrue(pack["remaining_blockers"])
+        self.assertTrue(
+            all(
+                blocker["blocks_real_execution"]
+                and not blocker["real_execution_allowed"]
+                for blocker in pack["remaining_blockers"]
+            )
+        )
+        required_inputs = pack["required_inputs_checklist"]
+        self.assertIsInstance(required_inputs, list)
+        self.assertTrue(required_inputs)
+        self.assertTrue(
+            all(
+                not item["input_available"]
+                and not item["external_collection_allowed"]
+                and not item["real_execution_allowed"]
+                for item in required_inputs
+            )
+        )
+
+        evidence = pack["evidence_readiness_review"]
+        self.assertEqual(
+            evidence["review_mode"], "evidence_readiness_preview_only"
+        )
+        self.assertFalse(evidence["external_data_collected"])
+        self.assertFalse(evidence["real_execution_allowed"])
+        signoff = pack["operator_signoff_preview"]
+        self.assertEqual(
+            signoff["signoff_mode"], "human_signoff_preview_only"
+        )
+        self.assertFalse(signoff["approval_created"])
+        self.assertFalse(signoff["ticket_created"])
+        self.assertFalse(signoff["operator_log_written"])
+        self.assertFalse(signoff["signoff_persisted"])
+        self.assertFalse(signoff["real_execution_allowed"])
+
+        scope = pack["next_retry_scope"]
+        self.assertEqual(
+            scope["scope_mode"],
+            "next_dry_run_rehearsal_scope_preview",
+        )
+        self.assertEqual(scope["retry_type"], "dry_run_rehearsal_only")
+        self.assertFalse(scope["next_retry_started"])
+        self.assertFalse(scope["real_execution_allowed"])
+        self.assertIn("only to a future dry-run rehearsal", scope["note"])
+
+        checks = pack["verification_quality_checks"]
+        self.assertTrue(checks["remediation_pack_present"])
+        self.assertTrue(checks["action_count_consistent"])
+        self.assertTrue(checks["all_cards_traceable"])
+        self.assertTrue(checks["all_cards_execution_disabled"])
+        self.assertTrue(checks["unready_actions_have_blockers"])
+        self.assertTrue(checks["required_inputs_are_not_invented"])
+        self.assertTrue(checks["retry_gate_is_dry_run_only"])
+        self.assertFalse(checks["ready_for_real_execution"])
+        self.assertFalse(checks["external_data_collected"])
+        self.assertFalse(checks["approval_created"])
+        self.assertFalse(checks["ticket_created"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["verification_persisted"])
+        self.assertFalse(checks["real_execution_performed"])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["verification_run_id"])
+        self.assertFalse(audit["is_real_ticket_status"])
+        self.assertFalse(audit["is_real_remediation_completion"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+            "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
 
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):

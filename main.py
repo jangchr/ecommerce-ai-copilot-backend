@@ -25216,6 +25216,381 @@ def _rw_workspace_rehearsal_remediation_pack(
     }
 
 
+def _rw_workspace_remediation_verification_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    remediation_pack = dict(
+        creative_decision_pack.get("workspace_rehearsal_remediation_pack")
+        or {}
+    )
+    remediation_summary = dict(
+        remediation_pack.get("remediation_summary") or {}
+    )
+    actions = list(remediation_pack.get("remediation_action_items") or [])
+    retry_plan = dict(remediation_pack.get("retry_plan") or {})
+    evidence_fixes = list(remediation_pack.get("evidence_gap_fixes") or [])
+    operator_plan = dict(
+        remediation_pack.get("operator_follow_up_plan") or {}
+    )
+    blocked_resolution_plan = list(
+        remediation_pack.get("blocked_item_resolution_plan") or []
+    )
+    next_rehearsal_plan = dict(
+        remediation_pack.get("next_rehearsal_plan") or {}
+    )
+    launch_lock_status = _rw_text(
+        remediation_summary.get("launch_lock_status")
+    ) or "unavailable"
+
+    action_verification_cards = []
+    for action in actions:
+        source_action_id = _rw_text(action.get("action_id"))
+        required_input = _rw_text(action.get("required_input"))
+        source_retry_eligible = bool(action.get("retry_eligible"))
+        input_available = False
+        remaining_gap = (
+            required_input
+            if required_input
+            else _rw_text(action.get("remediation_detail"))
+            or "Human validation input is still required."
+        )
+        verification_status = (
+            "ready_for_next_dry_run"
+            if source_retry_eligible and input_available
+            else "blocked_pending_required_input"
+            if required_input and not input_available
+            else "review_required"
+        )
+        verification_signature = json.dumps(
+            {
+                "source_action_id": source_action_id,
+                "source_step_id": _rw_text(
+                    action.get("source_step_id")
+                ),
+                "issue_type": _rw_text(action.get("issue_type")),
+                "verification_status": verification_status,
+            },
+            ensure_ascii=True,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        action_verification_cards.append(
+            {
+                "verification_id": "remediation_verify_"
+                + hashlib.sha256(
+                    verification_signature.encode("utf-8")
+                ).hexdigest()[:10],
+                "source_action_id": source_action_id,
+                "source_step_id": _rw_text(
+                    action.get("source_step_id")
+                ),
+                "source_pack": _rw_text(action.get("source_pack")),
+                "issue_type": _rw_text(action.get("issue_type")),
+                "verification_status": verification_status,
+                "required_input": required_input,
+                "input_available": input_available,
+                "validation_before_retry": _rw_text(
+                    action.get("validation_before_retry")
+                ),
+                "retry_eligible": (
+                    verification_status == "ready_for_next_dry_run"
+                ),
+                "remaining_gap": remaining_gap,
+                "operator_review_required": True,
+                "real_execution_allowed": False,
+                "risk_note": _rw_text(action.get("risk_note"))
+                or "Verification is a dry-run readiness preview only.",
+            }
+        )
+
+    remaining_blockers = [
+        {
+            "blocker_id": f"verification_blocker_{index:02d}",
+            "source_verification_id": card["verification_id"],
+            "source_action_id": card["source_action_id"],
+            "source_step_id": card["source_step_id"],
+            "blocker_type": card["issue_type"] or "required_input",
+            "remaining_gap": card["remaining_gap"],
+            "resolution_required": card["validation_before_retry"],
+            "blocks_next_dry_run": True,
+            "blocks_real_execution": True,
+            "real_execution_allowed": False,
+        }
+        for index, card in enumerate(
+            [
+                card
+                for card in action_verification_cards
+                if not card["retry_eligible"]
+            ],
+            start=1,
+        )
+    ]
+    remaining_blockers.extend(
+        {
+            "blocker_id": f"blocked_resolution_{index:02d}",
+            "source_resolution_id": _rw_text(
+                item.get("resolution_id")
+            ),
+            "source_step_id": _rw_text(item.get("source_step_id")),
+            "blocker_type": "blocked_item_resolution",
+            "remaining_gap": _rw_text(item.get("blocking_reason")),
+            "resolution_required": _rw_text(
+                item.get("validation_before_retry")
+            ),
+            "blocks_next_dry_run": not bool(item.get("retry_eligible")),
+            "blocks_real_execution": True,
+            "real_execution_allowed": False,
+        }
+        for index, item in enumerate(blocked_resolution_plan, start=1)
+        if not bool(item.get("retry_eligible"))
+    )
+
+    required_inputs_checklist = [
+        {
+            "check_id": f"required_input_{index:02d}",
+            "source_verification_id": card["verification_id"],
+            "source_action_id": card["source_action_id"],
+            "source_step_id": card["source_step_id"],
+            "required_input": card["required_input"]
+            or card["remaining_gap"],
+            "input_available": card["input_available"],
+            "validation_before_retry": card[
+                "validation_before_retry"
+            ],
+            "check_status": "missing_input_requires_human_review",
+            "external_collection_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for index, card in enumerate(action_verification_cards, start=1)
+        if card["required_input"] or card["remaining_gap"]
+    ]
+    all_actions_ready = bool(action_verification_cards) and all(
+        card["retry_eligible"] for card in action_verification_cards
+    )
+    no_remaining_blockers = not remaining_blockers
+    retry_ready = all_actions_ready and no_remaining_blockers
+    retry_readiness_gate = {
+        "gate_mode": "next_dry_run_rehearsal_readiness_preview",
+        "gate_status": (
+            "ready_for_next_dry_run"
+            if retry_ready
+            else "blocked_for_next_dry_run"
+        ),
+        "ready_for_next_dry_run": retry_ready,
+        "ready_for_real_execution": False,
+        "real_execution_gate": False,
+        "action_count": len(action_verification_cards),
+        "eligible_action_count": sum(
+            card["retry_eligible"] for card in action_verification_cards
+        ),
+        "remaining_blocker_count": len(remaining_blockers),
+        "required_input_count": len(required_inputs_checklist),
+        "source_retry_status": _rw_text(retry_plan.get("retry_status")),
+        "launch_lock_status": launch_lock_status,
+        "gate_reason": (
+            "Required inputs, human review, or blocked-item resolution remain before the next dry-run rehearsal."
+            if not retry_ready
+            else "All verification previews are eligible for the next dry-run rehearsal only."
+        ),
+        "real_execution_allowed": False,
+    }
+
+    evidence_readiness_review = {
+        "review_mode": "evidence_readiness_preview_only",
+        "source_evidence_fix_count": len(evidence_fixes),
+        "evidence_items": [
+            {
+                "fix_id": _rw_text(fix.get("fix_id")),
+                "source_action_id": _rw_text(
+                    fix.get("source_action_id")
+                ),
+                "source_step_id": _rw_text(fix.get("source_step_id")),
+                "gap_type": _rw_text(fix.get("gap_type")),
+                "required_evidence": _rw_text(
+                    fix.get("required_evidence")
+                ),
+                "evidence_available": False,
+                "readiness_status": "missing_evidence",
+                "external_collection_allowed": False,
+                "real_execution_allowed": False,
+            }
+            for fix in evidence_fixes
+        ],
+        "all_evidence_ready": False if evidence_fixes else True,
+        "external_data_collected": False,
+        "real_execution_allowed": False,
+    }
+    operator_signoff_preview = {
+        "signoff_mode": "human_signoff_preview_only",
+        "source_review_count": int(
+            operator_plan.get("source_operator_review_count") or 0
+        ),
+        "review_items": list(operator_plan.get("review_items") or []),
+        "signoff_status": "pending_human_review",
+        "approval_created": False,
+        "ticket_created": False,
+        "operator_log_written": False,
+        "signoff_persisted": False,
+        "real_execution_allowed": False,
+        "note": (
+            "This is a signoff preview only and does not create an approval, ticket, or operator log."
+        ),
+    }
+    next_retry_scope = {
+        "scope_mode": "next_dry_run_rehearsal_scope_preview",
+        "retry_type": "dry_run_rehearsal_only",
+        "source_scope": list(next_rehearsal_plan.get("planned_scope") or []),
+        "verified_action_ids": [
+            card["source_action_id"] for card in action_verification_cards
+        ],
+        "blocked_action_ids": [
+            card["source_action_id"]
+            for card in action_verification_cards
+            if not card["retry_eligible"]
+        ],
+        "entry_criteria": list(
+            next_rehearsal_plan.get("entry_criteria") or []
+        ),
+        "next_retry_started": False,
+        "real_execution_allowed": False,
+        "note": (
+            "Scope applies only to a future dry-run rehearsal and cannot start real execution."
+        ),
+    }
+
+    verification_signature = json.dumps(
+        {
+            "remediation_id": _rw_text(
+                remediation_summary.get("remediation_id")
+            ),
+            "verification_ids": [
+                card["verification_id"]
+                for card in action_verification_cards
+            ],
+            "remaining_blocker_count": len(remaining_blockers),
+            "gate_status": retry_readiness_gate["gate_status"],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    verification_run_id = (
+        "remediation_verification_"
+        + hashlib.sha256(
+            verification_signature.encode("utf-8")
+        ).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "approval_creation_enabled": False,
+        "verification_persistence_enabled": False,
+        "launch_unlock_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_remediation_verification_pack_v1",
+        "verification_summary": {
+            "verification_run_id": verification_run_id,
+            "mode": "deterministic_remediation_verification_retry_readiness_preview_dry_run_only",
+            "verification_status": retry_readiness_gate["gate_status"],
+            "source_remediation_id": _rw_text(
+                remediation_summary.get("remediation_id")
+            ),
+            "action_verification_count": len(
+                action_verification_cards
+            ),
+            "remaining_blocker_count": len(remaining_blockers),
+            "required_input_count": len(required_inputs_checklist),
+            "ready_for_next_dry_run": retry_ready,
+            "ready_for_real_execution": False,
+            "recommended_next_action": (
+                "Complete required inputs and human signoff before evaluating the next dry-run rehearsal again."
+            ),
+            "real_execution_allowed": False,
+        },
+        "action_verification_cards": action_verification_cards,
+        "retry_readiness_gate": retry_readiness_gate,
+        "remaining_blockers": remaining_blockers,
+        "required_inputs_checklist": required_inputs_checklist,
+        "evidence_readiness_review": evidence_readiness_review,
+        "operator_signoff_preview": operator_signoff_preview,
+        "next_retry_scope": next_retry_scope,
+        "verification_quality_checks": {
+            "remediation_pack_present": bool(remediation_pack),
+            "action_count_consistent": len(action_verification_cards)
+            == len(actions),
+            "all_cards_traceable": all(
+                card["verification_id"]
+                and card["source_action_id"]
+                and card["source_step_id"]
+                for card in action_verification_cards
+            ),
+            "all_cards_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in action_verification_cards
+            ),
+            "unready_actions_have_blockers": all(
+                any(
+                    blocker.get("source_verification_id")
+                    == card["verification_id"]
+                    for blocker in remaining_blockers
+                )
+                for card in action_verification_cards
+                if not card["retry_eligible"]
+            ),
+            "required_inputs_are_not_invented": all(
+                not item["input_available"]
+                for item in required_inputs_checklist
+            ),
+            "retry_gate_is_dry_run_only": True,
+            "ready_for_real_execution": False,
+            "external_data_collected": False,
+            "approval_created": False,
+            "ticket_created": False,
+            "database_write_performed": False,
+            "verification_persisted": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_remediation_verification_preview",
+            "verification_run_id": verification_run_id,
+            "source_remediation_id": _rw_text(
+                remediation_summary.get("remediation_id")
+            ),
+            "source_action_ids": [
+                card["source_action_id"]
+                for card in action_verification_cards
+            ],
+            "source_retry_mode": _rw_text(retry_plan.get("mode")),
+            "source_next_rehearsal_mode": _rw_text(
+                next_rehearsal_plan.get("mode")
+            ),
+            "is_real_ticket_status": False,
+            "is_real_remediation_completion": False,
+            "database_write_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This verification audit is a deterministic preview only; no remediation completion, retry, approval, ticket, operator log, or database record was created."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -25332,6 +25707,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_rehearsal_remediation_pack"] = (
         _rw_workspace_rehearsal_remediation_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_remediation_verification_pack"] = (
+        _rw_workspace_remediation_verification_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
