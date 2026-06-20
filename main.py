@@ -24022,6 +24022,400 @@ def _rw_workspace_execution_readiness_pack(creative_decision_pack: dict) -> dict
     }
 
 
+def _rw_workspace_execution_rehearsal_pack(creative_decision_pack: dict) -> dict:
+    readiness_pack = dict(
+        creative_decision_pack.get("workspace_execution_readiness_pack") or {}
+    )
+    approval_pack = dict(
+        creative_decision_pack.get("workspace_approval_decision_pack") or {}
+    )
+    ticket_pack = dict(
+        creative_decision_pack.get("workspace_action_ticket_pack") or {}
+    )
+    queue_pack = dict(
+        creative_decision_pack.get("workspace_action_queue_pack") or {}
+    )
+    llm_pack = dict(
+        creative_decision_pack.get("llm_assist_dry_run_pack") or {}
+    )
+    video_pack = dict(
+        creative_decision_pack.get(
+            "video_provider_orchestration_dry_run_pack"
+        )
+        or {}
+    )
+    campaign_pack = dict(
+        creative_decision_pack.get("campaign_export_pack") or {}
+    )
+    snapshot_pack = dict(
+        creative_decision_pack.get("workspace_session_snapshot_pack") or {}
+    )
+
+    readiness_summary = dict(readiness_pack.get("readiness_summary") or {})
+    launch_lock = dict(readiness_pack.get("launch_lock") or {})
+    blocked_reasons = list(
+        readiness_pack.get("blocked_execution_reasons") or []
+    )
+    manual_review = dict(
+        readiness_pack.get("manual_review_requirements") or {}
+    )
+    launch_locked = _rw_text(launch_lock.get("lock_status")) in {
+        "locked",
+        "blocked",
+        "dry_run_only",
+    }
+
+    step_specs = [
+        (
+            "verify_evidence",
+            "Verify evidence and quote coverage",
+            "review_import_pack",
+            ["Review import and evidence packs are present."],
+            "Inspect evidence references, weak-evidence flags, and missing quotes without changing source reviews.",
+            "Evidence gaps and source quotes are listed for human review.",
+            "Confirm weak or missing evidence remains blocked from strong claims.",
+            "Weak evidence is treated as execution-ready.",
+            "Abort the rehearsal if an unsupported claim appears.",
+            "Weak or missing evidence must remain a review blocker.",
+        ),
+        (
+            "review_approval_gate",
+            "Review approval gate decisions",
+            "workspace_approval_decision_pack",
+            ["Decision ledger and human review requirements are present."],
+            "Walk through pending, blocked, and review-ready decisions as a read-only approval preview.",
+            "Every decision remains pending, blocked, or ready for human review only.",
+            "Confirm no decision is approved for real execution.",
+            "A review-ready decision is interpreted as execution approval.",
+            "Abort if any decision allows real execution.",
+            "Human review does not grant real execution permission.",
+        ),
+        (
+            "preview_llm_prompt",
+            "Preview the evidence-bound LLM prompt",
+            "llm_assist_dry_run_pack",
+            ["LLM assist dry-run pack is present."],
+            "Inspect the deterministic prompt plan, evidence bundle, and mock response without calling an LLM.",
+            "A prompt preview and deterministic placeholder remain visible.",
+            "Confirm the approval gate keeps the real LLM call disabled.",
+            "A real model response or secret is requested.",
+            "Abort if an API key, provider call, or real model output is requested.",
+            "The preview is not a real LLM response.",
+        ),
+        (
+            "preview_video_provider_plan",
+            "Preview the video provider orchestration plan",
+            "video_provider_orchestration_dry_run_pack",
+            ["Video orchestration dry-run pack is present."],
+            "Inspect the mock provider match, job plan, and cost placeholder without generating video or moving media.",
+            "Only deterministic provider and cost placeholders are shown.",
+            "Confirm real provider, video, media, and paid operations remain disabled.",
+            "A provider request, video job, upload, download, or charge is attempted.",
+            "Abort if any real provider or media operation is requested.",
+            "Provider capability and cost values are previews, not quotes.",
+        ),
+        (
+            "validate_export_manifest",
+            "Validate export manifests",
+            "campaign_export_pack",
+            ["Campaign export and workspace snapshot packs are present."],
+            "Compare exportable pack inventory and snapshot manifest without persisting history.",
+            "Export content is available as a deterministic snapshot only.",
+            "Confirm no database history, registry write, or external transfer occurs.",
+            "The snapshot is represented as a persisted history record.",
+            "Abort if export validation attempts persistence or external transfer.",
+            "Exportable does not mean persisted, uploaded, or executed.",
+        ),
+        (
+            "confirm_launch_lock",
+            "Confirm the launch lock remains closed",
+            "workspace_execution_readiness_pack",
+            ["Execution readiness pack and launch lock are present."],
+            "Recalculate the observable lock state and verify the run remains dry-run only.",
+            "The launch lock remains locked and real execution remains disabled.",
+            "Confirm lock_status is not unlocked_for_real_execution.",
+            "The rehearsal changes or bypasses the launch lock.",
+            "Abort if the lock is missing, changed, or represented as unlocked.",
+            "This rehearsal cannot unlock the launch lock.",
+        ),
+        (
+            "simulate_abort",
+            "Simulate an abort decision",
+            "workspace_execution_readiness_pack",
+            ["Blocked reasons and risk register are available."],
+            "Select a deterministic blocked reason and preview the stop decision without triggering a real failure.",
+            "The mock timeline records an aborted rehearsal checkpoint only.",
+            "Confirm no process, provider, or external system is interrupted.",
+            "Failure injection affects a real service or operation.",
+            "Abort the rehearsal preview if simulation boundaries cannot be proven.",
+            "Failure injection is descriptive only.",
+        ),
+        (
+            "simulate_rollback",
+            "Simulate the rollback runbook",
+            "video_provider_orchestration_dry_run_pack",
+            ["Abort and rollback preview data are available."],
+            "Review the deterministic rollback sequence without restoring data or executing rollback.",
+            "Rollback steps are documented as rehearsal-only observations.",
+            "Confirm rollback_enabled and real_restore_enabled remain false.",
+            "A restore, rollback, registry mutation, or database write is attempted.",
+            "Abort immediately if the preview requests a real restore or rollback.",
+            "Rollback rehearsal never performs rollback.",
+        ),
+        (
+            "manual_review_checkpoint",
+            "Complete the manual review checkpoint",
+            "workspace_action_ticket_pack",
+            ["Action tickets and operator review requirements are present."],
+            "Review the rehearsal observations and leave all tickets in human-review-only state.",
+            "Operator notes identify unresolved evidence and safety requirements.",
+            "Confirm completion does not change approval or execution state.",
+            "A reviewer marks the rehearsal as approved for real execution.",
+            "Abort if review completion is treated as execution authorization.",
+            "Manual review is required and cannot authorize real execution here.",
+        ),
+    ]
+
+    step_sequence = []
+    for index, spec in enumerate(step_specs, start=1):
+        (
+            step_type,
+            title,
+            source_pack,
+            preconditions,
+            dry_run_action,
+            expected_observation,
+            validation_check,
+            failure_mode,
+            abort_trigger,
+            risk_note,
+        ) = spec
+        step_signature = json.dumps(
+            {
+                "index": index,
+                "step_type": step_type,
+                "source_pack": source_pack,
+                "lock_id": _rw_text(launch_lock.get("lock_id")),
+            },
+            ensure_ascii=True,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        step_sequence.append(
+            {
+                "step_id": "rehearsal_step_"
+                + hashlib.sha256(step_signature.encode("utf-8")).hexdigest()[
+                    :10
+                ],
+                "step_order": index,
+                "step_title": title,
+                "step_type": step_type,
+                "source_pack": source_pack,
+                "source_pack_present": bool(
+                    creative_decision_pack.get(source_pack)
+                ),
+                "preconditions": preconditions,
+                "dry_run_action": dry_run_action,
+                "expected_observation": expected_observation,
+                "validation_check": validation_check,
+                "failure_mode": failure_mode,
+                "abort_trigger": abort_trigger,
+                "real_execution_allowed": False,
+                "risk_note": risk_note,
+            }
+        )
+
+    abort_triggers = list(
+        dict.fromkeys(
+            [
+                "launch_lock_missing_or_not_locked",
+                "real_execution_flag_detected",
+                "provider_or_llm_call_requested",
+                "video_or_media_operation_requested",
+                "paid_or_registry_operation_requested",
+                "database_write_or_history_persistence_requested",
+                "real_restore_or_rollback_requested",
+                "external_scraping_requested",
+                "unsupported_claim_or_missing_evidence_promoted",
+                *[str(reason) for reason in blocked_reasons if str(reason)],
+            ]
+        )
+    )
+    mock_timeline = [
+        {
+            "sequence": index,
+            "mock_time": f"T+{(index - 1) * 5:02d}m",
+            "step_id": step["step_id"],
+            "step_type": step["step_type"],
+            "mock_status": "preview_only",
+            "real_execution_performed": False,
+        }
+        for index, step in enumerate(step_sequence, start=1)
+    ]
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "approval_execution_enabled": False,
+        "launch_unlock_enabled": False,
+        "failure_injection_execution_enabled": False,
+    }
+
+    expected_outputs = {
+        "rehearsal_checklist": True,
+        "mock_timeline": True,
+        "checkpoint_observations": True,
+        "abort_preview": True,
+        "rollback_preview": True,
+        "operator_review_notes": True,
+        "real_execution_output": False,
+        "provider_output": False,
+        "database_history_record": False,
+    }
+    source_pack_presence = {
+        "workspace_execution_readiness_pack": bool(readiness_pack),
+        "workspace_approval_decision_pack": bool(approval_pack),
+        "workspace_action_ticket_pack": bool(ticket_pack),
+        "workspace_action_queue_pack": bool(queue_pack),
+        "llm_assist_dry_run_pack": bool(llm_pack),
+        "video_provider_orchestration_dry_run_pack": bool(video_pack),
+        "campaign_export_pack": bool(campaign_pack),
+        "workspace_session_snapshot_pack": bool(snapshot_pack),
+    }
+
+    return {
+        "pack_version": "workspace_execution_rehearsal_pack_v1",
+        "rehearsal_summary": {
+            "mode": "deterministic_dry_run_rehearsal_preview",
+            "rehearsal_status": (
+                "ready_for_dry_run_rehearsal"
+                if readiness_pack and launch_locked
+                else "blocked_missing_locked_readiness"
+            ),
+            "readiness_status": _rw_text(
+                readiness_summary.get("readiness_status")
+            ),
+            "launch_lock_status": _rw_text(
+                launch_lock.get("lock_status")
+            )
+            or "unavailable",
+            "step_count": len(step_sequence),
+            "checkpoint_count": len(step_sequence) + 2,
+            "blocked_reason_count": len(blocked_reasons),
+            "recommended_next_action": (
+                "Run the deterministic rehearsal with human review while keeping the launch lock closed."
+            ),
+            "real_execution_allowed": False,
+        },
+        "rehearsal_runbook": {
+            "runbook_mode": "dry_run_preview_only",
+            "source_pack_presence": source_pack_presence,
+            "launch_lock_required": True,
+            "launch_lock_observed": launch_locked,
+            "execution_state_changes_allowed": False,
+            "operator_role": "human_reviewer",
+            "completion_definition": (
+                "All mock observations are reviewed; no real operation is executed or unlocked."
+            ),
+        },
+        "step_sequence": step_sequence,
+        "checkpoint_plan": {
+            "checkpoint_mode": "deterministic_review_checkpoints",
+            "opening_checkpoint": "Confirm hard dry-run boundaries and locked launch state.",
+            "step_checkpoints": [
+                {
+                    "step_id": step["step_id"],
+                    "validation_check": step["validation_check"],
+                    "human_review_required": True,
+                }
+                for step in step_sequence
+            ],
+            "closing_checkpoint": (
+                "Confirm the launch lock is still closed and no real execution occurred."
+            ),
+        },
+        "mock_execution_timeline": {
+            "timeline_type": "deterministic_mock_timeline",
+            "is_real_execution_log": False,
+            "timeline_generated_from_steps": True,
+            "events": mock_timeline,
+            "note": (
+                "This is a deterministic mock timeline for rehearsal only, not a real execution log."
+            ),
+        },
+        "expected_outputs": expected_outputs,
+        "failure_injection_checks": {
+            "mode": "descriptive_simulation_only",
+            "real_failure_injection_performed": False,
+            "checks": [
+                "Simulate missing evidence and verify the rehearsal aborts before claims are promoted.",
+                "Simulate a provider request and verify the hard dry-run boundary blocks it.",
+                "Simulate a database write request and verify persistence remains disabled.",
+                "Simulate a rollback request and verify only the rollback preview is shown.",
+                "Simulate a launch unlock request and verify the lock remains closed.",
+            ],
+        },
+        "abort_triggers": abort_triggers,
+        "rollback_rehearsal_plan": {
+            "mode": "deterministic_rollback_rehearsal_preview",
+            "rollback_executed": False,
+            "restore_executed": False,
+            "steps": [
+                "Stop the mock timeline at the current checkpoint.",
+                "Record the simulated failure reason in operator notes only.",
+                "Reconfirm no provider, media, registry, database, restore, or rollback operation ran.",
+                "Return to the locked readiness state without changing workspace data.",
+            ],
+            "note": "This plan rehearses rollback decisions only and never executes rollback or restore.",
+        },
+        "operator_notes": {
+            "human_review_required": True,
+            "manual_review_requirements": manual_review,
+            "blocked_execution_reasons": blocked_reasons,
+            "notes": [
+                "Treat every timeline event as a deterministic preview.",
+                "Keep the launch lock closed throughout the rehearsal.",
+                "Retain all evidence gaps, risk notes, and do-not-claim boundaries.",
+                "Do not enter secrets or invoke external systems.",
+                "Rehearsal completion is not approval for real execution.",
+            ],
+        },
+        "rehearsal_quality_checks": {
+            "readiness_pack_present": bool(readiness_pack),
+            "approval_pack_present": bool(approval_pack),
+            "ticket_pack_present": bool(ticket_pack),
+            "queue_pack_present": bool(queue_pack),
+            "llm_dry_run_pack_present": bool(llm_pack),
+            "video_dry_run_pack_present": bool(video_pack),
+            "launch_lock_closed": launch_locked,
+            "step_sequence_present": bool(step_sequence),
+            "all_steps_traceable": all(
+                step["source_pack_present"] for step in step_sequence
+            ),
+            "all_steps_execution_disabled": all(
+                not step["real_execution_allowed"]
+                for step in step_sequence
+            ),
+            "mock_timeline_not_real": True,
+            "failure_injection_not_performed": True,
+            "rollback_not_performed": True,
+            "database_write_performed": False,
+            "real_execution_performed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -24129,6 +24523,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_execution_readiness_pack"] = (
         _rw_workspace_execution_readiness_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_execution_rehearsal_pack"] = (
+        _rw_workspace_execution_rehearsal_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

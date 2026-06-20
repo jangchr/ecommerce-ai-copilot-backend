@@ -1541,6 +1541,162 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_execution_rehearsal_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-execution-rehearsal",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "manual",
+                    "asin": "REHEARSE001",
+                    "title": "Compact Travel Mug",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Too short",
+                            "text": "Leaks.",
+                            "source_section": "manual_review",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+            "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_execution_rehearsal_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_execution_rehearsal_pack_v1",
+        )
+        summary = pack["rehearsal_summary"]
+        self.assertTrue(summary)
+        self.assertIn("dry_run", summary["mode"])
+        self.assertIn("rehearsal", summary["mode"])
+        self.assertFalse(summary["real_execution_allowed"])
+        self.assertEqual(summary["launch_lock_status"], "locked")
+
+        runbook = pack["rehearsal_runbook"]
+        self.assertTrue(runbook)
+        self.assertTrue(runbook["launch_lock_required"])
+        self.assertTrue(runbook["launch_lock_observed"])
+        self.assertFalse(runbook["execution_state_changes_allowed"])
+
+        steps = pack["step_sequence"]
+        self.assertTrue(steps)
+        expected_step_types = {
+            "verify_evidence",
+            "review_approval_gate",
+            "preview_llm_prompt",
+            "preview_video_provider_plan",
+            "validate_export_manifest",
+            "confirm_launch_lock",
+            "simulate_abort",
+            "simulate_rollback",
+            "manual_review_checkpoint",
+        }
+        self.assertTrue(expected_step_types.issubset({
+            step["step_type"] for step in steps
+        }))
+        for step in steps:
+            for field in [
+                "step_id",
+                "step_type",
+                "dry_run_action",
+                "validation_check",
+            ]:
+                with self.subTest(step=step["step_type"], field=field):
+                    self.assertTrue(step[field])
+            self.assertTrue(step["preconditions"])
+            self.assertTrue(step["abort_trigger"])
+            self.assertFalse(step["real_execution_allowed"])
+
+        self.assertTrue(pack["checkpoint_plan"])
+        timeline = pack["mock_execution_timeline"]
+        self.assertEqual(
+            timeline["timeline_type"], "deterministic_mock_timeline"
+        )
+        self.assertFalse(timeline["is_real_execution_log"])
+        self.assertIn("not a real execution log", timeline["note"])
+        self.assertTrue(timeline["events"])
+        self.assertTrue(
+            all(
+                not event["real_execution_performed"]
+                for event in timeline["events"]
+            )
+        )
+
+        self.assertTrue(pack["expected_outputs"])
+        failure_checks = pack["failure_injection_checks"]
+        self.assertTrue(failure_checks["checks"])
+        self.assertFalse(
+            failure_checks["real_failure_injection_performed"]
+        )
+        self.assertTrue(pack["abort_triggers"])
+        rollback_plan = pack["rollback_rehearsal_plan"]
+        self.assertTrue(rollback_plan["steps"])
+        self.assertFalse(rollback_plan["rollback_executed"])
+        self.assertFalse(rollback_plan["restore_executed"])
+        self.assertIn("never executes rollback", rollback_plan["note"])
+        self.assertTrue(pack["operator_notes"])
+
+        checks = pack["rehearsal_quality_checks"]
+        self.assertTrue(checks["readiness_pack_present"])
+        self.assertTrue(checks["approval_pack_present"])
+        self.assertTrue(checks["ticket_pack_present"])
+        self.assertTrue(checks["queue_pack_present"])
+        self.assertTrue(checks["llm_dry_run_pack_present"])
+        self.assertTrue(checks["video_dry_run_pack_present"])
+        self.assertTrue(checks["launch_lock_closed"])
+        self.assertTrue(checks["step_sequence_present"])
+        self.assertTrue(checks["all_steps_traceable"])
+        self.assertTrue(checks["all_steps_execution_disabled"])
+        self.assertTrue(checks["mock_timeline_not_real"])
+        self.assertTrue(checks["failure_injection_not_performed"])
+        self.assertTrue(checks["rollback_not_performed"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["real_execution_performed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+            "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 
 
