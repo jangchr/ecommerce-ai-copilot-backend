@@ -3605,6 +3605,7 @@
         let latestProjectLlmAssistDryRunPack = {};
         let latestProjectVideoProviderOrchestrationDryRunPack = {};
         let latestProjectWorkspaceSessionSnapshotPack = {};
+        let latestProjectWorkspaceRunComparePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8886,6 +8887,7 @@
                 latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
                 latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
                 latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
+                latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14727,6 +14729,7 @@
         const PROJECT_WORKSPACE_LLM_ASSIST_DRY_RUN_MARKER = 'Project Workspace LLM assist dry-run bundle';
         const PROJECT_WORKSPACE_VIDEO_PROVIDER_ORCHESTRATION_DRY_RUN_MARKER = 'Project Workspace video provider orchestration dry-run bundle';
         const PROJECT_WORKSPACE_SESSION_SNAPSHOT_MARKER = 'Project Workspace session snapshot bundle';
+        const PROJECT_WORKSPACE_RUN_SNAPSHOT_COMPARE_MARKER = 'Project Workspace run snapshot compare bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -16820,6 +16823,200 @@
 
         function copyProjectWorkspaceFullSessionSnapshotPack() {
             return copyProjectWorkspaceSessionSnapshotText('full');
+        }
+
+        function projectWorkspaceRunComparePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceRunComparePack
+                && Object.keys(latestProjectWorkspaceRunComparePack).length) {
+                return latestProjectWorkspaceRunComparePack;
+            }
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_run_compare_pack || {};
+        }
+
+        function projectWorkspaceExportRunCompareSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceRunComparePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_RUN_SNAPSHOT_COMPARE_MARKER,
+                has_workspace_run_compare_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                compare_summary: pack.compare_summary || {},
+                current_run_identity: pack.current_run_identity || {},
+                previous_run_identity: pack.previous_run_identity || {},
+                input_delta: pack.input_delta || {},
+                pack_inventory_delta: Array.isArray(pack.pack_inventory_delta) ? pack.pack_inventory_delta : [],
+                readiness_delta: pack.readiness_delta || {},
+                risk_delta: pack.risk_delta || {},
+                export_delta: pack.export_delta || {},
+                recommended_follow_up_actions: Array.isArray(pack.recommended_follow_up_actions) ? pack.recommended_follow_up_actions : [],
+                compare_quality_checks: pack.compare_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceRunCompareJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceRunCompareSummaryText(pack = projectWorkspaceExportRunCompareSnapshot()) {
+            if (!pack.has_workspace_run_compare_pack) return '';
+            const summary = pack.compare_summary || {};
+            return [
+                t('runCompareSummaryTitle'),
+                `${t('runCompareMode')}: ${summary.comparison_mode || t('none')}`,
+                `${t('runCompareCurrentRunId')}: ${summary.current_run_id || t('none')}`,
+                `${t('runComparePreviousRunId')}: ${summary.previous_run_id || t('runCompareUnavailable')}`,
+                `${t('runCompareReadiness')}: ${summary.comparison_status || t('none')}`,
+                `${t('runCompareBaselineStatus')}: ${summary.previous_snapshot_available ? t('runComparePreviousProvided') : t('runCompareNoPrevious')}`,
+                `${t('runCompareRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`
+            ].join('\n');
+        }
+
+        function projectWorkspaceRunIdentityText(pack = projectWorkspaceExportRunCompareSnapshot()) {
+            if (!pack.has_workspace_run_compare_pack) return '';
+            const previousAvailable = pack.compare_summary?.previous_snapshot_available === true;
+            return [
+                `## ${t('runCompareCurrentIdentityTitle')}`,
+                projectWorkspaceRunCompareJsonText(pack.current_run_identity),
+                '',
+                `## ${t('runComparePreviousIdentityTitle')}`,
+                previousAvailable
+                    ? projectWorkspaceRunCompareJsonText(pack.previous_run_identity)
+                    : t('runComparePreviousNotProvided')
+            ].join('\n');
+        }
+
+        function projectWorkspaceRunPackInventoryText(pack = projectWorkspaceExportRunCompareSnapshot()) {
+            if (!pack.has_workspace_run_compare_pack) return '';
+            return [
+                t('runComparePackInventoryTitle'),
+                ...(pack.pack_inventory_delta || []).map((item) => [
+                    item.pack_name || t('none'),
+                    `${t('runCompareCurrentPresence')}: ${String(item.current_present === true)}`,
+                    `${t('runComparePreviousPresence')}: ${item.previous_present === null || item.previous_present === undefined ? t('runCompareUnavailable') : String(item.previous_present === true)}`,
+                    `${t('runCompareDeltaStatus')}: ${item.delta_status || t('none')}`,
+                    `${t('runCompareCurrentVersion')}: ${item.current_pack_version || t('none')}`,
+                    `${t('runComparePreviousVersion')}: ${item.previous_pack_version || t('runCompareUnavailable')}`
+                ].join('\n'))
+            ].join('\n\n');
+        }
+
+        function projectWorkspaceRunReadinessText(pack = projectWorkspaceExportRunCompareSnapshot()) {
+            if (!pack.has_workspace_run_compare_pack) return '';
+            return [
+                t('runCompareReadinessDeltaTitle'),
+                projectWorkspaceRunCompareJsonText(pack.readiness_delta)
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceRunRiskExportText(pack = projectWorkspaceExportRunCompareSnapshot()) {
+            if (!pack.has_workspace_run_compare_pack) return '';
+            return [
+                `## ${t('runCompareInputDeltaTitle')}`,
+                projectWorkspaceRunCompareJsonText(pack.input_delta),
+                '',
+                `## ${t('runCompareRiskDeltaTitle')}`,
+                projectWorkspaceRunCompareJsonText(pack.risk_delta),
+                '',
+                `## ${t('runCompareExportDeltaTitle')}`,
+                projectWorkspaceRunCompareJsonText(pack.export_delta),
+                '',
+                `## ${t('runCompareQualityChecksTitle')}`,
+                projectWorkspaceRunCompareJsonText(pack.compare_quality_checks)
+            ].filter((item) => item !== undefined && item !== null).join('\n');
+        }
+
+        function projectWorkspaceRunFollowUpText(pack = projectWorkspaceExportRunCompareSnapshot()) {
+            if (!pack.has_workspace_run_compare_pack) return '';
+            return [
+                `## ${t('runCompareFollowUpTitle')}`,
+                (pack.recommended_follow_up_actions || []).map((item) => `- ${item}`).join('\n') || t('runCompareNoData'),
+                '',
+                `## ${t('runCompareSafetyBoundariesTitle')}`,
+                projectWorkspaceRunCompareJsonText(pack.safety_boundaries),
+                t('runCompareSafetyNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceExportRunCompareMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRunCompareSnapshot(workspace);
+            if (!pack.has_workspace_run_compare_pack) return '';
+            return [
+                `## ${t('runComparePackTitle')}`,
+                `## ${t('runCompareSummaryTitle')}`,
+                projectWorkspaceRunCompareSummaryText(pack),
+                '',
+                projectWorkspaceRunIdentityText(pack),
+                '',
+                `## ${t('runComparePackInventoryTitle')}`,
+                projectWorkspaceRunPackInventoryText(pack),
+                '',
+                `## ${t('runCompareReadinessDeltaTitle')}`,
+                projectWorkspaceRunReadinessText(pack),
+                '',
+                projectWorkspaceRunRiskExportText(pack),
+                '',
+                projectWorkspaceRunFollowUpText(pack)
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRunCompareText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceRunCompareStatus');
+            const pack = projectWorkspaceExportRunCompareSnapshot();
+            const text = kind === 'summary'
+                ? projectWorkspaceRunCompareSummaryText(pack)
+                : kind === 'identity'
+                    ? projectWorkspaceRunIdentityText(pack)
+                    : kind === 'inventory'
+                        ? projectWorkspaceRunPackInventoryText(pack)
+                        : kind === 'readiness'
+                            ? projectWorkspaceRunReadinessText(pack)
+                            : kind === 'risk'
+                                ? projectWorkspaceRunRiskExportText(pack)
+                                : kind === 'followup'
+                                    ? projectWorkspaceRunFollowUpText(pack)
+                                    : projectWorkspaceExportRunCompareMarkdown();
+            try {
+                if (!text) {
+                    if (status) status.textContent = t('runCompareCopyNoData');
+                    return;
+                }
+                if (!navigator.clipboard?.writeText) throw new Error(t('runCompareCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('runCompareCopied');
+            } catch (error) {
+                if (status) status.textContent = error.message || t('runCompareCopyFailed');
+            }
+        }
+
+        function copyProjectWorkspaceRunCompareSummary() {
+            return copyProjectWorkspaceRunCompareText('summary');
+        }
+
+        function copyProjectWorkspaceRunIdentityComparison() {
+            return copyProjectWorkspaceRunCompareText('identity');
+        }
+
+        function copyProjectWorkspaceRunPackInventoryDelta() {
+            return copyProjectWorkspaceRunCompareText('inventory');
+        }
+
+        function copyProjectWorkspaceRunReadinessDelta() {
+            return copyProjectWorkspaceRunCompareText('readiness');
+        }
+
+        function copyProjectWorkspaceRunRiskExportDelta() {
+            return copyProjectWorkspaceRunCompareText('risk');
+        }
+
+        function copyProjectWorkspaceRunFollowUpActions() {
+            return copyProjectWorkspaceRunCompareText('followup');
+        }
+
+        function copyProjectWorkspaceFullRunComparePack() {
+            return copyProjectWorkspaceRunCompareText('full');
         }
 
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
@@ -19062,6 +19259,132 @@
             `;
         }
 
+        function renderProjectWorkspaceRunCompareSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRunCompareSnapshot(workspace);
+            if (!pack.has_workspace_run_compare_pack) return '';
+            const summary = pack.compare_summary || {};
+            return `
+                <div class="section-block" id="projectWorkspaceRunCompareSummaryPanel"
+                    data-run-snapshot-compare-marker="${PROJECT_WORKSPACE_RUN_SNAPSHOT_COMPARE_MARKER}">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runComparePackTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runComparePackHelper'))}</div>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullRunComparePack()">${escapeHTML(t('runCompareCopyFullPack'))}</button>
+                    </div>
+                    <div class="metric-strip">
+                        ${metricPill(t('runCompareMode'), summary.comparison_mode || t('none'))}
+                        ${metricPill(t('runCompareCurrentRunId'), summary.current_run_id || t('none'))}
+                        ${metricPill(t('runComparePreviousRunId'), summary.previous_run_id || t('runCompareUnavailable'))}
+                        ${metricPill(t('runCompareReadiness'), summary.comparison_status || t('none'))}
+                        ${metricPill(t('runCompareBaselineStatus'), summary.previous_snapshot_available ? t('runComparePreviousProvided') : t('runCompareNoPrevious'))}
+                    </div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('runCompareRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('runComparePreviewNote'))}</div>
+                    <div class="quick-use-copy-status" id="projectWorkspaceRunCompareStatus"></div>
+                    <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRunCompareSummary()">${escapeHTML(t('runCompareCopySummary'))}</button>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRunIdentityPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRunCompareSnapshot(workspace);
+            if (!pack.has_workspace_run_compare_pack) return '';
+            const previousAvailable = pack.compare_summary?.previous_snapshot_available === true;
+            return `
+                <div class="section-block" id="projectWorkspaceRunIdentityPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runCompareIdentityPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runCompareIdentityPanelHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRunIdentityComparison()">${escapeHTML(t('runCompareCopyIdentity'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('runCompareCurrentIdentityTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.current_run_identity) || t('runCompareNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('runComparePreviousIdentityTitle'))}</strong>${previousAvailable ? `<pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.previous_run_identity))}</pre>` : `<div class="feedback-box">${escapeHTML(t('runComparePreviousNotProvided'))}</div>`}</div>
+                    </div>
+                    <div class="demo-warning">${escapeHTML(t('runCompareNoHistoryReadNote'))}</div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRunPackReadinessPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRunCompareSnapshot(workspace);
+            if (!pack.has_workspace_run_compare_pack) return '';
+            const deltas = pack.pack_inventory_delta || [];
+            return `
+                <div class="section-block" id="projectWorkspaceRunPackReadinessPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runComparePackReadinessTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runComparePackReadinessHelper'))}</div>
+                        </div>
+                        <div>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRunPackInventoryDelta()">${escapeHTML(t('runCompareCopyInventory'))}</button>
+                            <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRunReadinessDelta()">${escapeHTML(t('runCompareCopyReadiness'))}</button>
+                        </div>
+                    </div>
+                    ${deltas.length ? `<div class="graph-os-grid">${deltas.map((item) => `
+                        <div class="graph-os-card">
+                            <div class="section-header"><strong>${escapeHTML(item.pack_name || t('none'))}</strong><span class="badge">${escapeHTML(item.delta_status || t('none'))}</span></div>
+                            <div><strong>${escapeHTML(t('runCompareCurrentPresence'))}:</strong> ${escapeHTML(String(item.current_present === true))}</div>
+                            <div><strong>${escapeHTML(t('runComparePreviousPresence'))}:</strong> ${escapeHTML(item.previous_present === null || item.previous_present === undefined ? t('runCompareUnavailable') : String(item.previous_present === true))}</div>
+                            <div><strong>${escapeHTML(t('runCompareCurrentVersion'))}:</strong> ${escapeHTML(item.current_pack_version || t('none'))}</div>
+                            <div><strong>${escapeHTML(t('runComparePreviousVersion'))}:</strong> ${escapeHTML(item.previous_pack_version || t('runCompareUnavailable'))}</div>
+                        </div>
+                    `).join('')}</div>` : `<div class="feedback-box">${escapeHTML(t('runCompareNoData'))}</div>`}
+                    <div class="feedback-box"><strong>${escapeHTML(t('runCompareReadinessDeltaTitle'))}:</strong><pre style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.readiness_delta) || t('runCompareNoData'))}</pre></div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRunDeltaPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRunCompareSnapshot(workspace);
+            if (!pack.has_workspace_run_compare_pack) return '';
+            return `
+                <div class="section-block" id="projectWorkspaceRunDeltaPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runCompareDeltaPanelTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runCompareDeltaPanelHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRunRiskExportDelta()">${escapeHTML(t('runCompareCopyRiskExport'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        <div class="graph-os-card"><strong>${escapeHTML(t('runCompareInputDeltaTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.input_delta) || t('runCompareNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('runCompareRiskDeltaTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.risk_delta) || t('runCompareNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('runCompareExportDeltaTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.export_delta) || t('runCompareNoData'))}</pre></div>
+                        <div class="graph-os-card"><strong>${escapeHTML(t('runCompareQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.compare_quality_checks) || t('runCompareNoData'))}</pre></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectWorkspaceRunFollowUpSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRunCompareSnapshot(workspace);
+            if (!pack.has_workspace_run_compare_pack) return '';
+            const disabledBoundaries = Object.entries(pack.safety_boundaries || {}).map(([key, value]) => `${key}: ${value === false ? t('runCompareDisabled') : String(value)}`).join(' | ');
+            return `
+                <div class="section-block" id="projectWorkspaceRunFollowUpSafetyPanel">
+                    <div class="section-header">
+                        <div>
+                            <div class="json-key">${escapeHTML(t('runCompareFollowUpSafetyTitle'))}</div>
+                            <div class="field-helper">${escapeHTML(t('runCompareFollowUpSafetyHelper'))}</div>
+                        </div>
+                        <button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRunFollowUpActions()">${escapeHTML(t('runCompareCopyFollowUp'))}</button>
+                    </div>
+                    <div class="graph-os-compact-grid">
+                        ${(pack.recommended_follow_up_actions || []).map((action) => `<div class="graph-os-card">${escapeHTML(action)}</div>`).join('') || `<div class="feedback-box">${escapeHTML(t('runCompareNoData'))}</div>`}
+                    </div>
+                    <div class="feedback-box"><strong>${escapeHTML(t('runCompareQualityChecksTitle'))}:</strong><pre style="white-space: pre-wrap;">${escapeHTML(projectWorkspaceRunCompareJsonText(pack.compare_quality_checks) || t('runCompareNoData'))}</pre></div>
+                    <div class="demo-warning"><strong>${escapeHTML(t('runCompareSafetyBoundariesTitle'))}:</strong> ${escapeHTML(disabledBoundaries || t('none'))}</div>
+                    <div class="field-helper">${escapeHTML(t('runCompareSafetyNote'))}</div>
+                </div>
+            `;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -19546,6 +19869,8 @@
                 '',
                 projectWorkspaceExportSessionSnapshotMarkdown(workspace),
                 '',
+                projectWorkspaceExportRunCompareMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -19632,6 +19957,7 @@
                 llm_assist_dry_run_pack: projectWorkspaceExportLlmAssistDryRunSnapshot(workspace),
                 video_provider_orchestration_dry_run_pack: projectWorkspaceExportVideoProviderOrchestrationDryRunSnapshot(workspace),
                 workspace_session_snapshot_pack: projectWorkspaceExportSessionSnapshot(workspace),
+                workspace_run_compare_pack: projectWorkspaceExportRunCompareSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -32052,6 +32378,11 @@
                     ${renderProjectWorkspaceSessionPackInventoryPanel(workspace)}
                     ${renderProjectWorkspaceSessionExportHistoryPanel(workspace)}
                     ${renderProjectWorkspaceSessionRestoreSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceRunCompareSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceRunIdentityPanel(workspace)}
+                    ${renderProjectWorkspaceRunPackReadinessPanel(workspace)}
+                    ${renderProjectWorkspaceRunDeltaPanel(workspace)}
+                    ${renderProjectWorkspaceRunFollowUpSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -39981,6 +40312,116 @@
             workspaceSessionCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u4f1a\u8bdd\u5feb\u7167\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRunSnapshotCompareMarker: 'Project Workspace run snapshot compare bundle',
+            runComparePackTitle: 'Workspace Run Snapshot Compare',
+            runComparePackHelper: 'Compare the current snapshot with an explicitly supplied previous snapshot without reading database history.',
+            runCompareSummaryTitle: 'Compare Summary',
+            runCompareMode: 'Comparison mode',
+            runCompareCurrentRunId: 'Current run ID',
+            runComparePreviousRunId: 'Previous run ID',
+            runCompareReadiness: 'Comparison readiness',
+            runCompareBaselineStatus: 'Baseline status',
+            runCompareRecommendedNextAction: 'Recommended next action',
+            runCompareUnavailable: 'unavailable',
+            runCompareNoPrevious: 'no_previous_snapshot / baseline_only',
+            runComparePreviousProvided: 'previous snapshot provided',
+            runCompareDisabled: 'disabled',
+            runComparePreviewNote: 'Comparison preview only. No database history is read and no restore is executed.',
+            runCompareIdentityPanelTitle: 'Current vs Previous Run Identity',
+            runCompareIdentityPanelHelper: 'Inspect request-scoped identities without presenting them as server-side history.',
+            runCompareCurrentIdentityTitle: 'Current Run Identity',
+            runComparePreviousIdentityTitle: 'Previous Run Identity',
+            runComparePreviousNotProvided: 'No previous snapshot was provided. This is a current-only baseline comparison.',
+            runCompareNoHistoryReadNote: 'Previous identity comes only from an explicitly supplied snapshot; no real history lookup occurs.',
+            runComparePackReadinessTitle: 'Pack Inventory / Readiness Delta',
+            runComparePackReadinessHelper: 'Compare required pack presence, versions, baseline status, and snapshot readiness.',
+            runComparePackInventoryTitle: 'Pack Inventory Delta',
+            runCompareCurrentPresence: 'Current presence',
+            runComparePreviousPresence: 'Previous presence',
+            runCompareDeltaStatus: 'Delta status',
+            runCompareCurrentVersion: 'Current version',
+            runComparePreviousVersion: 'Previous version',
+            runCompareReadinessDeltaTitle: 'Readiness Delta',
+            runCompareDeltaPanelTitle: 'Input / Risk / Export Delta',
+            runCompareDeltaPanelHelper: 'Review evidence-bounded input, risk, export, and quality-check differences.',
+            runCompareInputDeltaTitle: 'Input Delta',
+            runCompareRiskDeltaTitle: 'Risk Delta',
+            runCompareExportDeltaTitle: 'Export Delta',
+            runCompareQualityChecksTitle: 'Compare Quality Checks',
+            runCompareFollowUpSafetyTitle: 'Recommended Follow-up / Safety Boundaries',
+            runCompareFollowUpSafetyHelper: 'Safe recommendations only; no provider, persistence, history, or restore action is triggered.',
+            runCompareFollowUpTitle: 'Follow-up Actions',
+            runCompareSafetyBoundariesTitle: 'Safety Boundaries',
+            runCompareSafetyNote: 'Preview only. Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, and real restore remain disabled.',
+            runCompareNoData: 'No run snapshot comparison data is available.',
+            runCompareCopySummary: 'Copy run compare summary',
+            runCompareCopyIdentity: 'Copy run identity comparison',
+            runCompareCopyInventory: 'Copy pack inventory delta',
+            runCompareCopyReadiness: 'Copy readiness delta',
+            runCompareCopyRiskExport: 'Copy risk / export delta',
+            runCompareCopyFollowUp: 'Copy follow-up actions',
+            runCompareCopyFullPack: 'Copy full run compare pack',
+            runCompareCopied: 'Run snapshot comparison content copied.',
+            runCompareCopyFailed: 'Unable to copy run snapshot comparison content.',
+            runCompareCopyNoData: 'No run snapshot comparison content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRunSnapshotCompareMarker: 'Project Workspace run snapshot compare bundle',
+            runComparePackTitle: '\u5de5\u4f5c\u533a\u8fd0\u884c\u5feb\u7167\u5bf9\u6bd4',
+            runComparePackHelper: '\u5c06\u5f53\u524d\u5feb\u7167\u4e0e\u663e\u5f0f\u63d0\u4f9b\u7684 previous snapshot \u5bf9\u6bd4\uff0c\u4e0d\u8bfb\u53d6\u6570\u636e\u5e93\u5386\u53f2\u3002',
+            runCompareSummaryTitle: '\u5bf9\u6bd4\u6458\u8981',
+            runCompareMode: '\u5bf9\u6bd4\u6a21\u5f0f',
+            runCompareCurrentRunId: '\u5f53\u524d\u8fd0\u884c ID',
+            runComparePreviousRunId: '\u4e0a\u4e00\u8fd0\u884c ID',
+            runCompareReadiness: '\u5bf9\u6bd4\u5c31\u7eea\u5ea6',
+            runCompareBaselineStatus: '\u57fa\u7ebf\u72b6\u6001',
+            runCompareRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            runCompareUnavailable: '\u4e0d\u53ef\u7528',
+            runCompareNoPrevious: '\u65e0 previous snapshot / \u4ec5\u5f53\u524d\u57fa\u7ebf',
+            runComparePreviousProvided: '\u5df2\u63d0\u4f9b previous snapshot',
+            runCompareDisabled: '\u5df2\u7981\u7528',
+            runComparePreviewNote: '\u4ec5\u4f5c\u5bf9\u6bd4\u9884\u89c8\u3002\u4e0d\u8bfb\u53d6\u6570\u636e\u5e93\u5386\u53f2\uff0c\u4e0d\u6267\u884c restore\u3002',
+            runCompareIdentityPanelTitle: '\u5f53\u524d vs \u4e0a\u4e00\u8fd0\u884c\u6807\u8bc6',
+            runCompareIdentityPanelHelper: '\u68c0\u67e5\u8bf7\u6c42\u8303\u56f4\u5185\u7684\u8fd0\u884c\u6807\u8bc6\uff0c\u4e0d\u5c06\u5176\u8868\u8ff0\u4e3a\u670d\u52a1\u5668\u5386\u53f2\u3002',
+            runCompareCurrentIdentityTitle: '\u5f53\u524d\u8fd0\u884c\u6807\u8bc6',
+            runComparePreviousIdentityTitle: '\u4e0a\u4e00\u8fd0\u884c\u6807\u8bc6',
+            runComparePreviousNotProvided: '\u672a\u63d0\u4f9b previous snapshot\u3002\u5f53\u524d\u4e3a\u4ec5\u5f53\u524d\u57fa\u7ebf\u5bf9\u6bd4\u3002',
+            runCompareNoHistoryReadNote: '\u4e0a\u4e00\u8fd0\u884c\u6807\u8bc6\u4ec5\u6765\u81ea\u663e\u5f0f\u63d0\u4f9b\u7684 snapshot\uff0c\u4e0d\u53d1\u751f\u771f\u5b9e\u5386\u53f2\u67e5\u8be2\u3002',
+            runComparePackReadinessTitle: 'Pack \u6e05\u5355 / \u5c31\u7eea\u5ea6\u5dee\u5f02',
+            runComparePackReadinessHelper: '\u5bf9\u6bd4\u5fc5\u9700 pack \u5b58\u5728\u3001\u7248\u672c\u3001\u57fa\u7ebf\u72b6\u6001\u548c\u5feb\u7167\u5c31\u7eea\u5ea6\u3002',
+            runComparePackInventoryTitle: 'Pack \u6e05\u5355\u5dee\u5f02',
+            runCompareCurrentPresence: '\u5f53\u524d\u5b58\u5728',
+            runComparePreviousPresence: '\u4e0a\u4e00\u7248\u5b58\u5728',
+            runCompareDeltaStatus: '\u5dee\u5f02\u72b6\u6001',
+            runCompareCurrentVersion: '\u5f53\u524d\u7248\u672c',
+            runComparePreviousVersion: '\u4e0a\u4e00\u7248\u672c',
+            runCompareReadinessDeltaTitle: '\u5c31\u7eea\u5ea6\u5dee\u5f02',
+            runCompareDeltaPanelTitle: '\u8f93\u5165 / \u98ce\u9669 / \u5bfc\u51fa\u5dee\u5f02',
+            runCompareDeltaPanelHelper: '\u68c0\u67e5\u53d7\u8bc1\u636e\u7ea6\u675f\u7684\u8f93\u5165\u3001\u98ce\u9669\u3001\u5bfc\u51fa\u548c\u8d28\u91cf\u68c0\u67e5\u5dee\u5f02\u3002',
+            runCompareInputDeltaTitle: '\u8f93\u5165\u5dee\u5f02',
+            runCompareRiskDeltaTitle: '\u98ce\u9669\u5dee\u5f02',
+            runCompareExportDeltaTitle: '\u5bfc\u51fa\u5dee\u5f02',
+            runCompareQualityChecksTitle: '\u5bf9\u6bd4\u8d28\u91cf\u68c0\u67e5',
+            runCompareFollowUpSafetyTitle: '\u63a8\u8350\u540e\u7eed / \u5b89\u5168\u8fb9\u754c',
+            runCompareFollowUpSafetyHelper: '\u4ec5\u63d0\u4f9b\u5b89\u5168\u5efa\u8bae\uff1b\u4e0d\u89e6\u53d1 provider\u3001\u6301\u4e45\u5316\u3001\u5386\u53f2\u6216 restore \u64cd\u4f5c\u3002',
+            runCompareFollowUpTitle: '\u540e\u7eed\u884c\u52a8',
+            runCompareSafetyBoundariesTitle: '\u5b89\u5168\u8fb9\u754c',
+            runCompareSafetyNote: '\u4ec5\u4f5c\u9884\u89c8\u3002\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u548c\u771f\u5b9e restore \u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            runCompareNoData: '\u6682\u65e0\u8fd0\u884c\u5feb\u7167\u5bf9\u6bd4\u6570\u636e\u3002',
+            runCompareCopySummary: '\u590d\u5236\u8fd0\u884c\u5bf9\u6bd4\u6458\u8981',
+            runCompareCopyIdentity: '\u590d\u5236\u8fd0\u884c\u6807\u8bc6\u5bf9\u6bd4',
+            runCompareCopyInventory: '\u590d\u5236 pack \u6e05\u5355\u5dee\u5f02',
+            runCompareCopyReadiness: '\u590d\u5236\u5c31\u7eea\u5ea6\u5dee\u5f02',
+            runCompareCopyRiskExport: '\u590d\u5236\u98ce\u9669 / \u5bfc\u51fa\u5dee\u5f02',
+            runCompareCopyFollowUp: '\u590d\u5236\u540e\u7eed\u884c\u52a8',
+            runCompareCopyFullPack: '\u590d\u5236\u5b8c\u6574\u8fd0\u884c\u5bf9\u6bd4\u5305',
+            runCompareCopied: '\u8fd0\u884c\u5feb\u7167\u5bf9\u6bd4\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            runCompareCopyFailed: '\u65e0\u6cd5\u590d\u5236\u8fd0\u884c\u5feb\u7167\u5bf9\u6bd4\u5185\u5bb9\u3002',
+            runCompareCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u8fd0\u884c\u5feb\u7167\u5bf9\u6bd4\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -41379,6 +41820,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectLlmAssistDryRunPack = latestProjectCreativeDecisionPack.llm_assist_dry_run_pack || {};
     latestProjectVideoProviderOrchestrationDryRunPack = latestProjectCreativeDecisionPack.video_provider_orchestration_dry_run_pack || {};
     latestProjectWorkspaceSessionSnapshotPack = latestProjectCreativeDecisionPack.workspace_session_snapshot_pack || {};
+    latestProjectWorkspaceRunComparePack = latestProjectCreativeDecisionPack.workspace_run_compare_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
