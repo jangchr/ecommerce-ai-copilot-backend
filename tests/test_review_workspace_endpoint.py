@@ -825,6 +825,134 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_run_compare_pack_uses_safe_current_only_baseline(self):
+        payload = {
+            "workspace_id": "workspace-run-compare",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "amazon",
+                    "asin": "COMPARE001",
+                    "title": "Compare Travel Bottle",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Leaked during commute",
+                            "text": "The lid leaked in my backpack during a commute and was difficult to clean after coffee.",
+                            "source_section": "amazon_visible_review",
+                        },
+                        {
+                            "rating": 5,
+                            "title": "Easy travel cleanup",
+                            "text": "I use it for travel because it feels sturdy and is easy to rinse after lunch.",
+                            "source_section": "manual_review",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_run_compare_pack"]
+        self.assertEqual(pack["pack_version"], "workspace_run_compare_pack_v1")
+        summary = pack["compare_summary"]
+        self.assertTrue(summary)
+        self.assertEqual(summary["comparison_mode"], "no_previous_snapshot")
+        self.assertNotEqual(summary["comparison_mode"], "real_history_compare")
+        self.assertFalse(summary["previous_snapshot_available"])
+        self.assertFalse(summary["real_history_compare_performed"])
+        self.assertTrue(pack["current_run_identity"]["run_id"])
+        self.assertEqual(pack["previous_run_identity"]["status"], "not_provided")
+        self.assertFalse(pack["previous_run_identity"]["available"])
+
+        inventory = {
+            item["pack_name"]: item
+            for item in pack["pack_inventory_delta"]
+        }
+        for pack_name in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "workspace_session_snapshot_pack",
+        ]:
+            with self.subTest(inventory_pack=pack_name):
+                self.assertIn(pack_name, inventory)
+                self.assertTrue(inventory[pack_name]["current_present"])
+                self.assertIsNone(inventory[pack_name]["previous_present"])
+                self.assertEqual(inventory[pack_name]["delta_status"], "baseline_only")
+
+        self.assertTrue(pack["input_delta"])
+        self.assertTrue(pack["readiness_delta"])
+        self.assertTrue(pack["risk_delta"])
+        self.assertTrue(pack["export_delta"])
+        self.assertTrue(pack["recommended_follow_up_actions"])
+        self.assertTrue(pack["compare_quality_checks"])
+        self.assertFalse(pack["compare_quality_checks"]["database_history_queried"])
+        self.assertFalse(pack["compare_quality_checks"]["restore_executed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
+        previous_snapshot = creative_pack["workspace_session_snapshot_pack"]
+        compare_payload = {
+            **payload,
+            "previous_workspace_snapshot": previous_snapshot,
+        }
+        compare_response = self.client.post(
+            "/api/v1/analyze-review-workspace",
+            json=compare_payload,
+        )
+        self.assertEqual(compare_response.status_code, 200)
+        compared_pack = compare_response.json()["creative_decision_pack"][
+            "workspace_run_compare_pack"
+        ]
+        self.assertEqual(
+            compared_pack["compare_summary"]["comparison_mode"],
+            "provided_snapshot_compare_preview",
+        )
+        self.assertTrue(
+            compared_pack["compare_summary"]["previous_snapshot_available"]
+        )
+        self.assertEqual(
+            compared_pack["previous_run_identity"]["run_id"],
+            previous_snapshot["run_identity"]["run_id"],
+        )
+        self.assertFalse(
+            compared_pack["compare_quality_checks"]["database_history_queried"]
+        )
+        self.assertFalse(compared_pack["safety_boundaries"]["real_restore_enabled"])
+
 
 
 

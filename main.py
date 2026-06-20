@@ -22493,6 +22493,304 @@ def _rw_workspace_session_snapshot_pack(
     }
 
 
+def _rw_workspace_run_compare_pack(
+    payload: ReviewWorkspaceRequest,
+    creative_decision_pack: dict,
+) -> dict:
+    current_snapshot = dict(
+        creative_decision_pack.get("workspace_session_snapshot_pack") or {}
+    )
+    previous_payload = dict(payload.previous_workspace_snapshot or {})
+    previous_snapshot = dict(
+        previous_payload.get("workspace_session_snapshot_pack")
+        or previous_payload.get("creative_decision_pack", {}).get(
+            "workspace_session_snapshot_pack"
+        )
+        or previous_payload
+    )
+    current_identity = dict(current_snapshot.get("run_identity") or {})
+    previous_identity = dict(previous_snapshot.get("run_identity") or {})
+    previous_available = bool(
+        previous_snapshot.get("pack_version")
+        and previous_identity.get("run_id")
+    )
+    if not previous_available:
+        previous_snapshot = {}
+        previous_identity = {
+            "status": "not_provided",
+            "available": False,
+            "run_id": "",
+            "source": "request_only_no_history_lookup",
+        }
+    else:
+        previous_identity = {
+            **previous_identity,
+            "status": "provided_snapshot",
+            "available": True,
+            "source": "request_payload",
+        }
+
+    current_input = dict(current_snapshot.get("input_source_summary") or {})
+    previous_input = dict(previous_snapshot.get("input_source_summary") or {})
+    input_count_fields = [
+        "product_count",
+        "raw_review_count",
+        "unique_review_count",
+        "duplicate_review_count",
+        "normalized_review_count",
+    ]
+    input_delta = {
+        "comparison_status": (
+            "compared_to_provided_snapshot"
+            if previous_available
+            else "current_only_baseline"
+        ),
+        "current_source": _rw_text(current_input.get("workspace_source")),
+        "previous_source": (
+            _rw_text(previous_input.get("workspace_source"))
+            if previous_available
+            else "unavailable"
+        ),
+        "count_deltas": {
+            field: {
+                "current": int(current_input.get(field) or 0),
+                "previous": (
+                    int(previous_input.get(field) or 0)
+                    if previous_available
+                    else None
+                ),
+                "delta": (
+                    int(current_input.get(field) or 0)
+                    - int(previous_input.get(field) or 0)
+                    if previous_available
+                    else None
+                ),
+            }
+            for field in input_count_fields
+        },
+        "current_source_type_counts": dict(
+            current_input.get("source_type_counts") or {}
+        ),
+        "previous_source_type_counts": (
+            dict(previous_input.get("source_type_counts") or {})
+            if previous_available
+            else {}
+        ),
+    }
+
+    current_inventory = {
+        _rw_text(item.get("pack_name")): item
+        for item in list(current_snapshot.get("pack_inventory") or [])
+        if _rw_text(item.get("pack_name"))
+    }
+    previous_inventory = {
+        _rw_text(item.get("pack_name")): item
+        for item in list(previous_snapshot.get("pack_inventory") or [])
+        if _rw_text(item.get("pack_name"))
+    }
+    required_pack_names = [
+        "review_import_pack",
+        "competitor_review_comparison_pack",
+        "llm_assist_dry_run_pack",
+        "video_provider_orchestration_dry_run_pack",
+        "campaign_export_pack",
+        "workspace_session_snapshot_pack",
+    ]
+    pack_inventory_delta = [
+        {
+            "pack_name": pack_name,
+            "current_present": bool(
+                current_inventory.get(pack_name, {}).get("present")
+            ),
+            "previous_present": (
+                bool(previous_inventory.get(pack_name, {}).get("present"))
+                if previous_available
+                else None
+            ),
+            "current_pack_version": _rw_text(
+                current_inventory.get(pack_name, {}).get("pack_version")
+            ),
+            "previous_pack_version": (
+                _rw_text(
+                    previous_inventory.get(pack_name, {}).get("pack_version")
+                )
+                if previous_available
+                else ""
+            ),
+            "delta_status": (
+                "unchanged"
+                if previous_available
+                and bool(current_inventory.get(pack_name, {}).get("present"))
+                == bool(previous_inventory.get(pack_name, {}).get("present"))
+                and _rw_text(
+                    current_inventory.get(pack_name, {}).get("pack_version")
+                )
+                == _rw_text(
+                    previous_inventory.get(pack_name, {}).get("pack_version")
+                )
+                else "changed"
+                if previous_available
+                else "baseline_only"
+            ),
+        }
+        for pack_name in required_pack_names
+    ]
+
+    current_summary = dict(current_snapshot.get("session_summary") or {})
+    previous_summary = dict(previous_snapshot.get("session_summary") or {})
+    readiness_delta = {
+        "current_snapshot_readiness": _rw_text(
+            current_summary.get("snapshot_status")
+        ),
+        "previous_snapshot_readiness": (
+            _rw_text(previous_summary.get("snapshot_status"))
+            if previous_available
+            else "unavailable"
+        ),
+        "readiness_changed": (
+            _rw_text(current_summary.get("snapshot_status"))
+            != _rw_text(previous_summary.get("snapshot_status"))
+            if previous_available
+            else None
+        ),
+        "comparison_status": (
+            "comparable" if previous_available else "baseline_only"
+        ),
+    }
+    current_risks = [
+        _rw_text(item)
+        for item in list(current_snapshot.get("risk_notes") or [])
+        if _rw_text(item)
+    ]
+    previous_risks = [
+        _rw_text(item)
+        for item in list(previous_snapshot.get("risk_notes") or [])
+        if _rw_text(item)
+    ]
+    risk_delta = {
+        "derivation": "snapshot_risk_notes_quality_checks_and_safety_boundaries_only",
+        "current_risk_notes": current_risks,
+        "previous_risk_notes": previous_risks if previous_available else [],
+        "added_risk_notes": (
+            sorted(set(current_risks) - set(previous_risks))
+            if previous_available
+            else []
+        ),
+        "resolved_risk_notes": (
+            sorted(set(previous_risks) - set(current_risks))
+            if previous_available
+            else []
+        ),
+        "current_quality_checks": dict(
+            current_snapshot.get("quality_checks") or {}
+        ),
+        "previous_quality_checks": (
+            dict(previous_snapshot.get("quality_checks") or {})
+            if previous_available
+            else {}
+        ),
+        "new_external_risk_inference_performed": False,
+    }
+    current_export = dict(current_snapshot.get("export_manifest") or {})
+    previous_export = dict(previous_snapshot.get("export_manifest") or {})
+    export_delta = {
+        "current_exportable_snapshot": bool(
+            current_export.get("exportable_snapshot")
+        ),
+        "previous_exportable_snapshot": (
+            bool(previous_export.get("exportable_snapshot"))
+            if previous_available
+            else None
+        ),
+        "current_included_packs": list(
+            current_export.get("included_packs") or []
+        ),
+        "previous_included_packs": (
+            list(previous_export.get("included_packs") or [])
+            if previous_available
+            else []
+        ),
+        "persisted_record_compared": False,
+        "history_record_compared": False,
+    }
+    comparison_mode = (
+        "provided_snapshot_compare_preview"
+        if previous_available
+        else "no_previous_snapshot"
+    )
+    follow_up_actions = (
+        [
+            "Review input, pack, readiness, risk, and export deltas before exporting a new snapshot.",
+            "Keep restore and persistence disabled; use the comparison as a read-only audit preview.",
+        ]
+        if previous_available
+        else [
+            "Export the current workspace snapshot if a user-controlled baseline is needed.",
+            "Provide a prior exported snapshot in a future request to enable deterministic comparison.",
+            "Do not query database history or execute restore to obtain a baseline.",
+        ]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "user_account_read_enabled": False,
+        "user_history_read_enabled": False,
+        "user_history_write_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_run_compare_pack_v1",
+        "compare_summary": {
+            "comparison_mode": comparison_mode,
+            "comparison_status": (
+                "comparison_preview_ready"
+                if previous_available
+                else "baseline_only"
+            ),
+            "current_run_id": _rw_text(current_identity.get("run_id")),
+            "previous_run_id": (
+                _rw_text(previous_identity.get("run_id"))
+                if previous_available
+                else ""
+            ),
+            "previous_snapshot_available": previous_available,
+            "real_history_compare_performed": False,
+            "recommended_next_action": follow_up_actions[0],
+        },
+        "current_run_identity": current_identity,
+        "previous_run_identity": previous_identity,
+        "input_delta": input_delta,
+        "pack_inventory_delta": pack_inventory_delta,
+        "readiness_delta": readiness_delta,
+        "risk_delta": risk_delta,
+        "export_delta": export_delta,
+        "recommended_follow_up_actions": follow_up_actions,
+        "compare_quality_checks": {
+            "current_snapshot_present": bool(current_snapshot),
+            "current_run_id_present": bool(current_identity.get("run_id")),
+            "previous_snapshot_provided": previous_available,
+            "required_pack_inventory_covered": all(
+                any(item["pack_name"] == name for item in pack_inventory_delta)
+                for name in required_pack_names
+            ),
+            "risk_delta_evidence_bounded": True,
+            "database_history_queried": False,
+            "restore_executed": False,
+            "comparison_is_preview_only": True,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -22585,6 +22883,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
             source_breakdown,
             creative_decision_pack,
         )
+    )
+    creative_decision_pack["workspace_run_compare_pack"] = (
+        _rw_workspace_run_compare_pack(payload, creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

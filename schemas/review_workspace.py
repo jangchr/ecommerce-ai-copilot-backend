@@ -32,6 +32,7 @@ class ReviewWorkspaceRequest(BaseModel):
     products: list[ReviewWorkspaceProduct] = Field(default_factory=list)
     goal: str = "tiktok_ctr"
     output_language: str = "en"
+    previous_workspace_snapshot: dict[str, object] | None = None
 
 
 class ReviewThemeSummary(BaseModel):
