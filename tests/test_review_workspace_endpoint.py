@@ -1381,6 +1381,166 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_execution_readiness_pack_keeps_launch_locked(self):
+        payload = {
+            "workspace_id": "workspace-execution-readiness",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [
+                {
+                    "platform": "manual",
+                    "asin": "READY001",
+                    "title": "Compact Travel Mug",
+                    "reviews": [
+                        {
+                            "rating": 2,
+                            "title": "Too short",
+                            "text": "Leaks.",
+                            "source_section": "manual_review",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        response = self.client.post("/api/v1/analyze-review-workspace", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack",
+            "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack",
+            "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_execution_readiness_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_execution_readiness_pack_v1",
+        )
+        summary = pack["readiness_summary"]
+        self.assertTrue(summary)
+        for field in [
+            "readiness_status",
+            "launch_lock_status",
+            "total_decisions",
+            "blocked_count",
+            "review_ready_count",
+            "manual_review_required_count",
+            "recommended_next_action",
+            "real_execution_allowed",
+        ]:
+            with self.subTest(summary_field=field):
+                self.assertIn(field, summary)
+        self.assertFalse(summary["real_execution_allowed"])
+        self.assertGreaterEqual(summary["blocked_count"], 1)
+        self.assertTrue(summary["weak_evidence"] or summary["missing_quote"])
+
+        launch_lock = pack["launch_lock"]
+        self.assertTrue(launch_lock["lock_id"])
+        self.assertIn(
+            launch_lock["lock_status"],
+            {"locked", "blocked", "dry_run_only"},
+        )
+        self.assertNotEqual(
+            launch_lock["lock_status"],
+            "unlocked_for_real_execution",
+        )
+        self.assertTrue(launch_lock["lock_reason"])
+        self.assertTrue(launch_lock["unlock_requirements"])
+        self.assertFalse(launch_lock["real_execution_allowed"])
+        self.assertTrue(launch_lock["dry_run_only"])
+        self.assertTrue(launch_lock["human_approval_required"])
+        self.assertFalse(launch_lock["unlock_performed"])
+
+        self.assertTrue(pack["preflight_checklist"])
+        self.assertFalse(pack["preflight_checklist"]["preflight_executed"])
+        self.assertIsInstance(pack["blocked_execution_reasons"], list)
+        self.assertTrue(pack["blocked_execution_reasons"])
+        self.assertTrue(pack["manual_review_requirements"])
+        self.assertTrue(
+            pack["manual_review_requirements"]["manual_review_required"]
+        )
+        enforcement = pack["dry_run_enforcement"]
+        self.assertTrue(enforcement["dry_run_only"])
+        for key in [
+            "real_execution_allowed",
+            "launch_allowed",
+            "provider_call_allowed",
+            "llm_call_allowed",
+            "video_generation_allowed",
+            "media_operation_allowed",
+            "paid_operation_allowed",
+            "registry_write_allowed",
+            "database_write_allowed",
+            "restore_allowed",
+            "rollback_allowed",
+            "external_scraping_allowed",
+        ]:
+            with self.subTest(enforcement=key):
+                self.assertFalse(enforcement[key])
+
+        self.assertIsInstance(pack["approved_for_review_items"], list)
+        self.assertIsInstance(pack["not_approved_items"], list)
+        self.assertTrue(pack["approved_for_review_items"])
+        self.assertTrue(pack["not_approved_items"])
+        for item in pack["approved_for_review_items"]:
+            self.assertEqual(item["approval_scope"], "human_review_only")
+            self.assertEqual(item["gate_status"], "ready_for_human_review")
+            self.assertFalse(item["real_execution_allowed"])
+        for item in pack["not_approved_items"]:
+            self.assertFalse(item["real_execution_allowed"])
+
+        self.assertTrue(pack["execution_risk_register"])
+        self.assertTrue(
+            all(
+                not risk["real_execution_allowed"]
+                for risk in pack["execution_risk_register"]
+            )
+        )
+        checks = pack["readiness_quality_checks"]
+        self.assertTrue(checks["approval_decision_pack_present"])
+        self.assertTrue(checks["action_ticket_pack_present"])
+        self.assertTrue(checks["action_queue_pack_present"])
+        self.assertTrue(checks["decision_count_consistent"])
+        self.assertTrue(checks["lock_id_present"])
+        self.assertTrue(checks["launch_lock_closed"])
+        self.assertTrue(checks["all_review_items_human_review_only"])
+        self.assertTrue(checks["all_not_approved_items_execution_disabled"])
+        self.assertTrue(checks["risk_register_complete"])
+        self.assertTrue(checks["blocked_reasons_capture_evidence_risk"])
+        self.assertTrue(checks["real_execution_disabled"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["launch_unlock_performed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled",
+            "llm_api_enabled",
+            "video_generation_enabled",
+            "media_upload_enabled",
+            "media_download_enabled",
+            "paid_operation_enabled",
+            "registry_write_enabled",
+            "rollback_enabled",
+            "external_scraping_enabled",
+            "database_persistence_enabled",
+            "real_restore_enabled",
+            "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 
 

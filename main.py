@@ -23715,6 +23715,313 @@ def _rw_workspace_approval_decision_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_workspace_execution_readiness_pack(creative_decision_pack: dict) -> dict:
+    approval_pack = dict(
+        creative_decision_pack.get("workspace_approval_decision_pack") or {}
+    )
+    ticket_pack = dict(
+        creative_decision_pack.get("workspace_action_ticket_pack") or {}
+    )
+    queue_pack = dict(
+        creative_decision_pack.get("workspace_action_queue_pack") or {}
+    )
+    decisions = list(approval_pack.get("decision_ledger") or [])
+    blocked_decisions = list(approval_pack.get("blocked_decisions") or [])
+    review_ready_decisions = list(
+        approval_pack.get("review_ready_decisions") or []
+    )
+    pending_decisions = list(approval_pack.get("pending_decisions") or [])
+    quality_checks = dict(creative_decision_pack.get("quality_checks") or {})
+    campaign_checks = dict(
+        creative_decision_pack.get("campaign_export_pack", {}).get(
+            "campaign_quality_checks"
+        )
+        or {}
+    )
+    weak_evidence = bool(
+        quality_checks.get("weak_evidence")
+        or campaign_checks.get("weak_evidence")
+        or queue_pack.get("evidence_gap_actions")
+    )
+    missing_quote = bool(
+        quality_checks.get("missing_quote")
+        or campaign_checks.get("missing_quote")
+    )
+
+    blocked_execution_reasons = list(
+        dict.fromkeys(
+            [
+                *(
+                    ["weak_evidence_requires_human_review"]
+                    if weak_evidence
+                    else []
+                ),
+                *(
+                    ["missing_quote_requires_human_review"]
+                    if missing_quote
+                    else []
+                ),
+                *[
+                    f"{_rw_text(decision.get('decision_id'))}:{reason}"
+                    for decision in blocked_decisions
+                    for reason in list(
+                        decision.get("blocking_reasons")
+                        or ["blocked_decision"]
+                    )
+                    if _rw_text(reason)
+                ],
+                *(
+                    ["pending_gate_decisions_require_review"]
+                    if pending_decisions
+                    else []
+                ),
+                "real_execution_is_outside_this_dry_run_capability",
+            ]
+        )
+    )
+    lock_signature = {
+        "decision_ids": [
+            _rw_text(decision.get("decision_id"))
+            for decision in decisions
+        ],
+        "decision_statuses": [
+            _rw_text(decision.get("decision_status"))
+            for decision in decisions
+        ],
+        "weak_evidence": weak_evidence,
+        "missing_quote": missing_quote,
+        "blocked_reason_count": len(blocked_execution_reasons),
+    }
+    lock_text = json.dumps(
+        lock_signature,
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    lock_id = (
+        "launchlock_"
+        + hashlib.sha256(lock_text.encode("utf-8")).hexdigest()[:12]
+    )
+    readiness_status = (
+        "blocked_requires_human_review"
+        if blocked_decisions or weak_evidence or missing_quote
+        else "review_ready_dry_run_only"
+        if review_ready_decisions
+        else "insufficient_decision_data"
+    )
+
+    approved_for_review_items = [
+        {
+            "decision_id": _rw_text(decision.get("decision_id")),
+            "source_ticket_id": _rw_text(
+                decision.get("source_ticket_id")
+            ),
+            "decision_title": _rw_text(decision.get("decision_title")),
+            "decision_type": _rw_text(decision.get("decision_type")),
+            "gate_status": "ready_for_human_review",
+            "approval_scope": "human_review_only",
+            "real_execution_allowed": False,
+            "validation_required": list(
+                decision.get("validation_required") or []
+            ),
+            "risk_note": _rw_text(decision.get("risk_note")),
+        }
+        for decision in review_ready_decisions
+    ]
+    not_approved_items = [
+        {
+            "decision_id": _rw_text(decision.get("decision_id")),
+            "source_ticket_id": _rw_text(
+                decision.get("source_ticket_id")
+            ),
+            "decision_title": _rw_text(decision.get("decision_title")),
+            "decision_status": _rw_text(
+                decision.get("decision_status")
+            ),
+            "gate_status": _rw_text(decision.get("gate_status")),
+            "blocking_reasons": list(
+                decision.get("blocking_reasons") or []
+            ),
+            "real_execution_allowed": False,
+        }
+        for decision in [*blocked_decisions, *pending_decisions]
+    ]
+    execution_risk_register = [
+        {
+            "risk_id": f"risk_{index:02d}",
+            "decision_id": _rw_text(decision.get("decision_id")),
+            "risk_type": (
+                "blocked_gate"
+                if _rw_text(decision.get("decision_status")) == "blocked"
+                else "human_review_boundary"
+            ),
+            "risk_note": _rw_text(decision.get("risk_note"))
+            or "Human review is required before any future capability design.",
+            "blocking_reasons": list(
+                decision.get("blocking_reasons") or []
+            ),
+            "do_not_claim": list(decision.get("do_not_claim") or []),
+            "mitigation": (
+                "Resolve only with user-supplied evidence and human review; do not execute any real operation."
+            ),
+            "real_execution_allowed": False,
+        }
+        for index, decision in enumerate(decisions, start=1)
+    ]
+    unlock_requirements = [
+        "Resolve every blocked decision using user-supplied evidence.",
+        "Complete all human review and validation requirements.",
+        "Retain every risk note and do-not-claim boundary.",
+        "Design and separately approve any future execution capability outside this dry-run pack.",
+        "Keep this launch lock closed because real execution is not implemented or allowed here.",
+    ]
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "approval_execution_enabled": False,
+        "launch_unlock_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_execution_readiness_pack_v1",
+        "readiness_summary": {
+            "readiness_status": readiness_status,
+            "launch_lock_status": "locked",
+            "total_decisions": len(decisions),
+            "blocked_count": len(blocked_decisions),
+            "review_ready_count": len(review_ready_decisions),
+            "manual_review_required_count": len(decisions),
+            "weak_evidence": weak_evidence,
+            "missing_quote": missing_quote,
+            "recommended_next_action": (
+                "Resolve blocked evidence and safety decisions, then repeat human review; real execution remains disabled."
+                if blocked_execution_reasons
+                else "Review readiness manually; this preview cannot unlock real execution."
+            ),
+            "real_execution_allowed": False,
+        },
+        "launch_lock": {
+            "lock_id": lock_id,
+            "lock_status": "locked",
+            "lock_reason": (
+                "Blocked, weak, missing, or human-review-only decisions remain, and this capability is dry-run only."
+            ),
+            "unlock_requirements": unlock_requirements,
+            "real_execution_allowed": False,
+            "dry_run_only": True,
+            "human_approval_required": True,
+            "unlock_performed": False,
+        },
+        "preflight_checklist": {
+            "checklist_mode": "deterministic_preflight_preview",
+            "preflight_executed": False,
+            "checks": [
+                {
+                    "check": "approval_decision_pack_present",
+                    "passed": bool(approval_pack),
+                },
+                {
+                    "check": "action_ticket_pack_present",
+                    "passed": bool(ticket_pack),
+                },
+                {
+                    "check": "action_queue_pack_present",
+                    "passed": bool(queue_pack),
+                },
+                {
+                    "check": "blocked_decisions_cleared",
+                    "passed": not bool(blocked_decisions),
+                },
+                {
+                    "check": "evidence_and_quotes_ready",
+                    "passed": not weak_evidence and not missing_quote,
+                },
+                {
+                    "check": "real_execution_disabled",
+                    "passed": True,
+                },
+            ],
+        },
+        "blocked_execution_reasons": blocked_execution_reasons,
+        "manual_review_requirements": {
+            "manual_review_required": True,
+            "review_scope": "all_decisions_before_any_future_capability",
+            "decision_ids": [
+                _rw_text(decision.get("decision_id"))
+                for decision in decisions
+            ],
+            "requirements": [
+                "Review blocked decisions and their required evidence.",
+                "Review review-ready decisions as human-review items only.",
+                "Validate all gate checks and ticket validation steps.",
+                "Retain all risk notes and do-not-claim boundaries.",
+                "Do not interpret review completion as real execution approval.",
+            ],
+        },
+        "dry_run_enforcement": {
+            "enforcement_mode": "hard_dry_run_lock",
+            "dry_run_only": True,
+            "real_execution_allowed": False,
+            "launch_allowed": False,
+            "provider_call_allowed": False,
+            "llm_call_allowed": False,
+            "video_generation_allowed": False,
+            "media_operation_allowed": False,
+            "paid_operation_allowed": False,
+            "registry_write_allowed": False,
+            "database_write_allowed": False,
+            "restore_allowed": False,
+            "rollback_allowed": False,
+            "external_scraping_allowed": False,
+        },
+        "approved_for_review_items": approved_for_review_items,
+        "not_approved_items": not_approved_items,
+        "execution_risk_register": execution_risk_register,
+        "readiness_quality_checks": {
+            "approval_decision_pack_present": bool(approval_pack),
+            "action_ticket_pack_present": bool(ticket_pack),
+            "action_queue_pack_present": bool(queue_pack),
+            "decision_count_consistent": len(decisions)
+            == len(blocked_decisions)
+            + len(review_ready_decisions)
+            + len(pending_decisions),
+            "lock_id_present": bool(lock_id),
+            "launch_lock_closed": True,
+            "all_review_items_human_review_only": all(
+                item["approval_scope"] == "human_review_only"
+                and not item["real_execution_allowed"]
+                for item in approved_for_review_items
+            ),
+            "all_not_approved_items_execution_disabled": all(
+                not item["real_execution_allowed"]
+                for item in not_approved_items
+            ),
+            "risk_register_complete": len(execution_risk_register)
+            == len(decisions),
+            "blocked_reasons_capture_evidence_risk": bool(
+                blocked_execution_reasons
+            )
+            if blocked_decisions or weak_evidence or missing_quote
+            else True,
+            "real_execution_disabled": True,
+            "database_write_performed": False,
+            "launch_unlock_performed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -23819,6 +24126,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_approval_decision_pack"] = (
         _rw_workspace_approval_decision_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_execution_readiness_pack"] = (
+        _rw_workspace_execution_readiness_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
