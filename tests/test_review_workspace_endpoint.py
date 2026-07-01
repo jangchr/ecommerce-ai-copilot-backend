@@ -2748,6 +2748,219 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_cycle_history_timeline_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-cycle-history-timeline",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "CYCLETIME001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Still leaks",
+                    "text": "Leaks.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        cycle_pack = creative_pack["workspace_retry_cycle_decision_pack"]
+        pack = creative_pack["workspace_cycle_history_timeline_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_cycle_history_timeline_pack_v1",
+        )
+        summary = pack["timeline_summary"]
+        self.assertTrue(summary["timeline_id"])
+        self.assertIn("cycle_history_preview", summary["mode"])
+        self.assertIn("decision_timeline", summary["mode"])
+        self.assertIn("dry_run_audit_preview", summary["mode"])
+        self.assertEqual(
+            summary["source_cycle_decision_id"],
+            cycle_pack["cycle_decision_summary"]["cycle_decision_id"],
+        )
+        self.assertFalse(summary["real_execution_allowed"])
+
+        events = pack["timeline_events"]
+        self.assertGreaterEqual(len(events), 8)
+        event_types = {event["event_type"] for event in events}
+        for expected_type in [
+            "readiness_lock", "execution_rehearsal_plan",
+            "rehearsal_result", "remediation_plan",
+            "remediation_verification", "retry_rehearsal_plan",
+            "retry_rehearsal_result", "retry_cycle_decision",
+            "manual_review_checkpoint", "blocked_or_carry_forward",
+        ]:
+            with self.subTest(event_type=expected_type):
+                self.assertIn(expected_type, event_types)
+        for index, event in enumerate(events, start=1):
+            self.assertEqual(event["event_order"], index)
+            for field in [
+                "event_id", "event_type", "event_title",
+                "source_pack", "cycle_phase", "decision_or_status",
+                "summary",
+            ]:
+                with self.subTest(event=event["event_id"], field=field):
+                    self.assertTrue(event[field])
+            self.assertIsInstance(event["source_keys"], list)
+            self.assertIsInstance(event["input_refs"], list)
+            self.assertIsInstance(event["output_refs"], list)
+            self.assertFalse(event["real_execution_allowed"])
+
+        lineage = pack["pack_lineage_map"]
+        self.assertTrue(lineage)
+        for pack_name in [
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+        ]:
+            with self.subTest(lineage_pack=pack_name):
+                self.assertIn(pack_name, lineage)
+                self.assertIn("direct_upstream", lineage[pack_name])
+                self.assertIn("direct_downstream", lineage[pack_name])
+                self.assertFalse(lineage[pack_name]["derived_from_real_history"])
+                self.assertFalse(lineage[pack_name]["database_read_performed"])
+                self.assertFalse(lineage[pack_name]["database_write_performed"])
+
+        decision_trace = pack["decision_trace_map"]
+        self.assertEqual(
+            decision_trace["cycle_decision_id"],
+            cycle_pack["cycle_decision_summary"]["cycle_decision_id"],
+        )
+        self.assertTrue(decision_trace["source_retry_result_id"])
+        self.assertIsInstance(decision_trace["source_retry_result_ids"], list)
+        self.assertIsInstance(decision_trace["source_blocker_ids"], list)
+        self.assertIsInstance(decision_trace["source_remaining_gap_ids"], list)
+        self.assertIsInstance(decision_trace["source_recommendation_ids"], list)
+        self.assertFalse(decision_trace["real_execution_allowed"])
+
+        transitions = pack["cycle_state_transitions"]
+        self.assertTrue(transitions)
+        self.assertTrue(
+            all(
+                transition["transition_type"] == "preview_state_transition"
+                for transition in transitions
+            )
+        )
+        self.assertTrue(
+            all(
+                not transition["state_change_persisted"]
+                for transition in transitions
+            )
+        )
+        self.assertTrue(
+            all(
+                not transition["real_execution_allowed"]
+                for transition in transitions
+            )
+        )
+
+        carry_trace = pack["carry_forward_trace"]
+        self.assertIsInstance(carry_trace, list)
+        self.assertTrue(carry_trace)
+        self.assertTrue(
+            all(
+                trace["origin_pack"] == "workspace_retry_rehearsal_result_pack"
+                for trace in carry_trace
+            )
+        )
+        self.assertTrue(
+            all(not trace["real_execution_allowed"] for trace in carry_trace)
+        )
+
+        operator_trace = pack["operator_review_trace"]
+        self.assertIsInstance(operator_trace, list)
+        self.assertTrue(operator_trace)
+        self.assertTrue(
+            all(not trace["approval_created"] for trace in operator_trace)
+        )
+        self.assertTrue(
+            all(
+                not trace["operator_log_written"]
+                for trace in operator_trace
+            )
+        )
+        self.assertTrue(
+            all(
+                not trace["database_write_performed"]
+                for trace in operator_trace
+            )
+        )
+        self.assertTrue(
+            all(not trace["real_execution_allowed"] for trace in operator_trace)
+        )
+
+        audit = pack["audit_timeline_preview"]
+        self.assertTrue(audit["timeline_id"])
+        self.assertFalse(audit["is_real_history_record"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        checks = pack["timeline_quality_checks"]
+        for key in [
+            "source_packs_present", "timeline_events_present",
+            "event_order_is_sequential",
+            "all_events_execution_disabled",
+            "pack_lineage_map_present",
+            "decision_trace_map_present",
+            "cycle_state_transitions_are_preview_only",
+            "operator_review_trace_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_history_table_read_performed",
+            "database_write_performed",
+            "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled", "llm_api_enabled",
+            "video_generation_enabled", "media_upload_enabled",
+            "media_download_enabled", "paid_operation_enabled",
+            "registry_write_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

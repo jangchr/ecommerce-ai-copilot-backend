@@ -26779,6 +26779,580 @@ def _rw_workspace_retry_cycle_decision_pack(
     }
 
 
+def _rw_workspace_cycle_history_timeline_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    readiness_pack = dict(
+        creative_decision_pack.get("workspace_execution_readiness_pack")
+        or {}
+    )
+    rehearsal_pack = dict(
+        creative_decision_pack.get("workspace_execution_rehearsal_pack")
+        or {}
+    )
+    rehearsal_result_pack = dict(
+        creative_decision_pack.get("workspace_rehearsal_result_pack") or {}
+    )
+    remediation_pack = dict(
+        creative_decision_pack.get("workspace_rehearsal_remediation_pack")
+        or {}
+    )
+    verification_pack = dict(
+        creative_decision_pack.get("workspace_remediation_verification_pack")
+        or {}
+    )
+    retry_plan_pack = dict(
+        creative_decision_pack.get("workspace_retry_rehearsal_plan_pack")
+        or {}
+    )
+    retry_result_pack = dict(
+        creative_decision_pack.get("workspace_retry_rehearsal_result_pack")
+        or {}
+    )
+    cycle_decision_pack = dict(
+        creative_decision_pack.get("workspace_retry_cycle_decision_pack")
+        or {}
+    )
+
+    readiness_summary = dict(readiness_pack.get("readiness_summary") or {})
+    launch_lock = dict(readiness_pack.get("launch_lock") or {})
+    rehearsal_summary = dict(rehearsal_pack.get("rehearsal_summary") or {})
+    rehearsal_result_summary = dict(
+        rehearsal_result_pack.get("result_summary") or {}
+    )
+    remediation_summary = dict(
+        remediation_pack.get("remediation_summary") or {}
+    )
+    verification_summary = dict(
+        verification_pack.get("verification_summary") or {}
+    )
+    retry_plan_summary = dict(
+        retry_plan_pack.get("retry_rehearsal_summary") or {}
+    )
+    retry_result_summary = dict(
+        retry_result_pack.get("retry_result_summary") or {}
+    )
+    cycle_decision_summary = dict(
+        cycle_decision_pack.get("cycle_decision_summary") or {}
+    )
+    recommended_cycle_action = dict(
+        cycle_decision_pack.get("recommended_cycle_action") or {}
+    )
+
+    pack_sequence = [
+        {
+            "pack_name": "workspace_execution_readiness_pack",
+            "event_type": "readiness_lock",
+            "event_title": "Execution readiness launch lock",
+            "cycle_phase": "readiness",
+            "pack": readiness_pack,
+            "summary": readiness_summary,
+            "source_keys": [
+                _rw_text(launch_lock.get("lock_id")),
+                _rw_text(readiness_summary.get("readiness_status")),
+            ],
+            "decision_or_status": _rw_text(
+                readiness_summary.get("launch_lock_status")
+            )
+            or _rw_text(launch_lock.get("lock_status"))
+            or "locked_preview",
+            "input_refs": [
+                "workspace_approval_decision_pack",
+                "workspace_action_ticket_pack",
+                "workspace_action_queue_pack",
+            ],
+            "output_refs": ["workspace_execution_rehearsal_pack"],
+            "summary_text": _rw_text(
+                readiness_summary.get("recommended_next_action")
+            )
+            or _rw_text(launch_lock.get("lock_reason"))
+            or "Launch lock keeps real execution disabled.",
+        },
+        {
+            "pack_name": "workspace_execution_rehearsal_pack",
+            "event_type": "execution_rehearsal_plan",
+            "event_title": "Execution rehearsal runbook",
+            "cycle_phase": "first_pass_rehearsal",
+            "pack": rehearsal_pack,
+            "summary": rehearsal_summary,
+            "source_keys": [
+                _rw_text(rehearsal_summary.get("rehearsal_id")),
+                _rw_text(rehearsal_summary.get("mode")),
+            ],
+            "decision_or_status": _rw_text(
+                rehearsal_summary.get("readiness")
+            )
+            or _rw_text(rehearsal_summary.get("mode"))
+            or "rehearsal_preview",
+            "input_refs": ["workspace_execution_readiness_pack"],
+            "output_refs": ["workspace_rehearsal_result_pack"],
+            "summary_text": _rw_text(
+                rehearsal_summary.get("recommended_next_action")
+            )
+            or "Dry-run rehearsal runbook is prepared without execution.",
+        },
+        {
+            "pack_name": "workspace_rehearsal_result_pack",
+            "event_type": "rehearsal_result",
+            "event_title": "Rehearsal result preview",
+            "cycle_phase": "first_pass_result",
+            "pack": rehearsal_result_pack,
+            "summary": rehearsal_result_summary,
+            "source_keys": [
+                _rw_text(rehearsal_result_summary.get("result_id")),
+                _rw_text(rehearsal_result_summary.get("mode")),
+            ],
+            "decision_or_status": _rw_text(
+                rehearsal_result_summary.get("result_status")
+            )
+            or _rw_text(rehearsal_result_summary.get("mode"))
+            or "result_preview",
+            "input_refs": ["workspace_execution_rehearsal_pack"],
+            "output_refs": ["workspace_rehearsal_remediation_pack"],
+            "summary_text": _rw_text(
+                rehearsal_result_summary.get("recommended_next_action")
+            )
+            or "Rehearsal result remains simulated and reviewable.",
+        },
+        {
+            "pack_name": "workspace_rehearsal_remediation_pack",
+            "event_type": "remediation_plan",
+            "event_title": "Rehearsal remediation plan",
+            "cycle_phase": "remediation",
+            "pack": remediation_pack,
+            "summary": remediation_summary,
+            "source_keys": [
+                _rw_text(remediation_summary.get("remediation_plan_id")),
+                _rw_text(remediation_summary.get("mode")),
+            ],
+            "decision_or_status": _rw_text(
+                remediation_summary.get("remediation_status")
+            )
+            or _rw_text(remediation_summary.get("mode"))
+            or "remediation_preview",
+            "input_refs": ["workspace_rehearsal_result_pack"],
+            "output_refs": ["workspace_remediation_verification_pack"],
+            "summary_text": _rw_text(
+                remediation_summary.get("recommended_next_action")
+            )
+            or "Remediation plan describes follow-up only.",
+        },
+        {
+            "pack_name": "workspace_remediation_verification_pack",
+            "event_type": "remediation_verification",
+            "event_title": "Remediation verification",
+            "cycle_phase": "verification",
+            "pack": verification_pack,
+            "summary": verification_summary,
+            "source_keys": [
+                _rw_text(verification_summary.get("verification_run_id")),
+                _rw_text(verification_summary.get("mode")),
+            ],
+            "decision_or_status": _rw_text(
+                verification_summary.get("verification_status")
+            )
+            or _rw_text(verification_summary.get("retry_readiness"))
+            or "verification_preview",
+            "input_refs": ["workspace_rehearsal_remediation_pack"],
+            "output_refs": ["workspace_retry_rehearsal_plan_pack"],
+            "summary_text": _rw_text(
+                verification_summary.get("recommended_next_action")
+            )
+            or "Verification preview decides whether retry rehearsal can be planned.",
+        },
+        {
+            "pack_name": "workspace_retry_rehearsal_plan_pack",
+            "event_type": "retry_rehearsal_plan",
+            "event_title": "Second-pass retry rehearsal plan",
+            "cycle_phase": "retry_planning",
+            "pack": retry_plan_pack,
+            "summary": retry_plan_summary,
+            "source_keys": [
+                _rw_text(retry_plan_summary.get("retry_plan_id")),
+                _rw_text(retry_plan_summary.get("mode")),
+            ],
+            "decision_or_status": _rw_text(
+                retry_plan_summary.get("plan_status")
+            )
+            or _rw_text(retry_plan_summary.get("mode"))
+            or "retry_plan_preview",
+            "input_refs": ["workspace_remediation_verification_pack"],
+            "output_refs": ["workspace_retry_rehearsal_result_pack"],
+            "summary_text": _rw_text(
+                retry_plan_summary.get("recommended_next_action")
+            )
+            or "Second-pass retry plan is dry-run only.",
+        },
+        {
+            "pack_name": "workspace_retry_rehearsal_result_pack",
+            "event_type": "retry_rehearsal_result",
+            "event_title": "Second-pass retry rehearsal result",
+            "cycle_phase": "retry_result",
+            "pack": retry_result_pack,
+            "summary": retry_result_summary,
+            "source_keys": [
+                _rw_text(retry_result_summary.get("retry_result_id")),
+                _rw_text(retry_result_summary.get("mode")),
+            ],
+            "decision_or_status": _rw_text(
+                retry_result_summary.get("result_status")
+            )
+            or _rw_text(retry_result_summary.get("mode"))
+            or "retry_result_preview",
+            "input_refs": ["workspace_retry_rehearsal_plan_pack"],
+            "output_refs": ["workspace_retry_cycle_decision_pack"],
+            "summary_text": _rw_text(
+                retry_result_summary.get("recommended_next_action")
+            )
+            or "Retry result is simulated and cannot authorize execution.",
+        },
+        {
+            "pack_name": "workspace_retry_cycle_decision_pack",
+            "event_type": "retry_cycle_decision",
+            "event_title": "Next-cycle control decision",
+            "cycle_phase": "cycle_decision",
+            "pack": cycle_decision_pack,
+            "summary": cycle_decision_summary,
+            "source_keys": [
+                _rw_text(cycle_decision_summary.get("cycle_decision_id")),
+                _rw_text(cycle_decision_summary.get("mode")),
+            ],
+            "decision_or_status": _rw_text(
+                cycle_decision_summary.get("decision_status")
+            )
+            or _rw_text(recommended_cycle_action.get("action_type"))
+            or "cycle_decision_preview",
+            "input_refs": [
+                "workspace_retry_rehearsal_result_pack",
+                "retry_failure_findings",
+                "remaining_retry_gaps",
+                "next_cycle_recommendations",
+            ],
+            "output_refs": [
+                "next_dry_run_or_remediation_cycle_preview",
+                "manual_review_packet",
+            ],
+            "summary_text": _rw_text(
+                recommended_cycle_action.get("reason")
+            )
+            or "Cycle decision remains preview-only.",
+        },
+    ]
+
+    timeline_events = []
+    for index, item in enumerate(pack_sequence, start=1):
+        event_signature = json.dumps(
+            {
+                "event_type": item["event_type"],
+                "source_pack": item["pack_name"],
+                "source_keys": item["source_keys"],
+                "decision_or_status": item["decision_or_status"],
+            },
+            ensure_ascii=True,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        timeline_events.append(
+            {
+                "event_id": "cycle_timeline_event_"
+                + hashlib.sha256(
+                    event_signature.encode("utf-8")
+                ).hexdigest()[:10],
+                "event_order": index,
+                "event_type": item["event_type"],
+                "event_title": item["event_title"],
+                "source_pack": item["pack_name"],
+                "source_keys": [
+                    key for key in item["source_keys"] if key
+                ],
+                "cycle_phase": item["cycle_phase"],
+                "decision_or_status": item["decision_or_status"],
+                "summary": item["summary_text"],
+                "input_refs": item["input_refs"],
+                "output_refs": item["output_refs"],
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Timeline event is a deterministic preview derived from workspace packs; it is not a real history record and cannot authorize execution."
+                ),
+            }
+        )
+
+    manual_review_items = list(
+        cycle_decision_pack.get("blocked_or_review_required_items") or []
+    )
+    if manual_review_items:
+        timeline_events.append(
+            {
+                "event_id": "cycle_timeline_manual_review_checkpoint",
+                "event_order": len(timeline_events) + 1,
+                "event_type": "manual_review_checkpoint",
+                "event_title": "Manual review checkpoint preview",
+                "source_pack": "workspace_retry_cycle_decision_pack",
+                "source_keys": [
+                    _rw_text(item.get("item_id"))
+                    for item in manual_review_items
+                    if _rw_text(item.get("item_id"))
+                ],
+                "cycle_phase": "manual_review",
+                "decision_or_status": "manual_review_required_preview",
+                "summary": (
+                    "Manual review is preview-only and does not create approval, ticket, operator log, or database record."
+                ),
+                "input_refs": [
+                    "blocked_or_review_required_items",
+                    "manual_review_packet",
+                ],
+                "output_refs": ["operator_review_trace"],
+                "real_execution_allowed": False,
+                "risk_note": "Human review checkpoint is not a real approval workflow.",
+            }
+        )
+    carry_forward_items = list(
+        cycle_decision_pack.get("carry_forward_items") or []
+    )
+    if carry_forward_items:
+        timeline_events.append(
+            {
+                "event_id": "cycle_timeline_blocked_or_carry_forward",
+                "event_order": len(timeline_events) + 1,
+                "event_type": "blocked_or_carry_forward",
+                "event_title": "Carry-forward blocker trace",
+                "source_pack": "workspace_retry_cycle_decision_pack",
+                "source_keys": [
+                    _rw_text(item.get("item_id"))
+                    for item in carry_forward_items
+                    if _rw_text(item.get("item_id"))
+                ],
+                "cycle_phase": "carry_forward",
+                "decision_or_status": "carry_forward_preview",
+                "summary": (
+                    "Remaining gaps and blockers are carried forward to remediation or manual review preview only."
+                ),
+                "input_refs": [
+                    "carry_forward_items",
+                    "remaining_retry_gaps",
+                ],
+                "output_refs": ["carry_forward_trace"],
+                "real_execution_allowed": False,
+                "risk_note": "Carry-forward trace blocks real execution until reviewed.",
+            }
+        )
+
+    lineage_names = [item["pack_name"] for item in pack_sequence]
+    pack_lineage_map = {}
+    for index, name in enumerate(lineage_names):
+        pack_lineage_map[name] = {
+            "upstream_sources": lineage_names[max(0, index - 2):index],
+            "direct_upstream": [lineage_names[index - 1]]
+            if index > 0
+            else [],
+            "direct_downstream": [lineage_names[index + 1]]
+            if index < len(lineage_names) - 1
+            else [],
+            "downstream_impacts": lineage_names[index + 1:index + 3],
+            "derived_from_real_history": False,
+            "database_read_performed": False,
+            "database_write_performed": False,
+        }
+
+    retry_result_ids = [
+        _rw_text(result.get("result_id"))
+        for result in list(
+            retry_result_pack.get("second_pass_step_results") or []
+        )
+        if _rw_text(result.get("result_id"))
+    ]
+    retry_blocker_ids = [
+        _rw_text(item.get("blocker_result_id"))
+        for item in list(
+            retry_result_pack.get("carry_forward_blocker_results") or []
+        )
+        if _rw_text(item.get("blocker_result_id"))
+    ]
+    retry_gap_ids = [
+        _rw_text(item.get("gap_id"))
+        for item in list(retry_result_pack.get("remaining_retry_gaps") or [])
+        if _rw_text(item.get("gap_id"))
+    ]
+    decision_trace_map = {
+        "cycle_decision_id": _rw_text(
+            cycle_decision_summary.get("cycle_decision_id")
+        ),
+        "source_retry_result_id": _rw_text(
+            cycle_decision_summary.get("source_retry_result_id")
+        ),
+        "source_retry_result_ids": retry_result_ids,
+        "source_blocker_ids": retry_blocker_ids,
+        "source_remaining_gap_ids": retry_gap_ids,
+        "source_recommendation_ids": [
+            _rw_text(item.get("recommendation_id"))
+            for item in list(
+                retry_result_pack.get("next_cycle_recommendations") or []
+            )
+            if _rw_text(item.get("recommendation_id"))
+        ],
+        "recommended_cycle_action": recommended_cycle_action,
+        "trace_mode": "deterministic_retry_result_to_cycle_decision_preview",
+        "real_execution_allowed": False,
+    }
+
+    cycle_state_transitions = [
+        {
+            "transition_id": f"cycle_transition_preview_{index:02d}",
+            "from_pack": event["source_pack"],
+            "to_pack": event["output_refs"][0] if event["output_refs"] else "",
+            "from_phase": event["cycle_phase"],
+            "to_phase": (
+                timeline_events[index]["cycle_phase"]
+                if index < len(timeline_events)
+                else "next_cycle_preview"
+            ),
+            "transition_type": "preview_state_transition",
+            "state_change_persisted": False,
+            "real_execution_allowed": False,
+        }
+        for index, event in enumerate(timeline_events, start=1)
+    ]
+
+    carry_forward_trace = [
+        {
+            "trace_id": f"carry_forward_trace_{index:02d}",
+            "source_item_id": _rw_text(item.get("item_id")),
+            "source_type": _rw_text(item.get("source_type")),
+            "origin_pack": "workspace_retry_rehearsal_result_pack",
+            "current_pack": "workspace_retry_cycle_decision_pack",
+            "next_preview_destination": "workspace_rehearsal_remediation_pack",
+            "issue": _rw_text(item.get("issue")),
+            "blocks_real_execution": bool(
+                item.get("blocks_real_execution")
+            ),
+            "real_execution_allowed": False,
+        }
+        for index, item in enumerate(carry_forward_items, start=1)
+    ]
+    operator_review_trace = [
+        {
+            "trace_id": f"operator_review_trace_{index:02d}",
+            "source_item_id": _rw_text(item.get("item_id")),
+            "source_type": _rw_text(item.get("source_type")),
+            "origin_pack": "workspace_retry_cycle_decision_pack",
+            "review_status": _rw_text(item.get("status"))
+            or "manual_review_required_preview",
+            "reason": _rw_text(item.get("reason")),
+            "approval_created": False,
+            "operator_log_written": False,
+            "database_write_performed": False,
+            "real_execution_allowed": False,
+        }
+        for index, item in enumerate(manual_review_items, start=1)
+    ]
+
+    timeline_signature = json.dumps(
+        {
+            "events": [event["event_id"] for event in timeline_events],
+            "cycle_decision_id": decision_trace_map["cycle_decision_id"],
+            "carry_forward_count": len(carry_forward_trace),
+            "operator_review_count": len(operator_review_trace),
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    timeline_id = (
+        "cycle_history_timeline_"
+        + hashlib.sha256(timeline_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "approval_creation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_cycle_history_timeline_pack_v1",
+        "timeline_summary": {
+            "timeline_id": timeline_id,
+            "mode": "deterministic_cycle_history_preview_decision_timeline_dry_run_audit_preview",
+            "source_cycle_decision_id": decision_trace_map[
+                "cycle_decision_id"
+            ],
+            "event_count": len(timeline_events),
+            "pack_count": len(pack_lineage_map),
+            "carry_forward_trace_count": len(carry_forward_trace),
+            "operator_review_trace_count": len(operator_review_trace),
+            "timeline_status": "preview_only_not_real_history",
+            "recommended_next_action": (
+                "Review the deterministic decision timeline before any later dry-run cycle; do not treat it as persisted history."
+            ),
+            "real_execution_allowed": False,
+        },
+        "timeline_events": timeline_events,
+        "pack_lineage_map": pack_lineage_map,
+        "decision_trace_map": decision_trace_map,
+        "cycle_state_transitions": cycle_state_transitions,
+        "carry_forward_trace": carry_forward_trace,
+        "operator_review_trace": operator_review_trace,
+        "audit_timeline_preview": {
+            "audit_mode": "deterministic_cycle_history_timeline_preview",
+            "timeline_id": timeline_id,
+            "event_ids": [event["event_id"] for event in timeline_events],
+            "source_packs": lineage_names,
+            "is_real_history_record": False,
+            "real_history_table_read_performed": False,
+            "database_write_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic timeline preview derived from workspace packs only; no external history, database record, approval, retry, restore, rollback, provider, LLM, video, media, paid, or registry operation was used."
+            ),
+        },
+        "timeline_quality_checks": {
+            "source_packs_present": all(
+                bool(item["pack"]) for item in pack_sequence
+            ),
+            "timeline_events_present": bool(timeline_events),
+            "event_order_is_sequential": [
+                event["event_order"] for event in timeline_events
+            ]
+            == list(range(1, len(timeline_events) + 1)),
+            "all_events_execution_disabled": all(
+                not event["real_execution_allowed"]
+                for event in timeline_events
+            ),
+            "pack_lineage_map_present": bool(pack_lineage_map),
+            "decision_trace_map_present": bool(
+                decision_trace_map.get("cycle_decision_id")
+            ),
+            "cycle_state_transitions_are_preview_only": all(
+                not transition["state_change_persisted"]
+                for transition in cycle_state_transitions
+            ),
+            "operator_review_trace_not_persisted": all(
+                not trace["database_write_performed"]
+                for trace in operator_review_trace
+            ),
+            "real_history_table_read_performed": False,
+            "database_write_performed": False,
+            "real_execution_performed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -26907,6 +27481,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_retry_cycle_decision_pack"] = (
         _rw_workspace_retry_cycle_decision_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_cycle_history_timeline_pack"] = (
+        _rw_workspace_cycle_history_timeline_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
