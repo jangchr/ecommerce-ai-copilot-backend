@@ -157,6 +157,7 @@ Add-Check "project_workspace_rehearsal_remediation_marker" ($page.Content -match
 Add-Check "project_workspace_remediation_verification_marker" ($page.Content -match "Project Workspace remediation verification bundle")
 Add-Check "project_workspace_retry_rehearsal_plan_marker" ($page.Content -match "Project Workspace retry rehearsal plan bundle")
 Add-Check "project_workspace_retry_rehearsal_result_marker" ($page.Content -match "Project Workspace retry rehearsal result bundle")
+Add-Check "project_workspace_retry_cycle_decision_marker" ($page.Content -match "Project Workspace retry cycle decision bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

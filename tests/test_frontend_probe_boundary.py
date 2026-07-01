@@ -10952,6 +10952,122 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_retry_cycle_decision_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace retry cycle decision bundle",
+            "PROJECT_WORKSPACE_RETRY_CYCLE_DECISION_MARKER",
+            "latestProjectWorkspaceRetryCycleDecisionPack",
+            "projectWorkspaceRetryCycleDecisionPackFromWorkspace",
+            "projectWorkspaceExportRetryCycleDecisionSnapshot",
+            "projectWorkspaceExportRetryCycleDecisionMarkdown",
+            "renderProjectWorkspaceRetryCycleSummaryPanel",
+            "renderProjectWorkspaceRetryCycleDecisionOptionsPanel",
+            "renderProjectWorkspaceRetryCycleGateActionPanel",
+            "renderProjectWorkspaceRetryCycleCarryManualPanel",
+            "renderProjectWorkspaceRetryCycleScopeAuditSafetyPanel",
+            "copyProjectWorkspaceRetryCycleDecisionSummary",
+            "copyProjectWorkspaceRetryCycleDecisionOptions",
+            "copyProjectWorkspaceRecommendedCycleAction",
+            "copyProjectWorkspaceRetryCycleGate",
+            "copyProjectWorkspaceRetryCycleCarryForwardItems",
+            "copyProjectWorkspaceRetryCycleBlockedReviewItems",
+            "copyProjectWorkspaceRetryCycleManualReviewPacket",
+            "copyProjectWorkspaceRetryCycleNextScope",
+            "copyProjectWorkspaceFullRetryCycleDecisionPack",
+            "workspace_retry_cycle_decision_pack: projectWorkspaceExportRetryCycleDecisionSnapshot(workspace)",
+            "Workspace Retry Cycle Decision / Next-Cycle Control",
+            "Cycle Decision Summary", "Decision Options",
+            "Recommended Cycle Action", "Cycle Gate",
+            "Carry-Forward Items", "Blocked or Review-Required Items",
+            "Manual Review Packet", "Next Cycle Scope",
+            "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.cycle_decision_summary", "pack.decision_options",
+            "pack.recommended_cycle_action", "pack.cycle_gate",
+            "pack.carry_forward_items",
+            "pack.blocked_or_review_required_items",
+            "pack.manual_review_packet", "pack.next_cycle_scope",
+            "pack.decision_quality_checks", "pack.audit_preview",
+            "pack.safety_boundaries", "summary.mode",
+            "summary.decision_status", "summary.recommended_next_state",
+            "summary.decision_option_count", "summary.carry_forward_item_count",
+            "summary.blocked_or_review_required_count",
+            "summary.real_execution_allowed", "option.option_id",
+            "option.option_type", "option.option_title", "option.source_pack",
+            "option.source_result_ids", "option.rationale",
+            "option.required_inputs", "option.blocked_by",
+            "option.recommended", "option.allowed_next_state",
+            "option.real_execution_allowed", "option.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceRetryResultAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceRetryCycleSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceRetryCycleScopeAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_retry_cycle_decision_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "retryCyclePackTitle", "retryCycleSummaryTitle",
+            "retryCycleDecisionOptionsTitle",
+            "retryCycleRecommendedActionTitle",
+            "retryCycleGateTitle", "retryCycleCarryForwardTitle",
+            "retryCycleBlockedReviewTitle", "retryCycleManualReviewTitle",
+            "retryCycleNextScopeTitle", "retryCycleAuditTitle",
+            "retryCycleSafetyTitle", "retryCycleCopySummary",
+            "retryCycleCopyOptions", "retryCycleCopyRecommended",
+            "retryCycleCopyGate", "retryCycleCopyCarry",
+            "retryCycleCopyBlocked", "retryCycleCopyManual",
+            "retryCycleCopyScope", "retryCycleCopyFull",
+            "retryCycleCopied", "retryCycleCopyFailed",
+            "retryCycleCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace retry cycle decision bundle", script)
+            self.assertIn("project_workspace_retry_cycle_decision_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceRetryCycleDecisionSummaryText"):
+            html.index("async function copyProjectWorkspaceRetryCycleDecisionText")
+        ]
+        for key in [
+            "retryCyclePackTitle", "retryCycleSummaryTitle",
+            "retryCycleDecisionOptionsTitle",
+            "retryCycleRecommendedActionTitle", "retryCycleGateTitle",
+            "retryCycleCarryForwardTitle", "retryCycleBlockedReviewTitle",
+            "retryCycleManualReviewTitle", "retryCycleNextScopeTitle",
+            "retryCycleAuditTitle", "retryCycleSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_RETRY_CYCLE_DECISION_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Preview decision only", html)
+        self.assertIn("not real execution", html)
+        self.assertIn("never shows ready_for_real_execution", html)
+        self.assertIn("No real approval, ticket, operator log, or database record is created.", html)
+        self.assertIn("Next cycle scope does not perform real operations.", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
