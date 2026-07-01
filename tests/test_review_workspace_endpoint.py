@@ -2386,6 +2386,185 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_retry_rehearsal_result_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-retry-rehearsal-result",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "RETRYRESULT001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Still leaks",
+                    "text": "Leaks.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        plan_pack = creative_pack["workspace_retry_rehearsal_plan_pack"]
+        pack = creative_pack["workspace_retry_rehearsal_result_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_retry_rehearsal_result_pack_v1",
+        )
+        summary = pack["retry_result_summary"]
+        self.assertTrue(summary["retry_result_id"])
+        self.assertIn("retry_rehearsal_result", summary["mode"])
+        self.assertIn("second_pass_dry_run_result", summary["mode"])
+        self.assertIn("preview", summary["mode"])
+        self.assertEqual(
+            summary["source_retry_plan_id"],
+            plan_pack["retry_rehearsal_summary"]["retry_plan_id"],
+        )
+        self.assertFalse(summary["real_retry_performed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        results = pack["second_pass_step_results"]
+        source_steps = plan_pack["second_pass_step_sequence"]
+        self.assertTrue(results)
+        self.assertEqual(len(results), len(source_steps))
+        source_step_ids = {step["retry_step_id"] for step in source_steps}
+        for result in results:
+            for field in [
+                "result_id", "source_retry_step_id",
+                "source_verification_id", "source_action_id",
+                "simulated_retry_status",
+                "tightened_validation_result",
+            ]:
+                with self.subTest(result=result["result_id"], field=field):
+                    self.assertTrue(result[field])
+            self.assertIn(result["source_retry_step_id"], source_step_ids)
+            self.assertIn(
+                result["simulated_retry_status"],
+                [
+                    "deterministic_simulated_pass",
+                    "review_required",
+                    "blocked_pending_operator_review",
+                ],
+            )
+            self.assertIn(
+                result["tightened_validation_result"],
+                [
+                    "blocked_by_remaining_gap",
+                    "deterministic_simulated_validation_pass",
+                ],
+            )
+            self.assertTrue(result["observed_placeholder"])
+            self.assertFalse(result["real_execution_allowed"])
+
+        checkpoint_results = pack["retry_checkpoint_results"]
+        self.assertTrue(checkpoint_results)
+        self.assertFalse(
+            checkpoint_results["checkpoint_execution_performed"]
+        )
+        self.assertFalse(checkpoint_results["real_execution_allowed"])
+        self.assertEqual(
+            len(checkpoint_results["step_checkpoints"]), len(results)
+        )
+
+        blocker_results = pack["carry_forward_blocker_results"]
+        self.assertIsInstance(blocker_results, list)
+        self.assertTrue(blocker_results)
+        self.assertTrue(
+            all(
+                not blocker["real_execution_allowed"]
+                for blocker in blocker_results
+            )
+        )
+        findings = pack["retry_failure_findings"]
+        self.assertIsInstance(findings, list)
+        self.assertTrue(findings)
+        self.assertTrue(
+            all(not finding["real_failure_triggered"] for finding in findings)
+        )
+        review = pack["operator_review_after_retry"]
+        self.assertTrue(review["operator_review_required"])
+        self.assertFalse(review["approval_created"])
+        self.assertFalse(review["ticket_created"])
+        self.assertFalse(review["operator_log_written"])
+        self.assertFalse(review["database_write_performed"])
+        self.assertFalse(review["real_execution_allowed"])
+
+        gaps = pack["remaining_retry_gaps"]
+        self.assertIsInstance(gaps, list)
+        self.assertTrue(gaps)
+        self.assertTrue(
+            all(gap["blocks_real_execution"] for gap in gaps)
+        )
+        recommendations = pack["next_cycle_recommendations"]
+        self.assertTrue(recommendations)
+        self.assertTrue(
+            all(
+                not item["real_execution_allowed"]
+                for item in recommendations
+            )
+        )
+
+        checks = pack["retry_result_quality_checks"]
+        for key in [
+            "retry_rehearsal_plan_pack_present",
+            "step_result_count_consistent",
+            "all_results_traceable",
+            "all_results_execution_disabled",
+            "checkpoint_results_are_preview_only",
+            "mock_timeline_was_not_executed",
+            "abort_plan_not_executed",
+            "operator_review_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "database_write_performed", "real_retry_performed",
+            "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["retry_result_id"])
+        self.assertFalse(audit["is_real_retry_log"])
+        self.assertFalse(audit["is_real_execution_log"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled", "llm_api_enabled",
+            "video_generation_enabled", "media_upload_enabled",
+            "media_download_enabled", "paid_operation_enabled",
+            "registry_write_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

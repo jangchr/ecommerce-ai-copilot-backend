@@ -26035,6 +26035,380 @@ def _rw_workspace_retry_rehearsal_plan_pack(
     }
 
 
+def _rw_workspace_retry_rehearsal_result_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    retry_plan_pack = dict(
+        creative_decision_pack.get("workspace_retry_rehearsal_plan_pack")
+        or {}
+    )
+    retry_summary = dict(
+        retry_plan_pack.get("retry_rehearsal_summary") or {}
+    )
+    retry_scope = dict(retry_plan_pack.get("retry_scope") or {})
+    steps = list(retry_plan_pack.get("second_pass_step_sequence") or [])
+    carry_forward_blockers = list(
+        retry_plan_pack.get("carry_forward_blockers") or []
+    )
+    tightened_checkpoint_plan = dict(
+        retry_plan_pack.get("tightened_checkpoint_plan") or {}
+    )
+    retry_validation_matrix = list(
+        retry_plan_pack.get("retry_validation_matrix") or []
+    )
+    operator_review_before_retry = dict(
+        retry_plan_pack.get("operator_review_before_retry") or {}
+    )
+    mock_retry_timeline = dict(
+        retry_plan_pack.get("mock_retry_timeline") or {}
+    )
+    retry_abort_plan = dict(retry_plan_pack.get("retry_abort_plan") or {})
+
+    matrix_by_step = {
+        _rw_text(row.get("retry_step_id")): row
+        for row in retry_validation_matrix
+    }
+    second_pass_step_results = []
+    for step in steps:
+        source_retry_step_id = _rw_text(step.get("retry_step_id"))
+        matrix_row = matrix_by_step.get(source_retry_step_id, {})
+        remaining_gap = _rw_text(step.get("remaining_gap")) or _rw_text(
+            matrix_row.get("remaining_gap")
+        )
+        operator_review_required = (
+            bool(step.get("operator_review_required"))
+            or not bool(step.get("retry_eligible"))
+            or bool(remaining_gap)
+            or bool(
+                operator_review_before_retry.get(
+                    "operator_review_required"
+                )
+            )
+        )
+        simulated_retry_status = (
+            "blocked_pending_operator_review"
+            if operator_review_required and remaining_gap
+            else "review_required"
+            if operator_review_required
+            else "deterministic_simulated_pass"
+        )
+        validation_result = (
+            "blocked_by_remaining_gap"
+            if remaining_gap
+            else "deterministic_simulated_validation_pass"
+        )
+        result_signature = json.dumps(
+            {
+                "source_retry_step_id": source_retry_step_id,
+                "source_verification_id": _rw_text(
+                    step.get("source_verification_id")
+                ),
+                "source_action_id": _rw_text(step.get("source_action_id")),
+                "simulated_retry_status": simulated_retry_status,
+                "validation_result": validation_result,
+            },
+            ensure_ascii=True,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        second_pass_step_results.append(
+            {
+                "result_id": "retry_result_"
+                + hashlib.sha256(
+                    result_signature.encode("utf-8")
+                ).hexdigest()[:10],
+                "source_retry_step_id": source_retry_step_id,
+                "source_verification_id": _rw_text(
+                    step.get("source_verification_id")
+                ),
+                "source_action_id": _rw_text(step.get("source_action_id")),
+                "step_title": _rw_text(step.get("step_title")),
+                "step_type": _rw_text(step.get("step_type")),
+                "simulated_retry_status": simulated_retry_status,
+                "expected_observation": _rw_text(
+                    step.get("expected_observation")
+                ),
+                "observed_placeholder": (
+                    "Deterministic placeholder observation only; no real retry or execution was run."
+                ),
+                "tightened_validation_result": validation_result,
+                "remaining_gap": remaining_gap,
+                "operator_review_required": operator_review_required,
+                "follow_up_action": (
+                    "Resolve the remaining gap and repeat human review before another dry-run retry."
+                    if remaining_gap
+                    else "Review deterministic pass evidence before considering any later dry-run cycle."
+                ),
+                "real_execution_allowed": False,
+                "risk_note": _rw_text(step.get("risk_note"))
+                or "Retry result is simulated and cannot authorize real execution.",
+            }
+        )
+
+    carry_forward_blocker_results = [
+        {
+            "blocker_result_id": f"retry_blocker_result_{index:02d}",
+            "source_blocker_id": _rw_text(blocker.get("blocker_id")),
+            "source_verification_id": _rw_text(
+                blocker.get("source_verification_id")
+            ),
+            "source_action_id": _rw_text(blocker.get("source_action_id")),
+            "blocker_type": _rw_text(blocker.get("blocker_type")),
+            "simulated_resolution_status": "still_blocked_for_real_execution",
+            "remaining_gap": _rw_text(blocker.get("remaining_gap")),
+            "follow_up_required": True,
+            "real_execution_allowed": False,
+        }
+        for index, blocker in enumerate(carry_forward_blockers, start=1)
+    ]
+
+    remaining_retry_gaps = [
+        {
+            "gap_id": f"remaining_retry_gap_{index:02d}",
+            "source_retry_step_id": result["source_retry_step_id"],
+            "source_action_id": result["source_action_id"],
+            "gap": result["remaining_gap"],
+            "operator_review_required": result[
+                "operator_review_required"
+            ],
+            "blocks_real_execution": True,
+            "real_execution_allowed": False,
+        }
+        for index, result in enumerate(second_pass_step_results, start=1)
+        if result["remaining_gap"]
+    ]
+    retry_failure_findings = [
+        {
+            "finding_id": f"retry_failure_finding_{index:02d}",
+            "source_retry_step_id": result["source_retry_step_id"],
+            "finding_type": (
+                "remaining_gap"
+                if result["remaining_gap"]
+                else "operator_review_required"
+            ),
+            "finding_summary": result["remaining_gap"]
+            or "Operator review is still required before any future cycle.",
+            "simulated_only": True,
+            "real_failure_triggered": False,
+            "real_execution_allowed": False,
+        }
+        for index, result in enumerate(second_pass_step_results, start=1)
+        if result["remaining_gap"] or result["operator_review_required"]
+    ]
+
+    retry_checkpoint_results = {
+        "checkpoint_result_mode": "deterministic_second_pass_checkpoint_result_preview",
+        "source_checkpoint_plan_present": bool(tightened_checkpoint_plan),
+        "opening_checks": [
+            {
+                "check": check,
+                "simulated_status": "review_required",
+                "real_check_executed": False,
+            }
+            for check in list(
+                tightened_checkpoint_plan.get("opening_checks") or []
+            )
+        ],
+        "step_checkpoints": [
+            {
+                "source_retry_step_id": result["source_retry_step_id"],
+                "tightened_validation_result": result[
+                    "tightened_validation_result"
+                ],
+                "simulated_status": result["simulated_retry_status"],
+                "real_check_executed": False,
+            }
+            for result in second_pass_step_results
+        ],
+        "closing_checks": [
+            {
+                "check": check,
+                "simulated_status": "review_required",
+                "real_check_executed": False,
+            }
+            for check in list(
+                tightened_checkpoint_plan.get("closing_checks") or []
+            )
+        ],
+        "checkpoint_execution_performed": False,
+        "real_execution_allowed": False,
+    }
+
+    operator_review_after_retry = {
+        "review_mode": "second_pass_operator_review_preview_only",
+        "source_operator_review_required": bool(
+            operator_review_before_retry.get("operator_review_required")
+        ),
+        "operator_review_required": bool(
+            retry_failure_findings
+            or carry_forward_blocker_results
+            or remaining_retry_gaps
+        ),
+        "review_status": "pending_operator_review",
+        "review_items": [
+            {
+                "source_retry_step_id": result["source_retry_step_id"],
+                "simulated_retry_status": result[
+                    "simulated_retry_status"
+                ],
+                "remaining_gap": result["remaining_gap"],
+                "follow_up_action": result["follow_up_action"],
+            }
+            for result in second_pass_step_results
+            if result["operator_review_required"]
+        ],
+        "approval_created": False,
+        "ticket_created": False,
+        "operator_log_written": False,
+        "database_write_performed": False,
+        "real_execution_allowed": False,
+    }
+    next_cycle_recommendations = [
+        {
+            "recommendation_id": f"next_retry_cycle_{index:02d}",
+            "source_retry_step_id": result["source_retry_step_id"],
+            "recommendation_type": (
+                "resolve_remaining_gap"
+                if result["remaining_gap"]
+                else "operator_review_before_retry_cycle"
+            ),
+            "recommended_action": result["follow_up_action"],
+            "real_execution_allowed": False,
+        }
+        for index, result in enumerate(second_pass_step_results, start=1)
+    ]
+
+    result_signature = json.dumps(
+        {
+            "retry_plan_id": _rw_text(retry_summary.get("retry_plan_id")),
+            "result_ids": [
+                result["result_id"] for result in second_pass_step_results
+            ],
+            "remaining_gap_count": len(remaining_retry_gaps),
+            "blocker_count": len(carry_forward_blocker_results),
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    retry_result_id = (
+        "retry_rehearsal_result_"
+        + hashlib.sha256(result_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "approval_creation_enabled": False,
+        "launch_unlock_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_retry_rehearsal_result_pack_v1",
+        "retry_result_summary": {
+            "retry_result_id": retry_result_id,
+            "mode": "deterministic_retry_rehearsal_result_second_pass_dry_run_result_preview",
+            "source_retry_plan_id": _rw_text(
+                retry_summary.get("retry_plan_id")
+            ),
+            "source_retry_scope_mode": _rw_text(
+                retry_scope.get("scope_mode")
+            ),
+            "result_status": (
+                "blocked_pending_operator_review"
+                if remaining_retry_gaps or carry_forward_blocker_results
+                else "deterministic_simulated_pass_pending_review"
+            ),
+            "second_pass_result_count": len(second_pass_step_results),
+            "carry_forward_blocker_result_count": len(
+                carry_forward_blocker_results
+            ),
+            "remaining_retry_gap_count": len(remaining_retry_gaps),
+            "operator_review_required": operator_review_after_retry[
+                "operator_review_required"
+            ],
+            "recommended_next_action": (
+                "Review simulated retry results, resolve remaining gaps, and prepare the next dry-run cycle only."
+            ),
+            "real_retry_performed": False,
+            "real_execution_allowed": False,
+        },
+        "second_pass_step_results": second_pass_step_results,
+        "retry_checkpoint_results": retry_checkpoint_results,
+        "carry_forward_blocker_results": carry_forward_blocker_results,
+        "retry_failure_findings": retry_failure_findings,
+        "operator_review_after_retry": operator_review_after_retry,
+        "remaining_retry_gaps": remaining_retry_gaps,
+        "next_cycle_recommendations": next_cycle_recommendations,
+        "retry_result_quality_checks": {
+            "retry_rehearsal_plan_pack_present": bool(retry_plan_pack),
+            "step_result_count_consistent": len(second_pass_step_results)
+            == len(steps),
+            "all_results_traceable": all(
+                result["result_id"]
+                and result["source_retry_step_id"]
+                and result["source_verification_id"]
+                and result["source_action_id"]
+                for result in second_pass_step_results
+            ),
+            "all_results_execution_disabled": all(
+                not result["real_execution_allowed"]
+                for result in second_pass_step_results
+            ),
+            "checkpoint_results_are_preview_only": not bool(
+                retry_checkpoint_results["checkpoint_execution_performed"]
+            ),
+            "mock_timeline_was_not_executed": not bool(
+                mock_retry_timeline.get("is_real_execution_log")
+            ),
+            "abort_plan_not_executed": not bool(
+                retry_abort_plan.get("real_abort_executed")
+            ),
+            "operator_review_not_persisted": not bool(
+                operator_review_after_retry["operator_log_written"]
+            ),
+            "database_write_performed": False,
+            "real_retry_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_second_pass_retry_result_preview",
+            "retry_result_id": retry_result_id,
+            "source_retry_plan_id": _rw_text(
+                retry_summary.get("retry_plan_id")
+            ),
+            "source_retry_step_ids": [
+                result["source_retry_step_id"]
+                for result in second_pass_step_results
+            ],
+            "result_ids": [
+                result["result_id"] for result in second_pass_step_results
+            ],
+            "is_real_retry_log": False,
+            "is_real_execution_log": False,
+            "database_write_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This audit is a deterministic second-pass retry rehearsal result preview only; no retry, execution, operator log, ticket, approval, or database record was created."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -26157,6 +26531,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_retry_rehearsal_plan_pack"] = (
         _rw_workspace_retry_rehearsal_plan_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_retry_rehearsal_result_pack"] = (
+        _rw_workspace_retry_rehearsal_result_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
