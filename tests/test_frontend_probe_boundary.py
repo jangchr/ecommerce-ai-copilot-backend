@@ -10721,6 +10721,122 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_retry_rehearsal_plan_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace retry rehearsal plan bundle",
+            "PROJECT_WORKSPACE_RETRY_REHEARSAL_PLAN_MARKER",
+            "latestProjectWorkspaceRetryRehearsalPlanPack",
+            "projectWorkspaceRetryRehearsalPlanPackFromWorkspace",
+            "projectWorkspaceExportRetryRehearsalPlanSnapshot",
+            "projectWorkspaceExportRetryRehearsalPlanMarkdown",
+            "renderProjectWorkspaceRetryRehearsalSummaryPanel",
+            "renderProjectWorkspaceSecondPassStepSequencePanel",
+            "renderProjectWorkspaceRetryBlockersOperatorPanel",
+            "renderProjectWorkspaceRetryCheckpointMatrixPanel",
+            "renderProjectWorkspaceRetryTimelineAbortSafetyPanel",
+            "copyProjectWorkspaceRetryRehearsalSummary",
+            "copyProjectWorkspaceRetryScope",
+            "copyProjectWorkspaceSecondPassStepSequence",
+            "copyProjectWorkspaceCarryForwardBlockers",
+            "copyProjectWorkspaceTightenedCheckpointPlan",
+            "copyProjectWorkspaceRetryValidationMatrix",
+            "copyProjectWorkspaceMockRetryTimeline",
+            "copyProjectWorkspaceRetryAbortPlan",
+            "copyProjectWorkspaceFullRetryRehearsalPlanPack",
+            "workspace_retry_rehearsal_plan_pack: projectWorkspaceExportRetryRehearsalPlanSnapshot(workspace)",
+            "Workspace Retry Rehearsal Plan / Second-Pass Runbook",
+            "Retry Rehearsal Summary", "Retry Scope",
+            "Second-Pass Step Sequence", "Carry-Forward Blockers",
+            "Tightened Checkpoint Plan", "Retry Validation Matrix",
+            "Operator Review Before Retry", "Mock Retry Timeline",
+            "Retry Abort Plan", "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.retry_rehearsal_summary", "pack.retry_scope",
+            "pack.second_pass_step_sequence", "pack.carry_forward_blockers",
+            "pack.tightened_checkpoint_plan", "pack.retry_validation_matrix",
+            "pack.operator_review_before_retry", "pack.mock_retry_timeline",
+            "pack.retry_abort_plan", "pack.retry_quality_checks",
+            "pack.audit_preview", "pack.safety_boundaries",
+            "summary.mode", "summary.plan_status",
+            "summary.second_pass_step_count", "summary.carry_forward_blocker_count",
+            "summary.operator_review_required", "summary.recommended_next_action",
+            "summary.real_execution_allowed", "step.retry_step_id",
+            "step.source_verification_id", "step.source_action_id",
+            "step.step_title", "step.step_type", "step.retry_reason",
+            "step.preconditions", "step.dry_run_retry_action",
+            "step.tightened_validation_check", "step.expected_observation",
+            "step.remaining_gap", "step.abort_trigger",
+            "step.retry_eligible", "step.real_execution_allowed",
+            "step.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceVerificationSignoffSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceRetryRehearsalSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceRetryTimelineAbortSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_retry_rehearsal_plan_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "retryPlanPackTitle", "retryPlanSummaryTitle",
+            "retryPlanScopeTitle", "retryPlanStepsTitle",
+            "retryPlanBlockersTitle", "retryPlanCheckpointTitle",
+            "retryPlanValidationMatrixTitle", "retryPlanOperatorReviewTitle",
+            "retryPlanMockTimelineTitle", "retryPlanAbortTitle",
+            "retryPlanAuditTitle", "retryPlanSafetyTitle",
+            "retryPlanCopySummary", "retryPlanCopyScope",
+            "retryPlanCopySteps", "retryPlanCopyBlockers",
+            "retryPlanCopyCheckpoints", "retryPlanCopyMatrix",
+            "retryPlanCopyTimeline", "retryPlanCopyAbort",
+            "retryPlanCopyFull", "retryPlanCopied",
+            "retryPlanCopyFailed", "retryPlanCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace retry rehearsal plan bundle", script)
+            self.assertIn("project_workspace_retry_rehearsal_plan_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceRetryRehearsalPlanSummaryText"):
+            html.index("async function copyProjectWorkspaceRetryRehearsalPlanText")
+        ]
+        for key in [
+            "retryPlanPackTitle", "retryPlanSummaryTitle",
+            "retryPlanScopeTitle", "retryPlanStepsTitle",
+            "retryPlanBlockersTitle", "retryPlanCheckpointTitle",
+            "retryPlanValidationMatrixTitle", "retryPlanOperatorReviewTitle",
+            "retryPlanMockTimelineTitle", "retryPlanAbortTitle",
+            "retryPlanAuditTitle", "retryPlanSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_RETRY_REHEARSAL_PLAN_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Second-pass dry-run preview only", html)
+        self.assertIn("This is not a real retry", html)
+        self.assertIn("No real approval, operator log, or ticket system record is created.", html)
+        self.assertIn("dry-run validation matrix only", html)
+        self.assertIn("not a real execution log", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
