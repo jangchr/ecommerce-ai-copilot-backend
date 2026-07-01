@@ -3617,6 +3617,7 @@
         let latestProjectWorkspaceRetryRehearsalPlanPack = {};
         let latestProjectWorkspaceRetryRehearsalResultPack = {};
         let latestProjectWorkspaceRetryCycleDecisionPack = {};
+        let latestProjectWorkspaceCycleHistoryTimelinePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8910,6 +8911,7 @@
                 latestProjectWorkspaceRetryRehearsalPlanPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_plan_pack || {};
                 latestProjectWorkspaceRetryRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_result_pack || {};
                 latestProjectWorkspaceRetryCycleDecisionPack = latestProjectCreativeDecisionPack.workspace_retry_cycle_decision_pack || {};
+                latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14763,6 +14765,7 @@
         const PROJECT_WORKSPACE_RETRY_REHEARSAL_PLAN_MARKER = 'Project Workspace retry rehearsal plan bundle';
         const PROJECT_WORKSPACE_RETRY_REHEARSAL_RESULT_MARKER = 'Project Workspace retry rehearsal result bundle';
         const PROJECT_WORKSPACE_RETRY_CYCLE_DECISION_MARKER = 'Project Workspace retry cycle decision bundle';
+        const PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER = 'Project Workspace cycle history timeline bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -18491,6 +18494,107 @@
         function copyProjectWorkspaceRetryCycleNextScope() { return copyProjectWorkspaceRetryCycleDecisionText('scope'); }
         function copyProjectWorkspaceFullRetryCycleDecisionPack() { return copyProjectWorkspaceRetryCycleDecisionText('full'); }
 
+        function projectWorkspaceCycleHistoryTimelinePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceCycleHistoryTimelinePack && Object.keys(latestProjectWorkspaceCycleHistoryTimelinePack).length) return latestProjectWorkspaceCycleHistoryTimelinePack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_cycle_history_timeline_pack || {};
+        }
+
+        function projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCycleHistoryTimelinePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER,
+                has_workspace_cycle_history_timeline_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                timeline_summary: pack.timeline_summary || {},
+                timeline_events: Array.isArray(pack.timeline_events) ? pack.timeline_events : [],
+                pack_lineage_map: pack.pack_lineage_map || {},
+                decision_trace_map: pack.decision_trace_map || {},
+                cycle_state_transitions: Array.isArray(pack.cycle_state_transitions) ? pack.cycle_state_transitions : [],
+                carry_forward_trace: Array.isArray(pack.carry_forward_trace) ? pack.carry_forward_trace : [],
+                operator_review_trace: Array.isArray(pack.operator_review_trace) ? pack.operator_review_trace : [],
+                audit_timeline_preview: pack.audit_timeline_preview || {},
+                timeline_quality_checks: pack.timeline_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCycleHistoryTimelineJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceCycleHistoryTimelineSummaryText(pack = projectWorkspaceExportCycleHistoryTimelineSnapshot()) {
+            if (!pack.has_workspace_cycle_history_timeline_pack) return '';
+            const summary = pack.timeline_summary || {};
+            const latest = (pack.timeline_events || [])[Math.max(0, (pack.timeline_events || []).length - 1)] || {};
+            return [
+                t('cycleHistorySummaryTitle'),
+                `${t('cycleHistoryMode')}: ${summary.mode || t('none')}`,
+                `${t('cycleHistoryEventCount')}: ${summary.event_count ?? (pack.timeline_events || []).length}`,
+                `${t('cycleHistoryCurrentPhase')}: ${latest.cycle_phase || t('none')}`,
+                `${t('cycleHistoryLatestStatus')}: ${latest.decision_or_status || summary.timeline_status || t('none')}`,
+                `${t('cycleHistoryRealExecution')}: ${summary.real_execution_allowed === false ? t('cycleHistoryDisabled') : String(summary.real_execution_allowed)}`,
+                `${t('cycleHistoryRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                t('cycleHistoryPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceCycleHistoryTimelineSectionText(titleKey, value) {
+            const body = projectWorkspaceCycleHistoryTimelineJsonText(value);
+            return body ? `## ${t(titleKey)}\n${body}` : '';
+        }
+
+        function projectWorkspaceExportCycleHistoryTimelineMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace);
+            if (!pack.has_workspace_cycle_history_timeline_pack) return '';
+            return [
+                `## ${t('cycleHistoryPackTitle')}`,
+                `## ${t('cycleHistorySummaryTitle')}`,
+                projectWorkspaceCycleHistoryTimelineSummaryText(pack), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryEventsTitle', pack.timeline_events), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryLineageTitle', pack.pack_lineage_map), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryDecisionTraceTitle', pack.decision_trace_map), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryTransitionsTitle', pack.cycle_state_transitions), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryCarryForwardTitle', pack.carry_forward_trace), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryOperatorReviewTitle', pack.operator_review_trace), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryAuditTitle', pack.audit_timeline_preview), '',
+                projectWorkspaceCycleHistoryTimelineSectionText('cycleHistorySafetyTitle', pack.safety_boundaries),
+                t('cycleHistorySafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceCycleHistoryTimelineText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceCycleHistoryTimelineStatus');
+            const pack = projectWorkspaceExportCycleHistoryTimelineSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceCycleHistoryTimelineSummaryText(pack)
+                : kind === 'events' ? projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryEventsTitle', pack.timeline_events)
+                : kind === 'lineage' ? projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryLineageTitle', pack.pack_lineage_map)
+                : kind === 'decision' ? projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryDecisionTraceTitle', pack.decision_trace_map)
+                : kind === 'transitions' ? projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryTransitionsTitle', pack.cycle_state_transitions)
+                : kind === 'carry' ? projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryCarryForwardTitle', pack.carry_forward_trace)
+                : kind === 'operator' ? projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryOperatorReviewTitle', pack.operator_review_trace)
+                : kind === 'audit' ? projectWorkspaceCycleHistoryTimelineSectionText('cycleHistoryAuditTitle', pack.audit_timeline_preview)
+                : projectWorkspaceExportCycleHistoryTimelineMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('cycleHistoryCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('cycleHistoryCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('cycleHistoryCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('cycleHistoryCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceCycleHistorySummary() { return copyProjectWorkspaceCycleHistoryTimelineText('summary'); }
+        function copyProjectWorkspaceCycleHistoryEvents() { return copyProjectWorkspaceCycleHistoryTimelineText('events'); }
+        function copyProjectWorkspaceCycleHistoryLineageMap() { return copyProjectWorkspaceCycleHistoryTimelineText('lineage'); }
+        function copyProjectWorkspaceCycleHistoryDecisionTraceMap() { return copyProjectWorkspaceCycleHistoryTimelineText('decision'); }
+        function copyProjectWorkspaceCycleHistoryStateTransitions() { return copyProjectWorkspaceCycleHistoryTimelineText('transitions'); }
+        function copyProjectWorkspaceCycleHistoryCarryForwardTrace() { return copyProjectWorkspaceCycleHistoryTimelineText('carry'); }
+        function copyProjectWorkspaceCycleHistoryOperatorReviewTrace() { return copyProjectWorkspaceCycleHistoryTimelineText('operator'); }
+        function copyProjectWorkspaceCycleHistoryAuditTimelinePreview() { return copyProjectWorkspaceCycleHistoryTimelineText('audit'); }
+        function copyProjectWorkspaceFullCycleHistoryTimelinePack() { return copyProjectWorkspaceCycleHistoryTimelineText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -21904,6 +22008,35 @@
             return `<div class="section-block" id="projectWorkspaceRetryCycleScopeAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('retryCycleScopeAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('retryCycleScopeAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryCycleNextScope()">${escapeHTML(t('retryCycleCopyScope'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('retryCycleNextScopeTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryCycleDecisionJsonText(pack.next_cycle_scope) || t('retryCycleNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryCycleQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryCycleDecisionJsonText(pack.decision_quality_checks) || t('retryCycleNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryCycleAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryCycleDecisionJsonText(pack.audit_preview) || t('retryCycleNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('retryCycleSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('retryCycleAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('retryCycleSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceCycleHistorySummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace); if (!pack.has_workspace_cycle_history_timeline_pack) return '';
+            const summary = pack.timeline_summary || {};
+            const latest = (pack.timeline_events || [])[Math.max(0, (pack.timeline_events || []).length - 1)] || {};
+            return `<div class="section-block" id="projectWorkspaceCycleHistorySummaryPanel" data-cycle-history-timeline-marker="${PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER}"><div class="section-header"><div><div class="json-key">${escapeHTML(t('cycleHistoryPackTitle'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullCycleHistoryTimelinePack()">${escapeHTML(t('cycleHistoryCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('cycleHistoryMode'), summary.mode || t('none'))}${metricPill(t('cycleHistoryEventCount'), summary.event_count ?? (pack.timeline_events || []).length)}${metricPill(t('cycleHistoryCurrentPhase'), latest.cycle_phase || t('none'))}${metricPill(t('cycleHistoryLatestStatus'), latest.decision_or_status || summary.timeline_status || t('none'))}${metricPill(t('cycleHistoryRealExecution'), summary.real_execution_allowed === false ? t('cycleHistoryDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineSummaryText(pack) || t('cycleHistoryNoData'))}</pre><div class="field-helper">${escapeHTML(t('cycleHistoryPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceCycleHistoryTimelineStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistorySummary()">${escapeHTML(t('cycleHistoryCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceCycleHistoryEventsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace); if (!pack.has_workspace_cycle_history_timeline_pack) return '';
+            const cards = (pack.timeline_events || []).map((event) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(event.event_order || '')}. ${escapeHTML(event.event_title || event.event_id || t('cycleHistoryEventsTitle'))}</strong><span class="metric-pill">${escapeHTML(event.event_type || t('none'))}</span></div><div><strong>${escapeHTML(t('cycleHistoryEventId'))}:</strong> ${escapeHTML(event.event_id || t('none'))}</div><div><strong>${escapeHTML(t('cycleHistorySourcePack'))}:</strong> ${escapeHTML(event.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('cycleHistoryCyclePhase'))}:</strong> ${escapeHTML(event.cycle_phase || t('none'))}</div><div><strong>${escapeHTML(t('cycleHistoryDecisionStatus'))}:</strong> ${escapeHTML(event.decision_or_status || t('none'))}</div><div><strong>${escapeHTML(t('cycleHistoryRealExecution'))}:</strong> ${escapeHTML(event.real_execution_allowed === false ? t('cycleHistoryDisabled') : String(event.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText({source_keys:event.source_keys||[],summary:event.summary||'',input_refs:event.input_refs||[],output_refs:event.output_refs||[],risk_note:event.risk_note||''}) || t('cycleHistoryNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceCycleHistoryEventsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('cycleHistoryEventsTitle'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryEventsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryEvents()">${escapeHTML(t('cycleHistoryCopyEvents'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('cycleHistoryNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceCycleHistoryLineageTracePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace); if (!pack.has_workspace_cycle_history_timeline_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceCycleHistoryLineageTracePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('cycleHistoryLineageTraceTitle'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryLineageTraceHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryLineageMap()">${escapeHTML(t('cycleHistoryCopyLineage'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryDecisionTraceMap()">${escapeHTML(t('cycleHistoryCopyDecisionTrace'))}</button></div></div><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryFlowTitle'))}</strong><div class="field-helper">readiness -> rehearsal -> result -> remediation -> verification -> retry -> cycle decision</div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryLineageTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.pack_lineage_map) || t('cycleHistoryNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryDecisionTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.decision_trace_map) || t('cycleHistoryNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('cycleHistoryTraceNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceCycleHistoryStateTracePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace); if (!pack.has_workspace_cycle_history_timeline_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceCycleHistoryStateTracePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('cycleHistoryStateTraceTitle'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryStateTraceHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryStateTransitions()">${escapeHTML(t('cycleHistoryCopyTransitions'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryCarryForwardTrace()">${escapeHTML(t('cycleHistoryCopyCarry'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryOperatorReviewTrace()">${escapeHTML(t('cycleHistoryCopyOperator'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryTransitionsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.cycle_state_transitions) || t('cycleHistoryNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryCarryForwardTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.carry_forward_trace) || t('cycleHistoryNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryOperatorReviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.operator_review_trace) || t('cycleHistoryNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('cycleHistoryOperatorNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceCycleHistoryAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace); if (!pack.has_workspace_cycle_history_timeline_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('cycleHistoryDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceCycleHistoryAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('cycleHistoryAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryAuditTimelinePreview()">${escapeHTML(t('cycleHistoryCopyAudit'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.audit_timeline_preview) || t('cycleHistoryNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.timeline_quality_checks) || t('cycleHistoryNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('cycleHistorySafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('cycleHistorySafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -22412,6 +22545,8 @@
                 '',
                 projectWorkspaceExportRetryCycleDecisionMarkdown(workspace),
                 '',
+                projectWorkspaceExportCycleHistoryTimelineMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -22510,6 +22645,7 @@
                 workspace_retry_rehearsal_plan_pack: projectWorkspaceExportRetryRehearsalPlanSnapshot(workspace),
                 workspace_retry_rehearsal_result_pack: projectWorkspaceExportRetryRehearsalResultSnapshot(workspace),
                 workspace_retry_cycle_decision_pack: projectWorkspaceExportRetryCycleDecisionSnapshot(workspace),
+                workspace_cycle_history_timeline_pack: projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -34991,6 +35127,11 @@
                     ${renderProjectWorkspaceRetryCycleGateActionPanel(workspace)}
                     ${renderProjectWorkspaceRetryCycleCarryManualPanel(workspace)}
                     ${renderProjectWorkspaceRetryCycleScopeAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceCycleHistorySummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCycleHistoryEventsPanel(workspace)}
+                    ${renderProjectWorkspaceCycleHistoryLineageTracePanel(workspace)}
+                    ${renderProjectWorkspaceCycleHistoryStateTracePanel(workspace)}
+                    ${renderProjectWorkspaceCycleHistoryAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -44276,6 +44417,112 @@
             retryCycleCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u91cd\u8bd5\u8f6e\u6b21\u51b3\u7b56\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCycleHistoryTimelineMarker: 'Project Workspace cycle history timeline bundle',
+            cycleHistoryPackTitle: 'Workspace Cycle History / Decision Timeline',
+            cycleHistoryPackHelper: 'Review deterministic cycle-history preview derived from workspace packs without reading a real history database.',
+            cycleHistorySummaryTitle: 'Cycle History Summary',
+            cycleHistoryEventsTitle: 'Timeline Events',
+            cycleHistoryLineageTitle: 'Pack Lineage Map',
+            cycleHistoryDecisionTraceTitle: 'Decision Trace Map',
+            cycleHistoryTransitionsTitle: 'Cycle State Transitions',
+            cycleHistoryCarryForwardTitle: 'Carry-Forward Trace',
+            cycleHistoryOperatorReviewTitle: 'Operator Review Trace',
+            cycleHistoryAuditTitle: 'Audit Timeline Preview',
+            cycleHistorySafetyTitle: 'Safety Boundaries',
+            cycleHistoryMode: 'Mode',
+            cycleHistoryEventCount: 'Total events',
+            cycleHistoryCurrentPhase: 'Current cycle phase',
+            cycleHistoryLatestStatus: 'Latest decision/status',
+            cycleHistoryRealExecution: 'Real execution',
+            cycleHistoryDisabled: 'disabled',
+            cycleHistoryRecommendedNextAction: 'Recommended next action',
+            cycleHistoryPreviewNote: 'Cycle history preview only. This is not a real history database and does not read external history tables.',
+            cycleHistoryNoData: 'No workspace cycle history timeline data is available.',
+            cycleHistoryCopyNoData: 'No workspace cycle history timeline content is available to copy.',
+            cycleHistoryCopyFailed: 'Unable to copy workspace cycle history timeline content.',
+            cycleHistoryCopied: 'Workspace cycle history timeline content copied.',
+            cycleHistoryCopySummary: 'Copy timeline summary',
+            cycleHistoryCopyEvents: 'Copy timeline events',
+            cycleHistoryCopyLineage: 'Copy pack lineage map',
+            cycleHistoryCopyDecisionTrace: 'Copy decision trace map',
+            cycleHistoryCopyTransitions: 'Copy cycle state transitions',
+            cycleHistoryCopyCarry: 'Copy carry-forward trace',
+            cycleHistoryCopyOperator: 'Copy operator review trace',
+            cycleHistoryCopyAudit: 'Copy audit timeline preview',
+            cycleHistoryCopyFull: 'Copy full cycle history timeline pack',
+            cycleHistoryEventsHelper: 'Inspect ordered decision timeline events and their source packs, inputs, outputs, and risk notes.',
+            cycleHistoryEventId: 'Event ID',
+            cycleHistorySourcePack: 'Source pack',
+            cycleHistoryCyclePhase: 'Cycle phase',
+            cycleHistoryDecisionStatus: 'Decision/status',
+            cycleHistoryLineageTraceTitle: 'Pack Lineage / Decision Trace',
+            cycleHistoryLineageTraceHelper: 'Trace readiness -> rehearsal -> result -> remediation -> verification -> retry -> cycle decision without reading real history tables.',
+            cycleHistoryFlowTitle: 'Deterministic lineage flow',
+            cycleHistoryTraceNote: 'Deterministic trace only. No real history table is read.',
+            cycleHistoryStateTraceTitle: 'Cycle State / Carry-Forward / Operator Review Trace',
+            cycleHistoryStateTraceHelper: 'Review preview state transitions, blocker carry-forward, and operator review traces.',
+            cycleHistoryOperatorNote: 'Operator review trace is preview-only. No real approval, ticket, operator log, or database record is created.',
+            cycleHistoryAuditSafetyTitle: 'Audit Timeline / Quality / Safety Boundaries',
+            cycleHistoryAuditSafetyHelper: 'Inspect audit preview and quality checks while all real capabilities remain disabled.',
+            cycleHistoryQualityTitle: 'Timeline Quality Checks',
+            cycleHistoryAuditNoWriteNote: 'Audit timeline preview is not written to a database and does not read real history tables.',
+            cycleHistorySafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCycleHistoryTimelineMarker: 'Project Workspace cycle history timeline bundle',
+            cycleHistoryPackTitle: '\u5de5\u4f5c\u533a\u8f6e\u6b21\u5386\u53f2 / \u51b3\u7b56\u65f6\u95f4\u7ebf',
+            cycleHistoryPackHelper: '\u68c0\u67e5\u7531\u5de5\u4f5c\u533a pack \u6d3e\u751f\u7684\u786e\u5b9a\u6027\u8f6e\u6b21\u5386\u53f2\u9884\u89c8\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u5386\u53f2\u6570\u636e\u5e93\u3002',
+            cycleHistorySummaryTitle: '\u8f6e\u6b21\u5386\u53f2\u6458\u8981',
+            cycleHistoryEventsTitle: '\u65f6\u95f4\u7ebf\u4e8b\u4ef6',
+            cycleHistoryLineageTitle: 'Pack \u6765\u6e90\u56fe',
+            cycleHistoryDecisionTraceTitle: '\u51b3\u7b56\u8ffd\u8e2a\u56fe',
+            cycleHistoryTransitionsTitle: '\u8f6e\u6b21\u72b6\u6001\u8fc1\u79fb',
+            cycleHistoryCarryForwardTitle: '\u5ef6\u7eed\u8ffd\u8e2a',
+            cycleHistoryOperatorReviewTitle: '\u64cd\u4f5c\u5458\u5ba1\u9605\u8ffd\u8e2a',
+            cycleHistoryAuditTitle: '\u5ba1\u8ba1\u65f6\u95f4\u7ebf\u9884\u89c8',
+            cycleHistorySafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            cycleHistoryMode: '\u6a21\u5f0f',
+            cycleHistoryEventCount: '\u4e8b\u4ef6\u603b\u6570',
+            cycleHistoryCurrentPhase: '\u5f53\u524d\u8f6e\u6b21\u9636\u6bb5',
+            cycleHistoryLatestStatus: '\u6700\u65b0\u51b3\u7b56/\u72b6\u6001',
+            cycleHistoryRealExecution: '\u771f\u5b9e\u6267\u884c',
+            cycleHistoryDisabled: '\u5df2\u7981\u7528',
+            cycleHistoryRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            cycleHistoryPreviewNote: '\u4ec5\u4e3a\u8f6e\u6b21\u5386\u53f2\u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u5386\u53f2\u6570\u636e\u5e93\uff0c\u4e5f\u4e0d\u8bfb\u53d6\u5916\u90e8\u5386\u53f2\u8868\u3002',
+            cycleHistoryNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u8f6e\u6b21\u5386\u53f2\u65f6\u95f4\u7ebf\u6570\u636e\u3002',
+            cycleHistoryCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u8f6e\u6b21\u5386\u53f2\u65f6\u95f4\u7ebf\u5185\u5bb9\u3002',
+            cycleHistoryCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u8f6e\u6b21\u5386\u53f2\u65f6\u95f4\u7ebf\u5185\u5bb9\u3002',
+            cycleHistoryCopied: '\u5de5\u4f5c\u533a\u8f6e\u6b21\u5386\u53f2\u65f6\u95f4\u7ebf\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            cycleHistoryCopySummary: '\u590d\u5236\u65f6\u95f4\u7ebf\u6458\u8981',
+            cycleHistoryCopyEvents: '\u590d\u5236\u65f6\u95f4\u7ebf\u4e8b\u4ef6',
+            cycleHistoryCopyLineage: '\u590d\u5236 pack \u6765\u6e90\u56fe',
+            cycleHistoryCopyDecisionTrace: '\u590d\u5236\u51b3\u7b56\u8ffd\u8e2a\u56fe',
+            cycleHistoryCopyTransitions: '\u590d\u5236\u8f6e\u6b21\u72b6\u6001\u8fc1\u79fb',
+            cycleHistoryCopyCarry: '\u590d\u5236\u5ef6\u7eed\u8ffd\u8e2a',
+            cycleHistoryCopyOperator: '\u590d\u5236\u64cd\u4f5c\u5458\u5ba1\u9605\u8ffd\u8e2a',
+            cycleHistoryCopyAudit: '\u590d\u5236\u5ba1\u8ba1\u65f6\u95f4\u7ebf\u9884\u89c8',
+            cycleHistoryCopyFull: '\u590d\u5236\u5b8c\u6574\u8f6e\u6b21\u5386\u53f2\u65f6\u95f4\u7ebf pack',
+            cycleHistoryEventsHelper: '\u68c0\u67e5\u6709\u5e8f\u51b3\u7b56\u65f6\u95f4\u7ebf\u4e8b\u4ef6\u53ca\u5176\u6765\u6e90 pack\u3001\u8f93\u5165\u3001\u8f93\u51fa\u548c\u98ce\u9669\u8bf4\u660e\u3002',
+            cycleHistoryEventId: '\u4e8b\u4ef6 ID',
+            cycleHistorySourcePack: '\u6765\u6e90 pack',
+            cycleHistoryCyclePhase: '\u8f6e\u6b21\u9636\u6bb5',
+            cycleHistoryDecisionStatus: '\u51b3\u7b56/\u72b6\u6001',
+            cycleHistoryLineageTraceTitle: 'Pack \u6765\u6e90 / \u51b3\u7b56\u8ffd\u8e2a',
+            cycleHistoryLineageTraceHelper: '\u8ffd\u8e2a readiness -> rehearsal -> result -> remediation -> verification -> retry -> cycle decision\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u5386\u53f2\u8868\u3002',
+            cycleHistoryFlowTitle: '\u786e\u5b9a\u6027\u6765\u6e90\u6d41',
+            cycleHistoryTraceNote: '\u4ec5\u4e3a\u786e\u5b9a\u6027\u8ffd\u8e2a\u3002\u4e0d\u8bfb\u53d6\u771f\u5b9e\u5386\u53f2\u8868\u3002',
+            cycleHistoryStateTraceTitle: '\u8f6e\u6b21\u72b6\u6001 / \u5ef6\u7eed / \u64cd\u4f5c\u5458\u5ba1\u9605\u8ffd\u8e2a',
+            cycleHistoryStateTraceHelper: '\u68c0\u67e5\u9884\u89c8\u72b6\u6001\u8fc1\u79fb\u3001\u963b\u585e\u5ef6\u7eed\u548c\u64cd\u4f5c\u5458\u5ba1\u9605\u8ffd\u8e2a\u3002',
+            cycleHistoryOperatorNote: '\u64cd\u4f5c\u5458\u5ba1\u9605\u8ffd\u8e2a\u4ec5\u4e3a\u9884\u89c8\u3002\u4e0d\u521b\u5efa\u771f\u5b9e\u5ba1\u6279\u3001\u5de5\u5355\u3001\u64cd\u4f5c\u5458\u65e5\u5fd7\u6216\u6570\u636e\u5e93\u8bb0\u5f55\u3002',
+            cycleHistoryAuditSafetyTitle: '\u5ba1\u8ba1\u65f6\u95f4\u7ebf / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            cycleHistoryAuditSafetyHelper: '\u68c0\u67e5\u5ba1\u8ba1\u9884\u89c8\u548c\u8d28\u91cf\u68c0\u67e5\uff0c\u540c\u65f6\u6240\u6709\u771f\u5b9e\u80fd\u529b\u4fdd\u6301\u7981\u7528\u3002',
+            cycleHistoryQualityTitle: '\u65f6\u95f4\u7ebf\u8d28\u91cf\u68c0\u67e5',
+            cycleHistoryAuditNoWriteNote: '\u5ba1\u8ba1\u65f6\u95f4\u7ebf\u9884\u89c8\u4e0d\u5199\u5165\u6570\u636e\u5e93\uff0c\u4e5f\u4e0d\u8bfb\u53d6\u771f\u5b9e\u5386\u53f2\u8868\u3002',
+            cycleHistorySafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -45686,6 +45933,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceRetryRehearsalPlanPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_plan_pack || {};
     latestProjectWorkspaceRetryRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_result_pack || {};
     latestProjectWorkspaceRetryCycleDecisionPack = latestProjectCreativeDecisionPack.workspace_retry_cycle_decision_pack || {};
+    latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

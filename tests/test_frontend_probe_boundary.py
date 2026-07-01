@@ -11068,6 +11068,115 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_cycle_history_timeline_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace cycle history timeline bundle",
+            "PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER",
+            "latestProjectWorkspaceCycleHistoryTimelinePack",
+            "projectWorkspaceCycleHistoryTimelinePackFromWorkspace",
+            "projectWorkspaceExportCycleHistoryTimelineSnapshot",
+            "projectWorkspaceExportCycleHistoryTimelineMarkdown",
+            "renderProjectWorkspaceCycleHistorySummaryPanel",
+            "renderProjectWorkspaceCycleHistoryEventsPanel",
+            "renderProjectWorkspaceCycleHistoryLineageTracePanel",
+            "renderProjectWorkspaceCycleHistoryStateTracePanel",
+            "renderProjectWorkspaceCycleHistoryAuditSafetyPanel",
+            "copyProjectWorkspaceCycleHistorySummary",
+            "copyProjectWorkspaceCycleHistoryEvents",
+            "copyProjectWorkspaceCycleHistoryLineageMap",
+            "copyProjectWorkspaceCycleHistoryDecisionTraceMap",
+            "copyProjectWorkspaceCycleHistoryStateTransitions",
+            "copyProjectWorkspaceCycleHistoryCarryForwardTrace",
+            "copyProjectWorkspaceCycleHistoryOperatorReviewTrace",
+            "copyProjectWorkspaceCycleHistoryAuditTimelinePreview",
+            "copyProjectWorkspaceFullCycleHistoryTimelinePack",
+            "workspace_cycle_history_timeline_pack: projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace)",
+            "Workspace Cycle History / Decision Timeline",
+            "Cycle History Summary", "Timeline Events",
+            "Pack Lineage Map", "Decision Trace Map",
+            "Cycle State Transitions", "Carry-Forward Trace",
+            "Operator Review Trace", "Audit Timeline Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.timeline_summary", "pack.timeline_events",
+            "pack.pack_lineage_map", "pack.decision_trace_map",
+            "pack.cycle_state_transitions", "pack.carry_forward_trace",
+            "pack.operator_review_trace", "pack.audit_timeline_preview",
+            "pack.timeline_quality_checks", "pack.safety_boundaries",
+            "summary.mode", "summary.event_count",
+            "summary.real_execution_allowed", "event.event_id",
+            "event.event_order", "event.event_type", "event.event_title",
+            "event.source_pack", "event.source_keys", "event.cycle_phase",
+            "event.decision_or_status", "event.summary", "event.input_refs",
+            "event.output_refs", "event.real_execution_allowed",
+            "event.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceRetryCycleScopeAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceCycleHistorySummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceCycleHistoryAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_cycle_history_timeline_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "cycleHistoryPackTitle", "cycleHistorySummaryTitle",
+            "cycleHistoryEventsTitle", "cycleHistoryLineageTitle",
+            "cycleHistoryDecisionTraceTitle", "cycleHistoryTransitionsTitle",
+            "cycleHistoryCarryForwardTitle", "cycleHistoryOperatorReviewTitle",
+            "cycleHistoryAuditTitle", "cycleHistorySafetyTitle",
+            "cycleHistoryCopySummary", "cycleHistoryCopyEvents",
+            "cycleHistoryCopyLineage", "cycleHistoryCopyDecisionTrace",
+            "cycleHistoryCopyTransitions", "cycleHistoryCopyCarry",
+            "cycleHistoryCopyOperator", "cycleHistoryCopyAudit",
+            "cycleHistoryCopyFull", "cycleHistoryCopied",
+            "cycleHistoryCopyFailed", "cycleHistoryCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace cycle history timeline bundle", script)
+            self.assertIn("project_workspace_cycle_history_timeline_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceCycleHistoryTimelineSummaryText"):
+            html.index("async function copyProjectWorkspaceCycleHistoryTimelineText")
+        ]
+        for key in [
+            "cycleHistoryPackTitle", "cycleHistorySummaryTitle",
+            "cycleHistoryEventsTitle", "cycleHistoryLineageTitle",
+            "cycleHistoryDecisionTraceTitle", "cycleHistoryTransitionsTitle",
+            "cycleHistoryCarryForwardTitle", "cycleHistoryOperatorReviewTitle",
+            "cycleHistoryAuditTitle", "cycleHistorySafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Cycle history preview only", html)
+        self.assertIn("not a real history database", html)
+        self.assertIn("No real history table is read", html)
+        self.assertIn("No real approval, ticket, operator log, or database record is created.", html)
+        self.assertIn("does not read real history tables", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
