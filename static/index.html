@@ -3615,6 +3615,7 @@
         let latestProjectWorkspaceRehearsalRemediationPack = {};
         let latestProjectWorkspaceRemediationVerificationPack = {};
         let latestProjectWorkspaceRetryRehearsalPlanPack = {};
+        let latestProjectWorkspaceRetryRehearsalResultPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8906,6 +8907,7 @@
                 latestProjectWorkspaceRehearsalRemediationPack = latestProjectCreativeDecisionPack.workspace_rehearsal_remediation_pack || {};
                 latestProjectWorkspaceRemediationVerificationPack = latestProjectCreativeDecisionPack.workspace_remediation_verification_pack || {};
                 latestProjectWorkspaceRetryRehearsalPlanPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_plan_pack || {};
+                latestProjectWorkspaceRetryRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_result_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14757,6 +14759,7 @@
         const PROJECT_WORKSPACE_REHEARSAL_REMEDIATION_MARKER = 'Project Workspace rehearsal remediation bundle';
         const PROJECT_WORKSPACE_REMEDIATION_VERIFICATION_MARKER = 'Project Workspace remediation verification bundle';
         const PROJECT_WORKSPACE_RETRY_REHEARSAL_PLAN_MARKER = 'Project Workspace retry rehearsal plan bundle';
+        const PROJECT_WORKSPACE_RETRY_REHEARSAL_RESULT_MARKER = 'Project Workspace retry rehearsal result bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -18271,6 +18274,115 @@
         function copyProjectWorkspaceRetryAbortPlan() { return copyProjectWorkspaceRetryRehearsalPlanText('abort'); }
         function copyProjectWorkspaceFullRetryRehearsalPlanPack() { return copyProjectWorkspaceRetryRehearsalPlanText('full'); }
 
+        function projectWorkspaceRetryRehearsalResultPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceRetryRehearsalResultPack && Object.keys(latestProjectWorkspaceRetryRehearsalResultPack).length) return latestProjectWorkspaceRetryRehearsalResultPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_retry_rehearsal_result_pack || {};
+        }
+
+        function projectWorkspaceExportRetryRehearsalResultSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceRetryRehearsalResultPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_RETRY_REHEARSAL_RESULT_MARKER,
+                has_workspace_retry_rehearsal_result_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                retry_result_summary: pack.retry_result_summary || {},
+                second_pass_step_results: Array.isArray(pack.second_pass_step_results) ? pack.second_pass_step_results : [],
+                retry_checkpoint_results: pack.retry_checkpoint_results || {},
+                carry_forward_blocker_results: Array.isArray(pack.carry_forward_blocker_results) ? pack.carry_forward_blocker_results : [],
+                retry_failure_findings: Array.isArray(pack.retry_failure_findings) ? pack.retry_failure_findings : [],
+                operator_review_after_retry: pack.operator_review_after_retry || {},
+                remaining_retry_gaps: Array.isArray(pack.remaining_retry_gaps) ? pack.remaining_retry_gaps : [],
+                next_cycle_recommendations: Array.isArray(pack.next_cycle_recommendations) ? pack.next_cycle_recommendations : [],
+                retry_result_quality_checks: pack.retry_result_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceRetryRehearsalResultJsonText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value) && !value.length) return '';
+            if (typeof value === 'object' && !Object.keys(value).length) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceRetryRehearsalResultSummaryText(pack = projectWorkspaceExportRetryRehearsalResultSnapshot()) {
+            if (!pack.has_workspace_retry_rehearsal_result_pack) return '';
+            const summary = pack.retry_result_summary || {};
+            const statusCounts = (pack.second_pass_step_results || []).reduce((acc, result) => {
+                const key = result.simulated_retry_status || 'unknown';
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+            }, {});
+            return [
+                t('retryResultSummaryTitle'),
+                `${t('retryResultMode')}: ${summary.mode || t('none')}`,
+                `${t('retryResultStatus')}: ${summary.result_status || t('none')}`,
+                `${t('retryResultStatusCounts')}: ${JSON.stringify(statusCounts)}`,
+                `${t('retryResultStepCount')}: ${summary.second_pass_result_count ?? 0}`,
+                `${t('retryResultGapCount')}: ${summary.remaining_retry_gap_count ?? 0}`,
+                `${t('retryResultOperatorReviewRequired')}: ${String(summary.operator_review_required === true)}`,
+                `${t('retryResultRealExecution')}: ${summary.real_execution_allowed === false ? t('retryResultDisabled') : String(summary.real_execution_allowed)}`,
+                `${t('retryResultRecommendedNextAction')}: ${summary.recommended_next_action || t('none')}`,
+                t('retryResultPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceRetryRehearsalResultSectionText(titleKey, value) {
+            const body = projectWorkspaceRetryRehearsalResultJsonText(value);
+            return body ? `## ${t(titleKey)}\n${body}` : '';
+        }
+
+        function projectWorkspaceExportRetryRehearsalResultMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRetryRehearsalResultSnapshot(workspace);
+            if (!pack.has_workspace_retry_rehearsal_result_pack) return '';
+            return [
+                `## ${t('retryResultPackTitle')}`,
+                `## ${t('retryResultSummaryTitle')}`,
+                projectWorkspaceRetryRehearsalResultSummaryText(pack), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultStepsTitle', pack.second_pass_step_results), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultCheckpointTitle', pack.retry_checkpoint_results), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultFailureTitle', pack.retry_failure_findings), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultBlockerTitle', pack.carry_forward_blocker_results), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultOperatorReviewTitle', pack.operator_review_after_retry), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultRemainingGapsTitle', pack.remaining_retry_gaps), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultNextCycleTitle', pack.next_cycle_recommendations), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultAuditTitle', pack.audit_preview), '',
+                projectWorkspaceRetryRehearsalResultSectionText('retryResultSafetyTitle', pack.safety_boundaries),
+                t('retryResultSafetyNote')
+            ].join('\n');
+        }
+
+        async function copyProjectWorkspaceRetryRehearsalResultText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceRetryRehearsalResultStatus');
+            const pack = projectWorkspaceExportRetryRehearsalResultSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceRetryRehearsalResultSummaryText(pack)
+                : kind === 'steps' ? projectWorkspaceRetryRehearsalResultSectionText('retryResultStepsTitle', pack.second_pass_step_results)
+                : kind === 'checkpoints' ? projectWorkspaceRetryRehearsalResultSectionText('retryResultCheckpointTitle', pack.retry_checkpoint_results)
+                : kind === 'failures' ? projectWorkspaceRetryRehearsalResultSectionText('retryResultFailureTitle', pack.retry_failure_findings)
+                : kind === 'blockers' ? projectWorkspaceRetryRehearsalResultSectionText('retryResultBlockerTitle', pack.carry_forward_blocker_results)
+                : kind === 'gaps' ? projectWorkspaceRetryRehearsalResultSectionText('retryResultRemainingGapsTitle', pack.remaining_retry_gaps)
+                : kind === 'next' ? projectWorkspaceRetryRehearsalResultSectionText('retryResultNextCycleTitle', pack.next_cycle_recommendations)
+                : kind === 'audit' ? projectWorkspaceRetryRehearsalResultSectionText('retryResultAuditTitle', pack.audit_preview)
+                : projectWorkspaceExportRetryRehearsalResultMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('retryResultCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('retryResultCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('retryResultCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('retryResultCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceRetryResultSummary() { return copyProjectWorkspaceRetryRehearsalResultText('summary'); }
+        function copyProjectWorkspaceSecondPassStepResults() { return copyProjectWorkspaceRetryRehearsalResultText('steps'); }
+        function copyProjectWorkspaceRetryCheckpointResults() { return copyProjectWorkspaceRetryRehearsalResultText('checkpoints'); }
+        function copyProjectWorkspaceRetryFailureFindings() { return copyProjectWorkspaceRetryRehearsalResultText('failures'); }
+        function copyProjectWorkspaceCarryForwardBlockerResults() { return copyProjectWorkspaceRetryRehearsalResultText('blockers'); }
+        function copyProjectWorkspaceRemainingRetryGaps() { return copyProjectWorkspaceRetryRehearsalResultText('gaps'); }
+        function copyProjectWorkspaceNextCycleRecommendations() { return copyProjectWorkspaceRetryRehearsalResultText('next'); }
+        function copyProjectWorkspaceRetryResultAuditPreview() { return copyProjectWorkspaceRetryRehearsalResultText('audit'); }
+        function copyProjectWorkspaceFullRetryRehearsalResultPack() { return copyProjectWorkspaceRetryRehearsalResultText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -21626,6 +21738,35 @@
             return `<div class="section-block" id="projectWorkspaceRetryTimelineAbortSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('retryPlanTimelineAbortSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('retryPlanTimelineAbortSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMockRetryTimeline()">${escapeHTML(t('retryPlanCopyTimeline'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryAbortPlan()">${escapeHTML(t('retryPlanCopyAbort'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('retryPlanMockTimelineTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalPlanJsonText(pack.mock_retry_timeline) || t('retryPlanNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryPlanAbortTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalPlanJsonText(pack.retry_abort_plan) || t('retryPlanNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryPlanQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalPlanJsonText(pack.retry_quality_checks) || t('retryPlanNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryPlanAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalPlanJsonText(pack.audit_preview) || t('retryPlanNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('retryPlanSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('retryPlanMockTimelineNote'))}</div><div class="field-helper">${escapeHTML(t('retryPlanSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceRetryResultSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRetryRehearsalResultSnapshot(workspace); if (!pack.has_workspace_retry_rehearsal_result_pack) return '';
+            const summary = pack.retry_result_summary || {};
+            const statusCounts = (pack.second_pass_step_results || []).reduce((acc, result) => { const key = result.simulated_retry_status || 'unknown'; acc[key] = (acc[key] || 0) + 1; return acc; }, {});
+            return `<div class="section-block" id="projectWorkspaceRetryResultSummaryPanel" data-retry-rehearsal-result-marker="${PROJECT_WORKSPACE_RETRY_REHEARSAL_RESULT_MARKER}"><div class="section-header"><div><div class="json-key">${escapeHTML(t('retryResultPackTitle'))}</div><div class="field-helper">${escapeHTML(t('retryResultPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullRetryRehearsalResultPack()">${escapeHTML(t('retryResultCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('retryResultMode'), summary.mode || t('none'))}${metricPill(t('retryResultStatus'), summary.result_status || t('none'))}${metricPill(t('retryResultStepCount'), summary.second_pass_result_count ?? 0)}${metricPill(t('retryResultGapCount'), summary.remaining_retry_gap_count ?? 0)}${metricPill(t('retryResultRealExecution'), summary.real_execution_allowed === false ? t('retryResultDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(statusCounts) || t('retryResultNoData'))}</pre><div class="demo-warning"><strong>${escapeHTML(t('retryResultRecommendedNextAction'))}:</strong> ${escapeHTML(summary.recommended_next_action || t('none'))}</div><div class="field-helper">${escapeHTML(t('retryResultPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceRetryRehearsalResultStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryResultSummary()">${escapeHTML(t('retryResultCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceSecondPassStepResultsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRetryRehearsalResultSnapshot(workspace); if (!pack.has_workspace_retry_rehearsal_result_pack) return '';
+            const cards = (pack.second_pass_step_results || []).map((result) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(result.result_id || t('retryResultStepsTitle'))}</strong><span class="metric-pill">${escapeHTML(result.simulated_retry_status || t('none'))}</span></div><div><strong>${escapeHTML(t('retryResultSourceRetryStep'))}:</strong> ${escapeHTML(result.source_retry_step_id || t('none'))}</div><div><strong>${escapeHTML(t('retryResultSourceVerification'))}:</strong> ${escapeHTML(result.source_verification_id || t('none'))}</div><div><strong>${escapeHTML(t('retryResultSourceAction'))}:</strong> ${escapeHTML(result.source_action_id || t('none'))}</div><div><strong>${escapeHTML(t('retryResultStepTitle'))}:</strong> ${escapeHTML(result.step_title || t('none'))}</div><div><strong>${escapeHTML(t('retryResultStepType'))}:</strong> ${escapeHTML(result.step_type || t('none'))}</div><div><strong>${escapeHTML(t('retryResultRealExecution'))}:</strong> ${escapeHTML(result.real_execution_allowed === false ? t('retryResultDisabled') : String(result.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText({expected_observation:result.expected_observation||'',observed_placeholder:result.observed_placeholder||'',tightened_validation_result:result.tightened_validation_result||'',remaining_gap:result.remaining_gap||'',operator_review_required:result.operator_review_required===true,follow_up_action:result.follow_up_action||'',risk_note:result.risk_note||''}) || t('retryResultNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceSecondPassStepResultsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('retryResultStepsTitle'))}</div><div class="field-helper">${escapeHTML(t('retryResultStepsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSecondPassStepResults()">${escapeHTML(t('retryResultCopySteps'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('retryResultNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceRetryCheckpointFailurePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRetryRehearsalResultSnapshot(workspace); if (!pack.has_workspace_retry_rehearsal_result_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceRetryCheckpointFailurePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('retryResultCheckpointFailureTitle'))}</div><div class="field-helper">${escapeHTML(t('retryResultCheckpointFailureHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryCheckpointResults()">${escapeHTML(t('retryResultCopyCheckpoints'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryFailureFindings()">${escapeHTML(t('retryResultCopyFailures'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('retryResultCheckpointTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.retry_checkpoint_results) || t('retryResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryResultFailureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.retry_failure_findings) || t('retryResultNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('retryResultNoRealCompletionNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceRetryOperatorGapsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRetryRehearsalResultSnapshot(workspace); if (!pack.has_workspace_retry_rehearsal_result_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceRetryOperatorGapsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('retryResultOperatorGapsTitle'))}</div><div class="field-helper">${escapeHTML(t('retryResultOperatorGapsHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCarryForwardBlockerResults()">${escapeHTML(t('retryResultCopyBlockers'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRemainingRetryGaps()">${escapeHTML(t('retryResultCopyGaps'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNextCycleRecommendations()">${escapeHTML(t('retryResultCopyNext'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('retryResultBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.carry_forward_blocker_results) || t('retryResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryResultOperatorReviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.operator_review_after_retry) || t('retryResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryResultRemainingGapsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.remaining_retry_gaps) || t('retryResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryResultNextCycleTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.next_cycle_recommendations) || t('retryResultNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('retryResultOperatorPreviewNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceRetryResultAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRetryRehearsalResultSnapshot(workspace); if (!pack.has_workspace_retry_rehearsal_result_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('retryResultDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceRetryResultAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('retryResultAuditQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('retryResultAuditQualitySafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryResultAuditPreview()">${escapeHTML(t('retryResultCopyAudit'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('retryResultAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.audit_preview) || t('retryResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('retryResultQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRetryRehearsalResultJsonText(pack.retry_result_quality_checks) || t('retryResultNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('retryResultSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('retryResultAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('retryResultSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -22130,6 +22271,8 @@
                 '',
                 projectWorkspaceExportRetryRehearsalPlanMarkdown(workspace),
                 '',
+                projectWorkspaceExportRetryRehearsalResultMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -22226,6 +22369,7 @@
                 workspace_rehearsal_remediation_pack: projectWorkspaceExportRehearsalRemediationSnapshot(workspace),
                 workspace_remediation_verification_pack: projectWorkspaceExportRemediationVerificationSnapshot(workspace),
                 workspace_retry_rehearsal_plan_pack: projectWorkspaceExportRetryRehearsalPlanSnapshot(workspace),
+                workspace_retry_rehearsal_result_pack: projectWorkspaceExportRetryRehearsalResultSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -34697,6 +34841,11 @@
                     ${renderProjectWorkspaceRetryBlockersOperatorPanel(workspace)}
                     ${renderProjectWorkspaceRetryCheckpointMatrixPanel(workspace)}
                     ${renderProjectWorkspaceRetryTimelineAbortSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceRetryResultSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceSecondPassStepResultsPanel(workspace)}
+                    ${renderProjectWorkspaceRetryCheckpointFailurePanel(workspace)}
+                    ${renderProjectWorkspaceRetryOperatorGapsPanel(workspace)}
+                    ${renderProjectWorkspaceRetryResultAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -43758,6 +43907,118 @@
             retryPlanCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u91cd\u8bd5\u6f14\u7ec3\u8ba1\u5212\u5185\u5bb9\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRetryRehearsalResultMarker: 'Project Workspace retry rehearsal result bundle',
+            retryResultPackTitle: 'Workspace Retry Rehearsal Result / Second-Pass Operator Review',
+            retryResultPackHelper: 'Review deterministic second-pass dry-run retry results without treating them as real retry output.',
+            retryResultSummaryTitle: 'Retry Result Summary',
+            retryResultStepsTitle: 'Second-Pass Step Results',
+            retryResultCheckpointTitle: 'Retry Checkpoint Results',
+            retryResultFailureTitle: 'Retry Failure Findings',
+            retryResultBlockerTitle: 'Carry-Forward Blocker Results',
+            retryResultOperatorReviewTitle: 'Operator Review After Retry',
+            retryResultRemainingGapsTitle: 'Remaining Retry Gaps',
+            retryResultNextCycleTitle: 'Next Cycle Recommendations',
+            retryResultAuditTitle: 'Audit Preview',
+            retryResultSafetyTitle: 'Safety Boundaries',
+            retryResultMode: 'Mode',
+            retryResultStatus: 'Result status',
+            retryResultStatusCounts: 'Simulated retry status counts',
+            retryResultStepCount: 'Step result count',
+            retryResultGapCount: 'Remaining gap count',
+            retryResultOperatorReviewRequired: 'Operator review required',
+            retryResultRealExecution: 'Real execution',
+            retryResultRecommendedNextAction: 'Recommended next action',
+            retryResultDisabled: 'disabled',
+            retryResultPreviewNote: 'Second-pass dry-run result preview only. This is not a real retry result and does not prove execution completed.',
+            retryResultStepsHelper: 'Inspect simulated retry status, expected and placeholder observations, tightened validation, remaining gaps, and follow-up actions.',
+            retryResultSourceRetryStep: 'Source retry step ID',
+            retryResultSourceVerification: 'Source verification ID',
+            retryResultSourceAction: 'Source action ID',
+            retryResultStepTitle: 'Step title',
+            retryResultStepType: 'Step type',
+            retryResultCheckpointFailureTitle: 'Retry Checkpoint Results / Failure Findings',
+            retryResultCheckpointFailureHelper: 'Review checkpoint previews and simulated failure findings without showing real execution completion.',
+            retryResultNoRealCompletionNote: 'Blocked, review_required, and simulated pass are preview states only. They do not indicate real execution completion.',
+            retryResultOperatorGapsTitle: 'Carry-Forward Blockers / Operator Review / Remaining Gaps',
+            retryResultOperatorGapsHelper: 'Review blockers, operator review preview, remaining gaps, and next cycle recommendations.',
+            retryResultOperatorPreviewNote: 'These are operator review previews only, not real operator logs, tickets, approvals, or persisted records.',
+            retryResultAuditQualitySafetyTitle: 'Audit Preview / Quality / Safety Boundaries',
+            retryResultAuditQualitySafetyHelper: 'Verify audit preview and quality checks while all real capabilities remain disabled.',
+            retryResultQualityTitle: 'Retry Result Quality Checks',
+            retryResultAuditNoWriteNote: 'Audit preview is not written to a database. Retry result does not mean real execution completed.',
+            retryResultSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            retryResultNoData: 'No workspace retry rehearsal result data is available.',
+            retryResultCopySummary: 'Copy retry result summary',
+            retryResultCopySteps: 'Copy second-pass step results',
+            retryResultCopyCheckpoints: 'Copy retry checkpoint results',
+            retryResultCopyFailures: 'Copy retry failure findings',
+            retryResultCopyBlockers: 'Copy carry-forward blocker results',
+            retryResultCopyGaps: 'Copy remaining retry gaps',
+            retryResultCopyNext: 'Copy next cycle recommendations',
+            retryResultCopyAudit: 'Copy audit preview',
+            retryResultCopyFull: 'Copy full retry rehearsal result pack',
+            retryResultCopied: 'Workspace retry rehearsal result content copied.',
+            retryResultCopyFailed: 'Unable to copy workspace retry rehearsal result content.',
+            retryResultCopyNoData: 'No workspace retry rehearsal result content is available to copy.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRetryRehearsalResultMarker: 'Project Workspace retry rehearsal result bundle',
+            retryResultPackTitle: '\u5de5\u4f5c\u533a\u91cd\u8bd5\u6f14\u7ec3\u7ed3\u679c / \u7b2c\u4e8c\u8f6e\u64cd\u4f5c\u5458\u5ba1\u9605',
+            retryResultPackHelper: '\u68c0\u67e5\u786e\u5b9a\u6027\u7b2c\u4e8c\u8f6e dry-run \u91cd\u8bd5\u7ed3\u679c\uff0c\u4e0d\u628a\u5b83\u89c6\u4e3a\u771f\u5b9e retry \u8f93\u51fa\u3002',
+            retryResultSummaryTitle: '\u91cd\u8bd5\u7ed3\u679c\u6458\u8981',
+            retryResultStepsTitle: '\u7b2c\u4e8c\u8f6e\u6b65\u9aa4\u7ed3\u679c',
+            retryResultCheckpointTitle: '\u91cd\u8bd5\u68c0\u67e5\u70b9\u7ed3\u679c',
+            retryResultFailureTitle: '\u91cd\u8bd5\u5931\u8d25\u53d1\u73b0',
+            retryResultBlockerTitle: '\u5ef6\u7eed\u963b\u585e\u7ed3\u679c',
+            retryResultOperatorReviewTitle: '\u91cd\u8bd5\u540e\u64cd\u4f5c\u5458\u5ba1\u9605',
+            retryResultRemainingGapsTitle: '\u5269\u4f59\u91cd\u8bd5\u7f3a\u53e3',
+            retryResultNextCycleTitle: '\u4e0b\u4e00\u8f6e\u5efa\u8bae',
+            retryResultAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            retryResultSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            retryResultMode: '\u6a21\u5f0f',
+            retryResultStatus: '\u7ed3\u679c\u72b6\u6001',
+            retryResultStatusCounts: '\u6a21\u62df\u91cd\u8bd5\u72b6\u6001\u7edf\u8ba1',
+            retryResultStepCount: '\u6b65\u9aa4\u7ed3\u679c\u6570',
+            retryResultGapCount: '\u5269\u4f59\u7f3a\u53e3\u6570',
+            retryResultOperatorReviewRequired: '\u9700\u8981\u64cd\u4f5c\u5458\u5ba1\u9605',
+            retryResultRealExecution: '\u771f\u5b9e\u6267\u884c',
+            retryResultRecommendedNextAction: '\u63a8\u8350\u4e0b\u4e00\u6b65',
+            retryResultDisabled: '\u5df2\u7981\u7528',
+            retryResultPreviewNote: '\u4ec5\u4e3a\u7b2c\u4e8c\u8f6e dry-run \u7ed3\u679c\u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e retry \u7ed3\u679c\uff0c\u4e5f\u4e0d\u8bc1\u660e\u6267\u884c\u5df2\u5b8c\u6210\u3002',
+            retryResultStepsHelper: '\u68c0\u67e5\u6a21\u62df\u91cd\u8bd5\u72b6\u6001\u3001\u9884\u671f\u548c\u5360\u4f4d\u89c2\u6d4b\u3001\u6536\u7d27\u9a8c\u8bc1\u3001\u5269\u4f59\u7f3a\u53e3\u548c\u8ddf\u8fdb\u64cd\u4f5c\u3002',
+            retryResultSourceRetryStep: '\u6765\u6e90\u91cd\u8bd5\u6b65\u9aa4 ID',
+            retryResultSourceVerification: '\u6765\u6e90\u590d\u6838 ID',
+            retryResultSourceAction: '\u6765\u6e90\u64cd\u4f5c ID',
+            retryResultStepTitle: '\u6b65\u9aa4\u6807\u9898',
+            retryResultStepType: '\u6b65\u9aa4\u7c7b\u578b',
+            retryResultCheckpointFailureTitle: '\u91cd\u8bd5\u68c0\u67e5\u70b9\u7ed3\u679c / \u5931\u8d25\u53d1\u73b0',
+            retryResultCheckpointFailureHelper: '\u68c0\u67e5\u68c0\u67e5\u70b9\u9884\u89c8\u548c\u6a21\u62df\u5931\u8d25\u53d1\u73b0\uff0c\u4e0d\u663e\u793a\u771f\u5b9e\u6267\u884c\u5b8c\u6210\u3002',
+            retryResultNoRealCompletionNote: '\u963b\u585e\u3001review_required \u548c\u6a21\u62df\u901a\u8fc7\u90fd\u53ea\u662f\u9884\u89c8\u72b6\u6001\uff0c\u4e0d\u8868\u793a\u771f\u5b9e\u6267\u884c\u5b8c\u6210\u3002',
+            retryResultOperatorGapsTitle: '\u5ef6\u7eed\u963b\u585e / \u64cd\u4f5c\u5458\u5ba1\u9605 / \u5269\u4f59\u7f3a\u53e3',
+            retryResultOperatorGapsHelper: '\u68c0\u67e5\u963b\u585e\u3001\u64cd\u4f5c\u5458\u5ba1\u9605\u9884\u89c8\u3001\u5269\u4f59\u7f3a\u53e3\u548c\u4e0b\u4e00\u8f6e\u5efa\u8bae\u3002',
+            retryResultOperatorPreviewNote: '\u8fd9\u4e9b\u4ec5\u662f\u64cd\u4f5c\u5458\u5ba1\u9605\u9884\u89c8\uff0c\u4e0d\u662f\u771f\u5b9e\u64cd\u4f5c\u5458\u65e5\u5fd7\u3001\u5de5\u5355\u3001\u5ba1\u6279\u6216\u6301\u4e45\u5316\u8bb0\u5f55\u3002',
+            retryResultAuditQualitySafetyTitle: '\u5ba1\u8ba1\u9884\u89c8 / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            retryResultAuditQualitySafetyHelper: '\u68c0\u67e5\u5ba1\u8ba1\u9884\u89c8\u548c\u8d28\u91cf\u68c0\u67e5\uff0c\u6240\u6709\u771f\u5b9e\u80fd\u529b\u4ecd\u4fdd\u6301\u7981\u7528\u3002',
+            retryResultQualityTitle: '\u91cd\u8bd5\u7ed3\u679c\u8d28\u91cf\u68c0\u67e5',
+            retryResultAuditNoWriteNote: '\u5ba1\u8ba1\u9884\u89c8\u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002\u91cd\u8bd5\u7ed3\u679c\u4e0d\u4ee3\u8868\u771f\u5b9e\u6267\u884c\u5df2\u5b8c\u6210\u3002',
+            retryResultSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002',
+            retryResultNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u91cd\u8bd5\u6f14\u7ec3\u7ed3\u679c\u6570\u636e\u3002',
+            retryResultCopySummary: '\u590d\u5236\u91cd\u8bd5\u7ed3\u679c\u6458\u8981',
+            retryResultCopySteps: '\u590d\u5236\u7b2c\u4e8c\u8f6e\u6b65\u9aa4\u7ed3\u679c',
+            retryResultCopyCheckpoints: '\u590d\u5236\u91cd\u8bd5\u68c0\u67e5\u70b9\u7ed3\u679c',
+            retryResultCopyFailures: '\u590d\u5236\u91cd\u8bd5\u5931\u8d25\u53d1\u73b0',
+            retryResultCopyBlockers: '\u590d\u5236\u5ef6\u7eed\u963b\u585e\u7ed3\u679c',
+            retryResultCopyGaps: '\u590d\u5236\u5269\u4f59\u91cd\u8bd5\u7f3a\u53e3',
+            retryResultCopyNext: '\u590d\u5236\u4e0b\u4e00\u8f6e\u5efa\u8bae',
+            retryResultCopyAudit: '\u590d\u5236\u5ba1\u8ba1\u9884\u89c8',
+            retryResultCopyFull: '\u590d\u5236\u5b8c\u6574\u91cd\u8bd5\u6f14\u7ec3\u7ed3\u679c pack',
+            retryResultCopied: '\u5de5\u4f5c\u533a\u91cd\u8bd5\u6f14\u7ec3\u7ed3\u679c\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            retryResultCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u91cd\u8bd5\u6f14\u7ec3\u7ed3\u679c\u5185\u5bb9\u3002',
+            retryResultCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u91cd\u8bd5\u6f14\u7ec3\u7ed3\u679c\u5185\u5bb9\u3002'
+        });
+
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -45166,6 +45427,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceRehearsalRemediationPack = latestProjectCreativeDecisionPack.workspace_rehearsal_remediation_pack || {};
     latestProjectWorkspaceRemediationVerificationPack = latestProjectCreativeDecisionPack.workspace_remediation_verification_pack || {};
     latestProjectWorkspaceRetryRehearsalPlanPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_plan_pack || {};
+    latestProjectWorkspaceRetryRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_result_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
