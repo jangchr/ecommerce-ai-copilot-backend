@@ -2565,6 +2565,189 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_retry_cycle_decision_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-retry-cycle-decision",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "RETRYCYCLE001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Still leaks",
+                    "text": "Leaks.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        result_pack = creative_pack["workspace_retry_rehearsal_result_pack"]
+        pack = creative_pack["workspace_retry_cycle_decision_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_retry_cycle_decision_pack_v1",
+        )
+
+        summary = pack["cycle_decision_summary"]
+        self.assertTrue(summary["cycle_decision_id"])
+        self.assertIn("retry_cycle_decision", summary["mode"])
+        self.assertIn("next_cycle_control", summary["mode"])
+        self.assertIn("preview", summary["mode"])
+        self.assertEqual(
+            summary["source_retry_result_id"],
+            result_pack["retry_result_summary"]["retry_result_id"],
+        )
+        self.assertFalse(summary["real_execution_allowed"])
+
+        options = pack["decision_options"]
+        self.assertTrue(options)
+        option_types = {option["option_type"] for option in options}
+        for expected_type in [
+            "continue_dry_run_cycle", "return_to_remediation",
+            "hold_for_manual_review", "keep_blocked",
+            "close_cycle_preview",
+        ]:
+            with self.subTest(option_type=expected_type):
+                self.assertIn(expected_type, option_types)
+        for option in options:
+            for field in [
+                "option_id", "option_type", "rationale",
+                "allowed_next_state",
+            ]:
+                with self.subTest(option=option["option_id"], field=field):
+                    self.assertTrue(option[field])
+            self.assertEqual(
+                option["source_pack"],
+                "workspace_retry_rehearsal_result_pack",
+            )
+            self.assertFalse(option["real_execution_allowed"])
+        self.assertTrue(any(option["recommended"] for option in options))
+
+        recommended = pack["recommended_cycle_action"]
+        self.assertTrue(recommended)
+        self.assertTrue(recommended["preview_recommendation_only"])
+        self.assertFalse(recommended["real_execution_allowed"])
+        self.assertIn(
+            recommended["action_type"],
+            [
+                "continue_dry_run_cycle",
+                "return_to_remediation",
+                "hold_for_manual_review",
+            ],
+        )
+
+        cycle_gate = pack["cycle_gate"]
+        self.assertTrue(cycle_gate)
+        self.assertIn("preview", cycle_gate["gate_mode"])
+        self.assertFalse(cycle_gate["real_execution_gate"])
+        self.assertFalse(cycle_gate["ready_for_real_execution"])
+        self.assertFalse(cycle_gate["real_execution_allowed"])
+        self.assertFalse(cycle_gate["database_write_performed"])
+        self.assertFalse(cycle_gate["approval_created"])
+
+        carry_forward_items = pack["carry_forward_items"]
+        self.assertIsInstance(carry_forward_items, list)
+        self.assertTrue(carry_forward_items)
+        self.assertTrue(
+            all(item["blocks_real_execution"] for item in carry_forward_items)
+        )
+        self.assertTrue(
+            all(
+                not item["real_execution_allowed"]
+                for item in carry_forward_items
+            )
+        )
+
+        blocked_items = pack["blocked_or_review_required_items"]
+        self.assertIsInstance(blocked_items, list)
+        self.assertTrue(blocked_items)
+        self.assertTrue(
+            all(item["manual_review_required"] for item in blocked_items)
+        )
+        self.assertTrue(
+            all(not item["real_execution_allowed"] for item in blocked_items)
+        )
+
+        next_scope = pack["next_cycle_scope"]
+        self.assertIn("dry_run", next_scope["scope_mode"])
+        self.assertFalse(next_scope["can_execute_retry"])
+        self.assertFalse(next_scope["can_collect_external_data"])
+        self.assertFalse(next_scope["can_write_database"])
+        self.assertFalse(next_scope["real_execution_allowed"])
+
+        manual_review = pack["manual_review_packet"]
+        self.assertIn("preview", manual_review["packet_mode"])
+        self.assertTrue(manual_review["operator_review_required"])
+        self.assertFalse(manual_review["approval_created"])
+        self.assertFalse(manual_review["ticket_created"])
+        self.assertFalse(manual_review["operator_log_written"])
+        self.assertFalse(manual_review["database_write_performed"])
+        self.assertFalse(manual_review["real_execution_allowed"])
+
+        checks = pack["decision_quality_checks"]
+        for key in [
+            "retry_rehearsal_result_pack_present",
+            "all_options_trace_to_retry_result",
+            "all_options_execution_disabled",
+            "recommended_option_present",
+            "cycle_gate_is_preview_only",
+            "checkpoint_results_are_preview_only",
+            "manual_review_packet_not_persisted",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "database_write_performed", "real_retry_performed",
+            "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["cycle_decision_id"])
+        self.assertFalse(audit["is_real_cycle_control_log"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled", "llm_api_enabled",
+            "video_generation_enabled", "media_upload_enabled",
+            "media_download_enabled", "paid_operation_enabled",
+            "registry_write_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

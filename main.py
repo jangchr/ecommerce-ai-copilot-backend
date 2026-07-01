@@ -26409,6 +26409,376 @@ def _rw_workspace_retry_rehearsal_result_pack(
     }
 
 
+def _rw_workspace_retry_cycle_decision_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    retry_result_pack = dict(
+        creative_decision_pack.get("workspace_retry_rehearsal_result_pack")
+        or {}
+    )
+    retry_summary = dict(retry_result_pack.get("retry_result_summary") or {})
+    second_pass_results = list(
+        retry_result_pack.get("second_pass_step_results") or []
+    )
+    checkpoint_results = dict(
+        retry_result_pack.get("retry_checkpoint_results") or {}
+    )
+    carry_forward_blockers = list(
+        retry_result_pack.get("carry_forward_blocker_results") or []
+    )
+    retry_failure_findings = list(
+        retry_result_pack.get("retry_failure_findings") or []
+    )
+    operator_review = dict(
+        retry_result_pack.get("operator_review_after_retry") or {}
+    )
+    remaining_retry_gaps = list(
+        retry_result_pack.get("remaining_retry_gaps") or []
+    )
+    next_cycle_recommendations = list(
+        retry_result_pack.get("next_cycle_recommendations") or []
+    )
+
+    operator_review_required = bool(
+        operator_review.get("operator_review_required")
+    )
+    has_blockers = bool(
+        carry_forward_blockers
+        or retry_failure_findings
+        or remaining_retry_gaps
+        or operator_review_required
+    )
+    recommended_type = (
+        "return_to_remediation"
+        if remaining_retry_gaps or carry_forward_blockers
+        else "hold_for_manual_review"
+        if operator_review_required
+        else "continue_dry_run_cycle"
+    )
+    allowed_next_state = (
+        "next_dry_run_remediation_cycle"
+        if recommended_type == "return_to_remediation"
+        else "manual_review_preview"
+        if recommended_type == "hold_for_manual_review"
+        else "next_dry_run_cycle_preview"
+    )
+
+    source_result_ids = [
+        _rw_text(result.get("result_id"))
+        for result in second_pass_results
+        if _rw_text(result.get("result_id"))
+    ]
+    option_specs = [
+        (
+            "continue_dry_run_cycle",
+            "Continue dry-run retry cycle",
+            "Preview a next dry-run cycle after operator review confirms the simulated retry result.",
+            ["operator review confirmation", "dry-run scope confirmation"],
+            ["remaining gaps", "carry-forward blockers"],
+            "next_dry_run_cycle_preview",
+        ),
+        (
+            "return_to_remediation",
+            "Return to remediation",
+            "Use remaining gaps and carry-forward blockers to prepare another remediation pass before retrying.",
+            ["remaining gap resolution notes", "updated evidence inputs"],
+            [],
+            "next_dry_run_remediation_cycle",
+        ),
+        (
+            "hold_for_manual_review",
+            "Hold for manual review",
+            "Keep the cycle in human review because simulated retry output cannot authorize real execution.",
+            ["operator review packet"],
+            [],
+            "manual_review_preview",
+        ),
+        (
+            "keep_blocked",
+            "Keep real execution blocked",
+            "Maintain the launch lock while blockers, gaps, or review-required findings remain unresolved.",
+            ["blocker review"],
+            [],
+            "blocked_preview",
+        ),
+        (
+            "close_cycle_preview",
+            "Close cycle preview",
+            "Close only the deterministic preview after documenting why no real execution was performed.",
+            ["audit preview review"],
+            ["operator review required"],
+            "closed_preview_only",
+        ),
+    ]
+    decision_options = []
+    for index, (
+        option_type,
+        option_title,
+        rationale,
+        required_inputs,
+        blocked_by,
+        option_next_state,
+    ) in enumerate(option_specs, start=1):
+        effective_blockers = list(blocked_by)
+        if option_type == "continue_dry_run_cycle" and has_blockers:
+            effective_blockers = [
+                item
+                for item in [
+                    "remaining retry gaps" if remaining_retry_gaps else "",
+                    "carry-forward blockers" if carry_forward_blockers else "",
+                    "operator review required"
+                    if operator_review_required
+                    else "",
+                    "retry failure findings" if retry_failure_findings else "",
+                ]
+                if item
+            ]
+        if option_type == "close_cycle_preview" and has_blockers:
+            effective_blockers = ["unresolved retry review items"]
+        decision_options.append(
+            {
+                "option_id": f"retry_cycle_option_{index:02d}",
+                "option_type": option_type,
+                "option_title": option_title,
+                "source_pack": "workspace_retry_rehearsal_result_pack",
+                "source_result_ids": source_result_ids,
+                "rationale": rationale,
+                "required_inputs": list(required_inputs),
+                "blocked_by": effective_blockers,
+                "recommended": option_type == recommended_type,
+                "allowed_next_state": option_next_state,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Decision option is preview-only and cannot authorize real execution, provider calls, retry execution, or database writes."
+                ),
+            }
+        )
+
+    carry_forward_items = [
+        {
+            "item_id": f"cycle_carry_forward_{index:02d}",
+            "source_type": "carry_forward_blocker",
+            "source_id": _rw_text(blocker.get("blocker_result_id")),
+            "source_pack": "workspace_retry_rehearsal_result_pack",
+            "issue": _rw_text(blocker.get("remaining_gap"))
+            or _rw_text(blocker.get("blocker_type"))
+            or "Carry-forward blocker remains unresolved.",
+            "recommended_handling": "Return to remediation before another dry-run retry cycle.",
+            "blocks_real_execution": True,
+            "real_execution_allowed": False,
+        }
+        for index, blocker in enumerate(carry_forward_blockers, start=1)
+    ]
+    carry_forward_items.extend(
+        {
+            "item_id": f"cycle_remaining_gap_{index:02d}",
+            "source_type": "remaining_retry_gap",
+            "source_id": _rw_text(gap.get("gap_id")),
+            "source_pack": "workspace_retry_rehearsal_result_pack",
+            "issue": _rw_text(gap.get("gap"))
+            or "Remaining retry gap requires review.",
+            "recommended_handling": "Resolve the gap before the next dry-run retry cycle.",
+            "blocks_real_execution": True,
+            "real_execution_allowed": False,
+        }
+        for index, gap in enumerate(remaining_retry_gaps, start=1)
+    )
+
+    blocked_or_review_required_items = [
+        {
+            "item_id": f"cycle_blocked_review_{index:02d}",
+            "source_type": "retry_failure_finding",
+            "source_id": _rw_text(finding.get("finding_id")),
+            "source_pack": "workspace_retry_rehearsal_result_pack",
+            "status": "blocked_or_review_required",
+            "reason": _rw_text(finding.get("finding_summary"))
+            or "Retry finding requires operator review.",
+            "manual_review_required": True,
+            "real_execution_allowed": False,
+        }
+        for index, finding in enumerate(retry_failure_findings, start=1)
+    ]
+    if operator_review_required:
+        blocked_or_review_required_items.append(
+            {
+                "item_id": "cycle_operator_review_required",
+                "source_type": "operator_review_after_retry",
+                "source_id": _rw_text(
+                    retry_summary.get("retry_result_id")
+                ),
+                "source_pack": "workspace_retry_rehearsal_result_pack",
+                "status": "operator_review_required",
+                "reason": "Operator review remains required after the second-pass retry preview.",
+                "manual_review_required": True,
+                "real_execution_allowed": False,
+            }
+        )
+
+    decision_signature = json.dumps(
+        {
+            "retry_result_id": _rw_text(retry_summary.get("retry_result_id")),
+            "source_result_ids": source_result_ids,
+            "recommended_type": recommended_type,
+            "carry_forward_count": len(carry_forward_items),
+            "blocked_count": len(blocked_or_review_required_items),
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    decision_id = (
+        "retry_cycle_decision_"
+        + hashlib.sha256(decision_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "approval_creation_enabled": False,
+        "real_cycle_transition_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_retry_cycle_decision_pack_v1",
+        "cycle_decision_summary": {
+            "cycle_decision_id": decision_id,
+            "mode": "deterministic_retry_cycle_decision_next_cycle_control_preview",
+            "source_retry_result_id": _rw_text(
+                retry_summary.get("retry_result_id")
+            ),
+            "source_result_status": _rw_text(
+                retry_summary.get("result_status")
+            ),
+            "decision_status": (
+                "blocked_or_review_required"
+                if has_blockers
+                else "preview_ready_for_next_dry_run_cycle"
+            ),
+            "decision_option_count": len(decision_options),
+            "carry_forward_item_count": len(carry_forward_items),
+            "blocked_or_review_required_count": len(
+                blocked_or_review_required_items
+            ),
+            "recommended_next_state": allowed_next_state,
+            "real_execution_allowed": False,
+        },
+        "decision_options": decision_options,
+        "recommended_cycle_action": {
+            "action_type": recommended_type,
+            "action_title": next(
+                option["option_title"]
+                for option in decision_options
+                if option["recommended"]
+            ),
+            "preview_recommendation_only": True,
+            "recommended_next_state": allowed_next_state,
+            "reason": (
+                "Remaining gaps or carry-forward blockers require another remediation preview."
+                if recommended_type == "return_to_remediation"
+                else "Operator review is required before another dry-run cycle."
+                if recommended_type == "hold_for_manual_review"
+                else "No blocking retry findings were detected, but only another dry-run cycle is allowed."
+            ),
+            "real_execution_allowed": False,
+        },
+        "cycle_gate": {
+            "gate_id": f"{decision_id}_gate",
+            "gate_mode": "next_cycle_control_preview_only",
+            "gate_status": (
+                "blocked_for_real_execution"
+                if has_blockers
+                else "dry_run_cycle_preview_only"
+            ),
+            "allowed_next_state": allowed_next_state,
+            "real_execution_gate": False,
+            "ready_for_real_execution": False,
+            "real_execution_allowed": False,
+            "database_write_performed": False,
+            "approval_created": False,
+        },
+        "carry_forward_items": carry_forward_items,
+        "blocked_or_review_required_items": blocked_or_review_required_items,
+        "next_cycle_scope": {
+            "scope_mode": "next_dry_run_or_remediation_cycle_preview_only",
+            "allowed_scope": allowed_next_state,
+            "source_recommendations": next_cycle_recommendations,
+            "can_execute_retry": False,
+            "can_collect_external_data": False,
+            "can_write_database": False,
+            "real_execution_allowed": False,
+        },
+        "manual_review_packet": {
+            "packet_mode": "manual_review_packet_preview_only",
+            "source_retry_result_id": _rw_text(
+                retry_summary.get("retry_result_id")
+            ),
+            "operator_review_required": operator_review_required
+            or bool(blocked_or_review_required_items),
+            "review_items": blocked_or_review_required_items,
+            "approval_created": False,
+            "ticket_created": False,
+            "operator_log_written": False,
+            "database_write_performed": False,
+            "real_execution_allowed": False,
+        },
+        "decision_quality_checks": {
+            "retry_rehearsal_result_pack_present": bool(retry_result_pack),
+            "all_options_trace_to_retry_result": all(
+                option["source_pack"]
+                == "workspace_retry_rehearsal_result_pack"
+                for option in decision_options
+            ),
+            "all_options_execution_disabled": all(
+                not option["real_execution_allowed"]
+                for option in decision_options
+            ),
+            "recommended_option_present": any(
+                option["recommended"] for option in decision_options
+            ),
+            "cycle_gate_is_preview_only": True,
+            "checkpoint_results_are_preview_only": not bool(
+                checkpoint_results.get("checkpoint_execution_performed")
+            ),
+            "manual_review_packet_not_persisted": not bool(
+                operator_review.get("operator_log_written")
+            ),
+            "audit_preview_not_persisted": True,
+            "database_write_performed": False,
+            "real_retry_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_retry_cycle_decision_preview",
+            "cycle_decision_id": decision_id,
+            "source_retry_result_id": _rw_text(
+                retry_summary.get("retry_result_id")
+            ),
+            "source_result_ids": source_result_ids,
+            "recommended_cycle_action": recommended_type,
+            "is_real_cycle_control_log": False,
+            "database_write_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This audit is a deterministic retry cycle decision preview only; no retry, execution, operator log, ticket, approval, cycle transition, or database record was created."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -26534,6 +26904,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_retry_rehearsal_result_pack"] = (
         _rw_workspace_retry_rehearsal_result_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_retry_cycle_decision_pack"] = (
+        _rw_workspace_retry_cycle_decision_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
