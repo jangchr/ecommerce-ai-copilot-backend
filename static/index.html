@@ -3618,6 +3618,7 @@
         let latestProjectWorkspaceRetryRehearsalResultPack = {};
         let latestProjectWorkspaceRetryCycleDecisionPack = {};
         let latestProjectWorkspaceCycleHistoryTimelinePack = {};
+        let latestProjectWorkspaceControlCenterPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8912,6 +8913,7 @@
                 latestProjectWorkspaceRetryRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_result_pack || {};
                 latestProjectWorkspaceRetryCycleDecisionPack = latestProjectCreativeDecisionPack.workspace_retry_cycle_decision_pack || {};
                 latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
+                latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14766,6 +14768,7 @@
         const PROJECT_WORKSPACE_RETRY_REHEARSAL_RESULT_MARKER = 'Project Workspace retry rehearsal result bundle';
         const PROJECT_WORKSPACE_RETRY_CYCLE_DECISION_MARKER = 'Project Workspace retry cycle decision bundle';
         const PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER = 'Project Workspace cycle history timeline bundle';
+        const PROJECT_WORKSPACE_CONTROL_CENTER_MARKER = 'Project Workspace control center bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -18595,6 +18598,104 @@
         function copyProjectWorkspaceCycleHistoryAuditTimelinePreview() { return copyProjectWorkspaceCycleHistoryTimelineText('audit'); }
         function copyProjectWorkspaceFullCycleHistoryTimelinePack() { return copyProjectWorkspaceCycleHistoryTimelineText('full'); }
 
+        function projectWorkspaceControlCenterPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceControlCenterPack && Object.keys(latestProjectWorkspaceControlCenterPack).length) return latestProjectWorkspaceControlCenterPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_control_center_pack || {};
+        }
+
+        function projectWorkspaceExportControlCenterSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceControlCenterPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CONTROL_CENTER_MARKER,
+                has_workspace_control_center_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                control_center_summary: pack.control_center_summary || {},
+                system_status_cards: pack.system_status_cards || [],
+                operator_priority_queue: pack.operator_priority_queue || [],
+                current_decision_snapshot: pack.current_decision_snapshot || {},
+                next_best_actions: pack.next_best_actions || [],
+                risk_and_blocker_overview: pack.risk_and_blocker_overview || {},
+                pack_readiness_inventory: pack.pack_readiness_inventory || [],
+                capability_lock_status: pack.capability_lock_status || {},
+                control_quality_checks: pack.control_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceControlCenterJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceControlCenterSummaryText(pack = projectWorkspaceExportControlCenterSnapshot()) {
+            if (!pack.has_workspace_control_center_pack) return '';
+            const summary = pack.control_center_summary || {};
+            return [
+                t('controlCenterSummaryTitle'),
+                `${t('controlCenterMode')}: ${summary.mode || t('none')}`,
+                `${t('controlCenterOverallStatus')}: ${summary.latest_decision_status || summary.current_cycle_phase || t('none')}`,
+                `${t('controlCenterRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('controlCenterRealExecution')}: ${summary.real_execution_allowed === false ? t('controlCenterDisabled') : String(summary.real_execution_allowed)}`,
+                t('controlCenterPreviewNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceControlCenterSectionText(titleKey, value) {
+            const body = projectWorkspaceControlCenterJsonText(value);
+            return body ? `## ${t(titleKey)}\n\n${body}` : '';
+        }
+
+        function projectWorkspaceExportControlCenterMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportControlCenterSnapshot(workspace);
+            if (!pack.has_workspace_control_center_pack) return '';
+            return [
+                `## ${t('controlCenterPackTitle')}`,
+                `## ${t('controlCenterSummaryTitle')}`,
+                projectWorkspaceControlCenterSummaryText(pack), '',
+                projectWorkspaceControlCenterSectionText('controlCenterSystemCardsTitle', pack.system_status_cards), '',
+                projectWorkspaceControlCenterSectionText('controlCenterPriorityQueueTitle', pack.operator_priority_queue), '',
+                projectWorkspaceControlCenterSectionText('controlCenterDecisionTitle', pack.current_decision_snapshot), '',
+                projectWorkspaceControlCenterSectionText('controlCenterNextBestActionsTitle', pack.next_best_actions), '',
+                projectWorkspaceControlCenterSectionText('controlCenterRiskOverviewTitle', pack.risk_and_blocker_overview), '',
+                projectWorkspaceControlCenterSectionText('controlCenterPackInventoryTitle', pack.pack_readiness_inventory), '',
+                projectWorkspaceControlCenterSectionText('controlCenterCapabilityLockTitle', pack.capability_lock_status), '',
+                projectWorkspaceControlCenterSectionText('controlCenterAuditTitle', pack.audit_preview), '',
+                projectWorkspaceControlCenterSectionText('controlCenterSafetyTitle', pack.safety_boundaries),
+                t('controlCenterSafetyNote')
+            ].filter(Boolean).join('\n\n');
+        }
+
+        async function copyProjectWorkspaceControlCenterText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceControlCenterStatus');
+            const pack = projectWorkspaceExportControlCenterSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceControlCenterSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceControlCenterSectionText('controlCenterSystemCardsTitle', pack.system_status_cards)
+                : kind === 'queue' ? projectWorkspaceControlCenterSectionText('controlCenterPriorityQueueTitle', pack.operator_priority_queue)
+                : kind === 'decision' ? projectWorkspaceControlCenterSectionText('controlCenterDecisionTitle', pack.current_decision_snapshot)
+                : kind === 'actions' ? projectWorkspaceControlCenterSectionText('controlCenterNextBestActionsTitle', pack.next_best_actions)
+                : kind === 'risk' ? projectWorkspaceControlCenterSectionText('controlCenterRiskOverviewTitle', pack.risk_and_blocker_overview)
+                : kind === 'inventory' ? projectWorkspaceControlCenterSectionText('controlCenterPackInventoryTitle', pack.pack_readiness_inventory)
+                : kind === 'lock' ? projectWorkspaceControlCenterSectionText('controlCenterCapabilityLockTitle', pack.capability_lock_status)
+                : projectWorkspaceExportControlCenterMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('controlCenterCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('controlCenterCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('controlCenterCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('controlCenterCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceControlCenterSummary() { return copyProjectWorkspaceControlCenterText('summary'); }
+        function copyProjectWorkspaceControlCenterSystemCards() { return copyProjectWorkspaceControlCenterText('cards'); }
+        function copyProjectWorkspaceControlCenterPriorityQueue() { return copyProjectWorkspaceControlCenterText('queue'); }
+        function copyProjectWorkspaceControlCenterDecisionSnapshot() { return copyProjectWorkspaceControlCenterText('decision'); }
+        function copyProjectWorkspaceControlCenterNextBestActions() { return copyProjectWorkspaceControlCenterText('actions'); }
+        function copyProjectWorkspaceControlCenterRiskOverview() { return copyProjectWorkspaceControlCenterText('risk'); }
+        function copyProjectWorkspaceControlCenterPackInventory() { return copyProjectWorkspaceControlCenterText('inventory'); }
+        function copyProjectWorkspaceControlCenterCapabilityLock() { return copyProjectWorkspaceControlCenterText('lock'); }
+        function copyProjectWorkspaceFullControlCenterPack() { return copyProjectWorkspaceControlCenterText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -22037,6 +22138,35 @@
             return `<div class="section-block" id="projectWorkspaceCycleHistoryAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('cycleHistoryAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCycleHistoryAuditTimelinePreview()">${escapeHTML(t('cycleHistoryCopyAudit'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.audit_timeline_preview) || t('cycleHistoryNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('cycleHistoryQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCycleHistoryTimelineJsonText(pack.timeline_quality_checks) || t('cycleHistoryNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('cycleHistorySafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('cycleHistoryAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('cycleHistorySafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceControlCenterSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportControlCenterSnapshot(workspace); if (!pack.has_workspace_control_center_pack) return '';
+            const summary = pack.control_center_summary || {};
+            return `<div class="section-block" id="projectWorkspaceControlCenterSummaryPanel" data-control-center-marker="${PROJECT_WORKSPACE_CONTROL_CENTER_MARKER}"><div class="section-header"><div><div class="json-key">${escapeHTML(t('controlCenterPackTitle'))}</div><div class="field-helper">${escapeHTML(t('controlCenterPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullControlCenterPack()">${escapeHTML(t('controlCenterCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('controlCenterMode'), summary.mode || t('none'))}${metricPill(t('controlCenterOverallStatus'), summary.latest_decision_status || summary.current_cycle_phase || t('none'))}${metricPill(t('controlCenterRecommendedAction'), summary.recommended_next_action || t('none'))}${metricPill(t('controlCenterRealExecution'), summary.real_execution_allowed === false ? t('controlCenterDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterSummaryText(pack) || t('controlCenterNoData'))}</pre><div class="field-helper">${escapeHTML(t('controlCenterPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceControlCenterStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterSummary()">${escapeHTML(t('controlCenterCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceControlCenterStatusCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportControlCenterSnapshot(workspace); if (!pack.has_workspace_control_center_pack) return '';
+            const cards = (pack.system_status_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.card_title || card.card_id || t('controlCenterSystemCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.priority || t('none'))}</span></div><div><strong>${escapeHTML(t('controlCenterCardId'))}:</strong> ${escapeHTML(card.card_id || t('none'))}</div><div><strong>${escapeHTML(t('controlCenterCardType'))}:</strong> ${escapeHTML(card.card_type || t('none'))}</div><div><strong>${escapeHTML(t('controlCenterSourcePack'))}:</strong> ${escapeHTML(card.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('controlCenterStatus'))}:</strong> ${escapeHTML(card.status || t('none'))}</div><div><strong>${escapeHTML(t('controlCenterRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('controlCenterDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText({summary:card.summary||'',recommended_operator_action:card.recommended_operator_action||'',risk_note:card.risk_note||''}) || t('controlCenterNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceControlCenterStatusCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('controlCenterSystemCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('controlCenterSystemCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterSystemCards()">${escapeHTML(t('controlCenterCopySystemCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('controlCenterNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceControlCenterPriorityQueuePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportControlCenterSnapshot(workspace); if (!pack.has_workspace_control_center_pack) return '';
+            const queueCards = (pack.operator_priority_queue || []).map((item) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(item.item_title || item.queue_id || t('controlCenterPriorityQueueTitle'))}</strong><span class="metric-pill">${escapeHTML(item.priority || t('none'))}</span></div><div><strong>${escapeHTML(t('controlCenterQueueId'))}:</strong> ${escapeHTML(item.queue_id || t('none'))}</div><div><strong>${escapeHTML(t('controlCenterSourcePack'))}:</strong> ${escapeHTML(item.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('controlCenterItemType'))}:</strong> ${escapeHTML(item.item_type || t('none'))}</div><div><strong>${escapeHTML(t('controlCenterRequiredReview'))}:</strong> ${escapeHTML(String(item.required_review))}</div><div><strong>${escapeHTML(t('controlCenterRealExecution'))}:</strong> ${escapeHTML(item.real_execution_allowed === false ? t('controlCenterDisabled') : String(item.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText({why_it_matters:item.why_it_matters||'',blocked_by:item.blocked_by||[],next_action_preview:item.next_action_preview||'',risk_note:item.risk_note||''}) || t('controlCenterNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceControlCenterPriorityQueuePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('controlCenterPriorityNextTitle'))}</div><div class="field-helper">${escapeHTML(t('controlCenterPriorityNextHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterPriorityQueue()">${escapeHTML(t('controlCenterCopyPriorityQueue'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterNextBestActions()">${escapeHTML(t('controlCenterCopyNextBestActions'))}</button></div></div><div class="graph-os-compact-grid">${queueCards || `<div class="empty-state">${escapeHTML(t('controlCenterNoData'))}</div>`}</div><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterNextBestActionsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.next_best_actions) || t('controlCenterNoData'))}</pre></div><div class="field-helper">${escapeHTML(t('controlCenterPreviewActionNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceControlCenterDecisionRiskInventoryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportControlCenterSnapshot(workspace); if (!pack.has_workspace_control_center_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceControlCenterDecisionRiskInventoryPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('controlCenterDecisionRiskInventoryTitle'))}</div><div class="field-helper">${escapeHTML(t('controlCenterDecisionRiskInventoryHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterDecisionSnapshot()">${escapeHTML(t('controlCenterCopyDecision'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterRiskOverview()">${escapeHTML(t('controlCenterCopyRisk'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterPackInventory()">${escapeHTML(t('controlCenterCopyInventory'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterDecisionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.current_decision_snapshot) || t('controlCenterNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterRiskOverviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.risk_and_blocker_overview) || t('controlCenterNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterPackInventoryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.pack_readiness_inventory) || t('controlCenterNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('controlCenterDecisionRiskNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceControlCenterLockAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportControlCenterSnapshot(workspace); if (!pack.has_workspace_control_center_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('controlCenterDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceControlCenterLockAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('controlCenterLockAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('controlCenterLockAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterCapabilityLock()">${escapeHTML(t('controlCenterCopyCapabilityLock'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterCapabilityLockTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.capability_lock_status) || t('controlCenterNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.control_quality_checks) || t('controlCenterNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.audit_preview) || t('controlCenterNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('controlCenterSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('controlCenterAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('controlCenterSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -22547,6 +22677,8 @@
                 '',
                 projectWorkspaceExportCycleHistoryTimelineMarkdown(workspace),
                 '',
+                projectWorkspaceExportControlCenterMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -22646,6 +22778,7 @@
                 workspace_retry_rehearsal_result_pack: projectWorkspaceExportRetryRehearsalResultSnapshot(workspace),
                 workspace_retry_cycle_decision_pack: projectWorkspaceExportRetryCycleDecisionSnapshot(workspace),
                 workspace_cycle_history_timeline_pack: projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace),
+                workspace_control_center_pack: projectWorkspaceExportControlCenterSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -35132,6 +35265,11 @@
                     ${renderProjectWorkspaceCycleHistoryLineageTracePanel(workspace)}
                     ${renderProjectWorkspaceCycleHistoryStateTracePanel(workspace)}
                     ${renderProjectWorkspaceCycleHistoryAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceControlCenterSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceControlCenterStatusCardsPanel(workspace)}
+                    ${renderProjectWorkspaceControlCenterPriorityQueuePanel(workspace)}
+                    ${renderProjectWorkspaceControlCenterDecisionRiskInventoryPanel(workspace)}
+                    ${renderProjectWorkspaceControlCenterLockAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -44523,6 +44661,113 @@
             cycleHistorySafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceControlCenterMarker: 'Project Workspace control center bundle',
+            controlCenterPackTitle: 'Workspace Control Center / Operator Cockpit',
+            controlCenterPackHelper: 'Review deterministic operator cockpit preview derived from workspace packs without creating real tasks or executing real controls.',
+            controlCenterSummaryTitle: 'Control Center Summary',
+            controlCenterSystemCardsTitle: 'System Status Cards',
+            controlCenterPriorityQueueTitle: 'Operator Priority Queue',
+            controlCenterPriorityNextTitle: 'Operator Priority Queue / Next Best Actions',
+            controlCenterDecisionTitle: 'Current Decision Snapshot',
+            controlCenterNextBestActionsTitle: 'Next Best Actions',
+            controlCenterRiskOverviewTitle: 'Risk and Blocker Overview',
+            controlCenterPackInventoryTitle: 'Pack Readiness Inventory',
+            controlCenterCapabilityLockTitle: 'Capability Lock Status',
+            controlCenterAuditTitle: 'Audit Preview',
+            controlCenterSafetyTitle: 'Safety Boundaries',
+            controlCenterQualityTitle: 'Control Quality Checks',
+            controlCenterMode: 'Mode',
+            controlCenterOverallStatus: 'Current overall status',
+            controlCenterRecommendedAction: 'Recommended operator action',
+            controlCenterRealExecution: 'Real execution',
+            controlCenterDisabled: 'disabled',
+            controlCenterPreviewNote: 'Operator cockpit preview only. This is not real control-center execution and cannot create real operator tasks.',
+            controlCenterNoData: 'No workspace control center data is available.',
+            controlCenterCopyNoData: 'No workspace control center content is available to copy.',
+            controlCenterCopyFailed: 'Unable to copy workspace control center content.',
+            controlCenterCopied: 'Workspace control center content copied.',
+            controlCenterCopySummary: 'Copy control center summary',
+            controlCenterCopySystemCards: 'Copy system status cards',
+            controlCenterCopyPriorityQueue: 'Copy operator priority queue',
+            controlCenterCopyDecision: 'Copy current decision snapshot',
+            controlCenterCopyNextBestActions: 'Copy next best actions',
+            controlCenterCopyRisk: 'Copy risk and blocker overview',
+            controlCenterCopyInventory: 'Copy pack readiness inventory',
+            controlCenterCopyCapabilityLock: 'Copy capability lock status',
+            controlCenterCopyFull: 'Copy full control center pack',
+            controlCenterSystemCardsHelper: 'Inspect pack-derived status cards with source pack, priority, recommended operator action, and disabled execution state.',
+            controlCenterCardId: 'Card ID',
+            controlCenterCardType: 'Card type',
+            controlCenterSourcePack: 'Source pack',
+            controlCenterStatus: 'Status',
+            controlCenterPriorityNextHelper: 'Review blocked, manual review, remaining gap, carry-forward, and safety lock items as preview actions only.',
+            controlCenterQueueId: 'Queue ID',
+            controlCenterItemType: 'Item type',
+            controlCenterRequiredReview: 'Required review',
+            controlCenterPreviewActionNote: 'Preview action only. No real task, retry, ticket, approval, operator log, or database write is created.',
+            controlCenterDecisionRiskInventoryTitle: 'Current Decision / Risk / Pack Inventory',
+            controlCenterDecisionRiskInventoryHelper: 'Review retry cycle decision, timeline-derived risk and blockers, and readiness inventory in one cockpit preview.',
+            controlCenterDecisionRiskNote: 'Decision snapshot references retry cycle decision and timeline only; blocked, manual review, remaining gap, carry-forward, and safety lock items stay preview-only.',
+            controlCenterLockAuditSafetyTitle: 'Capability Locks / Quality / Audit / Safety Boundaries',
+            controlCenterLockAuditSafetyHelper: 'Inspect capability locks, control quality checks, audit preview, and disabled real capabilities.',
+            controlCenterAuditNoWriteNote: 'Audit preview is not written to a database, no real history table is read, and no real operator task is created.',
+            controlCenterSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceControlCenterMarker: 'Project Workspace control center bundle',
+            controlCenterPackTitle: '\u5de5\u4f5c\u533a\u63a7\u5236\u4e2d\u5fc3 / \u64cd\u4f5c\u5458\u9a7e\u9a76\u8231',
+            controlCenterPackHelper: '\u68c0\u67e5\u7531\u5de5\u4f5c\u533a pack \u6d3e\u751f\u7684\u786e\u5b9a\u6027\u64cd\u4f5c\u5458\u9a7e\u9a76\u8231\u9884\u89c8\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u4efb\u52a1\uff0c\u4e0d\u6267\u884c\u771f\u5b9e\u63a7\u5236\u3002',
+            controlCenterSummaryTitle: '\u63a7\u5236\u4e2d\u5fc3\u6458\u8981',
+            controlCenterSystemCardsTitle: '\u7cfb\u7edf\u72b6\u6001\u5361\u7247',
+            controlCenterPriorityQueueTitle: '\u64cd\u4f5c\u5458\u4f18\u5148\u961f\u5217',
+            controlCenterPriorityNextTitle: '\u64cd\u4f5c\u5458\u4f18\u5148\u961f\u5217 / \u4e0b\u4e00\u6700\u4f73\u64cd\u4f5c',
+            controlCenterDecisionTitle: '\u5f53\u524d\u51b3\u7b56\u5feb\u7167',
+            controlCenterNextBestActionsTitle: '\u4e0b\u4e00\u6700\u4f73\u64cd\u4f5c',
+            controlCenterRiskOverviewTitle: '\u98ce\u9669\u548c\u963b\u585e\u6982\u89c8',
+            controlCenterPackInventoryTitle: 'Pack \u5c31\u7eea\u5ea6\u6e05\u5355',
+            controlCenterCapabilityLockTitle: '\u80fd\u529b\u9501\u5b9a\u72b6\u6001',
+            controlCenterAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            controlCenterSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            controlCenterQualityTitle: '\u63a7\u5236\u8d28\u91cf\u68c0\u67e5',
+            controlCenterMode: '\u6a21\u5f0f',
+            controlCenterOverallStatus: '\u5f53\u524d\u6574\u4f53\u72b6\u6001',
+            controlCenterRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u884c\u52a8',
+            controlCenterRealExecution: '\u771f\u5b9e\u6267\u884c',
+            controlCenterDisabled: '\u5df2\u7981\u7528',
+            controlCenterPreviewNote: '\u4ec5\u4e3a\u64cd\u4f5c\u5458\u9a7e\u9a76\u8231\u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u63a7\u5236\u4e2d\u5fc3\u6267\u884c\uff0c\u4e0d\u80fd\u521b\u5efa\u771f\u5b9e\u64cd\u4f5c\u5458\u4efb\u52a1\u3002',
+            controlCenterNoData: '\u6682\u65e0\u5de5\u4f5c\u533a\u63a7\u5236\u4e2d\u5fc3\u6570\u636e\u3002',
+            controlCenterCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a\u63a7\u5236\u4e2d\u5fc3\u5185\u5bb9\u3002',
+            controlCenterCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a\u63a7\u5236\u4e2d\u5fc3\u5185\u5bb9\u3002',
+            controlCenterCopied: '\u5de5\u4f5c\u533a\u63a7\u5236\u4e2d\u5fc3\u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            controlCenterCopySummary: '\u590d\u5236\u63a7\u5236\u4e2d\u5fc3\u6458\u8981',
+            controlCenterCopySystemCards: '\u590d\u5236\u7cfb\u7edf\u72b6\u6001\u5361\u7247',
+            controlCenterCopyPriorityQueue: '\u590d\u5236\u64cd\u4f5c\u5458\u4f18\u5148\u961f\u5217',
+            controlCenterCopyDecision: '\u590d\u5236\u5f53\u524d\u51b3\u7b56\u5feb\u7167',
+            controlCenterCopyNextBestActions: '\u590d\u5236\u4e0b\u4e00\u6700\u4f73\u64cd\u4f5c',
+            controlCenterCopyRisk: '\u590d\u5236\u98ce\u9669\u548c\u963b\u585e\u6982\u89c8',
+            controlCenterCopyInventory: '\u590d\u5236 pack \u5c31\u7eea\u5ea6\u6e05\u5355',
+            controlCenterCopyCapabilityLock: '\u590d\u5236\u80fd\u529b\u9501\u5b9a\u72b6\u6001',
+            controlCenterCopyFull: '\u590d\u5236\u5b8c\u6574\u63a7\u5236\u4e2d\u5fc3 pack',
+            controlCenterSystemCardsHelper: '\u68c0\u67e5\u7531 pack \u6d3e\u751f\u7684\u72b6\u6001\u5361\u7247\uff0c\u5305\u542b\u6765\u6e90 pack\u3001\u4f18\u5148\u7ea7\u3001\u63a8\u8350\u64cd\u4f5c\u5458\u884c\u52a8\u548c\u7981\u7528\u6267\u884c\u72b6\u6001\u3002',
+            controlCenterCardId: '\u5361\u7247 ID',
+            controlCenterCardType: '\u5361\u7247\u7c7b\u578b',
+            controlCenterSourcePack: '\u6765\u6e90 pack',
+            controlCenterStatus: '\u72b6\u6001',
+            controlCenterPriorityNextHelper: '\u4ec5\u4ee5\u9884\u89c8\u64cd\u4f5c\u65b9\u5f0f\u68c0\u67e5 blocked\u3001\u4eba\u5de5\u5ba1\u9605\u3001\u5269\u4f59 gap\u3001\u5ef6\u7eed\u548c\u5b89\u5168\u9501\u9879\u3002',
+            controlCenterQueueId: '\u961f\u5217 ID',
+            controlCenterItemType: '\u9879\u7c7b\u578b',
+            controlCenterRequiredReview: '\u9700\u5ba1\u9605',
+            controlCenterPreviewActionNote: '\u4ec5\u4e3a\u9884\u89c8\u64cd\u4f5c\u3002\u4e0d\u521b\u5efa\u771f\u5b9e\u4efb\u52a1\u3001retry\u3001\u5de5\u5355\u3001\u5ba1\u6279\u3001\u64cd\u4f5c\u5458\u65e5\u5fd7\u6216\u6570\u636e\u5e93\u5199\u5165\u3002',
+            controlCenterDecisionRiskInventoryTitle: '\u5f53\u524d\u51b3\u7b56 / \u98ce\u9669 / Pack \u6e05\u5355',
+            controlCenterDecisionRiskInventoryHelper: '\u5728\u4e00\u4e2a\u9a7e\u9a76\u8231\u9884\u89c8\u4e2d\u68c0\u67e5 retry \u8f6e\u6b21\u51b3\u7b56\u3001\u65f6\u95f4\u7ebf\u6d3e\u751f\u7684\u98ce\u9669\u548c\u963b\u585e\u3001\u4ee5\u53ca\u5c31\u7eea\u5ea6\u6e05\u5355\u3002',
+            controlCenterDecisionRiskNote: '\u51b3\u7b56\u5feb\u7167\u4ec5\u5f15\u7528 retry \u8f6e\u6b21\u51b3\u7b56\u548c\u65f6\u95f4\u7ebf\uff1bblocked\u3001\u4eba\u5de5\u5ba1\u9605\u3001\u5269\u4f59 gap\u3001\u5ef6\u7eed\u548c\u5b89\u5168\u9501\u9879\u90fd\u4fdd\u6301\u9884\u89c8\u72b6\u6001\u3002',
+            controlCenterLockAuditSafetyTitle: '\u80fd\u529b\u9501 / \u8d28\u91cf / \u5ba1\u8ba1 / \u5b89\u5168\u8fb9\u754c',
+            controlCenterLockAuditSafetyHelper: '\u68c0\u67e5\u80fd\u529b\u9501\u3001\u63a7\u5236\u8d28\u91cf\u68c0\u67e5\u3001\u5ba1\u8ba1\u9884\u89c8\u548c\u5df2\u7981\u7528\u7684\u771f\u5b9e\u80fd\u529b\u3002',
+            controlCenterAuditNoWriteNote: '\u5ba1\u8ba1\u9884\u89c8\u4e0d\u5199\u5165\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u5386\u53f2\u8868\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u64cd\u4f5c\u5458\u4efb\u52a1\u3002',
+            controlCenterSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002'
+        });
 
         applyLanguageCopy();
         mountUserTaskFlow();
@@ -45934,6 +46179,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceRetryRehearsalResultPack = latestProjectCreativeDecisionPack.workspace_retry_rehearsal_result_pack || {};
     latestProjectWorkspaceRetryCycleDecisionPack = latestProjectCreativeDecisionPack.workspace_retry_cycle_decision_pack || {};
     latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
+    latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

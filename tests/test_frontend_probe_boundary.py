@@ -11177,6 +11177,133 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_control_center_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace control center bundle",
+            "PROJECT_WORKSPACE_CONTROL_CENTER_MARKER",
+            "latestProjectWorkspaceControlCenterPack",
+            "projectWorkspaceControlCenterPackFromWorkspace",
+            "projectWorkspaceExportControlCenterSnapshot",
+            "projectWorkspaceExportControlCenterMarkdown",
+            "renderProjectWorkspaceControlCenterSummaryPanel",
+            "renderProjectWorkspaceControlCenterStatusCardsPanel",
+            "renderProjectWorkspaceControlCenterPriorityQueuePanel",
+            "renderProjectWorkspaceControlCenterDecisionRiskInventoryPanel",
+            "renderProjectWorkspaceControlCenterLockAuditSafetyPanel",
+            "copyProjectWorkspaceControlCenterSummary",
+            "copyProjectWorkspaceControlCenterSystemCards",
+            "copyProjectWorkspaceControlCenterPriorityQueue",
+            "copyProjectWorkspaceControlCenterDecisionSnapshot",
+            "copyProjectWorkspaceControlCenterNextBestActions",
+            "copyProjectWorkspaceControlCenterRiskOverview",
+            "copyProjectWorkspaceControlCenterPackInventory",
+            "copyProjectWorkspaceControlCenterCapabilityLock",
+            "copyProjectWorkspaceFullControlCenterPack",
+            "workspace_control_center_pack: projectWorkspaceExportControlCenterSnapshot(workspace)",
+            "Workspace Control Center / Operator Cockpit",
+            "Control Center Summary", "System Status Cards",
+            "Operator Priority Queue", "Current Decision Snapshot",
+            "Next Best Actions", "Risk and Blocker Overview",
+            "Pack Readiness Inventory", "Capability Lock Status",
+            "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.control_center_summary", "pack.system_status_cards",
+            "pack.operator_priority_queue",
+            "pack.current_decision_snapshot", "pack.next_best_actions",
+            "pack.risk_and_blocker_overview",
+            "pack.pack_readiness_inventory",
+            "pack.capability_lock_status",
+            "pack.control_quality_checks", "pack.audit_preview",
+            "pack.safety_boundaries", "summary.mode",
+            "summary.latest_decision_status", "summary.current_cycle_phase",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed", "card.card_id",
+            "card.card_type", "card.card_title", "card.source_pack",
+            "card.status", "card.summary", "card.priority",
+            "card.recommended_operator_action",
+            "card.real_execution_allowed", "card.risk_note",
+            "item.queue_id", "item.priority", "item.source_pack",
+            "item.item_type", "item.why_it_matters",
+            "item.required_review", "item.blocked_by",
+            "item.next_action_preview", "item.real_execution_allowed",
+            "item.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceCycleHistoryAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceControlCenterSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceControlCenterLockAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_control_center_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "controlCenterPackTitle", "controlCenterSummaryTitle",
+            "controlCenterSystemCardsTitle",
+            "controlCenterPriorityQueueTitle",
+            "controlCenterDecisionTitle",
+            "controlCenterNextBestActionsTitle",
+            "controlCenterRiskOverviewTitle",
+            "controlCenterPackInventoryTitle",
+            "controlCenterCapabilityLockTitle",
+            "controlCenterAuditTitle", "controlCenterSafetyTitle",
+            "controlCenterCopySummary", "controlCenterCopySystemCards",
+            "controlCenterCopyPriorityQueue",
+            "controlCenterCopyDecision",
+            "controlCenterCopyNextBestActions",
+            "controlCenterCopyRisk", "controlCenterCopyInventory",
+            "controlCenterCopyCapabilityLock",
+            "controlCenterCopyFull", "controlCenterCopied",
+            "controlCenterCopyFailed", "controlCenterCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace control center bundle", script)
+            self.assertIn("project_workspace_control_center_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceControlCenterSummaryText"):
+            html.index("async function copyProjectWorkspaceControlCenterText")
+        ]
+        for key in [
+            "controlCenterPackTitle", "controlCenterSummaryTitle",
+            "controlCenterSystemCardsTitle",
+            "controlCenterPriorityQueueTitle",
+            "controlCenterDecisionTitle",
+            "controlCenterNextBestActionsTitle",
+            "controlCenterRiskOverviewTitle",
+            "controlCenterPackInventoryTitle",
+            "controlCenterCapabilityLockTitle",
+            "controlCenterAuditTitle", "controlCenterSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CONTROL_CENTER_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Operator cockpit preview only", html)
+        self.assertIn("not real control-center execution", html)
+        self.assertIn("No real task, retry, ticket, approval, operator log, or database write is created.", html)
+        self.assertIn("no real history table is read", html)
+        self.assertIn("no real operator task is created", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
