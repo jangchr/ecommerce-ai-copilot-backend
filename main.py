@@ -27353,6 +27353,492 @@ def _rw_workspace_cycle_history_timeline_pack(
     }
 
 
+def _rw_workspace_control_center_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    required_pack_names = [
+        "workspace_execution_readiness_pack",
+        "workspace_execution_rehearsal_pack",
+        "workspace_rehearsal_result_pack",
+        "workspace_rehearsal_remediation_pack",
+        "workspace_remediation_verification_pack",
+        "workspace_retry_rehearsal_plan_pack",
+        "workspace_retry_rehearsal_result_pack",
+        "workspace_retry_cycle_decision_pack",
+        "workspace_cycle_history_timeline_pack",
+    ]
+    packs = {
+        name: dict(creative_decision_pack.get(name) or {})
+        for name in required_pack_names
+    }
+    readiness_pack = packs["workspace_execution_readiness_pack"]
+    readiness_summary = dict(readiness_pack.get("readiness_summary") or {})
+    launch_lock = dict(readiness_pack.get("launch_lock") or {})
+    cycle_pack = packs["workspace_retry_cycle_decision_pack"]
+    cycle_summary = dict(cycle_pack.get("cycle_decision_summary") or {})
+    recommended_cycle_action = dict(
+        cycle_pack.get("recommended_cycle_action") or {}
+    )
+    cycle_gate = dict(cycle_pack.get("cycle_gate") or {})
+    timeline_pack = packs["workspace_cycle_history_timeline_pack"]
+    timeline_summary = dict(timeline_pack.get("timeline_summary") or {})
+    decision_trace = dict(timeline_pack.get("decision_trace_map") or {})
+    carry_forward_trace = list(timeline_pack.get("carry_forward_trace") or [])
+    operator_review_trace = list(
+        timeline_pack.get("operator_review_trace") or []
+    )
+
+    pack_status_sources = {
+        "workspace_execution_readiness_pack": (
+            "execution_readiness",
+            _rw_text(readiness_summary.get("readiness_status"))
+            or _rw_text(launch_lock.get("lock_status"))
+            or "dry_run_locked",
+            _rw_text(readiness_summary.get("recommended_next_action"))
+            or "Review launch lock before any later dry-run step.",
+        ),
+        "workspace_execution_rehearsal_pack": (
+            "rehearsal_runbook",
+            _rw_text(
+                dict(
+                    packs["workspace_execution_rehearsal_pack"].get(
+                        "rehearsal_summary"
+                    )
+                    or {}
+                ).get("readiness")
+            )
+            or "rehearsal_preview",
+            "Review dry-run rehearsal runbook and checkpoints.",
+        ),
+        "workspace_rehearsal_result_pack": (
+            "rehearsal_result",
+            _rw_text(
+                dict(
+                    packs["workspace_rehearsal_result_pack"].get(
+                        "result_summary"
+                    )
+                    or {}
+                ).get("result_status")
+            )
+            or "operator_review_preview",
+            "Review simulated rehearsal results and operator items.",
+        ),
+        "workspace_rehearsal_remediation_pack": (
+            "remediation_plan",
+            _rw_text(
+                dict(
+                    packs["workspace_rehearsal_remediation_pack"].get(
+                        "remediation_summary"
+                    )
+                    or {}
+                ).get("retry_readiness")
+            )
+            or "remediation_preview",
+            "Resolve remediation action items before another dry-run retry.",
+        ),
+        "workspace_remediation_verification_pack": (
+            "remediation_verification",
+            _rw_text(
+                dict(
+                    packs["workspace_remediation_verification_pack"].get(
+                        "verification_summary"
+                    )
+                    or {}
+                ).get("verification_status")
+            )
+            or "verification_preview",
+            "Review remediation verification before retry rehearsal.",
+        ),
+        "workspace_retry_rehearsal_plan_pack": (
+            "retry_rehearsal_plan",
+            _rw_text(
+                dict(
+                    packs["workspace_retry_rehearsal_plan_pack"].get(
+                        "retry_rehearsal_summary"
+                    )
+                    or {}
+                ).get("retry_readiness")
+            )
+            or "retry_plan_preview",
+            "Review second-pass dry-run runbook before retry rehearsal.",
+        ),
+        "workspace_retry_rehearsal_result_pack": (
+            "retry_rehearsal_result",
+            _rw_text(
+                dict(
+                    packs["workspace_retry_rehearsal_result_pack"].get(
+                        "retry_result_summary"
+                    )
+                    or {}
+                ).get("result_status")
+            )
+            or "retry_result_preview",
+            "Review second-pass simulated results and remaining gaps.",
+        ),
+        "workspace_retry_cycle_decision_pack": (
+            "retry_cycle_decision",
+            _rw_text(cycle_summary.get("decision_status"))
+            or "cycle_decision_preview",
+            _rw_text(recommended_cycle_action.get("reason"))
+            or "Review retry cycle decision before next dry-run cycle.",
+        ),
+        "workspace_cycle_history_timeline_pack": (
+            "cycle_history_timeline",
+            _rw_text(timeline_summary.get("timeline_status"))
+            or "cycle_history_preview",
+            _rw_text(timeline_summary.get("recommended_next_action"))
+            or "Review deterministic timeline without reading real history.",
+        ),
+    }
+
+    pack_readiness_inventory = []
+    system_status_cards = []
+    for index, pack_name in enumerate(required_pack_names, start=1):
+        pack = packs[pack_name]
+        card_type, status, action = pack_status_sources[pack_name]
+        present = bool(pack)
+        priority = (
+            "high"
+            if any(
+                marker in status.lower()
+                for marker in ["blocked", "manual", "lock", "gap"]
+            )
+            else "medium"
+            if present
+            else "low"
+        )
+        inventory_item = {
+            "pack_name": pack_name,
+            "present": present,
+            "source": "creative_decision_pack",
+            "status": status if present else "missing",
+            "ready_for_review": present,
+            "real_execution_allowed": False,
+        }
+        pack_readiness_inventory.append(inventory_item)
+        system_status_cards.append(
+            {
+                "card_id": f"control_status_card_{index:02d}",
+                "card_type": card_type,
+                "card_title": pack_name.replace("_", " ").title(),
+                "source_pack": pack_name,
+                "status": inventory_item["status"],
+                "summary": (
+                    f"{pack_name} is present and available for operator review."
+                    if present
+                    else f"{pack_name} is missing from the workspace preview."
+                ),
+                "priority": priority,
+                "recommended_operator_action": action,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Control card is preview-only and cannot trigger real execution, provider calls, database writes, tickets, or approvals."
+                ),
+            }
+        )
+
+    priority_sources = []
+    for item in list(cycle_pack.get("blocked_or_review_required_items") or []):
+        priority_sources.append(
+            {
+                "source_pack": "workspace_retry_cycle_decision_pack",
+                "item_type": _rw_text(item.get("source_type"))
+                or "manual_review_required",
+                "item_title": _rw_text(item.get("reason"))
+                or "Manual review remains required.",
+                "blocked_by": [_rw_text(item.get("reason"))]
+                if _rw_text(item.get("reason"))
+                else ["manual review required"],
+                "next_action_preview": "Review blocked or manual-review item before any next dry-run cycle.",
+                "risk_note": "Manual review item cannot authorize real execution.",
+            }
+        )
+    for item in list(cycle_pack.get("carry_forward_items") or []):
+        priority_sources.append(
+            {
+                "source_pack": "workspace_retry_cycle_decision_pack",
+                "item_type": _rw_text(item.get("source_type"))
+                or "carry_forward_blocker",
+                "item_title": _rw_text(item.get("issue"))
+                or "Carry-forward blocker remains unresolved.",
+                "blocked_by": [_rw_text(item.get("issue"))]
+                if _rw_text(item.get("issue"))
+                else ["carry-forward blocker"],
+                "next_action_preview": _rw_text(
+                    item.get("recommended_handling")
+                )
+                or "Return to remediation preview before retrying.",
+                "risk_note": "Carry-forward blocker keeps real execution locked.",
+            }
+        )
+    for trace in carry_forward_trace:
+        priority_sources.append(
+            {
+                "source_pack": "workspace_cycle_history_timeline_pack",
+                "item_type": "cycle_history_carry_forward_trace",
+                "item_title": _rw_text(trace.get("issue"))
+                or "Carry-forward trace requires operator review.",
+                "blocked_by": [_rw_text(trace.get("issue"))]
+                if _rw_text(trace.get("issue"))
+                else ["timeline carry-forward trace"],
+                "next_action_preview": "Review deterministic carry-forward trace before the next dry-run remediation pass.",
+                "risk_note": "Timeline trace is preview-only and does not read real history.",
+            }
+        )
+    for trace in operator_review_trace:
+        priority_sources.append(
+            {
+                "source_pack": "workspace_cycle_history_timeline_pack",
+                "item_type": "operator_review_trace",
+                "item_title": _rw_text(trace.get("reason"))
+                or "Operator review trace remains open.",
+                "blocked_by": [_rw_text(trace.get("review_status"))]
+                if _rw_text(trace.get("review_status"))
+                else ["operator review"],
+                "next_action_preview": "Review operator trace manually; no real approval or ticket is created.",
+                "risk_note": "Operator review trace is not a real operator log.",
+            }
+        )
+    if not priority_sources:
+        priority_sources.append(
+            {
+                "source_pack": "workspace_execution_readiness_pack",
+                "item_type": "safety_lock_review",
+                "item_title": "Confirm dry-run launch lock remains active.",
+                "blocked_by": ["real execution disabled"],
+                "next_action_preview": "Review capability lock status before any later preview cycle.",
+                "risk_note": "Safety lock remains active and cannot unlock real execution.",
+            }
+        )
+
+    operator_priority_queue = []
+    for index, item in enumerate(priority_sources, start=1):
+        operator_priority_queue.append(
+            {
+                "queue_id": f"control_priority_{index:02d}",
+                "priority": "high" if index <= 3 else "medium",
+                "source_pack": item["source_pack"],
+                "item_type": item["item_type"],
+                "item_title": item["item_title"],
+                "why_it_matters": (
+                    "This item affects manual review, blocker handling, carry-forward resolution, or safety lock status."
+                ),
+                "required_review": True,
+                "blocked_by": list(item["blocked_by"]),
+                "next_action_preview": item["next_action_preview"],
+                "real_execution_allowed": False,
+                "risk_note": item["risk_note"],
+            }
+        )
+
+    disabled_capabilities = {
+        "provider": False,
+        "llm": False,
+        "video": False,
+        "media": False,
+        "paid": False,
+        "registry": False,
+        "rollback": False,
+        "external_scraping": False,
+        "database_persistence": False,
+        "real_restore": False,
+        "real_execution": False,
+    }
+    capability_lock_status = {
+        "lock_mode": "all_real_capabilities_disabled",
+        "all_real_capabilities_disabled": True,
+        "real_execution_allowed": False,
+        "capabilities": disabled_capabilities,
+        "lock_note": (
+            "Operator cockpit is deterministic preview only; it cannot call providers, LLMs, video, media, paid operations, registry, rollback, external scraping, database persistence, restore, or real execution."
+        ),
+    }
+
+    control_signature = json.dumps(
+        {
+            "cycle_decision_id": _rw_text(
+                cycle_summary.get("cycle_decision_id")
+            ),
+            "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+            "cards": [card["card_id"] for card in system_status_cards],
+            "queue": [item["queue_id"] for item in operator_priority_queue],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    control_center_id = (
+        "workspace_control_center_"
+        + hashlib.sha256(control_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+    }
+
+    current_decision_snapshot = {
+        "snapshot_mode": "retry_cycle_decision_and_timeline_preview",
+        "source_retry_cycle_decision_id": _rw_text(
+            cycle_summary.get("cycle_decision_id")
+        ),
+        "source_timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+        "recommended_cycle_action": recommended_cycle_action,
+        "cycle_gate": cycle_gate,
+        "decision_trace": decision_trace,
+        "real_execution_allowed": False,
+    }
+    next_best_actions = [
+        {
+            "action_id": "control_next_review_priority_queue",
+            "action_type": "review_priority_queue_preview",
+            "action_title": "Review operator priority queue",
+            "source_pack": "workspace_control_center_pack",
+            "preview_action_only": True,
+            "recommended_next_step": "Resolve high-priority blocked, manual review, remaining gap, or carry-forward items in preview.",
+            "real_execution_allowed": False,
+        },
+        {
+            "action_id": "control_next_follow_cycle_decision",
+            "action_type": "follow_retry_cycle_decision_preview",
+            "action_title": _rw_text(
+                recommended_cycle_action.get("action_title")
+            )
+            or "Follow retry cycle decision preview",
+            "source_pack": "workspace_retry_cycle_decision_pack",
+            "preview_action_only": True,
+            "recommended_next_step": _rw_text(
+                recommended_cycle_action.get("recommended_next_state")
+            )
+            or "Continue only with a dry-run preview state.",
+            "real_execution_allowed": False,
+        },
+    ]
+
+    return {
+        "pack_version": "workspace_control_center_pack_v1",
+        "control_center_summary": {
+            "control_center_id": control_center_id,
+            "mode": "operator_cockpit_preview_control_center_preview_dry_run_only",
+            "system_status_card_count": len(system_status_cards),
+            "operator_priority_item_count": len(operator_priority_queue),
+            "current_cycle_phase": _rw_text(
+                timeline_summary.get("timeline_status")
+            )
+            or "cycle_history_preview",
+            "latest_decision_status": _rw_text(
+                cycle_summary.get("decision_status")
+            )
+            or "decision_preview",
+            "recommended_next_action": (
+                operator_priority_queue[0]["next_action_preview"]
+                if operator_priority_queue
+                else "Review control center preview."
+            ),
+            "real_execution_allowed": False,
+        },
+        "system_status_cards": system_status_cards,
+        "operator_priority_queue": operator_priority_queue,
+        "current_decision_snapshot": current_decision_snapshot,
+        "next_best_actions": next_best_actions,
+        "risk_and_blocker_overview": {
+            "highest_risk_level": "high"
+            if operator_priority_queue
+            else "medium",
+            "unresolved_blocker_count": len(operator_priority_queue),
+            "unresolved_blockers": [
+                {
+                    "queue_id": item["queue_id"],
+                    "source_pack": item["source_pack"],
+                    "blocked_by": item["blocked_by"],
+                    "risk_note": item["risk_note"],
+                }
+                for item in operator_priority_queue
+            ],
+            "manual_review_required": bool(operator_priority_queue),
+            "safety_lock_active": True,
+            "real_execution_allowed": False,
+        },
+        "pack_readiness_inventory": pack_readiness_inventory,
+        "capability_lock_status": capability_lock_status,
+        "control_quality_checks": {
+            "required_source_packs_checked": required_pack_names,
+            "all_required_packs_have_inventory_status": all(
+                item["pack_name"] in required_pack_names
+                for item in pack_readiness_inventory
+            ),
+            "system_status_cards_present": len(system_status_cards) >= 2,
+            "all_cards_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in system_status_cards
+            ),
+            "operator_priority_queue_present": bool(operator_priority_queue),
+            "all_queue_items_execution_disabled": all(
+                not item["real_execution_allowed"]
+                for item in operator_priority_queue
+            ),
+            "current_decision_references_retry_cycle_or_timeline": bool(
+                current_decision_snapshot["source_retry_cycle_decision_id"]
+                or current_decision_snapshot["source_timeline_id"]
+            ),
+            "next_best_actions_preview_only": all(
+                action["preview_action_only"]
+                and not action["real_execution_allowed"]
+                for action in next_best_actions
+            ),
+            "capability_lock_status_all_disabled": bool(
+                capability_lock_status["all_real_capabilities_disabled"]
+            ),
+            "audit_preview_not_persisted": True,
+            "database_write_performed": False,
+            "operator_task_created": False,
+            "real_history_table_read_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_workspace_control_center_preview",
+            "control_center_id": control_center_id,
+            "source_retry_cycle_decision_id": current_decision_snapshot[
+                "source_retry_cycle_decision_id"
+            ],
+            "source_timeline_id": current_decision_snapshot[
+                "source_timeline_id"
+            ],
+            "system_status_card_ids": [
+                card["card_id"] for card in system_status_cards
+            ],
+            "operator_priority_queue_ids": [
+                item["queue_id"] for item in operator_priority_queue
+            ],
+            "is_real_control_center": False,
+            "database_write_performed": False,
+            "operator_task_created": False,
+            "real_history_table_read_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic operator cockpit preview derived from workspace packs only; no real task, operator log, ticket, approval, provider, LLM, video, media, paid, registry, rollback, restore, external scraping, history table read, database write, or execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -27484,6 +27970,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_cycle_history_timeline_pack"] = (
         _rw_workspace_cycle_history_timeline_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_control_center_pack"] = (
+        _rw_workspace_control_center_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
