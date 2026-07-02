@@ -28869,6 +28869,475 @@ def _rw_workspace_human_review_queue_pack(
     }
 
 
+def _rw_workspace_capability_permission_matrix_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_names = [
+        "workspace_control_center_pack",
+        "workspace_human_review_queue_pack",
+        "workspace_agent_run_ledger_pack",
+        "workspace_retry_cycle_decision_pack",
+        "workspace_execution_readiness_pack",
+        "workspace_cycle_history_timeline_pack",
+    ]
+    packs = {
+        name: dict(creative_decision_pack.get(name) or {})
+        for name in source_pack_names
+    }
+    control_pack = packs["workspace_control_center_pack"]
+    human_review_pack = packs["workspace_human_review_queue_pack"]
+    agent_ledger_pack = packs["workspace_agent_run_ledger_pack"]
+    cycle_pack = packs["workspace_retry_cycle_decision_pack"]
+    readiness_pack = packs["workspace_execution_readiness_pack"]
+    timeline_pack = packs["workspace_cycle_history_timeline_pack"]
+
+    control_summary = dict(control_pack.get("control_center_summary") or {})
+    capability_locks = dict(control_pack.get("capability_lock_status") or {})
+    review_summary = dict(human_review_pack.get("review_queue_summary") or {})
+    review_items = list(human_review_pack.get("review_queue_items") or [])
+    task_cards = list(human_review_pack.get("operator_task_cards") or [])
+    ledger_summary = dict(agent_ledger_pack.get("ledger_summary") or {})
+    capability_usage = agent_ledger_pack.get("capability_usage_preview") or []
+    cycle_summary = dict(cycle_pack.get("cycle_decision_summary") or {})
+    cycle_gate = dict(cycle_pack.get("cycle_gate") or {})
+    readiness_summary = dict(readiness_pack.get("readiness_summary") or {})
+    launch_lock = dict(readiness_pack.get("launch_lock") or {})
+    manual_review_requirements = (
+        readiness_pack.get("manual_review_requirements") or {}
+    )
+    timeline_summary = dict(timeline_pack.get("timeline_summary") or {})
+    operator_review_trace = list(
+        timeline_pack.get("operator_review_trace") or []
+    )
+    carry_forward_trace = list(timeline_pack.get("carry_forward_trace") or [])
+
+    capability_definitions = [
+        (
+            "llm_generation",
+            "LLM generation",
+            "ai_generation",
+            "workspace_agent_run_ledger_pack",
+            ["llm_api_enabled", "real_execution_enabled"],
+        ),
+        (
+            "video_provider",
+            "Video provider",
+            "provider_runtime",
+            "workspace_control_center_pack",
+            ["provider_calls_enabled", "video_generation_enabled"],
+        ),
+        (
+            "media_upload",
+            "Media upload",
+            "media_transfer",
+            "workspace_control_center_pack",
+            ["media_upload_enabled"],
+        ),
+        (
+            "media_download",
+            "Media download",
+            "media_transfer",
+            "workspace_control_center_pack",
+            ["media_download_enabled"],
+        ),
+        (
+            "paid_operation",
+            "Paid operation",
+            "commercial_action",
+            "workspace_control_center_pack",
+            ["paid_operation_enabled"],
+        ),
+        (
+            "provider_registry",
+            "Provider registry",
+            "provider_registry",
+            "workspace_control_center_pack",
+            ["registry_write_enabled"],
+        ),
+        (
+            "rollback_restore",
+            "Rollback / restore",
+            "restore_control",
+            "workspace_execution_readiness_pack",
+            ["rollback_enabled", "real_restore_enabled"],
+        ),
+        (
+            "external_scraping",
+            "External scraping",
+            "data_access",
+            "workspace_cycle_history_timeline_pack",
+            ["external_scraping_enabled"],
+        ),
+        (
+            "database_persistence",
+            "Database persistence",
+            "persistence",
+            "workspace_human_review_queue_pack",
+            ["database_persistence_enabled"],
+        ),
+        (
+            "real_execution",
+            "Real execution",
+            "execution",
+            "workspace_execution_readiness_pack",
+            ["real_execution_enabled"],
+        ),
+        (
+            "human_approval",
+            "Human approval",
+            "approval",
+            "workspace_human_review_queue_pack",
+            ["approval_creation_enabled"],
+        ),
+        (
+            "operator_task_creation",
+            "Operator task creation",
+            "operator_task",
+            "workspace_human_review_queue_pack",
+            ["operator_task_creation_enabled"],
+        ),
+        (
+            "secret_access",
+            "Secret access",
+            "secret_access",
+            "workspace_agent_run_ledger_pack",
+            ["secret_read_enabled"],
+        ),
+    ]
+    source_safety = {}
+    for pack in [
+        control_pack,
+        human_review_pack,
+        agent_ledger_pack,
+        cycle_pack,
+        readiness_pack,
+        timeline_pack,
+    ]:
+        source_safety.update(dict(pack.get("safety_boundaries") or {}))
+
+    review_refs = [
+        item.get("review_id")
+        for item in review_items
+        if item.get("review_id")
+    ]
+    task_refs = [
+        task.get("task_id")
+        for task in task_cards
+        if task.get("task_id")
+    ]
+    gate_refs = [
+        _rw_text(cycle_gate.get("gate_id")) or "cycle_gate_preview",
+        _rw_text(launch_lock.get("lock_id")) or "launch_lock_preview",
+    ]
+    evidence_refs = [
+        ref
+        for item in review_items
+        for ref in list(item.get("source_refs") or [])
+        if ref
+    ]
+    lock_reason = (
+        _rw_text(launch_lock.get("lock_reason"))
+        or _rw_text(cycle_gate.get("gate_reason"))
+        or "Real capability remains disabled by dry-run policy gate."
+    )
+
+    def _capability_status(keys: list[str]) -> str:
+        if any(source_safety.get(key) for key in keys):
+            return "policy_violation_blocked"
+        return "disabled_preview_only"
+
+    capability_permission_cards = []
+    policy_gate_results = []
+    capability_dependency_map = {}
+    for index, (
+        capability_id,
+        capability_name,
+        capability_category,
+        source_pack,
+        safety_keys,
+    ) in enumerate(capability_definitions, start=1):
+        requires_human_approval = capability_id in {
+            "human_approval",
+            "operator_task_creation",
+            "real_execution",
+        }
+        required_inputs = [
+            "source workspace pack review",
+            "safety boundary confirmation",
+        ]
+        if capability_id in {"llm_generation", "video_provider"}:
+            required_inputs.append("evidence-bound prompt or provider plan review")
+        if capability_id in {
+            "external_scraping",
+            "secret_access",
+            "database_persistence",
+        }:
+            required_inputs.append("explicit future security review")
+        required_approvals = ["human_review_preview"]
+        if requires_human_approval:
+            required_approvals.append("future real approval system not connected")
+        blocked_by = [
+            "real_execution_disabled",
+            "dry_run_policy_gate",
+            "launch_lock_active",
+        ]
+        if capability_id == "secret_access":
+            blocked_by.append("secret_read_disabled")
+        if capability_id in {"human_approval", "operator_task_creation"}:
+            blocked_by.append("real_approval_or_task_creation_disabled")
+        if capability_id in {"rollback_restore"}:
+            blocked_by.append("restore_and_rollback_disabled")
+        card = {
+            "capability_id": capability_id,
+            "capability_name": capability_name,
+            "capability_category": capability_category,
+            "current_status": _capability_status(safety_keys),
+            "permission_level": "denied_real_execution_preview_only",
+            "source_pack": source_pack,
+            "required_inputs": required_inputs,
+            "required_approvals": required_approvals,
+            "blocked_by": blocked_by,
+            "allowed_modes": [
+                "preview",
+                "dry_run",
+                "export",
+                "manual_review_preview",
+            ],
+            "disallowed_modes": [
+                "real_execution",
+                "real_provider_call",
+                "real_llm_call",
+                "media_transfer",
+                "paid_operation",
+                "database_write",
+                "registry_write",
+                "restore",
+                "rollback",
+                "secret_read",
+            ],
+            "real_execution_allowed": False,
+            "risk_note": (
+                f"{capability_name} remains disabled; this matrix is a deterministic policy gate preview and does not grant real permissions."
+            ),
+        }
+        capability_permission_cards.append(card)
+        policy_gate_results.append(
+            {
+                "gate_id": f"policy_gate_{index:02d}_{capability_id}",
+                "gate_name": f"{capability_name} policy gate",
+                "capability_id": capability_id,
+                "gate_status": "blocked_preview_only",
+                "gate_reason": (
+                    f"{capability_name} is denied for real use because real execution is disabled and the launch lock remains active."
+                ),
+                "required_evidence": evidence_refs[:5]
+                or ["workspace evidence review preview"],
+                "required_human_review": review_refs[:5]
+                or ["human_review_preview_required"],
+                "next_allowed_mode": "manual_review_preview",
+                "real_execution_allowed": False,
+                "risk_note": "Policy gate preview does not unlock any real capability.",
+            }
+        )
+        capability_dependency_map[capability_id] = {
+            "source_pack": source_pack,
+            "source_safety_keys": safety_keys,
+            "depends_on_reviews": review_refs[:8],
+            "depends_on_operator_tasks": task_refs[:8],
+            "depends_on_gates": gate_refs,
+            "depends_on_evidence": evidence_refs[:8],
+            "depends_on_launch_lock": _rw_text(launch_lock.get("lock_id"))
+            or "launch_lock_preview",
+            "depends_on_cycle_gate": _rw_text(cycle_gate.get("gate_id"))
+            or "cycle_gate_preview",
+            "real_execution_allowed": False,
+        }
+
+    denied_capability_reasons = [
+        {
+            "capability_id": card["capability_id"],
+            "denial_reason": (
+                "Real permission is denied in this deterministic preview; capability remains dry-run only."
+            ),
+            "blocked_by": list(card["blocked_by"]),
+            "real_execution_allowed": False,
+        }
+        for card in capability_permission_cards
+    ]
+    unlock_requirements = [
+        {
+            "requirement_id": "future_unlock_human_security_review",
+            "requirement": (
+                "A future, explicit security and human approval review would be required before any real capability could be considered."
+            ),
+            "unlocks_real_capability_now": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "requirement_id": "future_unlock_secret_and_provider_policy",
+            "requirement": (
+                "Future provider, secret, media, paid, database, registry, rollback, and external data policies would need to exist before real use."
+            ),
+            "unlocks_real_capability_now": False,
+            "real_execution_allowed": False,
+        },
+    ]
+    matrix_signature = json.dumps(
+        {
+            "control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "review_queue_id": _rw_text(review_summary.get("queue_id")),
+            "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+            "cycle_decision_id": _rw_text(
+                cycle_summary.get("cycle_decision_id")
+            ),
+            "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+            "capabilities": [
+                card["capability_id"] for card in capability_permission_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    matrix_id = (
+        "workspace_capability_permission_matrix_"
+        + hashlib.sha256(matrix_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_log_read_enabled": False,
+        "approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "agent_runtime_enabled": False,
+        "permission_system_enabled": False,
+        "human_approval_system_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_capability_permission_matrix_pack_v1",
+        "permission_matrix_summary": {
+            "matrix_id": matrix_id,
+            "mode": "permission_matrix_preview_policy_gate_preview_dry_run_only",
+            "capability_count": len(capability_permission_cards),
+            "policy_gate_count": len(policy_gate_results),
+            "denied_capability_count": len(denied_capability_reasons),
+            "source_control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "source_human_review_queue_id": _rw_text(
+                review_summary.get("queue_id")
+            ),
+            "source_agent_run_ledger_id": _rw_text(
+                ledger_summary.get("ledger_id")
+            ),
+            "launch_lock_status": _rw_text(launch_lock.get("lock_status"))
+            or "locked_preview_only",
+            "recommended_next_action": (
+                "Review permission matrix and keep all real capabilities disabled."
+            ),
+            "real_execution_allowed": False,
+        },
+        "capability_permission_cards": capability_permission_cards,
+        "policy_gate_results": policy_gate_results,
+        "unlock_requirements": unlock_requirements,
+        "denied_capability_reasons": denied_capability_reasons,
+        "human_approval_requirements": {
+            "mode": "human_approval_requirements_preview_only",
+            "manual_review_requirements": manual_review_requirements,
+            "review_queue_ids": review_refs,
+            "operator_task_preview_ids": task_refs,
+            "operator_review_trace_count": len(operator_review_trace),
+            "creates_real_approval": False,
+            "real_execution_allowed": False,
+        },
+        "capability_dependency_map": capability_dependency_map,
+        "permission_quality_checks": {
+            "source_packs_checked": source_pack_names,
+            "control_center_pack_present": bool(control_pack),
+            "human_review_queue_pack_present": bool(human_review_pack),
+            "agent_run_ledger_pack_present": bool(agent_ledger_pack),
+            "retry_cycle_decision_pack_present": bool(cycle_pack),
+            "execution_readiness_pack_present": bool(readiness_pack),
+            "cycle_history_timeline_pack_present": bool(timeline_pack),
+            "all_required_capabilities_present": len(
+                capability_permission_cards
+            )
+            == 13,
+            "all_capabilities_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in capability_permission_cards
+            ),
+            "all_policy_gates_execution_disabled": all(
+                not gate["real_execution_allowed"] for gate in policy_gate_results
+            ),
+            "unlock_requirements_do_not_unlock_now": all(
+                not item["unlocks_real_capability_now"]
+                for item in unlock_requirements
+            ),
+            "human_approval_preview_only": True,
+            "audit_preview_not_persisted": True,
+            "database_write_performed": False,
+            "real_secret_read_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "permission_granted_for_real_execution": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_capability_permission_matrix_preview",
+            "matrix_id": matrix_id,
+            "source_pack_ids": {
+                "control_center_id": _rw_text(
+                    control_summary.get("control_center_id")
+                ),
+                "review_queue_id": _rw_text(review_summary.get("queue_id")),
+                "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+                "cycle_decision_id": _rw_text(
+                    cycle_summary.get("cycle_decision_id")
+                ),
+                "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+            },
+            "capability_ids": [
+                card["capability_id"] for card in capability_permission_cards
+            ],
+            "carry_forward_trace_count": len(carry_forward_trace),
+            "capability_usage_preview": capability_usage,
+            "is_real_permission_system": False,
+            "database_write_performed": False,
+            "secret_read_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic capability permission matrix and policy gate preview derived from workspace packs only; no real permission system, human approval system, agent runtime, task system, operator log, secret read, provider, LLM, video, media, paid, registry, rollback, restore, external scraping, history table read, database write, or execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -29009,6 +29478,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_human_review_queue_pack"] = (
         _rw_workspace_human_review_queue_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_capability_permission_matrix_pack"] = (
+        _rw_workspace_capability_permission_matrix_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

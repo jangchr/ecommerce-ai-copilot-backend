@@ -3562,6 +3562,190 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_capability_permission_matrix_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-capability-permission-matrix",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PERMISSION001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_capability_permission_matrix_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_capability_permission_matrix_pack_v1",
+        )
+        summary = pack["permission_matrix_summary"]
+        self.assertTrue(summary["matrix_id"])
+        self.assertIn("permission_matrix_preview", summary["mode"])
+        self.assertIn("policy_gate_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        required_capabilities = {
+            "llm_generation", "video_provider", "media_upload",
+            "media_download", "paid_operation", "provider_registry",
+            "rollback_restore", "external_scraping",
+            "database_persistence", "real_execution", "human_approval",
+            "operator_task_creation", "secret_access",
+        }
+        cards = pack["capability_permission_cards"]
+        self.assertEqual(
+            {card["capability_id"] for card in cards},
+            required_capabilities,
+        )
+        for card in cards:
+            for field in [
+                "capability_id", "current_status", "permission_level",
+                "allowed_modes", "disallowed_modes",
+            ]:
+                with self.subTest(
+                    capability=card["capability_id"], field=field
+                ):
+                    self.assertTrue(card[field])
+            self.assertIn(card["current_status"], {
+                "disabled_preview_only",
+                "policy_violation_blocked",
+            })
+            self.assertIn("preview", card["allowed_modes"])
+            self.assertIn("dry_run", card["allowed_modes"])
+            self.assertIn("real_execution", card["disallowed_modes"])
+            self.assertFalse(card["real_execution_allowed"])
+            self.assertNotIn("granted", card["permission_level"].lower())
+
+        gates = pack["policy_gate_results"]
+        self.assertTrue(gates)
+        self.assertEqual(
+            {gate["capability_id"] for gate in gates},
+            required_capabilities,
+        )
+        for gate in gates:
+            for field in [
+                "gate_id", "capability_id", "gate_status", "gate_reason",
+            ]:
+                with self.subTest(gate=gate["gate_id"], field=field):
+                    self.assertTrue(gate[field])
+            self.assertIn("preview", gate["gate_status"])
+            self.assertFalse(gate["real_execution_allowed"])
+            self.assertNotIn("approved_for_real_execution", str(gate).lower())
+
+        unlock_requirements = pack["unlock_requirements"]
+        self.assertTrue(unlock_requirements)
+        for requirement in unlock_requirements:
+            self.assertFalse(requirement["unlocks_real_capability_now"])
+            self.assertFalse(requirement["real_execution_allowed"])
+
+        denied = pack["denied_capability_reasons"]
+        self.assertEqual(
+            {item["capability_id"] for item in denied},
+            required_capabilities,
+        )
+        self.assertTrue(all(not item["real_execution_allowed"] for item in denied))
+
+        human_approval = pack["human_approval_requirements"]
+        self.assertIn("preview_only", human_approval["mode"])
+        self.assertFalse(human_approval["creates_real_approval"])
+        self.assertFalse(human_approval["real_execution_allowed"])
+
+        dependency_map = pack["capability_dependency_map"]
+        self.assertEqual(set(dependency_map), required_capabilities)
+        for capability_id, dependency in dependency_map.items():
+            with self.subTest(dependency=capability_id):
+                self.assertIn("source_pack", dependency)
+                self.assertIn("depends_on_reviews", dependency)
+                self.assertIn("depends_on_gates", dependency)
+                self.assertIn("depends_on_evidence", dependency)
+                self.assertFalse(dependency["real_execution_allowed"])
+
+        checks = pack["permission_quality_checks"]
+        for key in [
+            "control_center_pack_present",
+            "human_review_queue_pack_present",
+            "agent_run_ledger_pack_present",
+            "retry_cycle_decision_pack_present",
+            "execution_readiness_pack_present",
+            "cycle_history_timeline_pack_present",
+            "all_required_capabilities_present",
+            "all_capabilities_execution_disabled",
+            "all_policy_gates_execution_disabled",
+            "unlock_requirements_do_not_unlock_now",
+            "human_approval_preview_only",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "database_write_performed", "real_secret_read_performed",
+            "real_log_read_performed", "real_history_table_read_performed",
+            "operator_task_created", "real_approval_created",
+            "permission_granted_for_real_execution",
+            "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["matrix_id"])
+        self.assertFalse(audit["is_real_permission_system"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["secret_read_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_approval_created"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled", "llm_api_enabled",
+            "video_generation_enabled", "media_upload_enabled",
+            "media_download_enabled", "paid_operation_enabled",
+            "registry_write_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
