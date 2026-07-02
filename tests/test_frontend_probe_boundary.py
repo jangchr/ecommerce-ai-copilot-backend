@@ -11693,6 +11693,141 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_system_integration_health_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace system integration health bundle",
+            "PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_MARKER",
+            "latestProjectWorkspaceSystemIntegrationHealthPack",
+            "projectWorkspaceSystemIntegrationHealthPackFromWorkspace",
+            "projectWorkspaceExportSystemIntegrationHealthSnapshot",
+            "projectWorkspaceExportSystemIntegrationHealthMarkdown",
+            "renderProjectWorkspaceSystemIntegrationHealthSummaryPanel",
+            "renderProjectWorkspacePackHealthCardsPanel",
+            "renderProjectWorkspaceWorkflowGateHealthPanel",
+            "renderProjectWorkspaceTraceabilityOperatorCapabilityHealthPanel",
+            "renderProjectWorkspaceIntegrationRiskQualityAuditSafetyPanel",
+            "copyProjectWorkspaceSystemIntegrationHealthSummary",
+            "copyProjectWorkspacePackHealthCards",
+            "copyProjectWorkspaceWorkflowChainHealth",
+            "copyProjectWorkspaceGateHealthOverview",
+            "copyProjectWorkspaceTraceabilityHealth",
+            "copyProjectWorkspaceOperatorReadinessOverview",
+            "copyProjectWorkspaceCapabilityLockHealth",
+            "copyProjectWorkspaceIntegrationRiskRegister",
+            "copyProjectWorkspaceFullSystemIntegrationHealthPack",
+            "workspace_system_integration_health_pack: projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace)",
+            "Workspace System Integration Health / Readiness Overview",
+            "Integration Health Summary", "Pack Health Cards",
+            "Workflow Chain Health", "Gate Health Overview",
+            "Traceability Health", "Operator Readiness Overview",
+            "Capability Lock Health", "Integration Risk Register",
+            "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.integration_health_summary",
+            "pack.pack_health_cards", "pack.workflow_chain_health",
+            "pack.gate_health_overview", "pack.traceability_health",
+            "pack.operator_readiness_overview", "pack.capability_lock_health",
+            "pack.integration_risk_register", "pack.health_quality_checks",
+            "pack.audit_preview", "pack.safety_boundaries",
+            "summary.mode", "summary.pack_health_card_count",
+            "summary.integration_risk_count", "summary.recommended_next_action",
+            "summary.real_execution_allowed", "card.pack_id",
+            "card.pack_name", "card.source_pack", "card.health_status",
+            "card.present", "card.ready_for_review",
+            "card.missing_or_weak_fields", "card.upstream_dependencies",
+            "card.downstream_consumers", "card.recommended_fix_preview",
+            "card.real_execution_allowed", "card.risk_note",
+            "launch_lock", "cycle_gate", "policy_gate", "human_review_gate",
+            "agent_run_ledger_present", "cycle_history_timeline_present",
+            "human_review_queue_present", "control_center_present",
+            "capabilities", "real_service_health_read_performed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceCapabilityDependencyQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceSystemIntegrationHealthSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceIntegrationRiskQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_system_integration_health_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "systemIntegrationHealthPackTitle",
+            "systemIntegrationHealthSummaryTitle",
+            "systemIntegrationHealthPackCardsTitle",
+            "systemIntegrationHealthWorkflowTitle",
+            "systemIntegrationHealthGateTitle",
+            "systemIntegrationHealthTraceabilityTitle",
+            "systemIntegrationHealthOperatorTitle",
+            "systemIntegrationHealthCapabilityTitle",
+            "systemIntegrationHealthRiskTitle",
+            "systemIntegrationHealthAuditTitle",
+            "systemIntegrationHealthSafetyTitle",
+            "systemIntegrationHealthCopySummary",
+            "systemIntegrationHealthCopyPackCards",
+            "systemIntegrationHealthCopyWorkflow",
+            "systemIntegrationHealthCopyGate",
+            "systemIntegrationHealthCopyTraceability",
+            "systemIntegrationHealthCopyOperator",
+            "systemIntegrationHealthCopyCapability",
+            "systemIntegrationHealthCopyRisk",
+            "systemIntegrationHealthCopyFull",
+            "systemIntegrationHealthCopied",
+            "systemIntegrationHealthCopyFailed",
+            "systemIntegrationHealthCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace system integration health bundle", script)
+            self.assertIn("project_workspace_system_integration_health_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceSystemIntegrationHealthSummaryText"):
+            html.index("async function copyProjectWorkspaceSystemIntegrationHealthText")
+        ]
+        for key in [
+            "systemIntegrationHealthPackTitle",
+            "systemIntegrationHealthSummaryTitle",
+            "systemIntegrationHealthPackCardsTitle",
+            "systemIntegrationHealthWorkflowTitle",
+            "systemIntegrationHealthGateTitle",
+            "systemIntegrationHealthTraceabilityTitle",
+            "systemIntegrationHealthOperatorTitle",
+            "systemIntegrationHealthCapabilityTitle",
+            "systemIntegrationHealthRiskTitle",
+            "systemIntegrationHealthAuditTitle",
+            "systemIntegrationHealthSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Integration health preview only", html)
+        self.assertIn("not a real monitoring system", html)
+        self.assertIn("does not read real service health", html)
+        self.assertIn("These are preview gates, not real execution gates", html)
+        self.assertIn("All 13 capabilities remain disabled", html)
+        self.assertIn("Audit preview is not written to a database", html)
+        self.assertIn("real service health", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

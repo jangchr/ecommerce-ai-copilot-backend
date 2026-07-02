@@ -3622,6 +3622,7 @@
         let latestProjectWorkspaceAgentRunLedgerPack = {};
         let latestProjectWorkspaceHumanReviewQueuePack = {};
         let latestProjectWorkspaceCapabilityPermissionMatrixPack = {};
+        let latestProjectWorkspaceSystemIntegrationHealthPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8920,6 +8921,7 @@
                 latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
                 latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
                 latestProjectWorkspaceCapabilityPermissionMatrixPack = latestProjectCreativeDecisionPack.workspace_capability_permission_matrix_pack || {};
+                latestProjectWorkspaceSystemIntegrationHealthPack = latestProjectCreativeDecisionPack.workspace_system_integration_health_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14778,6 +14780,19 @@
         const PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER = 'Project Workspace agent run ledger bundle';
         const PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER = 'Project Workspace human review queue bundle';
         const PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_MARKER = 'Project Workspace capability permission matrix bundle';
+        const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_MARKER = 'Project Workspace system integration health bundle';
+        const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
+            'launch_lock',
+            'cycle_gate',
+            'policy_gate',
+            'human_review_gate',
+            'agent_run_ledger_present',
+            'cycle_history_timeline_present',
+            'human_review_queue_present',
+            'control_center_present',
+            'capabilities',
+            'real_service_health_read_performed'
+        ];
         const PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_REQUIRED_IDS = [
             'llm_generation',
             'video_provider',
@@ -19018,6 +19033,108 @@
         function copyProjectWorkspaceCapabilityPermissionAuditPreview() { return copyProjectWorkspaceCapabilityPermissionMatrixText('audit'); }
         function copyProjectWorkspaceFullCapabilityPermissionMatrixPack() { return copyProjectWorkspaceCapabilityPermissionMatrixText('full'); }
 
+        function projectWorkspaceSystemIntegrationHealthPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceSystemIntegrationHealthPack && Object.keys(latestProjectWorkspaceSystemIntegrationHealthPack).length) return latestProjectWorkspaceSystemIntegrationHealthPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_system_integration_health_pack || {};
+        }
+
+        function projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceSystemIntegrationHealthPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_MARKER,
+                has_workspace_system_integration_health_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                integration_health_summary: pack.integration_health_summary || {},
+                pack_health_cards: pack.pack_health_cards || [],
+                workflow_chain_health: pack.workflow_chain_health || {},
+                gate_health_overview: pack.gate_health_overview || {},
+                traceability_health: pack.traceability_health || {},
+                operator_readiness_overview: pack.operator_readiness_overview || {},
+                capability_lock_health: pack.capability_lock_health || {},
+                integration_risk_register: pack.integration_risk_register || [],
+                health_quality_checks: pack.health_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceSystemIntegrationHealthJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceSystemIntegrationHealthSummaryText(pack = projectWorkspaceExportSystemIntegrationHealthSnapshot()) {
+            if (!pack.has_workspace_system_integration_health_pack) return '';
+            const summary = pack.integration_health_summary || {};
+            const overallStatus = summary.overall_health_status || (summary.workflow_chain_complete_for_preview ? 'preview_chain_complete' : 'preview_with_risks');
+            return [
+                t('systemIntegrationHealthSummaryTitle'),
+                `${t('systemIntegrationHealthMode')}: ${summary.mode || t('none')}`,
+                `${t('systemIntegrationHealthOverallStatus')}: ${overallStatus}`,
+                `${t('systemIntegrationHealthPackCount')}: ${summary.pack_health_card_count ?? pack.pack_health_cards.length}`,
+                `${t('systemIntegrationHealthRiskCount')}: ${summary.integration_risk_count ?? pack.integration_risk_register.length}`,
+                `${t('systemIntegrationHealthRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('systemIntegrationHealthRealExecution')}: ${summary.real_execution_allowed === false ? t('systemIntegrationHealthDisabled') : String(summary.real_execution_allowed)}`,
+                t('systemIntegrationHealthPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceSystemIntegrationHealthSectionText(titleKey, value) {
+            const body = projectWorkspaceSystemIntegrationHealthJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportSystemIntegrationHealthMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace);
+            if (!pack.has_workspace_system_integration_health_pack) return '';
+            return [
+                `## ${t('systemIntegrationHealthPackTitle')}`,
+                `## ${t('systemIntegrationHealthSummaryTitle')}`,
+                projectWorkspaceSystemIntegrationHealthSummaryText(pack), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthPackCardsTitle', pack.pack_health_cards), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthWorkflowTitle', pack.workflow_chain_health), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthGateTitle', pack.gate_health_overview), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthTraceabilityTitle', pack.traceability_health), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthOperatorTitle', pack.operator_readiness_overview), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthCapabilityTitle', pack.capability_lock_health), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthRiskTitle', pack.integration_risk_register), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthAuditTitle', pack.audit_preview), '',
+                projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthSafetyTitle', pack.safety_boundaries),
+                t('systemIntegrationHealthSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceSystemIntegrationHealthText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceSystemIntegrationHealthStatus');
+            const pack = projectWorkspaceExportSystemIntegrationHealthSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceSystemIntegrationHealthSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthPackCardsTitle', pack.pack_health_cards)
+                : kind === 'workflow' ? projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthWorkflowTitle', pack.workflow_chain_health)
+                : kind === 'gate' ? projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthGateTitle', pack.gate_health_overview)
+                : kind === 'traceability' ? projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthTraceabilityTitle', pack.traceability_health)
+                : kind === 'operator' ? projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthOperatorTitle', pack.operator_readiness_overview)
+                : kind === 'capability' ? projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthCapabilityTitle', pack.capability_lock_health)
+                : kind === 'risk' ? projectWorkspaceSystemIntegrationHealthSectionText('systemIntegrationHealthRiskTitle', pack.integration_risk_register)
+                : projectWorkspaceExportSystemIntegrationHealthMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('systemIntegrationHealthCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('systemIntegrationHealthCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('systemIntegrationHealthCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('systemIntegrationHealthCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceSystemIntegrationHealthSummary() { return copyProjectWorkspaceSystemIntegrationHealthText('summary'); }
+        function copyProjectWorkspacePackHealthCards() { return copyProjectWorkspaceSystemIntegrationHealthText('cards'); }
+        function copyProjectWorkspaceWorkflowChainHealth() { return copyProjectWorkspaceSystemIntegrationHealthText('workflow'); }
+        function copyProjectWorkspaceGateHealthOverview() { return copyProjectWorkspaceSystemIntegrationHealthText('gate'); }
+        function copyProjectWorkspaceTraceabilityHealth() { return copyProjectWorkspaceSystemIntegrationHealthText('traceability'); }
+        function copyProjectWorkspaceOperatorReadinessOverview() { return copyProjectWorkspaceSystemIntegrationHealthText('operator'); }
+        function copyProjectWorkspaceCapabilityLockHealth() { return copyProjectWorkspaceSystemIntegrationHealthText('capability'); }
+        function copyProjectWorkspaceIntegrationRiskRegister() { return copyProjectWorkspaceSystemIntegrationHealthText('risk'); }
+        function copyProjectWorkspaceFullSystemIntegrationHealthPack() { return copyProjectWorkspaceSystemIntegrationHealthText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -22579,6 +22696,35 @@
             return `<div class="section-block" id="projectWorkspaceCapabilityDependencyQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('capabilityPermissionMatrixDependencyQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixDependencyQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityDependencyMap()">${escapeHTML(t('capabilityPermissionMatrixCopyDependency'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityPermissionAuditPreview()">${escapeHTML(t('capabilityPermissionMatrixCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.capability_dependency_map) || t('capabilityPermissionMatrixNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.permission_quality_checks) || t('capabilityPermissionMatrixNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.audit_preview) || t('capabilityPermissionMatrixNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('capabilityPermissionMatrixSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixSecretTaskNote'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceSystemIntegrationHealthSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace); if (!pack.has_workspace_system_integration_health_pack) return '';
+            const summary = pack.integration_health_summary || {};
+            const overallStatus = summary.overall_health_status || (summary.workflow_chain_complete_for_preview ? 'preview_chain_complete' : 'preview_with_risks');
+            return `<div class="section-block" id="projectWorkspaceSystemIntegrationHealthSummaryPanel" data-system-integration-health-marker="${PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_MARKER}" data-marker="project_workspace_system_integration_health_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('systemIntegrationHealthPackTitle'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullSystemIntegrationHealthPack()">${escapeHTML(t('systemIntegrationHealthCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('systemIntegrationHealthMode'), summary.mode || t('none'))}${metricPill(t('systemIntegrationHealthOverallStatus'), overallStatus)}${metricPill(t('systemIntegrationHealthPackCount'), String(summary.pack_health_card_count ?? pack.pack_health_cards.length))}${metricPill(t('systemIntegrationHealthRiskCount'), String(summary.integration_risk_count ?? pack.integration_risk_register.length))}${metricPill(t('systemIntegrationHealthRealExecution'), summary.real_execution_allowed === false ? t('systemIntegrationHealthDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthSummaryText(pack) || t('systemIntegrationHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('systemIntegrationHealthPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceSystemIntegrationHealthStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSystemIntegrationHealthSummary()">${escapeHTML(t('systemIntegrationHealthCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspacePackHealthCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace); if (!pack.has_workspace_system_integration_health_pack) return '';
+            const cards = (pack.pack_health_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.pack_name || card.pack_id || t('systemIntegrationHealthPackCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.health_status || t('none'))}</span></div><div><strong>${escapeHTML(t('systemIntegrationHealthPackId'))}:</strong> ${escapeHTML(card.pack_id || t('none'))}</div><div><strong>${escapeHTML(t('systemIntegrationHealthSourcePack'))}:</strong> ${escapeHTML(card.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('systemIntegrationHealthPresent'))}:</strong> ${escapeHTML(String(card.present))}</div><div><strong>${escapeHTML(t('systemIntegrationHealthReadyForReview'))}:</strong> ${escapeHTML(String(card.ready_for_review))}</div><div><strong>${escapeHTML(t('systemIntegrationHealthRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('systemIntegrationHealthDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText({missing_or_weak_fields:card.missing_or_weak_fields||[],upstream_dependencies:card.upstream_dependencies||[],downstream_consumers:card.downstream_consumers||[],recommended_fix_preview:card.recommended_fix_preview||'',risk_note:card.risk_note||''}) || t('systemIntegrationHealthNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePackHealthCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('systemIntegrationHealthPackCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthPackCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePackHealthCards()">${escapeHTML(t('systemIntegrationHealthCopyPackCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('systemIntegrationHealthNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceWorkflowGateHealthPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace); if (!pack.has_workspace_system_integration_health_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceWorkflowGateHealthPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('systemIntegrationHealthWorkflowGateTitle'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthWorkflowGateHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceWorkflowChainHealth()">${escapeHTML(t('systemIntegrationHealthCopyWorkflow'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceGateHealthOverview()">${escapeHTML(t('systemIntegrationHealthCopyGate'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthWorkflowTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.workflow_chain_health) || t('systemIntegrationHealthNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthGateTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.gate_health_overview) || t('systemIntegrationHealthNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthPreviewGateNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceTraceabilityOperatorCapabilityHealthPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace); if (!pack.has_workspace_system_integration_health_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceTraceabilityOperatorCapabilityHealthPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('systemIntegrationHealthTraceOperatorCapabilityTitle'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthTraceOperatorCapabilityHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceTraceabilityHealth()">${escapeHTML(t('systemIntegrationHealthCopyTraceability'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorReadinessOverview()">${escapeHTML(t('systemIntegrationHealthCopyOperator'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityLockHealth()">${escapeHTML(t('systemIntegrationHealthCopyCapability'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthTraceabilityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.traceability_health) || t('systemIntegrationHealthNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthOperatorTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.operator_readiness_overview) || t('systemIntegrationHealthNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthCapabilityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.capability_lock_health) || t('systemIntegrationHealthNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthCapabilityDisabledNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceIntegrationRiskQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace); if (!pack.has_workspace_system_integration_health_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('systemIntegrationHealthDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceIntegrationRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('systemIntegrationHealthRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthRiskQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceIntegrationRiskRegister()">${escapeHTML(t('systemIntegrationHealthCopyRisk'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.integration_risk_register) || t('systemIntegrationHealthNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.health_quality_checks) || t('systemIntegrationHealthNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.audit_preview) || t('systemIntegrationHealthNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('systemIntegrationHealthSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -23097,6 +23243,8 @@
                 '',
                 projectWorkspaceExportCapabilityPermissionMatrixMarkdown(workspace),
                 '',
+                projectWorkspaceExportSystemIntegrationHealthMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -23200,6 +23348,7 @@
                 workspace_agent_run_ledger_pack: projectWorkspaceExportAgentRunLedgerSnapshot(workspace),
                 workspace_human_review_queue_pack: projectWorkspaceExportHumanReviewQueueSnapshot(workspace),
                 workspace_capability_permission_matrix_pack: projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace),
+                workspace_system_integration_health_pack: projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -35706,6 +35855,11 @@
                     ${renderProjectWorkspaceCapabilityPolicyGateResultsPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityUnlockDeniedApprovalPanel(workspace)}
                     ${renderProjectWorkspaceCapabilityDependencyQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceSystemIntegrationHealthSummaryPanel(workspace)}
+                    ${renderProjectWorkspacePackHealthCardsPanel(workspace)}
+                    ${renderProjectWorkspaceWorkflowGateHealthPanel(workspace)}
+                    ${renderProjectWorkspaceTraceabilityOperatorCapabilityHealthPanel(workspace)}
+                    ${renderProjectWorkspaceIntegrationRiskQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -45365,7 +45519,58 @@
             capabilityPermissionMatrixDependencyQualityAuditSafetyHelper: 'Inspect capability dependency map, quality checks, audit preview, and disabled real capability boundaries.',
             capabilityPermissionMatrixAuditNoWriteNote: 'Audit preview is not written to a database and does not read real logs or real history tables.',
             capabilityPermissionMatrixSecretTaskNote: 'No secret is read and no real operator task, ticket, approval, agent runtime, retry, restore, or rollback is created.',
-            capabilityPermissionMatrixSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+            capabilityPermissionMatrixSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            projectWorkspaceSystemIntegrationHealthMarker: 'Project Workspace system integration health bundle',
+            systemIntegrationHealthPackTitle: 'Workspace System Integration Health / Readiness Overview',
+            systemIntegrationHealthPackHelper: 'Review deterministic integration health and readiness overview derived from workspace packs without reading real service health.',
+            systemIntegrationHealthSummaryTitle: 'Integration Health Summary',
+            systemIntegrationHealthPackCardsTitle: 'Pack Health Cards',
+            systemIntegrationHealthWorkflowTitle: 'Workflow Chain Health',
+            systemIntegrationHealthGateTitle: 'Gate Health Overview',
+            systemIntegrationHealthTraceabilityTitle: 'Traceability Health',
+            systemIntegrationHealthOperatorTitle: 'Operator Readiness Overview',
+            systemIntegrationHealthCapabilityTitle: 'Capability Lock Health',
+            systemIntegrationHealthRiskTitle: 'Integration Risk Register',
+            systemIntegrationHealthAuditTitle: 'Audit Preview',
+            systemIntegrationHealthSafetyTitle: 'Safety Boundaries',
+            systemIntegrationHealthQualityTitle: 'Health Quality Checks',
+            systemIntegrationHealthMode: 'Mode',
+            systemIntegrationHealthOverallStatus: 'Overall health status',
+            systemIntegrationHealthPackCount: 'Pack count',
+            systemIntegrationHealthRiskCount: 'Risk count',
+            systemIntegrationHealthRecommendedAction: 'Recommended operator action',
+            systemIntegrationHealthRealExecution: 'Real execution',
+            systemIntegrationHealthDisabled: 'disabled',
+            systemIntegrationHealthPreviewNote: 'Integration health preview only. This is not a real monitoring system and does not read real service health.',
+            systemIntegrationHealthNoData: 'No workspace system integration health data is available.',
+            systemIntegrationHealthCopyNoData: 'No workspace system integration health content is available to copy.',
+            systemIntegrationHealthCopyFailed: 'Unable to copy workspace system integration health content.',
+            systemIntegrationHealthCopied: 'Workspace system integration health content copied.',
+            systemIntegrationHealthCopySummary: 'Copy integration health summary',
+            systemIntegrationHealthCopyPackCards: 'Copy pack health cards',
+            systemIntegrationHealthCopyWorkflow: 'Copy workflow chain health',
+            systemIntegrationHealthCopyGate: 'Copy gate health overview',
+            systemIntegrationHealthCopyTraceability: 'Copy traceability health',
+            systemIntegrationHealthCopyOperator: 'Copy operator readiness overview',
+            systemIntegrationHealthCopyCapability: 'Copy capability lock health',
+            systemIntegrationHealthCopyRisk: 'Copy integration risk register',
+            systemIntegrationHealthCopyFull: 'Copy full system integration health pack',
+            systemIntegrationHealthPackCardsHelper: 'Inspect pack health cards with presence, review readiness, missing or weak fields, upstream dependencies, downstream consumers, and disabled execution state.',
+            systemIntegrationHealthPackId: 'Pack ID',
+            systemIntegrationHealthSourcePack: 'Source pack',
+            systemIntegrationHealthHealthStatus: 'Health status',
+            systemIntegrationHealthPresent: 'Present',
+            systemIntegrationHealthReadyForReview: 'Ready for review',
+            systemIntegrationHealthWorkflowGateTitle: 'Workflow Chain / Gate Health',
+            systemIntegrationHealthWorkflowGateHelper: 'Review workflow chain health and preview-only gate health for launch lock, cycle gate, policy gate, and human review gate.',
+            systemIntegrationHealthPreviewGateNote: 'These are preview gates, not real execution gates, and cannot unlock real execution.',
+            systemIntegrationHealthTraceOperatorCapabilityTitle: 'Traceability / Operator / Capability Lock Health',
+            systemIntegrationHealthTraceOperatorCapabilityHelper: 'Review traceability, operator readiness, and capability lock health from agent ledger, timeline, human review queue, and permission matrix previews.',
+            systemIntegrationHealthCapabilityDisabledNote: 'All 13 capabilities remain disabled, preview-only, or dry-run-only.',
+            systemIntegrationHealthRiskQualityAuditSafetyTitle: 'Integration Risk / Quality / Audit / Safety Boundaries',
+            systemIntegrationHealthRiskQualityAuditSafetyHelper: 'Inspect integration risks, health quality checks, audit preview, and disabled real capability boundaries.',
+            systemIntegrationHealthAuditNoWriteNote: 'Audit preview is not written to a database and does not read real logs, real history tables, or real service health.',
+            systemIntegrationHealthSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -45528,7 +45733,58 @@
             capabilityPermissionMatrixDependencyQualityAuditSafetyHelper: '检查能力依赖图、质量检查、审计预览和已禁用的真实能力边界。',
             capabilityPermissionMatrixAuditNoWriteNote: '审计预览不写入数据库，也不读取真实日志或真实历史表。',
             capabilityPermissionMatrixSecretTaskNote: '不读取 secret，也不创建真实操作员任务、工单、审批、Agent runtime、retry、restore 或 rollback。',
-            capabilityPermissionMatrixSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
+            capabilityPermissionMatrixSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。',
+            projectWorkspaceSystemIntegrationHealthMarker: 'Project Workspace system integration health bundle',
+            systemIntegrationHealthPackTitle: '工作区系统集成健康 / 就绪总览',
+            systemIntegrationHealthPackHelper: '检查从工作区 pack 派生的确定性系统集成健康与就绪总览，不读取真实服务健康状态。',
+            systemIntegrationHealthSummaryTitle: '集成健康摘要',
+            systemIntegrationHealthPackCardsTitle: 'Pack 健康卡片',
+            systemIntegrationHealthWorkflowTitle: '工作流链路健康',
+            systemIntegrationHealthGateTitle: '门禁健康总览',
+            systemIntegrationHealthTraceabilityTitle: '可追踪性健康',
+            systemIntegrationHealthOperatorTitle: '操作员就绪总览',
+            systemIntegrationHealthCapabilityTitle: '能力锁健康',
+            systemIntegrationHealthRiskTitle: '集成风险登记',
+            systemIntegrationHealthAuditTitle: '审计预览',
+            systemIntegrationHealthSafetyTitle: '安全边界',
+            systemIntegrationHealthQualityTitle: '健康质量检查',
+            systemIntegrationHealthMode: '模式',
+            systemIntegrationHealthOverallStatus: '整体健康状态',
+            systemIntegrationHealthPackCount: 'Pack 数量',
+            systemIntegrationHealthRiskCount: '风险数量',
+            systemIntegrationHealthRecommendedAction: '推荐操作员动作',
+            systemIntegrationHealthRealExecution: '真实执行',
+            systemIntegrationHealthDisabled: '已禁用',
+            systemIntegrationHealthPreviewNote: '仅为集成健康预览。这不是真实监控系统，也不读取真实服务健康状态。',
+            systemIntegrationHealthNoData: '暂无工作区系统集成健康数据。',
+            systemIntegrationHealthCopyNoData: '暂无可复制的工作区系统集成健康内容。',
+            systemIntegrationHealthCopyFailed: '无法复制工作区系统集成健康内容。',
+            systemIntegrationHealthCopied: '工作区系统集成健康内容已复制。',
+            systemIntegrationHealthCopySummary: '复制集成健康摘要',
+            systemIntegrationHealthCopyPackCards: '复制 Pack 健康卡片',
+            systemIntegrationHealthCopyWorkflow: '复制工作流链路健康',
+            systemIntegrationHealthCopyGate: '复制门禁健康总览',
+            systemIntegrationHealthCopyTraceability: '复制可追踪性健康',
+            systemIntegrationHealthCopyOperator: '复制操作员就绪总览',
+            systemIntegrationHealthCopyCapability: '复制能力锁健康',
+            systemIntegrationHealthCopyRisk: '复制集成风险登记',
+            systemIntegrationHealthCopyFull: '复制完整系统集成健康 pack',
+            systemIntegrationHealthPackCardsHelper: '检查 Pack 健康卡片，包含存在状态、审阅就绪、缺失或薄弱字段、上游依赖、下游消费者和禁用执行状态。',
+            systemIntegrationHealthPackId: 'Pack ID',
+            systemIntegrationHealthSourcePack: '来源 pack',
+            systemIntegrationHealthHealthStatus: '健康状态',
+            systemIntegrationHealthPresent: '是否存在',
+            systemIntegrationHealthReadyForReview: '审阅就绪',
+            systemIntegrationHealthWorkflowGateTitle: '工作流链路 / 门禁健康',
+            systemIntegrationHealthWorkflowGateHelper: '检查工作流链路健康和仅预览门禁健康，包括 launch lock、cycle gate、policy gate 和 human review gate。',
+            systemIntegrationHealthPreviewGateNote: '这些只是预览门禁，不是真实执行门禁，也不能解锁真实执行。',
+            systemIntegrationHealthTraceOperatorCapabilityTitle: '可追踪性 / 操作员 / 能力锁健康',
+            systemIntegrationHealthTraceOperatorCapabilityHelper: '从 Agent 台账、时间线、人工审阅队列和权限矩阵预览检查可追踪性、操作员就绪和能力锁健康。',
+            systemIntegrationHealthCapabilityDisabledNote: '全部 13 项能力仍保持禁用、仅预览或仅 dry-run。',
+            systemIntegrationHealthRiskQualityAuditSafetyTitle: '集成风险 / 质量 / 审计 / 安全边界',
+            systemIntegrationHealthRiskQualityAuditSafetyHelper: '检查集成风险、健康质量检查、审计预览和已禁用的真实能力边界。',
+            systemIntegrationHealthAuditNoWriteNote: '审计预览不写入数据库，也不读取真实日志、真实历史表或真实服务健康状态。',
+            systemIntegrationHealthSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
         });
 
         applyLanguageCopy();
@@ -46945,6 +47201,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
     latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
     latestProjectWorkspaceCapabilityPermissionMatrixPack = latestProjectCreativeDecisionPack.workspace_capability_permission_matrix_pack || {};
+    latestProjectWorkspaceSystemIntegrationHealthPack = latestProjectCreativeDecisionPack.workspace_system_integration_health_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
