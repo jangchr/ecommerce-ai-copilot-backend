@@ -11425,6 +11425,128 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_human_review_queue_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace human review queue bundle",
+            "PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER",
+            "latestProjectWorkspaceHumanReviewQueuePack",
+            "projectWorkspaceHumanReviewQueuePackFromWorkspace",
+            "projectWorkspaceExportHumanReviewQueueSnapshot",
+            "projectWorkspaceExportHumanReviewQueueMarkdown",
+            "renderProjectWorkspaceHumanReviewQueueSummaryPanel",
+            "renderProjectWorkspaceHumanReviewQueueItemsPanel",
+            "renderProjectWorkspaceHumanReviewQueueTaskCardsPanel",
+            "renderProjectWorkspaceHumanReviewQueueInputsBlockedDependencyPanel",
+            "renderProjectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel",
+            "copyProjectWorkspaceHumanReviewQueueSummary",
+            "copyProjectWorkspaceHumanReviewQueueItems",
+            "copyProjectWorkspaceHumanReviewQueueTaskCards",
+            "copyProjectWorkspaceHumanReviewQueueRequiredInputs",
+            "copyProjectWorkspaceHumanReviewQueueBlockedItems",
+            "copyProjectWorkspaceHumanReviewQueueDependencyMap",
+            "copyProjectWorkspaceHumanReviewQueueDecisionOptions",
+            "copyProjectWorkspaceHumanReviewQueueAuditPreview",
+            "copyProjectWorkspaceFullHumanReviewQueuePack",
+            "workspace_human_review_queue_pack: projectWorkspaceExportHumanReviewQueueSnapshot(workspace)",
+            "Workspace Human Review Queue / Operator Task Preview",
+            "Human Review Queue Summary", "Review Queue Items",
+            "Operator Task Cards", "Required Inputs Overview",
+            "Blocked Review Items", "Review Dependency Map",
+            "Operator Decision Options", "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.review_queue_summary", "pack.review_queue_items",
+            "pack.operator_task_cards", "pack.review_priority_rationale",
+            "pack.required_inputs_overview", "pack.blocked_review_items",
+            "pack.review_dependency_map", "pack.operator_decision_options",
+            "pack.review_quality_checks", "pack.audit_preview",
+            "pack.safety_boundaries", "summary.mode",
+            "summary.review_item_count", "summary.blocked_review_item_count",
+            "summary.recommended_next_action", "summary.real_execution_allowed",
+            "item.review_id", "item.priority", "item.review_type",
+            "item.source_pack", "item.source_refs", "item.review_title",
+            "item.why_review_is_needed", "item.required_inputs",
+            "item.blocked_by", "item.operator_decision_needed",
+            "item.allowed_decisions", "item.next_action_preview",
+            "item.real_execution_allowed", "item.risk_note",
+            "task.task_id", "task.task_type", "task.task_title",
+            "task.source_review_id", "task.source_pack",
+            "task.task_status", "task.assignee_role",
+            "task.required_review", "task.completion_criteria",
+            "task.blocked_by", "task.real_execution_allowed",
+            "task.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceHumanReviewQueueSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_human_review_queue_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "humanReviewQueuePackTitle", "humanReviewQueueSummaryTitle",
+            "humanReviewQueueItemsTitle", "humanReviewQueueTasksTitle",
+            "humanReviewQueueRequiredInputsTitle",
+            "humanReviewQueueBlockedItemsTitle",
+            "humanReviewQueueDependencyTitle",
+            "humanReviewQueueDecisionOptionsTitle",
+            "humanReviewQueueAuditTitle", "humanReviewQueueSafetyTitle",
+            "humanReviewQueueCopySummary", "humanReviewQueueCopyItems",
+            "humanReviewQueueCopyTasks", "humanReviewQueueCopyInputs",
+            "humanReviewQueueCopyBlocked", "humanReviewQueueCopyDependency",
+            "humanReviewQueueCopyDecisions", "humanReviewQueueCopyAudit",
+            "humanReviewQueueCopyFull", "humanReviewQueueCopied",
+            "humanReviewQueueCopyFailed", "humanReviewQueueCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace human review queue bundle", script)
+            self.assertIn("project_workspace_human_review_queue_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceHumanReviewQueueSummaryText"):
+            html.index("async function copyProjectWorkspaceHumanReviewQueueText")
+        ]
+        for key in [
+            "humanReviewQueuePackTitle", "humanReviewQueueSummaryTitle",
+            "humanReviewQueueItemsTitle", "humanReviewQueueTasksTitle",
+            "humanReviewQueueRequiredInputsTitle",
+            "humanReviewQueueBlockedItemsTitle",
+            "humanReviewQueueDependencyTitle",
+            "humanReviewQueueDecisionOptionsTitle",
+            "humanReviewQueueAuditTitle", "humanReviewQueueSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Human review queue preview only", html)
+        self.assertIn("not a real approval system", html)
+        self.assertIn("No real ticket, operator task, approval, or task system write is created.", html)
+        self.assertIn("no real external data is collected", html)
+        self.assertIn("cannot create real approvals or unlock real execution", html)
+        self.assertIn("Audit preview is not written to a database, no real logs or history tables are read, and no operator task is created.", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

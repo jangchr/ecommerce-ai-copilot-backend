@@ -3620,6 +3620,7 @@
         let latestProjectWorkspaceCycleHistoryTimelinePack = {};
         let latestProjectWorkspaceControlCenterPack = {};
         let latestProjectWorkspaceAgentRunLedgerPack = {};
+        let latestProjectWorkspaceHumanReviewQueuePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8916,6 +8917,7 @@
                 latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
                 latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
                 latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
+                latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14772,6 +14774,7 @@
         const PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER = 'Project Workspace cycle history timeline bundle';
         const PROJECT_WORKSPACE_CONTROL_CENTER_MARKER = 'Project Workspace control center bundle';
         const PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER = 'Project Workspace agent run ledger bundle';
+        const PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER = 'Project Workspace human review queue bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -18797,6 +18800,107 @@
         function copyProjectWorkspaceAgentRunLedgerAuditPreview() { return copyProjectWorkspaceAgentRunLedgerText('audit'); }
         function copyProjectWorkspaceFullAgentRunLedgerPack() { return copyProjectWorkspaceAgentRunLedgerText('full'); }
 
+        function projectWorkspaceHumanReviewQueuePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceHumanReviewQueuePack && Object.keys(latestProjectWorkspaceHumanReviewQueuePack).length) return latestProjectWorkspaceHumanReviewQueuePack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_human_review_queue_pack || {};
+        }
+
+        function projectWorkspaceExportHumanReviewQueueSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceHumanReviewQueuePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER,
+                has_workspace_human_review_queue_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                review_queue_summary: pack.review_queue_summary || {},
+                review_queue_items: pack.review_queue_items || [],
+                operator_task_cards: pack.operator_task_cards || [],
+                review_priority_rationale: pack.review_priority_rationale || {},
+                required_inputs_overview: pack.required_inputs_overview || {},
+                blocked_review_items: pack.blocked_review_items || [],
+                review_dependency_map: pack.review_dependency_map || {},
+                operator_decision_options: pack.operator_decision_options || [],
+                review_quality_checks: pack.review_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceHumanReviewQueueJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceHumanReviewQueueSummaryText(pack = projectWorkspaceExportHumanReviewQueueSnapshot()) {
+            if (!pack.has_workspace_human_review_queue_pack) return '';
+            const summary = pack.review_queue_summary || {};
+            const priorities = (pack.review_queue_items || []).map((item) => item.priority).filter(Boolean);
+            const highest = priorities.includes('high') ? 'high' : priorities[0] || t('none');
+            return [
+                t('humanReviewQueueSummaryTitle'),
+                `${t('humanReviewQueueMode')}: ${summary.mode || t('none')}`,
+                `${t('humanReviewQueueItemCount')}: ${summary.review_item_count ?? pack.review_queue_items.length}`,
+                `${t('humanReviewQueueBlockedCount')}: ${summary.blocked_review_item_count ?? pack.blocked_review_items.length}`,
+                `${t('humanReviewQueueHighestPriority')}: ${highest}`,
+                `${t('humanReviewQueueRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('humanReviewQueueRealExecution')}: ${summary.real_execution_allowed === false ? t('humanReviewQueueDisabled') : String(summary.real_execution_allowed)}`,
+                t('humanReviewQueuePreviewNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceHumanReviewQueueSectionText(titleKey, value) {
+            const body = projectWorkspaceHumanReviewQueueJsonText(value);
+            return body ? `## ${t(titleKey)}\n\n${body}` : '';
+        }
+
+        function projectWorkspaceExportHumanReviewQueueMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportHumanReviewQueueSnapshot(workspace);
+            if (!pack.has_workspace_human_review_queue_pack) return '';
+            return [
+                `## ${t('humanReviewQueuePackTitle')}`,
+                `## ${t('humanReviewQueueSummaryTitle')}`,
+                projectWorkspaceHumanReviewQueueSummaryText(pack), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueItemsTitle', pack.review_queue_items), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueTasksTitle', pack.operator_task_cards), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueRequiredInputsTitle', pack.required_inputs_overview), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueBlockedItemsTitle', pack.blocked_review_items), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueDependencyTitle', pack.review_dependency_map), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueDecisionOptionsTitle', pack.operator_decision_options), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueAuditTitle', pack.audit_preview), '',
+                projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueSafetyTitle', pack.safety_boundaries),
+                t('humanReviewQueueSafetyNote')
+            ].filter(Boolean).join('\n\n');
+        }
+
+        async function copyProjectWorkspaceHumanReviewQueueText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceHumanReviewQueueStatus');
+            const pack = projectWorkspaceExportHumanReviewQueueSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceHumanReviewQueueSummaryText(pack)
+                : kind === 'items' ? projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueItemsTitle', pack.review_queue_items)
+                : kind === 'tasks' ? projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueTasksTitle', pack.operator_task_cards)
+                : kind === 'inputs' ? projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueRequiredInputsTitle', pack.required_inputs_overview)
+                : kind === 'blocked' ? projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueBlockedItemsTitle', pack.blocked_review_items)
+                : kind === 'dependency' ? projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueDependencyTitle', pack.review_dependency_map)
+                : kind === 'decisions' ? projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueDecisionOptionsTitle', pack.operator_decision_options)
+                : kind === 'audit' ? projectWorkspaceHumanReviewQueueSectionText('humanReviewQueueAuditTitle', pack.audit_preview)
+                : projectWorkspaceExportHumanReviewQueueMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('humanReviewQueueCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('humanReviewQueueCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('humanReviewQueueCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('humanReviewQueueCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceHumanReviewQueueSummary() { return copyProjectWorkspaceHumanReviewQueueText('summary'); }
+        function copyProjectWorkspaceHumanReviewQueueItems() { return copyProjectWorkspaceHumanReviewQueueText('items'); }
+        function copyProjectWorkspaceHumanReviewQueueTaskCards() { return copyProjectWorkspaceHumanReviewQueueText('tasks'); }
+        function copyProjectWorkspaceHumanReviewQueueRequiredInputs() { return copyProjectWorkspaceHumanReviewQueueText('inputs'); }
+        function copyProjectWorkspaceHumanReviewQueueBlockedItems() { return copyProjectWorkspaceHumanReviewQueueText('blocked'); }
+        function copyProjectWorkspaceHumanReviewQueueDependencyMap() { return copyProjectWorkspaceHumanReviewQueueText('dependency'); }
+        function copyProjectWorkspaceHumanReviewQueueDecisionOptions() { return copyProjectWorkspaceHumanReviewQueueText('decisions'); }
+        function copyProjectWorkspaceHumanReviewQueueAuditPreview() { return copyProjectWorkspaceHumanReviewQueueText('audit'); }
+        function copyProjectWorkspaceFullHumanReviewQueuePack() { return copyProjectWorkspaceHumanReviewQueueText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -22297,6 +22401,37 @@
             return `<div class="section-block" id="projectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('agentRunLedgerCapabilityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerCapabilityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerCapabilityUsage()">${escapeHTML(t('agentRunLedgerCopyCapability'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerAuditPreview()">${escapeHTML(t('agentRunLedgerCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerCapabilityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.capability_usage_preview) || t('agentRunLedgerNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.ledger_quality_checks) || t('agentRunLedgerNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.audit_preview) || t('agentRunLedgerNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('agentRunLedgerSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceHumanReviewQueueSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportHumanReviewQueueSnapshot(workspace); if (!pack.has_workspace_human_review_queue_pack) return '';
+            const summary = pack.review_queue_summary || {};
+            const priorities = (pack.review_queue_items || []).map((item) => item.priority).filter(Boolean);
+            const highest = priorities.includes('high') ? 'high' : priorities[0] || t('none');
+            return `<div class="section-block" id="projectWorkspaceHumanReviewQueueSummaryPanel" data-human-review-queue-marker="${PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER}" data-marker="project_workspace_human_review_queue_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('humanReviewQueuePackTitle'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueuePackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullHumanReviewQueuePack()">${escapeHTML(t('humanReviewQueueCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('humanReviewQueueMode'), summary.mode || t('none'))}${metricPill(t('humanReviewQueueItemCount'), String(summary.review_item_count ?? pack.review_queue_items.length))}${metricPill(t('humanReviewQueueBlockedCount'), String(summary.blocked_review_item_count ?? pack.blocked_review_items.length))}${metricPill(t('humanReviewQueueHighestPriority'), highest)}${metricPill(t('humanReviewQueueRealExecution'), summary.real_execution_allowed === false ? t('humanReviewQueueDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueSummaryText(pack) || t('humanReviewQueueNoData'))}</pre><div class="field-helper">${escapeHTML(t('humanReviewQueuePreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceHumanReviewQueueStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueSummary()">${escapeHTML(t('humanReviewQueueCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceHumanReviewQueueItemsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportHumanReviewQueueSnapshot(workspace); if (!pack.has_workspace_human_review_queue_pack) return '';
+            const cards = (pack.review_queue_items || []).map((item) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(item.review_title || item.review_id || t('humanReviewQueueItemsTitle'))}</strong><span class="metric-pill">${escapeHTML(item.priority || t('none'))}</span></div><div><strong>${escapeHTML(t('humanReviewQueueReviewId'))}:</strong> ${escapeHTML(item.review_id || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueReviewType'))}:</strong> ${escapeHTML(item.review_type || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueSourcePack'))}:</strong> ${escapeHTML(item.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueDecisionNeeded'))}:</strong> ${escapeHTML(String(item.operator_decision_needed))}</div><div><strong>${escapeHTML(t('humanReviewQueueRealExecution'))}:</strong> ${escapeHTML(item.real_execution_allowed === false ? t('humanReviewQueueDisabled') : String(item.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText({source_refs:item.source_refs||[],why_review_is_needed:item.why_review_is_needed||'',required_inputs:item.required_inputs||[],blocked_by:item.blocked_by||[],allowed_decisions:item.allowed_decisions||[],next_action_preview:item.next_action_preview||'',risk_note:item.risk_note||''}) || t('humanReviewQueueNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceHumanReviewQueueItemsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('humanReviewQueueItemsTitle'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueItemsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueItems()">${escapeHTML(t('humanReviewQueueCopyItems'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('humanReviewQueueNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceHumanReviewQueueTaskCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportHumanReviewQueueSnapshot(workspace); if (!pack.has_workspace_human_review_queue_pack) return '';
+            const cards = (pack.operator_task_cards || []).map((task) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(task.task_title || task.task_id || t('humanReviewQueueTasksTitle'))}</strong><span class="metric-pill">${escapeHTML(task.task_status || t('none'))}</span></div><div><strong>${escapeHTML(t('humanReviewQueueTaskId'))}:</strong> ${escapeHTML(task.task_id || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueTaskType'))}:</strong> ${escapeHTML(task.task_type || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueSourceReviewId'))}:</strong> ${escapeHTML(task.source_review_id || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueSourcePack'))}:</strong> ${escapeHTML(task.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueAssigneeRole'))}:</strong> ${escapeHTML(task.assignee_role || t('none'))}</div><div><strong>${escapeHTML(t('humanReviewQueueRealExecution'))}:</strong> ${escapeHTML(task.real_execution_allowed === false ? t('humanReviewQueueDisabled') : String(task.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText({required_review:task.required_review,completion_criteria:task.completion_criteria||[],blocked_by:task.blocked_by||[],risk_note:task.risk_note||''}) || t('humanReviewQueueNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceHumanReviewQueueTaskCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('humanReviewQueueTasksTitle'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueTasksHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueTaskCards()">${escapeHTML(t('humanReviewQueueCopyTasks'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('humanReviewQueueNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueTaskPreviewNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceHumanReviewQueueInputsBlockedDependencyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportHumanReviewQueueSnapshot(workspace); if (!pack.has_workspace_human_review_queue_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceHumanReviewQueueInputsBlockedDependencyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('humanReviewQueueInputsBlockedDependencyTitle'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueInputsBlockedDependencyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueRequiredInputs()">${escapeHTML(t('humanReviewQueueCopyInputs'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueBlockedItems()">${escapeHTML(t('humanReviewQueueCopyBlocked'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueDependencyMap()">${escapeHTML(t('humanReviewQueueCopyDependency'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueRequiredInputsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.required_inputs_overview) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueBlockedItemsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.blocked_review_items) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.review_dependency_map) || t('humanReviewQueueNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('humanReviewQueueNoExternalDataNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportHumanReviewQueueSnapshot(workspace); if (!pack.has_workspace_human_review_queue_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('humanReviewQueueDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('humanReviewQueueDecisionQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueDecisionQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueDecisionOptions()">${escapeHTML(t('humanReviewQueueCopyDecisions'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueAuditPreview()">${escapeHTML(t('humanReviewQueueCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueDecisionOptionsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.operator_decision_options) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueuePriorityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.review_priority_rationale) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.review_quality_checks) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.audit_preview) || t('humanReviewQueueNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('humanReviewQueueSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueDecisionPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -22811,6 +22946,8 @@
                 '',
                 projectWorkspaceExportAgentRunLedgerMarkdown(workspace),
                 '',
+                projectWorkspaceExportHumanReviewQueueMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -22912,6 +23049,7 @@
                 workspace_cycle_history_timeline_pack: projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace),
                 workspace_control_center_pack: projectWorkspaceExportControlCenterSnapshot(workspace),
                 workspace_agent_run_ledger_pack: projectWorkspaceExportAgentRunLedgerSnapshot(workspace),
+                workspace_human_review_queue_pack: projectWorkspaceExportHumanReviewQueueSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -35408,6 +35546,11 @@
                     ${renderProjectWorkspaceAgentRunLedgerHandoffPanel(workspace)}
                     ${renderProjectWorkspaceAgentRunLedgerTracePanel(workspace)}
                     ${renderProjectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceHumanReviewQueueSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceHumanReviewQueueItemsPanel(workspace)}
+                    ${renderProjectWorkspaceHumanReviewQueueTaskCardsPanel(workspace)}
+                    ${renderProjectWorkspaceHumanReviewQueueInputsBlockedDependencyPanel(workspace)}
+                    ${renderProjectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -44962,7 +45105,61 @@
             agentRunLedgerCapabilityAuditSafetyTitle: 'Capability Usage / Quality / Audit / Safety Boundaries',
             agentRunLedgerCapabilityAuditSafetyHelper: 'Inspect capability usage preview, ledger quality checks, audit preview, and disabled real capabilities.',
             agentRunLedgerAuditNoWriteNote: 'Audit preview is not written to a database, no real logs are read, and no real operator task is created.',
-            agentRunLedgerSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+            agentRunLedgerSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            projectWorkspaceHumanReviewQueueMarker: 'Project Workspace human review queue bundle',
+            humanReviewQueuePackTitle: 'Workspace Human Review Queue / Operator Task Preview',
+            humanReviewQueuePackHelper: 'Review deterministic human review queue and operator task preview derived from workspace packs without creating approvals or tasks.',
+            humanReviewQueueSummaryTitle: 'Human Review Queue Summary',
+            humanReviewQueueItemsTitle: 'Review Queue Items',
+            humanReviewQueueTasksTitle: 'Operator Task Cards',
+            humanReviewQueueRequiredInputsTitle: 'Required Inputs Overview',
+            humanReviewQueueBlockedItemsTitle: 'Blocked Review Items',
+            humanReviewQueueDependencyTitle: 'Review Dependency Map',
+            humanReviewQueueDecisionOptionsTitle: 'Operator Decision Options',
+            humanReviewQueueAuditTitle: 'Audit Preview',
+            humanReviewQueueSafetyTitle: 'Safety Boundaries',
+            humanReviewQueuePriorityTitle: 'Review Priority Rationale',
+            humanReviewQueueQualityTitle: 'Review Quality Checks',
+            humanReviewQueueMode: 'Mode',
+            humanReviewQueueItemCount: 'Total review items',
+            humanReviewQueueBlockedCount: 'Blocked review count',
+            humanReviewQueueHighestPriority: 'Highest priority',
+            humanReviewQueueRecommendedAction: 'Recommended operator action',
+            humanReviewQueueRealExecution: 'Real execution',
+            humanReviewQueueDisabled: 'disabled',
+            humanReviewQueuePreviewNote: 'Human review queue preview only. This is not a real approval system and does not create real operator tasks.',
+            humanReviewQueueNoData: 'No workspace human review queue data is available.',
+            humanReviewQueueCopyNoData: 'No workspace human review queue content is available to copy.',
+            humanReviewQueueCopyFailed: 'Unable to copy workspace human review queue content.',
+            humanReviewQueueCopied: 'Workspace human review queue content copied.',
+            humanReviewQueueCopySummary: 'Copy review queue summary',
+            humanReviewQueueCopyItems: 'Copy review queue items',
+            humanReviewQueueCopyTasks: 'Copy operator task cards',
+            humanReviewQueueCopyInputs: 'Copy required inputs overview',
+            humanReviewQueueCopyBlocked: 'Copy blocked review items',
+            humanReviewQueueCopyDependency: 'Copy review dependency map',
+            humanReviewQueueCopyDecisions: 'Copy operator decision options',
+            humanReviewQueueCopyAudit: 'Copy audit preview',
+            humanReviewQueueCopyFull: 'Copy full human review queue pack',
+            humanReviewQueueItemsHelper: 'Inspect review items with required inputs, blockers, allowed decisions, and disabled real execution state.',
+            humanReviewQueueReviewId: 'Review ID',
+            humanReviewQueueReviewType: 'Review type',
+            humanReviewQueueSourcePack: 'Source pack',
+            humanReviewQueueDecisionNeeded: 'Operator decision needed',
+            humanReviewQueueTasksHelper: 'Review operator task cards as deterministic previews without creating real tickets, tasks, or approvals.',
+            humanReviewQueueTaskId: 'Task ID',
+            humanReviewQueueTaskType: 'Task type',
+            humanReviewQueueSourceReviewId: 'Source review ID',
+            humanReviewQueueAssigneeRole: 'Assignee role',
+            humanReviewQueueTaskPreviewNote: 'Task cards are previews only. No real ticket, operator task, approval, or task system write is created.',
+            humanReviewQueueInputsBlockedDependencyTitle: 'Required Inputs / Blocked Reviews / Dependency Map',
+            humanReviewQueueInputsBlockedDependencyHelper: 'Review required inputs, blocked review items, and dependency mapping from workspace packs only.',
+            humanReviewQueueNoExternalDataNote: 'Required inputs and blockers are derived from workspace packs only; no real external data is collected.',
+            humanReviewQueueDecisionQualityAuditSafetyTitle: 'Decision Options / Quality / Audit / Safety Boundaries',
+            humanReviewQueueDecisionQualityAuditSafetyHelper: 'Inspect operator decision options, priority rationale, quality checks, audit preview, and disabled real capabilities.',
+            humanReviewQueueDecisionPreviewNote: 'Operator decision options are preview-only and cannot create real approvals or unlock real execution.',
+            humanReviewQueueAuditNoWriteNote: 'Audit preview is not written to a database, no real logs or history tables are read, and no operator task is created.',
+            humanReviewQueueSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -45020,7 +45217,61 @@
             agentRunLedgerCapabilityAuditSafetyTitle: '能力使用 / 质量 / 审计 / 安全边界',
             agentRunLedgerCapabilityAuditSafetyHelper: '检查能力使用预览、台账质量检查、审计预览和已禁用的真实能力。',
             agentRunLedgerAuditNoWriteNote: '审计预览不写入数据库，不读取真实日志，也不创建真实操作员任务。',
-            agentRunLedgerSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
+            agentRunLedgerSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。',
+            projectWorkspaceHumanReviewQueueMarker: 'Project Workspace human review queue bundle',
+            humanReviewQueuePackTitle: '工作区人工审阅队列 / 操作员任务预览',
+            humanReviewQueuePackHelper: '工作区人工审阅队列操作员任务预览：检查由工作区 pack 派生的确定性人工审阅队列，不创建真实审批或任务。',
+            humanReviewQueueSummaryTitle: '人工审阅队列摘要',
+            humanReviewQueueItemsTitle: '审阅队列项',
+            humanReviewQueueTasksTitle: '操作员任务卡片',
+            humanReviewQueueRequiredInputsTitle: '所需输入概览',
+            humanReviewQueueBlockedItemsTitle: '阻塞审阅项',
+            humanReviewQueueDependencyTitle: '审阅依赖图',
+            humanReviewQueueDecisionOptionsTitle: '操作员决策选项',
+            humanReviewQueueAuditTitle: '审计预览',
+            humanReviewQueueSafetyTitle: '安全边界',
+            humanReviewQueuePriorityTitle: '审阅优先级依据',
+            humanReviewQueueQualityTitle: '审阅质量检查',
+            humanReviewQueueMode: '模式',
+            humanReviewQueueItemCount: '审阅项总数',
+            humanReviewQueueBlockedCount: '阻塞审阅数',
+            humanReviewQueueHighestPriority: '最高优先级',
+            humanReviewQueueRecommendedAction: '推荐操作员动作',
+            humanReviewQueueRealExecution: '真实执行',
+            humanReviewQueueDisabled: '已禁用',
+            humanReviewQueuePreviewNote: '仅为人工审阅队列预览。这不是真实审批系统，也不创建真实操作员任务。',
+            humanReviewQueueNoData: '暂无工作区人工审阅队列数据。',
+            humanReviewQueueCopyNoData: '暂无可复制的工作区人工审阅队列内容。',
+            humanReviewQueueCopyFailed: '无法复制工作区人工审阅队列内容。',
+            humanReviewQueueCopied: '工作区人工审阅队列内容已复制。',
+            humanReviewQueueCopySummary: '复制审阅队列摘要',
+            humanReviewQueueCopyItems: '复制审阅队列项',
+            humanReviewQueueCopyTasks: '复制操作员任务卡片',
+            humanReviewQueueCopyInputs: '复制所需输入概览',
+            humanReviewQueueCopyBlocked: '复制阻塞审阅项',
+            humanReviewQueueCopyDependency: '复制审阅依赖图',
+            humanReviewQueueCopyDecisions: '复制操作员决策选项',
+            humanReviewQueueCopyAudit: '复制审计预览',
+            humanReviewQueueCopyFull: '复制完整人工审阅队列 pack',
+            humanReviewQueueItemsHelper: '检查包含所需输入、阻塞项、允许决策和禁用真实执行状态的审阅项。',
+            humanReviewQueueReviewId: '审阅 ID',
+            humanReviewQueueReviewType: '审阅类型',
+            humanReviewQueueSourcePack: '来源 pack',
+            humanReviewQueueDecisionNeeded: '需要操作员决策',
+            humanReviewQueueTasksHelper: '以确定性预览方式检查操作员任务卡片，不创建真实工单、任务或审批。',
+            humanReviewQueueTaskId: '任务 ID',
+            humanReviewQueueTaskType: '任务类型',
+            humanReviewQueueSourceReviewId: '来源审阅 ID',
+            humanReviewQueueAssigneeRole: '负责角色',
+            humanReviewQueueTaskPreviewNote: '任务卡片仅为预览。不创建真实工单、操作员任务、审批或任务系统写入。',
+            humanReviewQueueInputsBlockedDependencyTitle: '所需输入 / 阻塞审阅 / 依赖图',
+            humanReviewQueueInputsBlockedDependencyHelper: '只从工作区 pack 检查所需输入、阻塞审阅项和依赖映射。',
+            humanReviewQueueNoExternalDataNote: '所需输入和阻塞项只从工作区 pack 派生；不采集真实外部数据。',
+            humanReviewQueueDecisionQualityAuditSafetyTitle: '决策选项 / 质量 / 审计 / 安全边界',
+            humanReviewQueueDecisionQualityAuditSafetyHelper: '检查操作员决策选项、优先级依据、质量检查、审计预览和已禁用的真实能力。',
+            humanReviewQueueDecisionPreviewNote: '操作员决策选项仅为预览，不能创建真实审批，也不能解锁真实执行。',
+            humanReviewQueueAuditNoWriteNote: '审计预览不写入数据库，不读取真实日志或历史表，也不创建真实操作员任务。',
+            humanReviewQueueSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
         });
 
         applyLanguageCopy();
@@ -46435,6 +46686,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
     latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
     latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
+    latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
