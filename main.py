@@ -29338,6 +29338,562 @@ def _rw_workspace_capability_permission_matrix_pack(
     }
 
 
+def _rw_workspace_system_integration_health_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_names = [
+        "workspace_control_center_pack",
+        "workspace_agent_run_ledger_pack",
+        "workspace_human_review_queue_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_cycle_history_timeline_pack",
+        "workspace_retry_cycle_decision_pack",
+        "workspace_execution_readiness_pack",
+        "workspace_remediation_verification_pack",
+    ]
+    packs = {
+        name: dict(creative_decision_pack.get(name) or {})
+        for name in source_pack_names
+    }
+    control_pack = packs["workspace_control_center_pack"]
+    ledger_pack = packs["workspace_agent_run_ledger_pack"]
+    review_pack = packs["workspace_human_review_queue_pack"]
+    permission_pack = packs["workspace_capability_permission_matrix_pack"]
+    timeline_pack = packs["workspace_cycle_history_timeline_pack"]
+    cycle_pack = packs["workspace_retry_cycle_decision_pack"]
+    readiness_pack = packs["workspace_execution_readiness_pack"]
+    verification_pack = packs["workspace_remediation_verification_pack"]
+
+    control_summary = dict(control_pack.get("control_center_summary") or {})
+    ledger_summary = dict(ledger_pack.get("ledger_summary") or {})
+    review_summary = dict(review_pack.get("review_queue_summary") or {})
+    permission_summary = dict(
+        permission_pack.get("permission_matrix_summary") or {}
+    )
+    timeline_summary = dict(timeline_pack.get("timeline_summary") or {})
+    cycle_summary = dict(cycle_pack.get("cycle_decision_summary") or {})
+    readiness_summary = dict(readiness_pack.get("readiness_summary") or {})
+    verification_summary = dict(
+        verification_pack.get("verification_summary") or {}
+    )
+    launch_lock = dict(readiness_pack.get("launch_lock") or {})
+    cycle_gate = dict(cycle_pack.get("cycle_gate") or {})
+    review_items = list(review_pack.get("review_queue_items") or [])
+    blocked_review_items = list(review_pack.get("blocked_review_items") or [])
+    capability_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+    policy_gates = list(permission_pack.get("policy_gate_results") or [])
+    timeline_events = list(timeline_pack.get("timeline_events") or [])
+    agent_run_cards = list(ledger_pack.get("agent_run_cards") or [])
+    permission_quality_checks = dict(
+        permission_pack.get("permission_quality_checks") or {}
+    )
+
+    pack_definitions = [
+        {
+            "pack_id": "control_center",
+            "pack_name": "Workspace Control Center",
+            "source_pack": "workspace_control_center_pack",
+            "pack": control_pack,
+            "required_fields": ["control_center_summary", "cycle_gate"],
+            "upstream_dependencies": [
+                "workspace_retry_cycle_decision_pack",
+                "workspace_cycle_history_timeline_pack",
+            ],
+            "downstream_consumers": [
+                "workspace_human_review_queue_pack",
+                "workspace_system_integration_health_pack",
+            ],
+        },
+        {
+            "pack_id": "agent_run_ledger",
+            "pack_name": "Workspace Agent Run Ledger",
+            "source_pack": "workspace_agent_run_ledger_pack",
+            "pack": ledger_pack,
+            "required_fields": ["ledger_summary", "agent_run_cards"],
+            "upstream_dependencies": ["workspace_control_center_pack"],
+            "downstream_consumers": [
+                "workspace_human_review_queue_pack",
+                "workspace_system_integration_health_pack",
+            ],
+        },
+        {
+            "pack_id": "human_review_queue",
+            "pack_name": "Workspace Human Review Queue",
+            "source_pack": "workspace_human_review_queue_pack",
+            "pack": review_pack,
+            "required_fields": [
+                "review_queue_summary",
+                "review_queue_items",
+                "operator_task_cards",
+            ],
+            "upstream_dependencies": [
+                "workspace_control_center_pack",
+                "workspace_agent_run_ledger_pack",
+            ],
+            "downstream_consumers": [
+                "workspace_capability_permission_matrix_pack",
+                "workspace_system_integration_health_pack",
+            ],
+        },
+        {
+            "pack_id": "capability_permission_matrix",
+            "pack_name": "Workspace Capability Permission Matrix",
+            "source_pack": "workspace_capability_permission_matrix_pack",
+            "pack": permission_pack,
+            "required_fields": [
+                "permission_matrix_summary",
+                "capability_permission_cards",
+                "policy_gate_results",
+            ],
+            "upstream_dependencies": [
+                "workspace_control_center_pack",
+                "workspace_human_review_queue_pack",
+                "workspace_agent_run_ledger_pack",
+            ],
+            "downstream_consumers": [
+                "workspace_system_integration_health_pack",
+            ],
+        },
+        {
+            "pack_id": "cycle_history_timeline",
+            "pack_name": "Workspace Cycle History Timeline",
+            "source_pack": "workspace_cycle_history_timeline_pack",
+            "pack": timeline_pack,
+            "required_fields": ["timeline_summary", "timeline_events"],
+            "upstream_dependencies": ["workspace_retry_cycle_decision_pack"],
+            "downstream_consumers": [
+                "workspace_control_center_pack",
+                "workspace_system_integration_health_pack",
+            ],
+        },
+        {
+            "pack_id": "retry_cycle_decision",
+            "pack_name": "Workspace Retry Cycle Decision",
+            "source_pack": "workspace_retry_cycle_decision_pack",
+            "pack": cycle_pack,
+            "required_fields": [
+                "cycle_decision_summary",
+                "cycle_gate",
+            ],
+            "upstream_dependencies": [
+                "workspace_retry_rehearsal_result_pack",
+            ],
+            "downstream_consumers": [
+                "workspace_cycle_history_timeline_pack",
+                "workspace_control_center_pack",
+            ],
+        },
+        {
+            "pack_id": "execution_readiness",
+            "pack_name": "Workspace Execution Readiness",
+            "source_pack": "workspace_execution_readiness_pack",
+            "pack": readiness_pack,
+            "required_fields": ["readiness_summary", "launch_lock"],
+            "upstream_dependencies": [
+                "workspace_approval_decision_pack",
+                "workspace_action_ticket_pack",
+            ],
+            "downstream_consumers": [
+                "workspace_execution_rehearsal_pack",
+                "workspace_system_integration_health_pack",
+            ],
+        },
+        {
+            "pack_id": "remediation_verification",
+            "pack_name": "Workspace Remediation Verification",
+            "source_pack": "workspace_remediation_verification_pack",
+            "pack": verification_pack,
+            "required_fields": [
+                "verification_summary",
+                "verification_check_results",
+            ],
+            "upstream_dependencies": [
+                "workspace_rehearsal_remediation_pack",
+            ],
+            "downstream_consumers": [
+                "workspace_retry_rehearsal_plan_pack",
+                "workspace_system_integration_health_pack",
+            ],
+        },
+    ]
+
+    pack_health_cards = []
+    for definition in pack_definitions:
+        pack = dict(definition["pack"] or {})
+        missing_or_weak_fields = [
+            field
+            for field in definition["required_fields"]
+            if not pack.get(field)
+        ]
+        present = bool(pack)
+        ready_for_review = present and not missing_or_weak_fields
+        health_status = (
+            "ready_for_review_preview"
+            if ready_for_review
+            else "present_with_missing_or_weak_fields"
+            if present
+            else "missing_preview_only"
+        )
+        pack_health_cards.append(
+            {
+                "pack_id": definition["pack_id"],
+                "pack_name": definition["pack_name"],
+                "source_pack": definition["source_pack"],
+                "health_status": health_status,
+                "present": present,
+                "ready_for_review": ready_for_review,
+                "missing_or_weak_fields": missing_or_weak_fields,
+                "upstream_dependencies": list(definition["upstream_dependencies"]),
+                "downstream_consumers": list(definition["downstream_consumers"]),
+                "recommended_fix_preview": (
+                    "Review missing or weak fields in preview before the next dry-run cycle."
+                    if missing_or_weak_fields
+                    else "Keep this pack in preview review; no real system health check is performed."
+                ),
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Pack health is derived from workspace pack presence and fields only; no real monitoring system or service health read is used."
+                ),
+            }
+        )
+
+    chain_components = {
+        "evidence": bool(creative_decision_pack.get("evidence_brief")),
+        "decision": bool(creative_decision_pack.get("creative_decision_pack"))
+        or bool(creative_decision_pack.get("recommended_angle_id")),
+        "readiness": bool(readiness_pack),
+        "rehearsal": bool(
+            creative_decision_pack.get("workspace_execution_rehearsal_pack")
+        ),
+        "remediation": bool(
+            creative_decision_pack.get("workspace_rehearsal_remediation_pack")
+        ),
+        "retry": bool(cycle_pack),
+        "control_center": bool(control_pack),
+        "permission_matrix": bool(permission_pack),
+    }
+    workflow_chain_health = {
+        "mode": "workflow_chain_health_preview",
+        "chain_components": chain_components,
+        "chain_complete_for_preview": all(chain_components.values()),
+        "missing_components": [
+            key for key, present in chain_components.items() if not present
+        ],
+        "source_packs": source_pack_names,
+        "real_execution_allowed": False,
+        "risk_note": (
+            "Workflow chain health is a deterministic preview from pack presence and does not represent real execution readiness."
+        ),
+    }
+    gate_health_overview = {
+        "mode": "gate_health_preview_not_real_execution_gate",
+        "launch_lock": {
+            "lock_id": _rw_text(launch_lock.get("lock_id")),
+            "lock_status": _rw_text(launch_lock.get("lock_status"))
+            or "locked_preview_only",
+            "real_execution_allowed": False,
+        },
+        "cycle_gate": {
+            "gate_id": _rw_text(cycle_gate.get("gate_id"))
+            or "cycle_gate_preview",
+            "gate_status": _rw_text(cycle_gate.get("gate_status"))
+            or "blocked_preview_only",
+            "real_execution_allowed": False,
+        },
+        "policy_gate": {
+            "policy_gate_count": len(policy_gates),
+            "all_policy_gates_preview_only": all(
+                not gate.get("real_execution_allowed") for gate in policy_gates
+            ),
+            "real_execution_allowed": False,
+        },
+        "human_review_gate": {
+            "review_item_count": len(review_items),
+            "blocked_review_item_count": len(blocked_review_items),
+            "creates_real_task": False,
+            "real_execution_allowed": False,
+        },
+        "is_real_execution_gate": False,
+    }
+    traceability_health = {
+        "mode": "traceability_health_preview",
+        "agent_run_ledger_present": bool(ledger_pack),
+        "agent_run_card_count": len(agent_run_cards),
+        "cycle_history_timeline_present": bool(timeline_pack),
+        "timeline_event_count": len(timeline_events),
+        "real_log_read_performed": False,
+        "real_history_table_read_performed": False,
+        "real_execution_allowed": False,
+    }
+    operator_readiness_overview = {
+        "mode": "operator_readiness_preview",
+        "human_review_queue_present": bool(review_pack),
+        "review_item_count": len(review_items),
+        "blocked_review_item_count": len(blocked_review_items),
+        "control_center_present": bool(control_pack),
+        "control_center_status": _rw_text(
+            control_summary.get("control_center_status")
+        )
+        or _rw_text(control_summary.get("mode"))
+        or "control_center_preview",
+        "operator_task_created": False,
+        "real_execution_allowed": False,
+    }
+    capability_lock_entries = {
+        card.get("capability_id"): {
+            "current_status": card.get("current_status")
+            or "disabled_preview_only",
+            "permission_level": card.get("permission_level")
+            or "denied_real_execution_preview_only",
+            "allowed_modes": list(card.get("allowed_modes") or []),
+            "disallowed_modes": list(card.get("disallowed_modes") or []),
+            "real_execution_allowed": False,
+        }
+        for card in capability_cards
+        if card.get("capability_id")
+    }
+    capability_lock_health = {
+        "mode": "capability_lock_health_preview",
+        "capability_count": len(capability_lock_entries),
+        "capabilities": capability_lock_entries,
+        "all_capabilities_disabled_or_preview_only": all(
+            not entry["real_execution_allowed"]
+            and (
+                "disabled" in str(entry["current_status"])
+                or "preview" in str(entry["current_status"])
+                or "dry" in " ".join(entry["allowed_modes"])
+            )
+            for entry in capability_lock_entries.values()
+        ),
+        "real_execution_allowed": False,
+    }
+
+    integration_risk_register = []
+    for card in pack_health_cards:
+        if not card["ready_for_review"]:
+            integration_risk_register.append(
+                {
+                    "risk_id": f"risk_missing_or_weak_{card['pack_id']}",
+                    "risk_type": "missing_input",
+                    "source_pack": card["source_pack"],
+                    "risk_title": f"{card['pack_name']} has missing or weak fields",
+                    "risk_detail": ", ".join(card["missing_or_weak_fields"])
+                    or "Pack is missing from preview chain.",
+                    "severity": "medium" if card["present"] else "high",
+                    "blocked_by": list(card["missing_or_weak_fields"])
+                    or ["pack_not_present"],
+                    "recommended_operator_action": card[
+                        "recommended_fix_preview"
+                    ],
+                    "real_execution_allowed": False,
+                    "risk_note": "Risk register is preview-only and cannot trigger remediation automatically.",
+                }
+            )
+    if blocked_review_items:
+        integration_risk_register.append(
+            {
+                "risk_id": "risk_human_review_required",
+                "risk_type": "review_required",
+                "source_pack": "workspace_human_review_queue_pack",
+                "risk_title": "Human review queue contains blocked review items",
+                "risk_detail": (
+                    "Blocked review items remain in the deterministic operator review preview."
+                ),
+                "severity": "high",
+                "blocked_by": [
+                    item.get("review_id", "blocked_review_item")
+                    for item in blocked_review_items[:8]
+                ],
+                "recommended_operator_action": (
+                    "Review blocked items manually in preview before continuing the dry-run cycle."
+                ),
+                "real_execution_allowed": False,
+                "risk_note": "No real operator task or approval is created.",
+            }
+        )
+    if capability_cards:
+        integration_risk_register.append(
+            {
+                "risk_id": "risk_locked_capabilities",
+                "risk_type": "locked_capability",
+                "source_pack": "workspace_capability_permission_matrix_pack",
+                "risk_title": "All real capabilities remain disabled",
+                "risk_detail": (
+                    "Capability permission matrix keeps real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, restore, and execution disabled."
+                ),
+                "severity": "high",
+                "blocked_by": [
+                    card.get("capability_id", "capability")
+                    for card in capability_cards
+                    if not card.get("real_execution_allowed")
+                ][:13],
+                "recommended_operator_action": (
+                    "Keep launch lock active and use dry-run preview only."
+                ),
+                "real_execution_allowed": False,
+                "risk_note": "Locked capability risk does not unlock or execute any capability.",
+            }
+        )
+    if creative_decision_pack.get("quality_checks", {}).get("weak_evidence"):
+        integration_risk_register.append(
+            {
+                "risk_id": "risk_weak_evidence",
+                "risk_type": "weak_evidence",
+                "source_pack": "creative_decision_pack",
+                "risk_title": "Weak evidence requires operator review",
+                "risk_detail": (
+                    "Creative decision quality checks indicate weak evidence for this preview."
+                ),
+                "severity": "medium",
+                "blocked_by": ["weak_evidence"],
+                "recommended_operator_action": (
+                    "Collect or review stronger evidence before the next dry-run."
+                ),
+                "real_execution_allowed": False,
+                "risk_note": "Weak evidence risk is advisory and does not trigger external collection.",
+            }
+        )
+
+    health_signature = json.dumps(
+        {
+            "control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+            "review_queue_id": _rw_text(review_summary.get("queue_id")),
+            "matrix_id": _rw_text(permission_summary.get("matrix_id")),
+            "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+            "cycle_decision_id": _rw_text(
+                cycle_summary.get("cycle_decision_id")
+            ),
+            "pack_health": [
+                card["health_status"] for card in pack_health_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    health_id = (
+        "workspace_system_integration_health_"
+        + hashlib.sha256(health_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_service_health_read_enabled": False,
+        "monitoring_system_enabled": False,
+        "approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "agent_runtime_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_system_integration_health_pack_v1",
+        "integration_health_summary": {
+            "health_id": health_id,
+            "mode": "integration_health_preview_readiness_overview_dry_run_only",
+            "pack_health_card_count": len(pack_health_cards),
+            "ready_for_review_pack_count": len(
+                [card for card in pack_health_cards if card["ready_for_review"]]
+            ),
+            "integration_risk_count": len(integration_risk_register),
+            "workflow_chain_complete_for_preview": workflow_chain_health[
+                "chain_complete_for_preview"
+            ],
+            "capability_count": len(capability_lock_entries),
+            "recommended_next_action": (
+                "Review integration health preview and keep all real capabilities disabled."
+            ),
+            "real_execution_allowed": False,
+        },
+        "pack_health_cards": pack_health_cards,
+        "workflow_chain_health": workflow_chain_health,
+        "gate_health_overview": gate_health_overview,
+        "traceability_health": traceability_health,
+        "operator_readiness_overview": operator_readiness_overview,
+        "capability_lock_health": capability_lock_health,
+        "integration_risk_register": integration_risk_register,
+        "health_quality_checks": {
+            "source_packs_checked": source_pack_names,
+            "pack_health_cards_present": len(pack_health_cards) >= 4,
+            "workflow_chain_health_present": bool(workflow_chain_health),
+            "gate_health_overview_present": bool(gate_health_overview),
+            "gate_health_is_not_real_execution_gate": not gate_health_overview[
+                "is_real_execution_gate"
+            ],
+            "traceability_health_present": bool(traceability_health),
+            "traceability_uses_preview_packs_only": True,
+            "operator_readiness_overview_present": bool(
+                operator_readiness_overview
+            ),
+            "capability_lock_health_present": bool(capability_lock_health),
+            "all_capabilities_execution_disabled": capability_lock_health[
+                "all_capabilities_disabled_or_preview_only"
+            ],
+            "integration_risk_register_present_or_empty_state": isinstance(
+                integration_risk_register, list
+            ),
+            "audit_preview_not_persisted": True,
+            "real_service_health_read_performed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_system_integration_health_preview",
+            "health_id": health_id,
+            "source_pack_ids": {
+                "control_center_id": _rw_text(
+                    control_summary.get("control_center_id")
+                ),
+                "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+                "review_queue_id": _rw_text(review_summary.get("queue_id")),
+                "permission_matrix_id": _rw_text(
+                    permission_summary.get("matrix_id")
+                ),
+                "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+                "cycle_decision_id": _rw_text(
+                    cycle_summary.get("cycle_decision_id")
+                ),
+            },
+            "is_real_monitoring_system": False,
+            "real_service_health_read_performed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic system integration health and readiness overview derived from workspace packs only; no real monitoring system, service health read, permission system, approval system, agent runtime, operator log, ticket, provider, LLM, video, media, paid, registry, rollback, restore, external scraping, history table read, database write, or execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -29481,6 +30037,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_capability_permission_matrix_pack"] = (
         _rw_workspace_capability_permission_matrix_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_system_integration_health_pack"] = (
+        _rw_workspace_system_integration_health_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
