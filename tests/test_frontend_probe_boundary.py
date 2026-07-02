@@ -11547,6 +11547,152 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_capability_permission_matrix_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace capability permission matrix bundle",
+            "PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_MARKER",
+            "latestProjectWorkspaceCapabilityPermissionMatrixPack",
+            "projectWorkspaceCapabilityPermissionMatrixPackFromWorkspace",
+            "projectWorkspaceExportCapabilityPermissionMatrixSnapshot",
+            "projectWorkspaceExportCapabilityPermissionMatrixMarkdown",
+            "renderProjectWorkspaceCapabilityPermissionMatrixSummaryPanel",
+            "renderProjectWorkspaceCapabilityPermissionCardsPanel",
+            "renderProjectWorkspaceCapabilityPolicyGateResultsPanel",
+            "renderProjectWorkspaceCapabilityUnlockDeniedApprovalPanel",
+            "renderProjectWorkspaceCapabilityDependencyQualityAuditSafetyPanel",
+            "copyProjectWorkspaceCapabilityPermissionMatrixSummary",
+            "copyProjectWorkspaceCapabilityPermissionCards",
+            "copyProjectWorkspaceCapabilityPolicyGateResults",
+            "copyProjectWorkspaceCapabilityUnlockRequirements",
+            "copyProjectWorkspaceDeniedCapabilityReasons",
+            "copyProjectWorkspaceCapabilityHumanApprovalRequirements",
+            "copyProjectWorkspaceCapabilityDependencyMap",
+            "copyProjectWorkspaceCapabilityPermissionAuditPreview",
+            "copyProjectWorkspaceFullCapabilityPermissionMatrixPack",
+            "workspace_capability_permission_matrix_pack: projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace)",
+            "Workspace Capability Permission Matrix / Policy Gate",
+            "Permission Matrix Summary", "Capability Permission Cards",
+            "Policy Gate Results", "Unlock Requirements",
+            "Denied Capability Reasons", "Human Approval Requirements",
+            "Capability Dependency Map", "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for capability_id in [
+            "llm_generation", "video_provider", "media_upload",
+            "media_download", "paid_operation", "provider_registry",
+            "rollback_restore", "external_scraping",
+            "database_persistence", "real_execution", "human_approval",
+            "operator_task_creation", "secret_access",
+        ]:
+            with self.subTest(capability=capability_id):
+                self.assertIn(capability_id, html)
+        for field in [
+            "pack.permission_matrix_summary",
+            "pack.capability_permission_cards",
+            "pack.policy_gate_results", "pack.unlock_requirements",
+            "pack.denied_capability_reasons",
+            "pack.human_approval_requirements",
+            "pack.capability_dependency_map",
+            "pack.permission_quality_checks", "pack.audit_preview",
+            "pack.safety_boundaries", "summary.mode",
+            "summary.capability_count", "summary.recommended_next_action",
+            "summary.real_execution_allowed", "card.capability_id",
+            "card.capability_name", "card.capability_category",
+            "card.current_status", "card.permission_level",
+            "card.source_pack", "card.required_inputs",
+            "card.required_approvals", "card.blocked_by",
+            "card.allowed_modes", "card.disallowed_modes",
+            "card.real_execution_allowed", "card.risk_note",
+            "gate.gate_id", "gate.gate_name", "gate.capability_id",
+            "gate.gate_status", "gate.gate_reason",
+            "gate.required_evidence", "gate.required_human_review",
+            "gate.next_allowed_mode", "gate.real_execution_allowed",
+            "gate.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceCapabilityPermissionMatrixSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceCapabilityDependencyQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_capability_permission_matrix_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "capabilityPermissionMatrixPackTitle",
+            "capabilityPermissionMatrixSummaryTitle",
+            "capabilityPermissionMatrixCardsTitle",
+            "capabilityPermissionMatrixPolicyGatesTitle",
+            "capabilityPermissionMatrixUnlockTitle",
+            "capabilityPermissionMatrixDeniedTitle",
+            "capabilityPermissionMatrixHumanApprovalTitle",
+            "capabilityPermissionMatrixDependencyTitle",
+            "capabilityPermissionMatrixAuditTitle",
+            "capabilityPermissionMatrixSafetyTitle",
+            "capabilityPermissionMatrixCopySummary",
+            "capabilityPermissionMatrixCopyCards",
+            "capabilityPermissionMatrixCopyGates",
+            "capabilityPermissionMatrixCopyUnlock",
+            "capabilityPermissionMatrixCopyDenied",
+            "capabilityPermissionMatrixCopyHumanApproval",
+            "capabilityPermissionMatrixCopyDependency",
+            "capabilityPermissionMatrixCopyAudit",
+            "capabilityPermissionMatrixCopyFull",
+            "capabilityPermissionMatrixCopied",
+            "capabilityPermissionMatrixCopyFailed",
+            "capabilityPermissionMatrixCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace capability permission matrix bundle", script)
+            self.assertIn("project_workspace_capability_permission_matrix_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceCapabilityPermissionMatrixSummaryText"):
+            html.index("async function copyProjectWorkspaceCapabilityPermissionMatrixText")
+        ]
+        for key in [
+            "capabilityPermissionMatrixPackTitle",
+            "capabilityPermissionMatrixSummaryTitle",
+            "capabilityPermissionMatrixCardsTitle",
+            "capabilityPermissionMatrixPolicyGatesTitle",
+            "capabilityPermissionMatrixUnlockTitle",
+            "capabilityPermissionMatrixDeniedTitle",
+            "capabilityPermissionMatrixHumanApprovalTitle",
+            "capabilityPermissionMatrixDependencyTitle",
+            "capabilityPermissionMatrixAuditTitle",
+            "capabilityPermissionMatrixSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Permission matrix preview only", html)
+        self.assertIn("not a real permission system", html)
+        self.assertIn("does not grant or unlock real capabilities", html)
+        self.assertIn("Policy gates must not display ready_for_real_execution", html)
+        self.assertIn("do not create real approvals", html)
+        self.assertIn("Audit preview is not written to a database", html)
+        self.assertIn("No secret is read and no real operator task", html)
+        self.assertNotIn("ready_for_real_execution</", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

@@ -3621,6 +3621,7 @@
         let latestProjectWorkspaceControlCenterPack = {};
         let latestProjectWorkspaceAgentRunLedgerPack = {};
         let latestProjectWorkspaceHumanReviewQueuePack = {};
+        let latestProjectWorkspaceCapabilityPermissionMatrixPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8918,6 +8919,7 @@
                 latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
                 latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
                 latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
+                latestProjectWorkspaceCapabilityPermissionMatrixPack = latestProjectCreativeDecisionPack.workspace_capability_permission_matrix_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14775,6 +14777,22 @@
         const PROJECT_WORKSPACE_CONTROL_CENTER_MARKER = 'Project Workspace control center bundle';
         const PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER = 'Project Workspace agent run ledger bundle';
         const PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER = 'Project Workspace human review queue bundle';
+        const PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_MARKER = 'Project Workspace capability permission matrix bundle';
+        const PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_REQUIRED_IDS = [
+            'llm_generation',
+            'video_provider',
+            'media_upload',
+            'media_download',
+            'paid_operation',
+            'provider_registry',
+            'rollback_restore',
+            'external_scraping',
+            'database_persistence',
+            'real_execution',
+            'human_approval',
+            'operator_task_creation',
+            'secret_access',
+        ];
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -18901,6 +18919,105 @@
         function copyProjectWorkspaceHumanReviewQueueAuditPreview() { return copyProjectWorkspaceHumanReviewQueueText('audit'); }
         function copyProjectWorkspaceFullHumanReviewQueuePack() { return copyProjectWorkspaceHumanReviewQueueText('full'); }
 
+        function projectWorkspaceCapabilityPermissionMatrixPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceCapabilityPermissionMatrixPack && Object.keys(latestProjectWorkspaceCapabilityPermissionMatrixPack).length) return latestProjectWorkspaceCapabilityPermissionMatrixPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_capability_permission_matrix_pack || {};
+        }
+
+        function projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCapabilityPermissionMatrixPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_MARKER,
+                has_workspace_capability_permission_matrix_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                permission_matrix_summary: pack.permission_matrix_summary || {},
+                capability_permission_cards: pack.capability_permission_cards || [],
+                policy_gate_results: pack.policy_gate_results || [],
+                unlock_requirements: pack.unlock_requirements || [],
+                denied_capability_reasons: pack.denied_capability_reasons || [],
+                human_approval_requirements: pack.human_approval_requirements || {},
+                capability_dependency_map: pack.capability_dependency_map || {},
+                permission_quality_checks: pack.permission_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCapabilityPermissionMatrixJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceCapabilityPermissionMatrixSummaryText(pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot()) {
+            if (!pack.has_workspace_capability_permission_matrix_pack) return '';
+            const summary = pack.permission_matrix_summary || {};
+            const disabledCount = (pack.capability_permission_cards || []).filter((card) => String(card.current_status || '').includes('disabled') || String(card.current_status || '').includes('preview') || card.real_execution_allowed === false).length;
+            return [
+                t('capabilityPermissionMatrixSummaryTitle'),
+                `${t('capabilityPermissionMatrixMode')}: ${summary.mode || t('none')}`,
+                `${t('capabilityPermissionMatrixCapabilityCount')}: ${summary.capability_count ?? pack.capability_permission_cards.length}`,
+                `${t('capabilityPermissionMatrixDisabledPreviewCount')}: ${disabledCount}`,
+                `${t('capabilityPermissionMatrixRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('capabilityPermissionMatrixRealExecution')}: ${summary.real_execution_allowed === false ? t('capabilityPermissionMatrixDisabled') : String(summary.real_execution_allowed)}`,
+                t('capabilityPermissionMatrixPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceCapabilityPermissionMatrixSectionText(titleKey, value) {
+            const body = projectWorkspaceCapabilityPermissionMatrixJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportCapabilityPermissionMatrixMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace);
+            if (!pack.has_workspace_capability_permission_matrix_pack) return '';
+            return [
+                `## ${t('capabilityPermissionMatrixPackTitle')}`,
+                `## ${t('capabilityPermissionMatrixSummaryTitle')}`,
+                projectWorkspaceCapabilityPermissionMatrixSummaryText(pack), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixCardsTitle', pack.capability_permission_cards), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixPolicyGatesTitle', pack.policy_gate_results), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixUnlockTitle', pack.unlock_requirements), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixDeniedTitle', pack.denied_capability_reasons), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixHumanApprovalTitle', pack.human_approval_requirements), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixDependencyTitle', pack.capability_dependency_map), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixAuditTitle', pack.audit_preview), '',
+                projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixSafetyTitle', pack.safety_boundaries),
+                t('capabilityPermissionMatrixSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceCapabilityPermissionMatrixText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceCapabilityPermissionMatrixStatus');
+            const pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceCapabilityPermissionMatrixSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixCardsTitle', pack.capability_permission_cards)
+                : kind === 'gates' ? projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixPolicyGatesTitle', pack.policy_gate_results)
+                : kind === 'unlock' ? projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixUnlockTitle', pack.unlock_requirements)
+                : kind === 'denied' ? projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixDeniedTitle', pack.denied_capability_reasons)
+                : kind === 'approval' ? projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixHumanApprovalTitle', pack.human_approval_requirements)
+                : kind === 'dependency' ? projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixDependencyTitle', pack.capability_dependency_map)
+                : kind === 'audit' ? projectWorkspaceCapabilityPermissionMatrixSectionText('capabilityPermissionMatrixAuditTitle', pack.audit_preview)
+                : projectWorkspaceExportCapabilityPermissionMatrixMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('capabilityPermissionMatrixCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('capabilityPermissionMatrixCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('capabilityPermissionMatrixCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('capabilityPermissionMatrixCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceCapabilityPermissionMatrixSummary() { return copyProjectWorkspaceCapabilityPermissionMatrixText('summary'); }
+        function copyProjectWorkspaceCapabilityPermissionCards() { return copyProjectWorkspaceCapabilityPermissionMatrixText('cards'); }
+        function copyProjectWorkspaceCapabilityPolicyGateResults() { return copyProjectWorkspaceCapabilityPermissionMatrixText('gates'); }
+        function copyProjectWorkspaceCapabilityUnlockRequirements() { return copyProjectWorkspaceCapabilityPermissionMatrixText('unlock'); }
+        function copyProjectWorkspaceDeniedCapabilityReasons() { return copyProjectWorkspaceCapabilityPermissionMatrixText('denied'); }
+        function copyProjectWorkspaceCapabilityHumanApprovalRequirements() { return copyProjectWorkspaceCapabilityPermissionMatrixText('approval'); }
+        function copyProjectWorkspaceCapabilityDependencyMap() { return copyProjectWorkspaceCapabilityPermissionMatrixText('dependency'); }
+        function copyProjectWorkspaceCapabilityPermissionAuditPreview() { return copyProjectWorkspaceCapabilityPermissionMatrixText('audit'); }
+        function copyProjectWorkspaceFullCapabilityPermissionMatrixPack() { return copyProjectWorkspaceCapabilityPermissionMatrixText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -22432,6 +22549,36 @@
             return `<div class="section-block" id="projectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('humanReviewQueueDecisionQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueDecisionQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueDecisionOptions()">${escapeHTML(t('humanReviewQueueCopyDecisions'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHumanReviewQueueAuditPreview()">${escapeHTML(t('humanReviewQueueCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueDecisionOptionsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.operator_decision_options) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueuePriorityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.review_priority_rationale) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.review_quality_checks) || t('humanReviewQueueNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('humanReviewQueueAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceHumanReviewQueueJsonText(pack.audit_preview) || t('humanReviewQueueNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('humanReviewQueueSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueDecisionPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('humanReviewQueueSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceCapabilityPermissionMatrixSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace); if (!pack.has_workspace_capability_permission_matrix_pack) return '';
+            const summary = pack.permission_matrix_summary || {};
+            const disabledCount = (pack.capability_permission_cards || []).filter((card) => String(card.current_status || '').includes('disabled') || String(card.current_status || '').includes('preview') || card.real_execution_allowed === false).length;
+            return `<div class="section-block" id="projectWorkspaceCapabilityPermissionMatrixSummaryPanel" data-capability-permission-matrix-marker="${PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_MARKER}" data-marker="project_workspace_capability_permission_matrix_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('capabilityPermissionMatrixPackTitle'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullCapabilityPermissionMatrixPack()">${escapeHTML(t('capabilityPermissionMatrixCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('capabilityPermissionMatrixMode'), summary.mode || t('none'))}${metricPill(t('capabilityPermissionMatrixCapabilityCount'), String(summary.capability_count ?? pack.capability_permission_cards.length))}${metricPill(t('capabilityPermissionMatrixDisabledPreviewCount'), String(disabledCount))}${metricPill(t('capabilityPermissionMatrixRealExecution'), summary.real_execution_allowed === false ? t('capabilityPermissionMatrixDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixSummaryText(pack) || t('capabilityPermissionMatrixNoData'))}</pre><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceCapabilityPermissionMatrixStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityPermissionMatrixSummary()">${escapeHTML(t('capabilityPermissionMatrixCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceCapabilityPermissionCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace); if (!pack.has_workspace_capability_permission_matrix_pack) return '';
+            const cards = (pack.capability_permission_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.capability_name || card.capability_id || t('capabilityPermissionMatrixCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.current_status || t('none'))}</span></div><div><strong>${escapeHTML(t('capabilityPermissionMatrixCapabilityId'))}:</strong> ${escapeHTML(card.capability_id || t('none'))}</div><div><strong>${escapeHTML(t('capabilityPermissionMatrixCategory'))}:</strong> ${escapeHTML(card.capability_category || t('none'))}</div><div><strong>${escapeHTML(t('capabilityPermissionMatrixPermissionLevel'))}:</strong> ${escapeHTML(card.permission_level || t('none'))}</div><div><strong>${escapeHTML(t('capabilityPermissionMatrixSourcePack'))}:</strong> ${escapeHTML(card.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('capabilityPermissionMatrixRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('capabilityPermissionMatrixDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText({required_inputs:card.required_inputs||[],required_approvals:card.required_approvals||[],blocked_by:card.blocked_by||[],allowed_modes:card.allowed_modes||[],disallowed_modes:card.disallowed_modes||[],risk_note:card.risk_note||''}) || t('capabilityPermissionMatrixNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceCapabilityPermissionCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('capabilityPermissionMatrixCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityPermissionCards()">${escapeHTML(t('capabilityPermissionMatrixCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('capabilityPermissionMatrixNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceCapabilityPolicyGateResultsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace); if (!pack.has_workspace_capability_permission_matrix_pack) return '';
+            const gates = (pack.policy_gate_results || []).map((gate) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(gate.gate_name || gate.gate_id || t('capabilityPermissionMatrixPolicyGatesTitle'))}</strong><span class="metric-pill">${escapeHTML(gate.gate_status || t('none'))}</span></div><div><strong>${escapeHTML(t('capabilityPermissionMatrixGateId'))}:</strong> ${escapeHTML(gate.gate_id || t('none'))}</div><div><strong>${escapeHTML(t('capabilityPermissionMatrixCapabilityId'))}:</strong> ${escapeHTML(gate.capability_id || t('none'))}</div><div><strong>${escapeHTML(t('capabilityPermissionMatrixNextAllowedMode'))}:</strong> ${escapeHTML(gate.next_allowed_mode || t('none'))}</div><div><strong>${escapeHTML(t('capabilityPermissionMatrixRealExecution'))}:</strong> ${escapeHTML(gate.real_execution_allowed === false ? t('capabilityPermissionMatrixDisabled') : String(gate.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText({gate_reason:gate.gate_reason||'',required_evidence:gate.required_evidence||[],required_human_review:gate.required_human_review||[],risk_note:gate.risk_note||''}) || t('capabilityPermissionMatrixNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceCapabilityPolicyGateResultsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('capabilityPermissionMatrixPolicyGatesTitle'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixPolicyGatesHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityPolicyGateResults()">${escapeHTML(t('capabilityPermissionMatrixCopyGates'))}</button></div><div class="graph-os-compact-grid">${gates || `<div class="empty-state">${escapeHTML(t('capabilityPermissionMatrixNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixNoRealReadyNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceCapabilityUnlockDeniedApprovalPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace); if (!pack.has_workspace_capability_permission_matrix_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceCapabilityUnlockDeniedApprovalPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('capabilityPermissionMatrixUnlockDeniedApprovalTitle'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixUnlockDeniedApprovalHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityUnlockRequirements()">${escapeHTML(t('capabilityPermissionMatrixCopyUnlock'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDeniedCapabilityReasons()">${escapeHTML(t('capabilityPermissionMatrixCopyDenied'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityHumanApprovalRequirements()">${escapeHTML(t('capabilityPermissionMatrixCopyHumanApproval'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixUnlockTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.unlock_requirements) || t('capabilityPermissionMatrixNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixDeniedTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.denied_capability_reasons) || t('capabilityPermissionMatrixNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixHumanApprovalTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.human_approval_requirements) || t('capabilityPermissionMatrixNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixUnlockPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixNoRealApprovalNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceCapabilityDependencyQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace); if (!pack.has_workspace_capability_permission_matrix_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('capabilityPermissionMatrixDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceCapabilityDependencyQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('capabilityPermissionMatrixDependencyQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixDependencyQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityDependencyMap()">${escapeHTML(t('capabilityPermissionMatrixCopyDependency'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCapabilityPermissionAuditPreview()">${escapeHTML(t('capabilityPermissionMatrixCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.capability_dependency_map) || t('capabilityPermissionMatrixNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.permission_quality_checks) || t('capabilityPermissionMatrixNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('capabilityPermissionMatrixAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCapabilityPermissionMatrixJsonText(pack.audit_preview) || t('capabilityPermissionMatrixNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('capabilityPermissionMatrixSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixSecretTaskNote'))}</div><div class="field-helper">${escapeHTML(t('capabilityPermissionMatrixSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -22948,6 +23095,8 @@
                 '',
                 projectWorkspaceExportHumanReviewQueueMarkdown(workspace),
                 '',
+                projectWorkspaceExportCapabilityPermissionMatrixMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -23050,6 +23199,7 @@
                 workspace_control_center_pack: projectWorkspaceExportControlCenterSnapshot(workspace),
                 workspace_agent_run_ledger_pack: projectWorkspaceExportAgentRunLedgerSnapshot(workspace),
                 workspace_human_review_queue_pack: projectWorkspaceExportHumanReviewQueueSnapshot(workspace),
+                workspace_capability_permission_matrix_pack: projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -35551,6 +35701,11 @@
                     ${renderProjectWorkspaceHumanReviewQueueTaskCardsPanel(workspace)}
                     ${renderProjectWorkspaceHumanReviewQueueInputsBlockedDependencyPanel(workspace)}
                     ${renderProjectWorkspaceHumanReviewQueueDecisionQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityPermissionMatrixSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityPermissionCardsPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityPolicyGateResultsPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityUnlockDeniedApprovalPanel(workspace)}
+                    ${renderProjectWorkspaceCapabilityDependencyQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -45159,7 +45314,58 @@
             humanReviewQueueDecisionQualityAuditSafetyHelper: 'Inspect operator decision options, priority rationale, quality checks, audit preview, and disabled real capabilities.',
             humanReviewQueueDecisionPreviewNote: 'Operator decision options are preview-only and cannot create real approvals or unlock real execution.',
             humanReviewQueueAuditNoWriteNote: 'Audit preview is not written to a database, no real logs or history tables are read, and no operator task is created.',
-            humanReviewQueueSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+            humanReviewQueueSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            projectWorkspaceCapabilityPermissionMatrixMarker: 'Project Workspace capability permission matrix bundle',
+            capabilityPermissionMatrixPackTitle: 'Workspace Capability Permission Matrix / Policy Gate',
+            capabilityPermissionMatrixPackHelper: 'Review deterministic capability permission and policy gate preview from workspace packs without granting real permissions.',
+            capabilityPermissionMatrixSummaryTitle: 'Permission Matrix Summary',
+            capabilityPermissionMatrixCardsTitle: 'Capability Permission Cards',
+            capabilityPermissionMatrixPolicyGatesTitle: 'Policy Gate Results',
+            capabilityPermissionMatrixUnlockTitle: 'Unlock Requirements',
+            capabilityPermissionMatrixDeniedTitle: 'Denied Capability Reasons',
+            capabilityPermissionMatrixHumanApprovalTitle: 'Human Approval Requirements',
+            capabilityPermissionMatrixDependencyTitle: 'Capability Dependency Map',
+            capabilityPermissionMatrixAuditTitle: 'Audit Preview',
+            capabilityPermissionMatrixSafetyTitle: 'Safety Boundaries',
+            capabilityPermissionMatrixQualityTitle: 'Permission Quality Checks',
+            capabilityPermissionMatrixMode: 'Mode',
+            capabilityPermissionMatrixCapabilityCount: 'Total capabilities',
+            capabilityPermissionMatrixDisabledPreviewCount: 'Disabled / preview-only count',
+            capabilityPermissionMatrixRecommendedAction: 'Recommended operator action',
+            capabilityPermissionMatrixRealExecution: 'Real execution',
+            capabilityPermissionMatrixDisabled: 'disabled',
+            capabilityPermissionMatrixPreviewNote: 'Permission matrix preview only. This is not a real permission system and does not grant or unlock real capabilities.',
+            capabilityPermissionMatrixNoData: 'No workspace capability permission matrix data is available.',
+            capabilityPermissionMatrixCopyNoData: 'No workspace capability permission matrix content is available to copy.',
+            capabilityPermissionMatrixCopyFailed: 'Unable to copy workspace capability permission matrix content.',
+            capabilityPermissionMatrixCopied: 'Workspace capability permission matrix content copied.',
+            capabilityPermissionMatrixCopySummary: 'Copy permission matrix summary',
+            capabilityPermissionMatrixCopyCards: 'Copy capability permission cards',
+            capabilityPermissionMatrixCopyGates: 'Copy policy gate results',
+            capabilityPermissionMatrixCopyUnlock: 'Copy unlock requirements',
+            capabilityPermissionMatrixCopyDenied: 'Copy denied capability reasons',
+            capabilityPermissionMatrixCopyHumanApproval: 'Copy human approval requirements',
+            capabilityPermissionMatrixCopyDependency: 'Copy capability dependency map',
+            capabilityPermissionMatrixCopyAudit: 'Copy audit preview',
+            capabilityPermissionMatrixCopyFull: 'Copy full capability permission matrix pack',
+            capabilityPermissionMatrixCardsHelper: 'Inspect each capability permission card with required inputs, approvals, blockers, allowed preview modes, disallowed real modes, and disabled execution state.',
+            capabilityPermissionMatrixCapabilityId: 'Capability ID',
+            capabilityPermissionMatrixCategory: 'Capability category',
+            capabilityPermissionMatrixPermissionLevel: 'Permission level',
+            capabilityPermissionMatrixSourcePack: 'Source pack',
+            capabilityPermissionMatrixGateId: 'Gate ID',
+            capabilityPermissionMatrixNextAllowedMode: 'Next allowed mode',
+            capabilityPermissionMatrixPolicyGatesHelper: 'Review policy gate results for each capability. No gate is ready for real execution.',
+            capabilityPermissionMatrixNoRealReadyNote: 'Policy gates must not display ready_for_real_execution; only preview and manual review modes are allowed.',
+            capabilityPermissionMatrixUnlockDeniedApprovalTitle: 'Unlock Requirements / Denied Reasons / Human Approval',
+            capabilityPermissionMatrixUnlockDeniedApprovalHelper: 'Review future unlock requirements, denied capability reasons, and human approval requirements without unlocking or creating approvals.',
+            capabilityPermissionMatrixUnlockPreviewNote: 'Unlock requirements describe future prerequisites only and do not unlock any real capability.',
+            capabilityPermissionMatrixNoRealApprovalNote: 'Human approval requirements are preview-only and do not create real approvals.',
+            capabilityPermissionMatrixDependencyQualityAuditSafetyTitle: 'Capability Dependency / Quality / Audit / Safety Boundaries',
+            capabilityPermissionMatrixDependencyQualityAuditSafetyHelper: 'Inspect capability dependency map, quality checks, audit preview, and disabled real capability boundaries.',
+            capabilityPermissionMatrixAuditNoWriteNote: 'Audit preview is not written to a database and does not read real logs or real history tables.',
+            capabilityPermissionMatrixSecretTaskNote: 'No secret is read and no real operator task, ticket, approval, agent runtime, retry, restore, or rollback is created.',
+            capabilityPermissionMatrixSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -45271,7 +45477,58 @@
             humanReviewQueueDecisionQualityAuditSafetyHelper: '检查操作员决策选项、优先级依据、质量检查、审计预览和已禁用的真实能力。',
             humanReviewQueueDecisionPreviewNote: '操作员决策选项仅为预览，不能创建真实审批，也不能解锁真实执行。',
             humanReviewQueueAuditNoWriteNote: '审计预览不写入数据库，不读取真实日志或历史表，也不创建真实操作员任务。',
-            humanReviewQueueSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
+            humanReviewQueueSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。',
+            projectWorkspaceCapabilityPermissionMatrixMarker: 'Project Workspace capability permission matrix bundle',
+            capabilityPermissionMatrixPackTitle: '工作区能力权限矩阵 / 策略门禁',
+            capabilityPermissionMatrixPackHelper: '工作区能力权限矩阵策略门禁预览：从工作区 pack 检查确定性能力权限和策略门禁，不授予真实权限。',
+            capabilityPermissionMatrixSummaryTitle: '权限矩阵摘要',
+            capabilityPermissionMatrixCardsTitle: '能力权限卡片',
+            capabilityPermissionMatrixPolicyGatesTitle: '策略门禁结果',
+            capabilityPermissionMatrixUnlockTitle: '解锁要求',
+            capabilityPermissionMatrixDeniedTitle: '能力拒绝原因',
+            capabilityPermissionMatrixHumanApprovalTitle: '人工审批要求',
+            capabilityPermissionMatrixDependencyTitle: '能力依赖图',
+            capabilityPermissionMatrixAuditTitle: '审计预览',
+            capabilityPermissionMatrixSafetyTitle: '安全边界',
+            capabilityPermissionMatrixQualityTitle: '权限质量检查',
+            capabilityPermissionMatrixMode: '模式',
+            capabilityPermissionMatrixCapabilityCount: '能力总数',
+            capabilityPermissionMatrixDisabledPreviewCount: '禁用 / 仅预览数量',
+            capabilityPermissionMatrixRecommendedAction: '推荐操作员动作',
+            capabilityPermissionMatrixRealExecution: '真实执行',
+            capabilityPermissionMatrixDisabled: '已禁用',
+            capabilityPermissionMatrixPreviewNote: '仅为权限矩阵预览。这不是真实权限系统，也不会授予或解锁真实能力。',
+            capabilityPermissionMatrixNoData: '暂无工作区能力权限矩阵数据。',
+            capabilityPermissionMatrixCopyNoData: '暂无可复制的工作区能力权限矩阵内容。',
+            capabilityPermissionMatrixCopyFailed: '无法复制工作区能力权限矩阵内容。',
+            capabilityPermissionMatrixCopied: '工作区能力权限矩阵内容已复制。',
+            capabilityPermissionMatrixCopySummary: '复制权限矩阵摘要',
+            capabilityPermissionMatrixCopyCards: '复制能力权限卡片',
+            capabilityPermissionMatrixCopyGates: '复制策略门禁结果',
+            capabilityPermissionMatrixCopyUnlock: '复制解锁要求',
+            capabilityPermissionMatrixCopyDenied: '复制能力拒绝原因',
+            capabilityPermissionMatrixCopyHumanApproval: '复制人工审批要求',
+            capabilityPermissionMatrixCopyDependency: '复制能力依赖图',
+            capabilityPermissionMatrixCopyAudit: '复制审计预览',
+            capabilityPermissionMatrixCopyFull: '复制完整能力权限矩阵 pack',
+            capabilityPermissionMatrixCardsHelper: '检查每个能力权限卡片，包含所需输入、审批、阻塞项、允许预览模式、禁止真实模式和禁用执行状态。',
+            capabilityPermissionMatrixCapabilityId: '能力 ID',
+            capabilityPermissionMatrixCategory: '能力类别',
+            capabilityPermissionMatrixPermissionLevel: '权限级别',
+            capabilityPermissionMatrixSourcePack: '来源 pack',
+            capabilityPermissionMatrixGateId: '门禁 ID',
+            capabilityPermissionMatrixNextAllowedMode: '下一个允许模式',
+            capabilityPermissionMatrixPolicyGatesHelper: '检查每个能力的策略门禁结果。没有任何门禁可进入真实执行。',
+            capabilityPermissionMatrixNoRealReadyNote: '策略门禁不得显示 ready_for_real_execution；只允许预览和人工审阅模式。',
+            capabilityPermissionMatrixUnlockDeniedApprovalTitle: '解锁要求 / 拒绝原因 / 人工审批',
+            capabilityPermissionMatrixUnlockDeniedApprovalHelper: '检查未来解锁要求、能力拒绝原因和人工审批要求，但不解锁，也不创建审批。',
+            capabilityPermissionMatrixUnlockPreviewNote: '解锁要求只描述未来前置条件，不会解锁任何真实能力。',
+            capabilityPermissionMatrixNoRealApprovalNote: '人工审批要求仅为预览，不创建真实审批。',
+            capabilityPermissionMatrixDependencyQualityAuditSafetyTitle: '能力依赖 / 质量 / 审计 / 安全边界',
+            capabilityPermissionMatrixDependencyQualityAuditSafetyHelper: '检查能力依赖图、质量检查、审计预览和已禁用的真实能力边界。',
+            capabilityPermissionMatrixAuditNoWriteNote: '审计预览不写入数据库，也不读取真实日志或真实历史表。',
+            capabilityPermissionMatrixSecretTaskNote: '不读取 secret，也不创建真实操作员任务、工单、审批、Agent runtime、retry、restore 或 rollback。',
+            capabilityPermissionMatrixSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
         });
 
         applyLanguageCopy();
@@ -46687,6 +46944,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
     latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
     latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
+    latestProjectWorkspaceCapabilityPermissionMatrixPack = latestProjectCreativeDecisionPack.workspace_capability_permission_matrix_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
