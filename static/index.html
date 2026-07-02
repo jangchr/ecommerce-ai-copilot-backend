@@ -3623,6 +3623,7 @@
         let latestProjectWorkspaceHumanReviewQueuePack = {};
         let latestProjectWorkspaceCapabilityPermissionMatrixPack = {};
         let latestProjectWorkspaceSystemIntegrationHealthPack = {};
+        let latestProjectWorkspaceReplayHarnessPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8922,6 +8923,7 @@
                 latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
                 latestProjectWorkspaceCapabilityPermissionMatrixPack = latestProjectCreativeDecisionPack.workspace_capability_permission_matrix_pack || {};
                 latestProjectWorkspaceSystemIntegrationHealthPack = latestProjectCreativeDecisionPack.workspace_system_integration_health_pack || {};
+                latestProjectWorkspaceReplayHarnessPack = latestProjectCreativeDecisionPack.workspace_replay_harness_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14781,6 +14783,7 @@
         const PROJECT_WORKSPACE_HUMAN_REVIEW_QUEUE_MARKER = 'Project Workspace human review queue bundle';
         const PROJECT_WORKSPACE_CAPABILITY_PERMISSION_MATRIX_MARKER = 'Project Workspace capability permission matrix bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_MARKER = 'Project Workspace system integration health bundle';
+        const PROJECT_WORKSPACE_REPLAY_HARNESS_MARKER = 'Project Workspace replay harness bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -19135,6 +19138,106 @@
         function copyProjectWorkspaceIntegrationRiskRegister() { return copyProjectWorkspaceSystemIntegrationHealthText('risk'); }
         function copyProjectWorkspaceFullSystemIntegrationHealthPack() { return copyProjectWorkspaceSystemIntegrationHealthText('full'); }
 
+        function projectWorkspaceReplayHarnessPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceReplayHarnessPack && Object.keys(latestProjectWorkspaceReplayHarnessPack).length) return latestProjectWorkspaceReplayHarnessPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_replay_harness_pack || {};
+        }
+
+        function projectWorkspaceExportReplayHarnessSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceReplayHarnessPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_REPLAY_HARNESS_MARKER,
+                has_workspace_replay_harness_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                replay_harness_summary: pack.replay_harness_summary || {},
+                replay_scenarios: pack.replay_scenarios || [],
+                replay_input_contracts: pack.replay_input_contracts || [],
+                expected_output_snapshots: pack.expected_output_snapshots || [],
+                regression_check_matrix: pack.regression_check_matrix || [],
+                pack_consistency_checks: pack.pack_consistency_checks || {},
+                replay_diff_plan: pack.replay_diff_plan || {},
+                operator_replay_notes: pack.operator_replay_notes || {},
+                replay_quality_checks: pack.replay_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceReplayHarnessJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceReplayHarnessSummaryText(pack = projectWorkspaceExportReplayHarnessSnapshot()) {
+            if (!pack.has_workspace_replay_harness_pack) return '';
+            const summary = pack.replay_harness_summary || {};
+            return [
+                t('replayHarnessSummaryTitle'),
+                `${t('replayHarnessMode')}: ${summary.mode || t('none')}`,
+                `${t('replayHarnessScenarioCount')}: ${summary.scenario_count ?? pack.replay_scenarios.length}`,
+                `${t('replayHarnessRegressionCheckCount')}: ${summary.regression_check_count ?? pack.regression_check_matrix.length}`,
+                `${t('replayHarnessRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('replayHarnessRealExecution')}: ${summary.real_execution_allowed === false ? t('replayHarnessDisabled') : String(summary.real_execution_allowed)}`,
+                t('replayHarnessPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceReplayHarnessSectionText(titleKey, value) {
+            const body = projectWorkspaceReplayHarnessJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportReplayHarnessMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReplayHarnessSnapshot(workspace);
+            if (!pack.has_workspace_replay_harness_pack) return '';
+            return [
+                `## ${t('replayHarnessPackTitle')}`,
+                `## ${t('replayHarnessSummaryTitle')}`,
+                projectWorkspaceReplayHarnessSummaryText(pack), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessScenariosTitle', pack.replay_scenarios), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessInputContractsTitle', pack.replay_input_contracts), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessExpectedSnapshotsTitle', pack.expected_output_snapshots), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessRegressionMatrixTitle', pack.regression_check_matrix), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessPackConsistencyTitle', pack.pack_consistency_checks), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessDiffPlanTitle', pack.replay_diff_plan), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessOperatorNotesTitle', pack.operator_replay_notes), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessAuditTitle', pack.audit_preview), '',
+                projectWorkspaceReplayHarnessSectionText('replayHarnessSafetyTitle', pack.safety_boundaries),
+                t('replayHarnessSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceReplayHarnessText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceReplayHarnessStatus');
+            const pack = projectWorkspaceExportReplayHarnessSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceReplayHarnessSummaryText(pack)
+                : kind === 'scenarios' ? projectWorkspaceReplayHarnessSectionText('replayHarnessScenariosTitle', pack.replay_scenarios)
+                : kind === 'contracts' ? projectWorkspaceReplayHarnessSectionText('replayHarnessInputContractsTitle', pack.replay_input_contracts)
+                : kind === 'snapshots' ? projectWorkspaceReplayHarnessSectionText('replayHarnessExpectedSnapshotsTitle', pack.expected_output_snapshots)
+                : kind === 'matrix' ? projectWorkspaceReplayHarnessSectionText('replayHarnessRegressionMatrixTitle', pack.regression_check_matrix)
+                : kind === 'consistency' ? projectWorkspaceReplayHarnessSectionText('replayHarnessPackConsistencyTitle', pack.pack_consistency_checks)
+                : kind === 'diff' ? projectWorkspaceReplayHarnessSectionText('replayHarnessDiffPlanTitle', pack.replay_diff_plan)
+                : kind === 'operator' ? projectWorkspaceReplayHarnessSectionText('replayHarnessOperatorNotesTitle', pack.operator_replay_notes)
+                : projectWorkspaceExportReplayHarnessMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('replayHarnessCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('replayHarnessCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('replayHarnessCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('replayHarnessCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceReplayHarnessSummary() { return copyProjectWorkspaceReplayHarnessText('summary'); }
+        function copyProjectWorkspaceReplayScenarios() { return copyProjectWorkspaceReplayHarnessText('scenarios'); }
+        function copyProjectWorkspaceReplayInputContracts() { return copyProjectWorkspaceReplayHarnessText('contracts'); }
+        function copyProjectWorkspaceExpectedOutputSnapshots() { return copyProjectWorkspaceReplayHarnessText('snapshots'); }
+        function copyProjectWorkspaceRegressionCheckMatrix() { return copyProjectWorkspaceReplayHarnessText('matrix'); }
+        function copyProjectWorkspacePackConsistencyChecks() { return copyProjectWorkspaceReplayHarnessText('consistency'); }
+        function copyProjectWorkspaceReplayDiffPlan() { return copyProjectWorkspaceReplayHarnessText('diff'); }
+        function copyProjectWorkspaceOperatorReplayNotes() { return copyProjectWorkspaceReplayHarnessText('operator'); }
+        function copyProjectWorkspaceFullReplayHarnessPack() { return copyProjectWorkspaceReplayHarnessText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -22725,6 +22828,35 @@
             return `<div class="section-block" id="projectWorkspaceIntegrationRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('systemIntegrationHealthRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthRiskQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceIntegrationRiskRegister()">${escapeHTML(t('systemIntegrationHealthCopyRisk'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.integration_risk_register) || t('systemIntegrationHealthNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.health_quality_checks) || t('systemIntegrationHealthNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('systemIntegrationHealthAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSystemIntegrationHealthJsonText(pack.audit_preview) || t('systemIntegrationHealthNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('systemIntegrationHealthSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('systemIntegrationHealthSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceReplayHarnessSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReplayHarnessSnapshot(workspace); if (!pack.has_workspace_replay_harness_pack) return '';
+            const summary = pack.replay_harness_summary || {};
+            return `<div class="section-block" id="projectWorkspaceReplayHarnessSummaryPanel" data-replay-harness-marker="${PROJECT_WORKSPACE_REPLAY_HARNESS_MARKER}" data-marker="project_workspace_replay_harness_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('replayHarnessPackTitle'))}</div><div class="field-helper">${escapeHTML(t('replayHarnessPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullReplayHarnessPack()">${escapeHTML(t('replayHarnessCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('replayHarnessMode'), summary.mode || t('none'))}${metricPill(t('replayHarnessScenarioCount'), String(summary.scenario_count ?? pack.replay_scenarios.length))}${metricPill(t('replayHarnessRegressionCheckCount'), String(summary.regression_check_count ?? pack.regression_check_matrix.length))}${metricPill(t('replayHarnessRealExecution'), summary.real_execution_allowed === false ? t('replayHarnessDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessSummaryText(pack) || t('replayHarnessNoData'))}</pre><div class="field-helper">${escapeHTML(t('replayHarnessPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceReplayHarnessStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReplayHarnessSummary()">${escapeHTML(t('replayHarnessCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceReplayScenariosPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReplayHarnessSnapshot(workspace); if (!pack.has_workspace_replay_harness_pack) return '';
+            const cards = (pack.replay_scenarios || []).map((scenario) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(scenario.scenario_name || scenario.scenario_id || t('replayHarnessScenariosTitle'))}</strong><span class="metric-pill">${escapeHTML(scenario.scenario_type || t('none'))}</span></div><div><strong>${escapeHTML(t('replayHarnessScenarioId'))}:</strong> ${escapeHTML(scenario.scenario_id || t('none'))}</div><div><strong>${escapeHTML(t('replayHarnessSourcePack'))}:</strong> ${escapeHTML(scenario.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('replayHarnessExpectedStatus'))}:</strong> ${escapeHTML(scenario.expected_status || t('none'))}</div><div><strong>${escapeHTML(t('replayHarnessOperatorReview'))}:</strong> ${escapeHTML(String(scenario.operator_review_required))}</div><div><strong>${escapeHTML(t('replayHarnessRealExecution'))}:</strong> ${escapeHTML(scenario.real_execution_allowed === false ? t('replayHarnessDisabled') : String(scenario.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText({input_refs:scenario.input_refs||[],expected_pack_outputs:scenario.expected_pack_outputs||[],regression_focus:scenario.regression_focus||'',failure_signal:scenario.failure_signal||'',risk_note:scenario.risk_note||''}) || t('replayHarnessNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceReplayScenariosPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('replayHarnessScenariosTitle'))}</div><div class="field-helper">${escapeHTML(t('replayHarnessScenariosHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReplayScenarios()">${escapeHTML(t('replayHarnessCopyScenarios'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('replayHarnessNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceReplayInputExpectedPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReplayHarnessSnapshot(workspace); if (!pack.has_workspace_replay_harness_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceReplayInputExpectedPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('replayHarnessInputExpectedTitle'))}</div><div class="field-helper">${escapeHTML(t('replayHarnessInputExpectedHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReplayInputContracts()">${escapeHTML(t('replayHarnessCopyContracts'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceExpectedOutputSnapshots()">${escapeHTML(t('replayHarnessCopySnapshots'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('replayHarnessInputContractsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText(pack.replay_input_contracts) || t('replayHarnessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('replayHarnessExpectedSnapshotsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText(pack.expected_output_snapshots) || t('replayHarnessNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('replayHarnessNoFileDatabaseHistoryNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceRegressionMatrixConsistencyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReplayHarnessSnapshot(workspace); if (!pack.has_workspace_replay_harness_pack) return '';
+            const checks = (pack.regression_check_matrix || []).map((check) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(check.check_name || check.check_id || t('replayHarnessRegressionMatrixTitle'))}</strong><span class="metric-pill">${escapeHTML(check.severity || t('none'))}</span></div><div><strong>${escapeHTML(t('replayHarnessCheckId'))}:</strong> ${escapeHTML(check.check_id || t('none'))}</div><div><strong>${escapeHTML(t('replayHarnessSourcePack'))}:</strong> ${escapeHTML(check.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('replayHarnessTargetPack'))}:</strong> ${escapeHTML(check.target_pack || t('none'))}</div><div><strong>${escapeHTML(t('replayHarnessRealExecution'))}:</strong> ${escapeHTML(check.real_execution_allowed === false ? t('replayHarnessDisabled') : String(check.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText({expected_condition:check.expected_condition||'',failure_condition:check.failure_condition||'',suggested_fix_preview:check.suggested_fix_preview||'',risk_note:check.risk_note||''}) || t('replayHarnessNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceRegressionMatrixConsistencyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('replayHarnessRegressionConsistencyTitle'))}</div><div class="field-helper">${escapeHTML(t('replayHarnessRegressionConsistencyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRegressionCheckMatrix()">${escapeHTML(t('replayHarnessCopyMatrix'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePackConsistencyChecks()">${escapeHTML(t('replayHarnessCopyConsistency'))}</button></div></div><div class="graph-os-compact-grid">${checks || `<div class="empty-state">${escapeHTML(t('replayHarnessNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('replayHarnessPackConsistencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText(pack.pack_consistency_checks) || t('replayHarnessNoData'))}</pre></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceReplayDiffQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReplayHarnessSnapshot(workspace); if (!pack.has_workspace_replay_harness_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('replayHarnessDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceReplayDiffQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('replayHarnessDiffQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('replayHarnessDiffQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReplayDiffPlan()">${escapeHTML(t('replayHarnessCopyDiff'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorReplayNotes()">${escapeHTML(t('replayHarnessCopyOperator'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('replayHarnessDiffPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText(pack.replay_diff_plan) || t('replayHarnessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('replayHarnessOperatorNotesTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText(pack.operator_replay_notes) || t('replayHarnessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('replayHarnessQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText(pack.replay_quality_checks) || t('replayHarnessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('replayHarnessAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReplayHarnessJsonText(pack.audit_preview) || t('replayHarnessNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('replayHarnessSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('replayHarnessDiffAuditNote'))}</div><div class="field-helper">${escapeHTML(t('replayHarnessSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -23245,6 +23377,8 @@
                 '',
                 projectWorkspaceExportSystemIntegrationHealthMarkdown(workspace),
                 '',
+                projectWorkspaceExportReplayHarnessMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -23349,6 +23483,7 @@
                 workspace_human_review_queue_pack: projectWorkspaceExportHumanReviewQueueSnapshot(workspace),
                 workspace_capability_permission_matrix_pack: projectWorkspaceExportCapabilityPermissionMatrixSnapshot(workspace),
                 workspace_system_integration_health_pack: projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace),
+                workspace_replay_harness_pack: projectWorkspaceExportReplayHarnessSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -35860,6 +35995,11 @@
                     ${renderProjectWorkspaceWorkflowGateHealthPanel(workspace)}
                     ${renderProjectWorkspaceTraceabilityOperatorCapabilityHealthPanel(workspace)}
                     ${renderProjectWorkspaceIntegrationRiskQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceReplayHarnessSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceReplayScenariosPanel(workspace)}
+                    ${renderProjectWorkspaceReplayInputExpectedPanel(workspace)}
+                    ${renderProjectWorkspaceRegressionMatrixConsistencyPanel(workspace)}
+                    ${renderProjectWorkspaceReplayDiffQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -45570,7 +45710,57 @@
             systemIntegrationHealthRiskQualityAuditSafetyTitle: 'Integration Risk / Quality / Audit / Safety Boundaries',
             systemIntegrationHealthRiskQualityAuditSafetyHelper: 'Inspect integration risks, health quality checks, audit preview, and disabled real capability boundaries.',
             systemIntegrationHealthAuditNoWriteNote: 'Audit preview is not written to a database and does not read real logs, real history tables, or real service health.',
-            systemIntegrationHealthSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+            systemIntegrationHealthSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            projectWorkspaceReplayHarnessMarker: 'Project Workspace replay harness bundle',
+            replayHarnessPackTitle: 'Workspace Replay Harness / Regression Scenario',
+            replayHarnessPackHelper: 'Review deterministic replay harness and regression scenario previews derived from workspace packs without starting a real replay runtime.',
+            replayHarnessSummaryTitle: 'Replay Harness Summary',
+            replayHarnessScenariosTitle: 'Replay Scenarios',
+            replayHarnessInputContractsTitle: 'Replay Input Contracts',
+            replayHarnessExpectedSnapshotsTitle: 'Expected Output Snapshots',
+            replayHarnessRegressionMatrixTitle: 'Regression Check Matrix',
+            replayHarnessPackConsistencyTitle: 'Pack Consistency Checks',
+            replayHarnessDiffPlanTitle: 'Replay Diff Plan',
+            replayHarnessOperatorNotesTitle: 'Operator Replay Notes',
+            replayHarnessAuditTitle: 'Audit Preview',
+            replayHarnessSafetyTitle: 'Safety Boundaries',
+            replayHarnessQualityTitle: 'Replay Quality Checks',
+            replayHarnessMode: 'Mode',
+            replayHarnessScenarioCount: 'Scenario count',
+            replayHarnessRegressionCheckCount: 'Regression check count',
+            replayHarnessRecommendedAction: 'Recommended operator action',
+            replayHarnessRealExecution: 'Real execution',
+            replayHarnessDisabled: 'disabled',
+            replayHarnessPreviewNote: 'Replay harness preview only. This is not a real replay runtime and does not run real replay jobs.',
+            replayHarnessNoData: 'No workspace replay harness data is available.',
+            replayHarnessCopyNoData: 'No workspace replay harness content is available to copy.',
+            replayHarnessCopyFailed: 'Unable to copy workspace replay harness content.',
+            replayHarnessCopied: 'Workspace replay harness content copied.',
+            replayHarnessCopySummary: 'Copy replay harness summary',
+            replayHarnessCopyScenarios: 'Copy replay scenarios',
+            replayHarnessCopyContracts: 'Copy replay input contracts',
+            replayHarnessCopySnapshots: 'Copy expected output snapshots',
+            replayHarnessCopyMatrix: 'Copy regression check matrix',
+            replayHarnessCopyConsistency: 'Copy pack consistency checks',
+            replayHarnessCopyDiff: 'Copy replay diff plan',
+            replayHarnessCopyOperator: 'Copy operator replay notes',
+            replayHarnessCopyFull: 'Copy full replay harness pack',
+            replayHarnessScenariosHelper: 'Inspect deterministic replay scenarios, expected pack outputs, failure signals, operator review needs, and disabled execution state.',
+            replayHarnessScenarioId: 'Scenario ID',
+            replayHarnessSourcePack: 'Source pack',
+            replayHarnessExpectedStatus: 'Expected status',
+            replayHarnessOperatorReview: 'Operator review required',
+            replayHarnessInputExpectedTitle: 'Replay Input Contracts / Expected Output Snapshots',
+            replayHarnessInputExpectedHelper: 'Review key pack input requirements, field stability, and preview expected snapshots without writing files or databases.',
+            replayHarnessNoFileDatabaseHistoryNote: 'Replay input contracts and expected output snapshots do not write files, do not write databases, and do not read real history tables.',
+            replayHarnessRegressionConsistencyTitle: 'Regression Check Matrix / Pack Consistency',
+            replayHarnessRegressionConsistencyHelper: 'Inspect regression checks and pack consistency for pack presence, decision trace, capability locks, safety boundaries, operator review queue, and integration health.',
+            replayHarnessCheckId: 'Check ID',
+            replayHarnessTargetPack: 'Target pack',
+            replayHarnessDiffQualityAuditSafetyTitle: 'Replay Diff / Operator Notes / Quality / Audit / Safety Boundaries',
+            replayHarnessDiffQualityAuditSafetyHelper: 'Review replay diff plan, operator notes, quality checks, audit preview, and disabled real capability boundaries.',
+            replayHarnessDiffAuditNote: 'Replay diff plan does not execute a real diff job. Audit preview is not written to a database.',
+            replayHarnessSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -45784,7 +45974,57 @@
             systemIntegrationHealthRiskQualityAuditSafetyTitle: '集成风险 / 质量 / 审计 / 安全边界',
             systemIntegrationHealthRiskQualityAuditSafetyHelper: '检查集成风险、健康质量检查、审计预览和已禁用的真实能力边界。',
             systemIntegrationHealthAuditNoWriteNote: '审计预览不写入数据库，也不读取真实日志、真实历史表或真实服务健康状态。',
-            systemIntegrationHealthSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
+            systemIntegrationHealthSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。',
+            projectWorkspaceReplayHarnessMarker: 'Project Workspace replay harness bundle',
+            replayHarnessPackTitle: '工作区 Replay Harness / 回归场景',
+            replayHarnessPackHelper: '检查从工作区 pack 派生的确定性 replay harness 与回归场景预览，不启动真实 replay runtime。',
+            replayHarnessSummaryTitle: 'Replay Harness 摘要',
+            replayHarnessScenariosTitle: 'Replay 场景',
+            replayHarnessInputContractsTitle: 'Replay 输入契约',
+            replayHarnessExpectedSnapshotsTitle: '预期输出快照',
+            replayHarnessRegressionMatrixTitle: '回归检查矩阵',
+            replayHarnessPackConsistencyTitle: 'Pack 一致性检查',
+            replayHarnessDiffPlanTitle: 'Replay Diff 计划',
+            replayHarnessOperatorNotesTitle: '操作员 Replay 备注',
+            replayHarnessAuditTitle: '审计预览',
+            replayHarnessSafetyTitle: '安全边界',
+            replayHarnessQualityTitle: 'Replay 质量检查',
+            replayHarnessMode: '模式',
+            replayHarnessScenarioCount: '场景数量',
+            replayHarnessRegressionCheckCount: '回归检查数量',
+            replayHarnessRecommendedAction: '推荐操作员动作',
+            replayHarnessRealExecution: '真实执行',
+            replayHarnessDisabled: '已禁用',
+            replayHarnessPreviewNote: '仅为 Replay Harness 预览。这不是真实 replay runtime，也不运行真实 replay job。',
+            replayHarnessNoData: '暂无工作区 replay harness 数据。',
+            replayHarnessCopyNoData: '暂无可复制的工作区 replay harness 内容。',
+            replayHarnessCopyFailed: '无法复制工作区 replay harness 内容。',
+            replayHarnessCopied: '工作区 replay harness 内容已复制。',
+            replayHarnessCopySummary: '复制 replay harness 摘要',
+            replayHarnessCopyScenarios: '复制 replay 场景',
+            replayHarnessCopyContracts: '复制 replay 输入契约',
+            replayHarnessCopySnapshots: '复制预期输出快照',
+            replayHarnessCopyMatrix: '复制回归检查矩阵',
+            replayHarnessCopyConsistency: '复制 pack 一致性检查',
+            replayHarnessCopyDiff: '复制 replay diff 计划',
+            replayHarnessCopyOperator: '复制操作员 replay 备注',
+            replayHarnessCopyFull: '复制完整 replay harness pack',
+            replayHarnessScenariosHelper: '检查确定性 replay 场景、预期 pack 输出、失败信号、操作员审阅要求和禁用执行状态。',
+            replayHarnessScenarioId: '场景 ID',
+            replayHarnessSourcePack: '来源 pack',
+            replayHarnessExpectedStatus: '预期状态',
+            replayHarnessOperatorReview: '需要操作员审阅',
+            replayHarnessInputExpectedTitle: 'Replay 输入契约 / 预期输出快照',
+            replayHarnessInputExpectedHelper: '检查关键 pack 输入要求、字段稳定性和预期快照预览，不写文件或数据库。',
+            replayHarnessNoFileDatabaseHistoryNote: 'Replay 输入契约和预期输出快照不写文件、不写数据库，也不读取真实历史表。',
+            replayHarnessRegressionConsistencyTitle: '回归检查矩阵 / Pack 一致性',
+            replayHarnessRegressionConsistencyHelper: '检查 pack presence、decision trace、capability locks、safety boundaries、operator review queue 和 integration health 的回归检查与 pack 一致性。',
+            replayHarnessCheckId: '检查 ID',
+            replayHarnessTargetPack: '目标 pack',
+            replayHarnessDiffQualityAuditSafetyTitle: 'Replay Diff / 操作员备注 / 质量 / 审计 / 安全边界',
+            replayHarnessDiffQualityAuditSafetyHelper: '检查 replay diff 计划、操作员备注、质量检查、审计预览和已禁用的真实能力边界。',
+            replayHarnessDiffAuditNote: 'Replay diff 计划不执行真实 diff job。审计预览不写入数据库。',
+            replayHarnessSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
         });
 
         applyLanguageCopy();
@@ -47202,6 +47442,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceHumanReviewQueuePack = latestProjectCreativeDecisionPack.workspace_human_review_queue_pack || {};
     latestProjectWorkspaceCapabilityPermissionMatrixPack = latestProjectCreativeDecisionPack.workspace_capability_permission_matrix_pack || {};
     latestProjectWorkspaceSystemIntegrationHealthPack = latestProjectCreativeDecisionPack.workspace_system_integration_health_pack || {};
+    latestProjectWorkspaceReplayHarnessPack = latestProjectCreativeDecisionPack.workspace_replay_harness_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

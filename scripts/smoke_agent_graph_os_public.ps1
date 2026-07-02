@@ -164,6 +164,7 @@ Add-Check "project_workspace_agent_run_ledger_marker" ($page.Content -match "Pro
 Add-Check "project_workspace_human_review_queue_marker" ($page.Content -match "Project Workspace human review queue bundle")
 Add-Check "project_workspace_capability_permission_matrix_marker" ($page.Content -match "Project Workspace capability permission matrix bundle")
 Add-Check "project_workspace_system_integration_health_marker" ($page.Content -match "Project Workspace system integration health bundle")
+Add-Check "project_workspace_replay_harness_marker" ($page.Content -match "Project Workspace replay harness bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

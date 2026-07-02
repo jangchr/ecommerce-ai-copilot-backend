@@ -11828,6 +11828,137 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_replay_harness_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace replay harness bundle",
+            "PROJECT_WORKSPACE_REPLAY_HARNESS_MARKER",
+            "latestProjectWorkspaceReplayHarnessPack",
+            "projectWorkspaceReplayHarnessPackFromWorkspace",
+            "projectWorkspaceExportReplayHarnessSnapshot",
+            "projectWorkspaceExportReplayHarnessMarkdown",
+            "renderProjectWorkspaceReplayHarnessSummaryPanel",
+            "renderProjectWorkspaceReplayScenariosPanel",
+            "renderProjectWorkspaceReplayInputExpectedPanel",
+            "renderProjectWorkspaceRegressionMatrixConsistencyPanel",
+            "renderProjectWorkspaceReplayDiffQualityAuditSafetyPanel",
+            "copyProjectWorkspaceReplayHarnessSummary",
+            "copyProjectWorkspaceReplayScenarios",
+            "copyProjectWorkspaceReplayInputContracts",
+            "copyProjectWorkspaceExpectedOutputSnapshots",
+            "copyProjectWorkspaceRegressionCheckMatrix",
+            "copyProjectWorkspacePackConsistencyChecks",
+            "copyProjectWorkspaceReplayDiffPlan",
+            "copyProjectWorkspaceOperatorReplayNotes",
+            "copyProjectWorkspaceFullReplayHarnessPack",
+            "workspace_replay_harness_pack: projectWorkspaceExportReplayHarnessSnapshot(workspace)",
+            "Workspace Replay Harness / Regression Scenario",
+            "Replay Harness Summary", "Replay Scenarios",
+            "Replay Input Contracts", "Expected Output Snapshots",
+            "Regression Check Matrix", "Pack Consistency Checks",
+            "Replay Diff Plan", "Operator Replay Notes",
+            "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.replay_harness_summary", "pack.replay_scenarios",
+            "pack.replay_input_contracts",
+            "pack.expected_output_snapshots",
+            "pack.regression_check_matrix",
+            "pack.pack_consistency_checks", "pack.replay_diff_plan",
+            "pack.operator_replay_notes", "pack.replay_quality_checks",
+            "pack.audit_preview", "pack.safety_boundaries",
+            "summary.mode", "summary.scenario_count",
+            "summary.regression_check_count",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed", "scenario.scenario_id",
+            "scenario.scenario_name", "scenario.scenario_type",
+            "scenario.source_pack", "scenario.input_refs",
+            "scenario.expected_pack_outputs", "scenario.expected_status",
+            "scenario.regression_focus", "scenario.failure_signal",
+            "scenario.operator_review_required",
+            "scenario.real_execution_allowed", "scenario.risk_note",
+            "check.check_id", "check.source_pack", "check.target_pack",
+            "check.expected_condition", "check.failure_condition",
+            "check.severity", "check.suggested_fix_preview",
+            "check.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceIntegrationRiskQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceReplayHarnessSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceReplayDiffQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_replay_harness_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "replayHarnessPackTitle", "replayHarnessSummaryTitle",
+            "replayHarnessScenariosTitle",
+            "replayHarnessInputContractsTitle",
+            "replayHarnessExpectedSnapshotsTitle",
+            "replayHarnessRegressionMatrixTitle",
+            "replayHarnessPackConsistencyTitle",
+            "replayHarnessDiffPlanTitle",
+            "replayHarnessOperatorNotesTitle",
+            "replayHarnessAuditTitle", "replayHarnessSafetyTitle",
+            "replayHarnessCopySummary", "replayHarnessCopyScenarios",
+            "replayHarnessCopyContracts", "replayHarnessCopySnapshots",
+            "replayHarnessCopyMatrix", "replayHarnessCopyConsistency",
+            "replayHarnessCopyDiff", "replayHarnessCopyOperator",
+            "replayHarnessCopyFull", "replayHarnessCopied",
+            "replayHarnessCopyFailed", "replayHarnessCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace replay harness bundle", script)
+            self.assertIn("project_workspace_replay_harness_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceReplayHarnessSummaryText"):
+            html.index("async function copyProjectWorkspaceReplayHarnessText")
+        ]
+        for key in [
+            "replayHarnessPackTitle",
+            "replayHarnessSummaryTitle",
+            "replayHarnessScenariosTitle",
+            "replayHarnessInputContractsTitle",
+            "replayHarnessExpectedSnapshotsTitle",
+            "replayHarnessRegressionMatrixTitle",
+            "replayHarnessPackConsistencyTitle",
+            "replayHarnessDiffPlanTitle",
+            "replayHarnessOperatorNotesTitle",
+            "replayHarnessAuditTitle",
+            "replayHarnessSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_REPLAY_HARNESS_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Replay harness preview only", html)
+        self.assertIn("not a real replay runtime", html)
+        self.assertIn("does not run real replay jobs", html)
+        self.assertIn("do not write files", html)
+        self.assertIn("do not write databases", html)
+        self.assertIn("do not read real history tables", html)
+        self.assertIn("does not execute a real diff job", html)
+        self.assertIn("Audit preview is not written to a database", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
