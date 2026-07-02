@@ -11304,6 +11304,127 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_agent_run_ledger_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace agent run ledger bundle",
+            "PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER",
+            "latestProjectWorkspaceAgentRunLedgerPack",
+            "projectWorkspaceAgentRunLedgerPackFromWorkspace",
+            "projectWorkspaceExportAgentRunLedgerSnapshot",
+            "projectWorkspaceExportAgentRunLedgerMarkdown",
+            "renderProjectWorkspaceAgentRunLedgerSummaryPanel",
+            "renderProjectWorkspaceAgentRunLedgerCardsPanel",
+            "renderProjectWorkspaceAgentRunLedgerHandoffPanel",
+            "renderProjectWorkspaceAgentRunLedgerTracePanel",
+            "renderProjectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel",
+            "copyProjectWorkspaceAgentRunLedgerSummary",
+            "copyProjectWorkspaceAgentRunLedgerCards",
+            "copyProjectWorkspaceAgentRunLedgerHandoffTrace",
+            "copyProjectWorkspaceAgentRunLedgerInputOutputTrace",
+            "copyProjectWorkspaceAgentRunLedgerEvidenceTrace",
+            "copyProjectWorkspaceAgentRunLedgerDecisionTrace",
+            "copyProjectWorkspaceAgentRunLedgerCapabilityUsage",
+            "copyProjectWorkspaceAgentRunLedgerAuditPreview",
+            "copyProjectWorkspaceFullAgentRunLedgerPack",
+            "workspace_agent_run_ledger_pack: projectWorkspaceExportAgentRunLedgerSnapshot(workspace)",
+            "Workspace Agent Run Ledger / Traceability",
+            "Agent Run Ledger Summary", "Agent Run Cards",
+            "Handoff Trace", "Input / Output Trace Map",
+            "Evidence Trace", "Decision Trace",
+            "Capability Usage Preview", "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.ledger_summary", "pack.agent_run_cards",
+            "pack.handoff_trace", "pack.input_output_trace_map",
+            "pack.evidence_trace", "pack.decision_trace",
+            "pack.capability_usage_preview", "pack.ledger_quality_checks",
+            "pack.audit_preview", "pack.safety_boundaries",
+            "summary.mode", "summary.total_run_cards",
+            "summary.total_handoffs", "summary.current_workflow_phase",
+            "summary.recommended_next_action",
+            "summary.real_execution_allowed", "card.run_id",
+            "card.agent_role", "card.workflow_phase",
+            "card.source_pack", "card.input_refs", "card.output_refs",
+            "card.status", "card.summary", "card.handoff_to",
+            "card.evidence_refs", "card.decision_refs",
+            "card.capability_mode", "card.real_execution_allowed",
+            "card.risk_note", "handoff.handoff_id",
+            "handoff.from_agent", "handoff.to_agent",
+            "handoff.from_pack", "handoff.to_pack",
+            "handoff.handoff_reason", "handoff.input_refs",
+            "handoff.output_refs", "handoff.blocked_by",
+            "handoff.real_execution_allowed", "handoff.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceControlCenterLockAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceAgentRunLedgerSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_agent_run_ledger_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "agentRunLedgerPackTitle", "agentRunLedgerSummaryTitle",
+            "agentRunLedgerCardsTitle", "agentRunLedgerHandoffTitle",
+            "agentRunLedgerInputOutputTitle",
+            "agentRunLedgerEvidenceTitle", "agentRunLedgerDecisionTitle",
+            "agentRunLedgerCapabilityTitle", "agentRunLedgerAuditTitle",
+            "agentRunLedgerSafetyTitle", "agentRunLedgerCopySummary",
+            "agentRunLedgerCopyCards", "agentRunLedgerCopyHandoff",
+            "agentRunLedgerCopyInputOutput", "agentRunLedgerCopyEvidence",
+            "agentRunLedgerCopyDecision", "agentRunLedgerCopyCapability",
+            "agentRunLedgerCopyAudit", "agentRunLedgerCopyFull",
+            "agentRunLedgerCopied", "agentRunLedgerCopyFailed",
+            "agentRunLedgerCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace agent run ledger bundle", script)
+            self.assertIn("project_workspace_agent_run_ledger_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceAgentRunLedgerSummaryText"):
+            html.index("async function copyProjectWorkspaceAgentRunLedgerText")
+        ]
+        for key in [
+            "agentRunLedgerPackTitle", "agentRunLedgerSummaryTitle",
+            "agentRunLedgerCardsTitle", "agentRunLedgerHandoffTitle",
+            "agentRunLedgerInputOutputTitle",
+            "agentRunLedgerEvidenceTitle", "agentRunLedgerDecisionTitle",
+            "agentRunLedgerCapabilityTitle", "agentRunLedgerAuditTitle",
+            "agentRunLedgerSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        self.assertIn("Traceability preview only", html)
+        self.assertIn("not real agent runtime", html)
+        self.assertIn("does not read real logs or real history tables", html)
+        self.assertIn("No real agent execution, operator task, ticket, approval, operator log, or database write is created.", html)
+        self.assertIn("Evidence, quote, and risk flow is derived from workspace packs only.", html)
+        self.assertIn("Decision, gate, and recommended action flow is derived from upstream preview packs only.", html)
+        self.assertIn("Audit preview is not written to a database, no real logs are read, and no real operator task is created.", html)
+        for boundary in [
+            "Real LLM", "provider", "video", "media", "paid", "registry",
+            "rollback", "external scraping", "database persistence",
+            "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

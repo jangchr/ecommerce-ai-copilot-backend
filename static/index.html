@@ -3619,6 +3619,7 @@
         let latestProjectWorkspaceRetryCycleDecisionPack = {};
         let latestProjectWorkspaceCycleHistoryTimelinePack = {};
         let latestProjectWorkspaceControlCenterPack = {};
+        let latestProjectWorkspaceAgentRunLedgerPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8914,6 +8915,7 @@
                 latestProjectWorkspaceRetryCycleDecisionPack = latestProjectCreativeDecisionPack.workspace_retry_cycle_decision_pack || {};
                 latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
                 latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
+                latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14769,6 +14771,7 @@
         const PROJECT_WORKSPACE_RETRY_CYCLE_DECISION_MARKER = 'Project Workspace retry cycle decision bundle';
         const PROJECT_WORKSPACE_CYCLE_HISTORY_TIMELINE_MARKER = 'Project Workspace cycle history timeline bundle';
         const PROJECT_WORKSPACE_CONTROL_CENTER_MARKER = 'Project Workspace control center bundle';
+        const PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER = 'Project Workspace agent run ledger bundle';
         const PROJECT_WORKSPACE_REVIEW_IMPORT_WARNING_TYPES = [
             'empty_review_text',
             'missing_rating',
@@ -18696,6 +18699,104 @@
         function copyProjectWorkspaceControlCenterCapabilityLock() { return copyProjectWorkspaceControlCenterText('lock'); }
         function copyProjectWorkspaceFullControlCenterPack() { return copyProjectWorkspaceControlCenterText('full'); }
 
+        function projectWorkspaceAgentRunLedgerPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceAgentRunLedgerPack && Object.keys(latestProjectWorkspaceAgentRunLedgerPack).length) return latestProjectWorkspaceAgentRunLedgerPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_agent_run_ledger_pack || {};
+        }
+
+        function projectWorkspaceExportAgentRunLedgerSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceAgentRunLedgerPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER,
+                has_workspace_agent_run_ledger_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                ledger_summary: pack.ledger_summary || {},
+                agent_run_cards: pack.agent_run_cards || [],
+                handoff_trace: pack.handoff_trace || [],
+                input_output_trace_map: pack.input_output_trace_map || {},
+                evidence_trace: pack.evidence_trace || {},
+                decision_trace: pack.decision_trace || {},
+                capability_usage_preview: pack.capability_usage_preview || {},
+                ledger_quality_checks: pack.ledger_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceAgentRunLedgerJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceAgentRunLedgerSummaryText(pack = projectWorkspaceExportAgentRunLedgerSnapshot()) {
+            if (!pack.has_workspace_agent_run_ledger_pack) return '';
+            const summary = pack.ledger_summary || {};
+            return [
+                t('agentRunLedgerSummaryTitle'),
+                `${t('agentRunLedgerMode')}: ${summary.mode || t('none')}`,
+                `${t('agentRunLedgerRunCount')}: ${summary.total_run_cards ?? pack.agent_run_cards.length}`,
+                `${t('agentRunLedgerHandoffCount')}: ${summary.total_handoffs ?? pack.handoff_trace.length}`,
+                `${t('agentRunLedgerCurrentPhase')}: ${summary.current_workflow_phase || t('none')}`,
+                `${t('agentRunLedgerRealExecution')}: ${summary.real_execution_allowed === false ? t('agentRunLedgerDisabled') : String(summary.real_execution_allowed)}`,
+                `${t('agentRunLedgerRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                t('agentRunLedgerPreviewNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        function projectWorkspaceAgentRunLedgerSectionText(titleKey, value) {
+            const body = projectWorkspaceAgentRunLedgerJsonText(value);
+            return body ? `## ${t(titleKey)}\n\n${body}` : '';
+        }
+
+        function projectWorkspaceExportAgentRunLedgerMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAgentRunLedgerSnapshot(workspace);
+            if (!pack.has_workspace_agent_run_ledger_pack) return '';
+            return [
+                `## ${t('agentRunLedgerPackTitle')}`,
+                `## ${t('agentRunLedgerSummaryTitle')}`,
+                projectWorkspaceAgentRunLedgerSummaryText(pack), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerCardsTitle', pack.agent_run_cards), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerHandoffTitle', pack.handoff_trace), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerInputOutputTitle', pack.input_output_trace_map), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerEvidenceTitle', pack.evidence_trace), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerDecisionTitle', pack.decision_trace), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerCapabilityTitle', pack.capability_usage_preview), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerAuditTitle', pack.audit_preview), '',
+                projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerSafetyTitle', pack.safety_boundaries),
+                t('agentRunLedgerSafetyNote')
+            ].filter(Boolean).join('\n\n');
+        }
+
+        async function copyProjectWorkspaceAgentRunLedgerText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceAgentRunLedgerStatus');
+            const pack = projectWorkspaceExportAgentRunLedgerSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceAgentRunLedgerSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerCardsTitle', pack.agent_run_cards)
+                : kind === 'handoff' ? projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerHandoffTitle', pack.handoff_trace)
+                : kind === 'io' ? projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerInputOutputTitle', pack.input_output_trace_map)
+                : kind === 'evidence' ? projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerEvidenceTitle', pack.evidence_trace)
+                : kind === 'decision' ? projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerDecisionTitle', pack.decision_trace)
+                : kind === 'capability' ? projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerCapabilityTitle', pack.capability_usage_preview)
+                : kind === 'audit' ? projectWorkspaceAgentRunLedgerSectionText('agentRunLedgerAuditTitle', pack.audit_preview)
+                : projectWorkspaceExportAgentRunLedgerMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('agentRunLedgerCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('agentRunLedgerCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('agentRunLedgerCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('agentRunLedgerCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceAgentRunLedgerSummary() { return copyProjectWorkspaceAgentRunLedgerText('summary'); }
+        function copyProjectWorkspaceAgentRunLedgerCards() { return copyProjectWorkspaceAgentRunLedgerText('cards'); }
+        function copyProjectWorkspaceAgentRunLedgerHandoffTrace() { return copyProjectWorkspaceAgentRunLedgerText('handoff'); }
+        function copyProjectWorkspaceAgentRunLedgerInputOutputTrace() { return copyProjectWorkspaceAgentRunLedgerText('io'); }
+        function copyProjectWorkspaceAgentRunLedgerEvidenceTrace() { return copyProjectWorkspaceAgentRunLedgerText('evidence'); }
+        function copyProjectWorkspaceAgentRunLedgerDecisionTrace() { return copyProjectWorkspaceAgentRunLedgerText('decision'); }
+        function copyProjectWorkspaceAgentRunLedgerCapabilityUsage() { return copyProjectWorkspaceAgentRunLedgerText('capability'); }
+        function copyProjectWorkspaceAgentRunLedgerAuditPreview() { return copyProjectWorkspaceAgentRunLedgerText('audit'); }
+        function copyProjectWorkspaceFullAgentRunLedgerPack() { return copyProjectWorkspaceAgentRunLedgerText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -22167,6 +22268,35 @@
             return `<div class="section-block" id="projectWorkspaceControlCenterLockAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('controlCenterLockAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('controlCenterLockAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceControlCenterCapabilityLock()">${escapeHTML(t('controlCenterCopyCapabilityLock'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterCapabilityLockTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.capability_lock_status) || t('controlCenterNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.control_quality_checks) || t('controlCenterNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('controlCenterAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceControlCenterJsonText(pack.audit_preview) || t('controlCenterNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('controlCenterSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('controlCenterAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('controlCenterSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceAgentRunLedgerSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAgentRunLedgerSnapshot(workspace); if (!pack.has_workspace_agent_run_ledger_pack) return '';
+            const summary = pack.ledger_summary || {};
+            return `<div class="section-block" id="projectWorkspaceAgentRunLedgerSummaryPanel" data-agent-run-ledger-marker="${PROJECT_WORKSPACE_AGENT_RUN_LEDGER_MARKER}" data-marker="project_workspace_agent_run_ledger_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('agentRunLedgerPackTitle'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullAgentRunLedgerPack()">${escapeHTML(t('agentRunLedgerCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('agentRunLedgerMode'), summary.mode || t('none'))}${metricPill(t('agentRunLedgerRunCount'), String(summary.total_run_cards ?? pack.agent_run_cards.length))}${metricPill(t('agentRunLedgerHandoffCount'), String(summary.total_handoffs ?? pack.handoff_trace.length))}${metricPill(t('agentRunLedgerCurrentPhase'), summary.current_workflow_phase || t('none'))}${metricPill(t('agentRunLedgerRealExecution'), summary.real_execution_allowed === false ? t('agentRunLedgerDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerSummaryText(pack) || t('agentRunLedgerNoData'))}</pre><div class="field-helper">${escapeHTML(t('agentRunLedgerPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceAgentRunLedgerStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerSummary()">${escapeHTML(t('agentRunLedgerCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceAgentRunLedgerCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAgentRunLedgerSnapshot(workspace); if (!pack.has_workspace_agent_run_ledger_pack) return '';
+            const cards = (pack.agent_run_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.agent_role || card.run_id || t('agentRunLedgerCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.status || t('none'))}</span></div><div><strong>${escapeHTML(t('agentRunLedgerRunId'))}:</strong> ${escapeHTML(card.run_id || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerWorkflowPhase'))}:</strong> ${escapeHTML(card.workflow_phase || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerSourcePack'))}:</strong> ${escapeHTML(card.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerCapabilityMode'))}:</strong> ${escapeHTML(card.capability_mode || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('agentRunLedgerDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText({summary:card.summary||'',input_refs:card.input_refs||[],output_refs:card.output_refs||[],handoff_to:card.handoff_to||[],evidence_refs:card.evidence_refs||[],decision_refs:card.decision_refs||[],risk_note:card.risk_note||''}) || t('agentRunLedgerNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceAgentRunLedgerCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('agentRunLedgerCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerCards()">${escapeHTML(t('agentRunLedgerCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('agentRunLedgerNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceAgentRunLedgerHandoffPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAgentRunLedgerSnapshot(workspace); if (!pack.has_workspace_agent_run_ledger_pack) return '';
+            const cards = (pack.handoff_trace || []).map((handoff) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(handoff.handoff_id || t('agentRunLedgerHandoffTitle'))}</strong><span class="metric-pill">${escapeHTML(handoff.to_agent || t('none'))}</span></div><div><strong>${escapeHTML(t('agentRunLedgerFromAgent'))}:</strong> ${escapeHTML(handoff.from_agent || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerToAgent'))}:</strong> ${escapeHTML(handoff.to_agent || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerFromPack'))}:</strong> ${escapeHTML(handoff.from_pack || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerToPack'))}:</strong> ${escapeHTML(handoff.to_pack || t('none'))}</div><div><strong>${escapeHTML(t('agentRunLedgerRealExecution'))}:</strong> ${escapeHTML(handoff.real_execution_allowed === false ? t('agentRunLedgerDisabled') : String(handoff.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText({handoff_reason:handoff.handoff_reason||'',input_refs:handoff.input_refs||[],output_refs:handoff.output_refs||[],blocked_by:handoff.blocked_by||[],risk_note:handoff.risk_note||''}) || t('agentRunLedgerNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceAgentRunLedgerHandoffPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('agentRunLedgerHandoffTitle'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerHandoffHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerHandoffTrace()">${escapeHTML(t('agentRunLedgerCopyHandoff'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('agentRunLedgerNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceAgentRunLedgerTracePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAgentRunLedgerSnapshot(workspace); if (!pack.has_workspace_agent_run_ledger_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceAgentRunLedgerTracePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('agentRunLedgerTraceTitle'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerTraceHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerInputOutputTrace()">${escapeHTML(t('agentRunLedgerCopyInputOutput'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerEvidenceTrace()">${escapeHTML(t('agentRunLedgerCopyEvidence'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerDecisionTrace()">${escapeHTML(t('agentRunLedgerCopyDecision'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerInputOutputTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.input_output_trace_map) || t('agentRunLedgerNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerEvidenceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.evidence_trace) || t('agentRunLedgerNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerDecisionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.decision_trace) || t('agentRunLedgerNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('agentRunLedgerEvidenceDecisionNote'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerNoRealLogNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportAgentRunLedgerSnapshot(workspace); if (!pack.has_workspace_agent_run_ledger_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('agentRunLedgerDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('agentRunLedgerCapabilityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerCapabilityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerCapabilityUsage()">${escapeHTML(t('agentRunLedgerCopyCapability'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAgentRunLedgerAuditPreview()">${escapeHTML(t('agentRunLedgerCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerCapabilityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.capability_usage_preview) || t('agentRunLedgerNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.ledger_quality_checks) || t('agentRunLedgerNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('agentRunLedgerAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceAgentRunLedgerJsonText(pack.audit_preview) || t('agentRunLedgerNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('agentRunLedgerSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerAuditNoWriteNote'))}</div><div class="field-helper">${escapeHTML(t('agentRunLedgerSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -22679,6 +22809,8 @@
                 '',
                 projectWorkspaceExportControlCenterMarkdown(workspace),
                 '',
+                projectWorkspaceExportAgentRunLedgerMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -22779,6 +22911,7 @@
                 workspace_retry_cycle_decision_pack: projectWorkspaceExportRetryCycleDecisionSnapshot(workspace),
                 workspace_cycle_history_timeline_pack: projectWorkspaceExportCycleHistoryTimelineSnapshot(workspace),
                 workspace_control_center_pack: projectWorkspaceExportControlCenterSnapshot(workspace),
+                workspace_agent_run_ledger_pack: projectWorkspaceExportAgentRunLedgerSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -35270,6 +35403,11 @@
                     ${renderProjectWorkspaceControlCenterPriorityQueuePanel(workspace)}
                     ${renderProjectWorkspaceControlCenterDecisionRiskInventoryPanel(workspace)}
                     ${renderProjectWorkspaceControlCenterLockAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceAgentRunLedgerSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceAgentRunLedgerCardsPanel(workspace)}
+                    ${renderProjectWorkspaceAgentRunLedgerHandoffPanel(workspace)}
+                    ${renderProjectWorkspaceAgentRunLedgerTracePanel(workspace)}
+                    ${renderProjectWorkspaceAgentRunLedgerCapabilityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -44769,6 +44907,122 @@
             controlCenterSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001\u89c6\u9891\u3001\u5a92\u4f53\u3001\u4ed8\u8d39\u3001registry\u3001rollback\u3001\u5916\u90e8\u6293\u53d6\u3001\u6570\u636e\u5e93\u6301\u4e45\u5316\u3001\u771f\u5b9e restore \u548c\u771f\u5b9e\u6267\u884c\u4ecd\u5168\u90e8\u7981\u7528\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceAgentRunLedgerMarker: 'Project Workspace agent run ledger bundle',
+            agentRunLedgerPackTitle: 'Workspace Agent Run Ledger / Traceability',
+            agentRunLedgerPackHelper: 'Review deterministic agent-run traceability preview derived from workspace packs without starting real agent runtime.',
+            agentRunLedgerSummaryTitle: 'Agent Run Ledger Summary',
+            agentRunLedgerCardsTitle: 'Agent Run Cards',
+            agentRunLedgerHandoffTitle: 'Handoff Trace',
+            agentRunLedgerInputOutputTitle: 'Input / Output Trace Map',
+            agentRunLedgerEvidenceTitle: 'Evidence Trace',
+            agentRunLedgerDecisionTitle: 'Decision Trace',
+            agentRunLedgerCapabilityTitle: 'Capability Usage Preview',
+            agentRunLedgerAuditTitle: 'Audit Preview',
+            agentRunLedgerSafetyTitle: 'Safety Boundaries',
+            agentRunLedgerQualityTitle: 'Ledger Quality Checks',
+            agentRunLedgerMode: 'Mode',
+            agentRunLedgerRunCount: 'Total run cards',
+            agentRunLedgerHandoffCount: 'Total handoffs',
+            agentRunLedgerCurrentPhase: 'Current workflow phase',
+            agentRunLedgerRealExecution: 'Real execution',
+            agentRunLedgerDisabled: 'disabled',
+            agentRunLedgerRecommendedAction: 'Recommended next action',
+            agentRunLedgerPreviewNote: 'Traceability preview only. This is not real agent runtime and does not read real logs or real history tables.',
+            agentRunLedgerNoData: 'No workspace agent run ledger data is available.',
+            agentRunLedgerCopyNoData: 'No workspace agent run ledger content is available to copy.',
+            agentRunLedgerCopyFailed: 'Unable to copy workspace agent run ledger content.',
+            agentRunLedgerCopied: 'Workspace agent run ledger content copied.',
+            agentRunLedgerCopySummary: 'Copy ledger summary',
+            agentRunLedgerCopyCards: 'Copy agent run cards',
+            agentRunLedgerCopyHandoff: 'Copy handoff trace',
+            agentRunLedgerCopyInputOutput: 'Copy input/output trace map',
+            agentRunLedgerCopyEvidence: 'Copy evidence trace',
+            agentRunLedgerCopyDecision: 'Copy decision trace',
+            agentRunLedgerCopyCapability: 'Copy capability usage preview',
+            agentRunLedgerCopyAudit: 'Copy audit preview',
+            agentRunLedgerCopyFull: 'Copy full agent run ledger pack',
+            agentRunLedgerCardsHelper: 'Inspect deterministic agent run cards with source pack, workflow phase, handoff, evidence, decision, and disabled execution state.',
+            agentRunLedgerRunId: 'Run ID',
+            agentRunLedgerAgentRole: 'Agent role',
+            agentRunLedgerWorkflowPhase: 'Workflow phase',
+            agentRunLedgerSourcePack: 'Source pack',
+            agentRunLedgerStatus: 'Status',
+            agentRunLedgerCapabilityMode: 'Capability mode',
+            agentRunLedgerHandoffHelper: 'Review deterministic handoffs between preview agents without creating real operator tasks or agent executions.',
+            agentRunLedgerHandoffId: 'Handoff ID',
+            agentRunLedgerFromAgent: 'From agent',
+            agentRunLedgerToAgent: 'To agent',
+            agentRunLedgerFromPack: 'From pack',
+            agentRunLedgerToPack: 'To pack',
+            agentRunLedgerTraceTitle: 'Input / Evidence / Decision Trace',
+            agentRunLedgerTraceHelper: 'Trace inputs, evidence, quotes, risks, decisions, gates, and recommended actions from upstream workspace packs.',
+            agentRunLedgerEvidenceDecisionNote: 'Evidence, quote, and risk flow is derived from workspace packs only. Decision, gate, and recommended action flow is derived from upstream preview packs only.',
+            agentRunLedgerNoRealLogNote: 'No real agent execution, operator task, ticket, approval, operator log, or database write is created.',
+            agentRunLedgerCapabilityAuditSafetyTitle: 'Capability Usage / Quality / Audit / Safety Boundaries',
+            agentRunLedgerCapabilityAuditSafetyHelper: 'Inspect capability usage preview, ledger quality checks, audit preview, and disabled real capabilities.',
+            agentRunLedgerAuditNoWriteNote: 'Audit preview is not written to a database, no real logs are read, and no real operator task is created.',
+            agentRunLedgerSafetyNote: 'Real LLM, provider, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceAgentRunLedgerMarker: 'Project Workspace agent run ledger bundle',
+            agentRunLedgerPackTitle: '工作区 Agent 运行台账 / 可追踪性',
+            agentRunLedgerPackHelper: '工作区 Agent 运行台账可追踪性预览：检查由工作区 pack 派生的确定性 Agent 运行追踪，不启动真实 Agent runtime。',
+            agentRunLedgerSummaryTitle: 'Agent 运行台账摘要',
+            agentRunLedgerCardsTitle: 'Agent 运行卡片',
+            agentRunLedgerHandoffTitle: '交接追踪',
+            agentRunLedgerInputOutputTitle: '输入 / 输出追踪图',
+            agentRunLedgerEvidenceTitle: '证据追踪',
+            agentRunLedgerDecisionTitle: '决策追踪',
+            agentRunLedgerCapabilityTitle: '能力使用预览',
+            agentRunLedgerAuditTitle: '审计预览',
+            agentRunLedgerSafetyTitle: '安全边界',
+            agentRunLedgerQualityTitle: '台账质量检查',
+            agentRunLedgerMode: '模式',
+            agentRunLedgerRunCount: '运行卡片总数',
+            agentRunLedgerHandoffCount: '交接总数',
+            agentRunLedgerCurrentPhase: '当前工作流阶段',
+            agentRunLedgerRealExecution: '真实执行',
+            agentRunLedgerDisabled: '已禁用',
+            agentRunLedgerRecommendedAction: '推荐下一步',
+            agentRunLedgerPreviewNote: '仅为可追踪性预览。这不是真实 Agent runtime，也不读取真实日志或真实历史表。',
+            agentRunLedgerNoData: '暂无工作区 Agent 运行台账数据。',
+            agentRunLedgerCopyNoData: '暂无可复制的工作区 Agent 运行台账内容。',
+            agentRunLedgerCopyFailed: '无法复制工作区 Agent 运行台账内容。',
+            agentRunLedgerCopied: '工作区 Agent 运行台账内容已复制。',
+            agentRunLedgerCopySummary: '复制台账摘要',
+            agentRunLedgerCopyCards: '复制 Agent 运行卡片',
+            agentRunLedgerCopyHandoff: '复制交接追踪',
+            agentRunLedgerCopyInputOutput: '复制输入/输出追踪图',
+            agentRunLedgerCopyEvidence: '复制证据追踪',
+            agentRunLedgerCopyDecision: '复制决策追踪',
+            agentRunLedgerCopyCapability: '复制能力使用预览',
+            agentRunLedgerCopyAudit: '复制审计预览',
+            agentRunLedgerCopyFull: '复制完整 Agent 运行台账 pack',
+            agentRunLedgerCardsHelper: '检查确定性的 Agent 运行卡片，包含来源 pack、工作流阶段、交接、证据、决策和禁用执行状态。',
+            agentRunLedgerRunId: '运行 ID',
+            agentRunLedgerAgentRole: 'Agent 角色',
+            agentRunLedgerWorkflowPhase: '工作流阶段',
+            agentRunLedgerSourcePack: '来源 pack',
+            agentRunLedgerStatus: '状态',
+            agentRunLedgerCapabilityMode: '能力模式',
+            agentRunLedgerHandoffHelper: '检查预览 Agent 之间的确定性交接，不创建真实操作员任务或 Agent 执行。',
+            agentRunLedgerHandoffId: '交接 ID',
+            agentRunLedgerFromAgent: '来自 Agent',
+            agentRunLedgerToAgent: '交给 Agent',
+            agentRunLedgerFromPack: '来自 pack',
+            agentRunLedgerToPack: '交给 pack',
+            agentRunLedgerTraceTitle: '输入 / 证据 / 决策追踪',
+            agentRunLedgerTraceHelper: '从上游工作区 pack 追踪输入、证据、引用、风险、决策、门禁和推荐操作。',
+            agentRunLedgerEvidenceDecisionNote: '证据、引用和风险流只从工作区 pack 派生。决策、门禁和推荐操作流只从上游预览 pack 派生。',
+            agentRunLedgerNoRealLogNote: '不创建真实 Agent 执行、操作员任务、工单、审批、操作员日志或数据库写入。',
+            agentRunLedgerCapabilityAuditSafetyTitle: '能力使用 / 质量 / 审计 / 安全边界',
+            agentRunLedgerCapabilityAuditSafetyHelper: '检查能力使用预览、台账质量检查、审计预览和已禁用的真实能力。',
+            agentRunLedgerAuditNoWriteNote: '审计预览不写入数据库，不读取真实日志，也不创建真实操作员任务。',
+            agentRunLedgerSafetyNote: '真实 LLM、provider、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
+        });
+
         applyLanguageCopy();
         mountUserTaskFlow();
         document.getElementById('projectWorkspaceRoot').innerHTML = renderProjectWorkspacePanel();
@@ -46180,6 +46434,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceRetryCycleDecisionPack = latestProjectCreativeDecisionPack.workspace_retry_cycle_decision_pack || {};
     latestProjectWorkspaceCycleHistoryTimelinePack = latestProjectCreativeDecisionPack.workspace_cycle_history_timeline_pack || {};
     latestProjectWorkspaceControlCenterPack = latestProjectCreativeDecisionPack.workspace_control_center_pack || {};
+    latestProjectWorkspaceAgentRunLedgerPack = latestProjectCreativeDecisionPack.workspace_agent_run_ledger_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack
