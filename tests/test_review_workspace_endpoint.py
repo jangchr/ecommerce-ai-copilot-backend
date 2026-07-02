@@ -3151,6 +3151,221 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_agent_run_ledger_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-agent-run-ledger",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "LEDGER001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Still leaks",
+                    "text": "Leaks.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        control_pack = creative_pack["workspace_control_center_pack"]
+        pack = creative_pack["workspace_agent_run_ledger_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_agent_run_ledger_pack_v1",
+        )
+        summary = pack["ledger_summary"]
+        self.assertTrue(summary["ledger_id"])
+        self.assertIn("agent_run_ledger_preview", summary["mode"])
+        self.assertIn("traceability_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertEqual(
+            summary["source_control_center_id"],
+            control_pack["control_center_summary"]["control_center_id"],
+        )
+        self.assertFalse(summary["real_execution_allowed"])
+
+        cards = pack["agent_run_cards"]
+        self.assertGreaterEqual(len(cards), 2)
+        roles = {card["agent_role"] for card in cards}
+        for expected_role in [
+            "creative_decision_agent",
+            "readiness_gate_agent",
+            "rehearsal_planner_agent",
+            "operator_review_agent",
+            "remediation_agent",
+            "verification_agent",
+            "retry_control_agent",
+            "timeline_agent",
+            "control_center_agent",
+        ]:
+            with self.subTest(agent_role=expected_role):
+                self.assertIn(expected_role, roles)
+        for card in cards:
+            for field in [
+                "run_id", "agent_role", "workflow_phase",
+                "source_pack", "status",
+            ]:
+                with self.subTest(card=card["run_id"], field=field):
+                    self.assertTrue(card[field])
+            self.assertIsInstance(card["input_refs"], list)
+            self.assertIsInstance(card["output_refs"], list)
+            self.assertIsInstance(card["handoff_to"], list)
+            self.assertIsInstance(card["evidence_refs"], list)
+            self.assertIsInstance(card["decision_refs"], list)
+            self.assertIn("preview", card["capability_mode"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        handoffs = pack["handoff_trace"]
+        self.assertGreaterEqual(len(handoffs), 2)
+        for handoff in handoffs:
+            for field in [
+                "handoff_id", "from_agent", "to_agent",
+                "from_pack", "to_pack",
+            ]:
+                with self.subTest(handoff=handoff["handoff_id"], field=field):
+                    self.assertTrue(handoff[field])
+            self.assertIsInstance(handoff["input_refs"], list)
+            self.assertIsInstance(handoff["output_refs"], list)
+            self.assertIsInstance(handoff["blocked_by"], list)
+            self.assertFalse(handoff["real_execution_allowed"])
+
+        io_trace = pack["input_output_trace_map"]
+        self.assertTrue(io_trace)
+        for pack_name in [
+            "creative_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+        ]:
+            with self.subTest(io_pack=pack_name):
+                self.assertIn(pack_name, io_trace)
+                self.assertIsInstance(io_trace[pack_name]["input_refs"], list)
+                self.assertIsInstance(io_trace[pack_name]["output_refs"], list)
+                self.assertFalse(io_trace[pack_name]["real_execution_allowed"])
+
+        evidence_trace = pack["evidence_trace"]
+        self.assertIsInstance(evidence_trace, list)
+        self.assertTrue(evidence_trace)
+        self.assertTrue(
+            all(not trace["real_execution_allowed"] for trace in evidence_trace)
+        )
+
+        decision_trace = pack["decision_trace"]
+        self.assertTrue(decision_trace)
+        self.assertTrue(
+            all(
+                not trace["real_execution_allowed"]
+                for trace in decision_trace
+            )
+        )
+        self.assertTrue(
+            any(
+                trace["source_pack"] == "workspace_retry_cycle_decision_pack"
+                for trace in decision_trace
+            )
+        )
+
+        capabilities = pack["capability_usage_preview"]
+        self.assertTrue(capabilities)
+        capability_by_name = {item["capability"]: item for item in capabilities}
+        for capability in [
+            "provider", "llm", "video", "media", "paid", "registry",
+            "rollback", "external_scraping", "database_persistence",
+            "real_restore", "real_execution", "agent_runtime",
+            "real_log_read", "operator_task",
+        ]:
+            with self.subTest(capability=capability):
+                self.assertIn(capability, capability_by_name)
+                self.assertIn(
+                    "preview",
+                    capability_by_name[capability]["usage_mode"],
+                )
+                self.assertFalse(
+                    capability_by_name[capability]["real_capability_enabled"]
+                )
+                self.assertFalse(
+                    capability_by_name[capability]["real_execution_allowed"]
+                )
+
+        checks = pack["ledger_quality_checks"]
+        for key in [
+            "agent_run_cards_present",
+            "all_cards_execution_disabled",
+            "handoff_trace_present",
+            "all_handoffs_execution_disabled",
+            "input_output_trace_map_present",
+            "evidence_trace_present_or_empty_state",
+            "decision_trace_present",
+            "all_capabilities_preview_only",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "database_write_performed", "real_log_read_performed",
+            "real_history_table_read_performed", "agent_runtime_invoked",
+            "operator_task_created", "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["ledger_id"])
+        self.assertFalse(audit["is_real_agent_runtime_log"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled", "llm_api_enabled",
+            "video_generation_enabled", "media_upload_enabled",
+            "media_download_enabled", "paid_operation_enabled",
+            "registry_write_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

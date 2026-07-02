@@ -27839,6 +27839,517 @@ def _rw_workspace_control_center_pack(
     }
 
 
+def _rw_workspace_agent_run_ledger_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    pack_specs = [
+        (
+            "creative_decision_pack",
+            "creative_decision_agent",
+            "creative_decision",
+            "creative_decision_pack",
+            "creative_decision_preview",
+            ["evidence_brief", "source_breakdown"],
+            ["creative_decision_pack"],
+        ),
+        (
+            "workspace_execution_readiness_pack",
+            "readiness_gate_agent",
+            "execution_readiness",
+            "workspace_execution_readiness_pack",
+            "readiness_gate_preview",
+            ["workspace_approval_decision_pack", "workspace_action_ticket_pack"],
+            ["workspace_execution_readiness_pack"],
+        ),
+        (
+            "workspace_execution_rehearsal_pack",
+            "rehearsal_planner_agent",
+            "execution_rehearsal",
+            "workspace_execution_rehearsal_pack",
+            "rehearsal_runbook_preview",
+            ["workspace_execution_readiness_pack"],
+            ["workspace_execution_rehearsal_pack"],
+        ),
+        (
+            "workspace_rehearsal_result_pack",
+            "operator_review_agent",
+            "rehearsal_result",
+            "workspace_rehearsal_result_pack",
+            "operator_review_preview",
+            ["workspace_execution_rehearsal_pack"],
+            ["workspace_rehearsal_result_pack"],
+        ),
+        (
+            "workspace_rehearsal_remediation_pack",
+            "remediation_agent",
+            "rehearsal_remediation",
+            "workspace_rehearsal_remediation_pack",
+            "remediation_plan_preview",
+            ["workspace_rehearsal_result_pack"],
+            ["workspace_rehearsal_remediation_pack"],
+        ),
+        (
+            "workspace_remediation_verification_pack",
+            "verification_agent",
+            "remediation_verification",
+            "workspace_remediation_verification_pack",
+            "verification_preview",
+            ["workspace_rehearsal_remediation_pack"],
+            ["workspace_remediation_verification_pack"],
+        ),
+        (
+            "workspace_retry_rehearsal_plan_pack",
+            "retry_control_agent",
+            "retry_rehearsal_plan",
+            "workspace_retry_rehearsal_plan_pack",
+            "retry_plan_preview",
+            ["workspace_remediation_verification_pack"],
+            ["workspace_retry_rehearsal_plan_pack"],
+        ),
+        (
+            "workspace_retry_rehearsal_result_pack",
+            "operator_review_agent",
+            "retry_rehearsal_result",
+            "workspace_retry_rehearsal_result_pack",
+            "retry_result_preview",
+            ["workspace_retry_rehearsal_plan_pack"],
+            ["workspace_retry_rehearsal_result_pack"],
+        ),
+        (
+            "workspace_retry_cycle_decision_pack",
+            "retry_control_agent",
+            "retry_cycle_decision",
+            "workspace_retry_cycle_decision_pack",
+            "cycle_decision_preview",
+            ["workspace_retry_rehearsal_result_pack"],
+            ["workspace_retry_cycle_decision_pack"],
+        ),
+        (
+            "workspace_cycle_history_timeline_pack",
+            "timeline_agent",
+            "cycle_history_timeline",
+            "workspace_cycle_history_timeline_pack",
+            "timeline_trace_preview",
+            ["workspace_retry_cycle_decision_pack"],
+            ["workspace_cycle_history_timeline_pack"],
+        ),
+        (
+            "workspace_control_center_pack",
+            "control_center_agent",
+            "operator_cockpit",
+            "workspace_control_center_pack",
+            "control_center_preview",
+            [
+                "workspace_retry_cycle_decision_pack",
+                "workspace_cycle_history_timeline_pack",
+            ],
+            ["workspace_control_center_pack"],
+        ),
+    ]
+    packs = {
+        source_pack: (
+            creative_decision_pack
+            if source_pack == "creative_decision_pack"
+            else dict(creative_decision_pack.get(source_pack) or {})
+        )
+        for _, _, _, source_pack, _, _, _ in pack_specs
+    }
+
+    def _pack_status(pack_name: str, fallback: str) -> str:
+        pack = packs.get(pack_name) or {}
+        summary_keys = [
+            "control_center_summary",
+            "timeline_summary",
+            "cycle_decision_summary",
+            "retry_result_summary",
+            "retry_rehearsal_summary",
+            "verification_summary",
+            "remediation_summary",
+            "result_summary",
+            "rehearsal_summary",
+            "readiness_summary",
+        ]
+        for key in summary_keys:
+            summary = dict(pack.get(key) or {})
+            for status_key in [
+                "latest_decision_status",
+                "timeline_status",
+                "decision_status",
+                "result_status",
+                "verification_status",
+                "retry_readiness",
+                "readiness_status",
+                "mode",
+            ]:
+                status = _rw_text(summary.get(status_key))
+                if status:
+                    return status
+        return fallback if pack else "missing"
+
+    def _pack_summary(pack_name: str, fallback: str) -> str:
+        pack = packs.get(pack_name) or {}
+        for key in [
+            "control_center_summary",
+            "timeline_summary",
+            "cycle_decision_summary",
+            "retry_result_summary",
+            "retry_rehearsal_summary",
+            "verification_summary",
+            "remediation_summary",
+            "result_summary",
+            "rehearsal_summary",
+            "readiness_summary",
+        ]:
+            summary = dict(pack.get(key) or {})
+            text = _rw_text(summary.get("recommended_next_action"))
+            if text:
+                return text
+        return fallback
+
+    agent_run_cards = []
+    for index, (
+        run_suffix,
+        agent_role,
+        workflow_phase,
+        source_pack,
+        fallback_status,
+        input_refs,
+        output_refs,
+    ) in enumerate(pack_specs, start=1):
+        pack = packs.get(source_pack) or {}
+        next_pack = pack_specs[index][3] if index < len(pack_specs) else ""
+        evidence_refs = [
+            ref
+            for ref in [
+                "evidence_brief" if source_pack == "creative_decision_pack" else "",
+                "review_import_pack" if source_pack == "creative_decision_pack" else "",
+                "workspace_cycle_history_timeline_pack"
+                if source_pack in [
+                    "workspace_control_center_pack",
+                    "workspace_retry_cycle_decision_pack",
+                ]
+                else "",
+            ]
+            if ref
+        ]
+        decision_refs = [
+            ref
+            for ref in [
+                "workspace_retry_cycle_decision_pack"
+                if source_pack in [
+                    "workspace_cycle_history_timeline_pack",
+                    "workspace_control_center_pack",
+                ]
+                else "",
+                "cycle_gate" if source_pack == "workspace_control_center_pack" else "",
+            ]
+            if ref
+        ]
+        agent_run_cards.append(
+            {
+                "run_id": f"agent_ledger_run_{index:02d}_{run_suffix}",
+                "agent_role": agent_role,
+                "workflow_phase": workflow_phase,
+                "source_pack": source_pack,
+                "input_refs": list(input_refs),
+                "output_refs": list(output_refs),
+                "status": _pack_status(source_pack, fallback_status),
+                "summary": _pack_summary(
+                    source_pack,
+                    f"{source_pack} contributes deterministic traceability preview data.",
+                ),
+                "handoff_to": [next_pack] if next_pack else [],
+                "evidence_refs": evidence_refs,
+                "decision_refs": decision_refs,
+                "capability_mode": (
+                    "deterministic_preview_only_real_runtime_disabled"
+                    if pack
+                    else "missing_pack_no_runtime_access"
+                ),
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Agent run card is a deterministic ledger preview; it is not a real agent execution log and cannot trigger runtime, tasks, database writes, provider calls, or approvals."
+                ),
+            }
+        )
+
+    handoff_trace = []
+    for index in range(len(agent_run_cards) - 1):
+        current = agent_run_cards[index]
+        nxt = agent_run_cards[index + 1]
+        handoff_trace.append(
+            {
+                "handoff_id": f"agent_handoff_{index + 1:02d}",
+                "from_agent": current["agent_role"],
+                "to_agent": nxt["agent_role"],
+                "from_pack": current["source_pack"],
+                "to_pack": nxt["source_pack"],
+                "handoff_reason": (
+                    f"{current['source_pack']} output references feed {nxt['source_pack']} as deterministic preview inputs."
+                ),
+                "input_refs": list(nxt["input_refs"]),
+                "output_refs": list(current["output_refs"]),
+                "blocked_by": [
+                    ref
+                    for ref in [
+                        "real_execution_disabled",
+                        "manual_review_required"
+                        if "manual" in nxt["status"].lower()
+                        else "",
+                        "blocked_preview" if "blocked" in nxt["status"].lower() else "",
+                    ]
+                    if ref
+                ],
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Handoff is a preview trace only and does not represent a real runtime handoff or log read."
+                ),
+            }
+        )
+
+    input_output_trace_map = {
+        card["source_pack"]: {
+            "agent_role": card["agent_role"],
+            "workflow_phase": card["workflow_phase"],
+            "input_refs": card["input_refs"],
+            "output_refs": card["output_refs"],
+            "handoff_to": card["handoff_to"],
+            "real_execution_allowed": False,
+        }
+        for card in agent_run_cards
+    }
+
+    evidence_brief = dict(creative_decision_pack.get("evidence_brief") or {})
+    quote_refs = []
+    for key, value in evidence_brief.items():
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    quote = _rw_text(item.get("quote") or item.get("evidence_quote"))
+                    if quote:
+                        quote_refs.append(quote)
+        elif isinstance(value, str) and value:
+            quote_refs.append(value)
+    review_import_pack = dict(
+        creative_decision_pack.get("review_import_pack") or {}
+    )
+    evidence_trace = [
+        {
+            "trace_id": "evidence_trace_review_import",
+            "source_pack": "review_import_pack",
+            "evidence_type": "normalized_reviews",
+            "input_refs": ["pasted_reviews", "csv_rows", "manual_reviews"],
+            "output_refs": [
+                "evidence_brief",
+                "creative_decision_pack",
+                "workspace_execution_readiness_pack",
+            ],
+            "evidence_count": len(
+                list(review_import_pack.get("normalized_reviews") or [])
+            ),
+            "risk_note": "Review evidence is normalized deterministically and does not scrape external sources.",
+            "real_execution_allowed": False,
+        },
+        {
+            "trace_id": "evidence_trace_quotes_to_decisions",
+            "source_pack": "creative_decision_pack",
+            "evidence_type": "evidence_brief_quotes",
+            "input_refs": ["evidence_brief", "do_not_claim"],
+            "output_refs": [
+                "workspace_retry_cycle_decision_pack",
+                "workspace_control_center_pack",
+            ],
+            "evidence_count": len(quote_refs),
+            "risk_note": "Evidence trace is a preview of quote/risk propagation, not a real log.",
+            "real_execution_allowed": False,
+        },
+    ]
+
+    cycle_pack = dict(
+        creative_decision_pack.get("workspace_retry_cycle_decision_pack") or {}
+    )
+    cycle_summary = dict(cycle_pack.get("cycle_decision_summary") or {})
+    recommended_cycle_action = dict(
+        cycle_pack.get("recommended_cycle_action") or {}
+    )
+    cycle_gate = dict(cycle_pack.get("cycle_gate") or {})
+    timeline_pack = dict(
+        creative_decision_pack.get("workspace_cycle_history_timeline_pack")
+        or {}
+    )
+    timeline_summary = dict(timeline_pack.get("timeline_summary") or {})
+    control_pack = dict(
+        creative_decision_pack.get("workspace_control_center_pack") or {}
+    )
+    control_summary = dict(control_pack.get("control_center_summary") or {})
+    decision_trace = [
+        {
+            "trace_id": "decision_trace_retry_cycle",
+            "source_pack": "workspace_retry_cycle_decision_pack",
+            "decision_id": _rw_text(cycle_summary.get("cycle_decision_id")),
+            "decision_or_gate": _rw_text(cycle_summary.get("decision_status")),
+            "recommended_action": recommended_cycle_action,
+            "gate": cycle_gate,
+            "derived_from": ["workspace_retry_rehearsal_result_pack"],
+            "real_execution_allowed": False,
+            "risk_note": "Retry cycle decision is preview-only and cannot authorize real execution.",
+        },
+        {
+            "trace_id": "decision_trace_timeline_to_control_center",
+            "source_pack": "workspace_control_center_pack",
+            "decision_id": _rw_text(control_summary.get("control_center_id")),
+            "decision_or_gate": _rw_text(control_summary.get("latest_decision_status")),
+            "recommended_action": _rw_text(
+                control_summary.get("recommended_next_action")
+            ),
+            "derived_from": [
+                "workspace_retry_cycle_decision_pack",
+                "workspace_cycle_history_timeline_pack",
+            ],
+            "real_execution_allowed": False,
+            "risk_note": "Control center decision trace is deterministic preview only.",
+        },
+    ]
+
+    capability_usage_preview = [
+        {
+            "capability": capability,
+            "usage_mode": "disabled_preview_only",
+            "source_pack": "workspace_agent_run_ledger_pack",
+            "real_capability_enabled": False,
+            "real_execution_allowed": False,
+            "risk_note": "Capability is listed for traceability only and is not invoked.",
+        }
+        for capability in [
+            "provider",
+            "llm",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external_scraping",
+            "database_persistence",
+            "real_restore",
+            "real_execution",
+            "agent_runtime",
+            "real_log_read",
+            "operator_task",
+        ]
+    ]
+
+    ledger_signature = json.dumps(
+        {
+            "runs": [card["run_id"] for card in agent_run_cards],
+            "handoffs": [item["handoff_id"] for item in handoff_trace],
+            "cycle_decision_id": _rw_text(cycle_summary.get("cycle_decision_id")),
+            "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+            "control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    ledger_id = (
+        "workspace_agent_run_ledger_"
+        + hashlib.sha256(ledger_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_log_read_enabled": False,
+        "approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "agent_runtime_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_agent_run_ledger_pack_v1",
+        "ledger_summary": {
+            "ledger_id": ledger_id,
+            "mode": "agent_run_ledger_preview_traceability_preview_dry_run_only",
+            "agent_run_count": len(agent_run_cards),
+            "handoff_count": len(handoff_trace),
+            "evidence_trace_count": len(evidence_trace),
+            "decision_trace_count": len(decision_trace),
+            "source_control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "recommended_next_action": (
+                "Review deterministic agent run ledger and handoff trace; do not treat it as real runtime logs."
+            ),
+            "real_execution_allowed": False,
+        },
+        "agent_run_cards": agent_run_cards,
+        "handoff_trace": handoff_trace,
+        "input_output_trace_map": input_output_trace_map,
+        "evidence_trace": evidence_trace,
+        "decision_trace": decision_trace,
+        "capability_usage_preview": capability_usage_preview,
+        "ledger_quality_checks": {
+            "source_packs_checked": [spec[3] for spec in pack_specs],
+            "agent_run_cards_present": len(agent_run_cards) >= 2,
+            "all_cards_execution_disabled": all(
+                not card["real_execution_allowed"] for card in agent_run_cards
+            ),
+            "handoff_trace_present": len(handoff_trace) >= 2,
+            "all_handoffs_execution_disabled": all(
+                not item["real_execution_allowed"] for item in handoff_trace
+            ),
+            "input_output_trace_map_present": bool(input_output_trace_map),
+            "evidence_trace_present_or_empty_state": isinstance(
+                evidence_trace, list
+            ),
+            "decision_trace_present": bool(decision_trace),
+            "all_capabilities_preview_only": all(
+                not item["real_capability_enabled"]
+                and not item["real_execution_allowed"]
+                for item in capability_usage_preview
+            ),
+            "audit_preview_not_persisted": True,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "agent_runtime_invoked": False,
+            "operator_task_created": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_agent_run_ledger_traceability_preview",
+            "ledger_id": ledger_id,
+            "agent_run_ids": [card["run_id"] for card in agent_run_cards],
+            "handoff_ids": [item["handoff_id"] for item in handoff_trace],
+            "is_real_agent_runtime_log": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "database_write_performed": False,
+            "operator_task_created": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic agent/workflow ledger preview derived from workspace packs only; no real agent runtime, log read, history table read, task, ticket, approval, provider, LLM, video, media, paid, registry, rollback, restore, database write, or execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -27973,6 +28484,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_control_center_pack"] = (
         _rw_workspace_control_center_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_agent_run_ledger_pack"] = (
+        _rw_workspace_agent_run_ledger_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
