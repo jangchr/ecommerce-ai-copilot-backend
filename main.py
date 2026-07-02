@@ -28350,6 +28350,525 @@ def _rw_workspace_agent_run_ledger_pack(
     }
 
 
+def _rw_workspace_human_review_queue_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_names = [
+        "workspace_control_center_pack",
+        "workspace_agent_run_ledger_pack",
+        "workspace_retry_cycle_decision_pack",
+        "workspace_cycle_history_timeline_pack",
+        "workspace_remediation_verification_pack",
+        "workspace_rehearsal_remediation_pack",
+        "workspace_execution_readiness_pack",
+    ]
+    packs = {
+        name: dict(creative_decision_pack.get(name) or {})
+        for name in source_pack_names
+    }
+    control_pack = packs["workspace_control_center_pack"]
+    control_summary = dict(control_pack.get("control_center_summary") or {})
+    control_queue = list(control_pack.get("operator_priority_queue") or [])
+    risk_overview = dict(control_pack.get("risk_and_blocker_overview") or {})
+    agent_ledger_pack = packs["workspace_agent_run_ledger_pack"]
+    ledger_summary = dict(agent_ledger_pack.get("ledger_summary") or {})
+    agent_run_cards = list(agent_ledger_pack.get("agent_run_cards") or [])
+    handoff_trace = list(agent_ledger_pack.get("handoff_trace") or [])
+    cycle_pack = packs["workspace_retry_cycle_decision_pack"]
+    cycle_summary = dict(cycle_pack.get("cycle_decision_summary") or {})
+    cycle_gate = dict(cycle_pack.get("cycle_gate") or {})
+    cycle_blocked_items = list(
+        cycle_pack.get("blocked_or_review_required_items") or []
+    )
+    cycle_carry_forward = list(cycle_pack.get("carry_forward_items") or [])
+    timeline_pack = packs["workspace_cycle_history_timeline_pack"]
+    carry_forward_trace = list(timeline_pack.get("carry_forward_trace") or [])
+    operator_review_trace = list(
+        timeline_pack.get("operator_review_trace") or []
+    )
+    verification_pack = packs["workspace_remediation_verification_pack"]
+    verification_summary = dict(
+        verification_pack.get("verification_summary") or {}
+    )
+    remediation_pack = packs["workspace_rehearsal_remediation_pack"]
+    remediation_summary = dict(
+        remediation_pack.get("remediation_summary") or {}
+    )
+    remediation_actions = list(
+        remediation_pack.get("remediation_action_items") or []
+    )
+    readiness_pack = packs["workspace_execution_readiness_pack"]
+    readiness_summary = dict(readiness_pack.get("readiness_summary") or {})
+    launch_lock = dict(readiness_pack.get("launch_lock") or {})
+    blocked_execution_reasons = list(
+        readiness_pack.get("blocked_execution_reasons") or []
+    )
+    manual_review_requirements = readiness_pack.get(
+        "manual_review_requirements"
+    ) or {}
+
+    def _review_type_from_source(source_pack: str, text: str = "") -> str:
+        source_text = f"{source_pack} {text}".lower()
+        if "evidence" in source_text or "gap" in source_text:
+            return "evidence_gap_review"
+        if "approval" in source_text or "manual" in source_text:
+            return "manual_approval_review"
+        if "block" in source_text or "risk" in source_text:
+            return "risk_blocker_review"
+        if "retry" in source_text or "cycle" in source_text:
+            return "retry_cycle_review"
+        if "lock" in source_text or "capability" in source_text:
+            return "capability_lock_review"
+        return "operator_signoff_review"
+
+    review_sources: list[dict] = []
+    for item in control_queue:
+        review_sources.append(
+            {
+                "priority": _rw_text(item.get("priority")) or "high",
+                "review_type": _review_type_from_source(
+                    "workspace_control_center_pack",
+                    _rw_text(item.get("item_type"))
+                    + " "
+                    + _rw_text(item.get("item_title")),
+                ),
+                "source_pack": "workspace_control_center_pack",
+                "source_refs": [_rw_text(item.get("queue_id"))],
+                "review_title": _rw_text(item.get("item_title"))
+                or "Review control center priority item",
+                "why_review_is_needed": _rw_text(item.get("why_it_matters"))
+                or "Control center priority queue flagged this preview item for operator review.",
+                "required_inputs": list(item.get("blocked_by") or [])
+                or ["operator review input"],
+                "blocked_by": list(item.get("blocked_by") or []),
+                "next_action_preview": _rw_text(
+                    item.get("next_action_preview")
+                )
+                or "Review this priority item before the next dry-run cycle.",
+                "risk_note": _rw_text(item.get("risk_note"))
+                or "Priority item is preview-only and cannot create a task.",
+            }
+        )
+    for index, item in enumerate(cycle_blocked_items, start=1):
+        reason = _rw_text(item.get("reason")) or "Cycle decision requires review."
+        review_sources.append(
+            {
+                "priority": "high",
+                "review_type": "risk_blocker_review",
+                "source_pack": "workspace_retry_cycle_decision_pack",
+                "source_refs": [f"blocked_or_review_required_{index:02d}"],
+                "review_title": reason,
+                "why_review_is_needed": (
+                    "Retry cycle decision still contains a blocked or review-required preview item."
+                ),
+                "required_inputs": [reason],
+                "blocked_by": [reason],
+                "next_action_preview": "Resolve blocked or review-required item before another dry-run retry.",
+                "risk_note": "Cycle blocker cannot authorize real execution.",
+            }
+        )
+    for index, item in enumerate(cycle_carry_forward, start=1):
+        issue = _rw_text(item.get("issue")) or "Carry-forward issue remains open."
+        review_sources.append(
+            {
+                "priority": "high" if index <= 3 else "medium",
+                "review_type": "retry_cycle_review",
+                "source_pack": "workspace_retry_cycle_decision_pack",
+                "source_refs": [f"carry_forward_item_{index:02d}"],
+                "review_title": issue,
+                "why_review_is_needed": (
+                    "Carry-forward issue must be reviewed before next dry-run cycle planning."
+                ),
+                "required_inputs": [issue],
+                "blocked_by": [issue],
+                "next_action_preview": _rw_text(
+                    item.get("recommended_handling")
+                )
+                or "Return to remediation preview before retrying.",
+                "risk_note": "Carry-forward item keeps real execution locked.",
+            }
+        )
+    for index, trace in enumerate(carry_forward_trace, start=1):
+        issue = _rw_text(trace.get("issue")) or "Timeline carry-forward trace remains open."
+        review_sources.append(
+            {
+                "priority": "medium",
+                "review_type": "retry_cycle_review",
+                "source_pack": "workspace_cycle_history_timeline_pack",
+                "source_refs": [f"carry_forward_trace_{index:02d}"],
+                "review_title": issue,
+                "why_review_is_needed": (
+                    "Cycle history timeline shows a carry-forward preview item that needs operator review."
+                ),
+                "required_inputs": [issue],
+                "blocked_by": [issue],
+                "next_action_preview": "Review timeline carry-forward before another dry-run remediation pass.",
+                "risk_note": "Timeline trace is deterministic preview only and does not read real history.",
+            }
+        )
+    for index, trace in enumerate(operator_review_trace, start=1):
+        reason = _rw_text(trace.get("reason")) or "Operator review trace remains open."
+        review_sources.append(
+            {
+                "priority": "medium",
+                "review_type": "manual_approval_review",
+                "source_pack": "workspace_cycle_history_timeline_pack",
+                "source_refs": [f"operator_review_trace_{index:02d}"],
+                "review_title": reason,
+                "why_review_is_needed": (
+                    "Timeline includes an operator review preview trace without creating a real approval."
+                ),
+                "required_inputs": [reason],
+                "blocked_by": [_rw_text(trace.get("review_status"))]
+                if _rw_text(trace.get("review_status"))
+                else ["operator review preview"],
+                "next_action_preview": "Review operator trace manually; do not create a real ticket or approval.",
+                "risk_note": "Operator trace is preview-only and not a real operator log.",
+            }
+        )
+    for index, reason in enumerate(blocked_execution_reasons, start=1):
+        reason_text = _rw_text(reason.get("reason") if isinstance(reason, dict) else reason)
+        if not reason_text:
+            reason_text = "Execution readiness remains blocked."
+        review_sources.append(
+            {
+                "priority": "high",
+                "review_type": "capability_lock_review",
+                "source_pack": "workspace_execution_readiness_pack",
+                "source_refs": [f"blocked_execution_reason_{index:02d}"],
+                "review_title": reason_text,
+                "why_review_is_needed": (
+                    "Execution readiness launch lock requires human review before any further preview cycle."
+                ),
+                "required_inputs": [reason_text],
+                "blocked_by": [reason_text],
+                "next_action_preview": "Keep launch lock active and review missing inputs in preview only.",
+                "risk_note": "Launch lock cannot unlock real execution.",
+            }
+        )
+    for index, item in enumerate(remediation_actions, start=1):
+        issue = _rw_text(item.get("remediation_title")) or _rw_text(item.get("issue_type"))
+        if not issue:
+            issue = "Remediation action requires operator follow-up."
+        review_sources.append(
+            {
+                "priority": _rw_text(item.get("priority")) or "medium",
+                "review_type": _review_type_from_source(
+                    "workspace_rehearsal_remediation_pack",
+                    _rw_text(item.get("issue_type")),
+                ),
+                "source_pack": "workspace_rehearsal_remediation_pack",
+                "source_refs": [_rw_text(item.get("action_id")) or f"remediation_action_{index:02d}"],
+                "review_title": issue,
+                "why_review_is_needed": (
+                    "Remediation plan has preview follow-up work that must be reviewed before retry."
+                ),
+                "required_inputs": [_rw_text(item.get("required_input")) or issue],
+                "blocked_by": [_rw_text(item.get("required_input"))]
+                if _rw_text(item.get("required_input"))
+                else [],
+                "next_action_preview": _rw_text(item.get("validation_before_retry"))
+                or "Validate remediation input before the next dry-run retry.",
+                "risk_note": _rw_text(item.get("risk_note"))
+                or "Remediation item is preview-only and not a real task.",
+            }
+        )
+    if not review_sources:
+        review_sources.append(
+            {
+                "priority": "medium",
+                "review_type": "operator_signoff_review",
+                "source_pack": "workspace_agent_run_ledger_pack",
+                "source_refs": [_rw_text(ledger_summary.get("ledger_id"))],
+                "review_title": "Review deterministic agent run ledger",
+                "why_review_is_needed": (
+                    "Operator signoff is required to inspect preview traceability before continuing."
+                ),
+                "required_inputs": ["workspace preview packs"],
+                "blocked_by": ["real execution disabled"],
+                "next_action_preview": "Review traceability preview and keep all real capabilities disabled.",
+                "risk_note": "Human review queue is preview-only.",
+            }
+        )
+
+    review_queue_items = []
+    seen_titles: set[str] = set()
+    for index, source in enumerate(review_sources, start=1):
+        title_key = f"{source['source_pack']}::{source['review_title']}"
+        if title_key in seen_titles:
+            continue
+        seen_titles.add(title_key)
+        review_id = f"human_review_item_{len(review_queue_items) + 1:02d}"
+        allowed_decisions = [
+            "approve_for_next_dry_run_review",
+            "return_to_remediation",
+            "keep_blocked",
+            "request_more_evidence",
+        ]
+        review_queue_items.append(
+            {
+                "review_id": review_id,
+                "priority": source["priority"],
+                "review_type": source["review_type"],
+                "source_pack": source["source_pack"],
+                "source_refs": [
+                    ref for ref in list(source.get("source_refs") or []) if ref
+                ],
+                "review_title": source["review_title"],
+                "why_review_is_needed": source["why_review_is_needed"],
+                "required_inputs": list(source.get("required_inputs") or []),
+                "blocked_by": list(source.get("blocked_by") or []),
+                "operator_decision_needed": True,
+                "allowed_decisions": allowed_decisions,
+                "next_action_preview": source["next_action_preview"],
+                "real_execution_allowed": False,
+                "risk_note": source["risk_note"],
+            }
+        )
+
+    operator_task_cards = []
+    for index, item in enumerate(review_queue_items, start=1):
+        operator_task_cards.append(
+            {
+                "task_id": f"operator_task_preview_{index:02d}",
+                "task_type": item["review_type"].replace("_review", "_task"),
+                "task_title": item["review_title"],
+                "source_review_id": item["review_id"],
+                "source_pack": item["source_pack"],
+                "task_status": "preview_pending_human_review",
+                "assignee_role": "human_operator_reviewer",
+                "required_review": True,
+                "completion_criteria": [
+                    "Review required inputs",
+                    "Choose an allowed preview decision",
+                    "Keep real execution disabled",
+                ],
+                "blocked_by": list(item["blocked_by"]),
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Operator task card is a deterministic preview and is not written to any task system."
+                ),
+            }
+        )
+
+    blocked_review_items = [
+        item
+        for item in review_queue_items
+        if item["blocked_by"]
+        or item["review_type"]
+        in ["risk_blocker_review", "capability_lock_review", "evidence_gap_review"]
+    ]
+    required_inputs = sorted(
+        {
+            required
+            for item in review_queue_items
+            for required in item["required_inputs"]
+            if required
+        }
+    )
+    review_dependency_map = {
+        item["review_id"]: {
+            "source_pack": item["source_pack"],
+            "source_refs": item["source_refs"],
+            "depends_on_blockers": item["blocked_by"],
+            "depends_on_required_inputs": item["required_inputs"],
+            "depends_on_evidence": [
+                ref
+                for ref in item["source_refs"]
+                if "evidence" in ref.lower() or "review" in ref.lower()
+            ],
+            "real_execution_allowed": False,
+        }
+        for item in review_queue_items
+    }
+    operator_decision_options = [
+        {
+            "decision_id": "human_review_decision_approve_next_dry_run",
+            "decision_label": "approve_for_next_dry_run_review",
+            "decision_scope": "dry_run_review_only",
+            "creates_real_approval": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "decision_id": "human_review_decision_return_to_remediation",
+            "decision_label": "return_to_remediation",
+            "decision_scope": "remediation_preview_only",
+            "creates_real_approval": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "decision_id": "human_review_decision_keep_blocked",
+            "decision_label": "keep_blocked",
+            "decision_scope": "blocked_preview_only",
+            "creates_real_approval": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "decision_id": "human_review_decision_request_more_evidence",
+            "decision_label": "request_more_evidence",
+            "decision_scope": "evidence_gap_preview_only",
+            "creates_real_approval": False,
+            "real_execution_allowed": False,
+        },
+    ]
+    queue_signature = json.dumps(
+        {
+            "control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+            "cycle_decision_id": _rw_text(
+                cycle_summary.get("cycle_decision_id")
+            ),
+            "reviews": [item["review_id"] for item in review_queue_items],
+            "tasks": [item["task_id"] for item in operator_task_cards],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    queue_id = (
+        "workspace_human_review_queue_"
+        + hashlib.sha256(queue_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_log_read_enabled": False,
+        "approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "agent_runtime_enabled": False,
+        "human_review_system_write_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_human_review_queue_pack_v1",
+        "review_queue_summary": {
+            "queue_id": queue_id,
+            "mode": "human_review_queue_preview_operator_task_preview_dry_run_only",
+            "review_item_count": len(review_queue_items),
+            "operator_task_card_count": len(operator_task_cards),
+            "blocked_review_item_count": len(blocked_review_items),
+            "source_control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "source_agent_run_ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+            "current_workflow_phase": _rw_text(
+                control_summary.get("current_cycle_phase")
+            )
+            or _rw_text(readiness_summary.get("readiness_status"))
+            or "human_review_preview",
+            "recommended_next_action": (
+                review_queue_items[0]["next_action_preview"]
+                if review_queue_items
+                else "Review human review queue preview."
+            ),
+            "real_execution_allowed": False,
+        },
+        "review_queue_items": review_queue_items,
+        "operator_task_cards": operator_task_cards,
+        "review_priority_rationale": {
+            "priority_mode": "blocked_remaining_gap_manual_review_and_safety_lock_first",
+            "high_priority_sources": [
+                item["review_id"]
+                for item in review_queue_items
+                if item["priority"] == "high"
+            ],
+            "source_pack_order": source_pack_names,
+            "rationale": (
+                "Prioritize blocked, remaining-gap, manual review, retry cycle, and capability-lock items before any next dry-run review."
+            ),
+            "real_execution_allowed": False,
+        },
+        "required_inputs_overview": {
+            "required_input_count": len(required_inputs),
+            "required_inputs": required_inputs,
+            "manual_review_requirements": manual_review_requirements,
+            "verification_status": _rw_text(
+                verification_summary.get("verification_status")
+            ),
+            "remediation_retry_readiness": _rw_text(
+                remediation_summary.get("retry_readiness")
+            ),
+            "launch_lock_status": _rw_text(launch_lock.get("lock_status")),
+            "real_execution_allowed": False,
+        },
+        "blocked_review_items": blocked_review_items,
+        "review_dependency_map": review_dependency_map,
+        "operator_decision_options": operator_decision_options,
+        "review_quality_checks": {
+            "source_packs_checked": source_pack_names,
+            "control_center_pack_present": bool(control_pack),
+            "agent_run_ledger_pack_present": bool(agent_ledger_pack),
+            "review_queue_items_present": len(review_queue_items) >= 2,
+            "operator_task_cards_present": bool(operator_task_cards),
+            "all_review_items_execution_disabled": all(
+                not item["real_execution_allowed"] for item in review_queue_items
+            ),
+            "all_task_cards_execution_disabled": all(
+                not item["real_execution_allowed"] for item in operator_task_cards
+            ),
+            "blocked_review_items_present_or_empty_state": isinstance(
+                blocked_review_items, list
+            ),
+            "dependency_map_present": bool(review_dependency_map),
+            "operator_decision_options_preview_only": all(
+                not option["real_execution_allowed"]
+                and not option["creates_real_approval"]
+                and "real_execution" not in option["decision_label"]
+                and "real execution" not in option["decision_scope"].lower()
+                for option in operator_decision_options
+            ),
+            "audit_preview_not_persisted": True,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "agent_runtime_invoked": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_human_review_queue_preview",
+            "queue_id": queue_id,
+            "source_control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "source_agent_run_ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+            "review_ids": [item["review_id"] for item in review_queue_items],
+            "task_preview_ids": [
+                item["task_id"] for item in operator_task_cards
+            ],
+            "is_real_human_review_system": False,
+            "database_write_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic human review queue and operator task preview derived from workspace packs only; no real human review system, agent runtime, task system, operator log, ticket, approval, provider, LLM, video, media, paid, registry, rollback, restore, external scraping, history table read, database write, or execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -28487,6 +29006,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_agent_run_ledger_pack"] = (
         _rw_workspace_agent_run_ledger_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_human_review_queue_pack"] = (
+        _rw_workspace_human_review_queue_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

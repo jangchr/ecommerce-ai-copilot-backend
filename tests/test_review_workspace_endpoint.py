@@ -3366,6 +3366,202 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_human_review_queue_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-human-review-queue",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "REVIEWQUEUE001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Still leaks",
+                    "text": "Leaks.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        control_pack = creative_pack["workspace_control_center_pack"]
+        ledger_pack = creative_pack["workspace_agent_run_ledger_pack"]
+        pack = creative_pack["workspace_human_review_queue_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_human_review_queue_pack_v1",
+        )
+        summary = pack["review_queue_summary"]
+        self.assertTrue(summary["queue_id"])
+        self.assertIn("human_review_queue_preview", summary["mode"])
+        self.assertIn("operator_task_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertEqual(
+            summary["source_control_center_id"],
+            control_pack["control_center_summary"]["control_center_id"],
+        )
+        self.assertEqual(
+            summary["source_agent_run_ledger_id"],
+            ledger_pack["ledger_summary"]["ledger_id"],
+        )
+        self.assertFalse(summary["real_execution_allowed"])
+
+        review_items = pack["review_queue_items"]
+        self.assertGreaterEqual(len(review_items), 2)
+        review_types = {item["review_type"] for item in review_items}
+        self.assertTrue(
+            review_types.intersection({
+                "evidence_gap_review",
+                "manual_approval_review",
+                "risk_blocker_review",
+                "retry_cycle_review",
+                "capability_lock_review",
+                "operator_signoff_review",
+            })
+        )
+        for item in review_items:
+            for field in [
+                "review_id", "priority", "review_type",
+                "source_pack", "why_review_is_needed",
+            ]:
+                with self.subTest(review=item["review_id"], field=field):
+                    self.assertTrue(item[field])
+            self.assertIsInstance(item["source_refs"], list)
+            self.assertIsInstance(item["required_inputs"], list)
+            self.assertIsInstance(item["blocked_by"], list)
+            self.assertTrue(item["operator_decision_needed"])
+            self.assertIn("allowed_decisions", item)
+            self.assertFalse(item["real_execution_allowed"])
+
+        task_cards = pack["operator_task_cards"]
+        self.assertTrue(task_cards)
+        review_ids = {item["review_id"] for item in review_items}
+        for card in task_cards:
+            for field in [
+                "task_id", "task_type", "source_review_id",
+                "task_status",
+            ]:
+                with self.subTest(task=card["task_id"], field=field):
+                    self.assertTrue(card[field])
+            self.assertIn(card["source_review_id"], review_ids)
+            self.assertEqual(card["assignee_role"], "human_operator_reviewer")
+            self.assertTrue(card["required_review"])
+            self.assertIsInstance(card["completion_criteria"], list)
+            self.assertIsInstance(card["blocked_by"], list)
+            self.assertFalse(card["real_execution_allowed"])
+
+        self.assertTrue(pack["review_priority_rationale"])
+        inputs = pack["required_inputs_overview"]
+        self.assertIn("required_inputs", inputs)
+        self.assertFalse(inputs["real_execution_allowed"])
+
+        blocked_items = pack["blocked_review_items"]
+        self.assertIsInstance(blocked_items, list)
+        self.assertTrue(blocked_items)
+        self.assertTrue(
+            all(not item["real_execution_allowed"] for item in blocked_items)
+        )
+
+        dependency_map = pack["review_dependency_map"]
+        self.assertTrue(dependency_map)
+        for item in review_items:
+            with self.subTest(dependency=item["review_id"]):
+                self.assertIn(item["review_id"], dependency_map)
+                self.assertEqual(
+                    dependency_map[item["review_id"]]["source_pack"],
+                    item["source_pack"],
+                )
+                self.assertFalse(
+                    dependency_map[item["review_id"]]["real_execution_allowed"]
+                )
+
+        decision_options = pack["operator_decision_options"]
+        self.assertTrue(decision_options)
+        labels = " ".join(
+            option["decision_label"] + " " + option["decision_scope"]
+            for option in decision_options
+        )
+        self.assertNotIn("real execution approval", labels.lower())
+        self.assertNotIn("approved_for_real_execution", labels.lower())
+        self.assertNotIn("real_execution_approval", labels.lower())
+        for option in decision_options:
+            self.assertFalse(option["creates_real_approval"])
+            self.assertFalse(option["real_execution_allowed"])
+
+        checks = pack["review_quality_checks"]
+        for key in [
+            "control_center_pack_present",
+            "agent_run_ledger_pack_present",
+            "review_queue_items_present",
+            "operator_task_cards_present",
+            "all_review_items_execution_disabled",
+            "all_task_cards_execution_disabled",
+            "blocked_review_items_present_or_empty_state",
+            "dependency_map_present",
+            "operator_decision_options_preview_only",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "database_write_performed", "real_log_read_performed",
+            "real_history_table_read_performed", "agent_runtime_invoked",
+            "operator_task_created", "real_approval_created",
+            "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["queue_id"])
+        self.assertFalse(audit["is_real_human_review_system"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_approval_created"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled", "llm_api_enabled",
+            "video_generation_enabled", "media_upload_enabled",
+            "media_download_enabled", "paid_operation_enabled",
+            "registry_write_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
