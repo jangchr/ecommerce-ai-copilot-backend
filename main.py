@@ -29894,6 +29894,575 @@ def _rw_workspace_system_integration_health_pack(
     }
 
 
+def _rw_workspace_replay_harness_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_names = [
+        "workspace_system_integration_health_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_human_review_queue_pack",
+        "workspace_agent_run_ledger_pack",
+        "workspace_control_center_pack",
+        "workspace_cycle_history_timeline_pack",
+        "workspace_retry_cycle_decision_pack",
+        "workspace_execution_readiness_pack",
+    ]
+    packs = {
+        name: dict(creative_decision_pack.get(name) or {})
+        for name in source_pack_names
+    }
+    health_pack = packs["workspace_system_integration_health_pack"]
+    permission_pack = packs["workspace_capability_permission_matrix_pack"]
+    review_pack = packs["workspace_human_review_queue_pack"]
+    ledger_pack = packs["workspace_agent_run_ledger_pack"]
+    control_pack = packs["workspace_control_center_pack"]
+    timeline_pack = packs["workspace_cycle_history_timeline_pack"]
+    cycle_pack = packs["workspace_retry_cycle_decision_pack"]
+    readiness_pack = packs["workspace_execution_readiness_pack"]
+
+    health_summary = dict(health_pack.get("integration_health_summary") or {})
+    permission_summary = dict(
+        permission_pack.get("permission_matrix_summary") or {}
+    )
+    review_summary = dict(review_pack.get("review_queue_summary") or {})
+    ledger_summary = dict(ledger_pack.get("ledger_summary") or {})
+    control_summary = dict(control_pack.get("control_center_summary") or {})
+    timeline_summary = dict(timeline_pack.get("timeline_summary") or {})
+    cycle_summary = dict(cycle_pack.get("cycle_decision_summary") or {})
+    readiness_summary = dict(readiness_pack.get("readiness_summary") or {})
+    pack_health_cards = list(health_pack.get("pack_health_cards") or [])
+    capability_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+    policy_gates = list(permission_pack.get("policy_gate_results") or [])
+    review_items = list(review_pack.get("review_queue_items") or [])
+    agent_run_cards = list(ledger_pack.get("agent_run_cards") or [])
+    timeline_events = list(timeline_pack.get("timeline_events") or [])
+    integration_risks = list(
+        health_pack.get("integration_risk_register") or []
+    )
+
+    scenario_definitions = [
+        {
+            "scenario_id": "replay_pack_presence",
+            "scenario_name": "Pack presence replay",
+            "scenario_type": "pack_presence_replay",
+            "source_pack": "workspace_system_integration_health_pack",
+            "input_refs": [
+                card.get("source_pack", "workspace_pack")
+                for card in pack_health_cards[:8]
+            ]
+            or source_pack_names,
+            "expected_pack_outputs": [
+                "pack_health_cards",
+                "pack_consistency_checks",
+            ],
+            "expected_status": (
+                "preview_with_missing_or_weak_pack"
+                if integration_risks
+                else "preview_pack_presence_consistent"
+            ),
+            "regression_focus": "pack presence and required field stability",
+            "failure_signal": "missing required pack or weak required field",
+        },
+        {
+            "scenario_id": "replay_decision_trace",
+            "scenario_name": "Decision trace replay",
+            "scenario_type": "decision_trace_replay",
+            "source_pack": "workspace_cycle_history_timeline_pack",
+            "input_refs": [
+                event.get("event_id", "timeline_event")
+                for event in timeline_events[:8]
+            ]
+            or ["timeline_events"],
+            "expected_pack_outputs": [
+                "timeline_summary",
+                "cycle_decision_summary",
+                "control_center_summary",
+            ],
+            "expected_status": "preview_trace_available"
+            if timeline_pack
+            else "preview_trace_missing",
+            "regression_focus": "decision and cycle trace continuity",
+            "failure_signal": "timeline event count or latest decision changes",
+        },
+        {
+            "scenario_id": "replay_safety_boundaries",
+            "scenario_name": "Safety boundary replay",
+            "scenario_type": "safety_boundary_replay",
+            "source_pack": "workspace_system_integration_health_pack",
+            "input_refs": ["safety_boundaries", "health_quality_checks"],
+            "expected_pack_outputs": [
+                "real_execution_allowed_false",
+                "all_real_capabilities_disabled",
+            ],
+            "expected_status": "preview_safety_boundaries_locked",
+            "regression_focus": "disabled real capability boundaries",
+            "failure_signal": "any real capability boundary becomes enabled",
+        },
+        {
+            "scenario_id": "replay_permission_gate",
+            "scenario_name": "Permission gate replay",
+            "scenario_type": "permission_gate_replay",
+            "source_pack": "workspace_capability_permission_matrix_pack",
+            "input_refs": [
+                gate.get("gate_id", "policy_gate")
+                for gate in policy_gates[:8]
+            ]
+            or ["policy_gate_results"],
+            "expected_pack_outputs": [
+                "capability_permission_cards",
+                "policy_gate_results",
+            ],
+            "expected_status": "preview_permission_gates_locked",
+            "regression_focus": "permission matrix and policy gate locks",
+            "failure_signal": "policy gate appears ready for real execution",
+        },
+        {
+            "scenario_id": "replay_human_review_queue",
+            "scenario_name": "Human review queue replay",
+            "scenario_type": "human_review_queue_replay",
+            "source_pack": "workspace_human_review_queue_pack",
+            "input_refs": [
+                item.get("review_id", "review_queue_item")
+                for item in review_items[:8]
+            ]
+            or ["review_queue_items"],
+            "expected_pack_outputs": [
+                "review_queue_summary",
+                "review_queue_items",
+                "operator_task_cards",
+            ],
+            "expected_status": "preview_review_queue_available"
+            if review_pack
+            else "preview_review_queue_missing",
+            "regression_focus": "operator review preview and blockers",
+            "failure_signal": "review queue loses blocked/manual review items",
+        },
+        {
+            "scenario_id": "replay_integration_health",
+            "scenario_name": "Integration health replay",
+            "scenario_type": "integration_health_replay",
+            "source_pack": "workspace_system_integration_health_pack",
+            "input_refs": [
+                health_summary.get("health_id", "integration_health_summary")
+            ],
+            "expected_pack_outputs": [
+                "integration_health_summary",
+                "integration_risk_register",
+            ],
+            "expected_status": "preview_health_snapshot_available",
+            "regression_focus": "health summary and risk register stability",
+            "failure_signal": "health id, risk count, or pack count drift",
+        },
+        {
+            "scenario_id": "replay_export_contract",
+            "scenario_name": "Export contract replay",
+            "scenario_type": "export_contract_replay",
+            "source_pack": "campaign_export_pack",
+            "input_refs": ["campaign_export_pack", "workspace_session_snapshot_pack"],
+            "expected_pack_outputs": [
+                "exportable_preview_snapshot",
+                "no_file_write",
+            ],
+            "expected_status": "preview_export_contract_only",
+            "regression_focus": "export preview shape without file/database writes",
+            "failure_signal": "snapshot claims persistence or writes files",
+        },
+        {
+            "scenario_id": "replay_i18n_visibility",
+            "scenario_name": "I18n visibility replay",
+            "scenario_type": "i18n_visibility_replay",
+            "source_pack": "workspace_system_integration_health_pack",
+            "input_refs": ["en_workspace_preview", "zh_workspace_preview"],
+            "expected_pack_outputs": [
+                "browser_visibility_probe_preview",
+                "no_real_monitoring_read",
+            ],
+            "expected_status": "preview_i18n_visibility_contract",
+            "regression_focus": "EN/ZH workspace panel visibility contract",
+            "failure_signal": "preview panel loses expected bilingual marker",
+        },
+    ]
+
+    replay_scenarios = [
+        {
+            **scenario,
+            "operator_review_required": True,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Scenario is deterministic replay harness preview only; no real replay runtime, monitoring system, history read, database write, operator task, approval, provider, LLM, video, media, paid, registry, restore, rollback, external scraping, or execution is triggered."
+            ),
+        }
+        for scenario in scenario_definitions
+    ]
+
+    replay_input_contracts = []
+    required_field_map = {
+        "workspace_system_integration_health_pack": [
+            "integration_health_summary",
+            "pack_health_cards",
+            "safety_boundaries",
+        ],
+        "workspace_capability_permission_matrix_pack": [
+            "permission_matrix_summary",
+            "capability_permission_cards",
+            "policy_gate_results",
+        ],
+        "workspace_human_review_queue_pack": [
+            "review_queue_summary",
+            "review_queue_items",
+        ],
+        "workspace_agent_run_ledger_pack": [
+            "ledger_summary",
+            "agent_run_cards",
+        ],
+        "workspace_control_center_pack": [
+            "control_center_summary",
+            "control_center_cards",
+        ],
+        "workspace_cycle_history_timeline_pack": [
+            "timeline_summary",
+            "timeline_events",
+        ],
+        "workspace_retry_cycle_decision_pack": [
+            "cycle_decision_summary",
+            "cycle_gate",
+        ],
+        "workspace_execution_readiness_pack": [
+            "readiness_summary",
+            "launch_lock",
+        ],
+    }
+    for pack_name in source_pack_names:
+        pack = packs[pack_name]
+        required_fields = required_field_map[pack_name]
+        replay_input_contracts.append(
+            {
+                "contract_id": f"input_contract_{pack_name}",
+                "source_pack": pack_name,
+                "required_fields": required_fields,
+                "present": bool(pack),
+                "missing_fields": [
+                    field for field in required_fields if not pack.get(field)
+                ],
+                "field_stability": "stable_preview_fields_only",
+                "database_read_required": False,
+                "real_history_table_read_required": False,
+                "real_log_read_required": False,
+                "real_service_health_read_required": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Input contract is derived from in-memory workspace pack fields only and does not read a database, logs, history tables, service health, or secrets."
+                ),
+            }
+        )
+
+    expected_output_snapshots = [
+        {
+            "snapshot_id": f"expected_snapshot_{scenario['scenario_id']}",
+            "scenario_id": scenario["scenario_id"],
+            "source_pack": scenario["source_pack"],
+            "expected_pack_outputs": list(scenario["expected_pack_outputs"]),
+            "snapshot_mode": "preview_expected_output_snapshot_no_file_or_database_write",
+            "file_write_performed": False,
+            "database_write_performed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Expected output snapshot is a deterministic preview contract and is not written to a file or database."
+            ),
+        }
+        for scenario in replay_scenarios
+    ]
+
+    regression_checks = [
+        (
+            "check_pack_presence",
+            "Pack presence remains stable",
+            "workspace_system_integration_health_pack",
+            "workspace_system_integration_health_pack",
+            "all required source packs have preview contracts",
+            "source pack disappears or required field becomes empty",
+            "high",
+        ),
+        (
+            "check_decision_trace",
+            "Decision trace remains connected",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "timeline and control center retain deterministic trace ids",
+            "timeline event count or current phase becomes unavailable",
+            "medium",
+        ),
+        (
+            "check_capability_locks",
+            "Capability locks remain disabled",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "all real capability execution flags remain false",
+            "any capability allows real execution",
+            "critical",
+        ),
+        (
+            "check_safety_boundaries",
+            "Safety boundaries remain disabled",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "provider, llm, video, media, paid, registry, rollback, external scraping, database persistence, restore, and execution are disabled",
+            "any real capability safety boundary becomes enabled",
+            "critical",
+        ),
+        (
+            "check_operator_review_queue",
+            "Operator review queue remains preview-only",
+            "workspace_human_review_queue_pack",
+            "workspace_replay_harness_pack",
+            "operator review items remain preview items and create no real task",
+            "queue claims to create a real operator task",
+            "high",
+        ),
+        (
+            "check_integration_health",
+            "Integration health remains preview-only",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "health summary and risk register are derived from pack fields",
+            "health check reads real service health or monitoring state",
+            "high",
+        ),
+    ]
+    regression_check_matrix = [
+        {
+            "check_id": check_id,
+            "check_name": check_name,
+            "source_pack": source_pack,
+            "target_pack": target_pack,
+            "expected_condition": expected_condition,
+            "failure_condition": failure_condition,
+            "severity": severity,
+            "suggested_fix_preview": (
+                "Review the source pack preview and rerun the deterministic dry-run harness after fixing missing or weak fields."
+            ),
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Regression check is a preview assertion only and does not run a real diff job or replay runtime."
+            ),
+        }
+        for (
+            check_id,
+            check_name,
+            source_pack,
+            target_pack,
+            expected_condition,
+            failure_condition,
+            severity,
+        ) in regression_checks
+    ]
+
+    consistency_missing = {
+        contract["source_pack"]: contract["missing_fields"]
+        for contract in replay_input_contracts
+        if contract["missing_fields"]
+    }
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "llm_api_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_service_health_read_enabled": False,
+        "monitoring_system_enabled": False,
+        "permission_system_enabled": False,
+        "human_approval_system_enabled": False,
+        "agent_runtime_enabled": False,
+        "real_replay_runtime_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_approval_creation_enabled": False,
+    }
+    replay_signature = json.dumps(
+        {
+            "health_id": _rw_text(health_summary.get("health_id")),
+            "matrix_id": _rw_text(permission_summary.get("matrix_id")),
+            "queue_id": _rw_text(review_summary.get("queue_id")),
+            "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+            "control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+            "cycle_decision_id": _rw_text(
+                cycle_summary.get("cycle_decision_id")
+            ),
+            "readiness_status": _rw_text(
+                readiness_summary.get("readiness_status")
+            ),
+            "scenario_ids": [
+                scenario["scenario_id"] for scenario in replay_scenarios
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    harness_id = (
+        "workspace_replay_harness_"
+        + hashlib.sha256(replay_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    all_boundaries_disabled = all(
+        value is False for value in safety_boundaries.values()
+    )
+
+    return {
+        "pack_version": "workspace_replay_harness_pack_v1",
+        "replay_harness_summary": {
+            "harness_id": harness_id,
+            "mode": "replay_harness_preview_regression_scenario_preview_dry_run_only",
+            "scenario_count": len(replay_scenarios),
+            "regression_check_count": len(regression_check_matrix),
+            "input_contract_count": len(replay_input_contracts),
+            "expected_snapshot_count": len(expected_output_snapshots),
+            "source_pack_count": len(source_pack_names),
+            "recommended_next_action": (
+                "Review replay harness preview scenarios and keep all real replay, monitoring, permission, approval, agent runtime, provider, LLM, video, media, paid, registry, restore, rollback, database, history, log, service health, and execution capabilities disabled."
+            ),
+            "real_execution_allowed": False,
+        },
+        "replay_scenarios": replay_scenarios,
+        "replay_input_contracts": replay_input_contracts,
+        "expected_output_snapshots": expected_output_snapshots,
+        "regression_check_matrix": regression_check_matrix,
+        "pack_consistency_checks": {
+            "source_packs_checked": source_pack_names,
+            "all_source_packs_present": all(bool(packs[name]) for name in source_pack_names),
+            "missing_or_weak_fields_by_pack": consistency_missing,
+            "pack_health_card_count": len(pack_health_cards),
+            "agent_run_card_count": len(agent_run_cards),
+            "review_queue_item_count": len(review_items),
+            "capability_card_count": len(capability_cards),
+            "timeline_event_count": len(timeline_events),
+            "integration_risk_count": len(integration_risks),
+            "consistent_for_preview": not consistency_missing,
+            "database_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_log_read_performed": False,
+            "real_service_health_read_performed": False,
+            "real_execution_performed": False,
+        },
+        "replay_diff_plan": {
+            "mode": "future_diff_plan_preview_only",
+            "comparison_inputs": [
+                "current_preview_expected_output_snapshots",
+                "future_preview_replay_result_snapshots",
+            ],
+            "diff_job_executed": False,
+            "file_write_performed": False,
+            "database_write_performed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Replay diff plan only describes a future comparison strategy and does not execute a real diff job."
+            ),
+        },
+        "operator_replay_notes": {
+            "mode": "operator_replay_review_notes_preview",
+            "review_required": True,
+            "notes": [
+                "Review pack presence, decision trace, safety boundaries, permission gates, human review queue, and integration health before any future dry-run retry.",
+                "Do not create a real operator task, approval, ticket, replay runtime, monitoring job, or database record from this preview.",
+            ],
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_execution_allowed": False,
+        },
+        "replay_quality_checks": {
+            "replay_harness_summary_present": True,
+            "replay_scenarios_present": len(replay_scenarios) >= 2,
+            "scenario_types_cover_required_set": {
+                scenario["scenario_type"] for scenario in replay_scenarios
+            }
+            >= {
+                "pack_presence_replay",
+                "decision_trace_replay",
+                "safety_boundary_replay",
+                "permission_gate_replay",
+                "human_review_queue_replay",
+                "integration_health_replay",
+                "export_contract_replay",
+                "i18n_visibility_replay",
+            },
+            "replay_input_contracts_present": bool(replay_input_contracts),
+            "expected_output_snapshots_preview_only": all(
+                not snapshot["file_write_performed"]
+                and not snapshot["database_write_performed"]
+                for snapshot in expected_output_snapshots
+            ),
+            "regression_check_matrix_present": len(regression_check_matrix) >= 4,
+            "regression_checks_preview_only": all(
+                not check["real_execution_allowed"]
+                for check in regression_check_matrix
+            ),
+            "pack_consistency_checks_present": True,
+            "diff_job_executed": False,
+            "audit_preview_not_persisted": True,
+            "all_real_capabilities_disabled": all_boundaries_disabled,
+            "real_replay_runtime_started": False,
+            "monitoring_system_read_performed": False,
+            "permission_system_write_performed": False,
+            "human_approval_system_write_performed": False,
+            "agent_runtime_started": False,
+            "database_write_performed": False,
+            "real_history_table_read_performed": False,
+            "real_log_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_replay_harness_preview",
+            "harness_id": harness_id,
+            "source_pack_ids": {
+                "health_id": _rw_text(health_summary.get("health_id")),
+                "matrix_id": _rw_text(permission_summary.get("matrix_id")),
+                "review_queue_id": _rw_text(review_summary.get("queue_id")),
+                "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+                "control_center_id": _rw_text(
+                    control_summary.get("control_center_id")
+                ),
+                "timeline_id": _rw_text(timeline_summary.get("timeline_id")),
+                "cycle_decision_id": _rw_text(
+                    cycle_summary.get("cycle_decision_id")
+                ),
+            },
+            "is_real_replay_runtime": False,
+            "real_replay_runtime_started": False,
+            "monitoring_system_read_performed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic replay harness and regression scenario preview derived from workspace packs only; no real replay runtime, monitoring system, permission system, human approval system, agent runtime, retry, operator log, ticket system, provider, LLM, video, media, paid, registry, restore, rollback, external scraping, secret read, history table read, service health read, database write, or execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -30040,6 +30609,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_system_integration_health_pack"] = (
         _rw_workspace_system_integration_health_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_replay_harness_pack"] = (
+        _rw_workspace_replay_harness_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

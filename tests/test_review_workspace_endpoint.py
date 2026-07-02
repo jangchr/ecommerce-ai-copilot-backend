@@ -3941,6 +3941,212 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_replay_harness_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-replay-harness",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "REPLAY001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_replay_harness_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_replay_harness_pack_v1",
+        )
+        summary = pack["replay_harness_summary"]
+        self.assertTrue(summary["harness_id"])
+        self.assertIn("replay_harness_preview", summary["mode"])
+        self.assertIn("regression_scenario_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        scenarios = pack["replay_scenarios"]
+        self.assertGreaterEqual(len(scenarios), 2)
+        scenario_types = {scenario["scenario_type"] for scenario in scenarios}
+        for expected_type in [
+            "pack_presence_replay", "decision_trace_replay",
+            "safety_boundary_replay", "permission_gate_replay",
+            "human_review_queue_replay", "integration_health_replay",
+            "export_contract_replay", "i18n_visibility_replay",
+        ]:
+            with self.subTest(scenario_type=expected_type):
+                self.assertIn(expected_type, scenario_types)
+        for scenario in scenarios:
+            for field in [
+                "scenario_id", "scenario_type", "source_pack",
+                "expected_status", "input_refs",
+                "expected_pack_outputs", "regression_focus",
+                "failure_signal",
+            ]:
+                with self.subTest(
+                    scenario=scenario["scenario_id"], field=field
+                ):
+                    self.assertIn(field, scenario)
+            self.assertFalse(scenario["real_execution_allowed"])
+
+        contracts = pack["replay_input_contracts"]
+        self.assertTrue(contracts)
+        contract_sources = {contract["source_pack"] for contract in contracts}
+        for source_pack in [
+            "workspace_system_integration_health_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_control_center_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_execution_readiness_pack",
+        ]:
+            with self.subTest(contract=source_pack):
+                self.assertIn(source_pack, contract_sources)
+        for contract in contracts:
+            self.assertIsInstance(contract["required_fields"], list)
+            self.assertIsInstance(contract["missing_fields"], list)
+            self.assertFalse(contract["database_read_required"])
+            self.assertFalse(contract["real_history_table_read_required"])
+            self.assertFalse(contract["real_log_read_required"])
+            self.assertFalse(contract["real_service_health_read_required"])
+            self.assertFalse(contract["real_execution_allowed"])
+
+        snapshots = pack["expected_output_snapshots"]
+        self.assertTrue(snapshots)
+        for snapshot in snapshots:
+            self.assertIn("preview", snapshot["snapshot_mode"])
+            self.assertFalse(snapshot["file_write_performed"])
+            self.assertFalse(snapshot["database_write_performed"])
+            self.assertFalse(snapshot["real_execution_allowed"])
+
+        checks = pack["regression_check_matrix"]
+        self.assertGreaterEqual(len(checks), 2)
+        for check in checks:
+            for field in [
+                "check_id", "source_pack", "target_pack",
+                "expected_condition", "failure_condition",
+                "suggested_fix_preview",
+            ]:
+                with self.subTest(check=check["check_id"], field=field):
+                    self.assertIn(field, check)
+            self.assertFalse(check["real_execution_allowed"])
+
+        consistency = pack["pack_consistency_checks"]
+        self.assertTrue(consistency)
+        self.assertIn("source_packs_checked", consistency)
+        self.assertFalse(consistency["database_read_performed"])
+        self.assertFalse(consistency["real_history_table_read_performed"])
+        self.assertFalse(consistency["real_log_read_performed"])
+        self.assertFalse(consistency["real_service_health_read_performed"])
+        self.assertFalse(consistency["real_execution_performed"])
+
+        diff_plan = pack["replay_diff_plan"]
+        self.assertIn("preview", diff_plan["mode"])
+        self.assertFalse(diff_plan["diff_job_executed"])
+        self.assertFalse(diff_plan["file_write_performed"])
+        self.assertFalse(diff_plan["database_write_performed"])
+        self.assertFalse(diff_plan["real_execution_allowed"])
+
+        operator_notes = pack["operator_replay_notes"]
+        self.assertTrue(operator_notes["review_required"])
+        self.assertFalse(operator_notes["operator_task_created"])
+        self.assertFalse(operator_notes["real_approval_created"])
+        self.assertFalse(operator_notes["real_execution_allowed"])
+
+        quality = pack["replay_quality_checks"]
+        for key in [
+            "replay_harness_summary_present",
+            "replay_scenarios_present",
+            "scenario_types_cover_required_set",
+            "replay_input_contracts_present",
+            "expected_output_snapshots_preview_only",
+            "regression_check_matrix_present",
+            "regression_checks_preview_only",
+            "pack_consistency_checks_present",
+            "audit_preview_not_persisted",
+            "all_real_capabilities_disabled",
+        ]:
+            with self.subTest(quality=key):
+                self.assertTrue(quality[key])
+        for key in [
+            "diff_job_executed", "real_replay_runtime_started",
+            "monitoring_system_read_performed",
+            "permission_system_write_performed",
+            "human_approval_system_write_performed",
+            "agent_runtime_started", "database_write_performed",
+            "real_history_table_read_performed",
+            "real_log_read_performed",
+            "real_service_health_read_performed",
+            "operator_task_created", "real_approval_created",
+            "real_execution_performed",
+        ]:
+            with self.subTest(quality=key):
+                self.assertFalse(quality[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["harness_id"])
+        self.assertFalse(audit["is_real_replay_runtime"])
+        self.assertFalse(audit["real_replay_runtime_started"])
+        self.assertFalse(audit["monitoring_system_read_performed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_service_health_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_approval_created"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_calls_enabled", "llm_api_enabled",
+            "video_generation_enabled", "media_upload_enabled",
+            "media_download_enabled", "paid_operation_enabled",
+            "registry_write_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
