@@ -167,6 +167,7 @@ Add-Check "project_workspace_system_integration_health_marker" ($page.Content -m
 Add-Check "project_workspace_replay_harness_marker" ($page.Content -match "Project Workspace replay harness bundle")
 Add-Check "project_workspace_provider_adapter_contract_marker" ($page.Content -match "Project Workspace provider adapter contract bundle")
 Add-Check "project_workspace_provider_contract_test_marker" ($page.Content -match "Project Workspace provider contract test bundle")
+Add-Check "project_workspace_provider_mock_invocation_result_marker" ($page.Content -match "Project Workspace provider mock invocation result bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

@@ -12265,6 +12265,161 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_provider_mock_invocation_result_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider mock invocation result bundle",
+            "PROJECT_WORKSPACE_PROVIDER_MOCK_INVOCATION_RESULT_MARKER",
+            "latestProjectWorkspaceProviderMockInvocationResultPack",
+            "projectWorkspaceProviderMockInvocationResultPackFromWorkspace",
+            "projectWorkspaceExportProviderMockInvocationResultSnapshot",
+            "projectWorkspaceExportProviderMockInvocationResultMarkdown",
+            "renderProjectWorkspaceProviderMockInvocationResultSummaryPanel",
+            "renderProjectWorkspaceSandboxRunLedgerPanel",
+            "renderProjectWorkspaceMockRunResultCardsPanel",
+            "renderProjectWorkspaceMockSnapshotsBoundaryPanel",
+            "renderProjectWorkspaceMockFailureOperatorQualitySafetyPanel",
+            "copyProjectWorkspaceProviderMockInvocationResultSummary",
+            "copyProjectWorkspaceSandboxRunLedger",
+            "copyProjectWorkspaceMockRunResultCards",
+            "copyProjectWorkspaceMockInputOutputSnapshots",
+            "copyProjectWorkspaceBoundaryEnforcementResults",
+            "copyProjectWorkspaceMockFailureObservations",
+            "copyProjectWorkspaceOperatorReviewNotes",
+            "copyProjectWorkspaceProviderMockInvocationAuditPreview",
+            "copyProjectWorkspaceFullProviderMockInvocationResultPack",
+            "workspace_provider_mock_invocation_result_pack: projectWorkspaceExportProviderMockInvocationResultSnapshot(workspace)",
+            "Workspace Provider Mock Invocation Result / Sandbox Run Ledger",
+            "Mock Invocation Result Summary", "Sandbox Run Ledger",
+            "Mock Run Result Cards", "Mock Input Output Snapshots",
+            "Boundary Enforcement Results", "Mock Failure Observations",
+            "Operator Review Notes", "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.mock_invocation_result_summary",
+            "pack.sandbox_run_ledger", "pack.mock_run_result_cards",
+            "pack.mock_input_output_snapshots",
+            "pack.boundary_enforcement_results",
+            "pack.mock_failure_observations",
+            "pack.operator_review_notes",
+            "pack.sandbox_result_quality_checks",
+            "pack.audit_preview", "pack.safety_boundaries",
+            "summary.mode", "summary.sandbox_run_count",
+            "summary.mock_result_card_count",
+            "summary.recommended_next_action",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed", "run.run_id",
+            "run.provider_id", "run.provider_type",
+            "run.source_test_id", "run.run_mode",
+            "run.mock_started_at", "run.mock_completed_at",
+            "run.mock_status", "run.boundary_status",
+            "run.real_invocation_allowed", "run.real_execution_allowed",
+            "card.result_id", "card.run_id", "card.provider_id",
+            "card.provider_type", "card.source_test_id",
+            "card.input_contract_status", "card.output_contract_status",
+            "card.boundary_rule_status", "card.failure_simulation_status",
+            "card.approval_secret_status",
+            "card.expected_mock_output_summary",
+            "card.blocked_real_behavior_summary",
+            "card.recommended_operator_action",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceProviderApprovalCoverageQualitySafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceProviderMockInvocationResultSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceMockFailureOperatorQualitySafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_provider_mock_invocation_result_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "providerMockResultPackTitle",
+            "providerMockResultSummaryTitle",
+            "providerMockResultLedgerTitle",
+            "providerMockResultCardsTitle",
+            "providerMockResultSnapshotsTitle",
+            "providerMockResultBoundaryTitle",
+            "providerMockResultFailureTitle",
+            "providerMockResultOperatorNotesTitle",
+            "providerMockResultAuditTitle",
+            "providerMockResultSafetyTitle",
+            "providerMockResultCopySummary",
+            "providerMockResultCopyLedger",
+            "providerMockResultCopyCards",
+            "providerMockResultCopySnapshots",
+            "providerMockResultCopyBoundary",
+            "providerMockResultCopyFailure",
+            "providerMockResultCopyOperator",
+            "providerMockResultCopyAudit",
+            "providerMockResultCopyFull",
+            "providerMockResultCopied",
+            "providerMockResultCopyFailed",
+            "providerMockResultCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace provider mock invocation result bundle", script)
+            self.assertIn("project_workspace_provider_mock_invocation_result_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceProviderMockInvocationResultSummaryText"):
+            html.index("async function copyProjectWorkspaceProviderMockInvocationResultText")
+        ]
+        for key in [
+            "providerMockResultPackTitle",
+            "providerMockResultSummaryTitle",
+            "providerMockResultLedgerTitle",
+            "providerMockResultCardsTitle",
+            "providerMockResultSnapshotsTitle",
+            "providerMockResultBoundaryTitle",
+            "providerMockResultFailureTitle",
+            "providerMockResultOperatorNotesTitle",
+            "providerMockResultAuditTitle",
+            "providerMockResultSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PROVIDER_MOCK_INVOCATION_RESULT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Sandbox result preview only",
+            "not a real provider invocation",
+            "does not invoke real providers",
+            "do not write files or databases",
+            "real behavior is blocked",
+            "Failure observations are preview only",
+            "do not trigger real failures",
+            "Operator notes do not create real tasks",
+            "Audit preview is not written to a database",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        for boundary in [
+            "Real LLM", "provider", "image", "video", "media", "paid",
+            "registry", "rollback", "external scraping",
+            "database persistence", "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
