@@ -11959,6 +11959,157 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_provider_adapter_contract_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider adapter contract bundle",
+            "PROJECT_WORKSPACE_PROVIDER_ADAPTER_CONTRACT_MARKER",
+            "latestProjectWorkspaceProviderAdapterContractPack",
+            "projectWorkspaceProviderAdapterContractPackFromWorkspace",
+            "projectWorkspaceExportProviderAdapterContractSnapshot",
+            "projectWorkspaceExportProviderAdapterContractMarkdown",
+            "renderProjectWorkspaceProviderAdapterContractSummaryPanel",
+            "renderProjectWorkspaceProviderContractCardsPanel",
+            "renderProjectWorkspaceProviderInputOutputContractsPanel",
+            "renderProjectWorkspaceProviderInvocationBoundaryPanel",
+            "renderProjectWorkspaceProviderApprovalQualityAuditSafetyPanel",
+            "copyProjectWorkspaceProviderAdapterContractSummary",
+            "copyProjectWorkspaceProviderContractCards",
+            "copyProjectWorkspaceProviderInputContracts",
+            "copyProjectWorkspaceProviderOutputContracts",
+            "copyProjectWorkspaceProviderInvocationBoundaryRules",
+            "copyProjectWorkspaceProviderDryRunInvocationPreviews",
+            "copyProjectWorkspaceProviderFailureBoundaryMatrix",
+            "copyProjectWorkspaceProviderApprovalSecretRequirements",
+            "copyProjectWorkspaceFullProviderAdapterContractPack",
+            "workspace_provider_adapter_contract_pack: projectWorkspaceExportProviderAdapterContractSnapshot(workspace)",
+            "Workspace Provider Adapter Contract / Invocation Boundary",
+            "Adapter Contract Summary", "Provider Contract Cards",
+            "Input Contracts", "Output Contracts",
+            "Invocation Boundary Rules", "Dry-Run Invocation Previews",
+            "Failure Boundary Matrix", "Approval and Secret Requirements",
+            "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.adapter_contract_summary", "pack.provider_contract_cards",
+            "pack.input_contracts", "pack.output_contracts",
+            "pack.invocation_boundary_rules",
+            "pack.dry_run_invocation_previews",
+            "pack.failure_boundary_matrix",
+            "pack.approval_and_secret_requirements",
+            "pack.contract_quality_checks", "pack.audit_preview",
+            "pack.safety_boundaries", "summary.mode",
+            "summary.provider_contract_count", "summary.boundary_rule_count",
+            "summary.recommended_next_action",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed", "card.provider_id",
+            "card.provider_type", "card.provider_name",
+            "card.source_capability", "card.current_status",
+            "card.allowed_modes", "card.disallowed_modes",
+            "card.required_inputs", "card.required_outputs",
+            "card.required_approvals", "card.secret_required",
+            "card.secret_available", "card.real_invocation_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceReplayDiffQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceProviderAdapterContractSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceProviderApprovalQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_provider_adapter_contract_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "providerAdapterContractPackTitle",
+            "providerAdapterContractSummaryTitle",
+            "providerAdapterContractCardsTitle",
+            "providerAdapterContractInputTitle",
+            "providerAdapterContractOutputTitle",
+            "providerAdapterContractBoundaryRulesTitle",
+            "providerAdapterContractDryRunTitle",
+            "providerAdapterContractFailureTitle",
+            "providerAdapterContractApprovalSecretTitle",
+            "providerAdapterContractAuditTitle",
+            "providerAdapterContractSafetyTitle",
+            "providerAdapterContractCopySummary",
+            "providerAdapterContractCopyCards",
+            "providerAdapterContractCopyInput",
+            "providerAdapterContractCopyOutput",
+            "providerAdapterContractCopyRules",
+            "providerAdapterContractCopyDryRun",
+            "providerAdapterContractCopyFailure",
+            "providerAdapterContractCopyApproval",
+            "providerAdapterContractCopyFull",
+            "providerAdapterContractCopied",
+            "providerAdapterContractCopyFailed",
+            "providerAdapterContractCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace provider adapter contract bundle", script)
+            self.assertIn("project_workspace_provider_adapter_contract_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceProviderAdapterContractSummaryText"):
+            html.index("async function copyProjectWorkspaceProviderAdapterContractText")
+        ]
+        for key in [
+            "providerAdapterContractPackTitle",
+            "providerAdapterContractSummaryTitle",
+            "providerAdapterContractCardsTitle",
+            "providerAdapterContractInputTitle",
+            "providerAdapterContractOutputTitle",
+            "providerAdapterContractBoundaryRulesTitle",
+            "providerAdapterContractDryRunTitle",
+            "providerAdapterContractFailureTitle",
+            "providerAdapterContractApprovalSecretTitle",
+            "providerAdapterContractAuditTitle",
+            "providerAdapterContractSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PROVIDER_ADAPTER_CONTRACT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Provider adapter contract preview only",
+            "not a real provider adapter",
+            "does not invoke real providers",
+            "do not send requests",
+            "write files, read secrets, upload media, or download media",
+            "do not call providers",
+            "mock shapes only",
+            "No secret is read",
+            "no real approval is created",
+            "audit preview is not written to a database",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        for boundary in [
+            "Real LLM", "provider", "image", "video", "media", "paid",
+            "registry", "rollback", "external scraping",
+            "database persistence", "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
