@@ -31469,6 +31469,449 @@ def _rw_workspace_provider_contract_test_pack(
     }
 
 
+def _rw_workspace_provider_mock_invocation_result_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    test_pack = dict(
+        creative_decision_pack.get("workspace_provider_contract_test_pack")
+        or {}
+    )
+    summary = dict(test_pack.get("contract_test_summary") or {})
+    test_cases = list(test_pack.get("mock_invocation_test_cases") or [])
+    input_results = list(test_pack.get("input_validation_results") or [])
+    output_results = list(test_pack.get("output_validation_results") or [])
+    boundary_results = list(
+        test_pack.get("boundary_rule_test_results") or []
+    )
+    failure_previews = list(
+        test_pack.get("failure_simulation_previews") or []
+    )
+    approval_matrix = dict(
+        test_pack.get("approval_secret_test_matrix") or {}
+    )
+    provider_coverage = dict(test_pack.get("provider_test_coverage") or {})
+
+    input_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in input_results
+        if item.get("provider_id")
+    }
+    output_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in output_results
+        if item.get("provider_id")
+    }
+    boundary_by_provider: dict[str, list[dict]] = {}
+    for item in boundary_results:
+        provider_id = _rw_text(item.get("provider_id"))
+        if provider_id:
+            boundary_by_provider.setdefault(provider_id, []).append(item)
+    failure_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in failure_previews
+        if item.get("provider_id")
+    }
+
+    sandbox_run_ledger = []
+    mock_run_result_cards = []
+    mock_input_output_snapshots = []
+    boundary_enforcement_results = []
+    mock_failure_observations = []
+    operator_review_notes = []
+
+    for index, case in enumerate(test_cases, start=1):
+        provider_id = _rw_text(case.get("provider_id"))
+        provider_type = _rw_text(case.get("provider_type"))
+        source_test_id = _rw_text(case.get("test_id"))
+        run_id = f"sandbox_mock_run_{provider_id}"
+        input_result = input_by_provider.get(provider_id, {})
+        output_result = output_by_provider.get(provider_id, {})
+        provider_boundaries = boundary_by_provider.get(provider_id, [])
+        failure_preview = failure_by_provider.get(provider_id, {})
+        mock_started_at = f"dry_run_timeline_step_{index:02d}_start"
+        mock_completed_at = f"dry_run_timeline_step_{index:02d}_complete"
+        boundary_verified = all(
+            item.get("blocked_real_behavior_verified") is True
+            and item.get("real_execution_allowed") is False
+            for item in provider_boundaries
+        )
+        input_status = _rw_text(input_result.get("validation_status")) or (
+            "preview_shape_identified"
+        )
+        output_status = _rw_text(output_result.get("validation_status")) or (
+            "preview_shape_identified"
+        )
+        boundary_status = (
+            "blocked_real_behavior_verified"
+            if boundary_verified
+            else "needs_operator_review"
+        )
+        failure_status = (
+            "mock_failure_observed_preview_only"
+            if failure_preview
+            else "no_failure_preview_provided"
+        )
+
+        sandbox_run_ledger.append(
+            {
+                "run_id": run_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_test_id": source_test_id,
+                "run_mode": (
+                    "deterministic_sandbox_mock_run_preview_dry_run_only"
+                ),
+                "mock_started_at": mock_started_at,
+                "mock_completed_at": mock_completed_at,
+                "mock_status": (
+                    "mock_result_preview_recorded_real_invocation_blocked"
+                ),
+                "boundary_status": boundary_status,
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Sandbox run ledger records deterministic mock run preview "
+                    "only; no provider was invoked and no database, file, "
+                    "media, secret, approval, restore, rollback, paid, "
+                    "registry, external scraping, or execution action was "
+                    "performed."
+                ),
+            }
+        )
+        mock_run_result_cards.append(
+            {
+                "result_id": f"mock_result_card_{provider_id}",
+                "run_id": run_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_test_id": source_test_id,
+                "input_contract_status": input_status,
+                "output_contract_status": output_status,
+                "boundary_rule_status": boundary_status,
+                "failure_simulation_status": failure_status,
+                "approval_secret_status": (
+                    "approval_and_secret_requirements_identified_no_secret_read"
+                ),
+                "expected_mock_output_summary": (
+                    "Expected mock output fields: "
+                    + ", ".join(case.get("expected_mock_outputs") or [])
+                ),
+                "blocked_real_behavior_summary": (
+                    "Real provider invocation, execution, media transfer, "
+                    "secret access, persistence, approval creation, restore, "
+                    "rollback, paid operation, registry write, and external "
+                    "scraping remain blocked."
+                ),
+                "recommended_operator_action": (
+                    "Review sandbox mock result preview and keep real "
+                    "capabilities disabled."
+                ),
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Mock run result card is a deterministic preview and is "
+                    "not evidence of real provider execution success."
+                ),
+            }
+        )
+        mock_input_output_snapshots.append(
+            {
+                "snapshot_id": f"mock_io_snapshot_{provider_id}",
+                "run_id": run_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_test_id": source_test_id,
+                "mock_input_refs": list(case.get("mock_input_refs") or []),
+                "expected_mock_outputs": list(
+                    case.get("expected_mock_outputs") or []
+                ),
+                "snapshot_mode": "preview_snapshot_not_file",
+                "file_write_performed": False,
+                "database_write_performed": False,
+                "media_upload_performed": False,
+                "media_download_performed": False,
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Input/output snapshot is embedded preview data only and "
+                    "is not written to a file or database."
+                ),
+            }
+        )
+        for boundary in provider_boundaries:
+            boundary_enforcement_results.append(
+                {
+                    "enforcement_id": (
+                        f"boundary_enforcement_{boundary.get('rule_id')}"
+                    ),
+                    "run_id": run_id,
+                    "provider_id": provider_id,
+                    "provider_type": provider_type,
+                    "source_result_id": _rw_text(boundary.get("result_id")),
+                    "rule_id": _rw_text(boundary.get("rule_id")),
+                    "blocked_real_behavior_verified": bool(
+                        boundary.get("blocked_real_behavior_verified")
+                    ),
+                    "allowed_preview_behavior_verified": bool(
+                        boundary.get("allowed_preview_behavior_verified")
+                    ),
+                    "boundary_status": boundary_status,
+                    "real_invocation_allowed": False,
+                    "real_execution_allowed": False,
+                    "risk_note": (
+                        "Boundary enforcement result confirms blocked real "
+                        "behavior in preview only and does not execute "
+                        "provider behavior."
+                    ),
+                }
+            )
+        mock_failure_observations.append(
+            {
+                "observation_id": f"mock_failure_observation_{provider_id}",
+                "run_id": run_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_failure_preview": _rw_text(
+                    failure_preview.get("preview_id")
+                ),
+                "failure_signal": _rw_text(case.get("failure_signal")),
+                "observation_status": failure_status,
+                "real_failure_triggered": False,
+                "provider_called": False,
+                "retry_executed": False,
+                "rollback_executed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Mock failure observation describes the deterministic "
+                    "failure preview only and does not trigger a real failure."
+                ),
+            }
+        )
+        operator_review_notes.append(
+            {
+                "note_id": f"operator_review_note_{provider_id}",
+                "run_id": run_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "review_reason": (
+                    "Human review should verify that mock result preview "
+                    "matches contract expectations before any future provider "
+                    "implementation is considered."
+                ),
+                "recommended_operator_action": (
+                    "Keep real invocation disabled and review contract, "
+                    "boundary, failure, approval, and secret requirements."
+                ),
+                "operator_task_created": False,
+                "real_approval_created": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Operator review note is not a task, ticket, approval, or "
+                    "database record."
+                ),
+            }
+        )
+
+    required_provider_types = list(
+        provider_coverage.get("required_provider_types") or [
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "media_storage_provider",
+            "external_scraping_provider",
+            "translation_provider",
+            "analytics_or_tracking_provider",
+            "database_persistence_provider",
+            "approval_or_ticket_provider",
+            "rollback_restore_provider",
+        ]
+    )
+    covered_provider_types = sorted({
+        _rw_text(item.get("provider_type"))
+        for item in sandbox_run_ledger
+        if item.get("provider_type")
+    })
+    signature = json.dumps(
+        {
+            "source_harness_id": _rw_text(summary.get("harness_id")),
+            "run_ids": [item["run_id"] for item in sandbox_run_ledger],
+            "provider_types": covered_provider_types,
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    result_id = (
+        "workspace_provider_mock_invocation_result_"
+        + hashlib.sha256(signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_calls_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_service_health_read_enabled": False,
+        "monitoring_system_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_approval_creation_enabled": False,
+        "real_failure_injection_enabled": False,
+        "real_retry_enabled": False,
+        "real_diff_job_enabled": False,
+        "replay_snapshot_file_write_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_provider_mock_invocation_result_pack_v1",
+        "mock_invocation_result_summary": {
+            "result_id": result_id,
+            "mode": (
+                "mock_invocation_result_preview_sandbox_run_ledger_"
+                "dry_run_only"
+            ),
+            "source_pack": "workspace_provider_contract_test_pack",
+            "source_harness_id": _rw_text(summary.get("harness_id")),
+            "sandbox_run_count": len(sandbox_run_ledger),
+            "mock_result_card_count": len(mock_run_result_cards),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "recommended_next_action": (
+                "Review deterministic sandbox mock invocation results and "
+                "keep every real provider, LLM, image, video, media, paid, "
+                "registry, rollback, external scraping, database persistence, "
+                "restore, secret, approval, and execution capability disabled."
+            ),
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "sandbox_run_ledger": sandbox_run_ledger,
+        "mock_run_result_cards": mock_run_result_cards,
+        "mock_input_output_snapshots": mock_input_output_snapshots,
+        "boundary_enforcement_results": boundary_enforcement_results,
+        "mock_failure_observations": mock_failure_observations,
+        "operator_review_notes": operator_review_notes,
+        "sandbox_result_quality_checks": {
+            "mock_invocation_result_summary_present": True,
+            "source_provider_contract_test_pack_present": bool(test_pack),
+            "sandbox_run_ledger_present": bool(sandbox_run_ledger),
+            "mock_run_result_cards_present": bool(mock_run_result_cards),
+            "mock_input_output_snapshots_present": bool(
+                mock_input_output_snapshots
+            ),
+            "boundary_enforcement_results_present": bool(
+                boundary_enforcement_results
+            ),
+            "mock_failure_observations_present": bool(
+                mock_failure_observations
+            ),
+            "operator_review_notes_present": bool(operator_review_notes),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_sandbox_runs_keep_real_invocation_disabled": all(
+                not item["real_invocation_allowed"]
+                for item in sandbox_run_ledger
+            ),
+            "all_sandbox_runs_keep_real_execution_disabled": all(
+                not item["real_execution_allowed"]
+                for item in sandbox_run_ledger
+            ),
+            "all_result_cards_keep_real_invocation_disabled": all(
+                not item["real_invocation_allowed"]
+                for item in mock_run_result_cards
+            ),
+            "all_result_cards_keep_real_execution_disabled": all(
+                not item["real_execution_allowed"]
+                for item in mock_run_result_cards
+            ),
+            "snapshots_not_written_to_file_or_database": all(
+                not item["file_write_performed"]
+                and not item["database_write_performed"]
+                for item in mock_input_output_snapshots
+            ),
+            "boundary_results_verify_real_behavior_blocked": all(
+                item["blocked_real_behavior_verified"]
+                and not item["real_execution_allowed"]
+                for item in boundary_enforcement_results
+            ),
+            "failure_observations_do_not_trigger_real_failure": all(
+                not item["real_failure_triggered"]
+                for item in mock_failure_observations
+            ),
+            "operator_notes_do_not_create_tasks": all(
+                not item["operator_task_created"]
+                for item in operator_review_notes
+            ),
+            "audit_preview_not_persisted": True,
+            "provider_invocation_performed": False,
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": (
+                "deterministic_provider_mock_invocation_result_sandbox_preview"
+            ),
+            "result_id": result_id,
+            "source_harness_id": _rw_text(summary.get("harness_id")),
+            "is_real_provider_invocation": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "secret_read_performed": False,
+            "database_write_performed": False,
+            "file_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_failure_injection_triggered": False,
+            "real_diff_job_executed": False,
+            "replay_snapshot_file_written": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic provider mock invocation result and "
+                "sandbox run ledger preview derived from provider contract "
+                "test pack only; no real provider invocation, LLM, image "
+                "generation, video generation, media upload, media download, "
+                "paid operation, registry write, rollback, restore, external "
+                "scraping, secret read, monitoring system, permission system, "
+                "approval system, agent runtime, operator log, ticket system, "
+                "history table read, service health read, database write, "
+                "file write, diff job, replay snapshot file write, or "
+                "execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -31624,6 +32067,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_provider_contract_test_pack"] = (
         _rw_workspace_provider_contract_test_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_provider_mock_invocation_result_pack"] = (
+        _rw_workspace_provider_mock_invocation_result_pack(
+            creative_decision_pack
+        )
     )
 
     return ReviewWorkspaceResponse(

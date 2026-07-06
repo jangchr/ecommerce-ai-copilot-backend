@@ -4595,6 +4595,220 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_provider_mock_invocation_result_pack_is_sandbox_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-provider-mock-result",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PROVIDERRESULT001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks during commute and needs a better seal.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_provider_mock_invocation_result_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_provider_mock_invocation_result_pack_v1",
+        )
+        summary = pack["mock_invocation_result_summary"]
+        self.assertTrue(summary["result_id"])
+        self.assertIn("mock_invocation_result_preview", summary["mode"])
+        self.assertIn("sandbox_run_ledger", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["real_invocation_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        required_provider_types = {
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "media_storage_provider",
+            "external_scraping_provider",
+            "translation_provider",
+            "analytics_or_tracking_provider",
+            "database_persistence_provider",
+            "approval_or_ticket_provider",
+            "rollback_restore_provider",
+        }
+        ledger = pack["sandbox_run_ledger"]
+        self.assertTrue(ledger)
+        ledger_types = {item["provider_type"] for item in ledger}
+        self.assertTrue(required_provider_types <= ledger_types)
+        for run in ledger:
+            for field in [
+                "run_id", "provider_id", "provider_type", "source_test_id",
+                "run_mode", "mock_started_at", "mock_completed_at",
+                "mock_status", "boundary_status",
+            ]:
+                with self.subTest(run=run["run_id"], field=field):
+                    self.assertIn(field, run)
+            self.assertIn("mock", run["mock_status"])
+            self.assertFalse(run["real_invocation_allowed"])
+            self.assertFalse(run["real_execution_allowed"])
+
+        cards = pack["mock_run_result_cards"]
+        self.assertTrue(cards)
+        card_types = {item["provider_type"] for item in cards}
+        self.assertTrue(required_provider_types <= card_types)
+        for card in cards:
+            for field in [
+                "result_id", "run_id", "provider_id", "provider_type",
+                "source_test_id", "input_contract_status",
+                "output_contract_status", "boundary_rule_status",
+                "failure_simulation_status", "approval_secret_status",
+                "expected_mock_output_summary",
+                "blocked_real_behavior_summary",
+                "recommended_operator_action",
+            ]:
+                with self.subTest(card=card["result_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertIn("blocked", card["blocked_real_behavior_summary"])
+            self.assertFalse(card["real_invocation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        snapshots = pack["mock_input_output_snapshots"]
+        self.assertTrue(snapshots)
+        for snapshot in snapshots:
+            self.assertIn("mock_input_refs", snapshot)
+            self.assertIn("expected_mock_outputs", snapshot)
+            self.assertFalse(snapshot["file_write_performed"])
+            self.assertFalse(snapshot["database_write_performed"])
+            self.assertFalse(snapshot["media_upload_performed"])
+            self.assertFalse(snapshot["media_download_performed"])
+            self.assertFalse(snapshot["real_invocation_allowed"])
+            self.assertFalse(snapshot["real_execution_allowed"])
+
+        enforcement = pack["boundary_enforcement_results"]
+        self.assertTrue(enforcement)
+        for item in enforcement:
+            self.assertTrue(item["blocked_real_behavior_verified"])
+            self.assertFalse(item["real_invocation_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        failures = pack["mock_failure_observations"]
+        self.assertTrue(failures)
+        for failure in failures:
+            self.assertFalse(failure["real_failure_triggered"])
+            self.assertFalse(failure["provider_called"])
+            self.assertFalse(failure["retry_executed"])
+            self.assertFalse(failure["rollback_executed"])
+            self.assertFalse(failure["real_execution_allowed"])
+
+        notes = pack["operator_review_notes"]
+        self.assertTrue(notes)
+        for note in notes:
+            self.assertFalse(note["operator_task_created"])
+            self.assertFalse(note["real_approval_created"])
+            self.assertFalse(note["real_execution_allowed"])
+
+        checks = pack["sandbox_result_quality_checks"]
+        for key in [
+            "mock_invocation_result_summary_present",
+            "source_provider_contract_test_pack_present",
+            "sandbox_run_ledger_present",
+            "mock_run_result_cards_present",
+            "mock_input_output_snapshots_present",
+            "boundary_enforcement_results_present",
+            "mock_failure_observations_present",
+            "operator_review_notes_present",
+            "all_required_provider_types_covered",
+            "all_sandbox_runs_keep_real_invocation_disabled",
+            "all_sandbox_runs_keep_real_execution_disabled",
+            "all_result_cards_keep_real_invocation_disabled",
+            "all_result_cards_keep_real_execution_disabled",
+            "snapshots_not_written_to_file_or_database",
+            "boundary_results_verify_real_behavior_blocked",
+            "failure_observations_do_not_trigger_real_failure",
+            "operator_notes_do_not_create_tasks",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "provider_invocation_performed", "real_execution_performed",
+            "database_write_performed", "real_log_read_performed",
+            "real_history_table_read_performed",
+            "real_service_health_read_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["result_id"])
+        self.assertFalse(audit["is_real_provider_invocation"])
+        self.assertFalse(audit["provider_invocation_performed"])
+        self.assertFalse(audit["provider_called"])
+        self.assertFalse(audit["llm_called"])
+        self.assertFalse(audit["image_generation_performed"])
+        self.assertFalse(audit["video_generation_performed"])
+        self.assertFalse(audit["media_upload_performed"])
+        self.assertFalse(audit["media_download_performed"])
+        self.assertFalse(audit["secret_read_performed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["file_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_service_health_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_approval_created"])
+        self.assertFalse(audit["real_failure_injection_triggered"])
+        self.assertFalse(audit["real_diff_job_executed"])
+        self.assertFalse(audit["replay_snapshot_file_written"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_enabled", "llm_enabled", "image_enabled",
+            "video_enabled", "media_enabled", "paid_enabled",
+            "registry_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
