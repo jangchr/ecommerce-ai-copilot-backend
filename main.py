@@ -30463,6 +30463,574 @@ def _rw_workspace_replay_harness_pack(
     }
 
 
+def _rw_workspace_provider_adapter_contract_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_names = [
+        "workspace_capability_permission_matrix_pack",
+        "workspace_replay_harness_pack",
+        "workspace_system_integration_health_pack",
+        "workspace_agent_run_ledger_pack",
+        "workspace_human_review_queue_pack",
+        "workspace_control_center_pack",
+    ]
+    packs = {
+        name: dict(creative_decision_pack.get(name) or {})
+        for name in source_pack_names
+    }
+    permission_pack = packs["workspace_capability_permission_matrix_pack"]
+    replay_pack = packs["workspace_replay_harness_pack"]
+    health_pack = packs["workspace_system_integration_health_pack"]
+    ledger_pack = packs["workspace_agent_run_ledger_pack"]
+    review_pack = packs["workspace_human_review_queue_pack"]
+    control_pack = packs["workspace_control_center_pack"]
+
+    permission_summary = dict(
+        permission_pack.get("permission_matrix_summary") or {}
+    )
+    replay_summary = dict(replay_pack.get("replay_harness_summary") or {})
+    health_summary = dict(health_pack.get("integration_health_summary") or {})
+    ledger_summary = dict(ledger_pack.get("ledger_summary") or {})
+    review_summary = dict(review_pack.get("review_queue_summary") or {})
+    control_summary = dict(control_pack.get("control_center_summary") or {})
+    capability_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+    policy_gates = list(permission_pack.get("policy_gate_results") or [])
+    replay_scenarios = list(replay_pack.get("replay_scenarios") or [])
+    replay_contracts = list(replay_pack.get("replay_input_contracts") or [])
+    health_risks = list(health_pack.get("integration_risk_register") or [])
+    agent_run_cards = list(ledger_pack.get("agent_run_cards") or [])
+    review_items = list(review_pack.get("review_queue_items") or [])
+
+    capability_by_id = {
+        str(card.get("capability_id") or ""): card
+        for card in capability_cards
+        if card.get("capability_id")
+    }
+    default_allowed_modes = [
+        "preview",
+        "dry_run",
+        "contract_validation",
+        "manual_review_preview",
+    ]
+    disallowed_real_modes = [
+        "real_invocation",
+        "real_execution",
+        "media_upload",
+        "media_download",
+        "paid_operation",
+        "secret_access",
+        "registry_write",
+        "rollback_restore",
+        "external_scraping",
+        "database_persistence",
+    ]
+    provider_definitions = [
+        {
+            "provider_id": "llm_text_generation",
+            "provider_type": "llm_text_generation",
+            "provider_name": "LLM text generation provider",
+            "source_capability": "llm_generation",
+            "required_inputs": [
+                "evidence_bound_prompt",
+                "allowed_claims",
+                "do_not_claim",
+            ],
+            "required_outputs": [
+                "structured_text_preview",
+                "claim_safety_notes",
+            ],
+            "required_approvals": ["human_prompt_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "video_generation_provider",
+            "provider_type": "video_generation_provider",
+            "provider_name": "Video generation provider",
+            "source_capability": "video_provider",
+            "required_inputs": [
+                "video_job_plan",
+                "platform_delivery_specs",
+                "prompt_assets",
+            ],
+            "required_outputs": [
+                "mock_video_job_response",
+                "delivery_preview_contract",
+            ],
+            "required_approvals": ["human_video_plan_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "image_generation_provider",
+            "provider_type": "image_generation_provider",
+            "provider_name": "Image generation provider",
+            "source_capability": "media_upload",
+            "required_inputs": [
+                "image_prompt_preview",
+                "asset_quality_constraints",
+            ],
+            "required_outputs": [
+                "mock_image_asset_response",
+                "asset_safety_notes",
+            ],
+            "required_approvals": ["human_asset_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "media_storage_provider",
+            "provider_type": "media_storage_provider",
+            "provider_name": "Media storage provider",
+            "source_capability": "media_download",
+            "required_inputs": [
+                "asset_manifest_preview",
+                "storage_path_contract",
+            ],
+            "required_outputs": [
+                "mock_storage_receipt",
+                "no_upload_performed",
+            ],
+            "required_approvals": ["media_storage_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "external_scraping_provider",
+            "provider_type": "external_scraping_provider",
+            "provider_name": "External scraping provider",
+            "source_capability": "external_scraping",
+            "required_inputs": [
+                "visible_source_boundary",
+                "source_adapter_contract",
+            ],
+            "required_outputs": [
+                "mock_source_adapter_result",
+                "external_fetch_disabled_note",
+            ],
+            "required_approvals": ["source_compliance_review"],
+            "secret_required": False,
+        },
+        {
+            "provider_id": "translation_provider",
+            "provider_type": "translation_provider",
+            "provider_name": "Translation provider",
+            "source_capability": "llm_generation",
+            "required_inputs": [
+                "source_text_preview",
+                "target_locale",
+                "i18n_visibility_contract",
+            ],
+            "required_outputs": [
+                "mock_translation_preview",
+                "locale_quality_notes",
+            ],
+            "required_approvals": ["locale_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "analytics_or_tracking_provider",
+            "provider_type": "analytics_or_tracking_provider",
+            "provider_name": "Analytics or tracking provider",
+            "source_capability": "operator_task_creation",
+            "required_inputs": [
+                "event_schema_preview",
+                "privacy_boundary_notes",
+            ],
+            "required_outputs": [
+                "mock_event_contract",
+                "tracking_disabled_note",
+            ],
+            "required_approvals": ["privacy_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "database_persistence_provider",
+            "provider_type": "database_persistence_provider",
+            "provider_name": "Database persistence provider",
+            "source_capability": "database_persistence",
+            "required_inputs": [
+                "snapshot_contract_preview",
+                "history_entry_preview",
+            ],
+            "required_outputs": [
+                "mock_persistence_receipt",
+                "database_write_disabled_note",
+            ],
+            "required_approvals": ["data_persistence_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "approval_or_ticket_provider",
+            "provider_type": "approval_or_ticket_provider",
+            "provider_name": "Approval or ticket provider",
+            "source_capability": "human_approval",
+            "required_inputs": [
+                "approval_decision_preview",
+                "operator_task_preview",
+            ],
+            "required_outputs": [
+                "mock_ticket_response",
+                "approval_creation_disabled_note",
+            ],
+            "required_approvals": ["operator_manager_review"],
+            "secret_required": True,
+        },
+        {
+            "provider_id": "rollback_restore_provider",
+            "provider_type": "rollback_restore_provider",
+            "provider_name": "Rollback or restore provider",
+            "source_capability": "rollback_restore",
+            "required_inputs": [
+                "rollback_rehearsal_plan",
+                "restore_preview_contract",
+            ],
+            "required_outputs": [
+                "mock_restore_plan_response",
+                "rollback_disabled_note",
+            ],
+            "required_approvals": ["rollback_restore_review"],
+            "secret_required": True,
+        },
+    ]
+
+    provider_contract_cards = []
+    for definition in provider_definitions:
+        capability = capability_by_id.get(definition["source_capability"], {})
+        allowed_modes = list(capability.get("allowed_modes") or [])
+        if not allowed_modes:
+            allowed_modes = list(default_allowed_modes)
+        for mode in default_allowed_modes:
+            if mode not in allowed_modes:
+                allowed_modes.append(mode)
+        disallowed_modes = list(capability.get("disallowed_modes") or [])
+        for mode in disallowed_real_modes:
+            if mode not in disallowed_modes:
+                disallowed_modes.append(mode)
+        current_status = (
+            _rw_text(capability.get("current_status"))
+            or "disabled_preview_only"
+        )
+        if not any(
+            token in current_status
+            for token in ["disabled", "preview", "dry"]
+        ):
+            current_status = f"{current_status}_preview_only"
+        provider_contract_cards.append(
+            {
+                **definition,
+                "current_status": current_status,
+                "allowed_modes": allowed_modes,
+                "disallowed_modes": disallowed_modes,
+                "secret_available": False,
+                "real_invocation_allowed": False,
+                "risk_note": (
+                    "Provider adapter contract is preview-only; no secret is read and no real provider invocation, media transfer, generation, persistence, approval, restore, rollback, paid operation, registry write, scraping, or execution is allowed."
+                ),
+            }
+        )
+
+    input_contracts = [
+        {
+            "contract_id": f"provider_input_contract_{card['provider_id']}",
+            "provider_id": card["provider_id"],
+            "source_pack": "workspace_provider_adapter_contract_pack",
+            "required_fields": list(card["required_inputs"]),
+            "field_stability": "stable_preview_contract_fields_only",
+            "request_sent": False,
+            "file_write_performed": False,
+            "database_write_performed": False,
+            "secret_read_performed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Input contract defines field shape only and does not send a request, write files, read secrets, or persist data."
+            ),
+        }
+        for card in provider_contract_cards
+    ]
+    output_contracts = [
+        {
+            "contract_id": f"provider_output_contract_{card['provider_id']}",
+            "provider_id": card["provider_id"],
+            "source_pack": "workspace_provider_adapter_contract_pack",
+            "required_fields": list(card["required_outputs"]),
+            "output_mode": "mock_preview_output_contract_only",
+            "provider_called": False,
+            "file_write_performed": False,
+            "database_write_performed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Output contract describes expected preview response shape only and is not provider output."
+            ),
+        }
+        for card in provider_contract_cards
+    ]
+
+    invocation_boundary_rules = []
+    for card in provider_contract_cards:
+        invocation_boundary_rules.append(
+            {
+                "rule_id": f"boundary_rule_{card['provider_id']}",
+                "provider_id": card["provider_id"],
+                "rule_type": "provider_invocation_boundary",
+                "rule_title": f"{card['provider_name']} real invocation lock",
+                "allowed_preview_behavior": (
+                    "Validate contract fields, render dry-run preview, and route to manual review only."
+                ),
+                "blocked_real_behavior": (
+                    "Blocks real_invocation, real_execution, media_upload, media_download, paid_operation, secret_access, registry_write, rollback_restore, external_scraping, and database_persistence."
+                ),
+                "required_gate": "capability_permission_matrix_policy_gate_and_human_review_preview",
+                "failure_handling_preview": (
+                    "Record deterministic preview risk note and keep provider disabled."
+                ),
+                "audit_requirement": (
+                    "Preview audit only; no database, log, history table, service health, provider, or secret read."
+                ),
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Boundary rule cannot invoke a provider or unlock a real capability."
+                ),
+            }
+        )
+
+    dry_run_invocation_previews = [
+        {
+            "preview_id": f"dry_run_invocation_preview_{card['provider_id']}",
+            "provider_id": card["provider_id"],
+            "provider_type": card["provider_type"],
+            "mock_invocation_shape": {
+                "mode": "dry_run_contract_validation_only",
+                "input_contract_id": f"provider_input_contract_{card['provider_id']}",
+                "output_contract_id": f"provider_output_contract_{card['provider_id']}",
+                "provider_called": False,
+                "secret_read": False,
+                "real_invocation_allowed": False,
+            },
+            "expected_preview_status": "blocked_real_invocation_preview_only",
+            "provider_called": False,
+            "real_invocation_allowed": False,
+            "risk_note": (
+                "Dry-run invocation preview is a mock contract shape and does not call the provider."
+            ),
+        }
+        for card in provider_contract_cards
+    ]
+    failure_boundary_matrix = [
+        {
+            "failure_id": f"failure_boundary_{card['provider_id']}",
+            "provider_id": card["provider_id"],
+            "failure_type": "real_invocation_attempt_blocked",
+            "failure_trigger_preview": (
+                "A future implementation attempts to use a real provider mode."
+            ),
+            "handling_preview": (
+                "Keep invocation blocked, surface manual review requirement, and do not retry automatically."
+            ),
+            "real_failure_triggered": False,
+            "retry_allowed": False,
+            "rollback_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Failure boundary is descriptive only and does not trigger real failure injection, retry, restore, or rollback."
+            ),
+        }
+        for card in provider_contract_cards
+    ]
+    approval_and_secret_requirements = {
+        "mode": "approval_and_secret_requirements_preview",
+        "future_approval_required": True,
+        "required_approval_types": sorted({
+            approval
+            for card in provider_contract_cards
+            for approval in card["required_approvals"]
+        }),
+        "providers_requiring_secret": [
+            card["provider_id"]
+            for card in provider_contract_cards
+            if card["secret_required"]
+        ],
+        "secret_read_performed": False,
+        "secret_available": False,
+        "real_approval_created": False,
+        "operator_task_created": False,
+        "real_invocation_allowed": False,
+        "risk_note": (
+            "Approval and secret requirements describe future prerequisites only; no secret is read and no real approval or operator task is created."
+        ),
+    }
+    safety_boundaries = {
+        "provider_calls_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_api_enabled": False,
+        "image_generation_enabled": False,
+        "video_generation_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "operator_log_persistence_enabled": False,
+        "ticket_system_write_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_service_health_read_enabled": False,
+        "monitoring_system_enabled": False,
+        "permission_system_enabled": False,
+        "human_approval_system_enabled": False,
+        "agent_runtime_enabled": False,
+        "real_replay_runtime_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_approval_creation_enabled": False,
+    }
+    contract_signature = json.dumps(
+        {
+            "matrix_id": _rw_text(permission_summary.get("matrix_id")),
+            "replay_harness_id": _rw_text(replay_summary.get("harness_id")),
+            "health_id": _rw_text(health_summary.get("health_id")),
+            "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+            "review_queue_id": _rw_text(review_summary.get("queue_id")),
+            "control_center_id": _rw_text(
+                control_summary.get("control_center_id")
+            ),
+            "provider_ids": [
+                card["provider_id"] for card in provider_contract_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    contract_id = (
+        "workspace_provider_adapter_contract_"
+        + hashlib.sha256(contract_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    all_providers_disabled = all(
+        not card["real_invocation_allowed"]
+        and any(
+            token in card["current_status"]
+            for token in ["disabled", "preview", "dry"]
+        )
+        for card in provider_contract_cards
+    )
+
+    return {
+        "pack_version": "workspace_provider_adapter_contract_pack_v1",
+        "adapter_contract_summary": {
+            "contract_id": contract_id,
+            "mode": "provider_adapter_contract_preview_invocation_boundary_preview_dry_run_only",
+            "provider_contract_count": len(provider_contract_cards),
+            "boundary_rule_count": len(invocation_boundary_rules),
+            "dry_run_preview_count": len(dry_run_invocation_previews),
+            "source_pack_count": len(source_pack_names),
+            "recommended_next_action": (
+                "Review provider adapter contract preview and keep all real provider, LLM, image, video, media, paid, registry, rollback, external scraping, database persistence, restore, secret, approval, and execution capabilities disabled."
+            ),
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "provider_contract_cards": provider_contract_cards,
+        "input_contracts": input_contracts,
+        "output_contracts": output_contracts,
+        "invocation_boundary_rules": invocation_boundary_rules,
+        "dry_run_invocation_previews": dry_run_invocation_previews,
+        "failure_boundary_matrix": failure_boundary_matrix,
+        "approval_and_secret_requirements": approval_and_secret_requirements,
+        "contract_quality_checks": {
+            "adapter_contract_summary_present": True,
+            "provider_contract_cards_present": len(provider_contract_cards) >= 10,
+            "required_provider_types_covered": {
+                card["provider_type"] for card in provider_contract_cards
+            }
+            >= {
+                "llm_text_generation",
+                "video_generation_provider",
+                "image_generation_provider",
+                "media_storage_provider",
+                "external_scraping_provider",
+                "translation_provider",
+                "analytics_or_tracking_provider",
+                "database_persistence_provider",
+                "approval_or_ticket_provider",
+                "rollback_restore_provider",
+            },
+            "all_providers_disabled_or_preview_only": all_providers_disabled,
+            "input_contracts_present": bool(input_contracts),
+            "output_contracts_present": bool(output_contracts),
+            "invocation_boundary_rules_present": bool(invocation_boundary_rules),
+            "dry_run_previews_do_not_call_provider": all(
+                not preview["provider_called"]
+                for preview in dry_run_invocation_previews
+            ),
+            "failure_boundaries_do_not_trigger_real_failure": all(
+                not item["real_failure_triggered"]
+                for item in failure_boundary_matrix
+            ),
+            "approval_requirements_do_not_create_real_approval": not approval_and_secret_requirements[
+                "real_approval_created"
+            ],
+            "secret_not_read": not approval_and_secret_requirements[
+                "secret_read_performed"
+            ],
+            "audit_preview_not_persisted": True,
+            "source_packs_checked": source_pack_names,
+            "capability_card_count": len(capability_cards),
+            "policy_gate_count": len(policy_gates),
+            "replay_scenario_count": len(replay_scenarios),
+            "replay_input_contract_count": len(replay_contracts),
+            "health_risk_count": len(health_risks),
+            "agent_run_card_count": len(agent_run_cards),
+            "review_item_count": len(review_items),
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "provider_invocation_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_provider_adapter_contract_preview",
+            "contract_id": contract_id,
+            "source_pack_ids": {
+                "permission_matrix_id": _rw_text(
+                    permission_summary.get("matrix_id")
+                ),
+                "replay_harness_id": _rw_text(replay_summary.get("harness_id")),
+                "health_id": _rw_text(health_summary.get("health_id")),
+                "ledger_id": _rw_text(ledger_summary.get("ledger_id")),
+                "review_queue_id": _rw_text(review_summary.get("queue_id")),
+                "control_center_id": _rw_text(
+                    control_summary.get("control_center_id")
+                ),
+            },
+            "is_real_provider_adapter": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "secret_read_performed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic provider adapter contract and invocation boundary preview derived from workspace packs only; no real provider adapter, provider invocation, LLM, image generation, video generation, media upload, media download, paid operation, registry write, rollback, restore, external scraping, secret read, monitoring system, permission system, approval system, agent runtime, operator log, ticket system, history table read, service health read, database write, or execution was performed."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -30612,6 +31180,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_replay_harness_pack"] = (
         _rw_workspace_replay_harness_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_provider_adapter_contract_pack"] = (
+        _rw_workspace_provider_adapter_contract_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
