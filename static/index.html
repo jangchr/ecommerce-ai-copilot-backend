@@ -3625,6 +3625,7 @@
         let latestProjectWorkspaceSystemIntegrationHealthPack = {};
         let latestProjectWorkspaceReplayHarnessPack = {};
         let latestProjectWorkspaceProviderAdapterContractPack = {};
+        let latestProjectWorkspaceProviderContractTestPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8926,6 +8927,7 @@
                 latestProjectWorkspaceSystemIntegrationHealthPack = latestProjectCreativeDecisionPack.workspace_system_integration_health_pack || {};
                 latestProjectWorkspaceReplayHarnessPack = latestProjectCreativeDecisionPack.workspace_replay_harness_pack || {};
                 latestProjectWorkspaceProviderAdapterContractPack = latestProjectCreativeDecisionPack.workspace_provider_adapter_contract_pack || {};
+                latestProjectWorkspaceProviderContractTestPack = latestProjectCreativeDecisionPack.workspace_provider_contract_test_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14787,6 +14789,7 @@
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_MARKER = 'Project Workspace system integration health bundle';
         const PROJECT_WORKSPACE_REPLAY_HARNESS_MARKER = 'Project Workspace replay harness bundle';
         const PROJECT_WORKSPACE_PROVIDER_ADAPTER_CONTRACT_MARKER = 'Project Workspace provider adapter contract bundle';
+        const PROJECT_WORKSPACE_PROVIDER_CONTRACT_TEST_MARKER = 'Project Workspace provider contract test bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -19342,6 +19345,109 @@
         function copyProjectWorkspaceProviderApprovalSecretRequirements() { return copyProjectWorkspaceProviderAdapterContractText('approval'); }
         function copyProjectWorkspaceFullProviderAdapterContractPack() { return copyProjectWorkspaceProviderAdapterContractText('full'); }
 
+        function projectWorkspaceProviderContractTestPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceProviderContractTestPack && Object.keys(latestProjectWorkspaceProviderContractTestPack).length) return latestProjectWorkspaceProviderContractTestPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_provider_contract_test_pack || {};
+        }
+
+        function projectWorkspaceExportProviderContractTestSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceProviderContractTestPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PROVIDER_CONTRACT_TEST_MARKER,
+                has_workspace_provider_contract_test_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                contract_test_summary: pack.contract_test_summary || {},
+                mock_invocation_test_cases: pack.mock_invocation_test_cases || [],
+                input_validation_results: pack.input_validation_results || [],
+                output_validation_results: pack.output_validation_results || [],
+                boundary_rule_test_results: pack.boundary_rule_test_results || [],
+                failure_simulation_previews: pack.failure_simulation_previews || [],
+                approval_secret_test_matrix: pack.approval_secret_test_matrix || {},
+                provider_test_coverage: pack.provider_test_coverage || {},
+                contract_test_quality_checks: pack.contract_test_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceProviderContractTestJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceProviderContractTestSummaryText(pack = projectWorkspaceExportProviderContractTestSnapshot()) {
+            if (!pack.has_workspace_provider_contract_test_pack) return '';
+            const summary = pack.contract_test_summary || {};
+            const coverage = pack.provider_test_coverage || {};
+            return [
+                t('providerContractTestSummaryTitle'),
+                `${t('providerContractTestMode')}: ${summary.mode || t('none')}`,
+                `${t('providerContractTestCoverageCount')}: ${summary.covered_provider_type_count ?? coverage.coverage_count ?? 0}`,
+                `${t('providerContractTestCaseCount')}: ${summary.provider_test_case_count ?? pack.mock_invocation_test_cases.length}`,
+                `${t('providerContractTestBoundaryCount')}: ${summary.boundary_rule_test_count ?? pack.boundary_rule_test_results.length}`,
+                `${t('providerContractTestRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('providerContractTestRealInvocation')}: ${summary.real_invocation_allowed === false ? t('providerContractTestDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('providerContractTestRealExecution')}: ${summary.real_execution_allowed === false ? t('providerContractTestDisabled') : String(summary.real_execution_allowed)}`,
+                t('providerContractTestPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceProviderContractTestSectionText(titleKey, value) {
+            const body = projectWorkspaceProviderContractTestJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportProviderContractTestMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderContractTestSnapshot(workspace);
+            if (!pack.has_workspace_provider_contract_test_pack) return '';
+            return [
+                `## ${t('providerContractTestPackTitle')}`,
+                `## ${t('providerContractTestSummaryTitle')}`,
+                projectWorkspaceProviderContractTestSummaryText(pack), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestCasesTitle', pack.mock_invocation_test_cases), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestInputTitle', pack.input_validation_results), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestOutputTitle', pack.output_validation_results), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestBoundaryTitle', pack.boundary_rule_test_results), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestFailureTitle', pack.failure_simulation_previews), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestApprovalSecretTitle', pack.approval_secret_test_matrix), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestCoverageTitle', pack.provider_test_coverage), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestAuditTitle', pack.audit_preview), '',
+                projectWorkspaceProviderContractTestSectionText('providerContractTestSafetyTitle', pack.safety_boundaries),
+                t('providerContractTestSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderContractTestText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceProviderContractTestStatus');
+            const pack = projectWorkspaceExportProviderContractTestSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceProviderContractTestSummaryText(pack)
+                : kind === 'cases' ? projectWorkspaceProviderContractTestSectionText('providerContractTestCasesTitle', pack.mock_invocation_test_cases)
+                : kind === 'input' ? projectWorkspaceProviderContractTestSectionText('providerContractTestInputTitle', pack.input_validation_results)
+                : kind === 'output' ? projectWorkspaceProviderContractTestSectionText('providerContractTestOutputTitle', pack.output_validation_results)
+                : kind === 'boundary' ? projectWorkspaceProviderContractTestSectionText('providerContractTestBoundaryTitle', pack.boundary_rule_test_results)
+                : kind === 'failure' ? projectWorkspaceProviderContractTestSectionText('providerContractTestFailureTitle', pack.failure_simulation_previews)
+                : kind === 'approval' ? projectWorkspaceProviderContractTestSectionText('providerContractTestApprovalSecretTitle', pack.approval_secret_test_matrix)
+                : kind === 'coverage' ? projectWorkspaceProviderContractTestSectionText('providerContractTestCoverageTitle', pack.provider_test_coverage)
+                : projectWorkspaceExportProviderContractTestMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('providerContractTestCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('providerContractTestCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('providerContractTestCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('providerContractTestCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceProviderContractTestSummary() { return copyProjectWorkspaceProviderContractTestText('summary'); }
+        function copyProjectWorkspaceMockInvocationTestCases() { return copyProjectWorkspaceProviderContractTestText('cases'); }
+        function copyProjectWorkspaceInputValidationResults() { return copyProjectWorkspaceProviderContractTestText('input'); }
+        function copyProjectWorkspaceOutputValidationResults() { return copyProjectWorkspaceProviderContractTestText('output'); }
+        function copyProjectWorkspaceBoundaryRuleTestResults() { return copyProjectWorkspaceProviderContractTestText('boundary'); }
+        function copyProjectWorkspaceFailureSimulationPreviews() { return copyProjectWorkspaceProviderContractTestText('failure'); }
+        function copyProjectWorkspaceApprovalSecretTestMatrix() { return copyProjectWorkspaceProviderContractTestText('approval'); }
+        function copyProjectWorkspaceProviderTestCoverage() { return copyProjectWorkspaceProviderContractTestText('coverage'); }
+        function copyProjectWorkspaceFullProviderContractTestPack() { return copyProjectWorkspaceProviderContractTestText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -22989,6 +23095,35 @@
             return `<div class="section-block" id="projectWorkspaceProviderApprovalQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerAdapterContractApprovalQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerAdapterContractApprovalQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderApprovalSecretRequirements()">${escapeHTML(t('providerAdapterContractCopyApproval'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerAdapterContractApprovalSecretTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAdapterContractJsonText(pack.approval_and_secret_requirements) || t('providerAdapterContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAdapterContractQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAdapterContractJsonText(pack.contract_quality_checks) || t('providerAdapterContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAdapterContractAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAdapterContractJsonText(pack.audit_preview) || t('providerAdapterContractNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerAdapterContractSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerAdapterContractApprovalAuditNote'))}</div><div class="field-helper">${escapeHTML(t('providerAdapterContractSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceProviderContractTestSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderContractTestSnapshot(workspace); if (!pack.has_workspace_provider_contract_test_pack) return '';
+            const summary = pack.contract_test_summary || {};
+            const coverage = pack.provider_test_coverage || {};
+            return `<div class="section-block" id="projectWorkspaceProviderContractTestSummaryPanel" data-provider-contract-test-marker="${PROJECT_WORKSPACE_PROVIDER_CONTRACT_TEST_MARKER}" data-marker="project_workspace_provider_contract_test_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerContractTestPackTitle'))}</div><div class="field-helper">${escapeHTML(t('providerContractTestPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullProviderContractTestPack()">${escapeHTML(t('providerContractTestCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('providerContractTestMode'), summary.mode || t('none'))}${metricPill(t('providerContractTestCoverageCount'), String(summary.covered_provider_type_count ?? coverage.coverage_count ?? 0))}${metricPill(t('providerContractTestCaseCount'), String(summary.provider_test_case_count ?? pack.mock_invocation_test_cases.length))}${metricPill(t('providerContractTestBoundaryCount'), String(summary.boundary_rule_test_count ?? pack.boundary_rule_test_results.length))}${metricPill(t('providerContractTestRealInvocation'), summary.real_invocation_allowed === false ? t('providerContractTestDisabled') : String(summary.real_invocation_allowed))}${metricPill(t('providerContractTestRealExecution'), summary.real_execution_allowed === false ? t('providerContractTestDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestSummaryText(pack) || t('providerContractTestNoData'))}</pre><div class="field-helper">${escapeHTML(t('providerContractTestPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceProviderContractTestStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderContractTestSummary()">${escapeHTML(t('providerContractTestCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceMockInvocationTestCasesPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderContractTestSnapshot(workspace); if (!pack.has_workspace_provider_contract_test_pack) return '';
+            const cards = (pack.mock_invocation_test_cases || []).map((testCase) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(testCase.test_name || testCase.test_id || t('providerContractTestCasesTitle'))}</strong><span class="metric-pill">${escapeHTML(testCase.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerContractTestTestId'))}:</strong> ${escapeHTML(testCase.test_id || t('none'))}</div><div><strong>${escapeHTML(t('providerContractTestProviderId'))}:</strong> ${escapeHTML(testCase.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerContractTestSourceContract'))}:</strong> ${escapeHTML(testCase.source_contract_id || t('none'))}</div><div><strong>${escapeHTML(t('providerContractTestExpectedStatus'))}:</strong> ${escapeHTML(testCase.expected_status || t('none'))}</div><div><strong>${escapeHTML(t('providerContractTestRealInvocation'))}:</strong> ${escapeHTML(testCase.real_invocation_allowed === false ? t('providerContractTestDisabled') : String(testCase.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('providerContractTestRealExecution'))}:</strong> ${escapeHTML(testCase.real_execution_allowed === false ? t('providerContractTestDisabled') : String(testCase.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText({mock_input_refs:testCase.mock_input_refs||[],expected_mock_outputs:testCase.expected_mock_outputs||[],boundary_rules_checked:testCase.boundary_rules_checked||[],failure_signal:testCase.failure_signal||'',risk_note:testCase.risk_note||''}) || t('providerContractTestNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceMockInvocationTestCasesPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerContractTestCasesTitle'))}</div><div class="field-helper">${escapeHTML(t('providerContractTestCasesHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMockInvocationTestCases()">${escapeHTML(t('providerContractTestCopyCases'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerContractTestNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('providerContractTestProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceProviderValidationResultsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderContractTestSnapshot(workspace); if (!pack.has_workspace_provider_contract_test_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceProviderValidationResultsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerContractTestInputOutputValidationTitle'))}</div><div class="field-helper">${escapeHTML(t('providerContractTestInputOutputValidationHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceInputValidationResults()">${escapeHTML(t('providerContractTestCopyInput'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOutputValidationResults()">${escapeHTML(t('providerContractTestCopyOutput'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestInputTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.input_validation_results) || t('providerContractTestNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestOutputTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.output_validation_results) || t('providerContractTestNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerContractTestValidationNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceProviderBoundaryFailurePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderContractTestSnapshot(workspace); if (!pack.has_workspace_provider_contract_test_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceProviderBoundaryFailurePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerContractTestBoundaryFailureTitle'))}</div><div class="field-helper">${escapeHTML(t('providerContractTestBoundaryFailureHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBoundaryRuleTestResults()">${escapeHTML(t('providerContractTestCopyBoundary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFailureSimulationPreviews()">${escapeHTML(t('providerContractTestCopyFailure'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestBoundaryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.boundary_rule_test_results) || t('providerContractTestNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestFailureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.failure_simulation_previews) || t('providerContractTestNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerContractTestFailureNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceProviderApprovalCoverageQualitySafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderContractTestSnapshot(workspace); if (!pack.has_workspace_provider_contract_test_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerContractTestDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceProviderApprovalCoverageQualitySafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerContractTestApprovalCoverageQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerContractTestApprovalCoverageQualitySafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalSecretTestMatrix()">${escapeHTML(t('providerContractTestCopyApproval'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderTestCoverage()">${escapeHTML(t('providerContractTestCopyCoverage'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestApprovalSecretTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.approval_secret_test_matrix) || t('providerContractTestNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestCoverageTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.provider_test_coverage) || t('providerContractTestNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.contract_test_quality_checks) || t('providerContractTestNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerContractTestAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderContractTestJsonText(pack.audit_preview) || t('providerContractTestNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerContractTestSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerContractTestApprovalAuditNote'))}</div><div class="field-helper">${escapeHTML(t('providerContractTestSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -23513,6 +23648,8 @@
                 '',
                 projectWorkspaceExportProviderAdapterContractMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderContractTestMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -23619,6 +23756,7 @@
                 workspace_system_integration_health_pack: projectWorkspaceExportSystemIntegrationHealthSnapshot(workspace),
                 workspace_replay_harness_pack: projectWorkspaceExportReplayHarnessSnapshot(workspace),
                 workspace_provider_adapter_contract_pack: projectWorkspaceExportProviderAdapterContractSnapshot(workspace),
+                workspace_provider_contract_test_pack: projectWorkspaceExportProviderContractTestSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -36140,6 +36278,11 @@
                     ${renderProjectWorkspaceProviderInputOutputContractsPanel(workspace)}
                     ${renderProjectWorkspaceProviderInvocationBoundaryPanel(workspace)}
                     ${renderProjectWorkspaceProviderApprovalQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceProviderContractTestSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceMockInvocationTestCasesPanel(workspace)}
+                    ${renderProjectWorkspaceProviderValidationResultsPanel(workspace)}
+                    ${renderProjectWorkspaceProviderBoundaryFailurePanel(workspace)}
+                    ${renderProjectWorkspaceProviderApprovalCoverageQualitySafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -45952,7 +46095,59 @@
             providerAdapterContractApprovalQualityAuditSafetyTitle: 'Approval / Secret / Quality / Audit / Safety Boundaries',
             providerAdapterContractApprovalQualityAuditSafetyHelper: 'Review approval and secret requirements, quality checks, audit preview, and disabled real capability boundaries.',
             providerAdapterContractApprovalAuditNote: 'No secret is read, no real approval is created, and audit preview is not written to a database.',
-            providerAdapterContractSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
+            providerAdapterContractSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            projectWorkspaceProviderContractTestMarker: 'Project Workspace provider contract test bundle',
+            providerContractTestPackTitle: 'Workspace Provider Contract Test / Mock Invocation Harness',
+            providerContractTestPackHelper: 'Review deterministic provider contract test and mock invocation harness preview without invoking real providers.',
+            providerContractTestSummaryTitle: 'Contract Test Summary',
+            providerContractTestCasesTitle: 'Mock Invocation Test Cases',
+            providerContractTestInputTitle: 'Input Validation Results',
+            providerContractTestOutputTitle: 'Output Validation Results',
+            providerContractTestBoundaryTitle: 'Boundary Rule Test Results',
+            providerContractTestFailureTitle: 'Failure Simulation Previews',
+            providerContractTestApprovalSecretTitle: 'Approval Secret Test Matrix',
+            providerContractTestCoverageTitle: 'Provider Test Coverage',
+            providerContractTestAuditTitle: 'Audit Preview',
+            providerContractTestSafetyTitle: 'Safety Boundaries',
+            providerContractTestQualityTitle: 'Contract Test Quality Checks',
+            providerContractTestMode: 'Mode',
+            providerContractTestCoverageCount: 'Provider coverage count',
+            providerContractTestCaseCount: 'Mock test case count',
+            providerContractTestBoundaryCount: 'Boundary result count',
+            providerContractTestRecommendedAction: 'Recommended operator action',
+            providerContractTestRealInvocation: 'Real invocation',
+            providerContractTestRealExecution: 'Real execution',
+            providerContractTestDisabled: 'disabled',
+            providerContractTestPreviewNote: 'Mock invocation harness preview only. This is not a real provider test and does not invoke real providers.',
+            providerContractTestNoData: 'No workspace provider contract test data is available.',
+            providerContractTestCopyNoData: 'No workspace provider contract test content is available to copy.',
+            providerContractTestCopyFailed: 'Unable to copy workspace provider contract test content.',
+            providerContractTestCopied: 'Workspace provider contract test content copied.',
+            providerContractTestCopySummary: 'Copy contract test summary',
+            providerContractTestCopyCases: 'Copy mock invocation test cases',
+            providerContractTestCopyInput: 'Copy input validation results',
+            providerContractTestCopyOutput: 'Copy output validation results',
+            providerContractTestCopyBoundary: 'Copy boundary rule test results',
+            providerContractTestCopyFailure: 'Copy failure simulation previews',
+            providerContractTestCopyApproval: 'Copy approval secret test matrix',
+            providerContractTestCopyCoverage: 'Copy provider test coverage',
+            providerContractTestCopyFull: 'Copy full provider contract test pack',
+            providerContractTestCasesHelper: 'Inspect mock invocation test cases with provider type, mock inputs, expected mock outputs, checked boundary rules, expected status, failure signal, and disabled real invocation state.',
+            providerContractTestTestId: 'Test ID',
+            providerContractTestProviderId: 'Provider ID',
+            providerContractTestSourceContract: 'Source contract',
+            providerContractTestExpectedStatus: 'Expected status',
+            providerContractTestProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.',
+            providerContractTestInputOutputValidationTitle: 'Input / Output Validation Results',
+            providerContractTestInputOutputValidationHelper: 'Review field contract validation and mock output shape validation without reading files, writing files, uploading media, or calling providers.',
+            providerContractTestValidationNote: 'Validation results verify field contracts and expected mock output shapes only; they do not read files, write files, upload media, download media, or invoke providers.',
+            providerContractTestBoundaryFailureTitle: 'Boundary Rule Test Results / Failure Simulation',
+            providerContractTestBoundaryFailureHelper: 'Review boundary rule test results and failure simulation previews without triggering real failures.',
+            providerContractTestFailureNote: 'Failure simulation is preview only and does not trigger real failure injection, retry, diff jobs, restore, or rollback.',
+            providerContractTestApprovalCoverageQualitySafetyTitle: 'Approval / Secret / Coverage / Quality / Safety Boundaries',
+            providerContractTestApprovalCoverageQualitySafetyHelper: 'Review approval secret test matrix, provider coverage, quality checks, audit preview, and disabled real capability boundaries.',
+            providerContractTestApprovalAuditNote: 'No secret is read, no real approval is created, no operator task is created, and audit preview is not written to a database.',
+            providerContractTestSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.'
         });
 
         Object.assign(LANGUAGE_COPY['zh-CN'], {
@@ -46268,7 +46463,59 @@
             providerAdapterContractApprovalQualityAuditSafetyTitle: '审批 / Secret / 质量 / 审计 / 安全边界',
             providerAdapterContractApprovalQualityAuditSafetyHelper: '检查审批和 secret 要求、质量检查、审计预览和已禁用的真实能力边界。',
             providerAdapterContractApprovalAuditNote: '不读取 secret，不创建真实审批，审计预览不写入数据库。',
-            providerAdapterContractSafetyNote: '真实 LLM、provider、图片、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
+            providerAdapterContractSafetyNote: '真实 LLM、provider、图片、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。',
+            projectWorkspaceProviderContractTestMarker: 'Project Workspace provider contract test bundle',
+            providerContractTestPackTitle: '工作区 Provider Contract Test / Mock Invocation Harness',
+            providerContractTestPackHelper: '检查确定性的 provider contract test 与 mock invocation harness 预览，不调用真实 provider。',
+            providerContractTestSummaryTitle: 'Contract Test 摘要',
+            providerContractTestCasesTitle: 'Mock Invocation 测试用例',
+            providerContractTestInputTitle: '输入验证结果',
+            providerContractTestOutputTitle: '输出验证结果',
+            providerContractTestBoundaryTitle: '边界规则测试结果',
+            providerContractTestFailureTitle: '失败模拟预览',
+            providerContractTestApprovalSecretTitle: '审批 Secret 测试矩阵',
+            providerContractTestCoverageTitle: 'Provider 测试覆盖',
+            providerContractTestAuditTitle: '审计预览',
+            providerContractTestSafetyTitle: '安全边界',
+            providerContractTestQualityTitle: 'Contract Test 质量检查',
+            providerContractTestMode: '模式',
+            providerContractTestCoverageCount: 'Provider 覆盖数量',
+            providerContractTestCaseCount: 'Mock 测试用例数量',
+            providerContractTestBoundaryCount: '边界结果数量',
+            providerContractTestRecommendedAction: '推荐操作员动作',
+            providerContractTestRealInvocation: '真实调用',
+            providerContractTestRealExecution: '真实执行',
+            providerContractTestDisabled: '已禁用',
+            providerContractTestPreviewNote: '仅为 mock invocation harness 预览。这不是真实 provider test，也不会调用真实 provider。',
+            providerContractTestNoData: '暂无工作区 provider contract test 数据。',
+            providerContractTestCopyNoData: '暂无可复制的工作区 provider contract test 内容。',
+            providerContractTestCopyFailed: '无法复制工作区 provider contract test 内容。',
+            providerContractTestCopied: '工作区 provider contract test 内容已复制。',
+            providerContractTestCopySummary: '复制 contract test 摘要',
+            providerContractTestCopyCases: '复制 mock invocation 测试用例',
+            providerContractTestCopyInput: '复制输入验证结果',
+            providerContractTestCopyOutput: '复制输出验证结果',
+            providerContractTestCopyBoundary: '复制边界规则测试结果',
+            providerContractTestCopyFailure: '复制失败模拟预览',
+            providerContractTestCopyApproval: '复制审批 secret 测试矩阵',
+            providerContractTestCopyCoverage: '复制 provider 测试覆盖',
+            providerContractTestCopyFull: '复制完整 provider contract test pack',
+            providerContractTestCasesHelper: '检查 mock invocation 测试用例，包含 provider 类型、mock 输入、预期 mock 输出、已检查边界规则、预期状态、失败信号和禁用真实调用状态。',
+            providerContractTestTestId: '测试 ID',
+            providerContractTestProviderId: 'Provider ID',
+            providerContractTestSourceContract: '来源契约',
+            providerContractTestExpectedStatus: '预期状态',
+            providerContractTestProviderTypesNote: '覆盖的 provider 类型：llm_text_generation、video_generation_provider、image_generation_provider、media_storage_provider、external_scraping_provider、translation_provider、analytics_or_tracking_provider、database_persistence_provider、approval_or_ticket_provider、rollback_restore_provider。',
+            providerContractTestInputOutputValidationTitle: '输入 / 输出验证结果',
+            providerContractTestInputOutputValidationHelper: '检查字段契约验证和 mock 输出 shape 验证，不读取文件、不写文件、不上传 media、不调用 provider。',
+            providerContractTestValidationNote: '验证结果只验证字段契约和预期 mock 输出 shape；不读取文件、不写文件、不上传 media、不下载 media，也不调用 provider。',
+            providerContractTestBoundaryFailureTitle: '边界规则测试结果 / 失败模拟',
+            providerContractTestBoundaryFailureHelper: '检查边界规则测试结果和失败模拟预览，不触发真实失败。',
+            providerContractTestFailureNote: '失败模拟仅为预览，不触发真实 failure injection、retry、diff job、restore 或 rollback。',
+            providerContractTestApprovalCoverageQualitySafetyTitle: '审批 / Secret / 覆盖 / 质量 / 安全边界',
+            providerContractTestApprovalCoverageQualitySafetyHelper: '检查审批 secret 测试矩阵、provider 覆盖、质量检查、审计预览和已禁用的真实能力边界。',
+            providerContractTestApprovalAuditNote: '不读取 secret，不创建真实审批，不创建操作员任务，审计预览不写入数据库。',
+            providerContractTestSafetyNote: '真实 LLM、provider、图片、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
         });
 
         applyLanguageCopy();
@@ -47688,6 +47935,7 @@ async function analyzeExtensionWorkspace() {
     latestProjectWorkspaceSystemIntegrationHealthPack = latestProjectCreativeDecisionPack.workspace_system_integration_health_pack || {};
     latestProjectWorkspaceReplayHarnessPack = latestProjectCreativeDecisionPack.workspace_replay_harness_pack || {};
     latestProjectWorkspaceProviderAdapterContractPack = latestProjectCreativeDecisionPack.workspace_provider_adapter_contract_pack || {};
+    latestProjectWorkspaceProviderContractTestPack = latestProjectCreativeDecisionPack.workspace_provider_contract_test_pack || {};
     latestProjectWorkspace = {
       ...(latestProjectWorkspace || {}),
       creative_decision_pack: latestProjectCreativeDecisionPack

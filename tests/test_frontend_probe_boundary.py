@@ -12110,6 +12110,161 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_provider_contract_test_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider contract test bundle",
+            "PROJECT_WORKSPACE_PROVIDER_CONTRACT_TEST_MARKER",
+            "latestProjectWorkspaceProviderContractTestPack",
+            "projectWorkspaceProviderContractTestPackFromWorkspace",
+            "projectWorkspaceExportProviderContractTestSnapshot",
+            "projectWorkspaceExportProviderContractTestMarkdown",
+            "renderProjectWorkspaceProviderContractTestSummaryPanel",
+            "renderProjectWorkspaceMockInvocationTestCasesPanel",
+            "renderProjectWorkspaceProviderValidationResultsPanel",
+            "renderProjectWorkspaceProviderBoundaryFailurePanel",
+            "renderProjectWorkspaceProviderApprovalCoverageQualitySafetyPanel",
+            "copyProjectWorkspaceProviderContractTestSummary",
+            "copyProjectWorkspaceMockInvocationTestCases",
+            "copyProjectWorkspaceInputValidationResults",
+            "copyProjectWorkspaceOutputValidationResults",
+            "copyProjectWorkspaceBoundaryRuleTestResults",
+            "copyProjectWorkspaceFailureSimulationPreviews",
+            "copyProjectWorkspaceApprovalSecretTestMatrix",
+            "copyProjectWorkspaceProviderTestCoverage",
+            "copyProjectWorkspaceFullProviderContractTestPack",
+            "workspace_provider_contract_test_pack: projectWorkspaceExportProviderContractTestSnapshot(workspace)",
+            "Workspace Provider Contract Test / Mock Invocation Harness",
+            "Contract Test Summary", "Mock Invocation Test Cases",
+            "Input Validation Results", "Output Validation Results",
+            "Boundary Rule Test Results", "Failure Simulation Previews",
+            "Approval Secret Test Matrix", "Provider Test Coverage",
+            "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.contract_test_summary",
+            "pack.mock_invocation_test_cases",
+            "pack.input_validation_results",
+            "pack.output_validation_results",
+            "pack.boundary_rule_test_results",
+            "pack.failure_simulation_previews",
+            "pack.approval_secret_test_matrix",
+            "pack.provider_test_coverage",
+            "pack.contract_test_quality_checks",
+            "pack.audit_preview", "pack.safety_boundaries",
+            "summary.mode", "summary.covered_provider_type_count",
+            "summary.provider_test_case_count",
+            "summary.boundary_rule_test_count",
+            "summary.recommended_next_action",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed", "testCase.test_id",
+            "testCase.provider_id", "testCase.provider_type",
+            "testCase.source_contract_id", "testCase.test_name",
+            "testCase.mock_input_refs", "testCase.expected_mock_outputs",
+            "testCase.boundary_rules_checked", "testCase.expected_status",
+            "testCase.failure_signal", "testCase.real_invocation_allowed",
+            "testCase.real_execution_allowed", "testCase.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceProviderApprovalQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceProviderContractTestSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceProviderApprovalCoverageQualitySafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_provider_contract_test_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "providerContractTestPackTitle",
+            "providerContractTestSummaryTitle",
+            "providerContractTestCasesTitle",
+            "providerContractTestInputTitle",
+            "providerContractTestOutputTitle",
+            "providerContractTestBoundaryTitle",
+            "providerContractTestFailureTitle",
+            "providerContractTestApprovalSecretTitle",
+            "providerContractTestCoverageTitle",
+            "providerContractTestAuditTitle",
+            "providerContractTestSafetyTitle",
+            "providerContractTestCopySummary",
+            "providerContractTestCopyCases",
+            "providerContractTestCopyInput",
+            "providerContractTestCopyOutput",
+            "providerContractTestCopyBoundary",
+            "providerContractTestCopyFailure",
+            "providerContractTestCopyApproval",
+            "providerContractTestCopyCoverage",
+            "providerContractTestCopyFull",
+            "providerContractTestCopied",
+            "providerContractTestCopyFailed",
+            "providerContractTestCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace provider contract test bundle", script)
+            self.assertIn("project_workspace_provider_contract_test_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceProviderContractTestSummaryText"):
+            html.index("async function copyProjectWorkspaceProviderContractTestText")
+        ]
+        for key in [
+            "providerContractTestPackTitle",
+            "providerContractTestSummaryTitle",
+            "providerContractTestCasesTitle",
+            "providerContractTestInputTitle",
+            "providerContractTestOutputTitle",
+            "providerContractTestBoundaryTitle",
+            "providerContractTestFailureTitle",
+            "providerContractTestApprovalSecretTitle",
+            "providerContractTestCoverageTitle",
+            "providerContractTestAuditTitle",
+            "providerContractTestSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PROVIDER_CONTRACT_TEST_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Mock invocation harness preview only",
+            "not a real provider test",
+            "does not invoke real providers",
+            "without reading files, writing files, uploading media, or calling providers",
+            "do not read files, write files, upload media, download media, or invoke providers",
+            "Failure simulation is preview only",
+            "does not trigger real failure injection",
+            "No secret is read",
+            "no real approval is created",
+            "audit preview is not written to a database",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        for boundary in [
+            "Real LLM", "provider", "image", "video", "media", "paid",
+            "registry", "rollback", "external scraping",
+            "database persistence", "real restore", "real execution",
+        ]:
+            self.assertIn(boundary, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
