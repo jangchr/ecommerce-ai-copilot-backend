@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -3627,6 +3627,7 @@
         let latestProjectWorkspaceProviderAdapterContractPack = {};
         let latestProjectWorkspaceProviderContractTestPack = {};
         let latestProjectWorkspaceProviderMockInvocationResultPack = {};
+        let latestProjectWorkspaceProviderFailureTaxonomyPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8930,6 +8931,7 @@
                 latestProjectWorkspaceProviderAdapterContractPack = latestProjectCreativeDecisionPack.workspace_provider_adapter_contract_pack || {};
                 latestProjectWorkspaceProviderContractTestPack = latestProjectCreativeDecisionPack.workspace_provider_contract_test_pack || {};
                 latestProjectWorkspaceProviderMockInvocationResultPack = latestProjectCreativeDecisionPack.workspace_provider_mock_invocation_result_pack || {};
+                latestProjectWorkspaceProviderFailureTaxonomyPack = latestProjectCreativeDecisionPack.workspace_provider_failure_taxonomy_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14793,6 +14795,7 @@
         const PROJECT_WORKSPACE_PROVIDER_ADAPTER_CONTRACT_MARKER = 'Project Workspace provider adapter contract bundle';
         const PROJECT_WORKSPACE_PROVIDER_CONTRACT_TEST_MARKER = 'Project Workspace provider contract test bundle';
         const PROJECT_WORKSPACE_PROVIDER_MOCK_INVOCATION_RESULT_MARKER = 'Project Workspace provider mock invocation result bundle';
+        const PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER = 'Project Workspace provider failure taxonomy bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -19551,6 +19554,105 @@
         function copyProjectWorkspaceProviderMockInvocationAuditPreview() { return copyProjectWorkspaceProviderMockInvocationResultText('audit'); }
         function copyProjectWorkspaceFullProviderMockInvocationResultPack() { return copyProjectWorkspaceProviderMockInvocationResultText('full'); }
 
+        function projectWorkspaceProviderFailureTaxonomyPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceProviderFailureTaxonomyPack && Object.keys(latestProjectWorkspaceProviderFailureTaxonomyPack).length) return latestProjectWorkspaceProviderFailureTaxonomyPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_provider_failure_taxonomy_pack || {};
+        }
+
+        function projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceProviderFailureTaxonomyPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER,
+                has_workspace_provider_failure_taxonomy_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                failure_taxonomy_summary: pack.failure_taxonomy_summary || {},
+                failure_taxonomy_cards: Array.isArray(pack.failure_taxonomy_cards) ? pack.failure_taxonomy_cards : [],
+                recovery_policy_cards: Array.isArray(pack.recovery_policy_cards) ? pack.recovery_policy_cards : [],
+                retry_boundary_rules: Array.isArray(pack.retry_boundary_rules) ? pack.retry_boundary_rules : [],
+                manual_intervention_requirements: Array.isArray(pack.manual_intervention_requirements) ? pack.manual_intervention_requirements : [],
+                non_recoverable_conditions: Array.isArray(pack.non_recoverable_conditions) ? pack.non_recoverable_conditions : [],
+                failure_to_action_map: Array.isArray(pack.failure_to_action_map) ? pack.failure_to_action_map : [],
+                recovery_quality_checks: pack.recovery_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceProviderFailureTaxonomyJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceProviderFailureTaxonomySummaryText(pack = projectWorkspaceExportProviderFailureTaxonomySnapshot()) {
+            if (!pack.has_workspace_provider_failure_taxonomy_pack) return '';
+            const summary = pack.failure_taxonomy_summary || {};
+            return [
+                t('providerFailureTaxonomySummaryTitle'),
+                `${t('providerFailureTaxonomyMode')}: ${summary.mode || t('none')}`,
+                `${t('providerFailureTaxonomyFailureTypeCount')}: ${summary.failure_taxonomy_card_count ?? pack.failure_taxonomy_cards.length}`,
+                `${t('providerFailureTaxonomyRecoveryPolicyCount')}: ${summary.recovery_policy_card_count ?? pack.recovery_policy_cards.length}`,
+                `${t('providerFailureTaxonomyNonRecoverableCount')}: ${pack.non_recoverable_conditions.length}`,
+                `${t('providerFailureTaxonomyRecommendedAction')}: ${summary.recommended_next_action || t('none')}`,
+                `${t('providerFailureTaxonomyRealInvocation')}: ${summary.real_invocation_allowed === false ? t('providerFailureTaxonomyDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('providerFailureTaxonomyRealExecution')}: ${summary.real_execution_allowed === false ? t('providerFailureTaxonomyDisabled') : String(summary.real_execution_allowed)}`,
+                t('providerFailureTaxonomyPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceProviderFailureTaxonomySectionText(titleKey, value) {
+            const body = projectWorkspaceProviderFailureTaxonomyJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportProviderFailureTaxonomyMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace);
+            if (!pack.has_workspace_provider_failure_taxonomy_pack) return '';
+            const sections = [
+                `## ${t('providerFailureTaxonomyPackTitle')}`,
+                `## ${t('providerFailureTaxonomySummaryTitle')}`,
+                projectWorkspaceProviderFailureTaxonomySummaryText(pack), ''
+            ];
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyCardsTitle', pack.failure_taxonomy_cards), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyPoliciesTitle', pack.recovery_policy_cards), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyRetryTitle', pack.retry_boundary_rules), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyManualTitle', pack.manual_intervention_requirements), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyNonRecoverableTitle', pack.non_recoverable_conditions), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyActionMapTitle', pack.failure_to_action_map), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyQualityTitle', pack.recovery_quality_checks), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyAuditTitle', pack.audit_preview), '');
+            sections.push(projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomySafetyTitle', pack.safety_boundaries), t('providerFailureTaxonomySafetyNote'));
+            return sections.filter(Boolean).join('\n');
+        }
+        async function copyProjectWorkspaceProviderFailureTaxonomyText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceProviderFailureTaxonomyStatus');
+            const pack = projectWorkspaceExportProviderFailureTaxonomySnapshot();
+            const text = kind === 'summary' ? projectWorkspaceProviderFailureTaxonomySummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyCardsTitle', pack.failure_taxonomy_cards)
+                : kind === 'policies' ? projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyPoliciesTitle', pack.recovery_policy_cards)
+                : kind === 'retry' ? projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyRetryTitle', pack.retry_boundary_rules)
+                : kind === 'manual' ? projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyManualTitle', pack.manual_intervention_requirements)
+                : kind === 'nonRecoverable' ? projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyNonRecoverableTitle', pack.non_recoverable_conditions)
+                : kind === 'actionMap' ? projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyActionMapTitle', pack.failure_to_action_map)
+                : kind === 'audit' ? projectWorkspaceProviderFailureTaxonomySectionText('providerFailureTaxonomyAuditTitle', pack.audit_preview)
+                : projectWorkspaceExportProviderFailureTaxonomyMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('providerFailureTaxonomyCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('providerFailureTaxonomyCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('providerFailureTaxonomyCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('providerFailureTaxonomyCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceProviderFailureTaxonomySummary() { return copyProjectWorkspaceProviderFailureTaxonomyText('summary'); }
+        function copyProjectWorkspaceFailureTaxonomyCards() { return copyProjectWorkspaceProviderFailureTaxonomyText('cards'); }
+        function copyProjectWorkspaceRecoveryPolicyCards() { return copyProjectWorkspaceProviderFailureTaxonomyText('policies'); }
+        function copyProjectWorkspaceRetryBoundaryRules() { return copyProjectWorkspaceProviderFailureTaxonomyText('retry'); }
+        function copyProjectWorkspaceManualInterventionRequirements() { return copyProjectWorkspaceProviderFailureTaxonomyText('manual'); }
+        function copyProjectWorkspaceNonRecoverableConditions() { return copyProjectWorkspaceProviderFailureTaxonomyText('nonRecoverable'); }
+        function copyProjectWorkspaceFailureToActionMap() { return copyProjectWorkspaceProviderFailureTaxonomyText('actionMap'); }
+        function copyProjectWorkspaceProviderFailureTaxonomyAuditPreview() { return copyProjectWorkspaceProviderFailureTaxonomyText('audit'); }
+        function copyProjectWorkspaceFullProviderFailureTaxonomyPack() { return copyProjectWorkspaceProviderFailureTaxonomyText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -23256,6 +23358,31 @@
             return `<div class="section-block" id="projectWorkspaceMockFailureOperatorQualitySafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerMockResultFailureOperatorQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerMockResultFailureOperatorQualitySafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMockFailureObservations()">${escapeHTML(t('providerMockResultCopyFailure'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorReviewNotes()">${escapeHTML(t('providerMockResultCopyOperator'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderMockInvocationAuditPreview()">${escapeHTML(t('providerMockResultCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerMockResultFailureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderMockInvocationResultJsonText(pack.mock_failure_observations) || t('providerMockResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerMockResultOperatorNotesTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderMockInvocationResultJsonText(pack.operator_review_notes) || t('providerMockResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerMockResultQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderMockInvocationResultJsonText(pack.sandbox_result_quality_checks) || t('providerMockResultNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerMockResultAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderMockInvocationResultJsonText(pack.audit_preview) || t('providerMockResultNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerMockResultSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerMockResultFailureOperatorNote'))}</div><div class="field-helper">${escapeHTML(t('providerMockResultSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceProviderFailureTaxonomySummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace); if (!pack.has_workspace_provider_failure_taxonomy_pack) return '';
+            const summary = pack.failure_taxonomy_summary || {};
+            return `<div class="section-block" id="projectWorkspaceProviderFailureTaxonomySummaryPanel" data-provider-failure-taxonomy-marker="${PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER}" data-marker="project_workspace_provider_failure_taxonomy_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerFailureTaxonomyPackTitle'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullProviderFailureTaxonomyPack()">${escapeHTML(t('providerFailureTaxonomyCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('providerFailureTaxonomyMode'), summary.mode || t('none'))}${metricPill(t('providerFailureTaxonomyFailureTypeCount'), String(summary.failure_taxonomy_card_count ?? pack.failure_taxonomy_cards.length))}${metricPill(t('providerFailureTaxonomyRecoveryPolicyCount'), String(summary.recovery_policy_card_count ?? pack.recovery_policy_cards.length))}${metricPill(t('providerFailureTaxonomyNonRecoverableCount'), String(pack.non_recoverable_conditions.length))}${metricPill(t('providerFailureTaxonomyRealInvocation'), summary.real_invocation_allowed === false ? t('providerFailureTaxonomyDisabled') : String(summary.real_invocation_allowed))}${metricPill(t('providerFailureTaxonomyRealExecution'), summary.real_execution_allowed === false ? t('providerFailureTaxonomyDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomySummaryText(pack) || t('providerFailureTaxonomyNoData'))}</pre><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceProviderFailureTaxonomyStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderFailureTaxonomySummary()">${escapeHTML(t('providerFailureTaxonomyCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceFailureTaxonomyCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace); if (!pack.has_workspace_provider_failure_taxonomy_pack) return '';
+            const cards = (pack.failure_taxonomy_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.failure_type_id || t('providerFailureTaxonomyCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerFailureTaxonomyFailureType'))}:</strong> ${escapeHTML(card.failure_type || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomySourceRun'))}:</strong> ${escapeHTML(card.source_run_id || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomySourceResult'))}:</strong> ${escapeHTML(card.source_result_id || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyCategory'))}:</strong> ${escapeHTML(card.failure_category || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomySignal'))}:</strong> ${escapeHTML(card.failure_signal || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomySeverity'))}:</strong> ${escapeHTML(card.severity || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('providerFailureTaxonomyDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('providerFailureTaxonomyDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText({detected_from:card.detected_from||[],blocked_real_behavior_summary:card.blocked_real_behavior_summary||'',operator_visible_message:card.operator_visible_message||'',risk_note:card.risk_note||''}) || t('providerFailureTaxonomyNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceFailureTaxonomyCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerFailureTaxonomyCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFailureTaxonomyCards()">${escapeHTML(t('providerFailureTaxonomyCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerFailureTaxonomyNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyProviderTypesNote'))}</div></div>`;
+        }
+        function renderProjectWorkspaceRecoveryPolicyCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace); if (!pack.has_workspace_provider_failure_taxonomy_pack) return '';
+            const cards = (pack.recovery_policy_cards || []).map((policy) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(policy.policy_id || t('providerFailureTaxonomyPoliciesTitle'))}</strong><span class="metric-pill">${escapeHTML(policy.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerFailureTaxonomyFailureTypeId'))}:</strong> ${escapeHTML(policy.failure_type_id || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyProviderId'))}:</strong> ${escapeHTML(policy.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRecoveryStrategy'))}:</strong> ${escapeHTML(policy.recovery_strategy || t('none'))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyHumanReview'))}:</strong> ${escapeHTML(String(policy.requires_human_review))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomySecretCheck'))}:</strong> ${escapeHTML(String(policy.requires_secret_check))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyCostReview'))}:</strong> ${escapeHTML(String(policy.requires_cost_review))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRollbackReview'))}:</strong> ${escapeHTML(String(policy.requires_rollback_review))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRetryAllowed'))}:</strong> ${escapeHTML(String(policy.retry_allowed))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRealRetry'))}:</strong> ${escapeHTML(policy.real_retry_allowed === false ? t('providerFailureTaxonomyDisabled') : String(policy.real_retry_allowed))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRealRollback'))}:</strong> ${escapeHTML(policy.real_rollback_allowed === false ? t('providerFailureTaxonomyDisabled') : String(policy.real_rollback_allowed))}</div><div><strong>${escapeHTML(t('providerFailureTaxonomyRealExecution'))}:</strong> ${escapeHTML(policy.real_execution_allowed === false ? t('providerFailureTaxonomyDisabled') : String(policy.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText({allowed_recovery_modes:policy.allowed_recovery_modes||[],disallowed_recovery_modes:policy.disallowed_recovery_modes||[],recommended_operator_action:policy.recommended_operator_action||'',risk_note:policy.risk_note||''}) || t('providerFailureTaxonomyNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceRecoveryPolicyCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerFailureTaxonomyPoliciesTitle'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyPoliciesHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRecoveryPolicyCards()">${escapeHTML(t('providerFailureTaxonomyCopyPolicies'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerFailureTaxonomyNoData'))}</div>`}</div></div>`;
+        }
+        function renderProjectWorkspaceRetryManualNonRecoverablePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace); if (!pack.has_workspace_provider_failure_taxonomy_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceRetryManualNonRecoverablePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerFailureTaxonomyRetryManualNonRecoverableTitle'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyRetryManualNonRecoverableHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryBoundaryRules()">${escapeHTML(t('providerFailureTaxonomyCopyRetry'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceManualInterventionRequirements()">${escapeHTML(t('providerFailureTaxonomyCopyManual'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNonRecoverableConditions()">${escapeHTML(t('providerFailureTaxonomyCopyNonRecoverable'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyRetryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.retry_boundary_rules) || t('providerFailureTaxonomyNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyManualTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.manual_intervention_requirements) || t('providerFailureTaxonomyNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyNonRecoverableTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.non_recoverable_conditions) || t('providerFailureTaxonomyNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyRetryManualNote'))}</div></div>`;
+        }
+        function renderProjectWorkspaceFailureActionQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace); if (!pack.has_workspace_provider_failure_taxonomy_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerFailureTaxonomyDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceFailureActionQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerFailureTaxonomyActionQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyActionQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFailureToActionMap()">${escapeHTML(t('providerFailureTaxonomyCopyActionMap'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderFailureTaxonomyAuditPreview()">${escapeHTML(t('providerFailureTaxonomyCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyActionMapTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.failure_to_action_map) || t('providerFailureTaxonomyNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.recovery_quality_checks) || t('providerFailureTaxonomyNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.audit_preview) || t('providerFailureTaxonomyNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerFailureTaxonomySafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyActionMapNote'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomySafetyNote'))}</div></div>`;
+        }
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -23892,6 +24019,7 @@
                 workspace_provider_adapter_contract_pack: projectWorkspaceExportProviderAdapterContractSnapshot(workspace),
                 workspace_provider_contract_test_pack: projectWorkspaceExportProviderContractTestSnapshot(workspace),
                 workspace_provider_mock_invocation_result_pack: projectWorkspaceExportProviderMockInvocationResultSnapshot(workspace),
+                workspace_provider_failure_taxonomy_pack: projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -36423,6 +36551,11 @@
                     ${renderProjectWorkspaceMockRunResultCardsPanel(workspace)}
                     ${renderProjectWorkspaceMockSnapshotsBoundaryPanel(workspace)}
                     ${renderProjectWorkspaceMockFailureOperatorQualitySafetyPanel(workspace)}
+                    ${renderProjectWorkspaceProviderFailureTaxonomySummaryPanel(workspace)}
+                    ${renderProjectWorkspaceFailureTaxonomyCardsPanel(workspace)}
+                    ${renderProjectWorkspaceRecoveryPolicyCardsPanel(workspace)}
+                    ${renderProjectWorkspaceRetryManualNonRecoverablePanel(workspace)}
+                    ${renderProjectWorkspaceFailureActionQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -46288,7 +46421,67 @@
             providerContractTestApprovalCoverageQualitySafetyHelper: 'Review approval secret test matrix, provider coverage, quality checks, audit preview, and disabled real capability boundaries.',
             providerContractTestApprovalAuditNote: 'No secret is read, no real approval is created, no operator task is created, and audit preview is not written to a database.',
             providerContractTestSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
-            projectWorkspaceProviderMockInvocationResultMarker: 'Project Workspace provider mock invocation result bundle',
+            projectWorkspaceProviderFailureTaxonomyMarker: 'Project Workspace provider failure taxonomy bundle',
+            providerFailureTaxonomyPackTitle: 'Workspace Provider Failure Taxonomy / Recovery Policy',
+            providerFailureTaxonomyPackHelper: 'Review provider failure taxonomy and recovery policy preview derived from mock results; this is not a real failure handling system.',
+            providerFailureTaxonomySummaryTitle: 'Failure Taxonomy Summary',
+            providerFailureTaxonomyCardsTitle: 'Failure Taxonomy Cards',
+            providerFailureTaxonomyPoliciesTitle: 'Recovery Policy Cards',
+            providerFailureTaxonomyRetryTitle: 'Retry Boundary Rules',
+            providerFailureTaxonomyManualTitle: 'Manual Intervention Requirements',
+            providerFailureTaxonomyNonRecoverableTitle: 'Non-Recoverable Conditions',
+            providerFailureTaxonomyActionMapTitle: 'Failure to Action Map',
+            providerFailureTaxonomyQualityTitle: 'Recovery Quality Checks',
+            providerFailureTaxonomyAuditTitle: 'Audit Preview',
+            providerFailureTaxonomySafetyTitle: 'Safety Boundaries',
+            providerFailureTaxonomyMode: 'Mode',
+            providerFailureTaxonomyFailureTypeCount: 'Failure type count',
+            providerFailureTaxonomyRecoveryPolicyCount: 'Recovery policy count',
+            providerFailureTaxonomyNonRecoverableCount: 'Non-recoverable count',
+            providerFailureTaxonomyRecommendedAction: 'Recommended operator action',
+            providerFailureTaxonomyRealInvocation: 'Real invocation',
+            providerFailureTaxonomyRealExecution: 'Real execution',
+            providerFailureTaxonomyDisabled: 'disabled',
+            providerFailureTaxonomyPreviewNote: 'Failure taxonomy preview only. This is not a real failure handling system and it does not execute real recovery.',
+            providerFailureTaxonomyNoData: 'No workspace provider failure taxonomy data is available.',
+            providerFailureTaxonomyCopyNoData: 'No workspace provider failure taxonomy content is available to copy.',
+            providerFailureTaxonomyCopyFailed: 'Unable to copy workspace provider failure taxonomy content.',
+            providerFailureTaxonomyCopied: 'Workspace provider failure taxonomy content copied.',
+            providerFailureTaxonomyCopySummary: 'Copy failure taxonomy summary',
+            providerFailureTaxonomyCopyCards: 'Copy failure taxonomy cards',
+            providerFailureTaxonomyCopyPolicies: 'Copy recovery policy cards',
+            providerFailureTaxonomyCopyRetry: 'Copy retry boundary rules',
+            providerFailureTaxonomyCopyManual: 'Copy manual intervention requirements',
+            providerFailureTaxonomyCopyNonRecoverable: 'Copy non-recoverable conditions',
+            providerFailureTaxonomyCopyActionMap: 'Copy failure to action map',
+            providerFailureTaxonomyCopyAudit: 'Copy audit preview',
+            providerFailureTaxonomyCopyFull: 'Copy full provider failure taxonomy pack',
+            providerFailureTaxonomyFailureType: 'Failure type',
+            providerFailureTaxonomyFailureTypeId: 'Failure type ID',
+            providerFailureTaxonomyProviderId: 'Provider ID',
+            providerFailureTaxonomySourceRun: 'Source run ID',
+            providerFailureTaxonomySourceResult: 'Source result ID',
+            providerFailureTaxonomyCategory: 'Failure category',
+            providerFailureTaxonomySignal: 'Failure signal',
+            providerFailureTaxonomySeverity: 'Severity',
+            providerFailureTaxonomyRecoveryStrategy: 'Recovery strategy',
+            providerFailureTaxonomyHumanReview: 'Requires human review',
+            providerFailureTaxonomySecretCheck: 'Requires secret check',
+            providerFailureTaxonomyCostReview: 'Requires cost review',
+            providerFailureTaxonomyRollbackReview: 'Requires rollback review',
+            providerFailureTaxonomyRetryAllowed: 'Retry allowed',
+            providerFailureTaxonomyRealRetry: 'Real retry',
+            providerFailureTaxonomyRealRollback: 'Real rollback',
+            providerFailureTaxonomyCardsHelper: 'Inspect failure type cards with provider type, source run, result, category, signal, severity, blocked real behavior, operator message, and disabled real invocation state.',
+            providerFailureTaxonomyPoliciesHelper: 'Inspect recovery policy cards with allowed preview modes, disallowed real modes, review requirements, retry boundaries, and disabled rollback state.',
+            providerFailureTaxonomyRetryManualNonRecoverableTitle: 'Retry Boundary / Manual Intervention / Non-Recoverable Conditions',
+            providerFailureTaxonomyRetryManualNonRecoverableHelper: 'Review which conditions require manual review, which cannot retry, and which require approval without creating tasks or executing retry or rollback.',
+            providerFailureTaxonomyRetryManualNote: 'Manual review, approval review, secret check, cost review, and rollback review are preview requirements only. This panel creates no real task and executes no real retry or rollback.',
+            providerFailureTaxonomyActionQualityAuditSafetyTitle: 'Failure Action Map / Quality / Audit / Safety Boundaries',
+            providerFailureTaxonomyActionQualityAuditSafetyHelper: 'Review preview action mapping, quality checks, audit preview, and disabled real capability boundaries.',
+            providerFailureTaxonomyActionMapNote: 'Failure-to-action map only maps preview actions. It does not execute real actions, create approvals, create operator tasks, write databases, retry, restore, or rollback.',
+            providerFailureTaxonomySafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            providerFailureTaxonomyProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.',            projectWorkspaceProviderMockInvocationResultMarker: 'Project Workspace provider mock invocation result bundle',
             providerMockResultPackTitle: 'Workspace Provider Mock Invocation Result / Sandbox Run Ledger',
             providerMockResultPackHelper: 'Review deterministic provider mock invocation result and sandbox run ledger preview without invoking real providers.',
             providerMockResultSummaryTitle: 'Mock Invocation Result Summary',
@@ -46709,7 +46902,67 @@
             providerContractTestApprovalCoverageQualitySafetyHelper: '检查审批 secret 测试矩阵、provider 覆盖、质量检查、审计预览和已禁用的真实能力边界。',
             providerContractTestApprovalAuditNote: '不读取 secret，不创建真实审批，不创建操作员任务，审计预览不写入数据库。',
             providerContractTestSafetyNote: '真实 LLM、provider、图片、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。',
-            projectWorkspaceProviderMockInvocationResultMarker: 'Project Workspace provider mock invocation result bundle',
+            projectWorkspaceProviderFailureTaxonomyMarker: 'Project Workspace provider failure taxonomy bundle',
+            providerFailureTaxonomyPackTitle: '工作区 Provider 失败分类 / 恢复策略',
+            providerFailureTaxonomyPackHelper: '检查从 mock 结果派生的 provider 失败分类和恢复策略预览；这不是真实失败处理系统。',
+            providerFailureTaxonomySummaryTitle: '失败分类摘要',
+            providerFailureTaxonomyCardsTitle: '失败分类卡片',
+            providerFailureTaxonomyPoliciesTitle: '恢复策略卡片',
+            providerFailureTaxonomyRetryTitle: 'Retry 边界规则',
+            providerFailureTaxonomyManualTitle: '人工介入要求',
+            providerFailureTaxonomyNonRecoverableTitle: '不可恢复条件',
+            providerFailureTaxonomyActionMapTitle: '失败到动作映射',
+            providerFailureTaxonomyQualityTitle: '恢复质量检查',
+            providerFailureTaxonomyAuditTitle: '审计预览',
+            providerFailureTaxonomySafetyTitle: '安全边界',
+            providerFailureTaxonomyMode: '模式',
+            providerFailureTaxonomyFailureTypeCount: '失败类型数量',
+            providerFailureTaxonomyRecoveryPolicyCount: '恢复策略数量',
+            providerFailureTaxonomyNonRecoverableCount: '不可恢复数量',
+            providerFailureTaxonomyRecommendedAction: '推荐操作员动作',
+            providerFailureTaxonomyRealInvocation: '真实调用',
+            providerFailureTaxonomyRealExecution: '真实执行',
+            providerFailureTaxonomyDisabled: '已禁用',
+            providerFailureTaxonomyPreviewNote: '仅为 failure taxonomy 预览。这不是真实失败处理系统，也不会执行真实恢复。',
+            providerFailureTaxonomyNoData: '暂无工作区 provider 失败分类数据。',
+            providerFailureTaxonomyCopyNoData: '暂无可复制的工作区 provider 失败分类内容。',
+            providerFailureTaxonomyCopyFailed: '无法复制工作区 provider 失败分类内容。',
+            providerFailureTaxonomyCopied: '工作区 provider 失败分类内容已复制。',
+            providerFailureTaxonomyCopySummary: '复制失败分类摘要',
+            providerFailureTaxonomyCopyCards: '复制失败分类卡片',
+            providerFailureTaxonomyCopyPolicies: '复制恢复策略卡片',
+            providerFailureTaxonomyCopyRetry: '复制 retry 边界规则',
+            providerFailureTaxonomyCopyManual: '复制人工介入要求',
+            providerFailureTaxonomyCopyNonRecoverable: '复制不可恢复条件',
+            providerFailureTaxonomyCopyActionMap: '复制失败到动作映射',
+            providerFailureTaxonomyCopyAudit: '复制审计预览',
+            providerFailureTaxonomyCopyFull: '复制完整 provider 失败分类 pack',
+            providerFailureTaxonomyFailureType: '失败类型',
+            providerFailureTaxonomyFailureTypeId: '失败类型 ID',
+            providerFailureTaxonomyProviderId: 'Provider ID',
+            providerFailureTaxonomySourceRun: '来源 run ID',
+            providerFailureTaxonomySourceResult: '来源 result ID',
+            providerFailureTaxonomyCategory: '失败分类',
+            providerFailureTaxonomySignal: '失败信号',
+            providerFailureTaxonomySeverity: '严重度',
+            providerFailureTaxonomyRecoveryStrategy: '恢复策略',
+            providerFailureTaxonomyHumanReview: '需要人工审阅',
+            providerFailureTaxonomySecretCheck: '需要 secret 检查',
+            providerFailureTaxonomyCostReview: '需要成本审阅',
+            providerFailureTaxonomyRollbackReview: '需要 rollback 审阅',
+            providerFailureTaxonomyRetryAllowed: '允许 retry',
+            providerFailureTaxonomyRealRetry: '真实 retry',
+            providerFailureTaxonomyRealRollback: '真实 rollback',
+            providerFailureTaxonomyCardsHelper: '检查失败类型卡片，包含 provider 类型、来源 run、结果、分类、信号、严重度、被阻止的真实行为、操作员消息和禁用真实调用状态。',
+            providerFailureTaxonomyPoliciesHelper: '检查恢复策略卡片，包含允许的预览模式、禁止的真实模式、审阅要求、retry 边界和禁用 rollback 状态。',
+            providerFailureTaxonomyRetryManualNonRecoverableTitle: 'Retry 边界 / 人工介入 / 不可恢复条件',
+            providerFailureTaxonomyRetryManualNonRecoverableHelper: '检查哪些情况只能人工审阅、哪些不能 retry、哪些需要 approval；不创建任务，也不执行 retry 或 rollback。',
+            providerFailureTaxonomyRetryManualNote: '人工审阅、approval 审阅、secret 检查、成本审阅和 rollback 审阅都只是预览要求。此面板不创建真实任务，不执行真实 retry 或 rollback。',
+            providerFailureTaxonomyActionQualityAuditSafetyTitle: '失败动作映射 / 质量 / 审计 / 安全边界',
+            providerFailureTaxonomyActionQualityAuditSafetyHelper: '检查预览动作映射、质量检查、审计预览和已禁用的真实能力边界。',
+            providerFailureTaxonomyActionMapNote: '失败到动作映射只映射 preview action，不执行真实 action，不创建审批或操作员任务，不写数据库，不 retry、restore 或 rollback。',
+            providerFailureTaxonomySafetyNote: '真实 LLM、provider、图片、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。',
+            providerFailureTaxonomyProviderTypesNote: '覆盖的 provider 类型：llm_text_generation、video_generation_provider、image_generation_provider、media_storage_provider、external_scraping_provider、translation_provider、analytics_or_tracking_provider、database_persistence_provider、approval_or_ticket_provider、rollback_restore_provider。',            projectWorkspaceProviderMockInvocationResultMarker: 'Project Workspace provider mock invocation result bundle',
             providerMockResultPackTitle: '工作区 Provider Mock Invocation Result / Sandbox Run Ledger',
             providerMockResultPackHelper: '检查确定性的 provider mock invocation result 和 sandbox run ledger 预览，不调用真实 provider。',
             providerMockResultSummaryTitle: 'Mock Invocation Result 摘要',

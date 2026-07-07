@@ -12420,6 +12420,181 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn(boundary, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_provider_failure_taxonomy_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider failure taxonomy bundle",
+            "PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER",
+            "latestProjectWorkspaceProviderFailureTaxonomyPack",
+            "projectWorkspaceProviderFailureTaxonomyPackFromWorkspace",
+            "projectWorkspaceExportProviderFailureTaxonomySnapshot",
+            "projectWorkspaceExportProviderFailureTaxonomyMarkdown",
+            "renderProjectWorkspaceProviderFailureTaxonomySummaryPanel",
+            "renderProjectWorkspaceFailureTaxonomyCardsPanel",
+            "renderProjectWorkspaceRecoveryPolicyCardsPanel",
+            "renderProjectWorkspaceRetryManualNonRecoverablePanel",
+            "renderProjectWorkspaceFailureActionQualityAuditSafetyPanel",
+            "copyProjectWorkspaceProviderFailureTaxonomySummary",
+            "copyProjectWorkspaceFailureTaxonomyCards",
+            "copyProjectWorkspaceRecoveryPolicyCards",
+            "copyProjectWorkspaceRetryBoundaryRules",
+            "copyProjectWorkspaceManualInterventionRequirements",
+            "copyProjectWorkspaceNonRecoverableConditions",
+            "copyProjectWorkspaceFailureToActionMap",
+            "copyProjectWorkspaceProviderFailureTaxonomyAuditPreview",
+            "copyProjectWorkspaceFullProviderFailureTaxonomyPack",
+            "workspace_provider_failure_taxonomy_pack: projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace)",
+            "Workspace Provider Failure Taxonomy / Recovery Policy",
+            "Failure Taxonomy Summary", "Failure Taxonomy Cards",
+            "Recovery Policy Cards", "Retry Boundary Rules",
+            "Manual Intervention Requirements", "Non-Recoverable Conditions",
+            "Failure to Action Map", "Audit Preview", "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.failure_taxonomy_summary",
+            "pack.failure_taxonomy_cards",
+            "pack.recovery_policy_cards",
+            "pack.retry_boundary_rules",
+            "pack.manual_intervention_requirements",
+            "pack.non_recoverable_conditions",
+            "pack.failure_to_action_map",
+            "pack.recovery_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.failure_taxonomy_card_count",
+            "summary.recovery_policy_card_count",
+            "summary.recommended_next_action",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.failure_type_id", "card.failure_type",
+            "card.provider_id", "card.provider_type",
+            "card.source_run_id", "card.source_result_id",
+            "card.failure_category", "card.failure_signal",
+            "card.severity", "card.detected_from",
+            "card.blocked_real_behavior_summary",
+            "card.operator_visible_message",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "card.risk_note",
+            "policy.policy_id", "policy.failure_type_id",
+            "policy.provider_id", "policy.provider_type",
+            "policy.recovery_strategy",
+            "policy.allowed_recovery_modes",
+            "policy.disallowed_recovery_modes",
+            "policy.requires_human_review",
+            "policy.requires_secret_check",
+            "policy.requires_cost_review",
+            "policy.requires_rollback_review",
+            "policy.retry_allowed",
+            "policy.real_retry_allowed",
+            "policy.real_rollback_allowed",
+            "policy.recommended_operator_action",
+            "policy.real_execution_allowed",
+            "policy.risk_note",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceMockFailureOperatorQualitySafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceProviderFailureTaxonomySummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceFailureActionQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_provider_failure_taxonomy_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "providerFailureTaxonomyPackTitle",
+            "providerFailureTaxonomySummaryTitle",
+            "providerFailureTaxonomyCardsTitle",
+            "providerFailureTaxonomyPoliciesTitle",
+            "providerFailureTaxonomyRetryTitle",
+            "providerFailureTaxonomyManualTitle",
+            "providerFailureTaxonomyNonRecoverableTitle",
+            "providerFailureTaxonomyActionMapTitle",
+            "providerFailureTaxonomyQualityTitle",
+            "providerFailureTaxonomyAuditTitle",
+            "providerFailureTaxonomySafetyTitle",
+            "providerFailureTaxonomyCopySummary",
+            "providerFailureTaxonomyCopyCards",
+            "providerFailureTaxonomyCopyPolicies",
+            "providerFailureTaxonomyCopyRetry",
+            "providerFailureTaxonomyCopyManual",
+            "providerFailureTaxonomyCopyNonRecoverable",
+            "providerFailureTaxonomyCopyActionMap",
+            "providerFailureTaxonomyCopyAudit",
+            "providerFailureTaxonomyCopyFull",
+            "providerFailureTaxonomyCopied",
+            "providerFailureTaxonomyCopyFailed",
+            "providerFailureTaxonomyCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace provider failure taxonomy bundle", script)
+            self.assertIn("project_workspace_provider_failure_taxonomy_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceProviderFailureTaxonomySummaryText"):
+            html.index("async function copyProjectWorkspaceProviderFailureTaxonomyText")
+        ]
+        for key in [
+            "providerFailureTaxonomyPackTitle",
+            "providerFailureTaxonomySummaryTitle",
+            "providerFailureTaxonomyCardsTitle",
+            "providerFailureTaxonomyPoliciesTitle",
+            "providerFailureTaxonomyRetryTitle",
+            "providerFailureTaxonomyManualTitle",
+            "providerFailureTaxonomyNonRecoverableTitle",
+            "providerFailureTaxonomyActionMapTitle",
+            "providerFailureTaxonomyAuditTitle",
+            "providerFailureTaxonomySafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Failure taxonomy preview only",
+            "not a real failure handling system",
+            "does not execute real recovery",
+            "creates no real task",
+            "executes no real retry or rollback",
+            "does not execute real actions",
+            "write databases",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
