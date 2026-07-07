@@ -31912,6 +31912,567 @@ def _rw_workspace_provider_mock_invocation_result_pack(
     }
 
 
+def _rw_workspace_provider_failure_taxonomy_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    result_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_mock_invocation_result_pack"
+        )
+        or {}
+    )
+    summary = dict(result_pack.get("mock_invocation_result_summary") or {})
+    ledger = list(result_pack.get("sandbox_run_ledger") or [])
+    result_cards = list(result_pack.get("mock_run_result_cards") or [])
+    snapshots = list(result_pack.get("mock_input_output_snapshots") or [])
+    boundary_results = list(
+        result_pack.get("boundary_enforcement_results") or []
+    )
+    failure_observations = list(
+        result_pack.get("mock_failure_observations") or []
+    )
+    operator_notes = list(result_pack.get("operator_review_notes") or [])
+    source_quality = dict(
+        result_pack.get("sandbox_result_quality_checks") or {}
+    )
+
+    ledger_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in ledger
+        if item.get("provider_id")
+    }
+    snapshot_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in snapshots
+        if item.get("provider_id")
+    }
+    failure_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in failure_observations
+        if item.get("provider_id")
+    }
+    operator_note_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in operator_notes
+        if item.get("provider_id")
+    }
+    boundary_by_provider: dict[str, list[dict]] = {}
+    for item in boundary_results:
+        provider_id = _rw_text(item.get("provider_id"))
+        if provider_id:
+            boundary_by_provider.setdefault(provider_id, []).append(item)
+
+    category_by_provider_type = {
+        "llm_text_generation": "approval_required",
+        "video_generation_provider": "media_contract_risk",
+        "image_generation_provider": "media_contract_risk",
+        "media_storage_provider": "media_contract_risk",
+        "external_scraping_provider": "external_call_blocked",
+        "translation_provider": "output_contract_failure",
+        "analytics_or_tracking_provider": "boundary_blocked_real_behavior",
+        "database_persistence_provider": "database_write_blocked",
+        "approval_or_ticket_provider": "approval_required",
+        "rollback_restore_provider": "rollback_or_restore_blocked",
+    }
+    severity_by_category = {
+        "approval_required": "medium",
+        "media_contract_risk": "high",
+        "external_call_blocked": "high",
+        "output_contract_failure": "medium",
+        "boundary_blocked_real_behavior": "high",
+        "database_write_blocked": "critical",
+        "rollback_or_restore_blocked": "critical",
+    }
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    providers = []
+    seen_provider_types = set()
+    for card in result_cards:
+        provider_type = _rw_text(card.get("provider_type"))
+        if provider_type:
+            providers.append(card)
+            seen_provider_types.add(provider_type)
+    for provider_type in required_provider_types:
+        if provider_type not in seen_provider_types:
+            provider_id = provider_type
+            providers.append(
+                {
+                    "result_id": f"mock_result_card_{provider_id}",
+                    "run_id": f"sandbox_mock_run_{provider_id}",
+                    "provider_id": provider_id,
+                    "provider_type": provider_type,
+                    "source_test_id": (
+                        f"mock_invocation_contract_test_{provider_id}"
+                    ),
+                    "input_contract_status": "preview_shape_identified",
+                    "output_contract_status": "preview_shape_identified",
+                    "boundary_rule_status": "needs_operator_review",
+                    "failure_simulation_status": (
+                        "mock_failure_observed_preview_only"
+                    ),
+                    "blocked_real_behavior_summary": (
+                        "Real provider behavior remains blocked in preview."
+                    ),
+                }
+            )
+
+    failure_taxonomy_cards = []
+    recovery_policy_cards = []
+    failure_to_action_map = []
+    manual_intervention_requirements = []
+
+    for index, card in enumerate(providers, start=1):
+        provider_id = _rw_text(card.get("provider_id"))
+        provider_type = _rw_text(card.get("provider_type")) or provider_id
+        run = ledger_by_provider.get(provider_id, {})
+        snapshot = snapshot_by_provider.get(provider_id, {})
+        failure = failure_by_provider.get(provider_id, {})
+        note = operator_note_by_provider.get(provider_id, {})
+        provider_boundaries = boundary_by_provider.get(provider_id, [])
+        category = category_by_provider_type.get(
+            provider_type,
+            "mock_failure_simulation",
+        )
+        severity = severity_by_category.get(category, "medium")
+        source_result_id = _rw_text(card.get("result_id")) or (
+            f"mock_result_card_{provider_id}"
+        )
+        source_run_id = _rw_text(card.get("run_id")) or _rw_text(
+            run.get("run_id")
+        )
+        if not source_run_id:
+            source_run_id = f"sandbox_mock_run_{provider_id}"
+        failure_type_id = f"failure_taxonomy_{provider_id}"
+        failure_signal = _rw_text(failure.get("failure_signal")) or _rw_text(
+            card.get("failure_simulation_status")
+        )
+        if not failure_signal:
+            failure_signal = "mock_failure_signal_preview_only"
+        detected_from = [
+            "workspace_provider_mock_invocation_result_pack",
+            "mock_invocation_result_summary",
+            "sandbox_run_ledger",
+            "mock_run_result_cards",
+            "mock_input_output_snapshots",
+            "boundary_enforcement_results",
+            "mock_failure_observations",
+            "operator_review_notes",
+            "sandbox_result_quality_checks",
+        ]
+        if snapshot:
+            detected_from.append(_rw_text(snapshot.get("snapshot_id")))
+        if provider_boundaries:
+            detected_from.extend(
+                _rw_text(item.get("enforcement_id"))
+                for item in provider_boundaries
+                if item.get("enforcement_id")
+            )
+
+        failure_taxonomy_cards.append(
+            {
+                "failure_type_id": failure_type_id,
+                "failure_type": (
+                    f"{provider_type}_mock_preview_failure_policy"
+                ),
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_run_id": source_run_id,
+                "source_result_id": source_result_id,
+                "failure_category": category,
+                "failure_signal": failure_signal,
+                "severity": severity,
+                "detected_from": detected_from,
+                "blocked_real_behavior_summary": _rw_text(
+                    card.get("blocked_real_behavior_summary")
+                )
+                or (
+                    "Real invocation, retry, rollback, persistence, media, "
+                    "secret, approval, paid, registry, external scraping, "
+                    "restore, and execution behavior remain blocked."
+                ),
+                "operator_visible_message": _rw_text(
+                    note.get("recommended_operator_action")
+                )
+                or (
+                    "Review this deterministic failure taxonomy preview; do "
+                    "not run a real provider or recovery action."
+                ),
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Failure taxonomy card classifies mock or preview "
+                    "failure signals only and does not trigger real provider "
+                    "failure handling."
+                ),
+            }
+        )
+        recovery_policy_cards.append(
+            {
+                "policy_id": f"recovery_policy_{provider_id}",
+                "failure_type_id": failure_type_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "recovery_strategy": (
+                    "manual_review_then_dry_run_retry_policy_preview_only"
+                ),
+                "allowed_recovery_modes": [
+                    "manual_review_preview",
+                    "contract_recheck_preview",
+                    "dry_run_retry_plan_preview",
+                    "operator_note_review",
+                ],
+                "disallowed_recovery_modes": [
+                    "real_provider_retry",
+                    "real_provider_invocation",
+                    "real_rollback",
+                    "real_restore",
+                    "database_write",
+                    "secret_read",
+                    "media_upload",
+                    "media_download",
+                    "paid_operation",
+                    "registry_write",
+                    "external_scraping",
+                ],
+                "requires_human_review": True,
+                "requires_secret_check": provider_type
+                in {
+                    "llm_text_generation",
+                    "video_generation_provider",
+                    "image_generation_provider",
+                    "translation_provider",
+                },
+                "requires_cost_review": provider_type
+                in {
+                    "llm_text_generation",
+                    "video_generation_provider",
+                    "image_generation_provider",
+                    "translation_provider",
+                    "external_scraping_provider",
+                },
+                "requires_rollback_review": provider_type
+                == "rollback_restore_provider",
+                "retry_allowed": False,
+                "real_retry_allowed": False,
+                "real_rollback_allowed": False,
+                "recommended_operator_action": (
+                    "Use this recovery policy as a preview checklist only; "
+                    "keep real retry, rollback, restore, provider invocation, "
+                    "persistence, media, secret, paid, registry, and external "
+                    "scraping disabled."
+                ),
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Recovery policy card describes preview recovery strategy "
+                    "only and does not execute retry or rollback."
+                ),
+            }
+        )
+        failure_to_action_map.append(
+            {
+                "map_id": f"failure_to_action_{provider_id}",
+                "failure_type_id": failure_type_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "preview_action": (
+                    "route_to_manual_review_and_update_dry_run_contract_"
+                    "checklist"
+                ),
+                "source_run_id": source_run_id,
+                "source_result_id": source_result_id,
+                "real_action_executed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Failure-to-action mapping is preview only and does not "
+                    "create a task, approval, retry, rollback, or provider "
+                    "operation."
+                ),
+            }
+        )
+        manual_intervention_requirements.append(
+            {
+                "requirement_id": f"manual_intervention_{provider_id}",
+                "failure_type_id": failure_type_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "requirement": (
+                    "Human operator must review mock failure category, "
+                    "boundary block, approval, secret, cost, and rollback "
+                    "requirements before any future implementation."
+                ),
+                "operator_task_created": False,
+                "real_approval_created": False,
+                "real_execution_allowed": False,
+            }
+        )
+
+    retry_boundary_rules = [
+        {
+            "rule_id": "retry_boundary_manual_review_only",
+            "rule_type": "manual_review_required_before_retry",
+            "rule_summary": (
+                "Retry can only be discussed as a dry-run preview after "
+                "human review; no real retry is executed."
+            ),
+            "real_retry_allowed": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "rule_id": "retry_boundary_no_secret_or_paid_operation",
+            "rule_type": "secret_and_cost_block",
+            "rule_summary": (
+                "Any recovery path that needs secrets, API keys, paid "
+                "operations, registry writes, or external calls is blocked "
+                "and can only be reviewed as preview policy."
+            ),
+            "real_retry_allowed": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "rule_id": "retry_boundary_no_rollback_or_restore",
+            "rule_type": "rollback_restore_block",
+            "rule_summary": (
+                "Rollback and restore are policy preview topics only and are "
+                "never executed by this pack."
+            ),
+            "real_retry_allowed": False,
+            "real_rollback_allowed": False,
+            "real_execution_allowed": False,
+        },
+    ]
+    non_recoverable_conditions = [
+        {
+            "condition_id": "secret_blocked",
+            "condition_type": "secret_missing_or_blocked",
+            "condition_summary": (
+                "Recovery cannot proceed when a real secret or API key would "
+                "be required."
+            ),
+            "real_recovery_allowed": False,
+        },
+        {
+            "condition_id": "paid_operation_blocked",
+            "condition_type": "quota_or_cost_risk",
+            "condition_summary": (
+                "Recovery cannot proceed when it would create cost, quota, "
+                "billing, or paid provider activity."
+            ),
+            "real_recovery_allowed": False,
+        },
+        {
+            "condition_id": "rollback_blocked",
+            "condition_type": "rollback_or_restore_blocked",
+            "condition_summary": (
+                "Recovery cannot proceed through real rollback or restore."
+            ),
+            "real_recovery_allowed": False,
+        },
+        {
+            "condition_id": "database_write_blocked",
+            "condition_type": "database_write_blocked",
+            "condition_summary": (
+                "Recovery cannot proceed when it would write to a database "
+                "or real history table."
+            ),
+            "real_recovery_allowed": False,
+        },
+        {
+            "condition_id": "external_scraping_blocked",
+            "condition_type": "external_call_blocked",
+            "condition_summary": (
+                "Recovery cannot proceed when it would scrape or call an "
+                "external source."
+            ),
+            "real_recovery_allowed": False,
+        },
+    ]
+    covered_provider_types = sorted({
+        _rw_text(item.get("provider_type"))
+        for item in failure_taxonomy_cards
+        if item.get("provider_type")
+    })
+    signature = json.dumps(
+        {
+            "source_result_id": _rw_text(summary.get("result_id")),
+            "failure_type_ids": [
+                item["failure_type_id"] for item in failure_taxonomy_cards
+            ],
+            "provider_types": covered_provider_types,
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    taxonomy_id = (
+        "workspace_provider_failure_taxonomy_"
+        + hashlib.sha256(signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_service_health_read_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_approval_creation_enabled": False,
+        "real_failure_injection_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_provider_failure_taxonomy_pack_v1",
+        "failure_taxonomy_summary": {
+            "taxonomy_id": taxonomy_id,
+            "mode": (
+                "failure_taxonomy_preview_recovery_policy_preview_"
+                "dry_run_only"
+            ),
+            "source_pack": (
+                "workspace_provider_mock_invocation_result_pack"
+            ),
+            "source_result_id": _rw_text(summary.get("result_id")),
+            "failure_taxonomy_card_count": len(failure_taxonomy_cards),
+            "recovery_policy_card_count": len(recovery_policy_cards),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "recommended_next_action": (
+                "Review failure taxonomy and recovery policy preview; do not "
+                "execute real retry, rollback, restore, provider invocation, "
+                "LLM, image, video, media, paid, registry, external scraping, "
+                "database persistence, approval, task creation, or execution."
+            ),
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "failure_taxonomy_cards": failure_taxonomy_cards,
+        "recovery_policy_cards": recovery_policy_cards,
+        "retry_boundary_rules": retry_boundary_rules,
+        "manual_intervention_requirements": manual_intervention_requirements,
+        "non_recoverable_conditions": non_recoverable_conditions,
+        "failure_to_action_map": failure_to_action_map,
+        "recovery_quality_checks": {
+            "source_mock_invocation_result_pack_present": bool(result_pack),
+            "mock_invocation_result_summary_referenced": bool(summary),
+            "sandbox_run_ledger_referenced": bool(ledger),
+            "mock_run_result_cards_referenced": bool(result_cards),
+            "mock_input_output_snapshots_referenced": bool(snapshots),
+            "boundary_enforcement_results_referenced": bool(
+                boundary_results
+            ),
+            "mock_failure_observations_referenced": bool(
+                failure_observations
+            ),
+            "operator_review_notes_referenced": bool(operator_notes),
+            "sandbox_result_quality_checks_referenced": bool(source_quality),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_failure_cards_keep_real_invocation_disabled": all(
+                not item["real_invocation_allowed"]
+                for item in failure_taxonomy_cards
+            ),
+            "all_failure_cards_keep_real_execution_disabled": all(
+                not item["real_execution_allowed"]
+                for item in failure_taxonomy_cards
+            ),
+            "all_recovery_policies_keep_real_retry_disabled": all(
+                not item["real_retry_allowed"]
+                for item in recovery_policy_cards
+            ),
+            "all_recovery_policies_keep_real_rollback_disabled": all(
+                not item["real_rollback_allowed"]
+                for item in recovery_policy_cards
+            ),
+            "all_failure_action_maps_are_preview_only": all(
+                not item["real_action_executed"]
+                for item in failure_to_action_map
+            ),
+            "manual_intervention_does_not_create_tasks": all(
+                not item["operator_task_created"]
+                for item in manual_intervention_requirements
+            ),
+            "audit_preview_not_persisted": True,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "provider_invocation_performed": False,
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": (
+                "deterministic_provider_failure_taxonomy_recovery_policy_"
+                "preview"
+            ),
+            "taxonomy_id": taxonomy_id,
+            "source_result_id": _rw_text(summary.get("result_id")),
+            "is_real_failure_handling_system": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "secret_read_performed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_failure_injection_triggered": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "audit_persisted": False,
+            "note": (
+                "This is a deterministic provider failure taxonomy and "
+                "recovery policy preview derived from the mock invocation "
+                "result pack only; it does not invoke providers, trigger "
+                "failures, retry, rollback, restore, read secrets, upload or "
+                "download media, read logs, read history tables, read service "
+                "health, create operator tasks, create approvals, write a "
+                "database, perform paid operations, write a registry, scrape "
+                "externally, or execute real behavior."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -32072,6 +32633,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         _rw_workspace_provider_mock_invocation_result_pack(
             creative_decision_pack
         )
+    )
+    creative_decision_pack["workspace_provider_failure_taxonomy_pack"] = (
+        _rw_workspace_provider_failure_taxonomy_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

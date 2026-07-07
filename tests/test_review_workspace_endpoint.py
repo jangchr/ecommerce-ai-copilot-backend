@@ -4809,6 +4809,244 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_provider_failure_taxonomy_pack_is_recovery_policy_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-provider-failure-taxonomy",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PROVIDERFAILURE001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks during commute and needs a better seal.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_provider_failure_taxonomy_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_provider_failure_taxonomy_pack_v1",
+        )
+        summary = pack["failure_taxonomy_summary"]
+        self.assertTrue(summary["taxonomy_id"])
+        self.assertIn("failure_taxonomy_preview", summary["mode"])
+        self.assertIn("recovery_policy_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["real_invocation_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        required_provider_types = {
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "media_storage_provider",
+            "external_scraping_provider",
+            "translation_provider",
+            "analytics_or_tracking_provider",
+            "database_persistence_provider",
+            "approval_or_ticket_provider",
+            "rollback_restore_provider",
+        }
+        failure_cards = pack["failure_taxonomy_cards"]
+        self.assertTrue(failure_cards)
+        failure_card_types = {item["provider_type"] for item in failure_cards}
+        self.assertTrue(required_provider_types <= failure_card_types)
+        for card in failure_cards:
+            for field in [
+                "failure_type_id", "failure_type", "provider_id",
+                "provider_type", "source_run_id", "source_result_id",
+                "failure_category", "failure_signal", "severity",
+                "detected_from", "blocked_real_behavior_summary",
+                "operator_visible_message",
+            ]:
+                with self.subTest(card=card["failure_type_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertIn(
+                "workspace_provider_mock_invocation_result_pack",
+                card["detected_from"],
+            )
+            self.assertIn(
+                card["failure_category"],
+                {
+                    "input_contract_failure",
+                    "output_contract_failure",
+                    "boundary_blocked_real_behavior",
+                    "secret_missing_or_blocked",
+                    "approval_required",
+                    "mock_failure_simulation",
+                    "quota_or_cost_risk",
+                    "media_contract_risk",
+                    "external_call_blocked",
+                    "rollback_or_restore_blocked",
+                    "database_write_blocked",
+                },
+            )
+            self.assertFalse(card["real_invocation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        policies = pack["recovery_policy_cards"]
+        self.assertTrue(policies)
+        policy_types = {item["provider_type"] for item in policies}
+        self.assertTrue(required_provider_types <= policy_types)
+        for policy in policies:
+            for field in [
+                "policy_id", "failure_type_id", "provider_id",
+                "provider_type", "recovery_strategy",
+                "allowed_recovery_modes", "disallowed_recovery_modes",
+                "requires_human_review", "requires_secret_check",
+                "requires_cost_review", "requires_rollback_review",
+                "retry_allowed", "recommended_operator_action",
+            ]:
+                with self.subTest(policy=policy["policy_id"], field=field):
+                    self.assertIn(field, policy)
+            self.assertIn(
+                "real_provider_retry", policy["disallowed_recovery_modes"]
+            )
+            self.assertIn("real_rollback", policy["disallowed_recovery_modes"])
+            self.assertFalse(policy["real_retry_allowed"])
+            self.assertFalse(policy["real_rollback_allowed"])
+            self.assertFalse(policy["real_execution_allowed"])
+
+        retry_rules = pack["retry_boundary_rules"]
+        self.assertTrue(retry_rules)
+        for rule in retry_rules:
+            self.assertFalse(rule["real_retry_allowed"])
+            self.assertFalse(rule["real_execution_allowed"])
+            self.assertIn("preview", rule["rule_summary"])
+
+        manual_requirements = pack["manual_intervention_requirements"]
+        self.assertTrue(manual_requirements)
+        for requirement in manual_requirements:
+            self.assertFalse(requirement["operator_task_created"])
+            self.assertFalse(requirement["real_approval_created"])
+            self.assertFalse(requirement["real_execution_allowed"])
+
+        non_recoverable = pack["non_recoverable_conditions"]
+        self.assertTrue(non_recoverable)
+        condition_types = {item["condition_type"] for item in non_recoverable}
+        self.assertTrue({
+            "secret_missing_or_blocked",
+            "quota_or_cost_risk",
+            "rollback_or_restore_blocked",
+            "database_write_blocked",
+            "external_call_blocked",
+        } <= condition_types)
+        for condition in non_recoverable:
+            self.assertFalse(condition["real_recovery_allowed"])
+
+        action_map = pack["failure_to_action_map"]
+        self.assertTrue(action_map)
+        for item in action_map:
+            self.assertIn("preview_action", item)
+            self.assertFalse(item["real_action_executed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        checks = pack["recovery_quality_checks"]
+        for key in [
+            "source_mock_invocation_result_pack_present",
+            "mock_invocation_result_summary_referenced",
+            "sandbox_run_ledger_referenced",
+            "mock_run_result_cards_referenced",
+            "mock_input_output_snapshots_referenced",
+            "boundary_enforcement_results_referenced",
+            "mock_failure_observations_referenced",
+            "operator_review_notes_referenced",
+            "sandbox_result_quality_checks_referenced",
+            "all_required_provider_types_covered",
+            "all_failure_cards_keep_real_invocation_disabled",
+            "all_failure_cards_keep_real_execution_disabled",
+            "all_recovery_policies_keep_real_retry_disabled",
+            "all_recovery_policies_keep_real_rollback_disabled",
+            "all_failure_action_maps_are_preview_only",
+            "manual_intervention_does_not_create_tasks",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_retry_executed", "real_rollback_executed",
+            "provider_invocation_performed", "real_execution_performed",
+            "database_write_performed", "real_log_read_performed",
+            "real_history_table_read_performed",
+            "real_service_health_read_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["taxonomy_id"])
+        self.assertFalse(audit["is_real_failure_handling_system"])
+        self.assertFalse(audit["provider_invocation_performed"])
+        self.assertFalse(audit["provider_called"])
+        self.assertFalse(audit["llm_called"])
+        self.assertFalse(audit["image_generation_performed"])
+        self.assertFalse(audit["video_generation_performed"])
+        self.assertFalse(audit["media_upload_performed"])
+        self.assertFalse(audit["media_download_performed"])
+        self.assertFalse(audit["secret_read_performed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_service_health_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_approval_created"])
+        self.assertFalse(audit["real_failure_injection_triggered"])
+        self.assertFalse(audit["real_retry_executed"])
+        self.assertFalse(audit["real_rollback_executed"])
+        self.assertFalse(audit["real_restore_executed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_enabled", "llm_enabled", "image_enabled",
+            "video_enabled", "media_enabled", "paid_enabled",
+            "registry_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
