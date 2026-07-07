@@ -5047,6 +5047,253 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_provider_asset_contract_pack_is_manifest_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-provider-asset-contract",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PROVIDERASSET001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks during commute and needs a better seal.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_asset_contract_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_provider_asset_contract_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_provider_asset_contract_pack_v1",
+        )
+        summary = pack["asset_contract_summary"]
+        self.assertTrue(summary["asset_contract_pack_id"])
+        self.assertIn("asset_contract_preview", summary["mode"])
+        self.assertIn("media_manifest_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            with self.subTest(source_pack=source_pack):
+                self.assertIn(source_pack, summary["source_packs"])
+        self.assertFalse(summary["media_upload_allowed"])
+        self.assertFalse(summary["media_download_allowed"])
+        self.assertFalse(summary["real_generation_allowed"])
+        self.assertFalse(summary["real_invocation_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        required_provider_types = {
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "media_storage_provider",
+            "external_scraping_provider",
+            "translation_provider",
+            "analytics_or_tracking_provider",
+            "database_persistence_provider",
+            "approval_or_ticket_provider",
+            "rollback_restore_provider",
+        }
+        cards = pack["provider_asset_contract_cards"]
+        self.assertTrue(cards)
+        self.assertTrue(required_provider_types <= {
+            card["provider_type"] for card in cards
+        })
+        for card in cards:
+            for field in [
+                "asset_contract_id", "provider_id", "provider_type",
+                "source_capability", "asset_role",
+                "required_input_assets", "expected_output_assets",
+                "allowed_asset_modes", "disallowed_asset_modes",
+                "risk_note",
+            ]:
+                with self.subTest(card=card["asset_contract_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["media_upload_allowed"])
+            self.assertFalse(card["media_download_allowed"])
+            self.assertFalse(card["real_generation_allowed"])
+            self.assertFalse(card["real_invocation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        manifests = pack["media_manifest_cards"]
+        self.assertTrue(manifests)
+        self.assertGreaterEqual(len({item["provider_id"] for item in manifests}), 3)
+        self.assertTrue(required_provider_types <= {
+            item["provider_type"] for item in manifests
+        })
+        for manifest in manifests:
+            for field in [
+                "manifest_id", "provider_id", "provider_type",
+                "asset_type", "asset_purpose", "source_pack",
+                "mock_asset_ref", "storage_mode", "transfer_mode",
+                "validation_status", "blocked_real_behavior_summary",
+            ]:
+                with self.subTest(
+                    manifest=manifest["manifest_id"], field=field
+                ):
+                    self.assertIn(field, manifest)
+            self.assertFalse(manifest["real_media_operation_allowed"])
+            self.assertFalse(manifest["real_execution_allowed"])
+
+        input_requirements = pack["input_asset_requirements"]
+        self.assertTrue(input_requirements)
+        for requirement in input_requirements:
+            self.assertFalse(requirement["file_read_performed"])
+            self.assertFalse(requirement["media_upload_performed"])
+            self.assertFalse(requirement["secret_read_performed"])
+            self.assertFalse(requirement["real_execution_allowed"])
+
+        output_requirements = pack["output_asset_requirements"]
+        self.assertTrue(output_requirements)
+        for requirement in output_requirements:
+            self.assertFalse(requirement["file_write_performed"])
+            self.assertFalse(requirement["media_download_performed"])
+            self.assertFalse(requirement["media_generated"])
+            self.assertFalse(requirement["database_write_performed"])
+            self.assertFalse(requirement["real_execution_allowed"])
+
+        rules = pack["asset_validation_rules"]
+        self.assertTrue(rules)
+        for rule in rules:
+            self.assertIn("required_fields", rule)
+            self.assertIn("blocked_validation_behaviors", rule)
+            self.assertFalse(rule["real_media_validation_performed"])
+            self.assertFalse(rule["real_execution_allowed"])
+
+        storage_boundaries = pack["storage_transfer_boundaries"]
+        self.assertTrue(storage_boundaries)
+        for boundary in storage_boundaries:
+            self.assertIn("no upload", boundary["storage_boundary"])
+            self.assertIn("no download", boundary["storage_boundary"])
+            self.assertIn("no storage write", boundary["storage_boundary"])
+            self.assertFalse(boundary["media_upload_allowed"])
+            self.assertFalse(boundary["media_download_allowed"])
+            self.assertFalse(boundary["storage_write_allowed"])
+            self.assertFalse(boundary["external_service_call_allowed"])
+            self.assertFalse(boundary["database_write_allowed"])
+            self.assertFalse(boundary["real_execution_allowed"])
+
+        policy_map = pack["asset_failure_policy_map"]
+        self.assertTrue(policy_map)
+        for item in policy_map:
+            self.assertEqual(
+                item["source_pack"],
+                "workspace_provider_failure_taxonomy_pack",
+            )
+            self.assertFalse(item["real_retry_allowed"])
+            self.assertFalse(item["real_rollback_allowed"])
+            self.assertFalse(item["real_restore_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        checks = pack["asset_quality_checks"]
+        for key in [
+            "asset_contract_summary_present",
+            "source_adapter_contract_pack_present",
+            "source_contract_test_pack_present",
+            "source_mock_invocation_result_pack_present",
+            "source_failure_taxonomy_pack_present",
+            "source_permission_matrix_pack_present",
+            "provider_asset_contract_cards_present",
+            "media_manifest_cards_present",
+            "all_required_provider_types_covered",
+            "all_contract_cards_block_media_upload",
+            "all_contract_cards_block_media_download",
+            "all_contract_cards_block_real_generation",
+            "all_contract_cards_block_real_invocation",
+            "all_contract_cards_block_real_execution",
+            "manifests_block_real_media_operations",
+            "input_requirements_do_not_read_files",
+            "output_requirements_do_not_write_files",
+            "storage_boundaries_block_transfer_and_storage",
+            "failure_policy_map_does_not_retry_or_rollback",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_media_operation_performed",
+            "provider_invocation_performed",
+            "real_execution_performed",
+            "database_write_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["asset_contract_pack_id"])
+        self.assertFalse(audit["is_real_media_pipeline"])
+        self.assertFalse(audit["provider_invocation_performed"])
+        self.assertFalse(audit["provider_called"])
+        self.assertFalse(audit["llm_called"])
+        self.assertFalse(audit["image_generation_performed"])
+        self.assertFalse(audit["video_generation_performed"])
+        self.assertFalse(audit["media_upload_performed"])
+        self.assertFalse(audit["media_download_performed"])
+        self.assertFalse(audit["file_read_performed"])
+        self.assertFalse(audit["file_write_performed"])
+        self.assertFalse(audit["storage_write_performed"])
+        self.assertFalse(audit["secret_read_performed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_retry_executed"])
+        self.assertFalse(audit["real_rollback_executed"])
+        self.assertFalse(audit["real_restore_executed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_enabled", "llm_enabled", "image_enabled",
+            "video_enabled", "media_enabled", "paid_enabled",
+            "registry_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

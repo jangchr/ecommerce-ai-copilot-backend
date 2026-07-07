@@ -32473,6 +32473,559 @@ def _rw_workspace_provider_failure_taxonomy_pack(
     }
 
 
+def _rw_workspace_provider_asset_contract_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    adapter_pack = dict(
+        creative_decision_pack.get("workspace_provider_adapter_contract_pack")
+        or {}
+    )
+    test_pack = dict(
+        creative_decision_pack.get("workspace_provider_contract_test_pack")
+        or {}
+    )
+    result_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_mock_invocation_result_pack"
+        )
+        or {}
+    )
+    taxonomy_pack = dict(
+        creative_decision_pack.get("workspace_provider_failure_taxonomy_pack")
+        or {}
+    )
+    permission_pack = dict(
+        creative_decision_pack.get(
+            "workspace_capability_permission_matrix_pack"
+        )
+        or {}
+    )
+
+    adapter_summary = dict(adapter_pack.get("adapter_contract_summary") or {})
+    result_summary = dict(
+        result_pack.get("mock_invocation_result_summary") or {}
+    )
+    taxonomy_summary = dict(
+        taxonomy_pack.get("failure_taxonomy_summary") or {}
+    )
+    permission_summary = dict(
+        permission_pack.get("permission_matrix_summary") or {}
+    )
+    adapter_cards = list(adapter_pack.get("provider_contract_cards") or [])
+    test_cases = list(test_pack.get("mock_invocation_test_cases") or [])
+    snapshots = list(result_pack.get("mock_input_output_snapshots") or [])
+    failure_cards = list(taxonomy_pack.get("failure_taxonomy_cards") or [])
+    recovery_policies = list(taxonomy_pack.get("recovery_policy_cards") or [])
+    capability_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    provider_by_type = {}
+    for card in adapter_cards:
+        provider_type = _rw_text(card.get("provider_type"))
+        if provider_type:
+            provider_by_type[provider_type] = card
+    for provider_type in required_provider_types:
+        provider_by_type.setdefault(
+            provider_type,
+            {
+                "provider_id": provider_type,
+                "provider_type": provider_type,
+                "source_capability": provider_type,
+                "required_inputs": ["future_asset_contract_preview"],
+                "required_outputs": ["mock_asset_response_preview"],
+            },
+        )
+
+    test_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in test_cases
+        if item.get("provider_id")
+    }
+    snapshot_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in snapshots
+        if item.get("provider_id")
+    }
+    failure_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in failure_cards
+        if item.get("provider_id")
+    }
+    recovery_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in recovery_policies
+        if item.get("provider_id")
+    }
+    capability_by_id = {
+        _rw_text(item.get("capability_id")): item
+        for item in capability_cards
+        if item.get("capability_id")
+    }
+
+    asset_type_by_provider_type = {
+        "llm_text_generation": "text_preview_asset",
+        "video_generation_provider": "video_manifest_preview",
+        "image_generation_provider": "image_manifest_preview",
+        "media_storage_provider": "storage_receipt_preview",
+        "external_scraping_provider": "source_result_preview",
+        "translation_provider": "localized_text_preview",
+        "analytics_or_tracking_provider": "event_schema_preview",
+        "database_persistence_provider": "persistence_receipt_preview",
+        "approval_or_ticket_provider": "ticket_preview_asset",
+        "rollback_restore_provider": "restore_plan_preview",
+    }
+    role_by_provider_type = {
+        "llm_text_generation": "copy_generation_preview",
+        "video_generation_provider": "video_asset_plan_preview",
+        "image_generation_provider": "image_asset_plan_preview",
+        "media_storage_provider": "media_storage_boundary_preview",
+        "external_scraping_provider": "external_source_boundary_preview",
+        "translation_provider": "translation_asset_preview",
+        "analytics_or_tracking_provider": "tracking_schema_preview",
+        "database_persistence_provider": "persistence_boundary_preview",
+        "approval_or_ticket_provider": "approval_ticket_asset_preview",
+        "rollback_restore_provider": "rollback_restore_asset_preview",
+    }
+
+    provider_asset_contract_cards = []
+    media_manifest_cards = []
+    input_asset_requirements = []
+    output_asset_requirements = []
+    asset_validation_rules = []
+    storage_transfer_boundaries = []
+    asset_failure_policy_map = []
+
+    allowed_asset_modes = [
+        "asset_contract_preview",
+        "media_manifest_preview",
+        "mock_asset_reference",
+        "dry_run_only",
+    ]
+    disallowed_asset_modes = [
+        "media_upload",
+        "media_download",
+        "real_generation",
+        "real_invocation",
+        "real_execution",
+        "file_read",
+        "file_write",
+        "database_write",
+        "secret_read",
+        "paid_operation",
+        "registry_write",
+        "external_scraping",
+        "real_retry",
+        "real_rollback",
+        "real_restore",
+    ]
+
+    for provider_type in required_provider_types:
+        provider = provider_by_type[provider_type]
+        provider_id = _rw_text(provider.get("provider_id")) or provider_type
+        source_capability = (
+            _rw_text(provider.get("source_capability")) or provider_type
+        )
+        capability = capability_by_id.get(source_capability, {})
+        test_case = test_by_provider.get(provider_id, {})
+        snapshot = snapshot_by_provider.get(provider_id, {})
+        failure = failure_by_provider.get(provider_id, {})
+        recovery = recovery_by_provider.get(provider_id, {})
+        required_inputs = list(provider.get("required_inputs") or [])
+        expected_outputs = list(provider.get("required_outputs") or [])
+        if not required_inputs:
+            required_inputs = list(test_case.get("mock_input_refs") or [])
+        if not expected_outputs:
+            expected_outputs = list(test_case.get("expected_mock_outputs") or [])
+        if not required_inputs:
+            required_inputs = ["future_asset_input_descriptor_preview"]
+        if not expected_outputs:
+            expected_outputs = ["mock_asset_output_descriptor_preview"]
+
+        asset_type = asset_type_by_provider_type[provider_type]
+        asset_role = role_by_provider_type[provider_type]
+        asset_contract_id = f"asset_contract_{provider_id}"
+        manifest_id = f"media_manifest_{provider_id}"
+
+        provider_asset_contract_cards.append(
+            {
+                "asset_contract_id": asset_contract_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_capability": source_capability,
+                "asset_role": asset_role,
+                "required_input_assets": required_inputs,
+                "expected_output_assets": expected_outputs,
+                "allowed_asset_modes": list(allowed_asset_modes),
+                "disallowed_asset_modes": list(disallowed_asset_modes),
+                "source_contract_id": _rw_text(
+                    test_case.get("source_contract_id")
+                )
+                or _rw_text(provider.get("contract_id")),
+                "source_permission_status": _rw_text(
+                    capability.get("current_status")
+                )
+                or "disabled_preview_only",
+                "source_mock_snapshot_id": _rw_text(
+                    snapshot.get("snapshot_id")
+                ),
+                "source_failure_type_id": _rw_text(
+                    failure.get("failure_type_id")
+                ),
+                "source_recovery_policy_id": _rw_text(
+                    recovery.get("policy_id")
+                ),
+                "media_upload_allowed": False,
+                "media_download_allowed": False,
+                "real_generation_allowed": False,
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Asset contract card is a deterministic preview derived "
+                    "from workspace provider packs; it does not read files, "
+                    "write files, generate media, invoke providers, read "
+                    "secrets, persist data, retry, rollback, restore, or "
+                    "execute real behavior."
+                ),
+            }
+        )
+        media_manifest_cards.append(
+            {
+                "manifest_id": manifest_id,
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "asset_type": asset_type,
+                "asset_purpose": asset_role,
+                "source_pack": (
+                    "workspace_provider_mock_invocation_result_pack"
+                ),
+                "mock_asset_ref": _rw_text(snapshot.get("snapshot_id")) or (
+                    f"mock_asset_ref_{provider_id}"
+                ),
+                "storage_mode": "manifest_preview_no_storage_write",
+                "transfer_mode": "no_upload_no_download",
+                "validation_status": (
+                    "field_and_boundary_preview_only_no_media_validation"
+                ),
+                "blocked_real_behavior_summary": (
+                    "Upload, download, real media generation, provider "
+                    "invocation, file IO, storage write, secret access, "
+                    "database persistence, paid operation, registry write, "
+                    "external scraping, retry, rollback, restore, and real "
+                    "execution are disabled."
+                ),
+                "real_media_operation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Media manifest card names a mock asset reference only; "
+                    "no file is uploaded, downloaded, generated, validated, "
+                    "stored, or written."
+                ),
+            }
+        )
+        input_asset_requirements.append(
+            {
+                "requirement_id": f"input_asset_requirement_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "required_input_assets": required_inputs,
+                "requirement_mode": "future_input_descriptor_preview_only",
+                "file_read_performed": False,
+                "media_upload_performed": False,
+                "secret_read_performed": False,
+                "real_execution_allowed": False,
+            }
+        )
+        output_asset_requirements.append(
+            {
+                "requirement_id": f"output_asset_requirement_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "expected_output_assets": expected_outputs,
+                "requirement_mode": "mock_output_descriptor_preview_only",
+                "file_write_performed": False,
+                "media_download_performed": False,
+                "media_generated": False,
+                "database_write_performed": False,
+                "real_execution_allowed": False,
+            }
+        )
+        asset_validation_rules.append(
+            {
+                "rule_id": f"asset_validation_rule_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "rule_type": "field_and_boundary_preview",
+                "required_fields": [
+                    "provider_id",
+                    "provider_type",
+                    "asset_type",
+                    "mock_asset_ref",
+                    "storage_mode",
+                    "transfer_mode",
+                ],
+                "blocked_validation_behaviors": [
+                    "real_media_validation",
+                    "file_read",
+                    "file_write",
+                    "provider_call",
+                    "storage_write",
+                    "database_write",
+                ],
+                "real_media_validation_performed": False,
+                "real_execution_allowed": False,
+            }
+        )
+        storage_transfer_boundaries.append(
+            {
+                "boundary_id": f"storage_transfer_boundary_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "storage_boundary": (
+                    "no upload, no download, no storage write, no external "
+                    "service call"
+                ),
+                "media_upload_allowed": False,
+                "media_download_allowed": False,
+                "storage_write_allowed": False,
+                "external_service_call_allowed": False,
+                "database_write_allowed": False,
+                "real_execution_allowed": False,
+            }
+        )
+        asset_failure_policy_map.append(
+            {
+                "map_id": f"asset_failure_policy_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "failure_type_id": _rw_text(
+                    failure.get("failure_type_id")
+                )
+                or f"failure_taxonomy_{provider_id}",
+                "recovery_policy_id": _rw_text(recovery.get("policy_id"))
+                or f"recovery_policy_{provider_id}",
+                "source_pack": "workspace_provider_failure_taxonomy_pack",
+                "policy_mode": (
+                    "failure_taxonomy_and_recovery_policy_preview_only"
+                ),
+                "real_retry_allowed": False,
+                "real_rollback_allowed": False,
+                "real_restore_allowed": False,
+                "real_execution_allowed": False,
+            }
+        )
+
+    covered_provider_types = sorted({
+        card["provider_type"] for card in provider_asset_contract_cards
+    })
+    signature = json.dumps(
+        {
+            "source_contract_id": _rw_text(adapter_summary.get("contract_id")),
+            "source_result_id": _rw_text(result_summary.get("result_id")),
+            "source_taxonomy_id": _rw_text(
+                taxonomy_summary.get("taxonomy_id")
+            ),
+            "asset_contract_ids": [
+                card["asset_contract_id"]
+                for card in provider_asset_contract_cards
+            ],
+            "manifest_ids": [
+                card["manifest_id"] for card in media_manifest_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    asset_contract_pack_id = (
+        "workspace_provider_asset_contract_"
+        + hashlib.sha256(signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "storage_write_enabled": False,
+        "real_media_validation_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_provider_asset_contract_pack_v1",
+        "asset_contract_summary": {
+            "asset_contract_pack_id": asset_contract_pack_id,
+            "mode": (
+                "asset_contract_preview_media_manifest_preview_"
+                "dry_run_only"
+            ),
+            "source_packs": [
+                "workspace_provider_adapter_contract_pack",
+                "workspace_provider_contract_test_pack",
+                "workspace_provider_mock_invocation_result_pack",
+                "workspace_provider_failure_taxonomy_pack",
+                "workspace_capability_permission_matrix_pack",
+            ],
+            "source_contract_id": _rw_text(adapter_summary.get("contract_id")),
+            "source_result_id": _rw_text(result_summary.get("result_id")),
+            "source_taxonomy_id": _rw_text(
+                taxonomy_summary.get("taxonomy_id")
+            ),
+            "source_permission_matrix_id": _rw_text(
+                permission_summary.get("matrix_id")
+            ),
+            "provider_asset_contract_card_count": len(
+                provider_asset_contract_cards
+            ),
+            "media_manifest_card_count": len(media_manifest_cards),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "media_upload_allowed": False,
+            "media_download_allowed": False,
+            "real_generation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "provider_asset_contract_cards": provider_asset_contract_cards,
+        "media_manifest_cards": media_manifest_cards,
+        "input_asset_requirements": input_asset_requirements,
+        "output_asset_requirements": output_asset_requirements,
+        "asset_validation_rules": asset_validation_rules,
+        "storage_transfer_boundaries": storage_transfer_boundaries,
+        "asset_failure_policy_map": asset_failure_policy_map,
+        "asset_quality_checks": {
+            "asset_contract_summary_present": True,
+            "source_adapter_contract_pack_present": bool(adapter_pack),
+            "source_contract_test_pack_present": bool(test_pack),
+            "source_mock_invocation_result_pack_present": bool(result_pack),
+            "source_failure_taxonomy_pack_present": bool(taxonomy_pack),
+            "source_permission_matrix_pack_present": bool(permission_pack),
+            "provider_asset_contract_cards_present": bool(
+                provider_asset_contract_cards
+            ),
+            "media_manifest_cards_present": bool(media_manifest_cards),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_contract_cards_block_media_upload": all(
+                not card["media_upload_allowed"]
+                for card in provider_asset_contract_cards
+            ),
+            "all_contract_cards_block_media_download": all(
+                not card["media_download_allowed"]
+                for card in provider_asset_contract_cards
+            ),
+            "all_contract_cards_block_real_generation": all(
+                not card["real_generation_allowed"]
+                for card in provider_asset_contract_cards
+            ),
+            "all_contract_cards_block_real_invocation": all(
+                not card["real_invocation_allowed"]
+                for card in provider_asset_contract_cards
+            ),
+            "all_contract_cards_block_real_execution": all(
+                not card["real_execution_allowed"]
+                for card in provider_asset_contract_cards
+            ),
+            "manifests_block_real_media_operations": all(
+                not card["real_media_operation_allowed"]
+                for card in media_manifest_cards
+            ),
+            "input_requirements_do_not_read_files": all(
+                not item["file_read_performed"]
+                for item in input_asset_requirements
+            ),
+            "output_requirements_do_not_write_files": all(
+                not item["file_write_performed"]
+                for item in output_asset_requirements
+            ),
+            "storage_boundaries_block_transfer_and_storage": all(
+                not item["media_upload_allowed"]
+                and not item["media_download_allowed"]
+                and not item["storage_write_allowed"]
+                for item in storage_transfer_boundaries
+            ),
+            "failure_policy_map_does_not_retry_or_rollback": all(
+                not item["real_retry_allowed"]
+                and not item["real_rollback_allowed"]
+                for item in asset_failure_policy_map
+            ),
+            "audit_preview_not_persisted": True,
+            "real_media_operation_performed": False,
+            "provider_invocation_performed": False,
+            "real_execution_performed": False,
+            "database_write_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": "deterministic_asset_contract_manifest_preview",
+            "asset_contract_pack_id": asset_contract_pack_id,
+            "source_packs": [
+                "workspace_provider_adapter_contract_pack",
+                "workspace_provider_contract_test_pack",
+                "workspace_provider_mock_invocation_result_pack",
+                "workspace_provider_failure_taxonomy_pack",
+                "workspace_capability_permission_matrix_pack",
+            ],
+            "is_real_media_pipeline": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "file_read_performed": False,
+            "file_write_performed": False,
+            "storage_write_performed": False,
+            "secret_read_performed": False,
+            "database_write_performed": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "audit_persisted": False,
+            "note": (
+                "This preview derives provider asset contracts and media "
+                "manifest cards from existing workspace provider packs only; "
+                "it does not upload, download, generate, validate, store, "
+                "persist, retry, rollback, restore, scrape, call providers, "
+                "read secrets, read files, write files, or execute real "
+                "behavior."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -32636,6 +33189,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_provider_failure_taxonomy_pack"] = (
         _rw_workspace_provider_failure_taxonomy_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_provider_asset_contract_pack"] = (
+        _rw_workspace_provider_asset_contract_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
