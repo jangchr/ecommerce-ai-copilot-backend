@@ -12792,6 +12792,211 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_real_provider_readiness_checklist_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace real provider readiness checklist bundle",
+            "PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER",
+            "latestProjectWorkspaceRealProviderReadinessChecklistPack",
+            "projectWorkspaceRealProviderReadinessChecklistPackFromWorkspace",
+            "projectWorkspaceExportRealProviderReadinessChecklistSnapshot",
+            "projectWorkspaceExportRealProviderReadinessChecklistMarkdown",
+            "renderProjectWorkspaceRealProviderReadinessSummaryPanel",
+            "renderProjectWorkspaceProviderReadinessCardsPanel",
+            "renderProjectWorkspaceReadinessGatePrerequisitePanel",
+            "renderProjectWorkspaceMissingApprovalSecretCostMediaPanel",
+            "renderProjectWorkspaceReadinessRiskQualityAuditSafetyPanel",
+            "copyProjectWorkspaceRealProviderReadinessSummary",
+            "copyProjectWorkspaceProviderReadinessCards",
+            "copyProjectWorkspaceReadinessGateChecks",
+            "copyProjectWorkspacePrerequisiteChecklist",
+            "copyProjectWorkspaceMissingReadinessRequirements",
+            "copyProjectWorkspaceApprovalReadinessRequirements",
+            "copyProjectWorkspaceSecretEnvironmentReadiness",
+            "copyProjectWorkspaceReadinessRiskRegister",
+            "copyProjectWorkspaceFullRealProviderReadinessChecklistPack",
+            "workspace_real_provider_readiness_checklist_pack: projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace)",
+            "Workspace Real Provider Readiness Checklist",
+            "Real Provider Readiness Summary",
+            "Provider Readiness Cards",
+            "Readiness Gate Checks",
+            "Prerequisite Checklist",
+            "Missing Readiness Requirements",
+            "Approval Readiness Requirements",
+            "Secret Environment Readiness",
+            "Cost Quota Readiness",
+            "Media Asset Readiness",
+            "Readiness Risk Register",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.real_provider_readiness_summary",
+            "pack.provider_readiness_cards",
+            "pack.readiness_gate_checks",
+            "pack.prerequisite_checklist",
+            "pack.missing_readiness_requirements",
+            "pack.approval_readiness_requirements",
+            "pack.secret_environment_readiness",
+            "pack.cost_quota_readiness",
+            "pack.media_asset_readiness",
+            "pack.readiness_risk_register",
+            "pack.readiness_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.provider_readiness_card_count",
+            "summary.readiness_gate_check_count",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.readiness_id",
+            "card.provider_id",
+            "card.provider_type",
+            "card.source_capability",
+            "card.current_readiness_status",
+            "card.readiness_level",
+            "card.contract_ready",
+            "card.mock_test_ready",
+            "card.failure_policy_ready",
+            "card.asset_manifest_ready",
+            "card.cost_quota_guard_ready",
+            "card.secret_ready",
+            "card.approval_ready",
+            "card.blocked_by",
+            "card.recommended_operator_action",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "card.risk_note",
+            "gate.gate_id",
+            "gate.gate_name",
+            "gate.gate_status",
+            "gate.required_evidence",
+            "gate.missing_evidence",
+            "gate.blocked_reason",
+            "gate.next_preview_step",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceApprovalRiskQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceRealProviderReadinessSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceReadinessRiskQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_real_provider_readiness_checklist_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "realProviderReadinessPackTitle",
+            "realProviderReadinessSummaryTitle",
+            "realProviderReadinessCardsTitle",
+            "realProviderReadinessGatesTitle",
+            "realProviderReadinessPrerequisiteTitle",
+            "realProviderReadinessMissingTitle",
+            "realProviderReadinessApprovalTitle",
+            "realProviderReadinessSecretTitle",
+            "realProviderReadinessCostTitle",
+            "realProviderReadinessMediaTitle",
+            "realProviderReadinessRiskTitle",
+            "realProviderReadinessAuditTitle",
+            "realProviderReadinessSafetyTitle",
+            "realProviderReadinessCopySummary",
+            "realProviderReadinessCopyCards",
+            "realProviderReadinessCopyGates",
+            "realProviderReadinessCopyPrerequisite",
+            "realProviderReadinessCopyMissing",
+            "realProviderReadinessCopyApproval",
+            "realProviderReadinessCopySecret",
+            "realProviderReadinessCopyRisk",
+            "realProviderReadinessCopyFull",
+            "realProviderReadinessCopied",
+            "realProviderReadinessCopyFailed",
+            "realProviderReadinessCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn(
+                "Project Workspace real provider readiness checklist bundle",
+                script,
+            )
+            self.assertIn(
+                "project_workspace_real_provider_readiness_checklist_marker",
+                script,
+            )
+        markdown = html[
+            html.index("function projectWorkspaceRealProviderReadinessChecklistSummaryText"):
+            html.index("async function copyProjectWorkspaceRealProviderReadinessChecklistText")
+        ]
+        for key in [
+            "realProviderReadinessPackTitle",
+            "realProviderReadinessSummaryTitle",
+            "realProviderReadinessCardsTitle",
+            "realProviderReadinessGatesTitle",
+            "realProviderReadinessPrerequisiteTitle",
+            "realProviderReadinessMissingTitle",
+            "realProviderReadinessApprovalTitle",
+            "realProviderReadinessSecretTitle",
+            "realProviderReadinessCostTitle",
+            "realProviderReadinessMediaTitle",
+            "realProviderReadinessRiskTitle",
+            "realProviderReadinessAuditTitle",
+            "realProviderReadinessSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "real provider readiness checklist preview",
+            "not real provider enablement",
+            "does not unlock real invocation",
+            "does not read secrets",
+            "does not read real billing or quota",
+            "does not upload or download media",
+            "creates no real approval",
+            "locked, blocked, or review-required",
+            "secret missing",
+            "paid blocked",
+            "quota unknown",
+            "media operation blocked",
+            "rollback blocked",
+            "external call blocked",
+            "database persistence blocked",
+            "Audit preview is not written to a database",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

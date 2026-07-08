@@ -3630,6 +3630,7 @@
         let latestProjectWorkspaceProviderFailureTaxonomyPack = {};
         let latestProjectWorkspaceProviderAssetContractPack = {};
         let latestProjectWorkspaceProviderCostQuotaRiskGuardPack = {};
+        let latestProjectWorkspaceRealProviderReadinessChecklistPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8934,6 +8935,7 @@
                 latestProjectWorkspaceProviderFailureTaxonomyPack = latestProjectCreativeDecisionPack.workspace_provider_failure_taxonomy_pack || {};
                 latestProjectWorkspaceProviderAssetContractPack = latestProjectCreativeDecisionPack.workspace_provider_asset_contract_pack || {};
                 latestProjectWorkspaceProviderCostQuotaRiskGuardPack = latestProjectCreativeDecisionPack.workspace_provider_cost_quota_risk_guard_pack || {};
+                latestProjectWorkspaceRealProviderReadinessChecklistPack = latestProjectCreativeDecisionPack.workspace_real_provider_readiness_checklist_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14800,6 +14802,7 @@
         const PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER = 'Project Workspace provider failure taxonomy bundle';
         const PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER = 'Project Workspace provider asset contract bundle';
         const PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER = 'Project Workspace provider cost quota risk guard bundle';
+        const PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER = 'Project Workspace real provider readiness checklist bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -19868,6 +19871,115 @@
         function copyProjectWorkspaceCostFailurePolicyMap() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('failurePolicy'); }
         function copyProjectWorkspaceApprovalCostReviewRequirements() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('approval'); }
         function copyProjectWorkspaceFullProviderCostQuotaRiskGuardPack() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('full'); }
+
+        function projectWorkspaceRealProviderReadinessChecklistPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceRealProviderReadinessChecklistPack && Object.keys(latestProjectWorkspaceRealProviderReadinessChecklistPack).length) return latestProjectWorkspaceRealProviderReadinessChecklistPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_real_provider_readiness_checklist_pack || {};
+        }
+
+        function projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceRealProviderReadinessChecklistPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER,
+                has_workspace_real_provider_readiness_checklist_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                real_provider_readiness_summary: pack.real_provider_readiness_summary || {},
+                provider_readiness_cards: Array.isArray(pack.provider_readiness_cards) ? pack.provider_readiness_cards : [],
+                readiness_gate_checks: Array.isArray(pack.readiness_gate_checks) ? pack.readiness_gate_checks : [],
+                prerequisite_checklist: Array.isArray(pack.prerequisite_checklist) ? pack.prerequisite_checklist : [],
+                missing_readiness_requirements: Array.isArray(pack.missing_readiness_requirements) ? pack.missing_readiness_requirements : [],
+                approval_readiness_requirements: Array.isArray(pack.approval_readiness_requirements) ? pack.approval_readiness_requirements : [],
+                secret_environment_readiness: pack.secret_environment_readiness || {},
+                cost_quota_readiness: pack.cost_quota_readiness || {},
+                media_asset_readiness: pack.media_asset_readiness || {},
+                readiness_risk_register: Array.isArray(pack.readiness_risk_register) ? pack.readiness_risk_register : [],
+                readiness_quality_checks: pack.readiness_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceRealProviderReadinessChecklistJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceRealProviderReadinessChecklistSummaryText(pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot()) {
+            if (!pack.has_workspace_real_provider_readiness_checklist_pack) return '';
+            const summary = pack.real_provider_readiness_summary || {};
+            return [
+                t('realProviderReadinessSummaryTitle'),
+                `${t('realProviderReadinessMode')}: ${summary.mode || t('none')}`,
+                `${t('realProviderReadinessProviderCount')}: ${summary.provider_readiness_card_count ?? pack.provider_readiness_cards.length}`,
+                `${t('realProviderReadinessGateCount')}: ${summary.readiness_gate_check_count ?? pack.readiness_gate_checks.length}`,
+                `${t('realProviderReadinessMissingCount')}: ${pack.missing_readiness_requirements.length}`,
+                `${t('realProviderReadinessRecommendedAction')}: ${summary.recommended_operator_action || t('none')}`,
+                `${t('realProviderReadinessRealInvocation')}: ${summary.real_invocation_allowed === false ? t('realProviderReadinessDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('realProviderReadinessRealExecution')}: ${summary.real_execution_allowed === false ? t('realProviderReadinessDisabled') : String(summary.real_execution_allowed)}`,
+                t('realProviderReadinessPreviewNote')
+            ].join('
+');
+        }
+
+        function projectWorkspaceRealProviderReadinessChecklistSectionText(titleKey, value) {
+            const body = projectWorkspaceRealProviderReadinessChecklistJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}
+${body}`;
+        }
+
+        function projectWorkspaceExportRealProviderReadinessChecklistMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace);
+            if (!pack.has_workspace_real_provider_readiness_checklist_pack) return '';
+            return [
+                `## ${t('realProviderReadinessPackTitle')}`,
+                `## ${t('realProviderReadinessSummaryTitle')}`,
+                projectWorkspaceRealProviderReadinessChecklistSummaryText(pack), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessCardsTitle', pack.provider_readiness_cards), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessGatesTitle', pack.readiness_gate_checks), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessPrerequisiteTitle', pack.prerequisite_checklist), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessMissingTitle', pack.missing_readiness_requirements), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessApprovalTitle', pack.approval_readiness_requirements), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessSecretTitle', pack.secret_environment_readiness), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessCostTitle', pack.cost_quota_readiness), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessMediaTitle', pack.media_asset_readiness), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessRiskTitle', pack.readiness_risk_register), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessAuditTitle', pack.audit_preview), '',
+                projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessSafetyTitle', pack.safety_boundaries),
+                t('realProviderReadinessSafetyNote')
+            ].filter(Boolean).join('
+');
+        }
+
+        async function copyProjectWorkspaceRealProviderReadinessChecklistText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceRealProviderReadinessChecklistStatus');
+            const pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceRealProviderReadinessChecklistSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessCardsTitle', pack.provider_readiness_cards)
+                : kind === 'gates' ? projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessGatesTitle', pack.readiness_gate_checks)
+                : kind === 'prerequisite' ? projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessPrerequisiteTitle', pack.prerequisite_checklist)
+                : kind === 'missing' ? projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessMissingTitle', pack.missing_readiness_requirements)
+                : kind === 'approval' ? projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessApprovalTitle', pack.approval_readiness_requirements)
+                : kind === 'secret' ? projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessSecretTitle', pack.secret_environment_readiness)
+                : kind === 'risk' ? projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessRiskTitle', pack.readiness_risk_register)
+                : projectWorkspaceExportRealProviderReadinessChecklistMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('realProviderReadinessCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('realProviderReadinessCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('realProviderReadinessCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('realProviderReadinessCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceRealProviderReadinessSummary() { return copyProjectWorkspaceRealProviderReadinessChecklistText('summary'); }
+        function copyProjectWorkspaceProviderReadinessCards() { return copyProjectWorkspaceRealProviderReadinessChecklistText('cards'); }
+        function copyProjectWorkspaceReadinessGateChecks() { return copyProjectWorkspaceRealProviderReadinessChecklistText('gates'); }
+        function copyProjectWorkspacePrerequisiteChecklist() { return copyProjectWorkspaceRealProviderReadinessChecklistText('prerequisite'); }
+        function copyProjectWorkspaceMissingReadinessRequirements() { return copyProjectWorkspaceRealProviderReadinessChecklistText('missing'); }
+        function copyProjectWorkspaceApprovalReadinessRequirements() { return copyProjectWorkspaceRealProviderReadinessChecklistText('approval'); }
+        function copyProjectWorkspaceSecretEnvironmentReadiness() { return copyProjectWorkspaceRealProviderReadinessChecklistText('secret'); }
+        function copyProjectWorkspaceReadinessRiskRegister() { return copyProjectWorkspaceRealProviderReadinessChecklistText('risk'); }
+        function copyProjectWorkspaceFullRealProviderReadinessChecklistPack() { return copyProjectWorkspaceRealProviderReadinessChecklistText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -23656,6 +23768,34 @@
             const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerCostQuotaRiskDisabled'):String(value)}`).join(' | ');
             return `<div class="section-block" id="projectWorkspaceApprovalRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerCostQuotaRiskApprovalRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskApprovalRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalCostReviewRequirements()">${escapeHTML(t('providerCostQuotaRiskCopyApproval'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskApprovalTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.approval_cost_review_requirements) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskScoreTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.risk_score_matrix) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.cost_guard_quality_checks) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.audit_preview) || t('providerCostQuotaRiskNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerCostQuotaRiskSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskApprovalRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskSafetyNote'))}</div></div>`;
         }
+        function renderProjectWorkspaceRealProviderReadinessSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace); if (!pack.has_workspace_real_provider_readiness_checklist_pack) return '';
+            const summary = pack.real_provider_readiness_summary || {};
+            return `<div class="section-block" id="projectWorkspaceRealProviderReadinessSummaryPanel" data-real-provider-readiness-checklist-marker="${PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER}" data-marker="project_workspace_real_provider_readiness_checklist_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realProviderReadinessPackTitle'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullRealProviderReadinessChecklistPack()">${escapeHTML(t('realProviderReadinessCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('realProviderReadinessMode'), summary.mode || t('none'))}${metricPill(t('realProviderReadinessProviderCount'), String(summary.provider_readiness_card_count ?? pack.provider_readiness_cards.length))}${metricPill(t('realProviderReadinessGateCount'), String(summary.readiness_gate_check_count ?? pack.readiness_gate_checks.length))}${metricPill(t('realProviderReadinessMissingCount'), String(pack.missing_readiness_requirements.length))}${metricPill(t('realProviderReadinessRealInvocation'), summary.real_invocation_allowed === false ? t('realProviderReadinessDisabled') : String(summary.real_invocation_allowed))}${metricPill(t('realProviderReadinessRealExecution'), summary.real_execution_allowed === false ? t('realProviderReadinessDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistSummaryText(pack) || t('realProviderReadinessNoData'))}</pre><div class="field-helper">${escapeHTML(t('realProviderReadinessPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceRealProviderReadinessChecklistStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRealProviderReadinessSummary()">${escapeHTML(t('realProviderReadinessCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceProviderReadinessCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace); if (!pack.has_workspace_real_provider_readiness_checklist_pack) return '';
+            const cards = (pack.provider_readiness_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.readiness_id || t('realProviderReadinessCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('realProviderReadinessProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('realProviderReadinessSourceCapability'))}:</strong> ${escapeHTML(card.source_capability || t('none'))}</div><div><strong>${escapeHTML(t('realProviderReadinessStatus'))}:</strong> ${escapeHTML(card.current_readiness_status || t('none'))}</div><div><strong>${escapeHTML(t('realProviderReadinessLevel'))}:</strong> ${escapeHTML(card.readiness_level || t('none'))}</div><div><strong>${escapeHTML(t('realProviderReadinessContractReady'))}:</strong> ${escapeHTML(String(card.contract_ready))}</div><div><strong>${escapeHTML(t('realProviderReadinessMockReady'))}:</strong> ${escapeHTML(String(card.mock_test_ready))}</div><div><strong>${escapeHTML(t('realProviderReadinessFailureReady'))}:</strong> ${escapeHTML(String(card.failure_policy_ready))}</div><div><strong>${escapeHTML(t('realProviderReadinessAssetReady'))}:</strong> ${escapeHTML(String(card.asset_manifest_ready))}</div><div><strong>${escapeHTML(t('realProviderReadinessCostReady'))}:</strong> ${escapeHTML(String(card.cost_quota_guard_ready))}</div><div><strong>${escapeHTML(t('realProviderReadinessSecretReady'))}:</strong> ${escapeHTML(String(card.secret_ready))}</div><div><strong>${escapeHTML(t('realProviderReadinessApprovalReady'))}:</strong> ${escapeHTML(String(card.approval_ready))}</div><div><strong>${escapeHTML(t('realProviderReadinessRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('realProviderReadinessDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('realProviderReadinessRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('realProviderReadinessDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText({blocked_by:card.blocked_by||[],recommended_operator_action:card.recommended_operator_action||'',risk_note:card.risk_note||''}) || t('realProviderReadinessNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceProviderReadinessCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realProviderReadinessCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderReadinessCards()">${escapeHTML(t('realProviderReadinessCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('realProviderReadinessNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceReadinessGatePrerequisitePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace); if (!pack.has_workspace_real_provider_readiness_checklist_pack) return '';
+            const gates = (pack.readiness_gate_checks || []).slice(0, 20).map((gate) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(gate.gate_id || t('realProviderReadinessGatesTitle'))}</strong><span class="metric-pill">${escapeHTML(gate.gate_status || t('none'))}</span></div><div><strong>${escapeHTML(t('realProviderReadinessProviderId'))}:</strong> ${escapeHTML(gate.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('realProviderReadinessProviderType'))}:</strong> ${escapeHTML(gate.provider_type || t('none'))}</div><div><strong>${escapeHTML(t('realProviderReadinessGateName'))}:</strong> ${escapeHTML(gate.gate_name || t('none'))}</div><div><strong>${escapeHTML(t('realProviderReadinessRealInvocation'))}:</strong> ${escapeHTML(gate.real_invocation_allowed === false ? t('realProviderReadinessDisabled') : String(gate.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('realProviderReadinessRealExecution'))}:</strong> ${escapeHTML(gate.real_execution_allowed === false ? t('realProviderReadinessDisabled') : String(gate.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText({required_evidence:gate.required_evidence||[],missing_evidence:gate.missing_evidence||[],blocked_reason:gate.blocked_reason||'',next_preview_step:gate.next_preview_step||'',risk_note:gate.risk_note||''}) || t('realProviderReadinessNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceReadinessGatePrerequisitePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realProviderReadinessGatePrerequisiteTitle'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessGatePrerequisiteHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReadinessGateChecks()">${escapeHTML(t('realProviderReadinessCopyGates'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePrerequisiteChecklist()">${escapeHTML(t('realProviderReadinessCopyPrerequisite'))}</button></div></div><div class="graph-os-compact-grid">${gates || `<div class="empty-state">${escapeHTML(t('realProviderReadinessNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessPrerequisiteTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.prerequisite_checklist) || t('realProviderReadinessNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('realProviderReadinessGateNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceMissingApprovalSecretCostMediaPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace); if (!pack.has_workspace_real_provider_readiness_checklist_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceMissingApprovalSecretCostMediaPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realProviderReadinessMissingApprovalSecretCostMediaTitle'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessMissingApprovalSecretCostMediaHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMissingReadinessRequirements()">${escapeHTML(t('realProviderReadinessCopyMissing'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalReadinessRequirements()">${escapeHTML(t('realProviderReadinessCopyApproval'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSecretEnvironmentReadiness()">${escapeHTML(t('realProviderReadinessCopySecret'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessMissingTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.missing_readiness_requirements) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessApprovalTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.approval_readiness_requirements) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessSecretTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.secret_environment_readiness) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessCostTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.cost_quota_readiness) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessMediaTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.media_asset_readiness) || t('realProviderReadinessNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('realProviderReadinessMissingApprovalSecretCostMediaNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceReadinessRiskQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace); if (!pack.has_workspace_real_provider_readiness_checklist_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('realProviderReadinessDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceReadinessRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realProviderReadinessRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReadinessRiskRegister()">${escapeHTML(t('realProviderReadinessCopyRisk'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.readiness_risk_register) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.readiness_quality_checks) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.audit_preview) || t('realProviderReadinessNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('realProviderReadinessSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessSafetyNote'))}</div></div>`;
+        }
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -24190,6 +24330,8 @@
                 '',
                 projectWorkspaceExportProviderCostQuotaRiskGuardMarkdown(workspace),
                 '',
+                projectWorkspaceExportRealProviderReadinessChecklistMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -24301,6 +24443,7 @@
                 workspace_provider_failure_taxonomy_pack: projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace),
                 workspace_provider_asset_contract_pack: projectWorkspaceExportProviderAssetContractSnapshot(workspace),
                 workspace_provider_cost_quota_risk_guard_pack: projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace),
+                workspace_real_provider_readiness_checklist_pack: projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -36847,6 +36990,11 @@
                     ${renderProjectWorkspaceQuotaBudgetPolicyPanel(workspace)}
                     ${renderProjectWorkspaceUsagePaidFailurePolicyPanel(workspace)}
                     ${renderProjectWorkspaceApprovalRiskQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceRealProviderReadinessSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceProviderReadinessCardsPanel(workspace)}
+                    ${renderProjectWorkspaceReadinessGatePrerequisitePanel(workspace)}
+                    ${renderProjectWorkspaceMissingApprovalSecretCostMediaPanel(workspace)}
+                    ${renderProjectWorkspaceReadinessRiskQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -47568,6 +47716,138 @@
             providerCostQuotaRiskApprovalRiskQualityAuditSafetyNote: '\u6210\u672c\u590d\u6838\u53ea\u662f\u4eba\u5de5\u590d\u6838\u8981\u6c42\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u5ba1\u6279\u3002Risk score \u53ea\u662f\u786e\u5b9a\u6027\u9884\u89c8\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u670d\u52a1\u6570\u636e\u3002Audit preview \u4e0d\u5199\u6570\u636e\u5e93\u3002',
             providerCostQuotaRiskSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore \u548c real execution \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
             providerCostQuotaRiskProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealProviderReadinessChecklistMarker: 'Project Workspace real provider readiness checklist bundle',
+            realProviderReadinessPackTitle: 'Workspace Real Provider Readiness Checklist',
+            realProviderReadinessPackHelper: 'Review real provider readiness checklist preview only. This is not real provider enablement.',
+            realProviderReadinessSummaryTitle: 'Real Provider Readiness Summary',
+            realProviderReadinessCardsTitle: 'Provider Readiness Cards',
+            realProviderReadinessGatesTitle: 'Readiness Gate Checks',
+            realProviderReadinessPrerequisiteTitle: 'Prerequisite Checklist',
+            realProviderReadinessMissingTitle: 'Missing Readiness Requirements',
+            realProviderReadinessApprovalTitle: 'Approval Readiness Requirements',
+            realProviderReadinessSecretTitle: 'Secret Environment Readiness',
+            realProviderReadinessCostTitle: 'Cost Quota Readiness',
+            realProviderReadinessMediaTitle: 'Media Asset Readiness',
+            realProviderReadinessRiskTitle: 'Readiness Risk Register',
+            realProviderReadinessQualityTitle: 'Readiness Quality Checks',
+            realProviderReadinessAuditTitle: 'Audit Preview',
+            realProviderReadinessSafetyTitle: 'Safety Boundaries',
+            realProviderReadinessGatePrerequisiteTitle: 'Readiness Gate Checks / Prerequisite Checklist',
+            realProviderReadinessMissingApprovalSecretCostMediaTitle: 'Missing Requirements / Approval / Secret / Cost / Media Readiness',
+            realProviderReadinessRiskQualityAuditSafetyTitle: 'Readiness Risk / Quality / Audit / Safety Boundaries',
+            realProviderReadinessMode: 'Mode',
+            realProviderReadinessProviderCount: 'Provider readiness count',
+            realProviderReadinessGateCount: 'Gate check count',
+            realProviderReadinessMissingCount: 'Missing requirement count',
+            realProviderReadinessRecommendedAction: 'Recommended operator action',
+            realProviderReadinessRealInvocation: 'Real invocation allowed',
+            realProviderReadinessRealExecution: 'Real execution allowed',
+            realProviderReadinessDisabled: 'disabled',
+            realProviderReadinessNoData: 'No workspace real provider readiness checklist data is available.',
+            realProviderReadinessCopyNoData: 'No workspace real provider readiness checklist content is available to copy.',
+            realProviderReadinessCopyFailed: 'Unable to copy workspace real provider readiness checklist content.',
+            realProviderReadinessCopied: 'Workspace real provider readiness checklist content copied.',
+            realProviderReadinessCopySummary: 'Copy real provider readiness summary',
+            realProviderReadinessCopyCards: 'Copy provider readiness cards',
+            realProviderReadinessCopyGates: 'Copy readiness gate checks',
+            realProviderReadinessCopyPrerequisite: 'Copy prerequisite checklist',
+            realProviderReadinessCopyMissing: 'Copy missing readiness requirements',
+            realProviderReadinessCopyApproval: 'Copy approval readiness requirements',
+            realProviderReadinessCopySecret: 'Copy secret environment readiness',
+            realProviderReadinessCopyRisk: 'Copy readiness risk register',
+            realProviderReadinessCopyFull: 'Copy full real provider readiness checklist pack',
+            realProviderReadinessProviderId: 'Provider ID',
+            realProviderReadinessProviderType: 'Provider type',
+            realProviderReadinessSourceCapability: 'Source capability',
+            realProviderReadinessStatus: 'Current readiness status',
+            realProviderReadinessLevel: 'Readiness level',
+            realProviderReadinessContractReady: 'Contract ready',
+            realProviderReadinessMockReady: 'Mock test ready',
+            realProviderReadinessFailureReady: 'Failure policy ready',
+            realProviderReadinessAssetReady: 'Asset manifest ready',
+            realProviderReadinessCostReady: 'Cost quota guard ready',
+            realProviderReadinessSecretReady: 'Secret ready',
+            realProviderReadinessApprovalReady: 'Approval ready',
+            realProviderReadinessGateName: 'Gate name',
+            realProviderReadinessCardsHelper: 'Inspect provider readiness cards with contract, mock, failure, asset, cost, secret, approval, and disabled real execution states.',
+            realProviderReadinessGatePrerequisiteHelper: 'Inspect locked, blocked, or review-required readiness gates and future prerequisites without invoking real providers.',
+            realProviderReadinessMissingApprovalSecretCostMediaHelper: 'Inspect missing requirements, manual approval requirements, secret readiness, cost quota readiness, and media readiness without reading secrets, billing, quota, or media.',
+            realProviderReadinessRiskQualityAuditSafetyHelper: 'Inspect readiness risks, quality checks, audit preview, and disabled real capability boundaries.',
+            realProviderReadinessPreviewNote: 'Real provider readiness checklist preview only. This is not real provider enablement and does not unlock real invocation or real execution.',
+            realProviderReadinessGateNote: 'All real invocation gates remain locked, blocked, or review-required. No real provider gate is opened.',
+            realProviderReadinessMissingApprovalSecretCostMediaNote: 'This preview does not read secrets, does not read real billing or quota, does not upload or download media, and creates no real approval.',
+            realProviderReadinessRiskQualityAuditSafetyNote: 'Risk register includes secret missing, paid blocked, quota unknown, media operation blocked, rollback blocked, external call blocked, and database persistence blocked. Audit preview is not written to a database.',
+            realProviderReadinessSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            realProviderReadinessProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealProviderReadinessChecklistMarker: 'Project Workspace real provider readiness checklist bundle',
+            realProviderReadinessPackTitle: '\u5de5\u4f5c\u533a Real Provider Readiness Checklist',
+            realProviderReadinessPackHelper: '\u4ec5\u67e5\u770b real provider readiness checklist \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e provider enablement\u3002',
+            realProviderReadinessSummaryTitle: 'Real Provider Readiness \u6458\u8981',
+            realProviderReadinessCardsTitle: 'Provider Readiness \u5361\u7247',
+            realProviderReadinessGatesTitle: 'Readiness Gate \u68c0\u67e5',
+            realProviderReadinessPrerequisiteTitle: '\u524d\u7f6e\u68c0\u67e5\u6e05\u5355',
+            realProviderReadinessMissingTitle: '\u7f3a\u5931\u7684 readiness \u8981\u6c42',
+            realProviderReadinessApprovalTitle: 'Approval Readiness \u8981\u6c42',
+            realProviderReadinessSecretTitle: 'Secret Environment Readiness',
+            realProviderReadinessCostTitle: 'Cost Quota Readiness',
+            realProviderReadinessMediaTitle: 'Media Asset Readiness',
+            realProviderReadinessRiskTitle: 'Readiness Risk Register',
+            realProviderReadinessQualityTitle: 'Readiness \u8d28\u91cf\u68c0\u67e5',
+            realProviderReadinessAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            realProviderReadinessSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            realProviderReadinessGatePrerequisiteTitle: 'Readiness Gate \u68c0\u67e5 / \u524d\u7f6e\u68c0\u67e5\u6e05\u5355',
+            realProviderReadinessMissingApprovalSecretCostMediaTitle: '\u7f3a\u5931\u8981\u6c42 / Approval / Secret / Cost / Media Readiness',
+            realProviderReadinessRiskQualityAuditSafetyTitle: 'Readiness Risk / \u8d28\u91cf / \u5ba1\u8ba1 / \u5b89\u5168\u8fb9\u754c',
+            realProviderReadinessMode: '\u6a21\u5f0f',
+            realProviderReadinessProviderCount: 'Provider readiness \u6570\u91cf',
+            realProviderReadinessGateCount: 'Gate \u68c0\u67e5\u6570\u91cf',
+            realProviderReadinessMissingCount: '\u7f3a\u5931\u8981\u6c42\u6570\u91cf',
+            realProviderReadinessRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            realProviderReadinessRealInvocation: '\u5141\u8bb8\u771f\u5b9e\u8c03\u7528',
+            realProviderReadinessRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            realProviderReadinessDisabled: '\u5df2\u7981\u7528',
+            realProviderReadinessNoData: '\u6682\u65e0\u5de5\u4f5c\u533a real provider readiness checklist \u6570\u636e\u3002',
+            realProviderReadinessCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a real provider readiness checklist \u5185\u5bb9\u3002',
+            realProviderReadinessCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a real provider readiness checklist \u5185\u5bb9\u3002',
+            realProviderReadinessCopied: '\u5de5\u4f5c\u533a real provider readiness checklist \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            realProviderReadinessCopySummary: '\u590d\u5236 real provider readiness \u6458\u8981',
+            realProviderReadinessCopyCards: '\u590d\u5236 provider readiness \u5361\u7247',
+            realProviderReadinessCopyGates: '\u590d\u5236 readiness gate \u68c0\u67e5',
+            realProviderReadinessCopyPrerequisite: '\u590d\u5236\u524d\u7f6e\u68c0\u67e5\u6e05\u5355',
+            realProviderReadinessCopyMissing: '\u590d\u5236\u7f3a\u5931\u7684 readiness \u8981\u6c42',
+            realProviderReadinessCopyApproval: '\u590d\u5236 approval readiness \u8981\u6c42',
+            realProviderReadinessCopySecret: '\u590d\u5236 secret environment readiness',
+            realProviderReadinessCopyRisk: '\u590d\u5236 readiness risk register',
+            realProviderReadinessCopyFull: '\u590d\u5236\u5b8c\u6574 real provider readiness checklist pack',
+            realProviderReadinessProviderId: 'Provider ID',
+            realProviderReadinessProviderType: 'Provider \u7c7b\u578b',
+            realProviderReadinessSourceCapability: '\u6765\u6e90\u80fd\u529b',
+            realProviderReadinessStatus: '\u5f53\u524d readiness \u72b6\u6001',
+            realProviderReadinessLevel: 'Readiness \u7ea7\u522b',
+            realProviderReadinessContractReady: 'Contract ready',
+            realProviderReadinessMockReady: 'Mock test ready',
+            realProviderReadinessFailureReady: 'Failure policy ready',
+            realProviderReadinessAssetReady: 'Asset manifest ready',
+            realProviderReadinessCostReady: 'Cost quota guard ready',
+            realProviderReadinessSecretReady: 'Secret ready',
+            realProviderReadinessApprovalReady: 'Approval ready',
+            realProviderReadinessGateName: 'Gate \u540d\u79f0',
+            realProviderReadinessCardsHelper: '\u67e5\u770b provider readiness \u5361\u7247\uff0c\u5305\u542b contract\u3001mock\u3001failure\u3001asset\u3001cost\u3001secret\u3001approval \u548c\u7981\u7528\u771f\u5b9e\u6267\u884c\u72b6\u6001\u3002',
+            realProviderReadinessGatePrerequisiteHelper: '\u67e5\u770b locked\u3001blocked \u6216 review-required readiness gate \u548c\u672a\u6765\u524d\u7f6e\u6761\u4ef6\uff0c\u4e0d\u8c03\u7528\u771f\u5b9e provider\u3002',
+            realProviderReadinessMissingApprovalSecretCostMediaHelper: '\u67e5\u770b\u7f3a\u5931\u8981\u6c42\u3001\u4eba\u5de5\u5ba1\u6279\u8981\u6c42\u3001secret readiness\u3001cost quota readiness \u548c media readiness\uff0c\u4e0d\u8bfb secret\u3001billing\u3001quota \u6216 media\u3002',
+            realProviderReadinessRiskQualityAuditSafetyHelper: '\u67e5\u770b readiness risk\u3001\u8d28\u91cf\u68c0\u67e5\u3001\u5ba1\u8ba1\u9884\u89c8\u548c\u5df2\u7981\u7528\u7684\u771f\u5b9e\u80fd\u529b\u8fb9\u754c\u3002',
+            realProviderReadinessPreviewNote: '\u4ec5\u4e3a real provider readiness checklist \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e provider enablement\uff0c\u4e0d\u89e3\u9501\u771f\u5b9e\u8c03\u7528\u6216\u771f\u5b9e\u6267\u884c\u3002',
+            realProviderReadinessGateNote: '\u6240\u6709\u771f\u5b9e\u8c03\u7528 gate \u4fdd\u6301 locked\u3001blocked \u6216 review-required\u3002\u4e0d\u6253\u5f00\u771f\u5b9e provider gate\u3002',
+            realProviderReadinessMissingApprovalSecretCostMediaNote: '\u6b64\u9884\u89c8\u4e0d\u8bfb secret\uff0c\u4e0d\u8bfb\u771f\u5b9e billing \u6216 quota\uff0c\u4e0d\u4e0a\u4f20\u6216\u4e0b\u8f7d media\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e approval\u3002',
+            realProviderReadinessRiskQualityAuditSafetyNote: 'Risk register \u5305\u542b secret missing\u3001paid blocked\u3001quota unknown\u3001media operation blocked\u3001rollback blocked\u3001external call blocked \u548c database persistence blocked\u3002Audit preview \u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002',
+            realProviderReadinessSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore \u548c real execution \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
+            realProviderReadinessProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
         });
 
         applyLanguageCopy();
