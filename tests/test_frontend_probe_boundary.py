@@ -12648,3 +12648,192 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             self.assertIn("Project Workspace creative feedback runtime bundle", script)
             self.assertIn("project_workspace_creative_feedback_runtime_marker", script)
         self.assertNotIn("????", html)
+
+    def test_workspace_provider_asset_contract_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider asset contract bundle",
+            "PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER",
+            "latestProjectWorkspaceProviderAssetContractPack",
+            "projectWorkspaceProviderAssetContractPackFromWorkspace",
+            "projectWorkspaceExportProviderAssetContractSnapshot",
+            "projectWorkspaceExportProviderAssetContractMarkdown",
+            "renderProjectWorkspaceProviderAssetContractSummaryPanel",
+            "renderProjectWorkspaceProviderAssetContractCardsPanel",
+            "renderProjectWorkspaceMediaManifestCardsPanel",
+            "renderProjectWorkspaceAssetRequirementBoundaryPanel",
+            "renderProjectWorkspaceAssetFailureQualityAuditSafetyPanel",
+            "copyProjectWorkspaceProviderAssetContractSummary",
+            "copyProjectWorkspaceProviderAssetContractCards",
+            "copyProjectWorkspaceMediaManifestCards",
+            "copyProjectWorkspaceInputAssetRequirements",
+            "copyProjectWorkspaceOutputAssetRequirements",
+            "copyProjectWorkspaceAssetValidationRules",
+            "copyProjectWorkspaceStorageTransferBoundaries",
+            "copyProjectWorkspaceAssetFailurePolicyMap",
+            "copyProjectWorkspaceFullProviderAssetContractPack",
+            "workspace_provider_asset_contract_pack: projectWorkspaceExportProviderAssetContractSnapshot(workspace)",
+            "Workspace Provider Asset Contract / Media Manifest",
+            "Asset Contract Summary",
+            "Provider Asset Contract Cards",
+            "Media Manifest Cards",
+            "Input Asset Requirements",
+            "Output Asset Requirements",
+            "Asset Validation Rules",
+            "Storage Transfer Boundaries",
+            "Asset Failure Policy Map",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.asset_contract_summary",
+            "pack.provider_asset_contract_cards",
+            "pack.media_manifest_cards",
+            "pack.input_asset_requirements",
+            "pack.output_asset_requirements",
+            "pack.asset_validation_rules",
+            "pack.storage_transfer_boundaries",
+            "pack.asset_failure_policy_map",
+            "pack.asset_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.provider_asset_contract_card_count",
+            "summary.media_manifest_card_count",
+            "summary.media_upload_allowed",
+            "summary.media_download_allowed",
+            "summary.real_generation_allowed",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.asset_contract_id",
+            "card.provider_id",
+            "card.provider_type",
+            "card.source_capability",
+            "card.asset_role",
+            "card.required_input_assets",
+            "card.expected_output_assets",
+            "card.allowed_asset_modes",
+            "card.disallowed_asset_modes",
+            "card.media_upload_allowed",
+            "card.media_download_allowed",
+            "card.real_generation_allowed",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "card.risk_note",
+            "card.manifest_id",
+            "card.asset_type",
+            "card.asset_purpose",
+            "card.source_pack",
+            "card.mock_asset_ref",
+            "card.storage_mode",
+            "card.transfer_mode",
+            "card.validation_status",
+            "card.blocked_real_behavior_summary",
+            "card.real_media_operation_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceFailureActionQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceProviderAssetContractSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceAssetFailureQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_provider_asset_contract_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "providerAssetContractPackTitle",
+            "providerAssetContractSummaryTitle",
+            "providerAssetContractCardsTitle",
+            "providerAssetContractManifestTitle",
+            "providerAssetContractInputTitle",
+            "providerAssetContractOutputTitle",
+            "providerAssetContractValidationTitle",
+            "providerAssetContractStorageTitle",
+            "providerAssetContractFailurePolicyTitle",
+            "providerAssetContractQualityTitle",
+            "providerAssetContractAuditTitle",
+            "providerAssetContractSafetyTitle",
+            "providerAssetContractCopySummary",
+            "providerAssetContractCopyCards",
+            "providerAssetContractCopyManifest",
+            "providerAssetContractCopyInput",
+            "providerAssetContractCopyOutput",
+            "providerAssetContractCopyValidation",
+            "providerAssetContractCopyStorage",
+            "providerAssetContractCopyFailurePolicy",
+            "providerAssetContractCopyFull",
+            "providerAssetContractCopied",
+            "providerAssetContractCopyFailed",
+            "providerAssetContractCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace provider asset contract bundle", script)
+            self.assertIn("project_workspace_provider_asset_contract_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceProviderAssetContractSummaryText"):
+            html.index("async function copyProjectWorkspaceProviderAssetContractText")
+        ]
+        for key in [
+            "providerAssetContractPackTitle",
+            "providerAssetContractSummaryTitle",
+            "providerAssetContractCardsTitle",
+            "providerAssetContractManifestTitle",
+            "providerAssetContractInputTitle",
+            "providerAssetContractOutputTitle",
+            "providerAssetContractValidationTitle",
+            "providerAssetContractStorageTitle",
+            "providerAssetContractFailurePolicyTitle",
+            "providerAssetContractAuditTitle",
+            "providerAssetContractSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "asset contract / media manifest preview",
+            "not a real media pipeline",
+            "does not invoke providers or generate media",
+            "No media is uploaded, downloaded, generated, transferred, or stored",
+            "does not read files",
+            "write files",
+            "write storage",
+            "call external services",
+            "write databases",
+            "does not execute real retry, restore, rollback",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)

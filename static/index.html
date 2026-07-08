@@ -3628,6 +3628,7 @@
         let latestProjectWorkspaceProviderContractTestPack = {};
         let latestProjectWorkspaceProviderMockInvocationResultPack = {};
         let latestProjectWorkspaceProviderFailureTaxonomyPack = {};
+        let latestProjectWorkspaceProviderAssetContractPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -5584,8 +5585,6 @@
             workspaceSyncingAfterGeneration: 'Syncing Project Workspace with the latest generated result...',
             workspaceSyncedAfterGeneration: 'Project Workspace synced with the latest generated result.',
             workspaceSyncedAfterVideoJob: 'Project Workspace synced with the latest Video Job.',
-            workspaceSyncedAfterDownstreamAction: '\u0050\u0072\u006f\u006a\u0065\u0063\u0074\u0020\u0057\u006f\u0072\u006b\u0073\u0070\u0061\u0063\u0065 \u5df2\u540c\u6b65\u6700\u65b0\u4e0b\u6e38\u52a8\u4f5c\u3002',
-            downstreamWorkspaceSyncMarker: '\u4e0b\u6e38\u52a8\u4f5c\u540c\u6b65\u0057\u006f\u0072\u006b\u0073\u0070\u0061\u0063\u0065',
             workspaceSyncedAfterDownstreamAction: 'Project Workspace synced with the latest downstream action.',
             workspaceSyncedAfterHumanApproval: 'Project Workspace synced with the latest human approval decision.',
             humanApprovalWorkspaceSyncMarker: 'Human approval workspace sync',
@@ -8932,6 +8931,7 @@
                 latestProjectWorkspaceProviderContractTestPack = latestProjectCreativeDecisionPack.workspace_provider_contract_test_pack || {};
                 latestProjectWorkspaceProviderMockInvocationResultPack = latestProjectCreativeDecisionPack.workspace_provider_mock_invocation_result_pack || {};
                 latestProjectWorkspaceProviderFailureTaxonomyPack = latestProjectCreativeDecisionPack.workspace_provider_failure_taxonomy_pack || {};
+                latestProjectWorkspaceProviderAssetContractPack = latestProjectCreativeDecisionPack.workspace_provider_asset_contract_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14796,6 +14796,7 @@
         const PROJECT_WORKSPACE_PROVIDER_CONTRACT_TEST_MARKER = 'Project Workspace provider contract test bundle';
         const PROJECT_WORKSPACE_PROVIDER_MOCK_INVOCATION_RESULT_MARKER = 'Project Workspace provider mock invocation result bundle';
         const PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER = 'Project Workspace provider failure taxonomy bundle';
+        const PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER = 'Project Workspace provider asset contract bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -19653,6 +19654,111 @@
         function copyProjectWorkspaceFailureToActionMap() { return copyProjectWorkspaceProviderFailureTaxonomyText('actionMap'); }
         function copyProjectWorkspaceProviderFailureTaxonomyAuditPreview() { return copyProjectWorkspaceProviderFailureTaxonomyText('audit'); }
         function copyProjectWorkspaceFullProviderFailureTaxonomyPack() { return copyProjectWorkspaceProviderFailureTaxonomyText('full'); }
+
+        function projectWorkspaceProviderAssetContractPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceProviderAssetContractPack && Object.keys(latestProjectWorkspaceProviderAssetContractPack).length) return latestProjectWorkspaceProviderAssetContractPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_provider_asset_contract_pack || {};
+        }
+
+        function projectWorkspaceExportProviderAssetContractSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceProviderAssetContractPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER,
+                has_workspace_provider_asset_contract_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                asset_contract_summary: pack.asset_contract_summary || {},
+                provider_asset_contract_cards: Array.isArray(pack.provider_asset_contract_cards) ? pack.provider_asset_contract_cards : [],
+                media_manifest_cards: Array.isArray(pack.media_manifest_cards) ? pack.media_manifest_cards : [],
+                input_asset_requirements: Array.isArray(pack.input_asset_requirements) ? pack.input_asset_requirements : [],
+                output_asset_requirements: Array.isArray(pack.output_asset_requirements) ? pack.output_asset_requirements : [],
+                asset_validation_rules: Array.isArray(pack.asset_validation_rules) ? pack.asset_validation_rules : [],
+                storage_transfer_boundaries: Array.isArray(pack.storage_transfer_boundaries) ? pack.storage_transfer_boundaries : [],
+                asset_failure_policy_map: Array.isArray(pack.asset_failure_policy_map) ? pack.asset_failure_policy_map : [],
+                asset_quality_checks: pack.asset_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceProviderAssetContractJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceProviderAssetContractSummaryText(pack = projectWorkspaceExportProviderAssetContractSnapshot()) {
+            if (!pack.has_workspace_provider_asset_contract_pack) return '';
+            const summary = pack.asset_contract_summary || {};
+            return [
+                t('providerAssetContractSummaryTitle'),
+                `${t('providerAssetContractMode')}: ${summary.mode || t('none')}`,
+                `${t('providerAssetContractProviderCount')}: ${summary.provider_asset_contract_card_count ?? pack.provider_asset_contract_cards.length}`,
+                `${t('providerAssetContractManifestCount')}: ${summary.media_manifest_card_count ?? pack.media_manifest_cards.length}`,
+                `${t('providerAssetContractRecommendedAction')}: ${summary.recommended_operator_action || summary.recommended_next_action || t('none')}`,
+                `${t('providerAssetContractMediaUpload')}: ${summary.media_upload_allowed === false ? t('providerAssetContractDisabled') : String(summary.media_upload_allowed)}`,
+                `${t('providerAssetContractMediaDownload')}: ${summary.media_download_allowed === false ? t('providerAssetContractDisabled') : String(summary.media_download_allowed)}`,
+                `${t('providerAssetContractRealGeneration')}: ${summary.real_generation_allowed === false ? t('providerAssetContractDisabled') : String(summary.real_generation_allowed)}`,
+                `${t('providerAssetContractRealInvocation')}: ${summary.real_invocation_allowed === false ? t('providerAssetContractDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('providerAssetContractRealExecution')}: ${summary.real_execution_allowed === false ? t('providerAssetContractDisabled') : String(summary.real_execution_allowed)}`,
+                t('providerAssetContractPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceProviderAssetContractSectionText(titleKey, value) {
+            const body = projectWorkspaceProviderAssetContractJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportProviderAssetContractMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderAssetContractSnapshot(workspace);
+            if (!pack.has_workspace_provider_asset_contract_pack) return '';
+            return [
+                `## ${t('providerAssetContractPackTitle')}`,
+                `## ${t('providerAssetContractSummaryTitle')}`,
+                projectWorkspaceProviderAssetContractSummaryText(pack), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractCardsTitle', pack.provider_asset_contract_cards), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractManifestTitle', pack.media_manifest_cards), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractInputTitle', pack.input_asset_requirements), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractOutputTitle', pack.output_asset_requirements), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractValidationTitle', pack.asset_validation_rules), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractStorageTitle', pack.storage_transfer_boundaries), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractFailurePolicyTitle', pack.asset_failure_policy_map), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractQualityTitle', pack.asset_quality_checks), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractAuditTitle', pack.audit_preview), '',
+                projectWorkspaceProviderAssetContractSectionText('providerAssetContractSafetyTitle', pack.safety_boundaries),
+                t('providerAssetContractSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderAssetContractText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceProviderAssetContractStatus');
+            const pack = projectWorkspaceExportProviderAssetContractSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceProviderAssetContractSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceProviderAssetContractSectionText('providerAssetContractCardsTitle', pack.provider_asset_contract_cards)
+                : kind === 'manifest' ? projectWorkspaceProviderAssetContractSectionText('providerAssetContractManifestTitle', pack.media_manifest_cards)
+                : kind === 'input' ? projectWorkspaceProviderAssetContractSectionText('providerAssetContractInputTitle', pack.input_asset_requirements)
+                : kind === 'output' ? projectWorkspaceProviderAssetContractSectionText('providerAssetContractOutputTitle', pack.output_asset_requirements)
+                : kind === 'validation' ? projectWorkspaceProviderAssetContractSectionText('providerAssetContractValidationTitle', pack.asset_validation_rules)
+                : kind === 'storage' ? projectWorkspaceProviderAssetContractSectionText('providerAssetContractStorageTitle', pack.storage_transfer_boundaries)
+                : kind === 'failurePolicy' ? projectWorkspaceProviderAssetContractSectionText('providerAssetContractFailurePolicyTitle', pack.asset_failure_policy_map)
+                : projectWorkspaceExportProviderAssetContractMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('providerAssetContractCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('providerAssetContractCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('providerAssetContractCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('providerAssetContractCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceProviderAssetContractSummary() { return copyProjectWorkspaceProviderAssetContractText('summary'); }
+        function copyProjectWorkspaceProviderAssetContractCards() { return copyProjectWorkspaceProviderAssetContractText('cards'); }
+        function copyProjectWorkspaceMediaManifestCards() { return copyProjectWorkspaceProviderAssetContractText('manifest'); }
+        function copyProjectWorkspaceInputAssetRequirements() { return copyProjectWorkspaceProviderAssetContractText('input'); }
+        function copyProjectWorkspaceOutputAssetRequirements() { return copyProjectWorkspaceProviderAssetContractText('output'); }
+        function copyProjectWorkspaceAssetValidationRules() { return copyProjectWorkspaceProviderAssetContractText('validation'); }
+        function copyProjectWorkspaceStorageTransferBoundaries() { return copyProjectWorkspaceProviderAssetContractText('storage'); }
+        function copyProjectWorkspaceAssetFailurePolicyMap() { return copyProjectWorkspaceProviderAssetContractText('failurePolicy'); }
+        function copyProjectWorkspaceFullProviderAssetContractPack() { return copyProjectWorkspaceProviderAssetContractText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -23383,6 +23489,35 @@
             const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerFailureTaxonomyDisabled'):String(value)}`).join(' | ');
             return `<div class="section-block" id="projectWorkspaceFailureActionQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerFailureTaxonomyActionQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyActionQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFailureToActionMap()">${escapeHTML(t('providerFailureTaxonomyCopyActionMap'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderFailureTaxonomyAuditPreview()">${escapeHTML(t('providerFailureTaxonomyCopyAudit'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyActionMapTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.failure_to_action_map) || t('providerFailureTaxonomyNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.recovery_quality_checks) || t('providerFailureTaxonomyNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerFailureTaxonomyAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderFailureTaxonomyJsonText(pack.audit_preview) || t('providerFailureTaxonomyNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerFailureTaxonomySafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomyActionMapNote'))}</div><div class="field-helper">${escapeHTML(t('providerFailureTaxonomySafetyNote'))}</div></div>`;
         }
+
+        function renderProjectWorkspaceProviderAssetContractSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderAssetContractSnapshot(workspace); if (!pack.has_workspace_provider_asset_contract_pack) return '';
+            const summary = pack.asset_contract_summary || {};
+            return `<div class="section-block" id="projectWorkspaceProviderAssetContractSummaryPanel" data-provider-asset-contract-marker="${PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER}" data-marker="project_workspace_provider_asset_contract_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerAssetContractPackTitle'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullProviderAssetContractPack()">${escapeHTML(t('providerAssetContractCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('providerAssetContractMode'), summary.mode || t('none'))}${metricPill(t('providerAssetContractProviderCount'), String(summary.provider_asset_contract_card_count ?? pack.provider_asset_contract_cards.length))}${metricPill(t('providerAssetContractManifestCount'), String(summary.media_manifest_card_count ?? pack.media_manifest_cards.length))}${metricPill(t('providerAssetContractMediaUpload'), summary.media_upload_allowed === false ? t('providerAssetContractDisabled') : String(summary.media_upload_allowed))}${metricPill(t('providerAssetContractMediaDownload'), summary.media_download_allowed === false ? t('providerAssetContractDisabled') : String(summary.media_download_allowed))}${metricPill(t('providerAssetContractRealExecution'), summary.real_execution_allowed === false ? t('providerAssetContractDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractSummaryText(pack) || t('providerAssetContractNoData'))}</pre><div class="field-helper">${escapeHTML(t('providerAssetContractPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceProviderAssetContractStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderAssetContractSummary()">${escapeHTML(t('providerAssetContractCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceProviderAssetContractCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderAssetContractSnapshot(workspace); if (!pack.has_workspace_provider_asset_contract_pack) return '';
+            const cards = (pack.provider_asset_contract_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.asset_contract_id || t('providerAssetContractCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerAssetContractProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractSourceCapability'))}:</strong> ${escapeHTML(card.source_capability || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractAssetRole'))}:</strong> ${escapeHTML(card.asset_role || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractMediaUpload'))}:</strong> ${escapeHTML(card.media_upload_allowed === false ? t('providerAssetContractDisabled') : String(card.media_upload_allowed))}</div><div><strong>${escapeHTML(t('providerAssetContractMediaDownload'))}:</strong> ${escapeHTML(card.media_download_allowed === false ? t('providerAssetContractDisabled') : String(card.media_download_allowed))}</div><div><strong>${escapeHTML(t('providerAssetContractRealGeneration'))}:</strong> ${escapeHTML(card.real_generation_allowed === false ? t('providerAssetContractDisabled') : String(card.real_generation_allowed))}</div><div><strong>${escapeHTML(t('providerAssetContractRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('providerAssetContractDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('providerAssetContractRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('providerAssetContractDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText({required_input_assets:card.required_input_assets||[],expected_output_assets:card.expected_output_assets||[],allowed_asset_modes:card.allowed_asset_modes||[],disallowed_asset_modes:card.disallowed_asset_modes||[],risk_note:card.risk_note||''}) || t('providerAssetContractNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceProviderAssetContractCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerAssetContractCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderAssetContractCards()">${escapeHTML(t('providerAssetContractCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerAssetContractNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('providerAssetContractProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceMediaManifestCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderAssetContractSnapshot(workspace); if (!pack.has_workspace_provider_asset_contract_pack) return '';
+            const cards = (pack.media_manifest_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.manifest_id || t('providerAssetContractManifestTitle'))}</strong><span class="metric-pill">${escapeHTML(card.asset_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerAssetContractProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractProviderType'))}:</strong> ${escapeHTML(card.provider_type || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractAssetPurpose'))}:</strong> ${escapeHTML(card.asset_purpose || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractSourcePack'))}:</strong> ${escapeHTML(card.source_pack || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractStorageMode'))}:</strong> ${escapeHTML(card.storage_mode || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractTransferMode'))}:</strong> ${escapeHTML(card.transfer_mode || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractValidationStatus'))}:</strong> ${escapeHTML(card.validation_status || t('none'))}</div><div><strong>${escapeHTML(t('providerAssetContractRealMediaOperation'))}:</strong> ${escapeHTML(card.real_media_operation_allowed === false ? t('providerAssetContractDisabled') : String(card.real_media_operation_allowed))}</div><div><strong>${escapeHTML(t('providerAssetContractRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('providerAssetContractDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText({mock_asset_ref:card.mock_asset_ref||'',blocked_real_behavior_summary:card.blocked_real_behavior_summary||'',risk_note:card.risk_note||''}) || t('providerAssetContractNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceMediaManifestCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerAssetContractManifestTitle'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractManifestHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMediaManifestCards()">${escapeHTML(t('providerAssetContractCopyManifest'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerAssetContractNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('providerAssetContractManifestNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceAssetRequirementBoundaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderAssetContractSnapshot(workspace); if (!pack.has_workspace_provider_asset_contract_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceAssetRequirementBoundaryPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerAssetContractRequirementsTitle'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractRequirementsHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceInputAssetRequirements()">${escapeHTML(t('providerAssetContractCopyInput'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOutputAssetRequirements()">${escapeHTML(t('providerAssetContractCopyOutput'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAssetValidationRules()">${escapeHTML(t('providerAssetContractCopyValidation'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceStorageTransferBoundaries()">${escapeHTML(t('providerAssetContractCopyStorage'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractInputTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.input_asset_requirements) || t('providerAssetContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractOutputTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.output_asset_requirements) || t('providerAssetContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractValidationTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.asset_validation_rules) || t('providerAssetContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractStorageTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.storage_transfer_boundaries) || t('providerAssetContractNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerAssetContractNoFileMediaStorageNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceAssetFailureQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderAssetContractSnapshot(workspace); if (!pack.has_workspace_provider_asset_contract_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerAssetContractDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceAssetFailureQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerAssetContractFailureQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractFailureQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAssetFailurePolicyMap()">${escapeHTML(t('providerAssetContractCopyFailurePolicy'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractFailurePolicyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.asset_failure_policy_map) || t('providerAssetContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.asset_quality_checks) || t('providerAssetContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.audit_preview) || t('providerAssetContractNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerAssetContractSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractFailurePolicyNote'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractSafetyNote'))}</div></div>`;
+        }
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -23911,6 +24046,10 @@
                 '',
                 projectWorkspaceExportProviderMockInvocationResultMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderFailureTaxonomyMarkdown(workspace),
+                '',
+                projectWorkspaceExportProviderAssetContractMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -24020,6 +24159,7 @@
                 workspace_provider_contract_test_pack: projectWorkspaceExportProviderContractTestSnapshot(workspace),
                 workspace_provider_mock_invocation_result_pack: projectWorkspaceExportProviderMockInvocationResultSnapshot(workspace),
                 workspace_provider_failure_taxonomy_pack: projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace),
+                workspace_provider_asset_contract_pack: projectWorkspaceExportProviderAssetContractSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -36556,6 +36696,11 @@
                     ${renderProjectWorkspaceRecoveryPolicyCardsPanel(workspace)}
                     ${renderProjectWorkspaceRetryManualNonRecoverablePanel(workspace)}
                     ${renderProjectWorkspaceFailureActionQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceProviderAssetContractSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceProviderAssetContractCardsPanel(workspace)}
+                    ${renderProjectWorkspaceMediaManifestCardsPanel(workspace)}
+                    ${renderProjectWorkspaceAssetRequirementBoundaryPanel(workspace)}
+                    ${renderProjectWorkspaceAssetFailureQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -47015,6 +47160,130 @@
             providerMockResultFailureOperatorQualitySafetyHelper: '检查 mock 失败观察、操作员审阅备注、质量检查、审计预览和已禁用的真实能力边界。',
             providerMockResultFailureOperatorNote: '失败观察仅为预览，不触发真实失败。操作员备注不创建真实任务。审计预览不写入数据库。',
             providerMockResultSafetyNote: '真实 LLM、provider、图片、视频、媒体、付费、registry、rollback、外部抓取、数据库持久化、真实 restore 和真实执行仍全部禁用。'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderAssetContractMarker: 'Project Workspace provider asset contract bundle',
+            providerAssetContractPackTitle: 'Workspace Provider Asset Contract / Media Manifest',
+            providerAssetContractPackHelper: 'Review provider asset contracts and media manifest preview. This is an asset contract / media manifest preview, not a real media pipeline.',
+            providerAssetContractSummaryTitle: 'Asset Contract Summary',
+            providerAssetContractCardsTitle: 'Provider Asset Contract Cards',
+            providerAssetContractManifestTitle: 'Media Manifest Cards',
+            providerAssetContractInputTitle: 'Input Asset Requirements',
+            providerAssetContractOutputTitle: 'Output Asset Requirements',
+            providerAssetContractValidationTitle: 'Asset Validation Rules',
+            providerAssetContractStorageTitle: 'Storage Transfer Boundaries',
+            providerAssetContractFailurePolicyTitle: 'Asset Failure Policy Map',
+            providerAssetContractQualityTitle: 'Asset Quality Checks',
+            providerAssetContractAuditTitle: 'Audit Preview',
+            providerAssetContractSafetyTitle: 'Safety Boundaries',
+            providerAssetContractRequirementsTitle: 'Input / Output Asset Requirements and Boundaries',
+            providerAssetContractFailureQualityAuditSafetyTitle: 'Asset Failure Policy / Quality / Audit / Safety Boundaries',
+            providerAssetContractMode: 'Mode',
+            providerAssetContractProviderCount: 'Provider count',
+            providerAssetContractManifestCount: 'Media manifest count',
+            providerAssetContractRecommendedAction: 'Recommended operator action',
+            providerAssetContractMediaUpload: 'Media upload allowed',
+            providerAssetContractMediaDownload: 'Media download allowed',
+            providerAssetContractRealGeneration: 'Real generation allowed',
+            providerAssetContractRealInvocation: 'Real invocation allowed',
+            providerAssetContractRealExecution: 'Real execution allowed',
+            providerAssetContractRealMediaOperation: 'Real media operation allowed',
+            providerAssetContractDisabled: 'disabled',
+            providerAssetContractNoData: 'No workspace provider asset contract data is available.',
+            providerAssetContractCopyNoData: 'No workspace provider asset contract content is available to copy.',
+            providerAssetContractCopyFailed: 'Unable to copy workspace provider asset contract content.',
+            providerAssetContractCopied: 'Workspace provider asset contract content copied.',
+            providerAssetContractCopySummary: 'Copy asset contract summary',
+            providerAssetContractCopyCards: 'Copy provider asset contract cards',
+            providerAssetContractCopyManifest: 'Copy media manifest cards',
+            providerAssetContractCopyInput: 'Copy input asset requirements',
+            providerAssetContractCopyOutput: 'Copy output asset requirements',
+            providerAssetContractCopyValidation: 'Copy asset validation rules',
+            providerAssetContractCopyStorage: 'Copy storage transfer boundaries',
+            providerAssetContractCopyFailurePolicy: 'Copy asset failure policy map',
+            providerAssetContractCopyFull: 'Copy full provider asset contract pack',
+            providerAssetContractProviderId: 'Provider ID',
+            providerAssetContractProviderType: 'Provider type',
+            providerAssetContractSourceCapability: 'Source capability',
+            providerAssetContractAssetRole: 'Asset role',
+            providerAssetContractAssetPurpose: 'Asset purpose',
+            providerAssetContractSourcePack: 'Source pack',
+            providerAssetContractStorageMode: 'Storage mode',
+            providerAssetContractTransferMode: 'Transfer mode',
+            providerAssetContractValidationStatus: 'Validation status',
+            providerAssetContractCardsHelper: 'Inspect asset contract cards with required inputs, expected outputs, allowed preview modes, disallowed real modes, and disabled real execution state.',
+            providerAssetContractManifestHelper: 'Inspect media manifest cards with mock asset refs, storage mode, transfer mode, validation status, blocked real behavior, and risk notes.',
+            providerAssetContractRequirementsHelper: 'Review input and output requirements, validation rules, and storage transfer boundaries without touching real files, media, storage, or external services.',
+            providerAssetContractFailureQualityAuditSafetyHelper: 'Review failure policy mapping, quality checks, audit preview, and disabled real capability boundaries.',
+            providerAssetContractPreviewNote: 'Asset contract / media manifest preview only. This is not a real media pipeline and does not invoke providers or generate media.',
+            providerAssetContractManifestNote: 'Manifest entries reference mock assets only. No media is uploaded, downloaded, generated, transferred, or stored.',
+            providerAssetContractNoFileMediaStorageNote: 'This preview does not read files, write files, upload media, download media, write storage, call external services, or write databases.',
+            providerAssetContractFailurePolicyNote: 'Failure policy map references failure taxonomy and recovery policy only; it does not execute real retry, restore, rollback, approvals, operator tasks, or database writes.',
+            providerAssetContractSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            providerAssetContractProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderAssetContractMarker: 'Project Workspace provider asset contract bundle',
+            providerAssetContractPackTitle: '\u5de5\u4f5c\u533a Provider Asset Contract / Media Manifest',
+            providerAssetContractPackHelper: '\u67e5\u770b provider asset contract \u548c media manifest \u9884\u89c8\u3002\u8fd9\u662f asset contract / media manifest \u9884\u89c8\uff0c\u4e0d\u662f\u771f\u5b9e media pipeline\u3002',
+            providerAssetContractSummaryTitle: 'Asset Contract \u6458\u8981',
+            providerAssetContractCardsTitle: 'Provider Asset Contract \u5361\u7247',
+            providerAssetContractManifestTitle: 'Media Manifest \u5361\u7247',
+            providerAssetContractInputTitle: '\u8f93\u5165\u8d44\u4ea7\u8981\u6c42',
+            providerAssetContractOutputTitle: '\u8f93\u51fa\u8d44\u4ea7\u8981\u6c42',
+            providerAssetContractValidationTitle: '\u8d44\u4ea7\u9a8c\u8bc1\u89c4\u5219',
+            providerAssetContractStorageTitle: '\u5b58\u50a8\u4e0e\u4f20\u8f93\u8fb9\u754c',
+            providerAssetContractFailurePolicyTitle: '\u8d44\u4ea7\u5931\u8d25\u7b56\u7565\u6620\u5c04',
+            providerAssetContractQualityTitle: '\u8d44\u4ea7\u8d28\u91cf\u68c0\u67e5',
+            providerAssetContractAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            providerAssetContractSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            providerAssetContractRequirementsTitle: '\u8f93\u5165 / \u8f93\u51fa\u8d44\u4ea7\u8981\u6c42\u4e0e\u8fb9\u754c',
+            providerAssetContractFailureQualityAuditSafetyTitle: '\u8d44\u4ea7\u5931\u8d25\u7b56\u7565 / \u8d28\u91cf / \u5ba1\u8ba1 / \u5b89\u5168\u8fb9\u754c',
+            providerAssetContractMode: '\u6a21\u5f0f',
+            providerAssetContractProviderCount: 'Provider \u6570\u91cf',
+            providerAssetContractManifestCount: 'Media manifest \u6570\u91cf',
+            providerAssetContractRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            providerAssetContractMediaUpload: '\u5141\u8bb8 media \u4e0a\u4f20',
+            providerAssetContractMediaDownload: '\u5141\u8bb8 media \u4e0b\u8f7d',
+            providerAssetContractRealGeneration: '\u5141\u8bb8\u771f\u5b9e\u751f\u6210',
+            providerAssetContractRealInvocation: '\u5141\u8bb8\u771f\u5b9e\u8c03\u7528',
+            providerAssetContractRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            providerAssetContractRealMediaOperation: '\u5141\u8bb8\u771f\u5b9e media \u64cd\u4f5c',
+            providerAssetContractDisabled: '\u5df2\u7981\u7528',
+            providerAssetContractNoData: '\u6682\u65e0\u5de5\u4f5c\u533a provider asset contract \u6570\u636e\u3002',
+            providerAssetContractCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a provider asset contract \u5185\u5bb9\u3002',
+            providerAssetContractCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a provider asset contract \u5185\u5bb9\u3002',
+            providerAssetContractCopied: '\u5de5\u4f5c\u533a provider asset contract \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            providerAssetContractCopySummary: '\u590d\u5236 asset contract \u6458\u8981',
+            providerAssetContractCopyCards: '\u590d\u5236 provider asset contract \u5361\u7247',
+            providerAssetContractCopyManifest: '\u590d\u5236 media manifest \u5361\u7247',
+            providerAssetContractCopyInput: '\u590d\u5236\u8f93\u5165\u8d44\u4ea7\u8981\u6c42',
+            providerAssetContractCopyOutput: '\u590d\u5236\u8f93\u51fa\u8d44\u4ea7\u8981\u6c42',
+            providerAssetContractCopyValidation: '\u590d\u5236\u8d44\u4ea7\u9a8c\u8bc1\u89c4\u5219',
+            providerAssetContractCopyStorage: '\u590d\u5236\u5b58\u50a8\u4e0e\u4f20\u8f93\u8fb9\u754c',
+            providerAssetContractCopyFailurePolicy: '\u590d\u5236\u8d44\u4ea7\u5931\u8d25\u7b56\u7565\u6620\u5c04',
+            providerAssetContractCopyFull: '\u590d\u5236\u5b8c\u6574 provider asset contract pack',
+            providerAssetContractProviderId: 'Provider ID',
+            providerAssetContractProviderType: 'Provider \u7c7b\u578b',
+            providerAssetContractSourceCapability: '\u6765\u6e90\u80fd\u529b',
+            providerAssetContractAssetRole: '\u8d44\u4ea7\u89d2\u8272',
+            providerAssetContractAssetPurpose: '\u8d44\u4ea7\u7528\u9014',
+            providerAssetContractSourcePack: '\u6765\u6e90 pack',
+            providerAssetContractStorageMode: '\u5b58\u50a8\u6a21\u5f0f',
+            providerAssetContractTransferMode: '\u4f20\u8f93\u6a21\u5f0f',
+            providerAssetContractValidationStatus: '\u9a8c\u8bc1\u72b6\u6001',
+            providerAssetContractCardsHelper: '\u67e5\u770b asset contract \u5361\u7247\uff0c\u5305\u542b\u5fc5\u9700\u8f93\u5165\u3001\u9884\u671f\u8f93\u51fa\u3001\u5141\u8bb8\u7684\u9884\u89c8\u6a21\u5f0f\u3001\u7981\u6b62\u7684\u771f\u5b9e\u6a21\u5f0f\u548c\u7981\u7528\u771f\u5b9e\u6267\u884c\u72b6\u6001\u3002',
+            providerAssetContractManifestHelper: '\u67e5\u770b media manifest \u5361\u7247\uff0c\u5305\u542b mock asset ref\u3001\u5b58\u50a8\u6a21\u5f0f\u3001\u4f20\u8f93\u6a21\u5f0f\u3001\u9a8c\u8bc1\u72b6\u6001\u3001\u88ab\u963b\u6b62\u7684\u771f\u5b9e\u884c\u4e3a\u548c\u98ce\u9669\u5907\u6ce8\u3002',
+            providerAssetContractRequirementsHelper: '\u67e5\u770b\u8f93\u5165\u548c\u8f93\u51fa\u8981\u6c42\u3001\u9a8c\u8bc1\u89c4\u5219\u548c\u5b58\u50a8\u4f20\u8f93\u8fb9\u754c\uff0c\u4e0d\u89e6\u78b0\u771f\u5b9e\u6587\u4ef6\u3001media\u3001storage \u6216\u5916\u90e8\u670d\u52a1\u3002',
+            providerAssetContractFailureQualityAuditSafetyHelper: '\u67e5\u770b\u5931\u8d25\u7b56\u7565\u6620\u5c04\u3001\u8d28\u91cf\u68c0\u67e5\u3001\u5ba1\u8ba1\u9884\u89c8\u548c\u5df2\u7981\u7528\u7684\u771f\u5b9e\u80fd\u529b\u8fb9\u754c\u3002',
+            providerAssetContractPreviewNote: '\u4ec5\u4e3a asset contract / media manifest \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e media pipeline\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u751f\u6210 media\u3002',
+            providerAssetContractManifestNote: 'Manifest \u6761\u76ee\u53ea\u5f15\u7528 mock asset\u3002\u4e0d\u4e0a\u4f20\u3001\u4e0b\u8f7d\u3001\u751f\u6210\u3001\u4f20\u8f93\u6216\u5b58\u50a8 media\u3002',
+            providerAssetContractNoFileMediaStorageNote: '\u6b64\u9884\u89c8\u4e0d\u8bfb\u6587\u4ef6\u3001\u4e0d\u5199\u6587\u4ef6\u3001\u4e0d\u4e0a\u4f20 media\u3001\u4e0d\u4e0b\u8f7d media\u3001\u4e0d\u5199 storage\u3001\u4e0d\u8c03\u7528\u5916\u90e8\u670d\u52a1\u3001\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            providerAssetContractFailurePolicyNote: '\u5931\u8d25\u7b56\u7565\u6620\u5c04\u53ea\u5f15\u7528 failure taxonomy \u548c recovery policy\uff1b\u4e0d\u6267\u884c\u771f\u5b9e retry\u3001restore\u3001rollback\u3001approval\u3001operator task \u6216\u6570\u636e\u5e93\u5199\u5165\u3002',
+            providerAssetContractSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore \u548c real execution \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
+            providerAssetContractProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
         });
 
         applyLanguageCopy();
