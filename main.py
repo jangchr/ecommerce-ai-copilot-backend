@@ -33706,6 +33706,589 @@ def _rw_workspace_provider_cost_quota_risk_guard_pack(
     }
 
 
+def _rw_workspace_real_provider_readiness_checklist_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    adapter_pack = dict(
+        creative_decision_pack.get("workspace_provider_adapter_contract_pack")
+        or {}
+    )
+    test_pack = dict(
+        creative_decision_pack.get("workspace_provider_contract_test_pack")
+        or {}
+    )
+    result_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_mock_invocation_result_pack"
+        )
+        or {}
+    )
+    taxonomy_pack = dict(
+        creative_decision_pack.get("workspace_provider_failure_taxonomy_pack")
+        or {}
+    )
+    asset_pack = dict(
+        creative_decision_pack.get("workspace_provider_asset_contract_pack")
+        or {}
+    )
+    cost_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_cost_quota_risk_guard_pack"
+        )
+        or {}
+    )
+    permission_pack = dict(
+        creative_decision_pack.get(
+            "workspace_capability_permission_matrix_pack"
+        )
+        or {}
+    )
+    review_pack = dict(
+        creative_decision_pack.get("workspace_human_review_queue_pack") or {}
+    )
+    health_pack = dict(
+        creative_decision_pack.get("workspace_system_integration_health_pack")
+        or {}
+    )
+    required_source_packs = [
+        "workspace_provider_adapter_contract_pack",
+        "workspace_provider_contract_test_pack",
+        "workspace_provider_mock_invocation_result_pack",
+        "workspace_provider_failure_taxonomy_pack",
+        "workspace_provider_asset_contract_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_human_review_queue_pack",
+        "workspace_system_integration_health_pack",
+    ]
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    source_capability_by_type = {
+        "llm_text_generation": "llm_generation",
+        "video_generation_provider": "video_provider",
+        "image_generation_provider": "image_generation",
+        "media_storage_provider": "media_storage",
+        "external_scraping_provider": "external_scraping",
+        "translation_provider": "translation",
+        "analytics_or_tracking_provider": "analytics_tracking",
+        "database_persistence_provider": "database_persistence",
+        "approval_or_ticket_provider": "approval_ticket",
+        "rollback_restore_provider": "rollback_restore",
+    }
+
+    adapter_cards = list(adapter_pack.get("provider_contract_cards") or [])
+    test_cases = list(test_pack.get("mock_invocation_test_cases") or [])
+    mock_cards = list(result_pack.get("mock_run_result_cards") or [])
+    failure_cards = list(taxonomy_pack.get("failure_taxonomy_cards") or [])
+    recovery_cards = list(taxonomy_pack.get("recovery_policy_cards") or [])
+    asset_cards = list(asset_pack.get("provider_asset_contract_cards") or [])
+    manifest_cards = list(asset_pack.get("media_manifest_cards") or [])
+    cost_cards = list(cost_pack.get("provider_cost_risk_cards") or [])
+    quota_cards = list(cost_pack.get("quota_guard_cards") or [])
+    budget_cards = list(cost_pack.get("budget_policy_cards") or [])
+    permission_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+
+    def by_provider(items: list[dict]) -> dict:
+        return {
+            _rw_text(item.get("provider_id")): item
+            for item in items
+            if item.get("provider_id")
+        }
+
+    adapter_by_provider = by_provider(adapter_cards)
+    test_by_provider = by_provider(test_cases)
+    mock_by_provider = by_provider(mock_cards)
+    failure_by_provider = by_provider(failure_cards)
+    recovery_by_provider = by_provider(recovery_cards)
+    asset_by_provider = by_provider(asset_cards)
+    manifest_by_provider = by_provider(manifest_cards)
+    cost_by_provider = by_provider(cost_cards)
+    quota_by_provider = by_provider(quota_cards)
+    budget_by_provider = by_provider(budget_cards)
+    permission_by_capability = {
+        _rw_text(item.get("capability_id")): item
+        for item in permission_cards
+        if item.get("capability_id")
+    }
+
+    providers = []
+    seen_provider_types = set()
+    for source in (cost_cards, asset_cards, adapter_cards):
+        for card in source:
+            provider_type = _rw_text(card.get("provider_type"))
+            provider_id = _rw_text(card.get("provider_id"))
+            if provider_type and provider_type not in seen_provider_types:
+                providers.append({
+                    "provider_id": provider_id or provider_type,
+                    "provider_type": provider_type,
+                    "source_capability": _rw_text(
+                        card.get("source_capability")
+                    ) or source_capability_by_type.get(
+                        provider_type, provider_type
+                    ),
+                })
+                seen_provider_types.add(provider_type)
+    for provider_type in required_provider_types:
+        if provider_type not in seen_provider_types:
+            providers.append({
+                "provider_id": provider_type,
+                "provider_type": provider_type,
+                "source_capability": source_capability_by_type[
+                    provider_type
+                ],
+            })
+
+    readiness_cards = []
+    gate_checks = []
+    approval_requirements = []
+    for index, provider in enumerate(providers, start=1):
+        provider_id = _rw_text(provider.get("provider_id")) or (
+            _rw_text(provider.get("provider_type")) or f"provider_{index}"
+        )
+        provider_type = _rw_text(provider.get("provider_type")) or provider_id
+        source_capability = _rw_text(provider.get("source_capability")) or (
+            source_capability_by_type.get(provider_type, provider_type)
+        )
+        contract_ready = bool(adapter_by_provider.get(provider_id))
+        mock_test_ready = bool(
+            test_by_provider.get(provider_id)
+            or mock_by_provider.get(provider_id)
+        )
+        failure_policy_ready = bool(
+            failure_by_provider.get(provider_id)
+            or recovery_by_provider.get(provider_id)
+        )
+        asset_manifest_ready = bool(
+            asset_by_provider.get(provider_id)
+            or manifest_by_provider.get(provider_id)
+        )
+        cost_quota_guard_ready = bool(
+            cost_by_provider.get(provider_id)
+            or quota_by_provider.get(provider_id)
+            or budget_by_provider.get(provider_id)
+        )
+        permission = permission_by_capability.get(source_capability, {})
+        blocked_by = [
+            "secret_environment_unread_unverified",
+            "manual_approval_not_created",
+            "real_quota_and_billing_unread",
+            "paid_operation_disabled",
+            "provider_invocation_disabled",
+            "real_execution_disabled",
+        ]
+        if not contract_ready:
+            blocked_by.append("provider_contract_evidence_missing")
+        if not mock_test_ready:
+            blocked_by.append("mock_contract_test_evidence_missing")
+        if not failure_policy_ready:
+            blocked_by.append("failure_policy_evidence_missing")
+        if not asset_manifest_ready:
+            blocked_by.append("asset_manifest_evidence_missing")
+        if not cost_quota_guard_ready:
+            blocked_by.append("cost_quota_guard_evidence_missing")
+        if permission:
+            blocked_by.append(
+                _rw_text(permission.get("capability_id"))
+                or source_capability
+            )
+
+        readiness_cards.append({
+            "readiness_id": f"real_provider_readiness_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_capability": source_capability,
+            "current_readiness_status": (
+                "blocked_review_required_preview_only"
+            ),
+            "readiness_level": "checklist_preview_only_not_real_ready",
+            "contract_ready": contract_ready,
+            "mock_test_ready": mock_test_ready,
+            "failure_policy_ready": failure_policy_ready,
+            "asset_manifest_ready": asset_manifest_ready,
+            "cost_quota_guard_ready": cost_quota_guard_ready,
+            "secret_ready": False,
+            "approval_ready": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "blocked_by": blocked_by,
+            "recommended_operator_action": (
+                "Review this deterministic readiness checklist only; do not "
+                "read secrets, read billing or quota, upload media, call "
+                "providers, create approvals, write databases, or enable "
+                "real execution."
+            ),
+            "risk_note": (
+                "Readiness is a dry-run preview assembled from existing "
+                "workspace packs; it is not provider enablement."
+            ),
+        })
+
+        gate_templates = [
+            (
+                "contract_gate", "Provider contract evidence",
+                contract_ready, ["workspace_provider_adapter_contract_pack"],
+                ["provider_contract_review"],
+            ),
+            (
+                "mock_test_gate", "Mock contract test evidence",
+                mock_test_ready,
+                [
+                    "workspace_provider_contract_test_pack",
+                    "workspace_provider_mock_invocation_result_pack",
+                ],
+                ["mock_invocation_review"],
+            ),
+            (
+                "failure_policy_gate", "Failure taxonomy and recovery policy",
+                failure_policy_ready,
+                ["workspace_provider_failure_taxonomy_pack"],
+                ["failure_policy_review"],
+            ),
+            (
+                "asset_manifest_gate", "Media asset manifest contract",
+                asset_manifest_ready,
+                ["workspace_provider_asset_contract_pack"],
+                ["media_manifest_review"],
+            ),
+            (
+                "cost_quota_gate", "Cost quota risk guard",
+                cost_quota_guard_ready,
+                ["workspace_provider_cost_quota_risk_guard_pack"],
+                ["manual_cost_quota_review"],
+            ),
+            (
+                "secret_gate", "Secret environment verification",
+                False, ["future_secret_inventory_without_secret_read"],
+                ["secret_environment_unread_unverified"],
+            ),
+            (
+                "approval_gate", "Manual operator approval",
+                False, ["future_operator_approval_record"],
+                ["manual_approval_not_created"],
+            ),
+            (
+                "real_invocation_gate", "Real provider invocation lock",
+                False, ["future_enablement_change_request"],
+                ["provider_invocation_disabled", "real_execution_disabled"],
+            ),
+        ]
+        for gate_key, gate_name, evidence_ready, evidence, missing in gate_templates:
+            always_locked = {
+                "secret_gate", "approval_gate", "real_invocation_gate",
+            }
+            gate_status = (
+                "review_required_preview_only"
+                if evidence_ready and gate_key not in always_locked
+                else "locked_blocked_preview_only"
+            )
+            gate_checks.append({
+                "gate_id": f"{gate_key}_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "gate_name": gate_name,
+                "gate_status": gate_status,
+                "required_evidence": evidence,
+                "missing_evidence": missing,
+                "blocked_reason": (
+                    "Real invocation remains locked; checklist evidence is "
+                    "preview-only and does not authorize provider use."
+                ),
+                "next_preview_step": (
+                    "Keep this as operator review guidance and collect future "
+                    "evidence outside this dry run."
+                ),
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Gate status is deterministic preview state only; no "
+                    "secret, billing, quota, media, provider, or database "
+                    "operation is performed."
+                ),
+            })
+
+        approval_requirements.append({
+            "requirement_id": f"real_provider_approval_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "approval_type": "manual_real_provider_enablement_review",
+            "approval_status": "not_created_preview_only",
+            "required_before_real_provider": True,
+            "real_approval_created": False,
+            "operator_task_created": False,
+            "ticket_created": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Manual approval requirement is described only; no approval, "
+                "ticket, or operator task is created."
+            ),
+        })
+
+    prerequisite_checklist = [
+        ("future_secret_inventory_review", "secret",
+         "workspace_provider_adapter_contract_pack"),
+        ("future_manual_operator_approval", "approval",
+         "workspace_human_review_queue_pack"),
+        ("future_quota_billing_review", "quota_billing",
+         "workspace_provider_cost_quota_risk_guard_pack"),
+        ("future_media_asset_review", "media",
+         "workspace_provider_asset_contract_pack"),
+        ("future_rollback_restore_review", "rollback",
+         "workspace_provider_failure_taxonomy_pack"),
+        ("future_audit_persistence_review", "audit",
+         "workspace_system_integration_health_pack"),
+    ]
+    prerequisite_checklist = [
+        {
+            "prerequisite_id": prerequisite_id,
+            "category": category,
+            "source_pack": source_pack,
+            "required_before_real_provider": True,
+            "preview_only": True,
+            "real_action_performed": False,
+            "real_execution_allowed": False,
+        }
+        for prerequisite_id, category, source_pack in prerequisite_checklist
+    ]
+    missing_readiness_requirements = [
+        {
+            "requirement_id": f"missing_real_provider_{category}",
+            "category": category,
+            "requirement_status": "missing_preview_only",
+            "required_before_real_provider": True,
+            "real_action_performed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Requirement is intentionally unmet in this dry-run checklist "
+                "and cannot unlock real provider execution."
+            ),
+        }
+        for category in [
+            "secret", "approval", "quota", "billing", "media", "rollback",
+            "audit", "operator_review", "external_call",
+            "database_persistence",
+        ]
+    ]
+    risk_register = [
+        {
+            "risk_id": f"real_provider_readiness_risk_{risk_type}",
+            "risk_type": risk_type,
+            "severity": "high_preview_only",
+            "blocked_by": [
+                "real_provider_enablement_disabled",
+                "operator_review_required",
+            ],
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Risk is recorded for checklist preview only and does not "
+                "trigger external calls, writes, rollback, restore, or paid "
+                "operations."
+            ),
+        }
+        for risk_type in [
+            "secret_missing", "paid_blocked", "quota_unknown",
+            "media_operation_blocked", "rollback_blocked",
+            "external_call_blocked", "database_persistence_blocked",
+        ]
+    ]
+
+    covered_provider_types = sorted({
+        _rw_text(card.get("provider_type"))
+        for card in readiness_cards
+        if card.get("provider_type")
+    })
+    readiness_signature = json.dumps(
+        {
+            "source_packs": required_source_packs,
+            "provider_types": covered_provider_types,
+            "readiness_ids": [
+                card["readiness_id"] for card in readiness_cards
+            ],
+            "gate_ids": [gate["gate_id"] for gate in gate_checks],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    checklist_id = (
+        "workspace_real_provider_readiness_checklist_"
+        + hashlib.sha256(readiness_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "billing_read_enabled": False,
+        "quota_read_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "real_approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_service_health_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_real_provider_readiness_checklist_pack_v1",
+        "real_provider_readiness_summary": {
+            "checklist_id": checklist_id,
+            "mode": (
+                "real_provider_readiness_preview_checklist_only_dry_run_only"
+            ),
+            "source_packs": required_source_packs,
+            "provider_readiness_card_count": len(readiness_cards),
+            "readiness_gate_check_count": len(gate_checks),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Use this as a future-readiness checklist only; keep all real "
+                "provider, secret, media, paid, database, rollback, restore, "
+                "and external capabilities disabled."
+            ),
+        },
+        "provider_readiness_cards": readiness_cards,
+        "readiness_gate_checks": gate_checks,
+        "prerequisite_checklist": prerequisite_checklist,
+        "missing_readiness_requirements": missing_readiness_requirements,
+        "approval_readiness_requirements": approval_requirements,
+        "secret_environment_readiness": {
+            "readiness_id": f"secret_environment_{checklist_id}",
+            "status": "unread_unverified_unavailable_preview_only",
+            "secret_read_performed": False,
+            "secret_verified": False,
+            "secret_available": False,
+            "secret_value_observed": False,
+            "environment_access_performed": False,
+            "real_execution_allowed": False,
+        },
+        "cost_quota_readiness": {
+            "readiness_id": f"cost_quota_{checklist_id}",
+            "source_pack": "workspace_provider_cost_quota_risk_guard_pack",
+            "status": "preview_referenced_no_real_billing_or_quota_read",
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "paid_operation_executed": False,
+            "real_execution_allowed": False,
+        },
+        "media_asset_readiness": {
+            "readiness_id": f"media_asset_{checklist_id}",
+            "source_pack": "workspace_provider_asset_contract_pack",
+            "status": "manifest_preview_referenced_no_media_operation",
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "real_media_operation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "readiness_risk_register": risk_register,
+        "readiness_quality_checks": {
+            "all_required_source_packs_referenced": True,
+            "source_adapter_contract_pack_present": bool(adapter_pack),
+            "source_contract_test_pack_present": bool(test_pack),
+            "source_mock_invocation_result_pack_present": bool(result_pack),
+            "source_failure_taxonomy_pack_present": bool(taxonomy_pack),
+            "source_asset_contract_pack_present": bool(asset_pack),
+            "source_cost_quota_guard_pack_present": bool(cost_pack),
+            "source_permission_matrix_pack_present": bool(permission_pack),
+            "source_human_review_queue_pack_present": bool(review_pack),
+            "source_system_integration_health_pack_present": bool(health_pack),
+            "provider_readiness_cards_present": bool(readiness_cards),
+            "readiness_gate_checks_present": bool(gate_checks),
+            "prerequisite_checklist_present": bool(prerequisite_checklist),
+            "missing_readiness_requirements_present": bool(
+                missing_readiness_requirements
+            ),
+            "approval_readiness_requirements_present": bool(
+                approval_requirements
+            ),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_real_invocation_disabled": all(
+                not card["real_invocation_allowed"]
+                for card in readiness_cards
+            ) and all(
+                not gate["real_invocation_allowed"] for gate in gate_checks
+            ),
+            "all_real_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in readiness_cards
+            ) and all(
+                not gate["real_execution_allowed"] for gate in gate_checks
+            ),
+            "secret_environment_not_read": True,
+            "real_billing_quota_not_read": True,
+            "media_operations_not_performed": True,
+            "approval_not_created": True,
+            "audit_preview_not_persisted": True,
+            "real_provider_enablement_performed": False,
+            "provider_invocation_performed": False,
+            "database_write_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "checklist_id": checklist_id,
+            "is_real_provider_enablement": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "secret_read_performed": False,
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "paid_operation_executed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "registry_write_performed": False,
+            "external_scraping_performed": False,
+            "audit_persisted": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -33877,6 +34460,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         _rw_workspace_provider_cost_quota_risk_guard_pack(
             creative_decision_pack
         )
+    )
+    creative_decision_pack[
+        "workspace_real_provider_readiness_checklist_pack"
+    ] = _rw_workspace_real_provider_readiness_checklist_pack(
+        creative_decision_pack
     )
 
     return ReviewWorkspaceResponse(

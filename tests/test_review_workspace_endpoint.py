@@ -5578,6 +5578,301 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_real_provider_readiness_checklist_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-real-provider-readiness-checklist",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PROVIDERREADY001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks during commute and needs a better seal.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_asset_contract_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_real_provider_readiness_checklist_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack[
+            "workspace_real_provider_readiness_checklist_pack"
+        ]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_real_provider_readiness_checklist_pack_v1",
+        )
+        required_provider_types = {
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "media_storage_provider",
+            "external_scraping_provider",
+            "translation_provider",
+            "analytics_or_tracking_provider",
+            "database_persistence_provider",
+            "approval_or_ticket_provider",
+            "rollback_restore_provider",
+        }
+
+        summary = pack["real_provider_readiness_summary"]
+        self.assertTrue(summary["checklist_id"])
+        self.assertIn("real_provider_readiness_preview", summary["mode"])
+        self.assertIn("checklist_only", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_asset_contract_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_system_integration_health_pack",
+        ]:
+            with self.subTest(source_pack=source_pack):
+                self.assertIn(source_pack, summary["source_packs"])
+        self.assertFalse(summary["real_invocation_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        cards = pack["provider_readiness_cards"]
+        self.assertTrue(cards)
+        self.assertTrue(required_provider_types <= {
+            card["provider_type"] for card in cards
+        })
+        for card in cards:
+            for field in [
+                "readiness_id", "provider_id", "provider_type",
+                "source_capability", "current_readiness_status",
+                "readiness_level", "contract_ready", "mock_test_ready",
+                "failure_policy_ready", "asset_manifest_ready",
+                "cost_quota_guard_ready", "secret_ready",
+                "approval_ready", "real_invocation_allowed",
+                "real_execution_allowed", "blocked_by",
+                "recommended_operator_action", "risk_note",
+            ]:
+                with self.subTest(card=card["readiness_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertNotIn(
+                "ready_for_real_invocation",
+                card["current_readiness_status"],
+            )
+            self.assertFalse(card["secret_ready"])
+            self.assertFalse(card["approval_ready"])
+            self.assertFalse(card["real_invocation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        gates = pack["readiness_gate_checks"]
+        self.assertTrue(gates)
+        self.assertGreaterEqual(len(gates), len(required_provider_types) * 3)
+        self.assertTrue(required_provider_types <= {
+            gate["provider_type"] for gate in gates
+        })
+        for gate in gates:
+            for field in [
+                "gate_id", "provider_id", "provider_type", "gate_name",
+                "gate_status", "required_evidence", "missing_evidence",
+                "blocked_reason", "next_preview_step",
+                "real_invocation_allowed", "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(gate=gate["gate_id"], field=field):
+                    self.assertIn(field, gate)
+            self.assertTrue(
+                "locked" in gate["gate_status"]
+                or "blocked" in gate["gate_status"]
+                or "review_required" in gate["gate_status"]
+            )
+            self.assertFalse(gate["real_invocation_allowed"])
+            self.assertFalse(gate["real_execution_allowed"])
+
+        prerequisites = pack["prerequisite_checklist"]
+        self.assertTrue(prerequisites)
+        for item in prerequisites:
+            self.assertTrue(item["required_before_real_provider"])
+            self.assertTrue(item["preview_only"])
+            self.assertFalse(item["real_action_performed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        missing = pack["missing_readiness_requirements"]
+        self.assertTrue(missing)
+        self.assertTrue({
+            "secret", "approval", "quota", "billing", "media", "rollback",
+            "audit", "operator_review",
+        } <= {item["category"] for item in missing})
+        for item in missing:
+            self.assertFalse(item["real_action_performed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        approvals = pack["approval_readiness_requirements"]
+        self.assertTrue(approvals)
+        for requirement in approvals:
+            self.assertFalse(requirement["real_approval_created"])
+            self.assertFalse(requirement["operator_task_created"])
+            self.assertFalse(requirement["ticket_created"])
+            self.assertFalse(requirement["real_execution_allowed"])
+
+        secret = pack["secret_environment_readiness"]
+        self.assertIn("unread", secret["status"])
+        self.assertFalse(secret["secret_read_performed"])
+        self.assertFalse(secret["secret_verified"])
+        self.assertFalse(secret["secret_available"])
+        self.assertFalse(secret["secret_value_observed"])
+        self.assertFalse(secret["environment_access_performed"])
+        self.assertFalse(secret["real_execution_allowed"])
+
+        cost = pack["cost_quota_readiness"]
+        self.assertEqual(
+            cost["source_pack"],
+            "workspace_provider_cost_quota_risk_guard_pack",
+        )
+        self.assertIn("no_real_billing_or_quota_read", cost["status"])
+        self.assertFalse(cost["real_billing_read_performed"])
+        self.assertFalse(cost["real_quota_read_performed"])
+        self.assertFalse(cost["paid_operation_executed"])
+        self.assertFalse(cost["real_execution_allowed"])
+
+        media = pack["media_asset_readiness"]
+        self.assertEqual(
+            media["source_pack"],
+            "workspace_provider_asset_contract_pack",
+        )
+        self.assertIn("no_media_operation", media["status"])
+        self.assertFalse(media["media_upload_performed"])
+        self.assertFalse(media["media_download_performed"])
+        self.assertFalse(media["real_media_operation_allowed"])
+        self.assertFalse(media["real_execution_allowed"])
+
+        risks = pack["readiness_risk_register"]
+        self.assertTrue(risks)
+        self.assertTrue({
+            "secret_missing", "paid_blocked", "quota_unknown",
+            "media_operation_blocked", "rollback_blocked",
+            "external_call_blocked", "database_persistence_blocked",
+        } <= {risk["risk_type"] for risk in risks})
+        for risk in risks:
+            self.assertFalse(risk["real_invocation_allowed"])
+            self.assertFalse(risk["real_execution_allowed"])
+
+        checks = pack["readiness_quality_checks"]
+        for key in [
+            "all_required_source_packs_referenced",
+            "source_adapter_contract_pack_present",
+            "source_contract_test_pack_present",
+            "source_mock_invocation_result_pack_present",
+            "source_failure_taxonomy_pack_present",
+            "source_asset_contract_pack_present",
+            "source_cost_quota_guard_pack_present",
+            "source_permission_matrix_pack_present",
+            "source_human_review_queue_pack_present",
+            "source_system_integration_health_pack_present",
+            "provider_readiness_cards_present",
+            "readiness_gate_checks_present",
+            "prerequisite_checklist_present",
+            "missing_readiness_requirements_present",
+            "approval_readiness_requirements_present",
+            "all_required_provider_types_covered",
+            "all_real_invocation_disabled",
+            "all_real_execution_disabled",
+            "secret_environment_not_read",
+            "real_billing_quota_not_read",
+            "media_operations_not_performed",
+            "approval_not_created",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_provider_enablement_performed",
+            "provider_invocation_performed",
+            "database_write_performed",
+            "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["is_real_provider_enablement"])
+        self.assertFalse(audit["provider_invocation_performed"])
+        self.assertFalse(audit["provider_called"])
+        self.assertFalse(audit["llm_called"])
+        self.assertFalse(audit["image_generation_performed"])
+        self.assertFalse(audit["video_generation_performed"])
+        self.assertFalse(audit["media_upload_performed"])
+        self.assertFalse(audit["media_download_performed"])
+        self.assertFalse(audit["secret_read_performed"])
+        self.assertFalse(audit["real_billing_read_performed"])
+        self.assertFalse(audit["real_quota_read_performed"])
+        self.assertFalse(audit["paid_operation_executed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_service_health_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_approval_created"])
+        self.assertFalse(audit["real_retry_executed"])
+        self.assertFalse(audit["real_rollback_executed"])
+        self.assertFalse(audit["real_restore_executed"])
+        self.assertFalse(audit["registry_write_performed"])
+        self.assertFalse(audit["external_scraping_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_enabled", "provider_invocation_enabled",
+            "llm_enabled", "llm_api_enabled", "image_enabled",
+            "image_generation_enabled", "video_enabled",
+            "video_generation_enabled", "media_enabled",
+            "media_upload_enabled", "media_download_enabled",
+            "paid_enabled", "paid_operation_enabled",
+            "registry_enabled", "registry_write_enabled",
+            "rollback_enabled", "rollback_execution_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
