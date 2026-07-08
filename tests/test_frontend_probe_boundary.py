@@ -12997,6 +12997,214 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace secret environment gate bundle",
+            "PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER",
+            "latestProjectWorkspaceSecretEnvironmentGatePack",
+            "projectWorkspaceSecretEnvironmentGatePackFromWorkspace",
+            "projectWorkspaceExportSecretEnvironmentGateSnapshot",
+            "projectWorkspaceExportSecretEnvironmentGateMarkdown",
+            "renderProjectWorkspaceSecretEnvironmentGateSummaryPanel",
+            "renderProjectWorkspaceSecretRequirementCardsPanel",
+            "renderProjectWorkspaceEnvironmentGatePolicyPanel",
+            "renderProjectWorkspaceMissingEnvironmentBlockedSecretDependencyPanel",
+            "renderProjectWorkspaceEnvironmentRiskQualityAuditSafetyPanel",
+            "copyProjectWorkspaceSecretEnvironmentGateSummary",
+            "copyProjectWorkspaceSecretRequirementCards",
+            "copyProjectWorkspaceEnvironmentGateChecks",
+            "copyProjectWorkspaceSecretAccessPolicyCards",
+            "copyProjectWorkspaceMissingEnvironmentRequirements",
+            "copyProjectWorkspaceBlockedSecretOperations",
+            "copyProjectWorkspaceProviderSecretDependencyMap",
+            "copyProjectWorkspaceEnvironmentRiskRegister",
+            "copyProjectWorkspaceFullSecretEnvironmentGatePack",
+            "workspace_secret_environment_gate_pack: projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace)",
+            "Workspace Secret Requirement / Environment Gate Preview",
+            "Secret Environment Gate Summary",
+            "Secret Requirement Cards",
+            "Environment Gate Checks",
+            "Secret Access Policy Cards",
+            "Missing Environment Requirements",
+            "Blocked Secret Operations",
+            "Provider Secret Dependency Map",
+            "Environment Risk Register",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.secret_environment_gate_summary",
+            "pack.secret_requirement_cards",
+            "pack.environment_gate_checks",
+            "pack.secret_access_policy_cards",
+            "pack.missing_environment_requirements",
+            "pack.blocked_secret_operations",
+            "pack.provider_secret_dependency_map",
+            "pack.environment_risk_register",
+            "pack.secret_gate_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.secret_requirement_card_count",
+            "summary.environment_gate_check_count",
+            "summary.secret_value_read_allowed",
+            "summary.secret_validation_allowed",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.secret_requirement_id",
+            "card.provider_id",
+            "card.provider_type",
+            "card.source_capability",
+            "card.secret_name_preview",
+            "card.secret_purpose",
+            "card.required_for_modes",
+            "card.current_secret_status",
+            "card.secret_value_read_allowed",
+            "card.secret_validation_allowed",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "card.blocked_by",
+            "card.recommended_operator_action",
+            "card.risk_note",
+            "gate.gate_id",
+            "gate.gate_name",
+            "gate.gate_status",
+            "gate.required_environment_refs",
+            "gate.missing_environment_refs",
+            "gate.blocked_reason",
+            "gate.next_preview_step",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceReadinessRiskQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceSecretEnvironmentGateSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceEnvironmentRiskQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_secret_environment_gate_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "secretEnvironmentGatePackTitle",
+            "secretEnvironmentGateSummaryTitle",
+            "secretEnvironmentGateCardsTitle",
+            "secretEnvironmentGateChecksTitle",
+            "secretEnvironmentGatePolicyTitle",
+            "secretEnvironmentGateMissingTitle",
+            "secretEnvironmentGateBlockedTitle",
+            "secretEnvironmentGateDependencyTitle",
+            "secretEnvironmentGateRiskTitle",
+            "secretEnvironmentGateAuditTitle",
+            "secretEnvironmentGateSafetyTitle",
+            "secretEnvironmentGateCopySummary",
+            "secretEnvironmentGateCopyCards",
+            "secretEnvironmentGateCopyChecks",
+            "secretEnvironmentGateCopyPolicy",
+            "secretEnvironmentGateCopyMissing",
+            "secretEnvironmentGateCopyBlocked",
+            "secretEnvironmentGateCopyDependency",
+            "secretEnvironmentGateCopyRisk",
+            "secretEnvironmentGateCopyFull",
+            "secretEnvironmentGateCopied",
+            "secretEnvironmentGateCopyFailed",
+            "secretEnvironmentGateCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn(
+                "Project Workspace secret environment gate bundle",
+                script,
+            )
+            self.assertIn(
+                "project_workspace_secret_environment_gate_marker",
+                script,
+            )
+        markdown = html[
+            html.index("function projectWorkspaceSecretEnvironmentGateSummaryText"):
+            html.index("async function copyProjectWorkspaceSecretEnvironmentGateText")
+        ]
+        for key in [
+            "secretEnvironmentGatePackTitle",
+            "secretEnvironmentGateSummaryTitle",
+            "secretEnvironmentGateCardsTitle",
+            "secretEnvironmentGateChecksTitle",
+            "secretEnvironmentGatePolicyTitle",
+            "secretEnvironmentGateMissingTitle",
+            "secretEnvironmentGateBlockedTitle",
+            "secretEnvironmentGateDependencyTitle",
+            "secretEnvironmentGateRiskTitle",
+            "secretEnvironmentGateAuditTitle",
+            "secretEnvironmentGateSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "secret/environment gate preview",
+            "not a real secret scanner",
+            "does not read",
+            "validate",
+            "export",
+            "persist",
+            "secret value",
+            "Secret requirement cards show secret name previews",
+            "read_secret",
+            "validate_secret",
+            "use_secret_for_call",
+            "persist_secret",
+            "export_secret",
+            "provider API key",
+            "billing/quota env",
+            "media storage env",
+            "approval token",
+            "rollback token",
+            "database env",
+            "secret missing",
+            "secret validation blocked",
+            "billing/quota env missing",
+            "media storage env missing",
+            "rollback token blocked",
+            "database env blocked",
+            "external provider key missing",
+            "Audit preview is not written to a database",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+            "secret read",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[

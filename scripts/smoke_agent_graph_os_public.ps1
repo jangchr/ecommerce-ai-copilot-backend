@@ -172,6 +172,7 @@ Add-Check "project_workspace_provider_failure_taxonomy_marker" ($page.Content -m
 Add-Check "project_workspace_provider_asset_contract_marker" ($page.Content -match "Project Workspace provider asset contract bundle")
 Add-Check "project_workspace_provider_cost_quota_risk_guard_marker" ($page.Content -match "Project Workspace provider cost quota risk guard bundle")
 Add-Check "project_workspace_real_provider_readiness_checklist_marker" ($page.Content -match "Project Workspace real provider readiness checklist bundle")
+Add-Check "project_workspace_secret_environment_gate_marker" ($page.Content -match "Project Workspace secret environment gate bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

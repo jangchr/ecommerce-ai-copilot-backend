@@ -992,7 +992,7 @@
             .live-graph-lane { grid-template-columns: 112px minmax(0, 1fr); }
             .live-graph-branches { margin-left: 124px; }
         }
-    
+
         /* L15.3-A mobile readability polish */
         @media (max-width: 720px) {
             body {
@@ -3631,6 +3631,7 @@
         let latestProjectWorkspaceProviderAssetContractPack = {};
         let latestProjectWorkspaceProviderCostQuotaRiskGuardPack = {};
         let latestProjectWorkspaceRealProviderReadinessChecklistPack = {};
+        let latestProjectWorkspaceSecretEnvironmentGatePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6134,6 +6135,132 @@
             }
         }
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceSecretEnvironmentGateMarker: 'Project Workspace secret environment gate bundle',
+            secretEnvironmentGatePackTitle: 'Workspace Secret Requirement / Environment Gate Preview',
+            secretEnvironmentGatePackHelper: 'Review secret requirement and environment gate preview only. This is not a real secret scanner.',
+            secretEnvironmentGateSummaryTitle: 'Secret Environment Gate Summary',
+            secretEnvironmentGateCardsTitle: 'Secret Requirement Cards',
+            secretEnvironmentGateChecksTitle: 'Environment Gate Checks',
+            secretEnvironmentGatePolicyTitle: 'Secret Access Policy Cards',
+            secretEnvironmentGateMissingTitle: 'Missing Environment Requirements',
+            secretEnvironmentGateBlockedTitle: 'Blocked Secret Operations',
+            secretEnvironmentGateDependencyTitle: 'Provider Secret Dependency Map',
+            secretEnvironmentGateRiskTitle: 'Environment Risk Register',
+            secretEnvironmentGateQualityTitle: 'Secret Gate Quality Checks',
+            secretEnvironmentGateAuditTitle: 'Audit Preview',
+            secretEnvironmentGateSafetyTitle: 'Safety Boundaries',
+            secretEnvironmentGatePolicyChecksTitle: 'Environment Gate Checks / Secret Access Policy',
+            secretEnvironmentGateMissingBlockedDependencyTitle: 'Missing Environment / Blocked Secret Operations / Provider Dependency Map',
+            secretEnvironmentGateRiskQualityAuditSafetyTitle: 'Environment Risk / Quality / Audit / Safety Boundaries',
+            secretEnvironmentGateMode: 'Mode',
+            secretEnvironmentGateSecretRequirementCount: 'Secret requirement count',
+            secretEnvironmentGateEnvironmentGateCount: 'Environment gate count',
+            secretEnvironmentGateMissingRequirementCount: 'Missing environment requirement count',
+            secretEnvironmentGateBlockedOperationCount: 'Blocked secret operation count',
+            secretEnvironmentGateRecommendedAction: 'Recommended operator action',
+            secretEnvironmentGateSecretRead: 'Secret value read allowed',
+            secretEnvironmentGateSecretValidation: 'Secret validation allowed',
+            secretEnvironmentGateRealInvocation: 'Real invocation allowed',
+            secretEnvironmentGateRealExecution: 'Real execution allowed',
+            secretEnvironmentGateDisabled: 'disabled',
+            secretEnvironmentGateNoData: 'No workspace secret environment gate data is available.',
+            secretEnvironmentGateCopyNoData: 'No workspace secret environment gate content is available to copy.',
+            secretEnvironmentGateCopyFailed: 'Unable to copy workspace secret environment gate content.',
+            secretEnvironmentGateCopied: 'Workspace secret environment gate content copied.',
+            secretEnvironmentGateCopySummary: 'Copy secret environment gate summary',
+            secretEnvironmentGateCopyCards: 'Copy secret requirement cards',
+            secretEnvironmentGateCopyChecks: 'Copy environment gate checks',
+            secretEnvironmentGateCopyPolicy: 'Copy secret access policy cards',
+            secretEnvironmentGateCopyMissing: 'Copy missing environment requirements',
+            secretEnvironmentGateCopyBlocked: 'Copy blocked secret operations',
+            secretEnvironmentGateCopyDependency: 'Copy provider secret dependency map',
+            secretEnvironmentGateCopyRisk: 'Copy environment risk register',
+            secretEnvironmentGateCopyFull: 'Copy full secret environment gate pack',
+            secretEnvironmentGateProviderId: 'Provider ID',
+            secretEnvironmentGateProviderType: 'Provider type',
+            secretEnvironmentGateSourceCapability: 'Source capability',
+            secretEnvironmentGateSecretNamePreview: 'Secret name preview',
+            secretEnvironmentGateSecretPurpose: 'Secret purpose',
+            secretEnvironmentGateRequiredModes: 'Required for modes',
+            secretEnvironmentGateSecretStatus: 'Current secret status',
+            secretEnvironmentGateGateName: 'Gate name',
+            secretEnvironmentGateCardsHelper: 'Inspect secret requirement cards with preview names, purposes, required modes, blocked secret reads, blocked validation, and disabled real execution.',
+            secretEnvironmentGatePolicyChecksHelper: 'Inspect environment gate checks and secret access policy cards. Env/secret gates remain blocked, missing, or review-required.',
+            secretEnvironmentGateMissingBlockedDependencyHelper: 'Inspect missing provider API key, billing/quota env, media storage env, approval token, rollback token, database env, blocked secret operations, and provider dependencies.',
+            secretEnvironmentGateRiskQualityAuditSafetyHelper: 'Inspect environment risks, quality checks, audit preview, and disabled real capability boundaries.',
+            secretEnvironmentGatePreviewNote: 'secret/environment gate preview only. This is not a real secret scanner and does not read, validate, export, persist, or use secret values.',
+            secretEnvironmentGateNoSecretValueNote: 'Secret requirement cards show secret name previews and purpose only; no secret value is read or displayed.',
+            secretEnvironmentGatePolicyNote: 'Secret access policy blocks read_secret, validate_secret, use_secret_for_call, persist_secret, and export_secret. No real secret is read, validated, used, persisted, or exported.',
+            secretEnvironmentGateBlockedNote: 'Missing environment requirements include provider API key, billing/quota env, media storage env, approval token, rollback token, and database env. All secret operations remain blocked.',
+            secretEnvironmentGateRiskQualityAuditSafetyNote: 'Risk register includes secret missing, secret validation blocked, billing/quota env missing, media storage env missing, rollback token blocked, database env blocked, and external provider key missing. Audit preview is not written to a database.',
+            secretEnvironmentGateSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, real execution, and secret read remain disabled.',
+            secretEnvironmentGateProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceSecretEnvironmentGateMarker: 'Project Workspace secret environment gate bundle',
+            secretEnvironmentGatePackTitle: '\u5de5\u4f5c\u533a Secret Requirement / Environment Gate Preview',
+            secretEnvironmentGatePackHelper: '\u4ec5\u67e5\u770b secret requirement \u548c environment gate \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e secret scanner\u3002',
+            secretEnvironmentGateSummaryTitle: 'Secret Environment Gate \u6458\u8981',
+            secretEnvironmentGateCardsTitle: 'Secret Requirement \u5361\u7247',
+            secretEnvironmentGateChecksTitle: 'Environment Gate \u68c0\u67e5',
+            secretEnvironmentGatePolicyTitle: 'Secret Access Policy \u5361\u7247',
+            secretEnvironmentGateMissingTitle: '\u7f3a\u5931\u7684 Environment \u8981\u6c42',
+            secretEnvironmentGateBlockedTitle: '\u88ab\u963b\u65ad\u7684 Secret \u64cd\u4f5c',
+            secretEnvironmentGateDependencyTitle: 'Provider Secret Dependency Map',
+            secretEnvironmentGateRiskTitle: 'Environment Risk Register',
+            secretEnvironmentGateQualityTitle: 'Secret Gate \u8d28\u91cf\u68c0\u67e5',
+            secretEnvironmentGateAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            secretEnvironmentGateSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            secretEnvironmentGatePolicyChecksTitle: 'Environment Gate \u68c0\u67e5 / Secret Access Policy',
+            secretEnvironmentGateMissingBlockedDependencyTitle: '\u7f3a\u5931 Environment / \u88ab\u963b\u65ad Secret \u64cd\u4f5c / Provider Dependency Map',
+            secretEnvironmentGateRiskQualityAuditSafetyTitle: 'Environment Risk / \u8d28\u91cf / \u5ba1\u8ba1 / \u5b89\u5168\u8fb9\u754c',
+            secretEnvironmentGateMode: '\u6a21\u5f0f',
+            secretEnvironmentGateSecretRequirementCount: 'Secret requirement \u6570\u91cf',
+            secretEnvironmentGateEnvironmentGateCount: 'Environment gate \u6570\u91cf',
+            secretEnvironmentGateMissingRequirementCount: '\u7f3a\u5931 environment \u8981\u6c42\u6570\u91cf',
+            secretEnvironmentGateBlockedOperationCount: '\u88ab\u963b\u65ad secret \u64cd\u4f5c\u6570\u91cf',
+            secretEnvironmentGateRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            secretEnvironmentGateSecretRead: '\u5141\u8bb8\u8bfb\u53d6 secret value',
+            secretEnvironmentGateSecretValidation: '\u5141\u8bb8\u9a8c\u8bc1 secret',
+            secretEnvironmentGateRealInvocation: '\u5141\u8bb8\u771f\u5b9e\u8c03\u7528',
+            secretEnvironmentGateRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            secretEnvironmentGateDisabled: '\u5df2\u7981\u7528',
+            secretEnvironmentGateNoData: '\u6682\u65e0\u5de5\u4f5c\u533a secret environment gate \u6570\u636e\u3002',
+            secretEnvironmentGateCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a secret environment gate \u5185\u5bb9\u3002',
+            secretEnvironmentGateCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a secret environment gate \u5185\u5bb9\u3002',
+            secretEnvironmentGateCopied: '\u5de5\u4f5c\u533a secret environment gate \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            secretEnvironmentGateCopySummary: '\u590d\u5236 secret environment gate \u6458\u8981',
+            secretEnvironmentGateCopyCards: '\u590d\u5236 secret requirement \u5361\u7247',
+            secretEnvironmentGateCopyChecks: '\u590d\u5236 environment gate \u68c0\u67e5',
+            secretEnvironmentGateCopyPolicy: '\u590d\u5236 secret access policy \u5361\u7247',
+            secretEnvironmentGateCopyMissing: '\u590d\u5236\u7f3a\u5931\u7684 environment \u8981\u6c42',
+            secretEnvironmentGateCopyBlocked: '\u590d\u5236\u88ab\u963b\u65ad\u7684 secret \u64cd\u4f5c',
+            secretEnvironmentGateCopyDependency: '\u590d\u5236 provider secret dependency map',
+            secretEnvironmentGateCopyRisk: '\u590d\u5236 environment risk register',
+            secretEnvironmentGateCopyFull: '\u590d\u5236\u5b8c\u6574 secret environment gate pack',
+            secretEnvironmentGateProviderId: 'Provider ID',
+            secretEnvironmentGateProviderType: 'Provider \u7c7b\u578b',
+            secretEnvironmentGateSourceCapability: '\u6765\u6e90\u80fd\u529b',
+            secretEnvironmentGateSecretNamePreview: 'Secret name preview',
+            secretEnvironmentGateSecretPurpose: 'Secret \u7528\u9014',
+            secretEnvironmentGateRequiredModes: '\u6240\u9700\u6a21\u5f0f',
+            secretEnvironmentGateSecretStatus: '\u5f53\u524d secret \u72b6\u6001',
+            secretEnvironmentGateGateName: 'Gate \u540d\u79f0',
+            secretEnvironmentGateCardsHelper: '\u67e5\u770b secret requirement \u5361\u7247\uff0c\u5305\u542b\u9884\u89c8\u540d\u79f0\u3001\u7528\u9014\u3001\u6240\u9700\u6a21\u5f0f\u3001\u88ab\u963b\u65ad\u7684 secret \u8bfb\u53d6\u3001\u88ab\u963b\u65ad\u7684\u9a8c\u8bc1\u548c\u7981\u7528\u771f\u5b9e\u6267\u884c\u72b6\u6001\u3002',
+            secretEnvironmentGatePolicyChecksHelper: '\u67e5\u770b environment gate \u68c0\u67e5\u548c secret access policy \u5361\u7247\u3002Env/secret gate \u4fdd\u6301 blocked\u3001missing \u6216 review-required\u3002',
+            secretEnvironmentGateMissingBlockedDependencyHelper: '\u67e5\u770b\u7f3a\u5931\u7684 provider API key\u3001billing/quota env\u3001media storage env\u3001approval token\u3001rollback token\u3001database env\u3001\u88ab\u963b\u65ad\u7684 secret \u64cd\u4f5c\u548c provider \u4f9d\u8d56\u3002',
+            secretEnvironmentGateRiskQualityAuditSafetyHelper: '\u67e5\u770b environment risk\u3001\u8d28\u91cf\u68c0\u67e5\u3001\u5ba1\u8ba1\u9884\u89c8\u548c\u5df2\u7981\u7528\u7684\u771f\u5b9e\u80fd\u529b\u8fb9\u754c\u3002',
+            secretEnvironmentGatePreviewNote: '\u4ec5\u4e3a secret/environment gate \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e secret scanner\uff0c\u4e0d\u8bfb\u53d6\u3001\u9a8c\u8bc1\u3001\u5bfc\u51fa\u3001\u6301\u4e45\u5316\u6216\u4f7f\u7528 secret value\u3002',
+            secretEnvironmentGateNoSecretValueNote: 'Secret requirement \u5361\u7247\u53ea\u663e\u793a secret name preview \u548c\u7528\u9014\uff1b\u4e0d\u8bfb\u53d6\u6216\u663e\u793a secret value\u3002',
+            secretEnvironmentGatePolicyNote: 'Secret access policy \u963b\u65ad read_secret\u3001validate_secret\u3001use_secret_for_call\u3001persist_secret \u548c export_secret\u3002\u4e0d\u8bfb\u53d6\u3001\u9a8c\u8bc1\u3001\u4f7f\u7528\u3001\u6301\u4e45\u5316\u6216\u5bfc\u51fa\u771f\u5b9e secret\u3002',
+            secretEnvironmentGateBlockedNote: '\u7f3a\u5931\u7684 environment \u8981\u6c42\u5305\u542b provider API key\u3001billing/quota env\u3001media storage env\u3001approval token\u3001rollback token \u548c database env\u3002\u6240\u6709 secret \u64cd\u4f5c\u4fdd\u6301 blocked\u3002',
+            secretEnvironmentGateRiskQualityAuditSafetyNote: 'Risk register \u5305\u542b secret missing\u3001secret validation blocked\u3001billing/quota env missing\u3001media storage env missing\u3001rollback token blocked\u3001database env blocked \u548c external provider key missing\u3002Audit preview \u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002',
+            secretEnvironmentGateSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore\u3001real execution \u548c secret read \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
+            secretEnvironmentGateProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
+        });
+
 
         // L21-E stable language body classes for CSS-driven copy
         function updateLanguageBodyClass(language) {
@@ -6144,7 +6271,9 @@
         function setLanguageMode(language) {
             updateLanguageBodyClass(language);
             outputLanguage = language === 'zh-CN' ? 'zh-CN' : 'en';
-            applyLanguageCopy();
+
+
+        applyLanguageCopy();
             const projectWorkspaceRoot = document.getElementById('projectWorkspaceRoot');
             if (projectWorkspaceRoot) {
                 projectWorkspaceRoot.innerHTML = renderProjectWorkspacePanel();
@@ -8936,6 +9065,7 @@
                 latestProjectWorkspaceProviderAssetContractPack = latestProjectCreativeDecisionPack.workspace_provider_asset_contract_pack || {};
                 latestProjectWorkspaceProviderCostQuotaRiskGuardPack = latestProjectCreativeDecisionPack.workspace_provider_cost_quota_risk_guard_pack || {};
                 latestProjectWorkspaceRealProviderReadinessChecklistPack = latestProjectCreativeDecisionPack.workspace_real_provider_readiness_checklist_pack || {};
+                latestProjectWorkspaceSecretEnvironmentGatePack = latestProjectCreativeDecisionPack.workspace_secret_environment_gate_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14803,6 +14933,7 @@
         const PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER = 'Project Workspace provider asset contract bundle';
         const PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER = 'Project Workspace provider cost quota risk guard bundle';
         const PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER = 'Project Workspace real provider readiness checklist bundle';
+        const PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER = 'Project Workspace secret environment gate bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -19980,6 +20111,111 @@ ${body}`;
         function copyProjectWorkspaceSecretEnvironmentReadiness() { return copyProjectWorkspaceRealProviderReadinessChecklistText('secret'); }
         function copyProjectWorkspaceReadinessRiskRegister() { return copyProjectWorkspaceRealProviderReadinessChecklistText('risk'); }
         function copyProjectWorkspaceFullRealProviderReadinessChecklistPack() { return copyProjectWorkspaceRealProviderReadinessChecklistText('full'); }
+
+        function projectWorkspaceSecretEnvironmentGatePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceSecretEnvironmentGatePack && Object.keys(latestProjectWorkspaceSecretEnvironmentGatePack).length) return latestProjectWorkspaceSecretEnvironmentGatePack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_secret_environment_gate_pack || {};
+        }
+
+        function projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceSecretEnvironmentGatePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER,
+                has_workspace_secret_environment_gate_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                secret_environment_gate_summary: pack.secret_environment_gate_summary || {},
+                secret_requirement_cards: Array.isArray(pack.secret_requirement_cards) ? pack.secret_requirement_cards : [],
+                environment_gate_checks: Array.isArray(pack.environment_gate_checks) ? pack.environment_gate_checks : [],
+                secret_access_policy_cards: Array.isArray(pack.secret_access_policy_cards) ? pack.secret_access_policy_cards : [],
+                missing_environment_requirements: Array.isArray(pack.missing_environment_requirements) ? pack.missing_environment_requirements : [],
+                blocked_secret_operations: Array.isArray(pack.blocked_secret_operations) ? pack.blocked_secret_operations : [],
+                provider_secret_dependency_map: Array.isArray(pack.provider_secret_dependency_map) ? pack.provider_secret_dependency_map : [],
+                environment_risk_register: Array.isArray(pack.environment_risk_register) ? pack.environment_risk_register : [],
+                secret_gate_quality_checks: pack.secret_gate_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceSecretEnvironmentGateJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceSecretEnvironmentGateSummaryText(pack = projectWorkspaceExportSecretEnvironmentGateSnapshot()) {
+            if (!pack.has_workspace_secret_environment_gate_pack) return '';
+            const summary = pack.secret_environment_gate_summary || {};
+            return [
+                t('secretEnvironmentGateSummaryTitle'),
+                `${t('secretEnvironmentGateMode')}: ${summary.mode || t('none')}`,
+                `${t('secretEnvironmentGateSecretRequirementCount')}: ${summary.secret_requirement_card_count ?? pack.secret_requirement_cards.length}`,
+                `${t('secretEnvironmentGateEnvironmentGateCount')}: ${summary.environment_gate_check_count ?? pack.environment_gate_checks.length}`,
+                `${t('secretEnvironmentGateMissingRequirementCount')}: ${pack.missing_environment_requirements.length}`,
+                `${t('secretEnvironmentGateBlockedOperationCount')}: ${pack.blocked_secret_operations.length}`,
+                `${t('secretEnvironmentGateRecommendedAction')}: ${summary.recommended_operator_action || t('none')}`,
+                `${t('secretEnvironmentGateSecretRead')}: ${summary.secret_value_read_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.secret_value_read_allowed)}`,
+                `${t('secretEnvironmentGateSecretValidation')}: ${summary.secret_validation_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.secret_validation_allowed)}`,
+                `${t('secretEnvironmentGateRealInvocation')}: ${summary.real_invocation_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('secretEnvironmentGateRealExecution')}: ${summary.real_execution_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.real_execution_allowed)}`,
+                t('secretEnvironmentGatePreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceSecretEnvironmentGateSectionText(titleKey, value) {
+            const body = projectWorkspaceSecretEnvironmentGateJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportSecretEnvironmentGateMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace);
+            if (!pack.has_workspace_secret_environment_gate_pack) return '';
+            return [
+                `## ${t('secretEnvironmentGatePackTitle')}`,
+                `## ${t('secretEnvironmentGateSummaryTitle')}`,
+                projectWorkspaceSecretEnvironmentGateSummaryText(pack), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateCardsTitle', pack.secret_requirement_cards), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateChecksTitle', pack.environment_gate_checks), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGatePolicyTitle', pack.secret_access_policy_cards), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateMissingTitle', pack.missing_environment_requirements), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateBlockedTitle', pack.blocked_secret_operations), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateDependencyTitle', pack.provider_secret_dependency_map), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateRiskTitle', pack.environment_risk_register), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateAuditTitle', pack.audit_preview), '',
+                projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateSafetyTitle', pack.safety_boundaries),
+                t('secretEnvironmentGateSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceSecretEnvironmentGateText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceSecretEnvironmentGateStatus');
+            const pack = projectWorkspaceExportSecretEnvironmentGateSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceSecretEnvironmentGateSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateCardsTitle', pack.secret_requirement_cards)
+                : kind === 'gates' ? projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateChecksTitle', pack.environment_gate_checks)
+                : kind === 'policy' ? projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGatePolicyTitle', pack.secret_access_policy_cards)
+                : kind === 'missing' ? projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateMissingTitle', pack.missing_environment_requirements)
+                : kind === 'blocked' ? projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateBlockedTitle', pack.blocked_secret_operations)
+                : kind === 'dependency' ? projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateDependencyTitle', pack.provider_secret_dependency_map)
+                : kind === 'risk' ? projectWorkspaceSecretEnvironmentGateSectionText('secretEnvironmentGateRiskTitle', pack.environment_risk_register)
+                : projectWorkspaceExportSecretEnvironmentGateMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('secretEnvironmentGateCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('secretEnvironmentGateCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('secretEnvironmentGateCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('secretEnvironmentGateCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceSecretEnvironmentGateSummary() { return copyProjectWorkspaceSecretEnvironmentGateText('summary'); }
+        function copyProjectWorkspaceSecretRequirementCards() { return copyProjectWorkspaceSecretEnvironmentGateText('cards'); }
+        function copyProjectWorkspaceEnvironmentGateChecks() { return copyProjectWorkspaceSecretEnvironmentGateText('gates'); }
+        function copyProjectWorkspaceSecretAccessPolicyCards() { return copyProjectWorkspaceSecretEnvironmentGateText('policy'); }
+        function copyProjectWorkspaceMissingEnvironmentRequirements() { return copyProjectWorkspaceSecretEnvironmentGateText('missing'); }
+        function copyProjectWorkspaceBlockedSecretOperations() { return copyProjectWorkspaceSecretEnvironmentGateText('blocked'); }
+        function copyProjectWorkspaceProviderSecretDependencyMap() { return copyProjectWorkspaceSecretEnvironmentGateText('dependency'); }
+        function copyProjectWorkspaceEnvironmentRiskRegister() { return copyProjectWorkspaceSecretEnvironmentGateText('risk'); }
+        function copyProjectWorkspaceFullSecretEnvironmentGatePack() { return copyProjectWorkspaceSecretEnvironmentGateText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -23796,6 +24032,35 @@ ${body}`;
             const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('realProviderReadinessDisabled'):String(value)}`).join(' | ');
             return `<div class="section-block" id="projectWorkspaceReadinessRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realProviderReadinessRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReadinessRiskRegister()">${escapeHTML(t('realProviderReadinessCopyRisk'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.readiness_risk_register) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.readiness_quality_checks) || t('realProviderReadinessNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realProviderReadinessAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealProviderReadinessChecklistJsonText(pack.audit_preview) || t('realProviderReadinessNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('realProviderReadinessSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('realProviderReadinessSafetyNote'))}</div></div>`;
         }
+        function renderProjectWorkspaceSecretEnvironmentGateSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace); if (!pack.has_workspace_secret_environment_gate_pack) return '';
+            const summary = pack.secret_environment_gate_summary || {};
+            return `<div class="section-block" id="projectWorkspaceSecretEnvironmentGateSummaryPanel" data-secret-environment-gate-marker="${PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER}" data-marker="project_workspace_secret_environment_gate_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('secretEnvironmentGatePackTitle'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGatePackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullSecretEnvironmentGatePack()">${escapeHTML(t('secretEnvironmentGateCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('secretEnvironmentGateMode'), summary.mode || t('none'))}${metricPill(t('secretEnvironmentGateSecretRequirementCount'), String(summary.secret_requirement_card_count ?? pack.secret_requirement_cards.length))}${metricPill(t('secretEnvironmentGateEnvironmentGateCount'), String(summary.environment_gate_check_count ?? pack.environment_gate_checks.length))}${metricPill(t('secretEnvironmentGateMissingRequirementCount'), String(pack.missing_environment_requirements.length))}${metricPill(t('secretEnvironmentGateBlockedOperationCount'), String(pack.blocked_secret_operations.length))}${metricPill(t('secretEnvironmentGateSecretRead'), summary.secret_value_read_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.secret_value_read_allowed))}${metricPill(t('secretEnvironmentGateSecretValidation'), summary.secret_validation_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.secret_validation_allowed))}${metricPill(t('secretEnvironmentGateRealInvocation'), summary.real_invocation_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.real_invocation_allowed))}${metricPill(t('secretEnvironmentGateRealExecution'), summary.real_execution_allowed === false ? t('secretEnvironmentGateDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateSummaryText(pack) || t('secretEnvironmentGateNoData'))}</pre><div class="field-helper">${escapeHTML(t('secretEnvironmentGatePreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceSecretEnvironmentGateStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSecretEnvironmentGateSummary()">${escapeHTML(t('secretEnvironmentGateCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceSecretRequirementCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace); if (!pack.has_workspace_secret_environment_gate_pack) return '';
+            const cards = (pack.secret_requirement_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.secret_requirement_id || t('secretEnvironmentGateCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('secretEnvironmentGateProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateSourceCapability'))}:</strong> ${escapeHTML(card.source_capability || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateSecretNamePreview'))}:</strong> ${escapeHTML(card.secret_name_preview || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateSecretPurpose'))}:</strong> ${escapeHTML(card.secret_purpose || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateSecretStatus'))}:</strong> ${escapeHTML(card.current_secret_status || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateRequiredModes'))}:</strong> ${escapeHTML((card.required_for_modes || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateSecretRead'))}:</strong> ${escapeHTML(card.secret_value_read_allowed === false ? t('secretEnvironmentGateDisabled') : String(card.secret_value_read_allowed))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateSecretValidation'))}:</strong> ${escapeHTML(card.secret_validation_allowed === false ? t('secretEnvironmentGateDisabled') : String(card.secret_validation_allowed))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('secretEnvironmentGateDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('secretEnvironmentGateDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText({blocked_by:card.blocked_by||[],recommended_operator_action:card.recommended_operator_action||'',risk_note:card.risk_note||''}) || t('secretEnvironmentGateNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceSecretRequirementCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('secretEnvironmentGateCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSecretRequirementCards()">${escapeHTML(t('secretEnvironmentGateCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('secretEnvironmentGateNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateNoSecretValueNote'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceEnvironmentGatePolicyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace); if (!pack.has_workspace_secret_environment_gate_pack) return '';
+            const gates = (pack.environment_gate_checks || []).slice(0, 20).map((gate) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(gate.gate_id || t('secretEnvironmentGateChecksTitle'))}</strong><span class="metric-pill">${escapeHTML(gate.gate_status || t('none'))}</span></div><div><strong>${escapeHTML(t('secretEnvironmentGateProviderId'))}:</strong> ${escapeHTML(gate.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateProviderType'))}:</strong> ${escapeHTML(gate.provider_type || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateGateName'))}:</strong> ${escapeHTML(gate.gate_name || t('none'))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateSecretRead'))}:</strong> ${escapeHTML(gate.secret_value_read_allowed === false ? t('secretEnvironmentGateDisabled') : String(gate.secret_value_read_allowed))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateRealInvocation'))}:</strong> ${escapeHTML(gate.real_invocation_allowed === false ? t('secretEnvironmentGateDisabled') : String(gate.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('secretEnvironmentGateRealExecution'))}:</strong> ${escapeHTML(gate.real_execution_allowed === false ? t('secretEnvironmentGateDisabled') : String(gate.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText({required_environment_refs:gate.required_environment_refs||[],missing_environment_refs:gate.missing_environment_refs||[],blocked_reason:gate.blocked_reason||'',next_preview_step:gate.next_preview_step||'',risk_note:gate.risk_note||''}) || t('secretEnvironmentGateNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceEnvironmentGatePolicyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('secretEnvironmentGatePolicyChecksTitle'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGatePolicyChecksHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEnvironmentGateChecks()">${escapeHTML(t('secretEnvironmentGateCopyChecks'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSecretAccessPolicyCards()">${escapeHTML(t('secretEnvironmentGateCopyPolicy'))}</button></div></div><div class="graph-os-compact-grid">${gates || `<div class="empty-state">${escapeHTML(t('secretEnvironmentGateNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGatePolicyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.secret_access_policy_cards) || t('secretEnvironmentGateNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('secretEnvironmentGatePolicyNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceMissingEnvironmentBlockedSecretDependencyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace); if (!pack.has_workspace_secret_environment_gate_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceMissingEnvironmentBlockedSecretDependencyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('secretEnvironmentGateMissingBlockedDependencyTitle'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateMissingBlockedDependencyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMissingEnvironmentRequirements()">${escapeHTML(t('secretEnvironmentGateCopyMissing'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedSecretOperations()">${escapeHTML(t('secretEnvironmentGateCopyBlocked'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSecretDependencyMap()">${escapeHTML(t('secretEnvironmentGateCopyDependency'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateMissingTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.missing_environment_requirements) || t('secretEnvironmentGateNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateBlockedTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.blocked_secret_operations) || t('secretEnvironmentGateNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.provider_secret_dependency_map) || t('secretEnvironmentGateNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateBlockedNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceEnvironmentRiskQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace); if (!pack.has_workspace_secret_environment_gate_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('secretEnvironmentGateDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceEnvironmentRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('secretEnvironmentGateRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEnvironmentRiskRegister()">${escapeHTML(t('secretEnvironmentGateCopyRisk'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.environment_risk_register) || t('secretEnvironmentGateNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.secret_gate_quality_checks) || t('secretEnvironmentGateNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.audit_preview) || t('secretEnvironmentGateNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('secretEnvironmentGateSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -24332,6 +24597,8 @@ ${body}`;
                 '',
                 projectWorkspaceExportRealProviderReadinessChecklistMarkdown(workspace),
                 '',
+                projectWorkspaceExportSecretEnvironmentGateMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -24444,6 +24711,7 @@ ${body}`;
                 workspace_provider_asset_contract_pack: projectWorkspaceExportProviderAssetContractSnapshot(workspace),
                 workspace_provider_cost_quota_risk_guard_pack: projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace),
                 workspace_real_provider_readiness_checklist_pack: projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace),
+                workspace_secret_environment_gate_pack: projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -36995,6 +37263,11 @@ ${body}`;
                     ${renderProjectWorkspaceReadinessGatePrerequisitePanel(workspace)}
                     ${renderProjectWorkspaceMissingApprovalSecretCostMediaPanel(workspace)}
                     ${renderProjectWorkspaceReadinessRiskQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceSecretEnvironmentGateSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceSecretRequirementCardsPanel(workspace)}
+                    ${renderProjectWorkspaceEnvironmentGatePolicyPanel(workspace)}
+                    ${renderProjectWorkspaceMissingEnvironmentBlockedSecretDependencyPanel(workspace)}
+                    ${renderProjectWorkspaceEnvironmentRiskQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
