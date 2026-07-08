@@ -33026,6 +33026,686 @@ def _rw_workspace_provider_asset_contract_pack(
     }
 
 
+def _rw_workspace_provider_cost_quota_risk_guard_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    asset_pack = dict(
+        creative_decision_pack.get("workspace_provider_asset_contract_pack")
+        or {}
+    )
+    taxonomy_pack = dict(
+        creative_decision_pack.get("workspace_provider_failure_taxonomy_pack")
+        or {}
+    )
+    result_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_mock_invocation_result_pack"
+        )
+        or {}
+    )
+    adapter_pack = dict(
+        creative_decision_pack.get("workspace_provider_adapter_contract_pack")
+        or {}
+    )
+    permission_pack = dict(
+        creative_decision_pack.get(
+            "workspace_capability_permission_matrix_pack"
+        )
+        or {}
+    )
+    health_pack = dict(
+        creative_decision_pack.get("workspace_system_integration_health_pack")
+        or {}
+    )
+
+    asset_summary = dict(asset_pack.get("asset_contract_summary") or {})
+    taxonomy_summary = dict(
+        taxonomy_pack.get("failure_taxonomy_summary") or {}
+    )
+    result_summary = dict(result_pack.get("mock_invocation_result_summary") or {})
+    adapter_summary = dict(adapter_pack.get("adapter_contract_summary") or {})
+    permission_summary = dict(
+        permission_pack.get("permission_matrix_summary") or {}
+    )
+    health_summary = dict(health_pack.get("integration_health_summary") or {})
+
+    asset_cards = list(asset_pack.get("provider_asset_contract_cards") or [])
+    failure_cards = list(taxonomy_pack.get("failure_taxonomy_cards") or [])
+    recovery_cards = list(taxonomy_pack.get("recovery_policy_cards") or [])
+    mock_cards = list(result_pack.get("mock_run_result_cards") or [])
+    adapter_cards = list(adapter_pack.get("provider_contract_cards") or [])
+    permission_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+
+    failure_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in failure_cards
+        if item.get("provider_id")
+    }
+    recovery_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in recovery_cards
+        if item.get("provider_id")
+    }
+    mock_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in mock_cards
+        if item.get("provider_id")
+    }
+    adapter_by_provider = {
+        _rw_text(item.get("provider_id")): item
+        for item in adapter_cards
+        if item.get("provider_id")
+    }
+    permission_by_capability = {
+        _rw_text(item.get("capability_id")): item
+        for item in permission_cards
+        if item.get("capability_id")
+    }
+
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    source_capability_by_type = {
+        "llm_text_generation": "llm_generation",
+        "video_generation_provider": "video_provider",
+        "image_generation_provider": "image_generation",
+        "media_storage_provider": "media_storage",
+        "external_scraping_provider": "external_scraping",
+        "translation_provider": "translation",
+        "analytics_or_tracking_provider": "analytics_tracking",
+        "database_persistence_provider": "database_persistence",
+        "approval_or_ticket_provider": "approval_ticket",
+        "rollback_restore_provider": "rollback_restore",
+    }
+    cost_level_by_type = {
+        "llm_text_generation": "estimated_medium_preview_only",
+        "video_generation_provider": "estimated_high_preview_only",
+        "image_generation_provider": "estimated_high_preview_only",
+        "media_storage_provider": "estimated_low_preview_only",
+        "external_scraping_provider": "estimated_medium_preview_only",
+        "translation_provider": "estimated_low_preview_only",
+        "analytics_or_tracking_provider": "estimated_low_preview_only",
+        "database_persistence_provider": "estimated_medium_preview_only",
+        "approval_or_ticket_provider": "estimated_low_preview_only",
+        "rollback_restore_provider": "estimated_high_preview_only",
+    }
+    quota_risk_by_type = {
+        "llm_text_generation": "quota_risk_medium_preview_only",
+        "video_generation_provider": "quota_risk_high_preview_only",
+        "image_generation_provider": "quota_risk_high_preview_only",
+        "media_storage_provider": "quota_risk_medium_preview_only",
+        "external_scraping_provider": "quota_risk_high_preview_only",
+        "translation_provider": "quota_risk_low_preview_only",
+        "analytics_or_tracking_provider": "quota_risk_medium_preview_only",
+        "database_persistence_provider": "quota_risk_high_preview_only",
+        "approval_or_ticket_provider": "quota_risk_low_preview_only",
+        "rollback_restore_provider": "quota_risk_high_preview_only",
+    }
+    risk_score_by_quota = {
+        "quota_risk_low_preview_only": 35,
+        "quota_risk_medium_preview_only": 60,
+        "quota_risk_high_preview_only": 85,
+    }
+
+    providers = []
+    seen_provider_types = set()
+    for card in asset_cards:
+        provider_type = _rw_text(card.get("provider_type"))
+        if provider_type:
+            providers.append(card)
+            seen_provider_types.add(provider_type)
+    for provider_type in required_provider_types:
+        if provider_type not in seen_provider_types:
+            provider_id = provider_type
+            providers.append(
+                {
+                    "asset_contract_id": (
+                        f"asset_contract_{provider_id}"
+                    ),
+                    "provider_id": provider_id,
+                    "provider_type": provider_type,
+                    "source_capability": source_capability_by_type[
+                        provider_type
+                    ],
+                    "asset_role": "cost_quota_risk_preview_fallback",
+                    "risk_note": (
+                        "Fallback provider entry preserves required coverage "
+                        "without reading real billing, quota, or usage."
+                    ),
+                }
+            )
+
+    provider_cost_risk_cards = []
+    quota_guard_cards = []
+    budget_policy_cards = []
+    usage_limit_boundaries = []
+    paid_operation_blockers = []
+    cost_failure_policy_map = []
+    approval_cost_review_requirements = []
+    risk_entries = []
+
+    for index, provider in enumerate(providers, start=1):
+        provider_id = _rw_text(provider.get("provider_id")) or (
+            _rw_text(provider.get("provider_type")) or f"provider_{index}"
+        )
+        provider_type = _rw_text(provider.get("provider_type")) or provider_id
+        source_capability = _rw_text(provider.get("source_capability")) or (
+            source_capability_by_type.get(provider_type, provider_type)
+        )
+        permission = permission_by_capability.get(source_capability, {})
+        failure = failure_by_provider.get(provider_id, {})
+        recovery = recovery_by_provider.get(provider_id, {})
+        mock = mock_by_provider.get(provider_id, {})
+        adapter = adapter_by_provider.get(provider_id, {})
+        estimated_cost_level = cost_level_by_type.get(
+            provider_type,
+            "estimated_medium_preview_only",
+        )
+        quota_risk_level = quota_risk_by_type.get(
+            provider_type,
+            "quota_risk_medium_preview_only",
+        )
+        paid_operation_required = provider_type in {
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "external_scraping_provider",
+            "database_persistence_provider",
+            "rollback_restore_provider",
+        }
+        blocked_by = [
+            "paid_operation_disabled",
+            "real_quota_check_disabled",
+            "provider_invocation_disabled",
+            "real_execution_disabled",
+        ]
+        if permission:
+            blocked_by.append(
+                _rw_text(permission.get("capability_id"))
+                or source_capability
+            )
+        if failure:
+            blocked_by.append(
+                _rw_text(failure.get("failure_type_id"))
+                or f"failure_taxonomy_{provider_id}"
+            )
+        if recovery:
+            blocked_by.append(
+                _rw_text(recovery.get("policy_id"))
+                or f"recovery_policy_{provider_id}"
+            )
+
+        provider_cost_risk_cards.append(
+            {
+                "cost_risk_id": f"cost_risk_guard_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_capability": source_capability,
+                "estimated_cost_level": estimated_cost_level,
+                "quota_risk_level": quota_risk_level,
+                "paid_operation_required": paid_operation_required,
+                "paid_operation_allowed": False,
+                "quota_check_mode": (
+                    "deterministic_quota_guard_preview_no_real_quota_read"
+                ),
+                "usage_tracking_mode": (
+                    "mock_usage_descriptor_preview_no_usage_api_or_log_write"
+                ),
+                "cost_review_required": True,
+                "approval_required": True,
+                "blocked_by": blocked_by,
+                "recommended_operator_action": (
+                    "Review estimated cost, quota, and risk preview only; "
+                    "do not call providers, read billing, read quota, read "
+                    "secrets, perform paid operations, or unlock real "
+                    "capabilities."
+                ),
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Cost risk is a deterministic mock/estimated preview "
+                    "derived from existing workspace provider packs only; no "
+                    "real billing, quota, provider usage, secret, or service "
+                    "data is read."
+                ),
+            }
+        )
+        quota_guard_cards.append(
+            {
+                "quota_guard_id": f"quota_guard_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "guard_type": "quota_guard_preview_only",
+                "guard_status": "blocked_real_quota_check_preview_only",
+                "allowed_preview_usage": [
+                    "mock_invocation_result_reference",
+                    "asset_contract_reference",
+                    "failure_taxonomy_reference",
+                    "permission_matrix_reference",
+                ],
+                "blocked_real_usage": [
+                    "real_provider_usage_api",
+                    "real_quota_read",
+                    "real_billing_read",
+                    "usage_log_write",
+                    "paid_operation",
+                    "provider_invocation",
+                ],
+                "quota_source": (
+                    "workspace_provider_mock_invocation_result_pack_and_"
+                    "workspace_provider_asset_contract_pack"
+                ),
+                "quota_available": "unknown_not_read_preview_only",
+                "quota_enforcement_mode": (
+                    "preview_blocker_no_real_quota_enforcement"
+                ),
+                "requires_human_review": True,
+                "real_quota_check_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Quota guard card describes quota risk preview only and "
+                    "does not read real provider quota or enforce real usage."
+                ),
+            }
+        )
+        budget_policy_cards.append(
+            {
+                "budget_policy_id": f"budget_policy_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "policy_mode": "future_budget_policy_preview_only",
+                "estimated_cost_level": estimated_cost_level,
+                "paid_operation_required": paid_operation_required,
+                "paid_operation_allowed": False,
+                "paid_operation_executed": False,
+                "budget_enforcement_performed": False,
+                "recommended_policy": (
+                    "Require explicit human cost review, secret review, "
+                    "quota review, and approval before any future paid "
+                    "provider operation."
+                ),
+                "real_execution_allowed": False,
+            }
+        )
+        usage_limit_boundaries.append(
+            {
+                "usage_boundary_id": f"usage_limit_boundary_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "boundary_mode": (
+                    "usage_limit_preview_no_real_usage_api_no_usage_log"
+                ),
+                "usage_api_called": False,
+                "usage_log_written": False,
+                "billing_read_performed": False,
+                "quota_read_performed": False,
+                "provider_invocation_performed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Usage limits are preview boundaries only; this pack "
+                    "does not call real usage APIs or write usage logs."
+                ),
+            }
+        )
+        paid_operation_blockers.append(
+            {
+                "blocker_id": f"paid_operation_blocker_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "blocker_type": "paid_operation_blocked",
+                "blocker_status": "blocked_preview_only",
+                "blocked_paid_behaviors": [
+                    "provider_api_call",
+                    "billing_meter_increment",
+                    "quota_consumption",
+                    "media_generation_cost",
+                    "storage_write_cost",
+                    "external_service_charge",
+                ],
+                "paid_operation_allowed": False,
+                "paid_operation_executed": False,
+                "real_execution_allowed": False,
+                "risk_note": "Paid operation is blocked and not executed.",
+            }
+        )
+        cost_failure_policy_map.append(
+            {
+                "map_id": f"cost_failure_policy_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_pack": "workspace_provider_failure_taxonomy_pack",
+                "failure_type_id": _rw_text(failure.get("failure_type_id"))
+                or f"failure_taxonomy_{provider_id}",
+                "recovery_policy_id": _rw_text(recovery.get("policy_id"))
+                or f"recovery_policy_{provider_id}",
+                "cost_guard_policy": (
+                    "manual_cost_review_and_keep_paid_operations_blocked"
+                ),
+                "real_retry_allowed": False,
+                "real_rollback_allowed": False,
+                "real_restore_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Maps failure taxonomy to cost guard policy only; no "
+                    "real retry, rollback, restore, or paid recovery runs."
+                ),
+            }
+        )
+        approval_cost_review_requirements.append(
+            {
+                "requirement_id": f"approval_cost_review_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "review_type": "manual_cost_quota_risk_review_preview",
+                "requires_human_cost_review": True,
+                "requires_quota_review": True,
+                "requires_secret_review": provider_type
+                in {
+                    "llm_text_generation",
+                    "video_generation_provider",
+                    "image_generation_provider",
+                    "translation_provider",
+                },
+                "real_approval_created": False,
+                "operator_task_created": False,
+                "paid_operation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Requirement is review guidance only and does not create "
+                    "a real approval or operator task."
+                ),
+            }
+        )
+        risk_entries.append(
+            {
+                "risk_score_id": f"risk_score_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_capability": source_capability,
+                "estimated_cost_level": estimated_cost_level,
+                "quota_risk_level": quota_risk_level,
+                "deterministic_preview_score": risk_score_by_quota.get(
+                    quota_risk_level,
+                    60,
+                ),
+                "score_basis": [
+                    "workspace_provider_asset_contract_pack",
+                    "workspace_provider_failure_taxonomy_pack",
+                    "workspace_provider_mock_invocation_result_pack",
+                    "workspace_provider_adapter_contract_pack",
+                    "workspace_capability_permission_matrix_pack",
+                    "workspace_system_integration_health_pack",
+                ],
+                "real_service_data_read": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Preview score is deterministic and does not read real "
+                    "service, billing, quota, usage, or health data."
+                ),
+            }
+        )
+
+    covered_provider_types = sorted(
+        {
+            _rw_text(card.get("provider_type"))
+            for card in provider_cost_risk_cards
+            if card.get("provider_type")
+        }
+    )
+    guard_signature = json.dumps(
+        {
+            "asset_contract_pack_id": _rw_text(
+                asset_summary.get("asset_contract_pack_id")
+            ),
+            "taxonomy_id": _rw_text(taxonomy_summary.get("taxonomy_id")),
+            "result_id": _rw_text(result_summary.get("result_id")),
+            "adapter_contract_id": _rw_text(
+                adapter_summary.get("contract_id")
+            ),
+            "permission_matrix_id": _rw_text(
+                permission_summary.get("matrix_id")
+            ),
+            "health_id": _rw_text(health_summary.get("health_id")),
+            "cost_risk_ids": [
+                card["cost_risk_id"] for card in provider_cost_risk_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    guard_id = (
+        "workspace_provider_cost_quota_risk_guard_"
+        + hashlib.sha256(guard_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "billing_read_enabled": False,
+        "quota_read_enabled": False,
+        "usage_api_enabled": False,
+        "usage_log_write_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "real_retry_enabled": False,
+        "real_approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_service_health_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_provider_cost_quota_risk_guard_pack_v1",
+        "cost_quota_risk_summary": {
+            "guard_id": guard_id,
+            "mode": (
+                "cost_quota_risk_preview_quota_guard_preview_dry_run_only"
+            ),
+            "source_packs": [
+                "workspace_provider_asset_contract_pack",
+                "workspace_provider_failure_taxonomy_pack",
+                "workspace_provider_mock_invocation_result_pack",
+                "workspace_provider_adapter_contract_pack",
+                "workspace_capability_permission_matrix_pack",
+                "workspace_system_integration_health_pack",
+            ],
+            "source_asset_contract_pack_id": _rw_text(
+                asset_summary.get("asset_contract_pack_id")
+            ),
+            "source_taxonomy_id": _rw_text(taxonomy_summary.get("taxonomy_id")),
+            "source_result_id": _rw_text(result_summary.get("result_id")),
+            "source_adapter_contract_id": _rw_text(
+                adapter_summary.get("contract_id")
+            ),
+            "source_permission_matrix_id": _rw_text(
+                permission_summary.get("matrix_id")
+            ),
+            "source_health_id": _rw_text(health_summary.get("health_id")),
+            "provider_cost_risk_card_count": len(provider_cost_risk_cards),
+            "quota_guard_card_count": len(quota_guard_cards),
+            "budget_policy_card_count": len(budget_policy_cards),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "paid_operation_allowed": False,
+            "real_quota_check_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review deterministic cost/quota/risk guard preview only; "
+                "keep all real provider, billing, quota, paid, and execution "
+                "capabilities disabled."
+            ),
+        },
+        "provider_cost_risk_cards": provider_cost_risk_cards,
+        "quota_guard_cards": quota_guard_cards,
+        "budget_policy_cards": budget_policy_cards,
+        "usage_limit_boundaries": usage_limit_boundaries,
+        "paid_operation_blockers": paid_operation_blockers,
+        "cost_failure_policy_map": cost_failure_policy_map,
+        "approval_cost_review_requirements": approval_cost_review_requirements,
+        "risk_score_matrix": {
+            "matrix_id": f"risk_score_matrix_{guard_id}",
+            "mode": "deterministic_preview_score_no_real_service_data",
+            "score_scale": "0_to_100_preview_only",
+            "entries": risk_entries,
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "real_service_data_read": False,
+            "real_execution_allowed": False,
+        },
+        "cost_guard_quality_checks": {
+            "source_asset_contract_pack_present": bool(asset_pack),
+            "source_failure_taxonomy_pack_present": bool(taxonomy_pack),
+            "source_mock_invocation_result_pack_present": bool(result_pack),
+            "source_adapter_contract_pack_present": bool(adapter_pack),
+            "source_permission_matrix_pack_present": bool(permission_pack),
+            "source_system_integration_health_pack_present": bool(health_pack),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "provider_cost_risk_cards_present": bool(
+                provider_cost_risk_cards
+            ),
+            "quota_guard_cards_present": bool(quota_guard_cards),
+            "budget_policy_cards_present": bool(budget_policy_cards),
+            "usage_limit_boundaries_present": bool(usage_limit_boundaries),
+            "paid_operation_blockers_present": bool(paid_operation_blockers),
+            "cost_failure_policy_map_present": bool(cost_failure_policy_map),
+            "approval_cost_review_requirements_present": bool(
+                approval_cost_review_requirements
+            ),
+            "risk_score_matrix_present": bool(risk_entries),
+            "all_paid_operations_blocked": all(
+                not card["paid_operation_allowed"]
+                for card in provider_cost_risk_cards
+            )
+            and all(
+                not card["paid_operation_allowed"]
+                for card in budget_policy_cards
+            )
+            and all(
+                not card["paid_operation_allowed"]
+                for card in paid_operation_blockers
+            ),
+            "all_quota_checks_preview_only": all(
+                not card["real_quota_check_allowed"]
+                for card in quota_guard_cards
+            ),
+            "all_real_invocation_disabled": all(
+                not card["real_invocation_allowed"]
+                for card in provider_cost_risk_cards
+            ),
+            "all_real_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in provider_cost_risk_cards
+            )
+            and all(
+                not card["real_execution_allowed"]
+                for card in quota_guard_cards
+            ),
+            "usage_boundaries_do_not_call_usage_api": all(
+                not item["usage_api_called"]
+                for item in usage_limit_boundaries
+            ),
+            "usage_boundaries_do_not_write_usage_log": all(
+                not item["usage_log_written"]
+                for item in usage_limit_boundaries
+            ),
+            "cost_failure_policy_does_not_retry_or_rollback": all(
+                not item["real_retry_allowed"]
+                and not item["real_rollback_allowed"]
+                for item in cost_failure_policy_map
+            ),
+            "approval_review_does_not_create_real_approval": all(
+                not item["real_approval_created"]
+                for item in approval_cost_review_requirements
+            ),
+            "risk_score_matrix_is_preview_only": True,
+            "audit_preview_not_persisted": True,
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "paid_operation_executed": False,
+            "provider_invocation_performed": False,
+            "database_write_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_mode": (
+                "deterministic_cost_quota_risk_guard_preview"
+            ),
+            "guard_id": guard_id,
+            "is_real_billing_system": False,
+            "is_real_quota_system": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "secret_read_performed": False,
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "real_usage_api_called": False,
+            "usage_log_written": False,
+            "paid_operation_executed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "registry_write_performed": False,
+            "external_scraping_performed": False,
+            "audit_persisted": False,
+            "note": (
+                "This deterministic cost/quota/risk guard preview is derived "
+                "from existing workspace provider packs only; it does not "
+                "read real provider usage, billing, quota, service health, "
+                "logs, history tables, or secrets; it does not call providers, "
+                "perform paid operations, upload or download media, write a "
+                "database, create approvals or operator tasks, retry, restore, "
+                "rollback, scrape externally, write registry state, or unlock "
+                "real capabilities."
+            ),
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -33192,6 +33872,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_provider_asset_contract_pack"] = (
         _rw_workspace_provider_asset_contract_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_provider_cost_quota_risk_guard_pack"] = (
+        _rw_workspace_provider_cost_quota_risk_guard_pack(
+            creative_decision_pack
+        )
     )
 
     return ReviewWorkspaceResponse(

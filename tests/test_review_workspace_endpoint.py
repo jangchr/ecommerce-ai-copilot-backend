@@ -5294,6 +5294,290 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_provider_cost_quota_risk_guard_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-provider-cost-quota-risk-guard",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PROVIDERCOST001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks during commute and needs a better seal.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_asset_contract_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_provider_cost_quota_risk_guard_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_provider_cost_quota_risk_guard_pack_v1",
+        )
+        required_provider_types = {
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "media_storage_provider",
+            "external_scraping_provider",
+            "translation_provider",
+            "analytics_or_tracking_provider",
+            "database_persistence_provider",
+            "approval_or_ticket_provider",
+            "rollback_restore_provider",
+        }
+
+        summary = pack["cost_quota_risk_summary"]
+        self.assertTrue(summary["guard_id"])
+        self.assertIn("cost_quota_risk_preview", summary["mode"])
+        self.assertIn("quota_guard_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_provider_asset_contract_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_adapter_contract_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+        ]:
+            with self.subTest(source_pack=source_pack):
+                self.assertIn(source_pack, summary["source_packs"])
+        self.assertFalse(summary["paid_operation_allowed"])
+        self.assertFalse(summary["real_quota_check_allowed"])
+        self.assertFalse(summary["real_invocation_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        cost_cards = pack["provider_cost_risk_cards"]
+        self.assertTrue(cost_cards)
+        self.assertTrue(required_provider_types <= {
+            card["provider_type"] for card in cost_cards
+        })
+        for card in cost_cards:
+            for field in [
+                "cost_risk_id", "provider_id", "provider_type",
+                "source_capability", "estimated_cost_level",
+                "quota_risk_level", "paid_operation_required",
+                "paid_operation_allowed", "quota_check_mode",
+                "usage_tracking_mode", "cost_review_required",
+                "approval_required", "blocked_by",
+                "recommended_operator_action", "real_invocation_allowed",
+                "real_execution_allowed", "risk_note",
+            ]:
+                with self.subTest(card=card["cost_risk_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertIn("preview", card["estimated_cost_level"])
+            self.assertIn("preview", card["quota_risk_level"])
+            self.assertIn("no_real_quota_read", card["quota_check_mode"])
+            self.assertIn("no_usage_api", card["usage_tracking_mode"])
+            self.assertFalse(card["paid_operation_allowed"])
+            self.assertFalse(card["real_invocation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        quota_cards = pack["quota_guard_cards"]
+        self.assertTrue(quota_cards)
+        self.assertTrue(required_provider_types <= {
+            card["provider_type"] for card in quota_cards
+        })
+        for card in quota_cards:
+            for field in [
+                "quota_guard_id", "provider_id", "provider_type",
+                "guard_type", "guard_status", "allowed_preview_usage",
+                "blocked_real_usage", "quota_source", "quota_available",
+                "quota_enforcement_mode", "requires_human_review",
+                "real_quota_check_allowed", "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(card=card["quota_guard_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertIn("blocked", card["guard_status"])
+            self.assertIn("real_provider_usage_api", card["blocked_real_usage"])
+            self.assertIn("real_quota_read", card["blocked_real_usage"])
+            self.assertFalse(card["real_quota_check_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        budget_cards = pack["budget_policy_cards"]
+        self.assertTrue(budget_cards)
+        for card in budget_cards:
+            self.assertIn("future_budget_policy_preview_only", card["policy_mode"])
+            self.assertFalse(card["paid_operation_allowed"])
+            self.assertFalse(card["paid_operation_executed"])
+            self.assertFalse(card["budget_enforcement_performed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        usage_boundaries = pack["usage_limit_boundaries"]
+        self.assertTrue(usage_boundaries)
+        for boundary in usage_boundaries:
+            self.assertIn("no_real_usage_api", boundary["boundary_mode"])
+            self.assertIn("no_usage_log", boundary["boundary_mode"])
+            self.assertFalse(boundary["usage_api_called"])
+            self.assertFalse(boundary["usage_log_written"])
+            self.assertFalse(boundary["billing_read_performed"])
+            self.assertFalse(boundary["quota_read_performed"])
+            self.assertFalse(boundary["provider_invocation_performed"])
+            self.assertFalse(boundary["real_execution_allowed"])
+
+        blockers = pack["paid_operation_blockers"]
+        self.assertTrue(blockers)
+        for blocker in blockers:
+            self.assertEqual(blocker["blocker_type"], "paid_operation_blocked")
+            self.assertIn("blocked", blocker["blocker_status"])
+            self.assertFalse(blocker["paid_operation_allowed"])
+            self.assertFalse(blocker["paid_operation_executed"])
+            self.assertFalse(blocker["real_execution_allowed"])
+
+        policy_map = pack["cost_failure_policy_map"]
+        self.assertTrue(policy_map)
+        for item in policy_map:
+            self.assertEqual(
+                item["source_pack"],
+                "workspace_provider_failure_taxonomy_pack",
+            )
+            self.assertFalse(item["real_retry_allowed"])
+            self.assertFalse(item["real_rollback_allowed"])
+            self.assertFalse(item["real_restore_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        approval_requirements = pack["approval_cost_review_requirements"]
+        self.assertTrue(approval_requirements)
+        for requirement in approval_requirements:
+            self.assertTrue(requirement["requires_human_cost_review"])
+            self.assertTrue(requirement["requires_quota_review"])
+            self.assertFalse(requirement["real_approval_created"])
+            self.assertFalse(requirement["operator_task_created"])
+            self.assertFalse(requirement["paid_operation_allowed"])
+            self.assertFalse(requirement["real_execution_allowed"])
+
+        matrix = pack["risk_score_matrix"]
+        self.assertTrue(matrix["matrix_id"])
+        self.assertIn("deterministic_preview_score", matrix["mode"])
+        self.assertTrue(matrix["entries"])
+        self.assertTrue(required_provider_types <= {
+            item["provider_type"] for item in matrix["entries"]
+        })
+        self.assertFalse(matrix["real_billing_read_performed"])
+        self.assertFalse(matrix["real_quota_read_performed"])
+        self.assertFalse(matrix["real_service_data_read"])
+        self.assertFalse(matrix["real_execution_allowed"])
+
+        checks = pack["cost_guard_quality_checks"]
+        for key in [
+            "source_asset_contract_pack_present",
+            "source_failure_taxonomy_pack_present",
+            "source_mock_invocation_result_pack_present",
+            "source_adapter_contract_pack_present",
+            "source_permission_matrix_pack_present",
+            "source_system_integration_health_pack_present",
+            "all_required_provider_types_covered",
+            "provider_cost_risk_cards_present",
+            "quota_guard_cards_present",
+            "budget_policy_cards_present",
+            "usage_limit_boundaries_present",
+            "paid_operation_blockers_present",
+            "cost_failure_policy_map_present",
+            "approval_cost_review_requirements_present",
+            "risk_score_matrix_present",
+            "all_paid_operations_blocked",
+            "all_quota_checks_preview_only",
+            "all_real_invocation_disabled",
+            "all_real_execution_disabled",
+            "usage_boundaries_do_not_call_usage_api",
+            "usage_boundaries_do_not_write_usage_log",
+            "cost_failure_policy_does_not_retry_or_rollback",
+            "approval_review_does_not_create_real_approval",
+            "risk_score_matrix_is_preview_only",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_billing_read_performed", "real_quota_read_performed",
+            "paid_operation_executed", "provider_invocation_performed",
+            "database_write_performed", "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["guard_id"])
+        self.assertFalse(audit["is_real_billing_system"])
+        self.assertFalse(audit["is_real_quota_system"])
+        self.assertFalse(audit["provider_invocation_performed"])
+        self.assertFalse(audit["provider_called"])
+        self.assertFalse(audit["llm_called"])
+        self.assertFalse(audit["image_generation_performed"])
+        self.assertFalse(audit["video_generation_performed"])
+        self.assertFalse(audit["media_upload_performed"])
+        self.assertFalse(audit["media_download_performed"])
+        self.assertFalse(audit["secret_read_performed"])
+        self.assertFalse(audit["real_billing_read_performed"])
+        self.assertFalse(audit["real_quota_read_performed"])
+        self.assertFalse(audit["real_usage_api_called"])
+        self.assertFalse(audit["usage_log_written"])
+        self.assertFalse(audit["paid_operation_executed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_service_health_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_approval_created"])
+        self.assertFalse(audit["real_retry_executed"])
+        self.assertFalse(audit["real_rollback_executed"])
+        self.assertFalse(audit["real_restore_executed"])
+        self.assertFalse(audit["registry_write_performed"])
+        self.assertFalse(audit["external_scraping_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_enabled", "llm_enabled", "image_enabled",
+            "video_enabled", "media_enabled", "paid_enabled",
+            "registry_enabled", "rollback_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
