@@ -3629,6 +3629,7 @@
         let latestProjectWorkspaceProviderMockInvocationResultPack = {};
         let latestProjectWorkspaceProviderFailureTaxonomyPack = {};
         let latestProjectWorkspaceProviderAssetContractPack = {};
+        let latestProjectWorkspaceProviderCostQuotaRiskGuardPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -8932,6 +8933,7 @@
                 latestProjectWorkspaceProviderMockInvocationResultPack = latestProjectCreativeDecisionPack.workspace_provider_mock_invocation_result_pack || {};
                 latestProjectWorkspaceProviderFailureTaxonomyPack = latestProjectCreativeDecisionPack.workspace_provider_failure_taxonomy_pack || {};
                 latestProjectWorkspaceProviderAssetContractPack = latestProjectCreativeDecisionPack.workspace_provider_asset_contract_pack || {};
+                latestProjectWorkspaceProviderCostQuotaRiskGuardPack = latestProjectCreativeDecisionPack.workspace_provider_cost_quota_risk_guard_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14797,6 +14799,7 @@
         const PROJECT_WORKSPACE_PROVIDER_MOCK_INVOCATION_RESULT_MARKER = 'Project Workspace provider mock invocation result bundle';
         const PROJECT_WORKSPACE_PROVIDER_FAILURE_TAXONOMY_MARKER = 'Project Workspace provider failure taxonomy bundle';
         const PROJECT_WORKSPACE_PROVIDER_ASSET_CONTRACT_MARKER = 'Project Workspace provider asset contract bundle';
+        const PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER = 'Project Workspace provider cost quota risk guard bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -19759,6 +19762,112 @@
         function copyProjectWorkspaceStorageTransferBoundaries() { return copyProjectWorkspaceProviderAssetContractText('storage'); }
         function copyProjectWorkspaceAssetFailurePolicyMap() { return copyProjectWorkspaceProviderAssetContractText('failurePolicy'); }
         function copyProjectWorkspaceFullProviderAssetContractPack() { return copyProjectWorkspaceProviderAssetContractText('full'); }
+
+        function projectWorkspaceProviderCostQuotaRiskGuardPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceProviderCostQuotaRiskGuardPack && Object.keys(latestProjectWorkspaceProviderCostQuotaRiskGuardPack).length) return latestProjectWorkspaceProviderCostQuotaRiskGuardPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_provider_cost_quota_risk_guard_pack || {};
+        }
+
+        function projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceProviderCostQuotaRiskGuardPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER,
+                has_workspace_provider_cost_quota_risk_guard_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                cost_quota_risk_summary: pack.cost_quota_risk_summary || {},
+                provider_cost_risk_cards: Array.isArray(pack.provider_cost_risk_cards) ? pack.provider_cost_risk_cards : [],
+                quota_guard_cards: Array.isArray(pack.quota_guard_cards) ? pack.quota_guard_cards : [],
+                budget_policy_cards: Array.isArray(pack.budget_policy_cards) ? pack.budget_policy_cards : [],
+                usage_limit_boundaries: Array.isArray(pack.usage_limit_boundaries) ? pack.usage_limit_boundaries : [],
+                paid_operation_blockers: Array.isArray(pack.paid_operation_blockers) ? pack.paid_operation_blockers : [],
+                cost_failure_policy_map: Array.isArray(pack.cost_failure_policy_map) ? pack.cost_failure_policy_map : [],
+                approval_cost_review_requirements: Array.isArray(pack.approval_cost_review_requirements) ? pack.approval_cost_review_requirements : [],
+                risk_score_matrix: pack.risk_score_matrix || {},
+                cost_guard_quality_checks: pack.cost_guard_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceProviderCostQuotaRiskGuardJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceProviderCostQuotaRiskGuardSummaryText(pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot()) {
+            if (!pack.has_workspace_provider_cost_quota_risk_guard_pack) return '';
+            const summary = pack.cost_quota_risk_summary || {};
+            return [
+                t('providerCostQuotaRiskSummaryTitle'),
+                `${t('providerCostQuotaRiskMode')}: ${summary.mode || t('none')}`,
+                `${t('providerCostQuotaRiskProviderCount')}: ${summary.provider_cost_risk_card_count ?? pack.provider_cost_risk_cards.length}`,
+                `${t('providerCostQuotaRiskQuotaCount')}: ${summary.quota_guard_card_count ?? pack.quota_guard_cards.length}`,
+                `${t('providerCostQuotaRiskPaidBlockerCount')}: ${pack.paid_operation_blockers.length}`,
+                `${t('providerCostQuotaRiskRecommendedAction')}: ${summary.recommended_operator_action || t('none')}`,
+                `${t('providerCostQuotaRiskPaidOperation')}: ${summary.paid_operation_allowed === false ? t('providerCostQuotaRiskDisabled') : String(summary.paid_operation_allowed)}`,
+                `${t('providerCostQuotaRiskRealQuotaCheck')}: ${summary.real_quota_check_allowed === false ? t('providerCostQuotaRiskDisabled') : String(summary.real_quota_check_allowed)}`,
+                `${t('providerCostQuotaRiskRealInvocation')}: ${summary.real_invocation_allowed === false ? t('providerCostQuotaRiskDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('providerCostQuotaRiskRealExecution')}: ${summary.real_execution_allowed === false ? t('providerCostQuotaRiskDisabled') : String(summary.real_execution_allowed)}`,
+                t('providerCostQuotaRiskPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceProviderCostQuotaRiskGuardSectionText(titleKey, value) {
+            const body = projectWorkspaceProviderCostQuotaRiskGuardJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportProviderCostQuotaRiskGuardMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace);
+            if (!pack.has_workspace_provider_cost_quota_risk_guard_pack) return '';
+            return [
+                `## ${t('providerCostQuotaRiskPackTitle')}`,
+                `## ${t('providerCostQuotaRiskSummaryTitle')}`,
+                projectWorkspaceProviderCostQuotaRiskGuardSummaryText(pack), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskCardsTitle', pack.provider_cost_risk_cards), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskQuotaTitle', pack.quota_guard_cards), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskBudgetTitle', pack.budget_policy_cards), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskUsageTitle', pack.usage_limit_boundaries), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskPaidBlockersTitle', pack.paid_operation_blockers), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskFailurePolicyTitle', pack.cost_failure_policy_map), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskApprovalTitle', pack.approval_cost_review_requirements), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskScoreTitle', pack.risk_score_matrix), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskAuditTitle', pack.audit_preview), '',
+                projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskSafetyTitle', pack.safety_boundaries),
+                t('providerCostQuotaRiskSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderCostQuotaRiskGuardText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceProviderCostQuotaRiskGuardStatus');
+            const pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceProviderCostQuotaRiskGuardSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskCardsTitle', pack.provider_cost_risk_cards)
+                : kind === 'quota' ? projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskQuotaTitle', pack.quota_guard_cards)
+                : kind === 'budget' ? projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskBudgetTitle', pack.budget_policy_cards)
+                : kind === 'usage' ? projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskUsageTitle', pack.usage_limit_boundaries)
+                : kind === 'paidBlockers' ? projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskPaidBlockersTitle', pack.paid_operation_blockers)
+                : kind === 'failurePolicy' ? projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskFailurePolicyTitle', pack.cost_failure_policy_map)
+                : kind === 'approval' ? projectWorkspaceProviderCostQuotaRiskGuardSectionText('providerCostQuotaRiskApprovalTitle', pack.approval_cost_review_requirements)
+                : projectWorkspaceExportProviderCostQuotaRiskGuardMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('providerCostQuotaRiskCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('providerCostQuotaRiskCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('providerCostQuotaRiskCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('providerCostQuotaRiskCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceProviderCostQuotaRiskSummary() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('summary'); }
+        function copyProjectWorkspaceProviderCostRiskCards() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('cards'); }
+        function copyProjectWorkspaceQuotaGuardCards() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('quota'); }
+        function copyProjectWorkspaceBudgetPolicyCards() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('budget'); }
+        function copyProjectWorkspaceUsageLimitBoundaries() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('usage'); }
+        function copyProjectWorkspacePaidOperationBlockers() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('paidBlockers'); }
+        function copyProjectWorkspaceCostFailurePolicyMap() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('failurePolicy'); }
+        function copyProjectWorkspaceApprovalCostReviewRequirements() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('approval'); }
+        function copyProjectWorkspaceFullProviderCostQuotaRiskGuardPack() { return copyProjectWorkspaceProviderCostQuotaRiskGuardText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -23518,6 +23627,35 @@
             const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerAssetContractDisabled'):String(value)}`).join(' | ');
             return `<div class="section-block" id="projectWorkspaceAssetFailureQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerAssetContractFailureQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractFailureQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAssetFailurePolicyMap()">${escapeHTML(t('providerAssetContractCopyFailurePolicy'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractFailurePolicyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.asset_failure_policy_map) || t('providerAssetContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.asset_quality_checks) || t('providerAssetContractNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerAssetContractAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderAssetContractJsonText(pack.audit_preview) || t('providerAssetContractNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerAssetContractSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractFailurePolicyNote'))}</div><div class="field-helper">${escapeHTML(t('providerAssetContractSafetyNote'))}</div></div>`;
         }
+
+        function renderProjectWorkspaceProviderCostQuotaRiskSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace); if (!pack.has_workspace_provider_cost_quota_risk_guard_pack) return '';
+            const summary = pack.cost_quota_risk_summary || {};
+            return `<div class="section-block" id="projectWorkspaceProviderCostQuotaRiskSummaryPanel" data-provider-cost-quota-risk-guard-marker="${PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER}" data-marker="project_workspace_provider_cost_quota_risk_guard_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerCostQuotaRiskPackTitle'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullProviderCostQuotaRiskGuardPack()">${escapeHTML(t('providerCostQuotaRiskCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('providerCostQuotaRiskMode'), summary.mode || t('none'))}${metricPill(t('providerCostQuotaRiskProviderCount'), String(summary.provider_cost_risk_card_count ?? pack.provider_cost_risk_cards.length))}${metricPill(t('providerCostQuotaRiskQuotaCount'), String(summary.quota_guard_card_count ?? pack.quota_guard_cards.length))}${metricPill(t('providerCostQuotaRiskPaidBlockerCount'), String(pack.paid_operation_blockers.length))}${metricPill(t('providerCostQuotaRiskPaidOperation'), summary.paid_operation_allowed === false ? t('providerCostQuotaRiskDisabled') : String(summary.paid_operation_allowed))}${metricPill(t('providerCostQuotaRiskRealExecution'), summary.real_execution_allowed === false ? t('providerCostQuotaRiskDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardSummaryText(pack) || t('providerCostQuotaRiskNoData'))}</pre><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceProviderCostQuotaRiskGuardStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderCostQuotaRiskSummary()">${escapeHTML(t('providerCostQuotaRiskCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceProviderCostRiskCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace); if (!pack.has_workspace_provider_cost_quota_risk_guard_pack) return '';
+            const cards = (pack.provider_cost_risk_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.cost_risk_id || t('providerCostQuotaRiskCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerCostQuotaRiskProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskSourceCapability'))}:</strong> ${escapeHTML(card.source_capability || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskEstimatedCost'))}:</strong> ${escapeHTML(card.estimated_cost_level || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskQuotaRisk'))}:</strong> ${escapeHTML(card.quota_risk_level || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskPaidRequired'))}:</strong> ${escapeHTML(String(card.paid_operation_required))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskPaidOperation'))}:</strong> ${escapeHTML(card.paid_operation_allowed === false ? t('providerCostQuotaRiskDisabled') : String(card.paid_operation_allowed))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskQuotaCheckMode'))}:</strong> ${escapeHTML(card.quota_check_mode || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskUsageTrackingMode'))}:</strong> ${escapeHTML(card.usage_tracking_mode || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskCostReview'))}:</strong> ${escapeHTML(String(card.cost_review_required))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskApprovalRequired'))}:</strong> ${escapeHTML(String(card.approval_required))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('providerCostQuotaRiskDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('providerCostQuotaRiskDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText({blocked_by:card.blocked_by||[],recommended_operator_action:card.recommended_operator_action||'',risk_note:card.risk_note||''}) || t('providerCostQuotaRiskNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceProviderCostRiskCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerCostQuotaRiskCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderCostRiskCards()">${escapeHTML(t('providerCostQuotaRiskCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerCostQuotaRiskNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceQuotaBudgetPolicyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace); if (!pack.has_workspace_provider_cost_quota_risk_guard_pack) return '';
+            const cards = (pack.quota_guard_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.quota_guard_id || t('providerCostQuotaRiskQuotaTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerCostQuotaRiskProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskGuardType'))}:</strong> ${escapeHTML(card.guard_type || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskGuardStatus'))}:</strong> ${escapeHTML(card.guard_status || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskQuotaSource'))}:</strong> ${escapeHTML(card.quota_source || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskQuotaAvailable'))}:</strong> ${escapeHTML(String(card.quota_available ?? t('none')))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskQuotaEnforcement'))}:</strong> ${escapeHTML(card.quota_enforcement_mode || t('none'))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskHumanReview'))}:</strong> ${escapeHTML(String(card.requires_human_review))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskRealQuotaCheck'))}:</strong> ${escapeHTML(card.real_quota_check_allowed === false ? t('providerCostQuotaRiskDisabled') : String(card.real_quota_check_allowed))}</div><div><strong>${escapeHTML(t('providerCostQuotaRiskRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('providerCostQuotaRiskDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText({allowed_preview_usage:card.allowed_preview_usage||[],blocked_real_usage:card.blocked_real_usage||[],risk_note:card.risk_note||''}) || t('providerCostQuotaRiskNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceQuotaBudgetPolicyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerCostQuotaRiskQuotaBudgetTitle'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskQuotaBudgetHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceQuotaGuardCards()">${escapeHTML(t('providerCostQuotaRiskCopyQuota'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBudgetPolicyCards()">${escapeHTML(t('providerCostQuotaRiskCopyBudget'))}</button></div></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerCostQuotaRiskNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskBudgetTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.budget_policy_cards) || t('providerCostQuotaRiskNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskQuotaBudgetNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceUsagePaidFailurePolicyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace); if (!pack.has_workspace_provider_cost_quota_risk_guard_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceUsagePaidFailurePolicyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerCostQuotaRiskUsagePaidFailureTitle'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskUsagePaidFailureHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceUsageLimitBoundaries()">${escapeHTML(t('providerCostQuotaRiskCopyUsage'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePaidOperationBlockers()">${escapeHTML(t('providerCostQuotaRiskCopyPaidBlockers'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCostFailurePolicyMap()">${escapeHTML(t('providerCostQuotaRiskCopyFailurePolicy'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskUsageTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.usage_limit_boundaries) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskPaidBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.paid_operation_blockers) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskFailurePolicyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.cost_failure_policy_map) || t('providerCostQuotaRiskNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskUsagePaidFailureNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceApprovalRiskQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace); if (!pack.has_workspace_provider_cost_quota_risk_guard_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerCostQuotaRiskDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceApprovalRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerCostQuotaRiskApprovalRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskApprovalRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalCostReviewRequirements()">${escapeHTML(t('providerCostQuotaRiskCopyApproval'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskApprovalTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.approval_cost_review_requirements) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskScoreTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.risk_score_matrix) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.cost_guard_quality_checks) || t('providerCostQuotaRiskNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerCostQuotaRiskAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderCostQuotaRiskGuardJsonText(pack.audit_preview) || t('providerCostQuotaRiskNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerCostQuotaRiskSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskApprovalRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('providerCostQuotaRiskSafetyNote'))}</div></div>`;
+        }
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -24050,6 +24188,8 @@
                 '',
                 projectWorkspaceExportProviderAssetContractMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderCostQuotaRiskGuardMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -24160,6 +24300,7 @@
                 workspace_provider_mock_invocation_result_pack: projectWorkspaceExportProviderMockInvocationResultSnapshot(workspace),
                 workspace_provider_failure_taxonomy_pack: projectWorkspaceExportProviderFailureTaxonomySnapshot(workspace),
                 workspace_provider_asset_contract_pack: projectWorkspaceExportProviderAssetContractSnapshot(workspace),
+                workspace_provider_cost_quota_risk_guard_pack: projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -36701,6 +36842,11 @@
                     ${renderProjectWorkspaceMediaManifestCardsPanel(workspace)}
                     ${renderProjectWorkspaceAssetRequirementBoundaryPanel(workspace)}
                     ${renderProjectWorkspaceAssetFailureQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceProviderCostQuotaRiskSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceProviderCostRiskCardsPanel(workspace)}
+                    ${renderProjectWorkspaceQuotaBudgetPolicyPanel(workspace)}
+                    ${renderProjectWorkspaceUsagePaidFailurePolicyPanel(workspace)}
+                    ${renderProjectWorkspaceApprovalRiskQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
@@ -47284,6 +47430,144 @@
             providerAssetContractFailurePolicyNote: '\u5931\u8d25\u7b56\u7565\u6620\u5c04\u53ea\u5f15\u7528 failure taxonomy \u548c recovery policy\uff1b\u4e0d\u6267\u884c\u771f\u5b9e retry\u3001restore\u3001rollback\u3001approval\u3001operator task \u6216\u6570\u636e\u5e93\u5199\u5165\u3002',
             providerAssetContractSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore \u548c real execution \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
             providerAssetContractProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderCostQuotaRiskGuardMarker: 'Project Workspace provider cost quota risk guard bundle',
+            providerCostQuotaRiskPackTitle: 'Workspace Provider Cost / Quota / Risk Guard',
+            providerCostQuotaRiskPackHelper: 'Review deterministic provider cost, quota, and risk guard preview. This is a cost / quota / risk preview, not a real billing system.',
+            providerCostQuotaRiskSummaryTitle: 'Cost Quota Risk Summary',
+            providerCostQuotaRiskCardsTitle: 'Provider Cost Risk Cards',
+            providerCostQuotaRiskQuotaTitle: 'Quota Guard Cards',
+            providerCostQuotaRiskBudgetTitle: 'Budget Policy Cards',
+            providerCostQuotaRiskUsageTitle: 'Usage Limit Boundaries',
+            providerCostQuotaRiskPaidBlockersTitle: 'Paid Operation Blockers',
+            providerCostQuotaRiskFailurePolicyTitle: 'Cost Failure Policy Map',
+            providerCostQuotaRiskApprovalTitle: 'Approval Cost Review Requirements',
+            providerCostQuotaRiskScoreTitle: 'Risk Score Matrix',
+            providerCostQuotaRiskQualityTitle: 'Cost Guard Quality Checks',
+            providerCostQuotaRiskAuditTitle: 'Audit Preview',
+            providerCostQuotaRiskSafetyTitle: 'Safety Boundaries',
+            providerCostQuotaRiskQuotaBudgetTitle: 'Quota Guard / Budget Policy Cards',
+            providerCostQuotaRiskUsagePaidFailureTitle: 'Usage Boundaries / Paid Operation Blockers / Cost Failure Policy',
+            providerCostQuotaRiskApprovalRiskQualityAuditSafetyTitle: 'Approval Cost Review / Risk Score / Quality / Audit / Safety Boundaries',
+            providerCostQuotaRiskMode: 'Mode',
+            providerCostQuotaRiskProviderCount: 'Provider cost risk count',
+            providerCostQuotaRiskQuotaCount: 'Quota guard count',
+            providerCostQuotaRiskPaidBlockerCount: 'Paid blocker count',
+            providerCostQuotaRiskRecommendedAction: 'Recommended operator action',
+            providerCostQuotaRiskPaidOperation: 'Paid operation allowed',
+            providerCostQuotaRiskRealQuotaCheck: 'Real quota check allowed',
+            providerCostQuotaRiskRealInvocation: 'Real invocation allowed',
+            providerCostQuotaRiskRealExecution: 'Real execution allowed',
+            providerCostQuotaRiskDisabled: 'disabled',
+            providerCostQuotaRiskNoData: 'No workspace provider cost quota risk guard data is available.',
+            providerCostQuotaRiskCopyNoData: 'No workspace provider cost quota risk guard content is available to copy.',
+            providerCostQuotaRiskCopyFailed: 'Unable to copy workspace provider cost quota risk guard content.',
+            providerCostQuotaRiskCopied: 'Workspace provider cost quota risk guard content copied.',
+            providerCostQuotaRiskCopySummary: 'Copy cost quota risk summary',
+            providerCostQuotaRiskCopyCards: 'Copy provider cost risk cards',
+            providerCostQuotaRiskCopyQuota: 'Copy quota guard cards',
+            providerCostQuotaRiskCopyBudget: 'Copy budget policy cards',
+            providerCostQuotaRiskCopyUsage: 'Copy usage limit boundaries',
+            providerCostQuotaRiskCopyPaidBlockers: 'Copy paid operation blockers',
+            providerCostQuotaRiskCopyFailurePolicy: 'Copy cost failure policy map',
+            providerCostQuotaRiskCopyApproval: 'Copy approval cost review requirements',
+            providerCostQuotaRiskCopyFull: 'Copy full provider cost quota risk guard pack',
+            providerCostQuotaRiskProviderId: 'Provider ID',
+            providerCostQuotaRiskSourceCapability: 'Source capability',
+            providerCostQuotaRiskEstimatedCost: 'Estimated cost level',
+            providerCostQuotaRiskQuotaRisk: 'Quota risk level',
+            providerCostQuotaRiskPaidRequired: 'Paid operation required',
+            providerCostQuotaRiskQuotaCheckMode: 'Quota check mode',
+            providerCostQuotaRiskUsageTrackingMode: 'Usage tracking mode',
+            providerCostQuotaRiskCostReview: 'Cost review required',
+            providerCostQuotaRiskApprovalRequired: 'Approval required',
+            providerCostQuotaRiskGuardType: 'Guard type',
+            providerCostQuotaRiskGuardStatus: 'Guard status',
+            providerCostQuotaRiskQuotaSource: 'Quota source',
+            providerCostQuotaRiskQuotaAvailable: 'Quota available',
+            providerCostQuotaRiskQuotaEnforcement: 'Quota enforcement mode',
+            providerCostQuotaRiskHumanReview: 'Requires human review',
+            providerCostQuotaRiskCardsHelper: 'Inspect provider cost risk cards with estimated cost, quota risk, blocked paid operations, quota check mode, usage tracking mode, review requirements, and disabled real invocation state.',
+            providerCostQuotaRiskQuotaBudgetHelper: 'Inspect quota guard and budget policy previews without reading real quota or billing data.',
+            providerCostQuotaRiskUsagePaidFailureHelper: 'Review usage boundaries, paid operation blockers, and cost failure policy references without calling real usage APIs, writing usage logs, or executing retry or rollback.',
+            providerCostQuotaRiskApprovalRiskQualityAuditSafetyHelper: 'Review manual cost review requirements, deterministic preview risk scores, quality checks, audit preview, and disabled real capability boundaries.',
+            providerCostQuotaRiskPreviewNote: 'Cost / quota / risk preview only. This is not a real billing system and does not read real billing, real quota, provider usage, or secrets.',
+            providerCostQuotaRiskQuotaBudgetNote: 'Quota guard and budget policy cards are preview-only. They do not read real quota or billing and do not execute paid operations.',
+            providerCostQuotaRiskUsagePaidFailureNote: 'This preview does not call a real usage API, does not write a usage log, keeps paid operation blocked, and only references failure taxonomy; it does not execute real retry or rollback.',
+            providerCostQuotaRiskApprovalRiskQualityAuditSafetyNote: 'Cost review is a manual review requirement only and creates no real approval. Risk score is a deterministic preview and does not read real service data. Audit preview is not written to a database.',
+            providerCostQuotaRiskSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, and real execution remain disabled.',
+            providerCostQuotaRiskProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderCostQuotaRiskGuardMarker: 'Project Workspace provider cost quota risk guard bundle',
+            providerCostQuotaRiskPackTitle: '\u5de5\u4f5c\u533a Provider Cost / Quota / Risk Guard',
+            providerCostQuotaRiskPackHelper: '\u67e5\u770b\u786e\u5b9a\u6027 provider cost\u3001quota \u548c risk guard \u9884\u89c8\u3002\u8fd9\u662f cost / quota / risk \u9884\u89c8\uff0c\u4e0d\u662f\u771f\u5b9e billing system\u3002',
+            providerCostQuotaRiskSummaryTitle: 'Cost Quota Risk \u6458\u8981',
+            providerCostQuotaRiskCardsTitle: 'Provider Cost Risk \u5361\u7247',
+            providerCostQuotaRiskQuotaTitle: 'Quota Guard \u5361\u7247',
+            providerCostQuotaRiskBudgetTitle: 'Budget Policy \u5361\u7247',
+            providerCostQuotaRiskUsageTitle: 'Usage Limit \u8fb9\u754c',
+            providerCostQuotaRiskPaidBlockersTitle: 'Paid Operation \u963b\u65ad\u9879',
+            providerCostQuotaRiskFailurePolicyTitle: 'Cost Failure Policy \u6620\u5c04',
+            providerCostQuotaRiskApprovalTitle: 'Approval Cost Review \u8981\u6c42',
+            providerCostQuotaRiskScoreTitle: 'Risk Score \u77e9\u9635',
+            providerCostQuotaRiskQualityTitle: 'Cost Guard \u8d28\u91cf\u68c0\u67e5',
+            providerCostQuotaRiskAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            providerCostQuotaRiskSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            providerCostQuotaRiskQuotaBudgetTitle: 'Quota Guard / Budget Policy \u5361\u7247',
+            providerCostQuotaRiskUsagePaidFailureTitle: 'Usage \u8fb9\u754c / Paid Operation \u963b\u65ad / Cost Failure Policy',
+            providerCostQuotaRiskApprovalRiskQualityAuditSafetyTitle: 'Approval Cost Review / Risk Score / \u8d28\u91cf / \u5ba1\u8ba1 / \u5b89\u5168\u8fb9\u754c',
+            providerCostQuotaRiskMode: '\u6a21\u5f0f',
+            providerCostQuotaRiskProviderCount: 'Provider cost risk \u6570\u91cf',
+            providerCostQuotaRiskQuotaCount: 'Quota guard \u6570\u91cf',
+            providerCostQuotaRiskPaidBlockerCount: 'Paid blocker \u6570\u91cf',
+            providerCostQuotaRiskRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            providerCostQuotaRiskPaidOperation: '\u5141\u8bb8 paid operation',
+            providerCostQuotaRiskRealQuotaCheck: '\u5141\u8bb8\u771f\u5b9e quota \u68c0\u67e5',
+            providerCostQuotaRiskRealInvocation: '\u5141\u8bb8\u771f\u5b9e\u8c03\u7528',
+            providerCostQuotaRiskRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            providerCostQuotaRiskDisabled: '\u5df2\u7981\u7528',
+            providerCostQuotaRiskNoData: '\u6682\u65e0\u5de5\u4f5c\u533a provider cost quota risk guard \u6570\u636e\u3002',
+            providerCostQuotaRiskCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a provider cost quota risk guard \u5185\u5bb9\u3002',
+            providerCostQuotaRiskCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a provider cost quota risk guard \u5185\u5bb9\u3002',
+            providerCostQuotaRiskCopied: '\u5de5\u4f5c\u533a provider cost quota risk guard \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            providerCostQuotaRiskCopySummary: '\u590d\u5236 cost quota risk \u6458\u8981',
+            providerCostQuotaRiskCopyCards: '\u590d\u5236 provider cost risk \u5361\u7247',
+            providerCostQuotaRiskCopyQuota: '\u590d\u5236 quota guard \u5361\u7247',
+            providerCostQuotaRiskCopyBudget: '\u590d\u5236 budget policy \u5361\u7247',
+            providerCostQuotaRiskCopyUsage: '\u590d\u5236 usage limit \u8fb9\u754c',
+            providerCostQuotaRiskCopyPaidBlockers: '\u590d\u5236 paid operation \u963b\u65ad\u9879',
+            providerCostQuotaRiskCopyFailurePolicy: '\u590d\u5236 cost failure policy \u6620\u5c04',
+            providerCostQuotaRiskCopyApproval: '\u590d\u5236 approval cost review \u8981\u6c42',
+            providerCostQuotaRiskCopyFull: '\u590d\u5236\u5b8c\u6574 provider cost quota risk guard pack',
+            providerCostQuotaRiskProviderId: 'Provider ID',
+            providerCostQuotaRiskSourceCapability: '\u6765\u6e90\u80fd\u529b',
+            providerCostQuotaRiskEstimatedCost: '\u9884\u4f30\u6210\u672c\u7ea7\u522b',
+            providerCostQuotaRiskQuotaRisk: 'Quota \u98ce\u9669\u7ea7\u522b',
+            providerCostQuotaRiskPaidRequired: '\u9700\u8981 paid operation',
+            providerCostQuotaRiskQuotaCheckMode: 'Quota \u68c0\u67e5\u6a21\u5f0f',
+            providerCostQuotaRiskUsageTrackingMode: 'Usage \u8ffd\u8e2a\u6a21\u5f0f',
+            providerCostQuotaRiskCostReview: '\u9700\u8981\u6210\u672c\u590d\u6838',
+            providerCostQuotaRiskApprovalRequired: '\u9700\u8981\u5ba1\u6279',
+            providerCostQuotaRiskGuardType: 'Guard \u7c7b\u578b',
+            providerCostQuotaRiskGuardStatus: 'Guard \u72b6\u6001',
+            providerCostQuotaRiskQuotaSource: 'Quota \u6765\u6e90',
+            providerCostQuotaRiskQuotaAvailable: 'Quota \u53ef\u7528\u6027',
+            providerCostQuotaRiskQuotaEnforcement: 'Quota \u6267\u884c\u6a21\u5f0f',
+            providerCostQuotaRiskHumanReview: '\u9700\u8981\u4eba\u5de5\u590d\u6838',
+            providerCostQuotaRiskCardsHelper: '\u67e5\u770b provider cost risk \u5361\u7247\uff0c\u5305\u542b\u9884\u4f30\u6210\u672c\u3001quota \u98ce\u9669\u3001\u88ab\u963b\u65ad\u7684 paid operation\u3001quota \u68c0\u67e5\u6a21\u5f0f\u3001usage \u8ffd\u8e2a\u6a21\u5f0f\u3001\u590d\u6838\u8981\u6c42\u548c\u7981\u7528\u771f\u5b9e\u8c03\u7528\u72b6\u6001\u3002',
+            providerCostQuotaRiskQuotaBudgetHelper: '\u67e5\u770b quota guard \u548c budget policy \u9884\u89c8\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e quota \u6216 billing \u6570\u636e\u3002',
+            providerCostQuotaRiskUsagePaidFailureHelper: '\u67e5\u770b usage \u8fb9\u754c\u3001paid operation \u963b\u65ad\u9879\u548c cost failure policy \u5f15\u7528\uff0c\u4e0d\u8c03\u7528\u771f\u5b9e usage API\uff0c\u4e0d\u5199 usage log\uff0c\u4e0d\u6267\u884c retry \u6216 rollback\u3002',
+            providerCostQuotaRiskApprovalRiskQualityAuditSafetyHelper: '\u67e5\u770b\u4eba\u5de5\u6210\u672c\u590d\u6838\u8981\u6c42\u3001\u786e\u5b9a\u6027\u9884\u89c8 risk score\u3001\u8d28\u91cf\u68c0\u67e5\u3001\u5ba1\u8ba1\u9884\u89c8\u548c\u5df2\u7981\u7528\u7684\u771f\u5b9e\u80fd\u529b\u8fb9\u754c\u3002',
+            providerCostQuotaRiskPreviewNote: '\u4ec5\u4e3a cost / quota / risk \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e billing system\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e billing\u3001\u771f\u5b9e quota\u3001provider usage \u6216 secret\u3002',
+            providerCostQuotaRiskQuotaBudgetNote: 'Quota guard \u548c budget policy \u5361\u7247\u4ec5\u4e3a\u9884\u89c8\u3002\u4e0d\u8bfb\u53d6\u771f\u5b9e quota \u6216 billing\uff0c\u4e0d\u6267\u884c paid operation\u3002',
+            providerCostQuotaRiskUsagePaidFailureNote: '\u6b64\u9884\u89c8\u4e0d\u8c03\u7528\u771f\u5b9e usage API\uff0c\u4e0d\u5199 usage log\uff0c\u4fdd\u6301 paid operation \u88ab\u963b\u65ad\uff0c\u4ec5\u5f15\u7528 failure taxonomy\uff1b\u4e0d\u6267\u884c\u771f\u5b9e retry \u6216 rollback\u3002',
+            providerCostQuotaRiskApprovalRiskQualityAuditSafetyNote: '\u6210\u672c\u590d\u6838\u53ea\u662f\u4eba\u5de5\u590d\u6838\u8981\u6c42\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u5ba1\u6279\u3002Risk score \u53ea\u662f\u786e\u5b9a\u6027\u9884\u89c8\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u670d\u52a1\u6570\u636e\u3002Audit preview \u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            providerCostQuotaRiskSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore \u548c real execution \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
+            providerCostQuotaRiskProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
         });
 
         applyLanguageCopy();

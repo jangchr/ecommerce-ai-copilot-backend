@@ -12595,6 +12595,203 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_provider_cost_quota_risk_guard_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider cost quota risk guard bundle",
+            "PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER",
+            "latestProjectWorkspaceProviderCostQuotaRiskGuardPack",
+            "projectWorkspaceProviderCostQuotaRiskGuardPackFromWorkspace",
+            "projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot",
+            "projectWorkspaceExportProviderCostQuotaRiskGuardMarkdown",
+            "renderProjectWorkspaceProviderCostQuotaRiskSummaryPanel",
+            "renderProjectWorkspaceProviderCostRiskCardsPanel",
+            "renderProjectWorkspaceQuotaBudgetPolicyPanel",
+            "renderProjectWorkspaceUsagePaidFailurePolicyPanel",
+            "renderProjectWorkspaceApprovalRiskQualityAuditSafetyPanel",
+            "copyProjectWorkspaceProviderCostQuotaRiskSummary",
+            "copyProjectWorkspaceProviderCostRiskCards",
+            "copyProjectWorkspaceQuotaGuardCards",
+            "copyProjectWorkspaceBudgetPolicyCards",
+            "copyProjectWorkspaceUsageLimitBoundaries",
+            "copyProjectWorkspacePaidOperationBlockers",
+            "copyProjectWorkspaceCostFailurePolicyMap",
+            "copyProjectWorkspaceApprovalCostReviewRequirements",
+            "copyProjectWorkspaceFullProviderCostQuotaRiskGuardPack",
+            "workspace_provider_cost_quota_risk_guard_pack: projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace)",
+            "Workspace Provider Cost / Quota / Risk Guard",
+            "Cost Quota Risk Summary",
+            "Provider Cost Risk Cards",
+            "Quota Guard Cards",
+            "Budget Policy Cards",
+            "Usage Limit Boundaries",
+            "Paid Operation Blockers",
+            "Cost Failure Policy Map",
+            "Approval Cost Review Requirements",
+            "Risk Score Matrix",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.cost_quota_risk_summary",
+            "pack.provider_cost_risk_cards",
+            "pack.quota_guard_cards",
+            "pack.budget_policy_cards",
+            "pack.usage_limit_boundaries",
+            "pack.paid_operation_blockers",
+            "pack.cost_failure_policy_map",
+            "pack.approval_cost_review_requirements",
+            "pack.risk_score_matrix",
+            "pack.cost_guard_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.provider_cost_risk_card_count",
+            "summary.quota_guard_card_count",
+            "summary.paid_operation_allowed",
+            "summary.real_quota_check_allowed",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.cost_risk_id",
+            "card.provider_id",
+            "card.provider_type",
+            "card.source_capability",
+            "card.estimated_cost_level",
+            "card.quota_risk_level",
+            "card.paid_operation_required",
+            "card.paid_operation_allowed",
+            "card.quota_check_mode",
+            "card.usage_tracking_mode",
+            "card.cost_review_required",
+            "card.approval_required",
+            "card.blocked_by",
+            "card.recommended_operator_action",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "card.risk_note",
+            "card.quota_guard_id",
+            "card.guard_type",
+            "card.guard_status",
+            "card.allowed_preview_usage",
+            "card.blocked_real_usage",
+            "card.quota_source",
+            "card.quota_available",
+            "card.quota_enforcement_mode",
+            "card.requires_human_review",
+            "card.real_quota_check_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("${renderProjectWorkspaceAssetFailureQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceProviderCostQuotaRiskSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceApprovalRiskQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_provider_cost_quota_risk_guard_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "providerCostQuotaRiskPackTitle",
+            "providerCostQuotaRiskSummaryTitle",
+            "providerCostQuotaRiskCardsTitle",
+            "providerCostQuotaRiskQuotaTitle",
+            "providerCostQuotaRiskBudgetTitle",
+            "providerCostQuotaRiskUsageTitle",
+            "providerCostQuotaRiskPaidBlockersTitle",
+            "providerCostQuotaRiskFailurePolicyTitle",
+            "providerCostQuotaRiskApprovalTitle",
+            "providerCostQuotaRiskScoreTitle",
+            "providerCostQuotaRiskAuditTitle",
+            "providerCostQuotaRiskSafetyTitle",
+            "providerCostQuotaRiskCopySummary",
+            "providerCostQuotaRiskCopyCards",
+            "providerCostQuotaRiskCopyQuota",
+            "providerCostQuotaRiskCopyBudget",
+            "providerCostQuotaRiskCopyUsage",
+            "providerCostQuotaRiskCopyPaidBlockers",
+            "providerCostQuotaRiskCopyFailurePolicy",
+            "providerCostQuotaRiskCopyApproval",
+            "providerCostQuotaRiskCopyFull",
+            "providerCostQuotaRiskCopied",
+            "providerCostQuotaRiskCopyFailed",
+            "providerCostQuotaRiskCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace provider cost quota risk guard bundle", script)
+            self.assertIn("project_workspace_provider_cost_quota_risk_guard_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceProviderCostQuotaRiskGuardSummaryText"):
+            html.index("async function copyProjectWorkspaceProviderCostQuotaRiskGuardText")
+        ]
+        for key in [
+            "providerCostQuotaRiskPackTitle",
+            "providerCostQuotaRiskSummaryTitle",
+            "providerCostQuotaRiskCardsTitle",
+            "providerCostQuotaRiskQuotaTitle",
+            "providerCostQuotaRiskBudgetTitle",
+            "providerCostQuotaRiskUsageTitle",
+            "providerCostQuotaRiskPaidBlockersTitle",
+            "providerCostQuotaRiskFailurePolicyTitle",
+            "providerCostQuotaRiskApprovalTitle",
+            "providerCostQuotaRiskScoreTitle",
+            "providerCostQuotaRiskAuditTitle",
+            "providerCostQuotaRiskSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "cost / quota / risk preview",
+            "not a real billing system",
+            "does not read real billing",
+            "real quota",
+            "provider usage",
+            "does not call a real usage API",
+            "does not write a usage log",
+            "paid operation blocked",
+            "failure taxonomy",
+            "does not execute real retry or rollback",
+            "creates no real approval",
+            "deterministic preview",
+            "does not read real service data",
+            "Audit preview is not written to a database",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_creative_decision_pack_keeps_real_execution_disabled(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         creative_section = html[
