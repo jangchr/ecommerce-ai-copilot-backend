@@ -34289,6 +34289,523 @@ def _rw_workspace_real_provider_readiness_checklist_pack(
     }
 
 
+
+def _rw_workspace_secret_environment_gate_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    readiness_pack = dict(
+        creative_decision_pack.get(
+            "workspace_real_provider_readiness_checklist_pack"
+        )
+        or {}
+    )
+    adapter_pack = dict(
+        creative_decision_pack.get("workspace_provider_adapter_contract_pack")
+        or {}
+    )
+    cost_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_cost_quota_risk_guard_pack"
+        )
+        or {}
+    )
+    permission_pack = dict(
+        creative_decision_pack.get(
+            "workspace_capability_permission_matrix_pack"
+        )
+        or {}
+    )
+    health_pack = dict(
+        creative_decision_pack.get("workspace_system_integration_health_pack")
+        or {}
+    )
+    review_pack = dict(
+        creative_decision_pack.get("workspace_human_review_queue_pack") or {}
+    )
+    required_source_packs = [
+        "workspace_real_provider_readiness_checklist_pack",
+        "workspace_provider_adapter_contract_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_system_integration_health_pack",
+        "workspace_human_review_queue_pack",
+    ]
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    source_capability_by_type = {
+        "llm_text_generation": "llm_generation",
+        "video_generation_provider": "video_provider",
+        "image_generation_provider": "image_generation",
+        "media_storage_provider": "media_storage",
+        "external_scraping_provider": "external_scraping",
+        "translation_provider": "translation",
+        "analytics_or_tracking_provider": "analytics_tracking",
+        "database_persistence_provider": "database_persistence",
+        "approval_or_ticket_provider": "approval_ticket",
+        "rollback_restore_provider": "rollback_restore",
+    }
+    secret_preview_by_type = {
+        "llm_text_generation": "LLM_TEXT_GENERATION_API_KEY_PREVIEW",
+        "video_generation_provider": "VIDEO_PROVIDER_API_KEY_PREVIEW",
+        "image_generation_provider": "IMAGE_GENERATION_API_KEY_PREVIEW",
+        "media_storage_provider": "MEDIA_STORAGE_ENV_PREVIEW",
+        "external_scraping_provider": "EXTERNAL_SCRAPING_API_KEY_PREVIEW",
+        "translation_provider": "TRANSLATION_PROVIDER_API_KEY_PREVIEW",
+        "analytics_or_tracking_provider": "ANALYTICS_TRACKING_TOKEN_PREVIEW",
+        "database_persistence_provider": "DATABASE_ENV_PREVIEW",
+        "approval_or_ticket_provider": "APPROVAL_TICKET_TOKEN_PREVIEW",
+        "rollback_restore_provider": "ROLLBACK_RESTORE_TOKEN_PREVIEW",
+    }
+    purpose_by_type = {
+        "llm_text_generation": "future_llm_provider_auth_preview_only",
+        "video_generation_provider": "future_video_provider_auth_preview_only",
+        "image_generation_provider": "future_image_provider_auth_preview_only",
+        "media_storage_provider": "future_media_storage_env_preview_only",
+        "external_scraping_provider": "future_external_scraping_auth_preview_only",
+        "translation_provider": "future_translation_provider_auth_preview_only",
+        "analytics_or_tracking_provider": "future_analytics_tracking_auth_preview_only",
+        "database_persistence_provider": "future_database_env_preview_only",
+        "approval_or_ticket_provider": "future_approval_ticket_auth_preview_only",
+        "rollback_restore_provider": "future_rollback_restore_auth_preview_only",
+    }
+
+    readiness_cards = list(readiness_pack.get("provider_readiness_cards") or [])
+    adapter_cards = list(adapter_pack.get("provider_contract_cards") or [])
+    cost_cards = list(cost_pack.get("provider_cost_risk_cards") or [])
+    permission_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+    permission_by_capability = {
+        _rw_text(item.get("capability_id")): item
+        for item in permission_cards
+        if item.get("capability_id")
+    }
+
+    providers = []
+    seen_provider_types = set()
+    for source in (readiness_cards, adapter_cards, cost_cards):
+        for card in source:
+            provider_type = _rw_text(card.get("provider_type"))
+            provider_id = _rw_text(card.get("provider_id"))
+            if provider_type and provider_type not in seen_provider_types:
+                providers.append({
+                    "provider_id": provider_id or provider_type,
+                    "provider_type": provider_type,
+                    "source_capability": _rw_text(
+                        card.get("source_capability")
+                    ) or source_capability_by_type.get(
+                        provider_type, provider_type
+                    ),
+                })
+                seen_provider_types.add(provider_type)
+    for provider_type in required_provider_types:
+        if provider_type not in seen_provider_types:
+            providers.append({
+                "provider_id": provider_type,
+                "provider_type": provider_type,
+                "source_capability": source_capability_by_type[
+                    provider_type
+                ],
+            })
+
+    secret_requirement_cards = []
+    environment_gate_checks = []
+    secret_access_policy_cards = []
+    provider_secret_dependency_map = []
+    for index, provider in enumerate(providers, start=1):
+        provider_id = _rw_text(provider.get("provider_id")) or f"provider_{index}"
+        provider_type = _rw_text(provider.get("provider_type")) or provider_id
+        source_capability = _rw_text(provider.get("source_capability")) or (
+            source_capability_by_type.get(provider_type, provider_type)
+        )
+        secret_name_preview = secret_preview_by_type.get(
+            provider_type,
+            f"{provider_type.upper()}_SECRET_PREVIEW",
+        )
+        permission = permission_by_capability.get(source_capability, {})
+        blocked_by = [
+            "secret_value_read_disabled",
+            "secret_validation_disabled",
+            "provider_invocation_disabled",
+            "real_execution_disabled",
+            "environment_requirement_missing_preview_only",
+        ]
+        if permission:
+            blocked_by.append(
+                _rw_text(permission.get("capability_id"))
+                or source_capability
+            )
+        secret_requirement_cards.append({
+            "secret_requirement_id": f"secret_requirement_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_capability": source_capability,
+            "secret_name_preview": secret_name_preview,
+            "secret_purpose": purpose_by_type.get(
+                provider_type,
+                "future_provider_secret_preview_only",
+            ),
+            "required_for_modes": [
+                "future_real_provider_invocation",
+                "future_provider_health_check",
+                "future_paid_or_quota_checked_operation",
+            ],
+            "current_secret_status": "missing_unread_unverified_preview_only",
+            "secret_value_read_allowed": False,
+            "secret_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "blocked_by": blocked_by,
+            "recommended_operator_action": (
+                "Review the secret name preview and future environment "
+                "requirement only; do not read, validate, persist, export, "
+                "or use any secret value."
+            ),
+            "risk_note": (
+                "Secret requirement is derived from existing workspace packs "
+                "and is not a secret scanner or provider enablement path."
+            ),
+        })
+        gate_templates = [
+            (
+                "secret_presence_gate",
+                "Secret presence preview",
+                [secret_name_preview],
+                [f"missing_{secret_name_preview}"],
+            ),
+            (
+                "secret_validation_gate",
+                "Secret validation lock",
+                ["future_secret_validation_result"],
+                ["secret_validation_blocked"],
+            ),
+            (
+                "environment_reference_gate",
+                "Environment reference review",
+                [
+                    secret_name_preview,
+                    f"{provider_type.upper()}_ENV_PREVIEW",
+                ],
+                ["environment_reference_missing_preview_only"],
+            ),
+        ]
+        for gate_key, gate_name, required_refs, missing_refs in gate_templates:
+            environment_gate_checks.append({
+                "gate_id": f"{gate_key}_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "gate_name": gate_name,
+                "gate_status": "blocked_missing_review_required_preview_only",
+                "required_environment_refs": required_refs,
+                "missing_environment_refs": missing_refs,
+                "blocked_reason": (
+                    "Secret/environment gate is preview-only; secret reads, "
+                    "secret validation, provider calls, and real execution "
+                    "remain blocked."
+                ),
+                "next_preview_step": (
+                    "Document future environment refs for operator review "
+                    "without reading or validating secret values."
+                ),
+                "secret_value_read_allowed": False,
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Gate check records missing/review-required environment "
+                    "state only and does not access real environment data."
+                ),
+            })
+        secret_access_policy_cards.append({
+            "policy_id": f"secret_access_policy_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "policy_mode": "secret_access_policy_preview_only",
+            "allowed_preview_fields": [
+                "secret_name_preview",
+                "secret_purpose",
+                "required_for_modes",
+                "blocked_by",
+            ],
+            "blocked_operations": [
+                "read_secret",
+                "validate_secret",
+                "use_secret_for_call",
+                "persist_secret",
+                "export_secret",
+            ],
+            "secret_value_read_allowed": False,
+            "secret_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Policy describes future secret access requirements only; "
+                "it never reads or displays secret values."
+            ),
+        })
+        provider_secret_dependency_map.append({
+            "dependency_id": f"provider_secret_dependency_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_capability": source_capability,
+            "secret_name_previews": [secret_name_preview],
+            "environment_ref_previews": [
+                f"{provider_type.upper()}_ENV_PREVIEW",
+                "BILLING_QUOTA_ENV_PREVIEW",
+            ],
+            "depends_on_billing_or_quota_env": provider_type in {
+                "llm_text_generation",
+                "video_generation_provider",
+                "image_generation_provider",
+                "external_scraping_provider",
+                "database_persistence_provider",
+                "rollback_restore_provider",
+            },
+            "secret_value_read_allowed": False,
+            "secret_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        })
+
+    missing_environment_requirements = [
+        {
+            "requirement_id": f"missing_environment_{category}",
+            "category": category,
+            "requirement_status": "missing_preview_only",
+            "description": description,
+            "secret_value_read_allowed": False,
+            "secret_validation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for category, description in [
+            ("provider_api_key", "Provider API key environment refs missing."),
+            ("billing_quota_env", "Billing/quota env refs missing."),
+            ("media_storage_env", "Media storage env refs missing."),
+            ("approval_token", "Approval or ticket token missing."),
+            ("rollback_token", "Rollback/restore token missing."),
+            ("database_env", "Database environment refs missing."),
+        ]
+    ]
+    blocked_secret_operations = [
+        {
+            "operation_id": f"blocked_secret_operation_{operation}",
+            "operation": operation,
+            "operation_status": "blocked_preview_only",
+            "blocked_reason": (
+                "Secret/environment gate preview cannot read, validate, use, "
+                "persist, or export secrets."
+            ),
+            "secret_value_read_allowed": False,
+            "secret_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for operation in [
+            "read_secret",
+            "validate_secret",
+            "use_secret_for_call",
+            "persist_secret",
+            "export_secret",
+        ]
+    ]
+    environment_risk_register = [
+        {
+            "risk_id": f"environment_gate_risk_{risk_type}",
+            "risk_type": risk_type,
+            "severity": "high_preview_only",
+            "blocked_by": [
+                "secret_environment_gate_preview_only",
+                "real_provider_enablement_disabled",
+            ],
+            "secret_value_read_allowed": False,
+            "secret_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for risk_type in [
+            "secret_missing",
+            "secret_validation_blocked",
+            "billing_quota_env_missing",
+            "media_storage_env_missing",
+            "rollback_token_blocked",
+            "database_env_blocked",
+            "external_provider_key_missing",
+        ]
+    ]
+    covered_provider_types = sorted({
+        _rw_text(card.get("provider_type"))
+        for card in secret_requirement_cards
+        if card.get("provider_type")
+    })
+    gate_signature = json.dumps(
+        {
+            "source_packs": required_source_packs,
+            "provider_types": covered_provider_types,
+            "secret_requirement_ids": [
+                card["secret_requirement_id"]
+                for card in secret_requirement_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    gate_id = (
+        "workspace_secret_environment_gate_"
+        + hashlib.sha256(gate_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "billing_read_enabled": False,
+        "quota_read_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "secret_validation_enabled": False,
+        "secret_export_enabled": False,
+        "secret_persistence_enabled": False,
+        "real_retry_enabled": False,
+        "real_approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_service_health_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_secret_environment_gate_pack_v1",
+        "secret_environment_gate_summary": {
+            "gate_id": gate_id,
+            "mode": (
+                "secret_environment_gate_preview_"
+                "environment_requirement_preview_dry_run_only"
+            ),
+            "source_packs": required_source_packs,
+            "secret_requirement_card_count": len(secret_requirement_cards),
+            "environment_gate_check_count": len(environment_gate_checks),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "secret_value_read_allowed": False,
+            "secret_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review deterministic secret/environment gate preview only; "
+                "do not read, validate, persist, export, or use secrets and "
+                "keep all real provider execution disabled."
+            ),
+        },
+        "secret_requirement_cards": secret_requirement_cards,
+        "environment_gate_checks": environment_gate_checks,
+        "secret_access_policy_cards": secret_access_policy_cards,
+        "missing_environment_requirements": missing_environment_requirements,
+        "blocked_secret_operations": blocked_secret_operations,
+        "provider_secret_dependency_map": provider_secret_dependency_map,
+        "environment_risk_register": environment_risk_register,
+        "secret_gate_quality_checks": {
+            "all_required_source_packs_referenced": True,
+            "source_real_provider_readiness_pack_present": bool(readiness_pack),
+            "source_provider_adapter_contract_pack_present": bool(adapter_pack),
+            "source_cost_quota_guard_pack_present": bool(cost_pack),
+            "source_permission_matrix_pack_present": bool(permission_pack),
+            "source_system_integration_health_pack_present": bool(health_pack),
+            "source_human_review_queue_pack_present": bool(review_pack),
+            "secret_requirement_cards_present": bool(secret_requirement_cards),
+            "environment_gate_checks_present": bool(environment_gate_checks),
+            "secret_access_policy_cards_present": bool(secret_access_policy_cards),
+            "missing_environment_requirements_present": bool(missing_environment_requirements),
+            "blocked_secret_operations_present": bool(blocked_secret_operations),
+            "provider_secret_dependency_map_present": bool(provider_secret_dependency_map),
+            "environment_risk_register_present": bool(environment_risk_register),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_secret_reads_disabled": all(
+                not card["secret_value_read_allowed"]
+                for card in secret_requirement_cards
+            ),
+            "all_secret_validation_disabled": all(
+                not card["secret_validation_allowed"]
+                for card in secret_requirement_cards
+            ),
+            "all_real_invocation_disabled": all(
+                not card["real_invocation_allowed"]
+                for card in secret_requirement_cards
+            ),
+            "all_real_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in secret_requirement_cards
+            ),
+            "audit_preview_not_persisted": True,
+            "secret_scanner_enabled": False,
+            "secret_value_read_performed": False,
+            "secret_validation_performed": False,
+            "provider_invocation_performed": False,
+            "database_write_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "gate_id": gate_id,
+            "audit_mode": "secret_environment_gate_preview_only",
+            "is_real_secret_scanner": False,
+            "secret_value_read_performed": False,
+            "secret_validation_performed": False,
+            "secret_persisted": False,
+            "secret_exported": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "paid_operation_executed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "registry_write_performed": False,
+            "external_scraping_performed": False,
+            "audit_persisted": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -34465,6 +34982,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         "workspace_real_provider_readiness_checklist_pack"
     ] = _rw_workspace_real_provider_readiness_checklist_pack(
         creative_decision_pack
+    )
+    creative_decision_pack["workspace_secret_environment_gate_pack"] = (
+        _rw_workspace_secret_environment_gate_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
