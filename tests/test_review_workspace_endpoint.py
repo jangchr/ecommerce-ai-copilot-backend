@@ -6441,6 +6441,300 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_real_execution_approval_token_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-real-execution-approval-token",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "APPROVALTOKEN001",
+                "title": "Compact Travel Mug",
+                "reviews": [{
+                    "rating": 2,
+                    "title": "Leaks during commute",
+                    "text": "Leaks during commute and needs a better seal.",
+                    "source_section": "manual_review",
+                }],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack", "competitor_review_comparison_pack",
+            "llm_assist_dry_run_pack",
+            "video_provider_orchestration_dry_run_pack",
+            "campaign_export_pack", "workspace_session_snapshot_pack",
+            "workspace_run_compare_pack", "workspace_action_queue_pack",
+            "workspace_action_ticket_pack",
+            "workspace_approval_decision_pack",
+            "workspace_execution_readiness_pack",
+            "workspace_execution_rehearsal_pack",
+            "workspace_rehearsal_result_pack",
+            "workspace_rehearsal_remediation_pack",
+            "workspace_remediation_verification_pack",
+            "workspace_retry_rehearsal_plan_pack",
+            "workspace_retry_rehearsal_result_pack",
+            "workspace_retry_cycle_decision_pack",
+            "workspace_cycle_history_timeline_pack",
+            "workspace_control_center_pack",
+            "workspace_agent_run_ledger_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+            "workspace_replay_harness_pack",
+            "workspace_provider_adapter_contract_pack",
+            "workspace_provider_contract_test_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_asset_contract_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_real_provider_readiness_checklist_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_real_execution_approval_token_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_real_execution_approval_token_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_real_execution_approval_token_pack_v1",
+        )
+        required_provider_types = {
+            "llm_text_generation",
+            "video_generation_provider",
+            "image_generation_provider",
+            "media_storage_provider",
+            "external_scraping_provider",
+            "translation_provider",
+            "analytics_or_tracking_provider",
+            "database_persistence_provider",
+            "approval_or_ticket_provider",
+            "rollback_restore_provider",
+        }
+
+        summary = pack["approval_token_summary"]
+        self.assertTrue(summary["token_preview_bundle_id"])
+        self.assertIn("approval_token_preview", summary["mode"])
+        self.assertIn("execution_approval_gate_preview", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_real_provider_readiness_checklist_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_human_review_queue_pack",
+            "workspace_approval_decision_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_system_integration_health_pack",
+        ]:
+            with self.subTest(source_pack=source_pack):
+                self.assertIn(source_pack, summary["source_packs"])
+        self.assertFalse(summary["token_issue_allowed"])
+        self.assertFalse(summary["token_validation_allowed"])
+        self.assertFalse(summary["real_invocation_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        cards = pack["approval_token_preview_cards"]
+        self.assertTrue(cards)
+        self.assertTrue(required_provider_types <= {
+            card["provider_type"] for card in cards
+        })
+        for card in cards:
+            for field in [
+                "token_preview_id", "provider_id", "provider_type",
+                "source_capability", "token_purpose",
+                "token_scope_preview", "required_signoffs",
+                "required_evidence", "blocked_by", "token_issue_allowed",
+                "token_validation_allowed", "real_invocation_allowed",
+                "real_execution_allowed", "recommended_operator_action",
+                "risk_note",
+            ]:
+                with self.subTest(card=card["token_preview_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["token_issue_allowed"])
+            self.assertFalse(card["token_validation_allowed"])
+            self.assertFalse(card["real_invocation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        gates = pack["execution_approval_gate_checks"]
+        self.assertTrue(gates)
+        self.assertGreaterEqual(len(gates), len(required_provider_types) * 3)
+        self.assertTrue(required_provider_types <= {
+            gate["provider_type"] for gate in gates
+        })
+        for gate in gates:
+            for field in [
+                "gate_id", "provider_id", "provider_type", "gate_name",
+                "gate_status", "required_approval_refs",
+                "missing_approval_refs", "required_evidence",
+                "blocked_reason", "next_preview_step",
+                "token_issue_allowed", "real_invocation_allowed",
+                "real_execution_allowed", "risk_note",
+            ]:
+                with self.subTest(gate=gate["gate_id"], field=field):
+                    self.assertIn(field, gate)
+            self.assertTrue(
+                "blocked" in gate["gate_status"]
+                or "missing" in gate["gate_status"]
+                or "review_required" in gate["gate_status"]
+            )
+            self.assertFalse(gate["token_issue_allowed"])
+            self.assertFalse(gate["real_invocation_allowed"])
+            self.assertFalse(gate["real_execution_allowed"])
+
+        signoffs = pack["required_signoff_matrix"]
+        self.assertTrue(signoffs)
+        self.assertTrue({
+            "human_review", "cost_review", "secret_review",
+            "network_review", "media_review", "rollback_review",
+            "database_review",
+        } <= {item["signoff_category"] for item in signoffs})
+        for item in signoffs:
+            self.assertTrue(item["required_before_token_issue"])
+            self.assertFalse(item["approval_created"])
+            self.assertFalse(item["token_issue_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        blockers = pack["token_blocker_cards"]
+        self.assertTrue(blockers)
+        self.assertTrue({
+            "token_issue", "token_validation", "token_use_for_execution",
+            "token_persistence", "token_export",
+        } <= {item["operation"] for item in blockers})
+        for item in blockers:
+            self.assertIn("blocked", item["blocker_status"])
+            self.assertFalse(item["token_issue_allowed"])
+            self.assertFalse(item["token_validation_allowed"])
+            self.assertFalse(item["real_invocation_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        requirements = pack["approval_packet_requirements"]
+        self.assertTrue(requirements)
+        for item in requirements:
+            self.assertFalse(item["approval_created"])
+            self.assertFalse(item["operator_task_created"])
+            self.assertFalse(item["ticket_created"])
+            self.assertFalse(item["token_issue_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        scope_rules = pack["token_scope_boundary_rules"]
+        self.assertTrue(scope_rules)
+        self.assertTrue({
+            "real_provider_call", "external_call", "secret_read",
+            "paid_operation", "media_transfer", "database_write",
+            "rollback",
+        } <= {item["operation"] for item in scope_rules})
+        for item in scope_rules:
+            self.assertFalse(item["operation_allowed"])
+            self.assertIn("blocked", item["boundary_status"])
+
+        risks = pack["approval_token_risk_register"]
+        self.assertTrue(risks)
+        self.assertTrue({
+            "unauthorized_execution", "missing_signoff",
+            "secret_gate_blocked", "network_blocked", "paid_blocked",
+            "rollback_blocked", "database_persistence_blocked",
+        } <= {risk["risk_type"] for risk in risks})
+
+        checks = pack["approval_token_quality_checks"]
+        for key in [
+            "all_required_source_packs_referenced",
+            "source_network_block_guard_pack_present",
+            "source_secret_environment_gate_pack_present",
+            "source_real_provider_readiness_pack_present",
+            "source_cost_quota_guard_pack_present",
+            "source_human_review_queue_pack_present",
+            "source_approval_decision_pack_present",
+            "source_permission_matrix_pack_present",
+            "source_system_integration_health_pack_present",
+            "approval_token_preview_cards_present",
+            "execution_approval_gate_checks_present",
+            "required_signoff_matrix_present",
+            "token_blocker_cards_present",
+            "approval_packet_requirements_present",
+            "token_scope_boundary_rules_present",
+            "approval_token_risk_register_present",
+            "all_required_provider_types_covered",
+            "all_token_issue_disabled",
+            "all_token_validation_disabled",
+            "all_real_invocation_disabled",
+            "all_real_execution_disabled",
+            "audit_preview_not_persisted",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "approval_token_system_enabled", "token_issued",
+            "token_validated", "token_used_for_execution",
+            "approval_created", "operator_task_created",
+            "provider_invocation_performed", "http_request_performed",
+            "webhook_call_performed", "external_scraping_performed",
+            "secret_read_performed", "secret_use_performed",
+            "database_write_performed", "real_retry_executed",
+            "real_rollback_executed", "real_execution_performed",
+        ]:
+            with self.subTest(check=key):
+                self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["is_real_token_system"])
+        self.assertFalse(audit["token_issued"])
+        self.assertFalse(audit["token_validated"])
+        self.assertFalse(audit["token_used_for_execution"])
+        self.assertFalse(audit["token_persisted"])
+        self.assertFalse(audit["token_exported"])
+        self.assertFalse(audit["approval_created"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["provider_invocation_performed"])
+        self.assertFalse(audit["provider_called"])
+        self.assertFalse(audit["llm_called"])
+        self.assertFalse(audit["http_request_performed"])
+        self.assertFalse(audit["webhook_call_performed"])
+        self.assertFalse(audit["external_scraping_performed"])
+        self.assertFalse(audit["image_generation_performed"])
+        self.assertFalse(audit["video_generation_performed"])
+        self.assertFalse(audit["media_upload_performed"])
+        self.assertFalse(audit["media_download_performed"])
+        self.assertFalse(audit["secret_read_performed"])
+        self.assertFalse(audit["secret_use_performed"])
+        self.assertFalse(audit["secret_validation_performed"])
+        self.assertFalse(audit["real_billing_read_performed"])
+        self.assertFalse(audit["real_quota_read_performed"])
+        self.assertFalse(audit["paid_operation_executed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_service_health_read_performed"])
+        self.assertFalse(audit["real_retry_executed"])
+        self.assertFalse(audit["real_rollback_executed"])
+        self.assertFalse(audit["real_restore_executed"])
+        self.assertFalse(audit["registry_write_performed"])
+        self.assertFalse(audit["audit_persisted"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider_enabled", "provider_invocation_enabled",
+            "llm_enabled", "llm_api_enabled", "image_enabled",
+            "image_generation_enabled", "video_enabled",
+            "video_generation_enabled", "media_enabled",
+            "media_upload_enabled", "media_download_enabled",
+            "paid_enabled", "paid_operation_enabled",
+            "registry_enabled", "registry_write_enabled",
+            "rollback_enabled", "rollback_execution_enabled",
+            "external_scraping_enabled", "database_persistence_enabled",
+            "real_restore_enabled", "real_execution_enabled",
+            "secret_read_enabled", "secret_use_enabled",
+            "external_call_enabled", "token_issue_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

@@ -35393,6 +35393,599 @@ def _rw_workspace_network_external_call_block_guard_pack(
     }
 
 
+def _rw_workspace_real_execution_approval_token_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    network_pack = dict(
+        creative_decision_pack.get(
+            "workspace_network_external_call_block_guard_pack"
+        )
+        or {}
+    )
+    secret_pack = dict(
+        creative_decision_pack.get("workspace_secret_environment_gate_pack")
+        or {}
+    )
+    readiness_pack = dict(
+        creative_decision_pack.get(
+            "workspace_real_provider_readiness_checklist_pack"
+        )
+        or {}
+    )
+    cost_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_cost_quota_risk_guard_pack"
+        )
+        or {}
+    )
+    review_pack = dict(
+        creative_decision_pack.get("workspace_human_review_queue_pack") or {}
+    )
+    approval_pack = dict(
+        creative_decision_pack.get("workspace_approval_decision_pack") or {}
+    )
+    permission_pack = dict(
+        creative_decision_pack.get(
+            "workspace_capability_permission_matrix_pack"
+        )
+        or {}
+    )
+    health_pack = dict(
+        creative_decision_pack.get("workspace_system_integration_health_pack")
+        or {}
+    )
+    required_source_packs = [
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_real_provider_readiness_checklist_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_human_review_queue_pack",
+        "workspace_approval_decision_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_system_integration_health_pack",
+    ]
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    source_capability_by_type = {
+        "llm_text_generation": "llm_generation",
+        "video_generation_provider": "video_provider",
+        "image_generation_provider": "image_generation",
+        "media_storage_provider": "media_storage",
+        "external_scraping_provider": "external_scraping",
+        "translation_provider": "translation",
+        "analytics_or_tracking_provider": "analytics_tracking",
+        "database_persistence_provider": "database_persistence",
+        "approval_or_ticket_provider": "approval_ticket",
+        "rollback_restore_provider": "rollback_restore",
+    }
+
+    def by_provider(items: list[dict]) -> dict:
+        return {
+            _rw_text(item.get("provider_id")): item
+            for item in items
+            if item.get("provider_id")
+        }
+
+    network_cards = list(network_pack.get("external_call_block_cards") or [])
+    secret_cards = list(secret_pack.get("secret_requirement_cards") or [])
+    readiness_cards = list(readiness_pack.get("provider_readiness_cards") or [])
+    cost_cards = list(cost_pack.get("provider_cost_risk_cards") or [])
+    permission_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+    network_by_provider = by_provider(network_cards)
+    secret_by_provider = by_provider(secret_cards)
+    readiness_by_provider = by_provider(readiness_cards)
+    cost_by_provider = by_provider(cost_cards)
+    permission_by_capability = {
+        _rw_text(item.get("capability_id")): item
+        for item in permission_cards
+        if item.get("capability_id")
+    }
+
+    providers = []
+    seen_provider_types = set()
+    for source in (network_cards, secret_cards, readiness_cards, cost_cards):
+        for card in source:
+            provider_type = _rw_text(card.get("provider_type"))
+            provider_id = _rw_text(card.get("provider_id"))
+            if provider_type and provider_type not in seen_provider_types:
+                providers.append({
+                    "provider_id": provider_id or provider_type,
+                    "provider_type": provider_type,
+                    "source_capability": _rw_text(
+                        card.get("source_capability")
+                    ) or source_capability_by_type.get(
+                        provider_type, provider_type
+                    ),
+                })
+                seen_provider_types.add(provider_type)
+    for provider_type in required_provider_types:
+        if provider_type not in seen_provider_types:
+            providers.append({
+                "provider_id": provider_type,
+                "provider_type": provider_type,
+                "source_capability": source_capability_by_type[
+                    provider_type
+                ],
+            })
+
+    base_signoffs = [
+        "human_review_signoff",
+        "cost_review_signoff",
+        "secret_review_signoff",
+        "network_review_signoff",
+        "media_review_signoff",
+        "rollback_review_signoff",
+        "database_review_signoff",
+    ]
+    approval_token_preview_cards = []
+    execution_approval_gate_checks = []
+    approval_packet_requirements = []
+    for index, provider in enumerate(providers, start=1):
+        provider_id = _rw_text(provider.get("provider_id")) or f"provider_{index}"
+        provider_type = _rw_text(provider.get("provider_type")) or provider_id
+        source_capability = _rw_text(provider.get("source_capability")) or (
+            source_capability_by_type.get(provider_type, provider_type)
+        )
+        network_card = network_by_provider.get(provider_id, {})
+        secret_card = secret_by_provider.get(provider_id, {})
+        readiness_card = readiness_by_provider.get(provider_id, {})
+        cost_card = cost_by_provider.get(provider_id, {})
+        permission = permission_by_capability.get(source_capability, {})
+        blocked_by = [
+            "approval_token_preview_only",
+            "token_issue_disabled",
+            "token_validation_disabled",
+            "real_invocation_disabled",
+            "real_execution_disabled",
+        ]
+        if not network_card:
+            blocked_by.append("network_external_call_guard_evidence_missing")
+        if not secret_card:
+            blocked_by.append("secret_environment_gate_evidence_missing")
+        if not readiness_card:
+            blocked_by.append("real_provider_readiness_evidence_missing")
+        if not cost_card:
+            blocked_by.append("cost_quota_guard_evidence_missing")
+        if not review_pack:
+            blocked_by.append("human_review_queue_evidence_missing")
+        if not approval_pack:
+            blocked_by.append("approval_decision_evidence_missing")
+        if permission:
+            blocked_by.append(
+                _rw_text(permission.get("capability_id"))
+                or source_capability
+            )
+
+        approval_token_preview_cards.append({
+            "token_preview_id": f"approval_token_preview_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_capability": source_capability,
+            "token_purpose": (
+                "future_real_execution_approval_scope_preview_only"
+            ),
+            "token_scope_preview": {
+                "scope_id": f"real_execution_scope_preview_{provider_id}",
+                "provider_type": provider_type,
+                "allowed_preview_only": True,
+                "real_provider_call_allowed": False,
+                "external_call_allowed": False,
+                "secret_read_allowed": False,
+                "paid_operation_allowed": False,
+                "media_transfer_allowed": False,
+                "database_write_allowed": False,
+                "rollback_allowed": False,
+            },
+            "required_signoffs": base_signoffs,
+            "required_evidence": [
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_real_provider_readiness_checklist_pack",
+                "workspace_provider_cost_quota_risk_guard_pack",
+                "workspace_human_review_queue_pack",
+                "workspace_approval_decision_pack",
+            ],
+            "blocked_by": blocked_by,
+            "token_issue_allowed": False,
+            "token_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review deterministic approval token scope preview only; do "
+                "not issue, validate, persist, export, or use a token and do "
+                "not unlock real execution."
+            ),
+            "risk_note": (
+                "Approval token preview is assembled from existing workspace "
+                "packs and is not a token system or execution authorization."
+            ),
+        })
+
+        gate_templates = [
+            (
+                "human_review_gate",
+                "Human review signoff",
+                ["workspace_human_review_queue_pack"],
+                ["human_review_signoff_missing"],
+            ),
+            (
+                "approval_decision_gate",
+                "Approval decision signoff",
+                ["workspace_approval_decision_pack"],
+                ["approval_decision_missing"],
+            ),
+            (
+                "secret_review_gate",
+                "Secret review signoff",
+                ["workspace_secret_environment_gate_pack"],
+                ["secret_review_blocked"],
+            ),
+            (
+                "network_review_gate",
+                "Network review signoff",
+                ["workspace_network_external_call_block_guard_pack"],
+                ["network_review_blocked"],
+            ),
+            (
+                "cost_review_gate",
+                "Cost and quota signoff",
+                ["workspace_provider_cost_quota_risk_guard_pack"],
+                ["cost_review_missing"],
+            ),
+        ]
+        for gate_key, gate_name, evidence, missing_refs in gate_templates:
+            execution_approval_gate_checks.append({
+                "gate_id": f"{gate_key}_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "gate_name": gate_name,
+                "gate_status": "blocked_missing_review_required_preview_only",
+                "required_approval_refs": [
+                    f"{gate_key}_approval_ref_preview"
+                ],
+                "missing_approval_refs": missing_refs,
+                "required_evidence": evidence,
+                "blocked_reason": (
+                    "Execution approval gate is preview-only; no approval "
+                    "token is issued or validated and real execution remains "
+                    "blocked."
+                ),
+                "next_preview_step": (
+                    "Document future signoff and approval packet requirements "
+                    "for operator review without creating approval records."
+                ),
+                "token_issue_allowed": False,
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Gate status records missing/review-required approval "
+                    "state only and cannot authorize execution."
+                ),
+            })
+
+        approval_packet_requirements.append({
+            "requirement_id": f"approval_packet_requirement_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "required_materials": [
+                "human_review_summary_preview",
+                "cost_quota_guard_preview",
+                "secret_environment_gate_preview",
+                "network_external_call_block_guard_preview",
+                "media_boundary_preview",
+                "rollback_boundary_preview",
+                "database_boundary_preview",
+            ],
+            "approval_created": False,
+            "operator_task_created": False,
+            "ticket_created": False,
+            "token_issue_allowed": False,
+            "real_execution_allowed": False,
+        })
+
+    required_signoff_matrix = [
+        {
+            "signoff_id": f"required_signoff_{category}",
+            "signoff_category": category,
+            "signoff_status": "missing_preview_only",
+            "source_pack": source_pack,
+            "required_before_token_issue": True,
+            "approval_created": False,
+            "token_issue_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for category, source_pack in [
+            ("human_review", "workspace_human_review_queue_pack"),
+            ("cost_review", "workspace_provider_cost_quota_risk_guard_pack"),
+            ("secret_review", "workspace_secret_environment_gate_pack"),
+            ("network_review", "workspace_network_external_call_block_guard_pack"),
+            ("media_review", "workspace_real_provider_readiness_checklist_pack"),
+            ("rollback_review", "workspace_network_external_call_block_guard_pack"),
+            ("database_review", "workspace_network_external_call_block_guard_pack"),
+        ]
+    ]
+    token_blocker_cards = [
+        {
+            "blocker_id": f"token_blocker_{operation}",
+            "operation": operation,
+            "blocker_status": "blocked_preview_only",
+            "blocked_reason": (
+                "Approval token preview cannot issue, validate, use, persist, "
+                "or export tokens and cannot authorize real execution."
+            ),
+            "token_issue_allowed": False,
+            "token_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for operation in [
+            "token_issue",
+            "token_validation",
+            "token_use_for_execution",
+            "token_persistence",
+            "token_export",
+        ]
+    ]
+    token_scope_boundary_rules = [
+        {
+            "rule_id": f"token_scope_boundary_{operation}",
+            "operation": operation,
+            "operation_allowed": False,
+            "boundary_status": "blocked_preview_only",
+            "risk_note": (
+                "Preview token scope cannot be used for real provider, "
+                "external, secret, paid, media, database, rollback, or "
+                "execution operations."
+            ),
+        }
+        for operation in [
+            "real_provider_call",
+            "external_call",
+            "secret_read",
+            "paid_operation",
+            "media_transfer",
+            "database_write",
+            "rollback",
+        ]
+    ]
+    approval_token_risk_register = [
+        {
+            "risk_id": f"approval_token_risk_{risk_type}",
+            "risk_type": risk_type,
+            "severity": "high_preview_only",
+            "blocked_by": [
+                "approval_token_preview_only",
+                "real_execution_disabled",
+            ],
+            "token_issue_allowed": False,
+            "token_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for risk_type in [
+            "unauthorized_execution",
+            "missing_signoff",
+            "secret_gate_blocked",
+            "network_blocked",
+            "paid_blocked",
+            "rollback_blocked",
+            "database_persistence_blocked",
+        ]
+    ]
+    covered_provider_types = sorted({
+        _rw_text(card.get("provider_type"))
+        for card in approval_token_preview_cards
+        if card.get("provider_type")
+    })
+    token_signature = json.dumps(
+        {
+            "source_packs": required_source_packs,
+            "provider_types": covered_provider_types,
+            "token_preview_ids": [
+                card["token_preview_id"]
+                for card in approval_token_preview_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    token_preview_bundle_id = (
+        "workspace_real_execution_approval_token_"
+        + hashlib.sha256(token_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "billing_read_enabled": False,
+        "quota_read_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "secret_use_enabled": False,
+        "external_call_enabled": False,
+        "token_issue_enabled": False,
+        "token_validation_enabled": False,
+        "token_persistence_enabled": False,
+        "token_export_enabled": False,
+        "real_retry_enabled": False,
+        "real_approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_service_health_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_real_execution_approval_token_pack_v1",
+        "approval_token_summary": {
+            "token_preview_bundle_id": token_preview_bundle_id,
+            "mode": (
+                "approval_token_preview_"
+                "execution_approval_gate_preview_dry_run_only"
+            ),
+            "source_packs": required_source_packs,
+            "approval_token_preview_card_count": len(
+                approval_token_preview_cards
+            ),
+            "execution_approval_gate_check_count": len(
+                execution_approval_gate_checks
+            ),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "token_issue_allowed": False,
+            "token_validation_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review deterministic approval token preview only; do not "
+                "issue or validate tokens, create approvals, call providers, "
+                "send external calls, use secrets, perform paid operations, "
+                "write databases, retry, restore, rollback, or unlock real "
+                "execution."
+            ),
+        },
+        "approval_token_preview_cards": approval_token_preview_cards,
+        "execution_approval_gate_checks": execution_approval_gate_checks,
+        "required_signoff_matrix": required_signoff_matrix,
+        "token_blocker_cards": token_blocker_cards,
+        "approval_packet_requirements": approval_packet_requirements,
+        "token_scope_boundary_rules": token_scope_boundary_rules,
+        "approval_token_risk_register": approval_token_risk_register,
+        "approval_token_quality_checks": {
+            "all_required_source_packs_referenced": True,
+            "source_network_block_guard_pack_present": bool(network_pack),
+            "source_secret_environment_gate_pack_present": bool(secret_pack),
+            "source_real_provider_readiness_pack_present": bool(readiness_pack),
+            "source_cost_quota_guard_pack_present": bool(cost_pack),
+            "source_human_review_queue_pack_present": bool(review_pack),
+            "source_approval_decision_pack_present": bool(approval_pack),
+            "source_permission_matrix_pack_present": bool(permission_pack),
+            "source_system_integration_health_pack_present": bool(health_pack),
+            "approval_token_preview_cards_present": bool(
+                approval_token_preview_cards
+            ),
+            "execution_approval_gate_checks_present": bool(
+                execution_approval_gate_checks
+            ),
+            "required_signoff_matrix_present": bool(required_signoff_matrix),
+            "token_blocker_cards_present": bool(token_blocker_cards),
+            "approval_packet_requirements_present": bool(
+                approval_packet_requirements
+            ),
+            "token_scope_boundary_rules_present": bool(
+                token_scope_boundary_rules
+            ),
+            "approval_token_risk_register_present": bool(
+                approval_token_risk_register
+            ),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_token_issue_disabled": all(
+                not card["token_issue_allowed"]
+                for card in approval_token_preview_cards
+            ),
+            "all_token_validation_disabled": all(
+                not card["token_validation_allowed"]
+                for card in approval_token_preview_cards
+            ),
+            "all_real_invocation_disabled": all(
+                not card["real_invocation_allowed"]
+                for card in approval_token_preview_cards
+            ),
+            "all_real_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in approval_token_preview_cards
+            ),
+            "audit_preview_not_persisted": True,
+            "approval_token_system_enabled": False,
+            "token_issued": False,
+            "token_validated": False,
+            "token_used_for_execution": False,
+            "approval_created": False,
+            "operator_task_created": False,
+            "provider_invocation_performed": False,
+            "http_request_performed": False,
+            "webhook_call_performed": False,
+            "external_scraping_performed": False,
+            "secret_read_performed": False,
+            "secret_use_performed": False,
+            "database_write_performed": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "token_preview_bundle_id": token_preview_bundle_id,
+            "audit_mode": "real_execution_approval_token_preview_only",
+            "is_real_token_system": False,
+            "token_issued": False,
+            "token_validated": False,
+            "token_used_for_execution": False,
+            "token_persisted": False,
+            "token_exported": False,
+            "approval_created": False,
+            "operator_task_created": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "http_request_performed": False,
+            "webhook_call_performed": False,
+            "external_scraping_performed": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "secret_read_performed": False,
+            "secret_use_performed": False,
+            "secret_validation_performed": False,
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "paid_operation_executed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "registry_write_performed": False,
+            "audit_persisted": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -35576,6 +36169,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     creative_decision_pack[
         "workspace_network_external_call_block_guard_pack"
     ] = _rw_workspace_network_external_call_block_guard_pack(
+        creative_decision_pack
+    )
+    creative_decision_pack[
+        "workspace_real_execution_approval_token_pack"
+    ] = _rw_workspace_real_execution_approval_token_pack(
         creative_decision_pack
     )
 
